@@ -30,6 +30,7 @@ import CertificateIcon from "@patternfly/react-icons/dist/esm/icons/certificate-
 import ClockIcon from "@patternfly/react-icons/dist/esm/icons/clock-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 
+import type { PythonPythonPackageContentResponse } from "@app/client";
 import { ConditionalDataListBody } from "@app/components/DataListControls/ConditionalDataListBody";
 import { DocumentMetadata } from "@app/components/DocumentMetadata";
 import { FilterToolbar, FilterType } from "@app/components/FilterToolbar";
@@ -41,10 +42,14 @@ import {
   useTableControlState,
 } from "@app/hooks/table-controls";
 import { useFetchPackages } from "@app/queries/packages";
+import { Paths } from "@app/Routes";
 import { toCamelCase } from "@app/utils/utils";
 import dayjs from "dayjs";
+import { generatePath, useNavigate } from "react-router-dom";
 
 export const PythonList: React.FC = () => {
+  const navigate = useNavigate();
+
   const [isSortByOpen, setIsSortByOpen] = React.useState<boolean>(false);
 
   const tableControlState = useTableControlState({
@@ -101,6 +106,14 @@ export const PythonList: React.FC = () => {
     sortableColumns,
     sortState: { activeSort, setActiveSort },
   } = tableControls;
+
+  const onClickCard = (item: PythonPythonPackageContentResponse) => {
+    navigate(
+      generatePath(Paths.pythonDetails, {
+        pythonId: item.pulp_href ?? "",
+      }),
+    );
+  };
 
   return (
     <>
@@ -178,8 +191,12 @@ export const PythonList: React.FC = () => {
                       key={`${item.name}-${item.version}`}
                       aria-labelledby={`Item-${rowIndex}`}
                     >
-                      <Card isCompact>
-                        <CardHeader>
+                      <Card isCompact isClickable>
+                        <CardHeader
+                          selectableActions={{
+                            onClickAction: () => onClickCard(item),
+                          }}
+                        >
                           <Flex spaceItems={{ default: "spaceItemsSm" }}>
                             <FlexItem>
                               <Content component="h4">{item.name}</Content>
