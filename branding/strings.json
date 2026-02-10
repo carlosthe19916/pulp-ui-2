@@ -1,0 +1,24 @@
+{
+  "application": {
+    "title": "Pulp",
+    "name": "Pulp UI",
+    "description": "UI application for Pulp"
+  },
+  "about": {
+    "displayName": "Pulp UI",
+    "imageSrc": "<%= brandingRoot %>/images/pulp_logo_icon.svg",
+    "documentationUrl": ""
+  },
+  "masthead": {
+    "leftBrand": {
+      "src": "<%= brandingRoot %>/images/pulp_logo_icon.svg",
+      "alt": "Pulp UI",
+      "height": "25px"
+    },
+    "leftTitle": {
+      "text": "Pulp UI"
+    },
+    "rightBrand": null,
+    "supportUrl": "https://github.com/pulp/pulp-ui-2/issues"
+  }
+}

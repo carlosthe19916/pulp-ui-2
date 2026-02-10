@@ -1,0 +1,16 @@
+{
+  "application": {
+    "title": "Trusted Developer Libraries",
+    "name": "Pulp UI",
+    "description": "Pulp UI"
+  },
+  "about": {
+    "displayName": "Trusted Developer Libraries",
+    "documentationUrl": ""
+  },
+  "masthead": {
+    "leftTitle": {
+      "text": "Trusted Developer Libraries"
+    }
+  }
+}

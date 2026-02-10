@@ -1,0 +1,71 @@
+{
+  "name": "@pulp-ui/client",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "clean:all": "rimraf ./dist ./node_modules",
+    "build": "vite build",
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "start:dev": "MOCK=on vite --port 3000 --host",
+    "start": "vite preview",
+    "test": "vitest",
+    "generate": "openapi-ts -f ./config/openapi-ts.config.ts",
+    "coverage": "vitest run --coverage",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@patternfly/patternfly": "^6.4.0",
+    "@patternfly/react-core": "^6.4.0",
+    "@patternfly/react-table": "^6.4.0",
+    "@patternfly/react-tokens": "^6.4.0",
+    "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-query-devtools": "^5.61.0",
+    "axios": "^1.7.2",
+    "dayjs": "^1.11.18",
+    "file-saver": "^2.0.5",
+    "pretty-bytes": "^6.1.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-error-boundary": "^6.0.0",
+    "react-markdown": "^8.0.7",
+    "react-router-dom": "^7.8.1",
+    "usehooks-ts": "^3.1.1"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.91.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/file-saver": "^2.0.2",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/browser": "^3.2.4",
+    "jsdom": "^27.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.2",
+    "vite-plugin-ejs": "^1.7.0",
+    "vite-plugin-istanbul": "^7.2.1",
+    "vite-plugin-static-copy": "^3.1.1",
+    "vitest": "^4.0.0",
+    "vitest-browser-react": "^2.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
