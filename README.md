@@ -24,7 +24,7 @@ PULP_API_URL="https://packages.redhat.com" PULP_USERNAME=<redacted> PULP_PASSWOR
 - Create a .env file:
 ```bash
 export PULP_API_URL="https://packages.redhat.com"
-export PULP_USERNAME="redacted"
+export PULP_USERNAME="<redacted>"
 export PULP_PASSWORD="<redacted>"
 ```
 
