@@ -130,3 +130,7 @@ export const universalComparator = (
 export const parseBooleanIfPossible = (value?: string): boolean => {
   return value?.toLocaleLowerCase() === "true";
 };
+
+export const toCamelCase = (value: string) => {
+  return value.charAt(0).toUpperCase() + value.slice(1).replace("_", " ");
+};
