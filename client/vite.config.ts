@@ -111,6 +111,16 @@ export default defineConfig({
       "/api": {
         target: PULP_ENV.PULP_API_URL || "http://localhost:8080",
         changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on("proxyReq", (proxyReq, _req, _res) => {
+            if (PULP_ENV.MOCK === "off") {
+              // Add Basic Auth header to all proxied requests
+              const credentials = `${PULP_ENV.PULP_USERNAME}:${PULP_ENV.PULP_PASSWORD}`;
+              const encoded = Buffer.from(credentials).toString("base64");
+              proxyReq.setHeader("Authorization", `Basic ${encoded}`);
+            }
+          });
+        },
       },
     },
   },

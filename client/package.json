@@ -12,7 +12,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format .",
     "format:fix": "biome format --write .",
-    "start:dev": "MOCK=on vite --port 3000 --host",
+    "start:dev": "vite --port 3000 --host",
     "start": "vite preview",
     "test": "vitest",
     "generate": "openapi-ts -f ./config/openapi-ts.config.ts",

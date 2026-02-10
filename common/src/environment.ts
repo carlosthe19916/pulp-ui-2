@@ -25,6 +25,12 @@ export type PulpEnvType = {
   /** Target URL for the UI server's `/api` proxy */
   PULP_API_URL?: string;
 
+  /** Pulp Basic Username */
+  PULP_USERNAME?: string;
+
+  /** Pulp Basic Password */
+  PULP_PASSWORD?: string;
+
   /** Pulp Domain */
   PULP_DOMAIN?: string;
 
@@ -36,7 +42,13 @@ export type PulpEnvType = {
  * Keys in `PulpEnv` that are only used on the server and therefore do not
  * need to be sent to the client.
  */
-export const SERVER_ENV_KEYS = ["PORT", "PULP_API_URL", "BRANDING"];
+export const SERVER_ENV_KEYS = [
+  "PORT",
+  "PULP_API_URL",
+  "PULP_USERNAME",
+  "PULP_PASSWORD",
+  "BRANDING",
+];
 
 /**
  * Create a `PulpEnv` from a partial `PulpEnv` with a set of default values.
@@ -50,6 +62,8 @@ export const buildPulpEnv = ({
   UI_INGRESS_PROXY_BODY_SIZE = "500m",
 
   PULP_API_URL,
+  PULP_USERNAME,
+  PULP_PASSWORD,
   PULP_DOMAIN = "calunga-ui-dev",
 
   BRANDING,
@@ -61,8 +75,10 @@ export const buildPulpEnv = ({
 
   UI_INGRESS_PROXY_BODY_SIZE,
 
-  PULP_API_URL: PULP_API_URL,
-  PULP_DOMAIN: PULP_DOMAIN,
+  PULP_API_URL,
+  PULP_USERNAME,
+  PULP_PASSWORD,
+  PULP_DOMAIN,
 
   BRANDING,
 });

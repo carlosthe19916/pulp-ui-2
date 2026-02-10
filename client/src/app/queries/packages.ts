@@ -4,6 +4,7 @@ import {
   contentPythonPackagesList,
   contentPythonPackagesRead,
 } from "@app/client";
+import { PULP_DOMAIN } from "@app/Constants";
 import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { mockQueryFn } from "./helpers";
@@ -22,7 +23,7 @@ export const useFetchPackages = (
         const response = await contentPythonPackagesList({
           client,
           path: {
-            pulp_domain: "default",
+            pulp_domain: PULP_DOMAIN,
           },
         });
         return response.data;

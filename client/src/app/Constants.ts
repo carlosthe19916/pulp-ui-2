@@ -8,7 +8,7 @@ export const FILTER_DATE_FORMAT = "YYYY-MM-DD";
 
 export const DEFAULT_REFETCH_INTERVAL = 5000;
 
-export const PULP_DOMAIN = ENV.PULP_DOMAIN;
+export const PULP_DOMAIN = ENV.PULP_DOMAIN ?? "default";
 
 export const TablePersistenceKeyPrefixes = {
   python_wheels: "pw",

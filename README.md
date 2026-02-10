@@ -4,13 +4,40 @@ A React-based web application demo.
 
 ## Quick Start
 
+- Install dependencies:
 ```bash
-# Install dependencies
 npm ci
+```
 
-# Start development server
+### Start with mock data
+```bash
+MOCK=on npm run start:dev
+```
+
+### Start server with credentials
+#### Using inline ENVs
+```bash
+PULP_API_URL="https://packages.redhat.com" PULP_USERNAME=<redacted> PULP_PASSWORD=<redacted> npm run start:dev
+```
+
+#### Using .env file
+- Create a .env file:
+```bash
+export PULP_API_URL="https://packages.redhat.com"
+export PULP_USERNAME="<redacted>"
+export PULP_PASSWORD="<redacted>"
+```
+
+- Load ENVs:
+```bash
+source .env
+```
+
+- Run the app:
+```bash
 npm run start:dev
 ```
+
 
 The application will be available at http://localhost:3000
 
