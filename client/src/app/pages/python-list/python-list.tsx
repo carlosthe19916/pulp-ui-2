@@ -2,14 +2,12 @@ import React from "react";
 
 import {
   Bullseye,
-  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
   ClipboardCopy,
   Content,
-  DataList,
-  DataListCell,
-  DataListItem,
-  DataListItemCells,
-  DataListItemRow,
   Flex,
   FlexItem,
   Icon,
@@ -24,15 +22,12 @@ import {
   Title,
   Toolbar,
   ToolbarContent,
-  ToolbarGroup,
   ToolbarItem,
   Truncate,
   type MenuToggleElement,
 } from "@patternfly/react-core";
 import CertificateIcon from "@patternfly/react-icons/dist/esm/icons/certificate-icon";
 import ClockIcon from "@patternfly/react-icons/dist/esm/icons/clock-icon";
-import SortAmountDownIcon from "@patternfly/react-icons/dist/esm/icons/sort-amount-down-icon";
-import SortAmountUpIcon from "@patternfly/react-icons/dist/esm/icons/sort-amount-up-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 
 import { ConditionalDataListBody } from "@app/components/DataListControls/ConditionalDataListBody";
@@ -89,7 +84,7 @@ export const PythonList: React.FC = () => {
 
   const tableControls = useTableControlProps({
     ...tableControlState,
-    idProperty: "name",
+    idProperty: "pulp_href",
     currentPageItems: packages,
     totalItemCount,
     isLoading: isFetching,
@@ -121,66 +116,45 @@ export const PythonList: React.FC = () => {
             <Toolbar {...toolbarProps}>
               <ToolbarContent>
                 <FilterToolbar showFiltersSideBySide {...filterToolbarProps} />
-                <ToolbarGroup variant="filter-group">
-                  <ToolbarItem>
-                    {activeSort && (
-                      <Button
-                        variant="control"
-                        onClick={() => {
-                          setActiveSort({
-                            columnKey: activeSort.columnKey,
-                            direction:
-                              activeSort?.direction === "asc" ? "desc" : "asc",
-                          });
-                        }}
+                <ToolbarItem variant="separator" />
+                <ToolbarItem>
+                  <Select
+                    id="sort-by"
+                    isOpen={isSortByOpen}
+                    selected={activeSort?.columnKey}
+                    onSelect={(_e, value) => {
+                      setActiveSort({
+                        // biome-ignore lint/suspicious/noExplicitAny: allowed
+                        columnKey: value as any,
+                        direction: activeSort?.direction ?? "asc",
+                      });
+                    }}
+                    onOpenChange={(isOpen) => setIsSortByOpen(isOpen)}
+                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        onClick={() => setIsSortByOpen(!isSortByOpen)}
+                        isExpanded={isSortByOpen}
+                        style={
+                          {
+                            width: "200px",
+                          } as React.CSSProperties
+                        }
                       >
-                        {activeSort.direction === "asc" ? (
-                          <SortAmountDownIcon />
-                        ) : (
-                          <SortAmountUpIcon />
-                        )}
-                      </Button>
+                        {toCamelCase(activeSort?.columnKey ?? "")}
+                      </MenuToggle>
                     )}
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <Select
-                      id="sort-by"
-                      isOpen={isSortByOpen}
-                      selected={activeSort?.columnKey}
-                      onSelect={(_e, value) => {
-                        setActiveSort({
-                          // biome-ignore lint/suspicious/noExplicitAny: allowed
-                          columnKey: value as any,
-                          direction: activeSort?.direction ?? "asc",
-                        });
-                      }}
-                      onOpenChange={(isOpen) => setIsSortByOpen(isOpen)}
-                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                        <MenuToggle
-                          ref={toggleRef}
-                          onClick={() => setIsSortByOpen(!isSortByOpen)}
-                          isExpanded={isSortByOpen}
-                          style={
-                            {
-                              width: "200px",
-                            } as React.CSSProperties
-                          }
-                        >
+                    shouldFocusToggleOnSelect
+                  >
+                    <SelectList>
+                      {sortableColumns?.map((e) => (
+                        <SelectOption key={e} value={e}>
                           {toCamelCase(activeSort?.columnKey ?? "")}
-                        </MenuToggle>
-                      )}
-                      shouldFocusToggleOnSelect
-                    >
-                      <SelectList>
-                        {sortableColumns?.map((e) => (
-                          <SelectOption key={e} value={e}>
-                            {toCamelCase(activeSort?.columnKey ?? "")}
-                          </SelectOption>
-                        ))}
-                      </SelectList>
-                    </Select>
-                  </ToolbarItem>
-                </ToolbarGroup>
+                        </SelectOption>
+                      ))}
+                    </SelectList>
+                  </Select>
+                </ToolbarItem>
                 <ToolbarItem {...paginationToolbarItemProps}>
                   <SimplePagination
                     idPrefix="python-table"
@@ -192,7 +166,7 @@ export const PythonList: React.FC = () => {
             </Toolbar>
           </StackItem>
           <StackItem>
-            <DataList aria-label="Python list">
+            <Stack aria-label="Python list" hasGutter>
               <ConditionalDataListBody
                 isLoading={isFetching}
                 isError={!!fetchError}
@@ -200,93 +174,77 @@ export const PythonList: React.FC = () => {
               >
                 {currentPageItems?.map((item, rowIndex) => {
                   return (
-                    <DataListItem
+                    <StackItem
                       key={`${item.name}-${item.version}`}
                       aria-labelledby={`Item-${rowIndex}`}
                     >
-                      <DataListItemRow>
-                        <DataListItemCells
-                          dataListCells={[
-                            <DataListCell key="name" isFilled={true}>
-                              <Flex direction={{ default: "column" }}>
-                                <FlexItem>
-                                  <Flex
-                                    spaceItems={{ default: "spaceItemsSm" }}
-                                  >
-                                    <FlexItem>
-                                      <Content component="h4">
-                                        {item.name}
-                                      </Content>
-                                    </FlexItem>
-                                    <FlexItem>
-                                      <Label isCompact>{item.version}</Label>
-                                    </FlexItem>
-                                  </Flex>
-                                </FlexItem>
-                                <FlexItem>
-                                  <Content component="small">
-                                    {item.summary}
-                                  </Content>
-                                </FlexItem>
-                                <FlexItem>
-                                  <Flex
-                                    spaceItems={{ default: "spaceItemsSm" }}
-                                  >
-                                    <FlexItem>
-                                      <Icon>
-                                        <ClockIcon />
-                                      </Icon>{" "}
-                                      {dayjs(item.pulp_last_updated).fromNow()}
-                                    </FlexItem>
-                                    <FlexItem>
-                                      <Icon>
-                                        <UserIcon />
-                                      </Icon>{" "}
-                                      <Truncate
-                                        maxCharsDisplayed={35}
-                                        content={
-                                          item.author ||
-                                          item.author_email ||
-                                          item.maintainer_email ||
-                                          "Unknown"
-                                        }
-                                      />
-                                    </FlexItem>
-                                    <FlexItem>
-                                      <Icon>
-                                        <CertificateIcon />
-                                      </Icon>{" "}
-                                      <Truncate
-                                        maxCharsDisplayed={35}
-                                        content={
-                                          item.license ||
-                                          item.license_expression ||
-                                          "Unknown"
-                                        }
-                                      />
-                                    </FlexItem>
-                                    <FlexItem align={{ default: "alignRight" }}>
-                                      <ClipboardCopy
-                                        isReadOnly
-                                        hoverTip="Copy"
-                                        clickTip="Copied"
-                                        variant="inline-compact"
-                                      >
-                                        pip install {item.name ?? ""}
-                                      </ClipboardCopy>
-                                    </FlexItem>
-                                  </Flex>
-                                </FlexItem>
-                              </Flex>
-                            </DataListCell>,
-                          ]}
-                        />
-                      </DataListItemRow>
-                    </DataListItem>
+                      <Card isCompact>
+                        <CardHeader>
+                          <Flex spaceItems={{ default: "spaceItemsSm" }}>
+                            <FlexItem>
+                              <Content component="h4">{item.name}</Content>
+                            </FlexItem>
+                            <FlexItem>
+                              <Label isCompact>{item.version}</Label>
+                            </FlexItem>
+                          </Flex>
+                        </CardHeader>
+                        <CardBody>
+                          <Content component="small">{item.summary}</Content>
+                        </CardBody>
+                        <CardFooter>
+                          <Flex spaceItems={{ default: "spaceItemsSm" }}>
+                            <FlexItem>
+                              <Icon>
+                                <ClockIcon />
+                              </Icon>{" "}
+                              {dayjs(item.pulp_last_updated).fromNow()}
+                            </FlexItem>
+                            <FlexItem>
+                              <Icon>
+                                <UserIcon />
+                              </Icon>{" "}
+                              <Truncate
+                                maxCharsDisplayed={35}
+                                content={
+                                  item.author ||
+                                  item.author_email ||
+                                  item.maintainer_email ||
+                                  "Unknown"
+                                }
+                              />
+                            </FlexItem>
+                            <FlexItem>
+                              <Icon>
+                                <CertificateIcon />
+                              </Icon>{" "}
+                              <Truncate
+                                maxCharsDisplayed={35}
+                                content={
+                                  item.license ||
+                                  item.license_expression ||
+                                  "Unknown"
+                                }
+                              />
+                            </FlexItem>
+                            <FlexItem align={{ default: "alignRight" }}>
+                              <ClipboardCopy
+                                isReadOnly
+                                hoverTip="Copy"
+                                clickTip="Copied"
+                                variant="inline-compact"
+                              >
+                                pip install {item.name ?? ""}
+                              </ClipboardCopy>
+                            </FlexItem>
+                          </Flex>
+                        </CardFooter>
+                      </Card>
+                    </StackItem>
                   );
                 })}
               </ConditionalDataListBody>
-            </DataList>
+            </Stack>
           </StackItem>
           <StackItem>
             <Bullseye>
