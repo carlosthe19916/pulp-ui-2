@@ -1,4 +1,8 @@
 import type {
+  UniquePackageMetadataResponse,
+  UniquePackageResponse,
+} from "@app/api/models";
+import type {
   PaginatedpythonPythonPackageContentResponseList,
   PythonPythonPackageContentResponse,
 } from "@app/client";
@@ -562,4 +566,1883 @@ export const packageMock: PythonPythonPackageContentResponse = {
   metadata_sha256:
     "84d0b674cc29fcb1627776c02a0afc4ec712bb338140f9ad0785817f9446c200",
   provenance: undefined,
+};
+
+export const uniquePackagesMock: UniquePackageResponse = {
+  meta: {
+    "api-version": "1.1",
+    "_last-serial": 1000000000,
+  },
+  projects: [
+    {
+      name: "accelerate",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aiobotocore",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aiohappyeyeballs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aiohttp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aioitertools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aiosignal",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "aiosqlite",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "alabaster",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "altgraph",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "annotated-doc",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "annotated-types",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "anyio",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "appdirs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "APScheduler",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "argon2-cffi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "argon2-cffi-bindings",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "arrow",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "asttokens",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "astunparse",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "async-lru",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "asyncpg",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "attrs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "autoevals",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "azure-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "azure-identity",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "azure-storage-blob",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "babel",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "backoff",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "bashlex",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "beautifulsoup4",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "beniget",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "bigtree",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "bleach",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "blis",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "boto3",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "botocore",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "bracex",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "build",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cachetools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "calver",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "catalogue",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "certifi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cffi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "chardet",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "charset-normalizer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "chevron",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cibuildwheel",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "click",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cloudpathlib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cloudpickle",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cmake",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "coherent.licensed",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "colorama",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "comm",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "confection",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "contourpy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cppy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "croniter",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cryptography",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cycler",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "cymem",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Cython",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dask",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dataclasses-json",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "datasets",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "debugpy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "decorator",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "defusedxml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "delocate",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dependency-groups",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "deprecation",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dill",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "diskcache",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "distro",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dnspython",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docling",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docling-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docling-ibm-models",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docling-parse",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docstring_parser",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "docutils",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "dunamai",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "durationpy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "einops",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "email-validator",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "et_xmlfile",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "executing",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "expandvars",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "faiss-cpu",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Faker",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fastapi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fastapi-sso",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fastjsonschema",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "feast",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "filelock",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "filetype",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fire",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "flit_core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fonttools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fqdn",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "frozenlist",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "fsspec",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "gast",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "gitdb",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "GitPython",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-api-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "googleapis-common-protos",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-auth",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-cloud-aiplatform",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-cloud-bigquery",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-cloud-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-cloud-resource-manager",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-cloud-storage",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-crc32c",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-genai",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "google-resumable-media",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "greenlet",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "grpc-google-iam-v1",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "grpcio",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "grpcio-status",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "gunicorn",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "h11",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatch-fancy-pypi-readme",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatch-jupyter-builder",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatchling",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatch-nodejs-version",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatch-requirements-txt",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hatch-vcs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "hf-xet",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "httpcore",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "httptools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "httpx",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "httpx-sse",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "huggingface_hub",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "humanize",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "id",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "idna",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "imagesize",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "importlib_metadata",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "instructor",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ipykernel",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ipython",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ipython_pygments_lexers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "isodate",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "isoduration",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "its_hub",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jaraco.classes",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jaraco.context",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jaraco.functools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jedi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jeepney",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Jinja2",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jiter",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jmespath",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "joblib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "json5",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonlines",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonpatch",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonpointer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonref",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonschema",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jsonschema-specifications",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_client",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter-events",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyterlab",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyterlab_git",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyterlab_pygments",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyterlab_server",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter-lsp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_packaging",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_server",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter-server-mathjax",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_server_proxy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "jupyter_server_terminals",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "keyring",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "kfp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "kfp-kubernetes",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "kiwisolver",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "kubernetes",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langchain",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langchain-community",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langchain-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langchain-openai",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langchain-text-splitters",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langcodes",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "langsmith",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "language_data",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "lark",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "latex2mathml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "litellm",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "litellm-enterprise",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "litellm-proxy-extras",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "llama_stack",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "llama_stack_client",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "llama-stack-provider-lmeval",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "llama-stack-provider-ragas",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "llama-stack-provider-trustyai-fms",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "locket",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "lxml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "macholib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "marisa-trie",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "markdown-it-py",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "marko",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "MarkupSafe",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "marshmallow",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "matplotlib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "matplotlib-inline",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "maturin",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mcp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mdurl",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "meson",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "meson-python",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "milvus-lite",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mistune",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mmh3",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "more-itertools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mpire",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mpmath",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "msal",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "msal-extensions",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "multidict",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "multiprocess",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "murmurhash",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mypy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "mypy_extensions",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nbclient",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nbconvert",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nbdime",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nbformat",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nbgitpuller",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nest_asyncio",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "networkx",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nh3",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ninja",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "nltk",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "notebook_shim",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "numpy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "oauthlib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "odh_jupyter_trash_cleanup",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "openai",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "openpyxl",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-api",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-exporter-otlp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-exporter-otlp-proto-common",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-exporter-otlp-proto-grpc",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-exporter-otlp-proto-http",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-proto",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-sdk",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "opentelemetry-semantic-conventions",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "orjson",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "packaging",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pandas",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pandocfilters",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "parso",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "partd",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "patchelf",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pathspec",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pdm-backend",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pdm-pep517",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pexpect",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pillow",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pip",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pkgconfig",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pkginfo",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "platformdirs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pluggy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ply",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "poetry-core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "poetry-dynamic-versioning",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "polars",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "polyfactory",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "polyleven",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "preshed",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "prometheus_client",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "prompt_toolkit",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "propcache",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "protobuf",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "proto-plus",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "psutil",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "psycopg2-binary",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ptyprocess",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pure_eval",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyaml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyarrow",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyasn1",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyasn1_modules",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pybind11",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "PyBindGen",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pycparser",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pydantic",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pydantic_core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pydantic-settings",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyelftools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Pygments",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "PyJWT",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pylatexenc",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pymilvus",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pymongo",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "PyNaCl",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyparsing",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pypdf",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pypdfium2",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyproject_hooks",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyproject-metadata",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pytest-runner",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-dateutil",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-docx",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-dotenv",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-json-logger",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-multipart",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "python-pptx",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pythran",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pytz",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "PyYAML",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "pyzmq",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ragas",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "readme_renderer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "redis",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "referencing",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "regex",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "requests",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "requests-oauthlib",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "requests-toolbelt",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "reward_hub",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rfc3339_validator",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rfc3986",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rfc3986_validator",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rfc3987-syntax",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rich",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "roman-numerals-py",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rpds-py",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rq",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rsa",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "rtree",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "s3fs",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "s3transfer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "safetensors",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "scikit-build",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "scikit_build_core",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "scikit-learn",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "scipy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sdg_hub",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "SecretStorage",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "semantic_version",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "semchunk",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Send2Trash",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sentencepiece",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sentence-transformers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "setuptools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "setuptools-git-versioning",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "setuptools-rust",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "setuptools-scm",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "shapely",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "shellingham",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "simpervisor",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "six",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "smart_open",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "smmap",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sniffio",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "snowballstemmer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "soupsieve",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "spacy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "spacy-legacy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "spacy-loggers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "Sphinx",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-applehelp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-devhelp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-htmlhelp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-jsmath",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-qthelp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sphinxcontrib-serializinghtml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "SQLAlchemy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "srsly",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sse-starlette",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "stack_data",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "starlette",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "sympy",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tabulate",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tenacity",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "termcolor",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "terminado",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "thinc",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "threadpoolctl",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tiktoken",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tinycss2",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tokenizers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "toml",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tomlkit",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "toolz",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "torch",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "torchao",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "torchvision",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tornado",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tqdm",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "traitlets",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "transformers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "triton",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "trove-classifiers",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "twine",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "typeguard",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "typer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "types-psutil",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "types-python-dateutil",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "types-setuptools",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "typing_extensions",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "typing_inspect",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "typing-inspection",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tzdata",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "tzlocal",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "ujson",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uri-template",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "urllib3",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uv",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uv-build",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uv-dynamic-versioning",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uvicorn",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uvicorn-worker",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "uvloop",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "versioneer",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "wasabi",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "watchfiles",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "wcwidth",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "weasel",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "webcolors",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "webencodings",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "websocket-client",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "websockets",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "wheel",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "wrapt",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "xlsxwriter",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "xxhash",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "yarl",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "zipp",
+      "_last-serial": 1000000000,
+    },
+    {
+      name: "zstandard",
+      "_last-serial": 1000000000,
+    },
+  ],
+};
+
+export const uniquePackageMock: UniquePackageMetadataResponse = {
+  last_serial: 0,
+  info: {
+    name: "tenacity",
+    version: "9.1.2",
+    summary: "Retry code until it succeeds",
+    keywords: "",
+    description:
+      "Tenacity is a general-purpose retrying library to simplify the task of adding retry behavior to just about anything.\n",
+    description_content_type: "",
+    bugtrack_url: undefined,
+    docs_url: undefined,
+    downloads: {
+      last_day: -1,
+      last_month: -1,
+      last_week: -1,
+    },
+    download_url: "",
+    home_page: "https://github.com/jd/tenacity",
+    author: "Julien Danjou",
+    author_email: "julien@danjou.info",
+    maintainer: "",
+    maintainer_email: "",
+    license: "Apache 2.0",
+    requires_python: ">=3.9",
+    package_url: "",
+    project_url: "",
+    release_url: "",
+    project_urls: undefined,
+    platform: "",
+    requires_dist: [
+      'reno; extra == "doc"',
+      'sphinx; extra == "doc"',
+      'pytest; extra == "test"',
+      'tornado>=4.5; extra == "test"',
+      'typeguard; extra == "test"',
+    ],
+    classifiers: [
+      "Intended Audience :: Developers",
+      "License :: OSI Approved :: Apache Software License",
+      "Programming Language :: Python",
+      "Programming Language :: Python :: 3",
+      "Programming Language :: Python :: 3 :: Only",
+      "Programming Language :: Python :: 3.9",
+      "Programming Language :: Python :: 3.10",
+      "Programming Language :: Python :: 3.11",
+      "Programming Language :: Python :: 3.12",
+      "Programming Language :: Python :: 3.13",
+      "Topic :: Utilities",
+    ],
+    yanked: false,
+    yanked_reason: undefined,
+    provides_extras: ["doc", "test"],
+    dynamic: ["license-file"],
+    license_expression: "",
+    license_file: ["LICENSE"],
+  },
+  releases: {
+    "8.5.0": [
+      {
+        comment_text: "",
+        digests: {
+          md5: "",
+          sha256:
+            "b2d0e41673fa197dc692a9fbe5943db0207724fd2e87b1055266c34c598d431f",
+        },
+        downloads: -1,
+        filename: "tenacity-8.5.0-2-py3-none-any.whl",
+        has_sig: false,
+        md5_digest: "",
+        packagetype: "bdist_wheel",
+        python_version: "py3",
+        requires_python: ">=3.8",
+        size: 29241,
+        upload_time: "2026-02-05 17:53:41.981882+00:00",
+        upload_time_iso_8601: "2026-02-05T17:53:41.981882+00:00",
+        url: "https://packages.redhat.com/api/pulp-content/calunga-ui-dev/rhoai/3.0/cpu-ubi9-test/tenacity-8.5.0-2-py3-none-any.whl",
+        yanked: false,
+        yanked_reason: undefined,
+      },
+    ],
+    "9.1.2": [
+      {
+        comment_text: "",
+        digests: {
+          md5: "",
+          sha256:
+            "1e89d34bd119805da0be9056afed75a1d30fbc5b2b5e124ab1aafc9d06d3f20b",
+        },
+        downloads: -1,
+        filename: "tenacity-9.1.2-2-py3-none-any.whl",
+        has_sig: false,
+        md5_digest: "",
+        packagetype: "bdist_wheel",
+        python_version: "py3",
+        requires_python: ">=3.9",
+        size: 29285,
+        upload_time: "2026-02-05 17:55:36.055940+00:00",
+        upload_time_iso_8601: "2026-02-05T17:55:36.055940+00:00",
+        url: "https://packages.redhat.com/api/pulp-content/calunga-ui-dev/rhoai/3.0/cpu-ubi9-test/tenacity-9.1.2-2-py3-none-any.whl",
+        yanked: false,
+        yanked_reason: undefined,
+      },
+    ],
+  },
+  urls: [
+    {
+      comment_text: "",
+      digests: {
+        md5: "",
+        sha256:
+          "1e89d34bd119805da0be9056afed75a1d30fbc5b2b5e124ab1aafc9d06d3f20b",
+      },
+      downloads: -1,
+      filename: "tenacity-9.1.2-2-py3-none-any.whl",
+      has_sig: false,
+      md5_digest: "",
+      packagetype: "bdist_wheel",
+      python_version: "py3",
+      requires_python: ">=3.9",
+      size: 29285,
+      upload_time: "2026-02-05 17:55:36.055940+00:00",
+      upload_time_iso_8601: "2026-02-05T17:55:36.055940+00:00",
+      url: "https://packages.redhat.com/api/pulp-content/calunga-ui-dev/rhoai/3.0/cpu-ubi9-test/tenacity-9.1.2-2-py3-none-any.whl",
+      yanked: false,
+      yanked_reason: undefined,
+    },
+  ],
 };
