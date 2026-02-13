@@ -6,6 +6,7 @@ import { RouterProvider } from "react-router-dom";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { get, set, del } from "idb-keyval";
 
 import "@app/dayjs";
 import { queryClient } from "@app/queries/config";
@@ -17,7 +18,11 @@ const container = document.getElementById("root");
 const root = createRoot(container!);
 
 const persister = createAsyncStoragePersister({
-  storage: window.localStorage,
+  storage: {
+    getItem: (key) => get<string>(key) ?? null,
+    setItem: (key, value) => set(key, value),
+    removeItem: (key) => del(key),
+  },
 });
 
 const renderApp = () => {

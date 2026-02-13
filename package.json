@@ -26,11 +26,12 @@
     "client",
     "server"
   ],
-  "dependencies": {    
+  "dependencies": {
     "@types/express": "^5.0.3",
-    "http-proxy-middleware": "^3.0.5"
+    "http-proxy-middleware": "^3.0.5",
+    "idb-keyval": "^6.2.2"
   },
-  "peerDependencies": {    
+  "peerDependencies": {
     "react": "^19.1.1",
     "react-dom": "19.1.1",
     "typescript": "~5.7.3"
