@@ -3,17 +3,13 @@
     "patternfly": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "@patternfly/patternfly-mcp"
-      ],
+      "args": ["@patternfly/patternfly-mcp"],
       "env": {}
     },
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ],
+      "args": ["@playwright/mcp@latest"],
       "env": {}
     }
   }

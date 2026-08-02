@@ -1,0 +1,8 @@
+**/dist
+**/node_modules
+**/coverage
+client/src/app/client/**
+client/openapi/**
+*.gen.ts
+routeTree.gen.ts
+package-lock.json

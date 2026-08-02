@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { ViteEjsPlugin } from "vite-plugin-ejs";
@@ -31,6 +32,12 @@ const faviconPath = path.resolve(brandingPath, "favicon.ico");
 export default defineConfig({
   base: process.env.BASE_URL,
   plugins: [
+    TanStackRouterVite({
+      target: "react",
+      autoCodeSplitting: true,
+      routesDirectory: "./src/routes",
+      generatedRouteTree: "./src/routeTree.gen.ts",
+    }),
     react(),
     {
       name: "ignore-process-env",

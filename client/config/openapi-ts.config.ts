@@ -5,6 +5,5 @@ export default defineConfig({
   input: "./openapi/pulp.json",
   output: {
     path: "src/app/client",
-    postProcess: ["biome:format", "biome:lint"],
   },
 });

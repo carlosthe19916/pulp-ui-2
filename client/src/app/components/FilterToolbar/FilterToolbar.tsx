@@ -96,18 +96,24 @@ export interface IAsyncMultiselectFilterCategory<
   onInputValueChange?: (value: string) => void;
 }
 
-export interface ISelectFilterCategory<TItem, TFilterCategoryKey extends string>
-  extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
+export interface ISelectFilterCategory<
+  TItem,
+  TFilterCategoryKey extends string,
+> extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
   selectOptions: FilterSelectOptionProps[];
 }
 
-export interface ISearchFilterCategory<TItem, TFilterCategoryKey extends string>
-  extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
+export interface ISearchFilterCategory<
+  TItem,
+  TFilterCategoryKey extends string,
+> extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
   placeholderText: string;
 }
 
-export interface IToggleFilterCategory<TItem, TFilterCategoryKey extends string>
-  extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
+export interface IToggleFilterCategory<
+  TItem,
+  TFilterCategoryKey extends string,
+> extends IBasicFilterCategory<TItem, TFilterCategoryKey> {
   label: string;
 }
 
@@ -165,8 +171,7 @@ export const FilterToolbar = <TItem, TFilterCategoryKey extends string>({
   const [currentFilterCategoryKey, setCurrentFilterCategoryKey] =
     React.useState(
       filteredFilterCategories[0]?.categoryKey as
-        | TFilterCategoryKey
-        | undefined,
+        TFilterCategoryKey | undefined,
     );
 
   const onCategorySelect = (

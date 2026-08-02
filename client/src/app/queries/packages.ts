@@ -1,5 +1,9 @@
 import type { HubRequestParams } from "@app/api/models";
 import { client } from "@app/axios-config/apiInit";
+import type {
+  PaginatedPythonPythonPackageContentResponseList,
+  PythonPythonPackageContentResponse,
+} from "@app/client";
 import {
   contentPythonPackagesList,
   contentPythonPackagesRead,
@@ -18,7 +22,7 @@ export const useFetchPackages = (
 ) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [PackagesQueryKey, params],
-    queryFn: () =>
+    queryFn: (): Promise<PaginatedPythonPythonPackageContentResponseList> =>
       mockQueryFn(async () => {
         const response = await contentPythonPackagesList({
           client,
@@ -45,7 +49,7 @@ export const useFetchPackages = (
 
 export const packageByIdQueryOptions = (package_href: string) => ({
   queryKey: [PackagesQueryKey, package_href],
-  queryFn: () =>
+  queryFn: (): Promise<PythonPythonPackageContentResponse> =>
     mockQueryFn(async () => {
       const response = await contentPythonPackagesRead({
         client,

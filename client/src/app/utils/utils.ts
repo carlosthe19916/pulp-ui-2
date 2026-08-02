@@ -6,7 +6,7 @@ import type { ToolbarLabel } from "@patternfly/react-core";
 
 // Axios error
 
-// biome-ignore lint/suspicious/noExplicitAny: allowed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
   if (axiosError.response?.data?.errorMessage) {
     return axiosError.response.data.errorMessage;
@@ -51,7 +51,7 @@ export const duplicateNameCheck = <T extends { name?: string }>(
   nameValue: T["name"],
 ) => duplicateFieldCheck("name", itemList, currentItem, nameValue);
 
-// biome-ignore lint/suspicious/noExplicitAny: allowed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const dedupeFunction = (arr: any[]) =>
   arr?.filter(
     (value, index, self) =>
@@ -71,8 +71,7 @@ export const parseMaybeNumericString = (
   return Number.isNaN(num) ? numOrStr : num;
 };
 
-// biome-ignore lint/complexity/noBannedTypes: safe to use
-export const objectKeys = <T extends Object>(obj: T) =>
+export const objectKeys = <T extends object>(obj: T) =>
   Object.keys(obj) as (keyof T)[];
 
 export const getValidatedFromErrors = (
@@ -115,10 +114,8 @@ export const getFilenameFromContentDisposition = (
  * @param locale to be used by string compareFn
  */
 export const universalComparator = (
-  // biome-ignore lint/suspicious/noExplicitAny: allowed
-  a: any,
-  // biome-ignore lint/suspicious/noExplicitAny: allowed
-  b: any,
+  a: string | number | null | undefined,
+  b: string | number | null | undefined,
   locale: string,
 ) => {
   if (typeof a === "number" && typeof b === "number") {

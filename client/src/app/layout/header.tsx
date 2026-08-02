@@ -1,5 +1,6 @@
 import type React from "react";
 import { useReducer, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   Brand,
@@ -27,9 +28,11 @@ import {
 
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
 import HelpIcon from "@patternfly/react-icons/dist/esm/icons/help-icon";
+import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 import BarsIcon from "@patternfly/react-icons/dist/js/icons/bars-icon";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/js/icons/external-link-alt-icon";
 
+import { useAuth } from "@app/context/AuthContext";
 import useBranding from "@app/hooks/useBranding";
 
 import { AboutApp } from "./about";
@@ -43,8 +46,11 @@ export const HeaderApp: React.FC = () => {
     (state) => !state,
     false,
   );
+  const auth = useAuth();
+  const navigate = useNavigate();
   const [isHelpDropdownOpen, setIsHelpDropdownOpen] = useState(false);
   const [isKebabDropdownOpen, setIsKebabDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const onHelpDropdownToggle = () => {
     setIsHelpDropdownOpen(!isHelpDropdownOpen);
@@ -52,6 +58,11 @@ export const HeaderApp: React.FC = () => {
 
   const onKebabDropdownToggle = () => {
     setIsKebabDropdownOpen(!isKebabDropdownOpen);
+  };
+
+  const onLogout = () => {
+    auth.logout();
+    navigate({ to: "/login" });
   };
 
   return (
@@ -160,6 +171,37 @@ export const HeaderApp: React.FC = () => {
                   </Dropdown>
                 </ToolbarItem>
               </ToolbarGroup>
+
+              {auth.isAuthenticated && (
+                <ToolbarGroup variant="action-group-plain">
+                  <ToolbarItem>
+                    <Dropdown
+                      isOpen={isUserDropdownOpen}
+                      onSelect={() => setIsUserDropdownOpen(false)}
+                      onOpenChange={setIsUserDropdownOpen}
+                      popperProps={{ position: "right" }}
+                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                        <MenuToggle
+                          ref={toggleRef}
+                          onClick={() =>
+                            setIsUserDropdownOpen(!isUserDropdownOpen)
+                          }
+                          isExpanded={isUserDropdownOpen}
+                          icon={<UserIcon />}
+                        >
+                          {auth.user?.username}
+                        </MenuToggle>
+                      )}
+                    >
+                      <DropdownList>
+                        <DropdownItem key="logout" onClick={onLogout}>
+                          Log out
+                        </DropdownItem>
+                      </DropdownList>
+                    </Dropdown>
+                  </ToolbarItem>
+                </ToolbarGroup>
+              )}
 
               {/* toolbar items to show at mobile sizes */}
               <ToolbarGroup

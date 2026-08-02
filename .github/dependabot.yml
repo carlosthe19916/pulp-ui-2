@@ -19,7 +19,7 @@ updates:
 
     ignore:
       - dependency-name: "@patternfly/*"
-        update-types: [ "version-update:semver-major" ]
+        update-types: ["version-update:semver-major"]
 
     groups:
       patternfly:
@@ -46,7 +46,7 @@ updates:
 
       tools:
         patterns:
-           - "@vitejs/*"
-           - "vite"
-           - "vite-*"
-           - "@hey-api/*"
+          - "@vitejs/*"
+          - "vite"
+          - "vite-*"
+          - "@hey-api/*"

@@ -137,7 +137,7 @@ export const PythonList: React.FC = () => {
                     selected={activeSort?.columnKey}
                     onSelect={(_e, value) => {
                       setActiveSort({
-                        // biome-ignore lint/suspicious/noExplicitAny: allowed
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         columnKey: value as any,
                         direction: activeSort?.direction ?? "asc",
                       });

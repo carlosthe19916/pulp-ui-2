@@ -26,8 +26,10 @@ jobs:
         run: npm run build
       - name: Lint sources
         run: npm run lint
-      - name: Check
+      - name: Check formatting
         run: npm run format
+      - name: Test
+        run: npm run test -- --run
 
   codeql:
     runs-on: ubuntu-latest
