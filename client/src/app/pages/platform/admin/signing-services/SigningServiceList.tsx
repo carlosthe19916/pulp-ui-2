@@ -10,6 +10,8 @@ import {
 import {
   Content,
   ContentVariants,
+  EmptyState,
+  EmptyStateBody,
   PageSection,
   Pagination,
   SearchInput,
@@ -21,6 +23,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { SigningServiceResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 import { isForbiddenError } from "@app/utils/isHttpError";
@@ -70,100 +73,112 @@ export const SigningServiceList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Signing Services</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading signing services" />
+    <>
+      <DocumentTitle title="Signing Services" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Signing services table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </Th>
-                ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {services.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No signing services found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+        <PageSection>
+          <Content component={ContentVariants.h1}>Signing Services</Content>
+          <Content component={ContentVariants.p}>
+            Signing services are provisioned by an administrator via the Pulp
+            API or CLI; they can&apos;t be created, edited, or deleted from this
+            UI.
+          </Content>
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
-    </PageSection>
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading signing services" />
+          ) : services.length === 0 ? (
+            <EmptyState titleText="No signing services found" headingLevel="h4">
+              <EmptyStateBody>
+                {nameFilter
+                  ? "No signing services match the current filter. Try a different search term."
+                  : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
+              </EmptyStateBody>
+            </EmptyState>
+          ) : (
+            <Table aria-label="Signing services table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          )}
+
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
+        </PageSection>
+      )}
+    </>
   );
 };

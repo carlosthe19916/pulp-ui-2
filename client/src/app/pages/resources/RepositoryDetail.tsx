@@ -46,6 +46,7 @@ type DistributionRow = DistributionResponse & {
 };
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
@@ -59,6 +60,7 @@ import {
 } from "@app/queries/file-repositories";
 import { buildRepositoryHref, extractIdFromHref } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRepositoryModal } from "./EditRepositoryModal";
 import { PublishModal } from "./actions/PublishModal";
@@ -84,6 +86,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
     isLoading,
     error,
   } = useFileRepositoryDetailQuery(repoHref);
+  const repoDisplayName = repo?.name ?? "Repository";
   const { data: versionsData, isLoading: isVersionsLoading } =
     useFileRepositoryVersionsListQuery(repoHref);
   const { data: distributionsData, isLoading: isDistributionsLoading } =
@@ -250,9 +253,9 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
         });
       }
       void navigate({ to: "/repositories" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete repository",
+        ...getMutationErrorMessage(error, "Failed to delete repository"),
         variant: "danger",
       });
     }
@@ -260,219 +263,166 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!repo}
-      loadingLabel="Loading repository"
-    >
-      {repo ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/repositories">Repositories</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{repo.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle title={repoDisplayName} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!repo}
+        loadingLabel="Loading repository"
+      >
+        {repo ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/repositories">Repositories</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>{repo.name}</Content>
-              </StackItem>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>
+                    {repoDisplayName}
+                  </Content>
+                </StackItem>
 
-              <StackItem>
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsEditOpen(true)}
-                  className={spacing.mrSm}
-                >
-                  Edit
-                </Button>
-                {descriptor?.supportsSync && (
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsSyncOpen(true)}
-                    className={spacing.mrSm}
-                  >
-                    Sync
-                  </Button>
-                )}
-                {descriptor?.supportsPublish && (
+                <StackItem>
                   <Button
                     variant="secondary"
-                    onClick={() => setIsPublishOpen(true)}
+                    onClick={() => setIsEditOpen(true)}
                     className={spacing.mrSm}
                   >
-                    Publish
+                    Edit
                   </Button>
-                )}
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
-                  Delete
-                </Button>
-              </StackItem>
-
-              <StackItem>
-                <Tabs
-                  activeKey={activeTab}
-                  onSelect={(_e, tabKey) => setActiveTab(tabKey)}
-                >
-                  <Tab
-                    eventKey="details"
-                    title={<TabTitleText>Details</TabTitleText>}
+                  {descriptor?.supportsSync && (
+                    <Button
+                      variant="primary"
+                      onClick={() => setIsSyncOpen(true)}
+                      className={spacing.mrSm}
+                    >
+                      Sync
+                    </Button>
+                  )}
+                  {descriptor?.supportsPublish && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setIsPublishOpen(true)}
+                      className={spacing.mrSm}
+                    >
+                      Publish
+                    </Button>
+                  )}
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
                   >
-                    <TabContentBody hasPadding>
-                      <DescriptionList isHorizontal>
-                        <DescriptionListGroup>
-                          <DescriptionListTerm>Name</DescriptionListTerm>
-                          <DescriptionListDescription>
-                            {repo.name}
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                        <DescriptionListGroup>
-                          <DescriptionListTerm>Description</DescriptionListTerm>
-                          <DescriptionListDescription>
-                            {repo.description || "—"}
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                        <DescriptionListGroup>
-                          <DescriptionListTerm>Remote</DescriptionListTerm>
-                          <DescriptionListDescription>
-                            <ResourceHrefLink
-                              kind="remote"
-                              href={repo.remote}
-                            />
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                        <DescriptionListGroup>
-                          <DescriptionListTerm>
-                            Retain repo versions
-                          </DescriptionListTerm>
-                          <DescriptionListDescription>
-                            {repo.retain_repo_versions ?? "All"}
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                        <DescriptionListGroup>
-                          <DescriptionListTerm>Created</DescriptionListTerm>
-                          <DescriptionListDescription>
-                            {repo.pulp_created
-                              ? dayjs(repo.pulp_created).format(
-                                  RENDER_DATETIME_FORMAT,
-                                )
-                              : "—"}
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                        <DescriptorDetailFields
-                          fields={descriptor?.detailFields}
-                          entity={repo}
-                          skipKeys={["remote"]}
-                        />
-                      </DescriptionList>
-                    </TabContentBody>
-                  </Tab>
+                    Delete
+                  </Button>
+                </StackItem>
 
-                  <Tab
-                    eventKey="versions"
-                    title={
-                      <TabTitleText>Versions ({versions.length})</TabTitleText>
-                    }
+                <StackItem>
+                  <Tabs
+                    activeKey={activeTab}
+                    onSelect={(_e, tabKey) => setActiveTab(tabKey)}
                   >
-                    <TabContentBody hasPadding>
-                      {isVersionsLoading ? (
-                        <Content component={ContentVariants.p}>
-                          Loading versions...
-                        </Content>
-                      ) : (
-                        <Table
-                          aria-label="Repository versions table"
-                          variant="compact"
-                        >
-                          <Thead>
-                            {versionsTable
-                              .getHeaderGroups()
-                              .map((headerGroup) => (
-                                <Tr key={headerGroup.id}>
-                                  {headerGroup.headers.map((header) => (
-                                    <Th key={header.id}>
-                                      {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext(),
-                                          )}
-                                    </Th>
-                                  ))}
-                                </Tr>
-                              ))}
-                          </Thead>
-                          <Tbody>
-                            {versionsTable.getRowModel().rows.map((row) => (
-                              <Tr key={row.id}>
-                                {row.getVisibleCells().map((cell) => (
-                                  <Td key={cell.id}>
-                                    {flexRender(
-                                      cell.column.columnDef.cell,
-                                      cell.getContext(),
-                                    )}
-                                  </Td>
+                    <Tab
+                      eventKey="details"
+                      title={<TabTitleText>Details</TabTitleText>}
+                    >
+                      <TabContentBody hasPadding>
+                        <DescriptionList isHorizontal>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>Name</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {repoDisplayName}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              Description
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {repo.description || "—"}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>Remote</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              <ResourceHrefLink
+                                kind="remote"
+                                href={repo.remote}
+                              />
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              Retain repo versions
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {repo.retain_repo_versions ?? "All"}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>Created</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {repo.pulp_created
+                                ? dayjs(repo.pulp_created).format(
+                                    RENDER_DATETIME_FORMAT,
+                                  )
+                                : "—"}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptorDetailFields
+                            fields={descriptor?.detailFields}
+                            entity={repo}
+                            skipKeys={["remote"]}
+                          />
+                        </DescriptionList>
+                      </TabContentBody>
+                    </Tab>
+
+                    <Tab
+                      eventKey="versions"
+                      title={
+                        <TabTitleText>
+                          Versions ({versions.length})
+                        </TabTitleText>
+                      }
+                    >
+                      <TabContentBody hasPadding>
+                        {isVersionsLoading ? (
+                          <Content component={ContentVariants.p}>
+                            Loading versions...
+                          </Content>
+                        ) : (
+                          <Table
+                            aria-label="Repository versions table"
+                            variant="compact"
+                          >
+                            <Thead>
+                              {versionsTable
+                                .getHeaderGroups()
+                                .map((headerGroup) => (
+                                  <Tr key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                      <Th key={header.id}>
+                                        {header.isPlaceholder
+                                          ? null
+                                          : flexRender(
+                                              header.column.columnDef.header,
+                                              header.getContext(),
+                                            )}
+                                      </Th>
+                                    ))}
+                                  </Tr>
                                 ))}
-                              </Tr>
-                            ))}
-                            {versions.length === 0 && (
-                              <Tr>
-                                <Td colSpan={versionColumns.length}>
-                                  No versions found.
-                                </Td>
-                              </Tr>
-                            )}
-                          </Tbody>
-                        </Table>
-                      )}
-                    </TabContentBody>
-                  </Tab>
-
-                  <Tab
-                    eventKey="distributions"
-                    title={
-                      <TabTitleText>
-                        Distributions ({distributions.length})
-                      </TabTitleText>
-                    }
-                  >
-                    <TabContentBody hasPadding>
-                      {isDistributionsLoading ? (
-                        <Content component={ContentVariants.p}>
-                          Loading distributions...
-                        </Content>
-                      ) : (
-                        <Table
-                          aria-label="Repository distributions table"
-                          variant="compact"
-                        >
-                          <Thead>
-                            {distributionsTable
-                              .getHeaderGroups()
-                              .map((headerGroup) => (
-                                <Tr key={headerGroup.id}>
-                                  {headerGroup.headers.map((header) => (
-                                    <Th key={header.id}>
-                                      {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext(),
-                                          )}
-                                    </Th>
-                                  ))}
-                                </Tr>
-                              ))}
-                          </Thead>
-                          <Tbody>
-                            {distributionsTable
-                              .getRowModel()
-                              .rows.map((row) => (
+                            </Thead>
+                            <Tbody>
+                              {versionsTable.getRowModel().rows.map((row) => (
                                 <Tr key={row.id}>
                                   {row.getVisibleCells().map((cell) => (
                                     <Td key={cell.id}>
@@ -484,74 +434,59 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                                   ))}
                                 </Tr>
                               ))}
-                            {distributions.length === 0 && (
-                              <Tr>
-                                <Td colSpan={distributionColumns.length}>
-                                  No distributions point at this repository.
-                                </Td>
-                              </Tr>
-                            )}
-                          </Tbody>
-                        </Table>
-                      )}
-                    </TabContentBody>
-                  </Tab>
+                              {versions.length === 0 && (
+                                <Tr>
+                                  <Td colSpan={versionColumns.length}>
+                                    No versions found.
+                                  </Td>
+                                </Tr>
+                              )}
+                            </Tbody>
+                          </Table>
+                        )}
+                      </TabContentBody>
+                    </Tab>
 
-                  <Tab
-                    eventKey="content"
-                    title={
-                      <TabTitleText>
-                        Content ({contentUnits.length})
-                      </TabTitleText>
-                    }
-                  >
-                    <TabContentBody hasPadding>
-                      <Stack hasGutter>
-                        <StackItem>
-                          {descriptor?.supportsUpload !== false && (
-                            <Button
-                              variant="secondary"
-                              onClick={() => setIsUploadOpen(true)}
-                            >
-                              Upload content
-                            </Button>
-                          )}
-                        </StackItem>
-                        <StackItem>
-                          {!latestVersionHref ? (
-                            <Content component={ContentVariants.p}>
-                              No repository version yet. Sync or upload content
-                              to create one.
-                            </Content>
-                          ) : isContentLoading ? (
-                            <Content component={ContentVariants.p}>
-                              Loading content...
-                            </Content>
-                          ) : (
-                            <Table
-                              aria-label="Repository content table"
-                              variant="compact"
-                            >
-                              <Thead>
-                                {contentTable
-                                  .getHeaderGroups()
-                                  .map((headerGroup) => (
-                                    <Tr key={headerGroup.id}>
-                                      {headerGroup.headers.map((header) => (
-                                        <Th key={header.id}>
-                                          {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
-                                              )}
-                                        </Th>
-                                      ))}
-                                    </Tr>
-                                  ))}
-                              </Thead>
-                              <Tbody>
-                                {contentTable.getRowModel().rows.map((row) => (
+                    <Tab
+                      eventKey="distributions"
+                      title={
+                        <TabTitleText>
+                          Distributions ({distributions.length})
+                        </TabTitleText>
+                      }
+                    >
+                      <TabContentBody hasPadding>
+                        {isDistributionsLoading ? (
+                          <Content component={ContentVariants.p}>
+                            Loading distributions...
+                          </Content>
+                        ) : (
+                          <Table
+                            aria-label="Repository distributions table"
+                            variant="compact"
+                          >
+                            <Thead>
+                              {distributionsTable
+                                .getHeaderGroups()
+                                .map((headerGroup) => (
+                                  <Tr key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                      <Th key={header.id}>
+                                        {header.isPlaceholder
+                                          ? null
+                                          : flexRender(
+                                              header.column.columnDef.header,
+                                              header.getContext(),
+                                            )}
+                                      </Th>
+                                    ))}
+                                  </Tr>
+                                ))}
+                            </Thead>
+                            <Tbody>
+                              {distributionsTable
+                                .getRowModel()
+                                .rows.map((row) => (
                                   <Tr key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
                                       <Td key={cell.id}>
@@ -563,75 +498,158 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                                     ))}
                                   </Tr>
                                 ))}
-                                {contentUnits.length === 0 && (
-                                  <Tr>
-                                    <Td colSpan={contentColumns.length}>
-                                      No content in the latest version.
-                                    </Td>
-                                  </Tr>
-                                )}
-                              </Tbody>
-                            </Table>
-                          )}
-                        </StackItem>
-                      </Stack>
-                    </TabContentBody>
-                  </Tab>
-                </Tabs>
-              </StackItem>
-            </Stack>
-          </PageSection>
+                              {distributions.length === 0 && (
+                                <Tr>
+                                  <Td colSpan={distributionColumns.length}>
+                                    No distributions point at this repository.
+                                  </Td>
+                                </Tr>
+                              )}
+                            </Tbody>
+                          </Table>
+                        )}
+                      </TabContentBody>
+                    </Tab>
 
-          <EditRepositoryModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            repository={repo}
-          />
+                    <Tab
+                      eventKey="content"
+                      title={
+                        <TabTitleText>
+                          Content ({contentUnits.length})
+                        </TabTitleText>
+                      }
+                    >
+                      <TabContentBody hasPadding>
+                        <Stack hasGutter>
+                          <StackItem>
+                            {descriptor?.supportsUpload !== false && (
+                              <Button
+                                variant="secondary"
+                                onClick={() => setIsUploadOpen(true)}
+                              >
+                                Upload content
+                              </Button>
+                            )}
+                          </StackItem>
+                          <StackItem>
+                            {!latestVersionHref ? (
+                              <Content component={ContentVariants.p}>
+                                No repository version yet. Sync or upload
+                                content to create one.
+                              </Content>
+                            ) : isContentLoading ? (
+                              <Content component={ContentVariants.p}>
+                                Loading content...
+                              </Content>
+                            ) : (
+                              <Table
+                                aria-label="Repository content table"
+                                variant="compact"
+                              >
+                                <Thead>
+                                  {contentTable
+                                    .getHeaderGroups()
+                                    .map((headerGroup) => (
+                                      <Tr key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                          <Th key={header.id}>
+                                            {header.isPlaceholder
+                                              ? null
+                                              : flexRender(
+                                                  header.column.columnDef
+                                                    .header,
+                                                  header.getContext(),
+                                                )}
+                                          </Th>
+                                        ))}
+                                      </Tr>
+                                    ))}
+                                </Thead>
+                                <Tbody>
+                                  {contentTable
+                                    .getRowModel()
+                                    .rows.map((row) => (
+                                      <Tr key={row.id}>
+                                        {row.getVisibleCells().map((cell) => (
+                                          <Td key={cell.id}>
+                                            {flexRender(
+                                              cell.column.columnDef.cell,
+                                              cell.getContext(),
+                                            )}
+                                          </Td>
+                                        ))}
+                                      </Tr>
+                                    ))}
+                                  {contentUnits.length === 0 && (
+                                    <Tr>
+                                      <Td colSpan={contentColumns.length}>
+                                        No content in the latest version.
+                                      </Td>
+                                    </Tr>
+                                  )}
+                                </Tbody>
+                              </Table>
+                            )}
+                          </StackItem>
+                        </Stack>
+                      </TabContentBody>
+                    </Tab>
+                  </Tabs>
+                </StackItem>
+              </Stack>
+            </PageSection>
 
-          <SyncModal
-            isOpen={isSyncOpen}
-            onClose={() => setIsSyncOpen(false)}
-            repoHref={repoHref}
-            remoteSuggestion={repo.remote ?? undefined}
-          />
+            <EditRepositoryModal
+              isOpen={isEditOpen}
+              onClose={() => setIsEditOpen(false)}
+              repository={repo}
+            />
 
-          <PublishModal
-            isOpen={isPublishOpen}
-            onClose={() => setIsPublishOpen(false)}
-            repoHref={repoHref}
-          />
+            <SyncModal
+              isOpen={isSyncOpen}
+              onClose={() => setIsSyncOpen(false)}
+              repoHref={repoHref}
+              remoteSuggestion={repo.remote ?? undefined}
+            />
 
-          <UploadModal
-            isOpen={isUploadOpen}
-            onClose={() => setIsUploadOpen(false)}
-            repositoryHref={repoHref}
-          />
+            <PublishModal
+              isOpen={isPublishOpen}
+              onClose={() => setIsPublishOpen(false)}
+              repoHref={repoHref}
+            />
 
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Repository" />
-            <ModalBody>
-              Are you sure you want to delete repository &quot;{repo.name}
-              &quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+            <UploadModal
+              isOpen={isUploadOpen}
+              onClose={() => setIsUploadOpen(false)}
+              repositoryHref={repoHref}
+            />
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete Repository" />
+              <ModalBody>
+                Are you sure you want to delete repository &quot;
+                {repoDisplayName}&quot;? This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
+                >
+                  Delete
+                </Button>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

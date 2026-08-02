@@ -20,6 +20,7 @@ import {
   rolesRead,
 } from "@app/client";
 import { PULP_DOMAIN } from "@app/Constants";
+import { isEmptyDetailPayload } from "@app/utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
@@ -68,7 +69,7 @@ export const roleDetailQueryOptions = (roleHref: string) =>
         client,
         path: { role_href: roleHref },
       });
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty role detail response");
       }
       return response.data;

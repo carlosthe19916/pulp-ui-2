@@ -3,13 +3,15 @@ import { Link } from "@tanstack/react-router";
 
 import type { ResourceKind } from "@app/descriptors/types";
 import { getDescriptor } from "@app/descriptors/registry";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
 
 interface ResourceHrefLinkProps {
   kind: ResourceKind;
   href: string | null | undefined;
   /** Assumed pulp_type when linking into typed detail routes (v1: file.file). */
   pulpType?: string;
+  /** Human-readable label; falls back to a short id, then a truncated href. */
+  label?: string | null;
   truncateAt?: number;
 }
 
@@ -22,52 +24,57 @@ export const ResourceHrefLink: React.FC<ResourceHrefLinkProps> = ({
   kind,
   href,
   pulpType = "file.file",
+  label,
   truncateAt = 48,
 }) => {
   if (!href) {
     return "—";
   }
 
-  const descriptor = getDescriptor(kind, pulpType);
+  const resolvedType = resolvePulpType(pulpType, href) ?? pulpType;
+  const descriptor = getDescriptor(kind, resolvedType);
   const id = extractIdFromHref(href);
-  const label = truncate(href, truncateAt);
+  const displayLabel =
+    label?.trim() ||
+    (id && id.length <= truncateAt ? id : undefined) ||
+    truncate(href, truncateAt);
 
   if (!descriptor || !id) {
-    return label;
+    return displayLabel;
   }
 
   switch (kind) {
     case "repository":
       return (
         <Link to="/repositories/$repoId" params={{ repoId: id }}>
-          {label}
+          {displayLabel}
         </Link>
       );
     case "remote":
       return (
         <Link to="/remotes/$remoteId" params={{ remoteId: id }}>
-          {label}
+          {displayLabel}
         </Link>
       );
     case "distribution":
       return (
         <Link to="/distributions/$distId" params={{ distId: id }}>
-          {label}
+          {displayLabel}
         </Link>
       );
     case "publication":
       return (
         <Link to="/publications/$pubId" params={{ pubId: id }}>
-          {label}
+          {displayLabel}
         </Link>
       );
     case "content":
       return (
         <Link to="/content/$contentId" params={{ contentId: id }}>
-          {label}
+          {displayLabel}
         </Link>
       );
     default:
-      return label;
+      return displayLabel;
   }
 };

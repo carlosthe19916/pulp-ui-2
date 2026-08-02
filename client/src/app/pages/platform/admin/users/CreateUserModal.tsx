@@ -20,6 +20,7 @@ import {
 
 import { useNotifications } from "@app/context/useNotifications";
 import { useUserCreateMutation } from "@app/queries/users";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createUserSchema = yup.object({
   username: yup.string().required("Username is required"),
@@ -101,9 +102,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       });
       reset();
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create user",
+        ...getMutationErrorMessage(error, "Failed to create user"),
         variant: "danger",
       });
     }

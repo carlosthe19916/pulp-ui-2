@@ -21,6 +21,7 @@ import {
   cleanFormValues,
 } from "@app/descriptors/formSchema";
 import { useFileRemoteCreateMutation } from "@app/queries/file-remotes";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = fileRemoteDescriptor.createFields ?? [];
 const createRemoteSchema = buildFieldSchema(createFields);
@@ -57,9 +58,9 @@ export const CreateRemoteModal: React.FC<CreateRemoteModalProps> = ({
       });
       reset(buildDefaultValues(createFields));
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create remote",
+        ...getMutationErrorMessage(error, "Failed to create remote"),
         variant: "danger",
       });
     }

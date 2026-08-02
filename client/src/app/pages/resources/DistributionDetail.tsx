@@ -25,6 +25,7 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
@@ -35,6 +36,7 @@ import {
 } from "@app/queries/file-distributions";
 import { buildDistributionHref } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditDistributionModal } from "./EditDistributionModal";
 
@@ -75,9 +77,9 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
         });
       }
       void navigate({ to: "/distributions" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete distribution",
+        ...getMutationErrorMessage(error, "Failed to delete distribution"),
         variant: "danger",
       });
     }
@@ -85,134 +87,140 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!distribution}
-      loadingLabel="Loading distribution"
-    >
-      {distribution ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/distributions">Distributions</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{distribution.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle title={distribution?.name ?? "Distribution"} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!distribution}
+        loadingLabel="Loading distribution"
+      >
+        {distribution ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/distributions">Distributions</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{distribution.name}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>
-                  {distribution.name}
-                </Content>
-              </StackItem>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>
+                    {distribution.name}
+                  </Content>
+                </StackItem>
 
-              <StackItem>
-                <Button
-                  variant="secondary"
-                  component={(props) => (
-                    <Link
-                      {...props}
-                      to="/browse/$distributionId"
-                      params={{ distributionId: distId }}
+                <StackItem>
+                  <Button
+                    variant="secondary"
+                    component={(props) => (
+                      <Link
+                        {...props}
+                        to="/browse/$distributionId"
+                        params={{ distributionId: distId }}
+                      />
+                    )}
+                    className={spacing.mrSm}
+                  >
+                    Browse
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsEditOpen(true)}
+                    className={spacing.mrSm}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    Delete
+                  </Button>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {distribution.name}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Created</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {distribution.pulp_created
+                          ? dayjs(distribution.pulp_created).format(
+                              RENDER_DATETIME_FORMAT,
+                            )
+                          : "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Repository</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <ResourceHrefLink
+                          kind="repository"
+                          href={distribution.repository}
+                        />
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Publication</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <ResourceHrefLink
+                          kind="publication"
+                          href={distribution.publication}
+                        />
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptorDetailFields
+                      fields={descriptor?.detailFields}
+                      entity={distribution}
+                      skipKeys={["repository", "publication"]}
                     />
-                  )}
-                  className={spacing.mrSm}
-                >
-                  Browse
-                </Button>
+                  </DescriptionList>
+                </StackItem>
+              </Stack>
+            </PageSection>
+
+            <EditDistributionModal
+              isOpen={isEditOpen}
+              onClose={() => setIsEditOpen(false)}
+              distribution={distribution}
+            />
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete Distribution" />
+              <ModalBody>
+                Are you sure you want to delete distribution &quot;
+                {distribution.name}&quot;? This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
                 <Button
-                  variant="secondary"
-                  onClick={() => setIsEditOpen(true)}
-                  className={spacing.mrSm}
+                  variant="danger"
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
                 >
-                  Edit
-                </Button>
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
                   Delete
                 </Button>
-              </StackItem>
-
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {distribution.name}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Created</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {distribution.pulp_created
-                        ? dayjs(distribution.pulp_created).format(
-                            RENDER_DATETIME_FORMAT,
-                          )
-                        : "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Repository</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <ResourceHrefLink
-                        kind="repository"
-                        href={distribution.repository}
-                      />
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Publication</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <ResourceHrefLink
-                        kind="publication"
-                        href={distribution.publication}
-                      />
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptorDetailFields
-                    fields={descriptor?.detailFields}
-                    entity={distribution}
-                    skipKeys={["repository", "publication"]}
-                  />
-                </DescriptionList>
-              </StackItem>
-            </Stack>
-          </PageSection>
-
-          <EditDistributionModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            distribution={distribution}
-          />
-
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Distribution" />
-            <ModalBody>
-              Are you sure you want to delete distribution &quot;
-              {distribution.name}&quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

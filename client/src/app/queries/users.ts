@@ -25,6 +25,7 @@ import {
   usersRolesList,
 } from "@app/client";
 import { PULP_DOMAIN } from "@app/Constants";
+import { isEmptyDetailPayload } from "@app/utils/pulpHref";
 
 export const UsersQueryKey = "users";
 
@@ -73,7 +74,7 @@ export const userDetailQueryOptions = (userHref: string) =>
         client,
         path: { auth_user_href: userHref },
       });
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.username) {
         throw new Error("Empty user detail response");
       }
       return response.data;

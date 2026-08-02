@@ -23,6 +23,7 @@ import { useNotifications } from "@app/context/useNotifications";
 import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const publishSchema = yup.object({
   repository: yup.string(),
@@ -93,9 +94,9 @@ export const PublishModal: React.FC<PublishModalProps> = ({
       if (taskHref) {
         notifyTaskStarted(addNotification, taskHref, "Publication started");
       }
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create publication",
+        ...getMutationErrorMessage(error, "Failed to create publication"),
         variant: "danger",
       });
     }

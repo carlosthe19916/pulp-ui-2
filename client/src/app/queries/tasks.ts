@@ -9,6 +9,7 @@ import { client } from "@app/axios-config/apiInit";
 import type { PaginatedTaskResponseList, TaskResponse } from "@app/client";
 import { tasksList, tasksRead, tasksCancel, tasksPurge } from "@app/client";
 import { DEFAULT_REFETCH_INTERVAL, PULP_DOMAIN } from "@app/Constants";
+import { isEmptyDetailPayload } from "@app/utils/pulpHref";
 
 export const TasksQueryKey = "tasks";
 
@@ -79,7 +80,7 @@ export const taskDetailQueryOptions = (taskHref: string) =>
         client,
         path: { task_href: taskHref },
       });
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty task detail response");
       }
       return response.data;

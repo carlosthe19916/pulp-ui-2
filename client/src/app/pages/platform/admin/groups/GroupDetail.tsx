@@ -43,6 +43,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { GroupRoleResponse, GroupUserResponse } from "@app/client";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -59,6 +60,7 @@ import {
 import { useRolesListQuery } from "@app/queries/roles";
 import { useUsersListQuery } from "@app/queries/users";
 import { buildGroupHref, extractIdFromHref } from "@app/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editNameSchema = yup.object({
   name: yup.string().required("Name is required"),
@@ -261,9 +263,9 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ groupId }) => {
         variant: "success",
       });
       void navigate({ to: "/admin/groups" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete group",
+        ...getMutationErrorMessage(error, "Failed to delete group"),
         variant: "danger",
       });
     }
@@ -281,9 +283,9 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ groupId }) => {
         variant: "success",
       });
       setIsEditNameOpen(false);
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update group name",
+        ...getMutationErrorMessage(error, "Failed to update group name"),
         variant: "danger",
       });
     }
@@ -367,471 +369,485 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ groupId }) => {
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!group}
-      loadingLabel="Loading group"
-    >
-      {group ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/admin/groups">Groups</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{group.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle title={group?.name ? `Group · ${group.name}` : "Group"} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!group}
+        loadingLabel="Loading group"
+      >
+        {group ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/admin/groups">Groups</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{group.name}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>{group.name}</Content>
-              </StackItem>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>{group.name}</Content>
+                </StackItem>
 
-              <StackItem>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    editNameForm.reset({ name: group.name });
-                    setIsEditNameOpen(true);
+                <StackItem>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      editNameForm.reset({ name: group.name });
+                      setIsEditNameOpen(true);
+                    }}
+                  >
+                    Edit Name
+                  </Button>{" "}
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    Delete Group
+                  </Button>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {group.name}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </StackItem>
+
+                <StackItem>
+                  <Tabs
+                    activeKey={activeTab}
+                    onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+                  >
+                    <Tab
+                      eventKey="users"
+                      title={
+                        <TabTitleText>Users ({users.length})</TabTitleText>
+                      }
+                    >
+                      <TabContentBody hasPadding>
+                        <Stack hasGutter>
+                          <StackItem>
+                            <Button
+                              variant="primary"
+                              onClick={() => setIsAddUserOpen(true)}
+                            >
+                              Add User
+                            </Button>
+                          </StackItem>
+                          <StackItem>
+                            <Table
+                              aria-label="Group users table"
+                              variant="compact"
+                            >
+                              <Thead>
+                                {usersTable
+                                  .getHeaderGroups()
+                                  .map((headerGroup) => (
+                                    <Tr key={headerGroup.id}>
+                                      {headerGroup.headers.map((header) => (
+                                        <Th key={header.id}>
+                                          {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                              )}
+                                        </Th>
+                                      ))}
+                                    </Tr>
+                                  ))}
+                              </Thead>
+                              <Tbody>
+                                {usersTable.getRowModel().rows.map((row) => (
+                                  <Tr key={row.id}>
+                                    {row.getVisibleCells().map((cell) => (
+                                      <Td key={cell.id}>
+                                        {flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext(),
+                                        )}
+                                      </Td>
+                                    ))}
+                                  </Tr>
+                                ))}
+                                {users.length === 0 && (
+                                  <Tr>
+                                    <Td colSpan={userColumns.length}>
+                                      No users in this group.
+                                    </Td>
+                                  </Tr>
+                                )}
+                              </Tbody>
+                            </Table>
+                          </StackItem>
+                        </Stack>
+                      </TabContentBody>
+                    </Tab>
+                    <Tab
+                      eventKey="roles"
+                      title={
+                        <TabTitleText>Roles ({roles.length})</TabTitleText>
+                      }
+                    >
+                      <TabContentBody hasPadding>
+                        <Stack hasGutter>
+                          <StackItem>
+                            <Button
+                              variant="primary"
+                              onClick={() => setIsAddRoleOpen(true)}
+                            >
+                              Add Role
+                            </Button>
+                          </StackItem>
+                          <StackItem>
+                            <Table
+                              aria-label="Group roles table"
+                              variant="compact"
+                            >
+                              <Thead>
+                                {rolesTable
+                                  .getHeaderGroups()
+                                  .map((headerGroup) => (
+                                    <Tr key={headerGroup.id}>
+                                      {headerGroup.headers.map((header) => (
+                                        <Th key={header.id}>
+                                          {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                              )}
+                                        </Th>
+                                      ))}
+                                    </Tr>
+                                  ))}
+                              </Thead>
+                              <Tbody>
+                                {rolesTable.getRowModel().rows.map((row) => (
+                                  <Tr key={row.id}>
+                                    {row.getVisibleCells().map((cell) => (
+                                      <Td key={cell.id}>
+                                        {flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext(),
+                                        )}
+                                      </Td>
+                                    ))}
+                                  </Tr>
+                                ))}
+                                {roles.length === 0 && (
+                                  <Tr>
+                                    <Td colSpan={roleColumns.length}>
+                                      No roles assigned to this group.
+                                    </Td>
+                                  </Tr>
+                                )}
+                              </Tbody>
+                            </Table>
+                          </StackItem>
+                        </Stack>
+                      </TabContentBody>
+                    </Tab>
+                  </Tabs>
+                </StackItem>
+              </Stack>
+            </PageSection>
+
+            <Modal
+              isOpen={isEditNameOpen}
+              onClose={() => setIsEditNameOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Edit Group Name" />
+              <ModalBody>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void onEditName();
                   }}
                 >
-                  Edit Name
-                </Button>{" "}
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
-                  Delete Group
+                  <FormGroup label="Name" isRequired fieldId="edit-group-name">
+                    <TextInput
+                      id="edit-group-name"
+                      value={editNameForm.watch("name")}
+                      onChange={(_e, value) =>
+                        editNameForm.setValue("name", value, {
+                          shouldValidate: true,
+                        })
+                      }
+                      isRequired
+                      validated={
+                        editNameForm.formState.errors.name ? "error" : "default"
+                      }
+                    />
+                    {editNameForm.formState.errors.name && (
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem variant="error">
+                            {editNameForm.formState.errors.name.message}
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                </Form>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="primary"
+                  onClick={() => void onEditName()}
+                  isDisabled={
+                    editNameForm.formState.isSubmitting ||
+                    updateMutation.isPending
+                  }
+                  isLoading={
+                    editNameForm.formState.isSubmitting ||
+                    updateMutation.isPending
+                  }
+                >
+                  Save
                 </Button>
-              </StackItem>
+                <Button variant="link" onClick={() => setIsEditNameOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
 
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {group.name}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                </DescriptionList>
-              </StackItem>
-
-              <StackItem>
-                <Tabs
-                  activeKey={activeTab}
-                  onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete Group" />
+              <ModalBody>
+                Are you sure you want to delete group &quot;{group.name}&quot;?
+                This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
                 >
-                  <Tab
-                    eventKey="users"
-                    title={<TabTitleText>Users ({users.length})</TabTitleText>}
-                  >
-                    <TabContentBody hasPadding>
-                      <Stack hasGutter>
-                        <StackItem>
-                          <Button
-                            variant="primary"
-                            onClick={() => setIsAddUserOpen(true)}
-                          >
-                            Add User
-                          </Button>
-                        </StackItem>
-                        <StackItem>
-                          <Table
-                            aria-label="Group users table"
-                            variant="compact"
-                          >
-                            <Thead>
-                              {usersTable
-                                .getHeaderGroups()
-                                .map((headerGroup) => (
-                                  <Tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                      <Th key={header.id}>
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext(),
-                                            )}
-                                      </Th>
-                                    ))}
-                                  </Tr>
-                                ))}
-                            </Thead>
-                            <Tbody>
-                              {usersTable.getRowModel().rows.map((row) => (
-                                <Tr key={row.id}>
-                                  {row.getVisibleCells().map((cell) => (
-                                    <Td key={cell.id}>
-                                      {flexRender(
-                                        cell.column.columnDef.cell,
-                                        cell.getContext(),
-                                      )}
-                                    </Td>
-                                  ))}
-                                </Tr>
-                              ))}
-                              {users.length === 0 && (
-                                <Tr>
-                                  <Td colSpan={userColumns.length}>
-                                    No users in this group.
-                                  </Td>
-                                </Tr>
-                              )}
-                            </Tbody>
-                          </Table>
-                        </StackItem>
-                      </Stack>
-                    </TabContentBody>
-                  </Tab>
-                  <Tab
-                    eventKey="roles"
-                    title={<TabTitleText>Roles ({roles.length})</TabTitleText>}
-                  >
-                    <TabContentBody hasPadding>
-                      <Stack hasGutter>
-                        <StackItem>
-                          <Button
-                            variant="primary"
-                            onClick={() => setIsAddRoleOpen(true)}
-                          >
-                            Add Role
-                          </Button>
-                        </StackItem>
-                        <StackItem>
-                          <Table
-                            aria-label="Group roles table"
-                            variant="compact"
-                          >
-                            <Thead>
-                              {rolesTable
-                                .getHeaderGroups()
-                                .map((headerGroup) => (
-                                  <Tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                      <Th key={header.id}>
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext(),
-                                            )}
-                                      </Th>
-                                    ))}
-                                  </Tr>
-                                ))}
-                            </Thead>
-                            <Tbody>
-                              {rolesTable.getRowModel().rows.map((row) => (
-                                <Tr key={row.id}>
-                                  {row.getVisibleCells().map((cell) => (
-                                    <Td key={cell.id}>
-                                      {flexRender(
-                                        cell.column.columnDef.cell,
-                                        cell.getContext(),
-                                      )}
-                                    </Td>
-                                  ))}
-                                </Tr>
-                              ))}
-                              {roles.length === 0 && (
-                                <Tr>
-                                  <Td colSpan={roleColumns.length}>
-                                    No roles assigned to this group.
-                                  </Td>
-                                </Tr>
-                              )}
-                            </Tbody>
-                          </Table>
-                        </StackItem>
-                      </Stack>
-                    </TabContentBody>
-                  </Tab>
-                </Tabs>
-              </StackItem>
-            </Stack>
-          </PageSection>
+                  Delete
+                </Button>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
 
-          <Modal
-            isOpen={isEditNameOpen}
-            onClose={() => setIsEditNameOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Edit Group Name" />
-            <ModalBody>
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void onEditName();
-                }}
-              >
-                <FormGroup label="Name" isRequired fieldId="edit-group-name">
-                  <TextInput
-                    id="edit-group-name"
-                    value={editNameForm.watch("name")}
-                    onChange={(_e, value) =>
-                      editNameForm.setValue("name", value, {
-                        shouldValidate: true,
-                      })
-                    }
+            <Modal
+              isOpen={isAddUserOpen}
+              onClose={() => {
+                addUserForm.reset();
+                setIsAddUserOpen(false);
+              }}
+              variant="small"
+            >
+              <ModalHeader title="Add User to Group" />
+              <ModalBody>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void onAddUser();
+                  }}
+                >
+                  <FormGroup
+                    label="User"
                     isRequired
-                    validated={
-                      editNameForm.formState.errors.name ? "error" : "default"
-                    }
-                  />
-                  {editNameForm.formState.errors.name && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {editNameForm.formState.errors.name.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
-                  )}
-                </FormGroup>
-              </Form>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="primary"
-                onClick={() => void onEditName()}
-                isDisabled={
-                  editNameForm.formState.isSubmitting ||
-                  updateMutation.isPending
-                }
-                isLoading={
-                  editNameForm.formState.isSubmitting ||
-                  updateMutation.isPending
-                }
-              >
-                Save
-              </Button>
-              <Button variant="link" onClick={() => setIsEditNameOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Group" />
-            <ModalBody>
-              Are you sure you want to delete group &quot;{group.name}&quot;?
-              This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-
-          <Modal
-            isOpen={isAddUserOpen}
-            onClose={() => {
-              addUserForm.reset();
-              setIsAddUserOpen(false);
-            }}
-            variant="small"
-          >
-            <ModalHeader title="Add User to Group" />
-            <ModalBody>
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void onAddUser();
-                }}
-              >
-                <FormGroup label="User" isRequired fieldId="add-user-username">
-                  <TypeaheadSelect
-                    id="add-user-username"
-                    ariaLabel="User"
-                    placeholder="Select a user"
-                    options={userOptions}
-                    value={addUserForm.watch("username")}
-                    onChange={(value) =>
-                      addUserForm.setValue("username", value, {
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                  {addUserForm.formState.errors.username && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {addUserForm.formState.errors.username.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
-                  )}
-                </FormGroup>
-              </Form>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="primary"
-                onClick={() => void onAddUser()}
-                isDisabled={
-                  addUserForm.formState.isSubmitting ||
-                  userCreateMutation.isPending
-                }
-                isLoading={
-                  addUserForm.formState.isSubmitting ||
-                  userCreateMutation.isPending
-                }
-              >
-                Add
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => {
-                  addUserForm.reset();
-                  setIsAddUserOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-
-          <Modal
-            isOpen={!!removeUserHref}
-            onClose={() => setRemoveUserHref(null)}
-            variant="small"
-          >
-            <ModalHeader title="Remove User" />
-            <ModalBody>
-              Are you sure you want to remove this user from the group?
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleRemoveUser()}
-                isLoading={userDeleteMutation.isPending}
-              >
-                Remove
-              </Button>
-              <Button variant="link" onClick={() => setRemoveUserHref(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-
-          <Modal
-            isOpen={isAddRoleOpen}
-            onClose={() => {
-              addRoleForm.reset();
-              setIsAddRoleOpen(false);
-            }}
-            variant="small"
-          >
-            <ModalHeader title="Assign Role to Group" />
-            <ModalBody>
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void onAddRole();
-                }}
-              >
-                <FormGroup label="Role" isRequired fieldId="add-role-name">
-                  <TypeaheadSelect
-                    id="add-role-name"
-                    ariaLabel="Role"
-                    placeholder="Select a role"
-                    options={roleOptions}
-                    value={addRoleForm.watch("role")}
-                    onChange={(value) =>
-                      addRoleForm.setValue("role", value, {
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                  {addRoleForm.formState.errors.role && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {addRoleForm.formState.errors.role.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
-                  )}
-                </FormGroup>
-                <FormGroup
-                  label="Content Object"
-                  fieldId="add-role-content-object"
+                    fieldId="add-user-username"
+                  >
+                    <TypeaheadSelect
+                      id="add-user-username"
+                      ariaLabel="User"
+                      placeholder="Select a user"
+                      options={userOptions}
+                      value={addUserForm.watch("username")}
+                      onChange={(value) =>
+                        addUserForm.setValue("username", value, {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {addUserForm.formState.errors.username && (
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem variant="error">
+                            {addUserForm.formState.errors.username.message}
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                </Form>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="primary"
+                  onClick={() => void onAddUser()}
+                  isDisabled={
+                    addUserForm.formState.isSubmitting ||
+                    userCreateMutation.isPending
+                  }
+                  isLoading={
+                    addUserForm.formState.isSubmitting ||
+                    userCreateMutation.isPending
+                  }
                 >
-                  <TextInput
-                    id="add-role-content-object"
-                    value={addRoleForm.watch("content_object")}
-                    onChange={(_e, value) =>
-                      addRoleForm.setValue("content_object", value)
-                    }
-                    placeholder="Optional pulp_href"
-                  />
-                </FormGroup>
-              </Form>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="primary"
-                onClick={() => void onAddRole()}
-                isDisabled={
-                  addRoleForm.formState.isSubmitting ||
-                  roleCreateMutation.isPending
-                }
-                isLoading={
-                  addRoleForm.formState.isSubmitting ||
-                  roleCreateMutation.isPending
-                }
-              >
-                Assign
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => {
-                  addRoleForm.reset();
-                  setIsAddRoleOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
+                  Add
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    addUserForm.reset();
+                    setIsAddUserOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
 
-          <Modal
-            isOpen={!!removeRoleHref}
-            onClose={() => setRemoveRoleHref(null)}
-            variant="small"
-          >
-            <ModalHeader title="Remove Role" />
-            <ModalBody>
-              Are you sure you want to remove this role from the group?
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleRemoveRole()}
-                isLoading={roleDeleteMutation.isPending}
-              >
-                Remove
-              </Button>
-              <Button variant="link" onClick={() => setRemoveRoleHref(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+            <Modal
+              isOpen={!!removeUserHref}
+              onClose={() => setRemoveUserHref(null)}
+              variant="small"
+            >
+              <ModalHeader title="Remove User" />
+              <ModalBody>
+                Are you sure you want to remove this user from the group?
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleRemoveUser()}
+                  isLoading={userDeleteMutation.isPending}
+                >
+                  Remove
+                </Button>
+                <Button variant="link" onClick={() => setRemoveUserHref(null)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+
+            <Modal
+              isOpen={isAddRoleOpen}
+              onClose={() => {
+                addRoleForm.reset();
+                setIsAddRoleOpen(false);
+              }}
+              variant="small"
+            >
+              <ModalHeader title="Assign Role to Group" />
+              <ModalBody>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void onAddRole();
+                  }}
+                >
+                  <FormGroup label="Role" isRequired fieldId="add-role-name">
+                    <TypeaheadSelect
+                      id="add-role-name"
+                      ariaLabel="Role"
+                      placeholder="Select a role"
+                      options={roleOptions}
+                      value={addRoleForm.watch("role")}
+                      onChange={(value) =>
+                        addRoleForm.setValue("role", value, {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {addRoleForm.formState.errors.role && (
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem variant="error">
+                            {addRoleForm.formState.errors.role.message}
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                  <FormGroup
+                    label="Content Object"
+                    fieldId="add-role-content-object"
+                  >
+                    <TextInput
+                      id="add-role-content-object"
+                      value={addRoleForm.watch("content_object")}
+                      onChange={(_e, value) =>
+                        addRoleForm.setValue("content_object", value)
+                      }
+                      placeholder="Optional pulp_href"
+                    />
+                  </FormGroup>
+                </Form>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="primary"
+                  onClick={() => void onAddRole()}
+                  isDisabled={
+                    addRoleForm.formState.isSubmitting ||
+                    roleCreateMutation.isPending
+                  }
+                  isLoading={
+                    addRoleForm.formState.isSubmitting ||
+                    roleCreateMutation.isPending
+                  }
+                >
+                  Assign
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    addRoleForm.reset();
+                    setIsAddRoleOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+
+            <Modal
+              isOpen={!!removeRoleHref}
+              onClose={() => setRemoveRoleHref(null)}
+              variant="small"
+            >
+              <ModalHeader title="Remove Role" />
+              <ModalBody>
+                Are you sure you want to remove this role from the group?
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleRemoveRole()}
+                  isLoading={roleDeleteMutation.isPending}
+                >
+                  Remove
+                </Button>
+                <Button variant="link" onClick={() => setRemoveRoleHref(null)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

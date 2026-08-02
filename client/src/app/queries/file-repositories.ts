@@ -22,6 +22,7 @@ import {
   repositoriesFileFileVersionsList,
 } from "@app/client";
 import { PULP_DOMAIN } from "@app/Constants";
+import { isEmptyDetailPayload } from "@app/utils/pulpHref";
 
 import { repositoriesRootQueryOptions } from "./repositories";
 
@@ -38,7 +39,7 @@ export const fileRepositoryDetailQueryOptions = (href: string) =>
         client,
         path: { file_file_repository_href: href },
       });
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty file repository detail response");
       }
       return response.data;

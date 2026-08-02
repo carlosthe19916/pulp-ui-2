@@ -19,6 +19,7 @@ import {
 
 import { useNotifications } from "@app/context/useNotifications";
 import { useGroupCreateMutation } from "@app/queries/groups";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createGroupSchema = yup.object({
   name: yup.string().required("Name is required"),
@@ -60,9 +61,9 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       });
       reset();
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create group",
+        ...getMutationErrorMessage(error, "Failed to create group"),
         variant: "danger",
       });
     }

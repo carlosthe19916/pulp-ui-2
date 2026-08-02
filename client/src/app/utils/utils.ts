@@ -1,10 +1,10 @@
-import type { AxiosError } from "axios";
+import axios, { type AxiosError } from "axios";
 import dayjs from "dayjs";
 
 import { RENDER_DATETIME_FORMAT, RENDER_DATE_FORMAT } from "@app/Constants";
 import type { ToolbarLabel } from "@patternfly/react-core";
 
-// Axios error
+// Axios / Pulp API errors
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
@@ -19,6 +19,55 @@ export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
   }
   return axiosError.message;
 };
+
+/**
+ * Build a user-facing mutation failure message from an unknown thrown value.
+ * Surfaces Pulp permission (403) and validation detail when available.
+ */
+export function getMutationErrorMessage(
+  error: unknown,
+  fallback: string,
+): { title: string; description?: string } {
+  if (!axios.isAxiosError(error)) {
+    if (error instanceof Error && error.message) {
+      return { title: fallback, description: error.message };
+    }
+    return { title: fallback };
+  }
+
+  const status = error.response?.status;
+  const data = error.response?.data as
+    | {
+        detail?: unknown;
+        non_field_errors?: unknown;
+        error?: unknown;
+        errorMessage?: unknown;
+      }
+    | undefined;
+
+  if (status === 403) {
+    return {
+      title: fallback,
+      description:
+        "You do not have permission to perform this action. Ask an administrator to grant the required role.",
+    };
+  }
+
+  const detail =
+    (typeof data?.detail === "string" && data.detail) ||
+    (typeof data?.errorMessage === "string" && data.errorMessage) ||
+    (typeof data?.error === "string" && data.error) ||
+    (Array.isArray(data?.non_field_errors) &&
+      data.non_field_errors.filter((x) => typeof x === "string").join(" ")) ||
+    (data?.detail && typeof data.detail === "object"
+      ? JSON.stringify(data.detail)
+      : undefined) ||
+    error.message;
+
+  return detail && detail !== fallback
+    ? { title: fallback, description: detail }
+    : { title: fallback };
+}
 
 // ToolbarChip
 

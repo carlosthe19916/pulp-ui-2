@@ -42,6 +42,7 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { UserRoleResponse } from "@app/client";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
@@ -54,6 +55,7 @@ import {
   useUserRolesListQuery,
 } from "@app/queries/users";
 import { extractIdFromHref, buildUserHref } from "@app/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditUserModal } from "./EditUserModal";
 
@@ -71,6 +73,7 @@ export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
   const navigate = useNavigate();
   const userHref = buildUserHref(userId);
   const { data: user, isLoading, error } = useUserDetailQuery(userHref);
+  const userDisplayName = user?.username || userId;
   const { data: rolesData, isLoading: isRolesLoading } =
     useUserRolesListQuery(userHref);
   const { data: allRolesData } = useRolesListQuery({ limit: 200 });
@@ -176,9 +179,9 @@ export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
         variant: "success",
       });
       void navigate({ to: "/admin/users" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete user",
+        ...getMutationErrorMessage(error, "Failed to delete user"),
         variant: "danger",
       });
     }
@@ -223,297 +226,310 @@ export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!user}
-      loadingLabel="Loading user"
-    >
-      {user ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/admin/users">Users</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{user.username}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle
+        title={user?.username ? `User · ${user.username}` : "User"}
+      />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!user}
+        loadingLabel="Loading user"
+      >
+        {user ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/admin/users">Users</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{userDisplayName}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>
-                  {user.username}
-                </Content>
-              </StackItem>
-
-              <StackItem>
-                <Button
-                  variant="primary"
-                  onClick={() => setIsEditOpen(true)}
-                  className={spacing.mrSm}
-                >
-                  Edit
-                </Button>
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
-                  Delete
-                </Button>
-              </StackItem>
-
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Username</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {user.username}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Email</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {user.email || "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>First name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {user.first_name || "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Last name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {user.last_name || "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Active</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <Label
-                        color={user.is_active ? "green" : "grey"}
-                        isCompact
-                      >
-                        {user.is_active ? "Active" : "Inactive"}
-                      </Label>
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Staff</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <Label color={user.is_staff ? "blue" : "grey"} isCompact>
-                        {user.is_staff ? "Yes" : "No"}
-                      </Label>
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Date joined</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {user.date_joined
-                        ? dayjs(user.date_joined).format(RENDER_DATETIME_FORMAT)
-                        : "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                </DescriptionList>
-              </StackItem>
-
-              {user.groups && user.groups.length > 0 && (
+            <PageSection>
+              <Stack hasGutter>
                 <StackItem>
-                  <Content component={ContentVariants.h2}>Groups</Content>
-                  <Content component="ul">
-                    {user.groups.map((group) => {
-                      const groupId = group.pulp_href
-                        ? extractIdFromHref(group.pulp_href)
-                        : null;
-                      return (
-                        <Content component="li" key={group.name}>
-                          {groupId ? (
-                            <Link
-                              to="/admin/groups/$groupId"
-                              params={{ groupId }}
-                            >
-                              {group.name}
-                            </Link>
-                          ) : (
-                            group.name
-                          )}
-                        </Content>
-                      );
-                    })}
+                  <Content component={ContentVariants.h1}>
+                    {userDisplayName}
                   </Content>
                 </StackItem>
-              )}
 
-              <StackItem>
-                <Content component={ContentVariants.h2}>Roles</Content>
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsAddRoleOpen(true)}
-                  className={spacing.mbMd}
-                >
-                  Add role
-                </Button>
-                {isRolesLoading ? (
-                  <Spinner aria-label="Loading roles" />
-                ) : (
-                  <Table aria-label="User roles table" variant="compact">
-                    <Thead>
-                      {roleTable.getHeaderGroups().map((headerGroup) => (
-                        <Tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <Th key={header.id}>
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
-                                  )}
-                            </Th>
-                          ))}
-                        </Tr>
-                      ))}
-                    </Thead>
-                    <Tbody>
-                      {roleTable.getRowModel().rows.map((row) => (
-                        <Tr key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
-                            <Td key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </Td>
-                          ))}
-                        </Tr>
-                      ))}
-                      {roles.length === 0 && (
-                        <Tr>
-                          <Td colSpan={roleColumns.length}>
-                            No roles assigned.
-                          </Td>
-                        </Tr>
-                      )}
-                    </Tbody>
-                  </Table>
+                <StackItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsEditOpen(true)}
+                    className={spacing.mrSm}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    Delete
+                  </Button>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Username</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {user.username || "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Email</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {user.email || "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>First name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {user.first_name || "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Last name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {user.last_name || "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Active</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Label
+                          color={user.is_active ? "green" : "grey"}
+                          isCompact
+                        >
+                          {user.is_active ? "Active" : "Inactive"}
+                        </Label>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Staff</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Label
+                          color={user.is_staff ? "blue" : "grey"}
+                          isCompact
+                        >
+                          {user.is_staff ? "Yes" : "No"}
+                        </Label>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Date joined</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {user.date_joined
+                          ? dayjs(user.date_joined).format(
+                              RENDER_DATETIME_FORMAT,
+                            )
+                          : "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </StackItem>
+
+                {user.groups && user.groups.length > 0 && (
+                  <StackItem>
+                    <Content component={ContentVariants.h2}>Groups</Content>
+                    <Content component="ul">
+                      {user.groups.map((group) => {
+                        const groupId = group.pulp_href
+                          ? extractIdFromHref(group.pulp_href)
+                          : null;
+                        return (
+                          <Content component="li" key={group.name}>
+                            {groupId ? (
+                              <Link
+                                to="/admin/groups/$groupId"
+                                params={{ groupId }}
+                              >
+                                {group.name}
+                              </Link>
+                            ) : (
+                              group.name
+                            )}
+                          </Content>
+                        );
+                      })}
+                    </Content>
+                  </StackItem>
                 )}
-              </StackItem>
-            </Stack>
-          </PageSection>
 
-          <EditUserModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            user={user}
-          />
-
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete User" />
-            <ModalBody>
-              Are you sure you want to delete user &quot;{user.username}&quot;?
-              This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-
-          <Modal
-            isOpen={isAddRoleOpen}
-            onClose={() => {
-              setIsAddRoleOpen(false);
-              reset();
-            }}
-            variant="small"
-          >
-            <ModalHeader title="Add Role" />
-            <ModalBody>
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void onAddRole();
-                }}
-              >
-                <FormGroup label="Role" isRequired fieldId="add-role-name">
-                  <TypeaheadSelect
-                    id="add-role-name"
-                    ariaLabel="Role"
-                    placeholder="Select a role"
-                    options={roleOptions}
-                    value={selectedRole}
-                    onChange={(value) =>
-                      setValue("role", value, { shouldValidate: true })
-                    }
-                  />
-                  {errors.role && (
-                    <FormHelperText>
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {errors.role.message}
-                        </HelperTextItem>
-                      </HelperText>
-                    </FormHelperText>
+                <StackItem>
+                  <Content component={ContentVariants.h2}>Roles</Content>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsAddRoleOpen(true)}
+                    className={spacing.mbMd}
+                  >
+                    Add role
+                  </Button>
+                  {isRolesLoading ? (
+                    <Spinner aria-label="Loading roles" />
+                  ) : (
+                    <Table aria-label="User roles table" variant="compact">
+                      <Thead>
+                        {roleTable.getHeaderGroups().map((headerGroup) => (
+                          <Tr key={headerGroup.id}>
+                            {headerGroup.headers.map((header) => (
+                              <Th key={header.id}>
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext(),
+                                    )}
+                              </Th>
+                            ))}
+                          </Tr>
+                        ))}
+                      </Thead>
+                      <Tbody>
+                        {roleTable.getRowModel().rows.map((row) => (
+                          <Tr key={row.id}>
+                            {row.getVisibleCells().map((cell) => (
+                              <Td key={cell.id}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </Td>
+                            ))}
+                          </Tr>
+                        ))}
+                        {roles.length === 0 && (
+                          <Tr>
+                            <Td colSpan={roleColumns.length}>
+                              No roles assigned.
+                            </Td>
+                          </Tr>
+                        )}
+                      </Tbody>
+                    </Table>
                   )}
-                </FormGroup>
-              </Form>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="primary"
-                onClick={() => void onAddRole()}
-                isDisabled={isSubmitting || roleCreateMutation.isPending}
-                isLoading={isSubmitting || roleCreateMutation.isPending}
-              >
-                Add
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setIsAddRoleOpen(false);
-                  reset();
-                }}
-              >
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
+                </StackItem>
+              </Stack>
+            </PageSection>
 
-          <Modal
-            isOpen={!!removeRoleHref}
-            onClose={() => setRemoveRoleHref(null)}
-            variant="small"
-          >
-            <ModalHeader title="Remove Role" />
-            <ModalBody>
-              Are you sure you want to remove this role from the user?
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleRemoveRole()}
-                isLoading={roleDeleteMutation.isPending}
-              >
-                Remove
-              </Button>
-              <Button variant="link" onClick={() => setRemoveRoleHref(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+            <EditUserModal
+              isOpen={isEditOpen}
+              onClose={() => setIsEditOpen(false)}
+              user={user}
+            />
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete User" />
+              <ModalBody>
+                Are you sure you want to delete user &quot;{userDisplayName}
+                &quot;? This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
+                >
+                  Delete
+                </Button>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+
+            <Modal
+              isOpen={isAddRoleOpen}
+              onClose={() => {
+                setIsAddRoleOpen(false);
+                reset();
+              }}
+              variant="small"
+            >
+              <ModalHeader title="Add Role" />
+              <ModalBody>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void onAddRole();
+                  }}
+                >
+                  <FormGroup label="Role" isRequired fieldId="add-role-name">
+                    <TypeaheadSelect
+                      id="add-role-name"
+                      ariaLabel="Role"
+                      placeholder="Select a role"
+                      options={roleOptions}
+                      value={selectedRole}
+                      onChange={(value) =>
+                        setValue("role", value, { shouldValidate: true })
+                      }
+                    />
+                    {errors.role && (
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem variant="error">
+                            {errors.role.message}
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                </Form>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="primary"
+                  onClick={() => void onAddRole()}
+                  isDisabled={isSubmitting || roleCreateMutation.isPending}
+                  isLoading={isSubmitting || roleCreateMutation.isPending}
+                >
+                  Add
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setIsAddRoleOpen(false);
+                    reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+
+            <Modal
+              isOpen={!!removeRoleHref}
+              onClose={() => setRemoveRoleHref(null)}
+              variant="small"
+            >
+              <ModalHeader title="Remove Role" />
+              <ModalBody>
+                Are you sure you want to remove this role from the user?
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleRemoveRole()}
+                  isLoading={roleDeleteMutation.isPending}
+                >
+                  Remove
+                </Button>
+                <Button variant="link" onClick={() => setRemoveRoleHref(null)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

@@ -24,13 +24,18 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { DistributionResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { getFieldValue } from "@app/descriptors/formSchema";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useBrowseDistributionsQuery } from "@app/queries/browse";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import {
+  extractIdFromHref,
+  inferPulpTypeFromHref,
+  resolvePulpType,
+} from "@app/utils/pulpHref";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated
@@ -55,162 +60,180 @@ export const DistributionBrowser: React.FC = () => {
   const distributions = (data?.results ?? []) as DistributionRow[];
   const totalCount = data?.count ?? 0;
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageSection>
-        <EmptyState titleText="Unable to load distributions" headingLevel="h4">
-          <EmptyStateBody>
-            Something went wrong while loading distributions. Try again later.
-          </EmptyStateBody>
-        </EmptyState>
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Browse Content</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading distributions" />
-      ) : distributions.length === 0 ? (
-        <EmptyState titleText="No distributions found" headingLevel="h4">
-          <EmptyStateBody>
-            {nameFilter
-              ? "No distributions match the current filter. Try a different search term."
-              : "There are no distributions available to browse."}
-          </EmptyStateBody>
-        </EmptyState>
+    <>
+      <DocumentTitle title="Content Browser" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
+      ) : error ? (
+        <PageSection>
+          <EmptyState
+            titleText="Unable to load distributions"
+            headingLevel="h4"
+          >
+            <EmptyStateBody>
+              Something went wrong while loading distributions. Try again later.
+            </EmptyStateBody>
+          </EmptyState>
+        </PageSection>
       ) : (
-        <Gallery hasGutter>
-          {distributions.map((dist) => {
-            const distId = extractIdFromHref(dist.pulp_href ?? "");
-            const pulpType = dist.pulp_type;
-            const descriptor = pulpType
-              ? getDescriptor("distribution", pulpType)
-              : undefined;
-            const labels = dist.pulp_labels ?? {};
-            const labelEntries = Object.entries(labels);
-            const canBrowse = !!descriptor && !!distId;
+        <PageSection>
+          <Content component={ContentVariants.h1}>Browse Content</Content>
 
-            return (
-              <Card isCompact key={dist.pulp_href}>
-                <CardHeader>
-                  <CardTitle>
-                    {canBrowse ? (
-                      <Link
-                        to="/browse/$distributionId"
-                        params={{ distributionId: distId }}
-                      >
-                        {dist.name}
-                      </Link>
-                    ) : (
-                      dist.name
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {(descriptor?.browseCardFields ?? []).map((field) => {
-                    const value = getFieldValue(dist, field.key);
-                    if (value === null || value === undefined || value === "") {
-                      return null;
-                    }
-                    return (
-                      <Content key={field.key} component={ContentVariants.p}>
-                        <strong>{field.label}:</strong> {String(value)}
-                      </Content>
-                    );
-                  })}
-                  {!descriptor?.browseCardFields?.length && (
-                    <Content component={ContentVariants.p}>
-                      <strong>Base path:</strong> {dist.base_path || "—"}
-                    </Content>
-                  )}
-                  {pulpType && (
-                    <Content component={ContentVariants.p}>
-                      <Label color={descriptor ? "blue" : "grey"} isCompact>
-                        {descriptor?.label ?? pulpType}
-                      </Label>
-                      {!descriptor && (
-                        <>
-                          {" "}
-                          <ReadOnlyBadge pulpType={pulpType} />
-                        </>
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading distributions" />
+          ) : distributions.length === 0 ? (
+            <EmptyState titleText="No distributions found" headingLevel="h4">
+              <EmptyStateBody>
+                {nameFilter
+                  ? "No distributions match the current filter. Try a different search term."
+                  : "There are no distributions available to browse."}
+              </EmptyStateBody>
+            </EmptyState>
+          ) : (
+            <Gallery hasGutter>
+              {distributions.map((dist) => {
+                const distId = extractIdFromHref(dist.pulp_href ?? "");
+                const pulpType = resolvePulpType(
+                  dist.pulp_type,
+                  dist.pulp_href,
+                );
+                const descriptor = pulpType
+                  ? getDescriptor("distribution", pulpType)
+                  : undefined;
+                const labels = dist.pulp_labels ?? {};
+                const labelEntries = Object.entries(labels);
+                const canBrowse =
+                  !!distId &&
+                  (!!descriptor ||
+                    (pulpType?.startsWith("file.") ?? false) ||
+                    !!inferPulpTypeFromHref(dist.pulp_href)?.startsWith(
+                      "file.",
+                    ));
+
+                return (
+                  <Card isCompact key={dist.pulp_href}>
+                    <CardHeader>
+                      <CardTitle>
+                        {canBrowse ? (
+                          <Link
+                            to="/browse/$distributionId"
+                            params={{ distributionId: distId }}
+                          >
+                            {dist.name}
+                          </Link>
+                        ) : (
+                          dist.name
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                      {(descriptor?.browseCardFields ?? []).map((field) => {
+                        const value = getFieldValue(dist, field.key);
+                        if (
+                          value === null ||
+                          value === undefined ||
+                          value === ""
+                        ) {
+                          return null;
+                        }
+                        return (
+                          <Content
+                            key={field.key}
+                            component={ContentVariants.p}
+                          >
+                            <strong>{field.label}:</strong> {String(value)}
+                          </Content>
+                        );
+                      })}
+                      {!descriptor?.browseCardFields?.length && (
+                        <Content component={ContentVariants.p}>
+                          <strong>Base path:</strong> {dist.base_path || "—"}
+                        </Content>
                       )}
-                    </Content>
-                  )}
-                  {labelEntries.length > 0 && (
-                    <Content component={ContentVariants.p}>
-                      {labelEntries.map(([key, value]) => (
-                        <Label key={key} isCompact className={spacing.mrXs}>
-                          {value ? `${key}=${value}` : key}
-                        </Label>
-                      ))}
-                    </Content>
-                  )}
-                  {!canBrowse && (
-                    <Content component={ContentVariants.p}>
-                      Browse is available for described file distributions only.
-                    </Content>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </Gallery>
-      )}
+                      {pulpType && (
+                        <Content component={ContentVariants.p}>
+                          <Label color={descriptor ? "blue" : "grey"} isCompact>
+                            {descriptor?.label ?? pulpType}
+                          </Label>
+                          {!descriptor && (
+                            <>
+                              {" "}
+                              <ReadOnlyBadge pulpType={pulpType} />
+                            </>
+                          )}
+                        </Content>
+                      )}
+                      {labelEntries.length > 0 && (
+                        <Content component={ContentVariants.p}>
+                          {labelEntries.map(([key, value]) => (
+                            <Label key={key} isCompact className={spacing.mrXs}>
+                              {value ? `${key}=${value}` : key}
+                            </Label>
+                          ))}
+                        </Content>
+                      )}
+                      {!canBrowse && (
+                        <Content component={ContentVariants.p}>
+                          {pulpType
+                            ? `Browsing isn't supported for "${pulpType}" distributions yet.`
+                            : "Browsing requires a described file distribution with a resolvable pulp_type; this distribution won't open."}
+                        </Content>
+                      )}
+                    </CardBody>
+                  </Card>
+                );
+              })}
+            </Gallery>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
-    </PageSection>
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
+        </PageSection>
+      )}
+    </>
   );
 };

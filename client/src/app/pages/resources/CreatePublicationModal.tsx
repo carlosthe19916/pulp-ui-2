@@ -25,6 +25,7 @@ import {
 import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = filePublicationDescriptor.createFields ?? [];
 const createPublicationSchema = buildFieldSchema(createFields);
@@ -85,9 +86,9 @@ export const CreatePublicationModal: React.FC<CreatePublicationModalProps> = ({
       }
       reset(defaultValues);
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create publication",
+        ...getMutationErrorMessage(error, "Failed to create publication"),
         variant: "danger",
       });
     }

@@ -27,6 +27,7 @@ import { usePublicationsListQuery } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = fileDistributionDescriptor.createFields ?? [];
 const createDistributionSchema = buildFieldSchema(createFields);
@@ -91,9 +92,9 @@ export const CreateDistributionModal: React.FC<
       }
       reset(buildDefaultValues(createFields));
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create distribution",
+        ...getMutationErrorMessage(error, "Failed to create distribution"),
         variant: "danger",
       });
     }

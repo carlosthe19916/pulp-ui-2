@@ -26,6 +26,7 @@ import {
 } from "@app/descriptors/formSchema";
 import { useFileRepositoryUpdateMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editFields = fileRepositoryDescriptor.editFields ?? [];
 const editRepositorySchema = buildFieldSchema(editFields);
@@ -82,9 +83,9 @@ export const EditRepositoryModal: React.FC<EditRepositoryModalProps> = ({
         variant: "success",
       });
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update repository",
+        ...getMutationErrorMessage(error, "Failed to update repository"),
         variant: "danger",
       });
     }
@@ -97,7 +98,7 @@ export const EditRepositoryModal: React.FC<EditRepositoryModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} variant="medium">
-      <ModalHeader title={`Edit ${repository.name}`} />
+      <ModalHeader title={`Edit ${repository.name ?? "repository"}`} />
       <ModalBody>
         <Form
           onSubmit={(e) => {

@@ -28,6 +28,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -40,8 +41,9 @@ import {
 import { useFileRepositoryDeleteMutation } from "@app/queries/file-repositories";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateRepositoryModal } from "./CreateRepositoryModal";
 import { PublishModal } from "./actions/PublishModal";
@@ -102,9 +104,9 @@ export const RepositoryList: React.FC = () => {
           "Repository delete started",
         );
       }
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete repository",
+        ...getMutationErrorMessage(error, "Failed to delete repository"),
         variant: "danger",
       });
     }
@@ -117,14 +119,10 @@ export const RepositoryList: React.FC = () => {
         id: "name",
         header: "Name",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("repository", pulpType)
-            : undefined;
-          if (!descriptor) {
+          const repoId = extractIdFromHref(row.original.pulp_href ?? "");
+          if (!repoId) {
             return row.original.name;
           }
-          const repoId = extractIdFromHref(row.original.pulp_href ?? "");
           return (
             <Link to="/repositories/$repoId" params={{ repoId }}>
               {row.original.name}
@@ -141,7 +139,10 @@ export const RepositoryList: React.FC = () => {
         id: "pulp_type",
         header: "Type",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           return pulpType ? (
             <PulpTypeLabel kind="repository" pulpType={pulpType} />
           ) : (
@@ -158,7 +159,10 @@ export const RepositoryList: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           const descriptor = pulpType
             ? getDescriptor("repository", pulpType)
             : undefined;
@@ -212,165 +216,172 @@ export const RepositoryList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Repositories</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <TextInput
-              id="repo-pulp-type-filter"
-              aria-label="Filter by pulp type"
-              placeholder="pulp_type (e.g. file.file)"
-              value={pulpTypeFilter}
-              onChange={(_e, value) => {
-                setPulpTypeFilter(value);
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          {canCreate && (
-            <ToolbarItem>
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                Create repository
-              </Button>
-            </ToolbarItem>
-          )}
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading repositories" />
+    <>
+      <DocumentTitle title="Repositories" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Repositories table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Repositories</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <TextInput
+                  id="repo-pulp-type-filter"
+                  aria-label="Filter by pulp type"
+                  placeholder="pulp_type (e.g. file.file)"
+                  value={pulpTypeFilter}
+                  onChange={(_e, value) => {
+                    setPulpTypeFilter(value);
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              {canCreate && (
+                <ToolbarItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsCreateOpen(true)}
+                  >
+                    Create repository
+                  </Button>
+                </ToolbarItem>
+              )}
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading repositories" />
+          ) : (
+            <Table aria-label="Repositories table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {repositories.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No repositories found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+                {repositories.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No repositories found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
 
-      <CreateRepositoryModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+          <CreateRepositoryModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+          />
 
-      {syncTarget && (
-        <SyncModal
-          isOpen
-          onClose={() => setSyncTarget(null)}
-          repoHref={syncTarget.pulp_href ?? ""}
-          remoteSuggestion={syncTarget.remote ?? undefined}
-        />
-      )}
+          {syncTarget && (
+            <SyncModal
+              isOpen
+              onClose={() => setSyncTarget(null)}
+              repoHref={syncTarget.pulp_href ?? ""}
+              remoteSuggestion={syncTarget.remote ?? undefined}
+            />
+          )}
 
-      {publishRepoHref && (
-        <PublishModal
-          isOpen
-          onClose={() => setPublishRepoHref(null)}
-          repoHref={publishRepoHref}
-        />
-      )}
+          {publishRepoHref && (
+            <PublishModal
+              isOpen
+              onClose={() => setPublishRepoHref(null)}
+              repoHref={publishRepoHref}
+            />
+          )}
 
-      <Modal
-        isOpen={!!deleteHref}
-        onClose={() => setDeleteHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Delete Repository" />
-        <ModalBody>
-          Are you sure you want to delete this repository? This action cannot be
-          undone.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleDelete()}
-            isLoading={deleteMutation.isPending}
+          <Modal
+            isOpen={!!deleteHref}
+            onClose={() => setDeleteHref(null)}
+            variant="small"
           >
-            Delete
-          </Button>
-          <Button variant="link" onClick={() => setDeleteHref(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+            <ModalHeader title="Delete Repository" />
+            <ModalBody>
+              Are you sure you want to delete this repository? This action
+              cannot be undone.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleDelete()}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button variant="link" onClick={() => setDeleteHref(null)}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
+      )}
+    </>
   );
 };

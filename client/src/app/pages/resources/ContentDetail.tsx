@@ -18,6 +18,7 @@ import {
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useFileContentDetailQuery } from "@app/queries/file-content";
@@ -37,60 +38,65 @@ export const ContentDetail: React.FC<ContentDetailProps> = ({ contentId }) => {
   const descriptor = getDescriptor("content", "file.file");
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!content}
-      loadingLabel="Loading content"
-    >
-      {content ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/content">Content</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{content.relative_path}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
-
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>
+    <>
+      <DocumentTitle title={content?.relative_path ?? "Content"} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!content}
+        loadingLabel="Loading content"
+      >
+        {content ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/content">Content</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>
                   {content.relative_path}
-                </Content>
-              </StackItem>
+                </BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Relative path</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {content.relative_path}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Created</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {content.pulp_created
-                        ? dayjs(content.pulp_created).format(
-                            RENDER_DATETIME_FORMAT,
-                          )
-                        : "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptorDetailFields
-                    fields={descriptor?.detailFields}
-                    entity={content}
-                    skipKeys={["relative_path"]}
-                  />
-                </DescriptionList>
-              </StackItem>
-            </Stack>
-          </PageSection>
-        </>
-      ) : null}
-    </DetailQueryGate>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>
+                    {content.relative_path}
+                  </Content>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Relative path</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {content.relative_path}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Created</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {content.pulp_created
+                          ? dayjs(content.pulp_created).format(
+                              RENDER_DATETIME_FORMAT,
+                            )
+                          : "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptorDetailFields
+                      fields={descriptor?.detailFields}
+                      entity={content}
+                      skipKeys={["relative_path"]}
+                    />
+                  </DescriptionList>
+                </StackItem>
+              </Stack>
+            </PageSection>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

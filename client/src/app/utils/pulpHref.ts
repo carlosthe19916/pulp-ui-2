@@ -1,5 +1,50 @@
 import { PULP_DOMAIN } from "@app/Constants";
 
+/**
+ * Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the
+ * aggregation API omits `pulp_type`.
+ */
+export function inferPulpTypeFromHref(
+  href: string | null | undefined,
+): string | undefined {
+  if (!href) return undefined;
+
+  const typed = href.match(
+    /\/(?:repositories|remotes|distributions|publications)\/([^/]+)\/([^/]+)\//,
+  );
+  if (typed) {
+    return `${typed[1]}.${typed[2]}`;
+  }
+
+  const content = href.match(/\/content\/([^/]+)\/([^/]+)\//);
+  if (content) {
+    const plugin = content[1];
+    const type = content[2].endsWith("s")
+      ? content[2].slice(0, -1)
+      : content[2];
+    return `${plugin}.${type}`;
+  }
+
+  return undefined;
+}
+
+/** Prefer an explicit pulp_type, otherwise infer from the resource href. */
+export function resolvePulpType(
+  pulpType: string | null | undefined,
+  href: string | null | undefined,
+): string | undefined {
+  return pulpType || inferPulpTypeFromHref(href);
+}
+
+/** True when a detail payload is missing or an empty object (`data ?? {}`). */
+export function isEmptyDetailPayload(
+  data: unknown,
+): data is null | undefined | Record<string, never> {
+  if (data == null) return true;
+  if (typeof data !== "object") return false;
+  return Object.keys(data as object).length === 0;
+}
+
 /** Build a Pulp user pulp_href from a user ID. */
 export function buildUserHref(userId: string): string {
   return `/api/pulp/${PULP_DOMAIN}/api/v3/users/${userId}/`;

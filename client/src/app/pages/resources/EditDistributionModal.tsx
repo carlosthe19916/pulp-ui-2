@@ -29,6 +29,7 @@ import { usePublicationsListQuery } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editFields = fileDistributionDescriptor.editFields ?? [];
 const editDistributionSchema = buildFieldSchema(editFields);
@@ -103,9 +104,9 @@ export const EditDistributionModal: React.FC<EditDistributionModalProps> = ({
         addNotification({ title: "Distribution updated", variant: "success" });
       }
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update distribution",
+        ...getMutationErrorMessage(error, "Failed to update distribution"),
         variant: "danger",
       });
     }

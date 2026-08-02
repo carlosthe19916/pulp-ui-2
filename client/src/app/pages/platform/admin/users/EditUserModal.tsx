@@ -22,6 +22,7 @@ import {
 import type { UserResponse } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
 import { useUserUpdateMutation } from "@app/queries/users";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editUserSchema = yup.object({
   email: yup.string().email("Invalid email address"),
@@ -105,9 +106,9 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         variant: "success",
       });
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update user",
+        ...getMutationErrorMessage(error, "Failed to update user"),
         variant: "danger",
       });
     }

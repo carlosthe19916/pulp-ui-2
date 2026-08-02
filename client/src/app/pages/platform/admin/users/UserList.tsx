@@ -29,12 +29,14 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { UserResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateUserModal } from "./CreateUserModal";
 
@@ -131,143 +133,147 @@ export const UserList: React.FC = () => {
         title: "User deleted",
         variant: "success",
       });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete user",
+        ...getMutationErrorMessage(error, "Failed to delete user"),
         variant: "danger",
       });
     }
     setDeleteHref(null);
   };
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Users</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by username..."
-              value={usernameFilter}
-              onChange={(_e, value) => {
-                setUsernameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setUsernameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-              Create user
-            </Button>
-          </ToolbarItem>
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading users" />
+    <>
+      <DocumentTitle title="Users" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Users table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Users</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by username..."
+                  value={usernameFilter}
+                  onChange={(_e, value) => {
+                    setUsernameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setUsernameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                  Create user
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading users" />
+          ) : (
+            <Table aria-label="Users table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {users.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No users found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+                {users.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No users found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
 
-      <CreateUserModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+          <CreateUserModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+          />
 
-      <Modal
-        isOpen={!!deleteHref}
-        onClose={() => setDeleteHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Delete User" />
-        <ModalBody>
-          Are you sure you want to delete this user? This action cannot be
-          undone.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleDelete()}
-            isLoading={deleteMutation.isPending}
+          <Modal
+            isOpen={!!deleteHref}
+            onClose={() => setDeleteHref(null)}
+            variant="small"
           >
-            Delete
-          </Button>
-          <Button variant="link" onClick={() => setDeleteHref(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+            <ModalHeader title="Delete User" />
+            <ModalBody>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleDelete()}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button variant="link" onClick={() => setDeleteHref(null)}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
+      )}
+    </>
   );
 };

@@ -27,6 +27,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -41,6 +42,7 @@ import { useFilePublicationDeleteMutation } from "@app/queries/file-publications
 import { usePublicationsListQuery } from "@app/queries/publications";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreatePublicationModal } from "./CreatePublicationModal";
 
@@ -85,9 +87,9 @@ export const PublicationList: React.FC = () => {
         title: "Publication deleted",
         variant: "success",
       });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete publication",
+        ...getMutationErrorMessage(error, "Failed to delete publication"),
         variant: "danger",
       });
     }
@@ -179,122 +181,129 @@ export const PublicationList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Publications</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          {canCreate && (
-            <ToolbarItem>
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                Create publication
-              </Button>
-            </ToolbarItem>
-          )}
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading publications" />
+    <>
+      <DocumentTitle title="Publications" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Publications table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Publications</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              {canCreate && (
+                <ToolbarItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsCreateOpen(true)}
+                  >
+                    Create publication
+                  </Button>
+                </ToolbarItem>
+              )}
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading publications" />
+          ) : (
+            <Table aria-label="Publications table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {publications.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No publications found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+                {publications.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No publications found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
 
-      <CreatePublicationModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+          <CreatePublicationModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+          />
 
-      <Modal
-        isOpen={!!deleteHref}
-        onClose={() => setDeleteHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Delete Publication" />
-        <ModalBody>
-          Are you sure you want to delete this publication? This action cannot
-          be undone.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleDelete()}
-            isLoading={deleteMutation.isPending}
+          <Modal
+            isOpen={!!deleteHref}
+            onClose={() => setDeleteHref(null)}
+            variant="small"
           >
-            Delete
-          </Button>
-          <Button variant="link" onClick={() => setDeleteHref(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+            <ModalHeader title="Delete Publication" />
+            <ModalBody>
+              Are you sure you want to delete this publication? This action
+              cannot be undone.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleDelete()}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button variant="link" onClick={() => setDeleteHref(null)}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
+      )}
+    </>
   );
 };

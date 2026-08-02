@@ -34,6 +34,8 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { TaskResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -42,10 +44,10 @@ import {
   useTaskPurgeMutation,
   useTasksListQuery,
 } from "@app/queries/tasks";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractTaskId } from "@app/utils/taskHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const stateColors: Record<
   string,
@@ -173,14 +175,6 @@ export const TaskList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   const handleCancel = async () => {
     if (!cancelHref) return;
     try {
@@ -189,9 +183,9 @@ export const TaskList: React.FC = () => {
         title: "Task cancel requested",
         variant: "info",
       });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to cancel task",
+        ...getMutationErrorMessage(error, "Failed to cancel task"),
         variant: "danger",
       });
     }
@@ -212,9 +206,9 @@ export const TaskList: React.FC = () => {
           variant: "info",
         });
       }
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to purge tasks",
+        ...getMutationErrorMessage(error, "Failed to purge tasks"),
         variant: "danger",
       });
     }
@@ -222,170 +216,185 @@ export const TaskList: React.FC = () => {
   };
 
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Tasks</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Select
-              isOpen={isStateOpen}
-              selected={stateFilter}
-              onSelect={(_e, value) => {
-                setStateFilter((value as TaskState | "") ?? "");
-                setPage(1);
-                setIsStateOpen(false);
-              }}
-              onOpenChange={setIsStateOpen}
-              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                <MenuToggle
-                  ref={toggleRef}
-                  onClick={() => setIsStateOpen(!isStateOpen)}
-                  isExpanded={isStateOpen}
-                >
-                  {stateFilter || "All states"}
-                </MenuToggle>
-              )}
-            >
-              <SelectList>
-                {TASK_STATES.map((state) => (
-                  <SelectOption key={state || "all"} value={state}>
-                    {state || "All states"}
-                  </SelectOption>
-                ))}
-              </SelectList>
-            </Select>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="secondary" onClick={() => setIsPurgeOpen(true)}>
-              Purge tasks
-            </Button>
-          </ToolbarItem>
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading tasks" />
+    <>
+      <DocumentTitle title="Tasks" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Tasks table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Tasks</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <Select
+                  isOpen={isStateOpen}
+                  selected={stateFilter}
+                  onSelect={(_e, value) => {
+                    setStateFilter((value as TaskState | "") ?? "");
+                    setPage(1);
+                    setIsStateOpen(false);
+                  }}
+                  onOpenChange={setIsStateOpen}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => setIsStateOpen(!isStateOpen)}
+                      isExpanded={isStateOpen}
+                    >
+                      {stateFilter || "All states"}
+                    </MenuToggle>
+                  )}
+                >
+                  <SelectList>
+                    {TASK_STATES.map((state) => (
+                      <SelectOption key={state || "all"} value={state}>
+                        {state || "All states"}
+                      </SelectOption>
+                    ))}
+                  </SelectList>
+                </Select>
+              </ToolbarItem>
+              <ToolbarItem>
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsPurgeOpen(true)}
+                >
+                  Purge tasks
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading tasks" />
+          ) : (
+            <Table aria-label="Tasks table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {tasks.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No tasks found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
+                {tasks.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No tasks found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
+
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
+
+          <Modal
+            isOpen={!!cancelHref}
+            onClose={() => setCancelHref(null)}
+            variant="small"
+          >
+            <ModalHeader title="Cancel Task" />
+            <ModalBody>Are you sure you want to cancel this task?</ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleCancel()}
+                isLoading={cancelMutation.isPending}
+              >
+                Cancel Task
+              </Button>
+              <Button variant="link" onClick={() => setCancelHref(null)}>
+                Close
+              </Button>
+            </ModalFooter>
+          </Modal>
+
+          <Modal
+            isOpen={isPurgeOpen}
+            onClose={() => setIsPurgeOpen(false)}
+            variant="small"
+          >
+            <ModalHeader title="Purge Tasks" />
+            <ModalBody>
+              Purge completed, failed, canceled, and skipped tasks? This starts
+              an asynchronous purge task.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handlePurge()}
+                isLoading={purgeMutation.isPending}
+              >
+                Purge
+              </Button>
+              <Button variant="link" onClick={() => setIsPurgeOpen(false)}>
+                Close
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
       )}
-
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
-
-      <Modal
-        isOpen={!!cancelHref}
-        onClose={() => setCancelHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Cancel Task" />
-        <ModalBody>Are you sure you want to cancel this task?</ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleCancel()}
-            isLoading={cancelMutation.isPending}
-          >
-            Cancel Task
-          </Button>
-          <Button variant="link" onClick={() => setCancelHref(null)}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={isPurgeOpen}
-        onClose={() => setIsPurgeOpen(false)}
-        variant="small"
-      >
-        <ModalHeader title="Purge Tasks" />
-        <ModalBody>
-          Purge completed, failed, canceled, and skipped tasks? This starts an
-          asynchronous purge task.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handlePurge()}
-            isLoading={purgeMutation.isPending}
-          >
-            Purge
-          </Button>
-          <Button variant="link" onClick={() => setIsPurgeOpen(false)}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+    </>
   );
 };

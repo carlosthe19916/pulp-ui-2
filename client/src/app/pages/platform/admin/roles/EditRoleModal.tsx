@@ -20,6 +20,7 @@ import { PermissionMultiSelect } from "@app/components/PermissionMultiSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRolesListQuery, useRoleUpdateMutation } from "@app/queries/roles";
 import { collectPermissionOptions } from "@app/utils/permissionOptions";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editRoleSchema = yup.object({
   description: yup.string(),
@@ -93,9 +94,9 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
         variant: "success",
       });
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update role",
+        ...getMutationErrorMessage(error, "Failed to update role"),
         variant: "danger",
       });
     }

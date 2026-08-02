@@ -11,6 +11,9 @@ import {
   buildRoleHref,
   buildUserHref,
   extractIdFromHref,
+  inferPulpTypeFromHref,
+  isEmptyDetailPayload,
+  resolvePulpType,
 } from "./pulpHref";
 
 describe("pulpHref helpers", () => {
@@ -32,6 +35,29 @@ describe("pulpHref helpers", () => {
 
   it("extracts the trailing id from a pulp_href", () => {
     expect(extractIdFromHref("/api/pulp/default/api/v3/users/42/")).toBe("42");
+  });
+
+  it("infers pulp_type from typed resource hrefs", () => {
+    expect(
+      inferPulpTypeFromHref(
+        "/api/pulp/default/api/v3/repositories/file/file/abc/",
+      ),
+    ).toBe("file.file");
+    expect(
+      inferPulpTypeFromHref("/api/pulp/default/api/v3/content/file/files/abc/"),
+    ).toBe("file.file");
+    expect(resolvePulpType("rpm.rpm", "/repositories/file/file/x/")).toBe(
+      "rpm.rpm",
+    );
+    expect(resolvePulpType(undefined, "/remotes/file/file/x/")).toBe(
+      "file.file",
+    );
+  });
+
+  it("detects empty detail payloads", () => {
+    expect(isEmptyDetailPayload(undefined)).toBe(true);
+    expect(isEmptyDetailPayload({})).toBe(true);
+    expect(isEmptyDetailPayload({ name: "x" })).toBe(false);
   });
 
   it("joins distribution base_url and relative_path for downloads", () => {

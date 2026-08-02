@@ -28,6 +28,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { DistributionResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -40,9 +41,11 @@ import {
 } from "@app/descriptors/registry";
 import { useFileDistributionDeleteMutation } from "@app/queries/file-distributions";
 import { useDistributionsListQuery } from "@app/queries/distributions";
+import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateDistributionModal } from "./CreateDistributionModal";
 
@@ -78,6 +81,17 @@ export const DistributionList: React.FC = () => {
   const distributions = (data?.results ?? []) as DistributionRow[];
   const totalCount = data?.count ?? 0;
 
+  const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
+  const repositoryNameByHref = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const repo of repositoriesData?.results ?? []) {
+      if (repo.pulp_href && repo.name) {
+        map[repo.pulp_href] = repo.name;
+      }
+    }
+    return map;
+  }, [repositoriesData?.results]);
+
   const canCreate = getDescriptorsForKind("distribution").some((d) =>
     d.isAvailable(plugins),
   );
@@ -94,9 +108,9 @@ export const DistributionList: React.FC = () => {
           "Distribution delete started",
         );
       }
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete distribution",
+        ...getMutationErrorMessage(error, "Failed to delete distribution"),
         variant: "danger",
       });
     }
@@ -109,14 +123,10 @@ export const DistributionList: React.FC = () => {
         id: "name",
         header: "Name",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("distribution", pulpType)
-            : undefined;
-          if (!descriptor) {
+          const distId = extractIdFromHref(row.original.pulp_href ?? "");
+          if (!distId) {
             return row.original.name;
           }
-          const distId = extractIdFromHref(row.original.pulp_href ?? "");
           return (
             <Link to="/distributions/$distId" params={{ distId }}>
               {row.original.name}
@@ -133,7 +143,10 @@ export const DistributionList: React.FC = () => {
         id: "pulp_type",
         header: "Type",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           return pulpType ? (
             <PulpTypeLabel kind="distribution" pulpType={pulpType} />
           ) : (
@@ -145,14 +158,25 @@ export const DistributionList: React.FC = () => {
         id: "repository",
         header: "Repository",
         cell: ({ row }) => (
-          <ResourceHrefLink kind="repository" href={row.original.repository} />
+          <ResourceHrefLink
+            kind="repository"
+            href={row.original.repository}
+            label={
+              row.original.repository
+                ? repositoryNameByHref[row.original.repository]
+                : undefined
+            }
+          />
         ),
       },
       {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           const descriptor = pulpType
             ? getDescriptor("distribution", pulpType)
             : undefined;
@@ -188,7 +212,7 @@ export const DistributionList: React.FC = () => {
         },
       },
     ],
-    [],
+    [repositoryNameByHref],
   );
 
   const table = useReactTable({
@@ -198,148 +222,155 @@ export const DistributionList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Distributions</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <TextInput
-              id="dist-pulp-type-filter"
-              aria-label="Filter by pulp type"
-              placeholder="pulp_type (e.g. file.file)"
-              value={pulpTypeFilter}
-              onChange={(_e, value) => {
-                setPulpTypeFilter(value);
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          {canCreate && (
-            <ToolbarItem>
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                Create distribution
-              </Button>
-            </ToolbarItem>
-          )}
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading distributions" />
+    <>
+      <DocumentTitle title="Distributions" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Distributions table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Distributions</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <TextInput
+                  id="dist-pulp-type-filter"
+                  aria-label="Filter by pulp type"
+                  placeholder="pulp_type (e.g. file.file)"
+                  value={pulpTypeFilter}
+                  onChange={(_e, value) => {
+                    setPulpTypeFilter(value);
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              {canCreate && (
+                <ToolbarItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsCreateOpen(true)}
+                  >
+                    Create distribution
+                  </Button>
+                </ToolbarItem>
+              )}
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading distributions" />
+          ) : (
+            <Table aria-label="Distributions table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {distributions.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No distributions found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+                {distributions.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No distributions found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
 
-      <CreateDistributionModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+          <CreateDistributionModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+          />
 
-      <Modal
-        isOpen={!!deleteHref}
-        onClose={() => setDeleteHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Delete Distribution" />
-        <ModalBody>
-          Are you sure you want to delete this distribution? This action cannot
-          be undone.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleDelete()}
-            isLoading={deleteMutation.isPending}
+          <Modal
+            isOpen={!!deleteHref}
+            onClose={() => setDeleteHref(null)}
+            variant="small"
           >
-            Delete
-          </Button>
-          <Button variant="link" onClick={() => setDeleteHref(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+            <ModalHeader title="Delete Distribution" />
+            <ModalBody>
+              Are you sure you want to delete this distribution? This action
+              cannot be undone.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleDelete()}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button variant="link" onClick={() => setDeleteHref(null)}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
+      )}
+    </>
   );
 };

@@ -22,6 +22,7 @@ import { PermissionMultiSelect } from "@app/components/PermissionMultiSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleCreateMutation, useRolesListQuery } from "@app/queries/roles";
 import { collectPermissionOptions } from "@app/utils/permissionOptions";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createRoleSchema = yup.object({
   name: yup.string().required("Name is required"),
@@ -86,9 +87,9 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
       });
       reset();
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create role",
+        ...getMutationErrorMessage(error, "Failed to create role"),
         variant: "danger",
       });
     }

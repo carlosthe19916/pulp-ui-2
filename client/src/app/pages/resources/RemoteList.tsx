@@ -28,6 +28,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { GenericRemoteResponse } from "@app/client";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -40,8 +41,9 @@ import {
 import { useFileRemoteDeleteMutation } from "@app/queries/file-remotes";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateRemoteModal } from "./CreateRemoteModal";
 
@@ -89,9 +91,9 @@ export const RemoteList: React.FC = () => {
       if (taskHref) {
         notifyTaskStarted(addNotification, taskHref, "Remote delete started");
       }
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete remote",
+        ...getMutationErrorMessage(error, "Failed to delete remote"),
         variant: "danger",
       });
     }
@@ -104,14 +106,10 @@ export const RemoteList: React.FC = () => {
         id: "name",
         header: "Name",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("remote", pulpType)
-            : undefined;
-          if (!descriptor) {
+          const remoteId = extractIdFromHref(row.original.pulp_href ?? "");
+          if (!remoteId) {
             return row.original.name;
           }
-          const remoteId = extractIdFromHref(row.original.pulp_href ?? "");
           return (
             <Link to="/remotes/$remoteId" params={{ remoteId }}>
               {row.original.name}
@@ -133,7 +131,10 @@ export const RemoteList: React.FC = () => {
         id: "pulp_type",
         header: "Type",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           return pulpType ? (
             <PulpTypeLabel kind="remote" pulpType={pulpType} />
           ) : (
@@ -145,7 +146,10 @@ export const RemoteList: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
+          const pulpType = resolvePulpType(
+            row.original.pulp_type,
+            row.original.pulp_href,
+          );
           const descriptor = pulpType
             ? getDescriptor("remote", pulpType)
             : undefined;
@@ -177,148 +181,155 @@ export const RemoteList: React.FC = () => {
     manualPagination: true,
   });
 
-  if (isForbiddenError(error)) {
-    return (
-      <PageSection>
-        <UnauthorizedState />
-      </PageSection>
-    );
-  }
-
   return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Remotes</Content>
-
-      <Toolbar>
-        <ToolbarContent>
-          <ToolbarItem>
-            <SearchInput
-              placeholder="Filter by name..."
-              value={nameFilter}
-              onChange={(_e, value) => {
-                setNameFilter(value);
-                setPage(1);
-              }}
-              onClear={() => {
-                setNameFilter("");
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <TextInput
-              id="remote-pulp-type-filter"
-              aria-label="Filter by pulp type"
-              placeholder="pulp_type (e.g. file.file)"
-              value={pulpTypeFilter}
-              onChange={(_e, value) => {
-                setPulpTypeFilter(value);
-                setPage(1);
-              }}
-            />
-          </ToolbarItem>
-          {canCreate && (
-            <ToolbarItem>
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                Create remote
-              </Button>
-            </ToolbarItem>
-          )}
-          <ToolbarItem variant="pagination">
-            <Pagination
-              itemCount={totalCount}
-              perPage={perPage}
-              page={page}
-              onSetPage={(_e, p) => setPage(p)}
-              onPerPageSelect={(_e, pp) => {
-                setPerPage(pp);
-                setPage(1);
-              }}
-              isCompact
-            />
-          </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-
-      {isLoading ? (
-        <Spinner aria-label="Loading remotes" />
+    <>
+      <DocumentTitle title="Remotes" />
+      {isForbiddenError(error) ? (
+        <PageSection>
+          <UnauthorizedState />
+        </PageSection>
       ) : (
-        <Table aria-label="Remotes table" variant="compact">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+        <PageSection>
+          <Content component={ContentVariants.h1}>Remotes</Content>
+
+          <Toolbar>
+            <ToolbarContent>
+              <ToolbarItem>
+                <SearchInput
+                  placeholder="Filter by name..."
+                  value={nameFilter}
+                  onChange={(_e, value) => {
+                    setNameFilter(value);
+                    setPage(1);
+                  }}
+                  onClear={() => {
+                    setNameFilter("");
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <TextInput
+                  id="remote-pulp-type-filter"
+                  aria-label="Filter by pulp type"
+                  placeholder="pulp_type (e.g. file.file)"
+                  value={pulpTypeFilter}
+                  onChange={(_e, value) => {
+                    setPulpTypeFilter(value);
+                    setPage(1);
+                  }}
+                />
+              </ToolbarItem>
+              {canCreate && (
+                <ToolbarItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsCreateOpen(true)}
+                  >
+                    Create remote
+                  </Button>
+                </ToolbarItem>
+              )}
+              <ToolbarItem variant="pagination">
+                <Pagination
+                  itemCount={totalCount}
+                  perPage={perPage}
+                  page={page}
+                  onSetPage={(_e, p) => setPage(p)}
+                  onPerPageSelect={(_e, pp) => {
+                    setPerPage(pp);
+                    setPage(1);
+                  }}
+                  isCompact
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
+
+          {isLoading ? (
+            <Spinner aria-label="Loading remotes" />
+          ) : (
+            <Table aria-label="Remotes table" variant="compact">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </Th>
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-            {remotes.length === 0 && (
-              <Tr>
-                <Td colSpan={columns.length}>No remotes found.</Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
-      )}
+                {remotes.length === 0 && (
+                  <Tr>
+                    <Td colSpan={columns.length}>No remotes found.</Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          )}
 
-      <Pagination
-        itemCount={totalCount}
-        perPage={perPage}
-        page={page}
-        onSetPage={(_e, p) => setPage(p)}
-        onPerPageSelect={(_e, pp) => {
-          setPerPage(pp);
-          setPage(1);
-        }}
-        variant="bottom"
-      />
+          <Pagination
+            itemCount={totalCount}
+            perPage={perPage}
+            page={page}
+            onSetPage={(_e, p) => setPage(p)}
+            onPerPageSelect={(_e, pp) => {
+              setPerPage(pp);
+              setPage(1);
+            }}
+            variant="bottom"
+          />
 
-      <CreateRemoteModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-      />
+          <CreateRemoteModal
+            isOpen={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+          />
 
-      <Modal
-        isOpen={!!deleteHref}
-        onClose={() => setDeleteHref(null)}
-        variant="small"
-      >
-        <ModalHeader title="Delete Remote" />
-        <ModalBody>
-          Are you sure you want to delete this remote? This action cannot be
-          undone.
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleDelete()}
-            isLoading={deleteMutation.isPending}
+          <Modal
+            isOpen={!!deleteHref}
+            onClose={() => setDeleteHref(null)}
+            variant="small"
           >
-            Delete
-          </Button>
-          <Button variant="link" onClick={() => setDeleteHref(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </PageSection>
+            <ModalHeader title="Delete Remote" />
+            <ModalBody>
+              Are you sure you want to delete this remote? This action cannot be
+              undone.
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="danger"
+                onClick={() => void handleDelete()}
+                isLoading={deleteMutation.isPending}
+              >
+                Delete
+              </Button>
+              <Button variant="link" onClick={() => setDeleteHref(null)}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </Modal>
+        </PageSection>
+      )}
+    </>
   );
 };

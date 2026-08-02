@@ -24,9 +24,11 @@ import {
 } from "@patternfly/react-core";
 
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleDeleteMutation, useRoleDetailQuery } from "@app/queries/roles";
 import { buildRoleHref } from "@app/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRoleModal } from "./EditRoleModal";
 
@@ -51,9 +53,9 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({ roleId }) => {
         variant: "success",
       });
       void navigate({ to: "/admin/roles" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete role",
+        ...getMutationErrorMessage(error, "Failed to delete role"),
         variant: "danger",
       });
     }
@@ -61,127 +63,130 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({ roleId }) => {
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!role}
-      loadingLabel="Loading role"
-    >
-      {role ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/admin/roles">Roles</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{role.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle title={role?.name ? `Role · ${role.name}` : "Role"} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!role}
+        loadingLabel="Loading role"
+      >
+        {role ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/admin/roles">Roles</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{role.name}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>{role.name}</Content>
-              </StackItem>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>{role.name}</Content>
+                </StackItem>
 
-              <StackItem>
-                <Button
-                  variant="primary"
-                  onClick={() => setIsEditOpen(true)}
-                  isDisabled={role.locked}
-                >
-                  Edit
-                </Button>{" "}
+                <StackItem>
+                  <Button
+                    variant="primary"
+                    onClick={() => setIsEditOpen(true)}
+                    isDisabled={role.locked}
+                  >
+                    Edit
+                  </Button>{" "}
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                    isDisabled={role.locked}
+                  >
+                    Delete
+                  </Button>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {role.name}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Description</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {role.description || "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Locked</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {role.locked ? (
+                          <Label color="green" isCompact>
+                            Yes
+                          </Label>
+                        ) : (
+                          <Label color="grey" isCompact>
+                            No
+                          </Label>
+                        )}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </StackItem>
+
+                <StackItem>
+                  <Content component={ContentVariants.h2}>Permissions</Content>
+                  {(role.permissions ?? []).length > 0 ? (
+                    <LabelGroup>
+                      {(role.permissions ?? []).map((perm) => (
+                        <Label key={perm} isCompact>
+                          {perm}
+                        </Label>
+                      ))}
+                    </LabelGroup>
+                  ) : (
+                    <Content component={ContentVariants.p}>
+                      No permissions assigned.
+                    </Content>
+                  )}
+                </StackItem>
+              </Stack>
+            </PageSection>
+
+            <EditRoleModal
+              isOpen={isEditOpen}
+              onClose={() => setIsEditOpen(false)}
+              role={role}
+            />
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete Role" />
+              <ModalBody>
+                Are you sure you want to delete the role &quot;{role.name}
+                &quot;? This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
                 <Button
                   variant="danger"
-                  onClick={() => setIsDeleteOpen(true)}
-                  isDisabled={role.locked}
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
                 >
                   Delete
                 </Button>
-              </StackItem>
-
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {role.name}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Description</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {role.description || "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Locked</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {role.locked ? (
-                        <Label color="green" isCompact>
-                          Yes
-                        </Label>
-                      ) : (
-                        <Label color="grey" isCompact>
-                          No
-                        </Label>
-                      )}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                </DescriptionList>
-              </StackItem>
-
-              <StackItem>
-                <Content component={ContentVariants.h2}>Permissions</Content>
-                {role.permissions.length > 0 ? (
-                  <LabelGroup>
-                    {role.permissions.map((perm) => (
-                      <Label key={perm} isCompact>
-                        {perm}
-                      </Label>
-                    ))}
-                  </LabelGroup>
-                ) : (
-                  <Content component={ContentVariants.p}>
-                    No permissions assigned.
-                  </Content>
-                )}
-              </StackItem>
-            </Stack>
-          </PageSection>
-
-          <EditRoleModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            role={role}
-          />
-
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Role" />
-            <ModalBody>
-              Are you sure you want to delete the role &quot;{role.name}&quot;?
-              This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

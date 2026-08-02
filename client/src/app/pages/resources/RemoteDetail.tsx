@@ -25,6 +25,7 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { DocumentTitle } from "@app/components/DocumentTitle";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
@@ -34,6 +35,7 @@ import {
 } from "@app/queries/file-remotes";
 import { buildRemoteHref } from "@app/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRemoteModal } from "./EditRemoteModal";
 
@@ -72,9 +74,9 @@ export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
         });
       }
       void navigate({ to: "/remotes" });
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to delete remote",
+        ...getMutationErrorMessage(error, "Failed to delete remote"),
         variant: "danger",
       });
     }
@@ -82,100 +84,108 @@ export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
   };
 
   return (
-    <DetailQueryGate
-      isLoading={isLoading}
-      error={error}
-      hasData={!!remote}
-      loadingLabel="Loading remote"
-    >
-      {remote ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/remotes">Remotes</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{remote.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <DocumentTitle title={remote?.name ?? "Remote"} />
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={!!remote}
+        loadingLabel="Loading remote"
+      >
+        {remote ? (
+          <>
+            <PageSection>
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/remotes">Remotes</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>{remote.name}</BreadcrumbItem>
+              </Breadcrumb>
+            </PageSection>
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>{remote.name}</Content>
-              </StackItem>
+            <PageSection>
+              <Stack hasGutter>
+                <StackItem>
+                  <Content component={ContentVariants.h1}>
+                    {remote.name}
+                  </Content>
+                </StackItem>
 
-              <StackItem>
+                <StackItem>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsEditOpen(true)}
+                    className={spacing.mrSm}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => setIsDeleteOpen(true)}
+                  >
+                    Delete
+                  </Button>
+                </StackItem>
+
+                <StackItem>
+                  <DescriptionList isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {remote.name}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Created</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {remote.pulp_created
+                          ? dayjs(remote.pulp_created).format(
+                              RENDER_DATETIME_FORMAT,
+                            )
+                          : "—"}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptorDetailFields
+                      fields={descriptor?.detailFields}
+                      entity={remote}
+                    />
+                  </DescriptionList>
+                </StackItem>
+              </Stack>
+            </PageSection>
+
+            <EditRemoteModal
+              isOpen={isEditOpen}
+              onClose={() => setIsEditOpen(false)}
+              remote={remote}
+            />
+
+            <Modal
+              isOpen={isDeleteOpen}
+              onClose={() => setIsDeleteOpen(false)}
+              variant="small"
+            >
+              <ModalHeader title="Delete Remote" />
+              <ModalBody>
+                Are you sure you want to delete remote &quot;{remote.name}
+                &quot;? This action cannot be undone.
+              </ModalBody>
+              <ModalFooter>
                 <Button
-                  variant="secondary"
-                  onClick={() => setIsEditOpen(true)}
-                  className={spacing.mrSm}
+                  variant="danger"
+                  onClick={() => void handleDelete()}
+                  isLoading={deleteMutation.isPending}
                 >
-                  Edit
-                </Button>
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
                   Delete
                 </Button>
-              </StackItem>
-
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Name</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {remote.name}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Created</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {remote.pulp_created
-                        ? dayjs(remote.pulp_created).format(
-                            RENDER_DATETIME_FORMAT,
-                          )
-                        : "—"}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptorDetailFields
-                    fields={descriptor?.detailFields}
-                    entity={remote}
-                  />
-                </DescriptionList>
-              </StackItem>
-            </Stack>
-          </PageSection>
-
-          <EditRemoteModal
-            isOpen={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
-            remote={remote}
-          />
-
-          <Modal
-            isOpen={isDeleteOpen}
-            onClose={() => setIsDeleteOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Remote" />
-            <ModalBody>
-              Are you sure you want to delete remote &quot;{remote.name}&quot;?
-              This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </>
-      ) : null}
-    </DetailQueryGate>
+                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </Modal>
+          </>
+        ) : null}
+      </DetailQueryGate>
+    </>
   );
 };

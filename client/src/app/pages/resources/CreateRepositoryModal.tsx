@@ -24,6 +24,7 @@ import {
 } from "@app/descriptors/formSchema";
 import { useFileRepositoryCreateMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = fileRepositoryDescriptor.createFields ?? [];
 const createRepositorySchema = buildFieldSchema(createFields);
@@ -72,9 +73,9 @@ export const CreateRepositoryModal: React.FC<CreateRepositoryModalProps> = ({
       });
       reset(buildDefaultValues(createFields));
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to create repository",
+        ...getMutationErrorMessage(error, "Failed to create repository"),
         variant: "danger",
       });
     }

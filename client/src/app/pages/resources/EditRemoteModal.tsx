@@ -24,6 +24,7 @@ import {
   buildFieldSchema,
 } from "@app/descriptors/formSchema";
 import { useFileRemoteUpdateMutation } from "@app/queries/file-remotes";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editFields = fileRemoteDescriptor.editFields ?? [];
 const editRemoteSchema = buildFieldSchema(editFields);
@@ -68,9 +69,9 @@ export const EditRemoteModal: React.FC<EditRemoteModalProps> = ({
         variant: "success",
       });
       onClose();
-    } catch {
+    } catch (error) {
       addNotification({
-        title: "Failed to update remote",
+        ...getMutationErrorMessage(error, "Failed to update remote"),
         variant: "danger",
       });
     }
