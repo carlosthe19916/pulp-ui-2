@@ -51,3 +51,4 @@ e2e/pulp/settings/database_fields.symmetric.key
 # Claude
 managed_context/
 test_suite_analysis/
+.playwright-mcp/

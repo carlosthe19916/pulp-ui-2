@@ -49,19 +49,11 @@ export const EditRemoteModal: React.FC<EditRemoteModalProps> = ({
     formState: { isSubmitting },
   } = useForm<Record<string, unknown>>({
     resolver: yupResolver(editRemoteSchema),
-    defaultValues: buildDefaultValues(
-      editFields,
-      remote as unknown as Record<string, unknown>,
-    ),
+    defaultValues: buildDefaultValues(editFields, remote),
   });
 
   useEffect(() => {
-    reset(
-      buildDefaultValues(
-        editFields,
-        remote as unknown as Record<string, unknown>,
-      ),
-    );
+    reset(buildDefaultValues(editFields, remote));
   }, [remote, reset]);
 
   const onSubmit = handleSubmit(async (values) => {

@@ -2,10 +2,14 @@ import { useMemo, useState, type Ref } from "react";
 
 import {
   Button,
+  Divider,
   Label,
   LabelGroup,
+  MenuSearch,
+  MenuSearchInput,
   MenuToggle,
   type MenuToggleElement,
+  SearchInput,
   Select,
   SelectList,
   SelectOption,
@@ -14,7 +18,7 @@ import {
   TextInputGroupMain,
   TextInputGroupUtilities,
 } from "@patternfly/react-core";
-import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 interface PermissionMultiSelectProps {
   id: string;
@@ -68,7 +72,7 @@ export function PermissionMultiSelect({
   return (
     <>
       {value.length > 0 && (
-        <LabelGroup style={{ marginBottom: "var(--pf-t--global--spacer--sm)" }}>
+        <LabelGroup className={spacing.mbSm}>
           {value.map((permission) => (
             <Label
               key={permission}
@@ -114,29 +118,20 @@ export function PermissionMultiSelect({
           </MenuToggle>
         )}
       >
+        <MenuSearch>
+          <MenuSearchInput>
+            <SearchInput
+              id={`${id}-filter`}
+              aria-label="Filter permissions"
+              value={filter}
+              onChange={(_e, next) => setFilter(next)}
+              placeholder="Filter permissions…"
+              onClear={() => setFilter("")}
+            />
+          </MenuSearchInput>
+        </MenuSearch>
+        <Divider />
         <SelectList isAriaMultiselectable>
-          <TextInputGroup>
-            <TextInputGroupMain>
-              <TextInput
-                id={`${id}-filter`}
-                aria-label="Filter permissions"
-                value={filter}
-                onChange={(_e, next) => setFilter(next)}
-                placeholder="Filter permissions…"
-              />
-            </TextInputGroupMain>
-            <TextInputGroupUtilities>
-              {filter ? (
-                <Button
-                  variant="plain"
-                  aria-label="Clear permission filter"
-                  onClick={() => setFilter("")}
-                >
-                  <TimesIcon />
-                </Button>
-              ) : null}
-            </TextInputGroupUtilities>
-          </TextInputGroup>
           {filtered.map((permission) => (
             <SelectOption
               key={permission}
@@ -153,7 +148,7 @@ export function PermissionMultiSelect({
         </SelectList>
       </Select>
 
-      <TextInputGroup style={{ marginTop: "var(--pf-t--global--spacer--sm)" }}>
+      <TextInputGroup className={spacing.mtSm}>
         <TextInputGroupMain>
           <TextInput
             id={`${id}-custom`}

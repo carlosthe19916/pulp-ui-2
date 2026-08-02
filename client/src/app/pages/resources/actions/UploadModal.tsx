@@ -89,9 +89,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   const repository = watch("repository");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] ?? null;
-    setValue("file", selected as File, { shouldValidate: true });
-    if (selected && !relativePath) {
+    const selected = e.target.files?.[0];
+    if (!selected) {
+      return;
+    }
+    setValue("file", selected, { shouldValidate: true });
+    if (!relativePath) {
       setValue("relative_path", selected.name, { shouldValidate: true });
     }
   };

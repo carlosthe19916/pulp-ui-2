@@ -3,7 +3,6 @@ import { defineConfig, devices } from "@playwright/test";
 const authFile = ".auth/user.json";
 
 const pulpApiUrl = process.env.PULP_API_URL ?? "http://localhost:8080";
-const pulpDomain = process.env.PULP_DOMAIN ?? "default";
 
 export default defineConfig({
   testDir: "./tests",
@@ -44,7 +43,6 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       PULP_API_URL: pulpApiUrl,
-      PULP_DOMAIN: pulpDomain,
     },
   },
 });

@@ -114,6 +114,7 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV === "development",
   },
   server: {
+    port: 3000,
     proxy: {
       "/api": {
         // Session cookies from the browser login flow are forwarded automatically.

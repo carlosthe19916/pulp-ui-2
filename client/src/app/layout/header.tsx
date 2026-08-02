@@ -29,9 +29,10 @@ import {
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
 import HelpIcon from "@patternfly/react-icons/dist/esm/icons/help-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
-import BarsIcon from "@patternfly/react-icons/dist/js/icons/bars-icon";
-import ExternalLinkAltIcon from "@patternfly/react-icons/dist/js/icons/external-link-alt-icon";
+import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
+import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
+import { ThemeSelector } from "@app/components/Theme";
 import { useAuth } from "@app/context/useAuth";
 import useBranding from "@app/hooks/useBranding";
 
@@ -93,7 +94,6 @@ export const HeaderApp: React.FC = () => {
                 <SplitItem isFilled>
                   {leftTitle ? (
                     <Title
-                      className="logo-pointer"
                       headingLevel={leftTitle?.heading ?? "h1"}
                       size={leftTitle?.size ?? "2xl"}
                     >
@@ -172,6 +172,9 @@ export const HeaderApp: React.FC = () => {
                     </DropdownList>
                   </Dropdown>
                 </ToolbarItem>
+                <ToolbarItem>
+                  <ThemeSelector />
+                </ToolbarItem>
               </ToolbarGroup>
 
               {auth.isAuthenticated && (
@@ -212,6 +215,9 @@ export const HeaderApp: React.FC = () => {
                 gap={{ default: "gapNone", md: "gapMd" }}
                 visibility={{ lg: "hidden" }}
               >
+                <ToolbarItem>
+                  <ThemeSelector />
+                </ToolbarItem>
                 <ToolbarItem>
                   <Dropdown
                     isOpen={isKebabDropdownOpen}

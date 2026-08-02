@@ -3,6 +3,8 @@ import { Controller } from "react-hook-form";
 
 import {
   Checkbox,
+  type DropEvent,
+  FileUpload,
   FormGroup,
   FormHelperText,
   FormSelect,
@@ -16,6 +18,10 @@ import {
 import type { FieldDescriptor, ResourceKind } from "@app/descriptors/types";
 
 import { TypeaheadSelect, type TypeaheadOption } from "./TypeaheadSelect";
+
+function isFile(value: unknown): value is File {
+  return typeof File !== "undefined" && value instanceof File;
+}
 
 interface DescriptorFormFieldsProps<
   TFieldValues extends FieldValues = Record<string, unknown>,
@@ -180,12 +186,15 @@ export function DescriptorFormFields<
                     fieldId={fieldId}
                     isRequired={field.required}
                   >
-                    <input
+                    <FileUpload
                       id={fieldId}
-                      type="file"
-                      onChange={(e) =>
-                        rhfField.onChange(e.target.files?.[0] ?? null)
+                      filename={
+                        isFile(rhfField.value) ? rhfField.value.name : ""
                       }
+                      onFileInputChange={(_event: DropEvent, file: File) =>
+                        rhfField.onChange(file)
+                      }
+                      onClearClick={() => rhfField.onChange(null)}
                     />
                     {helper}
                   </FormGroup>

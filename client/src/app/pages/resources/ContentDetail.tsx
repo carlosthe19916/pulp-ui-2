@@ -82,7 +82,7 @@ export const ContentDetail: React.FC<ContentDetailProps> = ({ contentId }) => {
                   </DescriptionListGroup>
                   <DescriptorDetailFields
                     fields={descriptor?.detailFields}
-                    entity={content as unknown as Record<string, unknown>}
+                    entity={content}
                     skipKeys={["relative_path"]}
                   />
                 </DescriptionList>

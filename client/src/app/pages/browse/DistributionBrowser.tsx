@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Card,
   CardBody,
+  CardHeader,
   CardTitle,
   Content,
   ContentVariants,
@@ -20,10 +21,12 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { DistributionResponse } from "@app/client";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
+import { getFieldValue } from "@app/descriptors/formSchema";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useBrowseDistributionsQuery } from "@app/queries/browse";
 import { isForbiddenError } from "@app/utils/isHttpError";
@@ -132,23 +135,23 @@ export const DistributionBrowser: React.FC = () => {
 
             return (
               <Card isCompact key={dist.pulp_href}>
-                <CardTitle>
-                  {canBrowse ? (
-                    <Link
-                      to="/browse/$distributionId"
-                      params={{ distributionId: distId }}
-                    >
-                      {dist.name}
-                    </Link>
-                  ) : (
-                    dist.name
-                  )}
-                </CardTitle>
+                <CardHeader>
+                  <CardTitle>
+                    {canBrowse ? (
+                      <Link
+                        to="/browse/$distributionId"
+                        params={{ distributionId: distId }}
+                      >
+                        {dist.name}
+                      </Link>
+                    ) : (
+                      dist.name
+                    )}
+                  </CardTitle>
+                </CardHeader>
                 <CardBody>
                   {(descriptor?.browseCardFields ?? []).map((field) => {
-                    const value = (dist as unknown as Record<string, unknown>)[
-                      field.key
-                    ];
+                    const value = getFieldValue(dist, field.key);
                     if (value === null || value === undefined || value === "") {
                       return null;
                     }
@@ -179,13 +182,7 @@ export const DistributionBrowser: React.FC = () => {
                   {labelEntries.length > 0 && (
                     <Content component={ContentVariants.p}>
                       {labelEntries.map(([key, value]) => (
-                        <Label
-                          key={key}
-                          isCompact
-                          style={{
-                            marginRight: "var(--pf-t--global--spacer--xs)",
-                          }}
-                        >
+                        <Label key={key} isCompact className={spacing.mrXs}>
                           {value ? `${key}=${value}` : key}
                         </Label>
                       ))}

@@ -38,6 +38,7 @@ import {
   StackItem,
 } from "@patternfly/react-core";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { UserRoleResponse } from "@app/client";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -251,7 +252,7 @@ export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
                 <Button
                   variant="primary"
                   onClick={() => setIsEditOpen(true)}
-                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                  className={spacing.mrSm}
                 >
                   Edit
                 </Button>
@@ -348,7 +349,7 @@ export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
                 <Button
                   variant="secondary"
                   onClick={() => setIsAddRoleOpen(true)}
-                  style={{ marginBottom: "var(--pf-t--global--spacer--md)" }}
+                  className={spacing.mbMd}
                 >
                   Add role
                 </Button>

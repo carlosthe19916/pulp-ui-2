@@ -7,6 +7,7 @@ import {
   Label,
 } from "@patternfly/react-core";
 
+import { getFieldValue } from "@app/descriptors/formSchema";
 import type { FieldDescriptor } from "@app/descriptors/types";
 import type { ResourceKind } from "@app/descriptors/types";
 
@@ -14,7 +15,7 @@ import { ResourceHrefLink } from "./ResourceHrefLink";
 
 interface DescriptorDetailFieldsProps {
   fields: FieldDescriptor[] | undefined;
-  entity: Record<string, unknown>;
+  entity: object;
   /** Keys already rendered by the shell; skip to avoid duplicates. */
   skipKeys?: string[];
 }
@@ -64,7 +65,7 @@ export const DescriptorDetailFields: React.FC<DescriptorDetailFieldsProps> = ({
           <DescriptionListGroup key={field.key}>
             <DescriptionListTerm>{field.label}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatValue(field, entity[field.key])}
+              {formatValue(field, getFieldValue(entity, field.key))}
             </DescriptionListDescription>
           </DescriptionListGroup>
         ))}

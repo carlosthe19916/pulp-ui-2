@@ -21,6 +21,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -110,17 +111,23 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
               </StackItem>
 
               <StackItem>
-                <Link
-                  to="/browse/$distributionId"
-                  params={{ distributionId: distId }}
-                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                <Button
+                  variant="secondary"
+                  component={(props) => (
+                    <Link
+                      {...props}
+                      to="/browse/$distributionId"
+                      params={{ distributionId: distId }}
+                    />
+                  )}
+                  className={spacing.mrSm}
                 >
-                  <Button variant="secondary">Browse</Button>
-                </Link>
+                  Browse
+                </Button>
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditOpen(true)}
-                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                  className={spacing.mrSm}
                 >
                   Edit
                 </Button>
@@ -167,7 +174,7 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
                   </DescriptionListGroup>
                   <DescriptorDetailFields
                     fields={descriptor?.detailFields}
-                    entity={distribution as unknown as Record<string, unknown>}
+                    entity={distribution}
                     skipKeys={["repository", "publication"]}
                   />
                 </DescriptionList>

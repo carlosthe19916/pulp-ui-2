@@ -1,18 +1,16 @@
 import { useMemo, useState, type Ref } from "react";
 
 import {
+  Divider,
+  MenuSearch,
+  MenuSearchInput,
   MenuToggle,
   type MenuToggleElement,
+  SearchInput,
   Select,
   SelectList,
   SelectOption,
-  TextInputGroup,
-  TextInputGroupMain,
-  TextInputGroupUtilities,
-  Button,
-  TextInput,
 } from "@patternfly/react-core";
-import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
 
 export interface TypeaheadOption {
   value: string;
@@ -87,29 +85,20 @@ export function TypeaheadSelect({
         </MenuToggle>
       )}
     >
+      <MenuSearch>
+        <MenuSearchInput>
+          <SearchInput
+            id={`${id}-filter`}
+            aria-label={`${ariaLabel} filter`}
+            value={filter}
+            onChange={(_e, next) => setFilter(next)}
+            placeholder="Filter…"
+            onClear={() => setFilter("")}
+          />
+        </MenuSearchInput>
+      </MenuSearch>
+      <Divider />
       <SelectList>
-        <TextInputGroup>
-          <TextInputGroupMain>
-            <TextInput
-              id={`${id}-filter`}
-              aria-label={`${ariaLabel} filter`}
-              value={filter}
-              onChange={(_e, next) => setFilter(next)}
-              placeholder="Filter…"
-            />
-          </TextInputGroupMain>
-          <TextInputGroupUtilities>
-            {filter ? (
-              <Button
-                variant="plain"
-                aria-label="Clear filter"
-                onClick={() => setFilter("")}
-              >
-                <TimesIcon />
-              </Button>
-            ) : null}
-          </TextInputGroupUtilities>
-        </TextInputGroup>
         {filtered.map((option) => (
           <SelectOption key={option.value} value={option.value}>
             {option.label}

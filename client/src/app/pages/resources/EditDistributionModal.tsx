@@ -78,19 +78,11 @@ export const EditDistributionModal: React.FC<EditDistributionModalProps> = ({
     formState: { isSubmitting },
   } = useForm<Record<string, unknown>>({
     resolver: yupResolver(editDistributionSchema),
-    defaultValues: buildDefaultValues(
-      editFields,
-      distribution as unknown as Record<string, unknown>,
-    ),
+    defaultValues: buildDefaultValues(editFields, distribution),
   });
 
   useEffect(() => {
-    reset(
-      buildDefaultValues(
-        editFields,
-        distribution as unknown as Record<string, unknown>,
-      ),
-    );
+    reset(buildDefaultValues(editFields, distribution));
   }, [distribution, reset]);
 
   const onSubmit = handleSubmit(async (values) => {

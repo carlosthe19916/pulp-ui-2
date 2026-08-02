@@ -10,7 +10,7 @@
 
 ```bash
 npm ci
-PULP_API_URL="http://localhost:8080" PULP_DOMAIN="default" npm run start:dev
+PULP_API_URL="http://localhost:8080" npm run start:dev
 ```
 
 The app starts at `http://localhost:3000`. Point `PULP_API_URL` at a running Pulp whose API root matches the generated client (`API_ROOT=/api/pulp/` with `DOMAIN_ENABLED`).
@@ -76,7 +76,7 @@ npm run test:e2e
 npm run test -w e2e -- --ui
 ```
 
-Playwright starts `npm run start:dev` via `webServer` and passes `PULP_API_URL` / `PULP_DOMAIN`. Authenticated specs reuse a saved storage state from `e2e/tests/auth.setup.ts`.
+Playwright starts `npm run start:dev` via `webServer` and passes `PULP_API_URL`. Authenticated specs reuse a saved storage state from `e2e/tests/auth.setup.ts`.
 
 ## Linting and formatting
 
@@ -110,13 +110,6 @@ docs: update contributing guide
 
 ## Architecture
 
-See `plan.md` for the full ADR covering:
-
-- Descriptor-driven UI (Decision 1)
-- Application structure (Decision 2)
-- Tech stack (Decision 3)
-- Navigation and page inventory (Decision 4)
-- API integration strategy (Decision 5)
-- Authentication (Decision 6)
-
-Known/deferred a11y and performance work: [docs/A11Y_PERF.md](docs/A11Y_PERF.md).
+- Living overview: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Full ADR / roadmap: [plan.md](plan.md)
+- A11y / perf backlog: [docs/A11Y_PERF.md](docs/A11Y_PERF.md)

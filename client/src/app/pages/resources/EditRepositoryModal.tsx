@@ -63,19 +63,11 @@ export const EditRepositoryModal: React.FC<EditRepositoryModalProps> = ({
     formState: { isSubmitting },
   } = useForm<Record<string, unknown>>({
     resolver: yupResolver(editRepositorySchema),
-    defaultValues: buildDefaultValues(
-      editFields,
-      repository as unknown as Record<string, unknown>,
-    ),
+    defaultValues: buildDefaultValues(editFields, repository),
   });
 
   useEffect(() => {
-    reset(
-      buildDefaultValues(
-        editFields,
-        repository as unknown as Record<string, unknown>,
-      ),
-    );
+    reset(buildDefaultValues(editFields, repository));
   }, [repository, reset]);
 
   const onSubmit = handleSubmit(async (values) => {

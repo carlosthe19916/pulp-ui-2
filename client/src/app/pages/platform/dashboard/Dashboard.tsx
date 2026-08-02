@@ -5,6 +5,7 @@ import prettyBytes from "pretty-bytes";
 import {
   Card,
   CardBody,
+  CardHeader,
   CardTitle,
   Content,
   ContentVariants,
@@ -49,7 +50,9 @@ export const Dashboard: React.FC = () => {
       <Gallery hasGutter minWidths={{ default: "300px" }}>
         <GalleryItem>
           <Card>
-            <CardTitle>Plugins &amp; Versions</CardTitle>
+            <CardHeader>
+              <CardTitle>Plugins &amp; Versions</CardTitle>
+            </CardHeader>
             <CardBody>
               <DescriptionList isCompact>
                 {status.versions.map((v) => (
@@ -67,7 +70,9 @@ export const Dashboard: React.FC = () => {
 
         <GalleryItem>
           <Card>
-            <CardTitle>Workers</CardTitle>
+            <CardHeader>
+              <CardTitle>Workers</CardTitle>
+            </CardHeader>
             <CardBody>
               {status.online_workers.length === 0 ? (
                 <Content component={ContentVariants.p}>
@@ -94,7 +99,9 @@ export const Dashboard: React.FC = () => {
         {status.storage && (
           <GalleryItem>
             <Card>
-              <CardTitle>Storage</CardTitle>
+              <CardHeader>
+                <CardTitle>Storage</CardTitle>
+              </CardHeader>
               <CardBody>
                 <DescriptionList isCompact>
                   <DescriptionListGroup>
@@ -129,7 +136,9 @@ export const Dashboard: React.FC = () => {
 
         <GalleryItem>
           <Card>
-            <CardTitle>Quick Links</CardTitle>
+            <CardHeader>
+              <CardTitle>Quick Links</CardTitle>
+            </CardHeader>
             <CardBody>
               <Content component="ul">
                 <Content component="li">

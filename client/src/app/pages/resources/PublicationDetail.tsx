@@ -139,7 +139,7 @@ export const PublicationDetail: React.FC<PublicationDetailProps> = ({
                   </DescriptionListGroup>
                   <DescriptorDetailFields
                     fields={descriptor?.detailFields}
-                    entity={publication as unknown as Record<string, unknown>}
+                    entity={publication}
                     skipKeys={["repository", "repository_version"]}
                   />
                 </DescriptionList>

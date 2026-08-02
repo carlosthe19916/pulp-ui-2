@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { Bullseye } from "@patternfly/react-core";
 
 import { NotFoundEmptyState } from "@app/components/NotFoundEmptyState";

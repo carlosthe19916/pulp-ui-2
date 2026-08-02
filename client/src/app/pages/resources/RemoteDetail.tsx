@@ -21,6 +21,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -108,7 +109,7 @@ export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditOpen(true)}
-                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                  className={spacing.mrSm}
                 >
                   Edit
                 </Button>
@@ -137,7 +138,7 @@ export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
                   </DescriptionListGroup>
                   <DescriptorDetailFields
                     fields={descriptor?.detailFields}
-                    entity={remote as unknown as Record<string, unknown>}
+                    entity={remote}
                   />
                 </DescriptionList>
               </StackItem>

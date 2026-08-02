@@ -111,7 +111,7 @@ export const BrowseContentDetail: React.FC<BrowseContentDetailProps> = ({
                   </DescriptionListGroup>
                   <DescriptorDetailFields
                     fields={descriptor?.browseDetailFields}
-                    entity={content as unknown as Record<string, unknown>}
+                    entity={content}
                   />
                 </DescriptionList>
               </StackItem>

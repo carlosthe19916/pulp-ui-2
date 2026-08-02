@@ -2,6 +2,18 @@ import * as yup from "yup";
 
 import type { FieldDescriptor } from "./types";
 
+/** Dynamic property access for descriptor-driven UI over OpenAPI objects. */
+export function getFieldValue(entity: object, key: string): unknown {
+  return Object.hasOwn(entity, key)
+    ? Object.getOwnPropertyDescriptor(entity, key)?.value
+    : undefined;
+}
+
+/** Convert a typed API entity into a field record for descriptor forms. */
+export function toFieldRecord(entity: object): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(entity));
+}
+
 /** Build a yup validator for a single field descriptor. */
 function buildFieldValidator(field: FieldDescriptor): yup.AnySchema {
   switch (field.type) {
@@ -40,24 +52,23 @@ function buildFieldValidator(field: FieldDescriptor): yup.AnySchema {
 /** Build a yup object schema mirroring the shape of the given field descriptors. */
 export function buildFieldSchema(
   fields: FieldDescriptor[],
-): yup.ObjectSchema<Record<string, unknown>> {
+): yup.AnyObjectSchema {
   const shape: Record<string, yup.AnySchema> = {};
   for (const field of fields) {
     shape[field.key] = buildFieldValidator(field);
   }
-  return yup.object(shape) as unknown as yup.ObjectSchema<
-    Record<string, unknown>
-  >;
+  return yup.object(shape);
 }
 
 /** Build default form values for the given field descriptors, optionally seeded from an existing record (for edit forms). */
 export function buildDefaultValues(
   fields: FieldDescriptor[],
-  source?: Record<string, unknown> | null,
+  source?: object | null,
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const field of fields) {
-    const sourceValue = source?.[field.key];
+    const sourceValue =
+      source != null ? getFieldValue(source, field.key) : undefined;
     if (sourceValue !== undefined) {
       values[field.key] =
         sourceValue ?? (field.type === "boolean" ? false : "");

@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { EmptyState, EmptyStateBody } from "@patternfly/react-core";
 import PathMissingIcon from "@patternfly/react-icons/dist/esm/icons/path-missing-icon";
 

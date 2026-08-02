@@ -5,7 +5,6 @@ import {
   Nav,
   NavGroup,
   NavItem,
-  NavList,
   PageSidebar,
   PageSidebarBody,
 } from "@patternfly/react-core";
@@ -27,18 +26,14 @@ export const BrowseSidebar: React.FC = () => {
       <PageSidebarBody>
         <Nav id="nav-browse-sidebar" aria-label="Browse navigation">
           <NavGroup title="Browse">
-            <NavList>
-              <NavItem isActive={isActive("/browse")}>
-                <Link to="/browse">Content Browser</Link>
-              </NavItem>
-            </NavList>
+            <NavItem isActive={isActive("/browse")}>
+              <Link to="/browse">Content Browser</Link>
+            </NavItem>
           </NavGroup>
           <NavGroup title="Console">
-            <NavList>
-              <NavItem isActive={currentPath === "/"}>
-                <Link to="/">Admin console</Link>
-              </NavItem>
-            </NavList>
+            <NavItem isActive={currentPath === "/"}>
+              <Link to="/">Admin console</Link>
+            </NavItem>
           </NavGroup>
         </Nav>
       </PageSidebarBody>

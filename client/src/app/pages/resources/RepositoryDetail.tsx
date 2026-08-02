@@ -32,6 +32,7 @@ import {
   Tabs,
 } from "@patternfly/react-core";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
+import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type {
   DistributionResponse,
@@ -286,7 +287,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditOpen(true)}
-                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                  className={spacing.mrSm}
                 >
                   Edit
                 </Button>
@@ -294,7 +295,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                   <Button
                     variant="primary"
                     onClick={() => setIsSyncOpen(true)}
-                    style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                    className={spacing.mrSm}
                   >
                     Sync
                   </Button>
@@ -303,7 +304,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                   <Button
                     variant="secondary"
                     onClick={() => setIsPublishOpen(true)}
-                    style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                    className={spacing.mrSm}
                   >
                     Publish
                   </Button>
@@ -365,7 +366,7 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                         </DescriptionListGroup>
                         <DescriptorDetailFields
                           fields={descriptor?.detailFields}
-                          entity={repo as unknown as Record<string, unknown>}
+                          entity={repo}
                           skipKeys={["remote"]}
                         />
                       </DescriptionList>
@@ -380,7 +381,9 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                   >
                     <TabContentBody hasPadding>
                       {isVersionsLoading ? (
-                        <Content>Loading versions...</Content>
+                        <Content component={ContentVariants.p}>
+                          Loading versions...
+                        </Content>
                       ) : (
                         <Table
                           aria-label="Repository versions table"
@@ -440,7 +443,9 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                   >
                     <TabContentBody hasPadding>
                       {isDistributionsLoading ? (
-                        <Content>Loading distributions...</Content>
+                        <Content component={ContentVariants.p}>
+                          Loading distributions...
+                        </Content>
                       ) : (
                         <Table
                           aria-label="Repository distributions table"
@@ -514,12 +519,14 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
                         </StackItem>
                         <StackItem>
                           {!latestVersionHref ? (
-                            <Content>
+                            <Content component={ContentVariants.p}>
                               No repository version yet. Sync or upload content
                               to create one.
                             </Content>
                           ) : isContentLoading ? (
-                            <Content>Loading content...</Content>
+                            <Content component={ContentVariants.p}>
+                              Loading content...
+                            </Content>
                           ) : (
                             <Table
                               aria-label="Repository content table"
