@@ -2,5 +2,11 @@
   "name": "@pulp-ui/e2e",
   "version": "0.1.0",
   "private": true,
-  "scripts": {}
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.62.1"
+  }
 }

@@ -19,7 +19,8 @@
     "start:dev:client": "npm run start:dev -w client",
     "start:dev": "npm run build -w common && concurrently -n common,client -c 'white.bold.inverse,green.bold.inverse,blue.bold.inverse' 'npm:start:dev:common' 'npm:start:dev:client'",
     "start": "npm run build -w common -w client && npm run start -w server",
-    "test": "npm run test -w common -w client -w server --if-present --"
+    "test": "npm run test -w common -w client -w server --if-present --",
+    "test:e2e": "npm run test -w e2e"
   },
   "workspaces": [
     "common",
@@ -56,6 +57,7 @@
     "cross-env": "^10.0.0",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.8.0",

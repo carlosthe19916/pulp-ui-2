@@ -37,8 +37,16 @@ npm-debug.log*
 # Cursor
 .cursor/
 
-# Test results
+# Playwright / test artifacts
 test-results/
+e2e/test-results/
+e2e/playwright-report/
+e2e/.auth/
+
+# Pulp e2e compose generated files under mounted settings
+e2e/pulp/settings/certs/
+e2e/pulp/settings/keys/
+e2e/pulp/settings/database_fields.symmetric.key
 
 # Claude
 managed_context/

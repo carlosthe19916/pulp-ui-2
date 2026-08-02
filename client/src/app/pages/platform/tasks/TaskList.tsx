@@ -42,6 +42,8 @@ import {
   useTaskPurgeMutation,
   useTasksListQuery,
 } from "@app/queries/tasks";
+import { UnauthorizedState } from "@app/components/UnauthorizedState";
+import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractTaskId } from "@app/utils/taskHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
@@ -91,7 +93,7 @@ export const TaskList: React.FC = () => {
   const cancelMutation = useTaskCancelMutation();
   const purgeMutation = useTaskPurgeMutation();
 
-  const { data, isLoading } = useTasksListQuery({
+  const { data, isLoading, error } = useTasksListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering: "-pulp_created",
@@ -170,6 +172,14 @@ export const TaskList: React.FC = () => {
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
   });
+
+  if (isForbiddenError(error)) {
+    return (
+      <PageSection>
+        <UnauthorizedState />
+      </PageSection>
+    );
+  }
 
   const handleCancel = async () => {
     if (!cancelHref) return;

@@ -1,0 +1,30 @@
+# Self-contained Pulp for Playwright e2e (ADR Decision 7).
+# Default credentials: admin / password (override via E2E_USERNAME / E2E_PASSWORD).
+services:
+  pulp:
+    image: docker.io/pulp/pulp:stable
+    container_name: pulp-ui-e2e
+    ports:
+      - "8080:80"
+    volumes:
+      - ./e2e/pulp/settings:/etc/pulp:Z
+      - pulp_e2e_storage:/var/lib/pulp
+      - pulp_e2e_pgsql:/var/lib/pgsql
+      - pulp_e2e_containers:/var/lib/containers
+      - pulp_e2e_container_build:/var/lib/pulp/.local/share/containers
+    devices:
+      - /dev/fuse
+    privileged: true
+    healthcheck:
+      test:
+        ["CMD", "curl", "-fsS", "http://localhost:80/api/pulp/api/v3/status/"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 90s
+
+volumes:
+  pulp_e2e_storage:
+  pulp_e2e_pgsql:
+  pulp_e2e_containers:
+  pulp_e2e_container_build:

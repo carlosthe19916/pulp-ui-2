@@ -2,6 +2,7 @@ import eslintReact from "@eslint-react/eslint-plugin";
 import eslintJs from "@eslint/js";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 import pluginRouter from "@tanstack/eslint-plugin-router";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
 import reactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -19,6 +20,7 @@ export default defineConfig([
       ...pluginQuery.configs["flat/recommended-strict"],
       ...pluginRouter.configs["flat/recommended"],
       reactRefresh.configs.vite,
+      jsxA11y.flatConfigs.recommended,
       prettierRecommended,
     ],
     languageOptions: {
@@ -28,9 +30,7 @@ export default defineConfig([
       },
       parser: tseslint.parser,
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["e2e/playwright.config.ts"],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

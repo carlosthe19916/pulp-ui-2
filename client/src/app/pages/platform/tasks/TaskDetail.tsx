@@ -22,11 +22,11 @@ import {
   ModalHeader,
   PageSection,
   Progress,
-  Spinner,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
 
+import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { useTaskCancelMutation, useTaskDetailQuery } from "@app/queries/tasks";
@@ -51,7 +51,7 @@ interface TaskDetailProps {
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
   const taskHref = buildTaskHref(taskId);
-  const { data: task, isLoading } = useTaskDetailQuery(taskHref);
+  const { data: task, isLoading, error } = useTaskDetailQuery(taskHref);
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -74,18 +74,28 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
     setIsCancelModalOpen(false);
   };
 
-  if (isLoading || !task) {
+  if (!task) {
     return (
-      <PageSection>
-        <Spinner aria-label="Loading task" />
-      </PageSection>
+      <DetailQueryGate
+        isLoading={isLoading}
+        error={error}
+        hasData={false}
+        loadingLabel="Loading task..."
+      >
+        {null}
+      </DetailQueryGate>
     );
   }
 
   const taskName = task.name.split(".").pop() ?? task.name;
 
   return (
-    <>
+    <DetailQueryGate
+      isLoading={isLoading}
+      error={error}
+      hasData
+      loadingLabel="Loading task..."
+    >
       <PageSection>
         <Breadcrumb>
           <BreadcrumbItem>
@@ -256,6 +266,6 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
           </Button>
         </ModalFooter>
       </Modal>
-    </>
+    </DetailQueryGate>
   );
 };
