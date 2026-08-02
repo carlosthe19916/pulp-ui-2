@@ -44,6 +44,7 @@ flowchart TB
 
 ## Related
 
+- [UI_ENTITIES.md](UI_ENTITIES.md) — domain entities and relationships in the UI
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — add a descriptor
 - [README.md](../README.md) — run / env
 - [A11Y_PERF.md](A11Y_PERF.md) — deferred a11y/perf

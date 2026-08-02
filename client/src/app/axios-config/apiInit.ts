@@ -13,6 +13,13 @@ export const setOnUnauthorized = (cb: () => void) => {
   onUnauthorized = cb;
 };
 
+/**
+ * Header used to mark requests (e.g. the initial session probe) whose 401
+ * responses are expected and shouldn't trigger the global unauthorized
+ * handler (which redirects to the login page).
+ */
+export const SKIP_AUTH_REDIRECT_HEADER = "X-Skip-Auth-Redirect";
+
 export const client = createClient({
   baseURL: "",
   axios: axios,
@@ -36,7 +43,11 @@ client.instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      onUnauthorized?.();
+      const skipRedirect =
+        error.config?.headers?.[SKIP_AUTH_REDIRECT_HEADER] === "true";
+      if (!skipRedirect) {
+        onUnauthorized?.();
+      }
     }
     return Promise.reject(error);
   },

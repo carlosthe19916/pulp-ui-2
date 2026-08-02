@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-import { client, setOnUnauthorized } from "@app/axios-config/apiInit";
+import {
+  client,
+  setOnUnauthorized,
+  SKIP_AUTH_REDIRECT_HEADER,
+} from "@app/axios-config/apiInit";
 import { login as loginApi, loginRead, logout as logoutApi } from "@app/client";
 import { PULP_DOMAIN } from "@app/Constants";
 
@@ -51,9 +55,12 @@ export const AuthProvider: React.FC<{
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // A 401 here just means "not logged in yet" on first load; skip the
+        // global unauthorized handler so it doesn't also redirect/log noise.
         const response = await loginRead({
           client,
           path: { pulp_domain: PULP_DOMAIN },
+          headers: { [SKIP_AUTH_REDIRECT_HEADER]: "true" },
         });
         const username =
           response.data?.username ??
@@ -66,6 +73,7 @@ export const AuthProvider: React.FC<{
           setUser(null);
         }
       } catch {
+        // Expected when the session probe returns 401 (not logged in yet).
         clearStoredUser();
         setUser(null);
       } finally {
