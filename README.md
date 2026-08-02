@@ -1,73 +1,39 @@
 # Pulp UI
 
-A React-based web application demo.
+React admin + browse UI for Pulp (pulpcore + plugins).
 
 ## Quick Start
 
-- Install dependencies:
-
 ```bash
 npm ci
+PULP_API_URL="http://localhost:24817" npm run start:dev
 ```
 
-### Start with mock data
-
-```bash
-MOCK=on npm run start:dev
-```
-
-### Start server with credentials
-
-#### Using inline ENVs
-
-```bash
-PULP_API_URL="https://packages.redhat.com" PULP_USERNAME=<redacted> PULP_PASSWORD=<redacted> npm run start:dev
-```
-
-#### Using .env file
-
-- Create a .env file:
-
-```bash
-export PULP_API_URL="https://packages.redhat.com"
-export PULP_USERNAME="<redacted>"
-export PULP_PASSWORD="<redacted>"
-```
-
-- Load ENVs:
-
-```bash
-source .env
-```
-
-- Run the app:
-
-```bash
-npm run start:dev
-```
-
-The application will be available at http://localhost:3000
+Open http://localhost:3000 and sign in with your Pulp credentials. The Vite proxy forwards `/api` to `PULP_API_URL` and uses **session cookies** after login (no injected Basic Auth).
 
 ## Project Structure
 
-This is a monorepo with the following workspaces:
+npm workspaces monorepo:
 
-- `common/` - Shared ESM module for environment config and branding
-- `client/` - React frontend application
-- `server/` - Express.js production server
+- `common/` — shared env + branding
+- `client/` — React SPA (Vite)
+- `server/` — Express production server
+- `e2e/` — Playwright placeholder (Phase 5)
 
 ## Tech Stack
 
-- React 19
-- TypeScript
-- PatternFly 6 (design system)
-- Rsbuild (build tool)
-- TanStack Query (data fetching)
-- React Router 7
+- React 19 + TypeScript
+- Vite + Vitest
+- PatternFly 6
+- TanStack Query, Router, Table
+- ESLint + Prettier
+- OpenAPI client via `@hey-api/openapi-ts`
 
-## Available Scripts
+## Scripts
 
-- `npm run start:dev` - Start development server
-- `npm run build` - Build all workspaces
-- `npm run check` - Lint and format check
-- `npm run test` - Run tests
+- `npm run start:dev` — build common + start Vite client
+- `npm run build` — build all workspaces
+- `npm run lint` / `npm run format` — lint and format checks
+- `npm run test` — unit tests
+- `npm run coverage -w client` — Vitest coverage
+- `npm run generate` — regenerate OpenAPI client

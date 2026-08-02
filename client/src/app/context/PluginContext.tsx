@@ -1,27 +1,9 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { useMemo } from "react";
 
-import type { StatusResponse, VersionResponse } from "@app/client";
 import { useStatusQuery } from "@app/queries/status";
 
-interface PluginContextValue {
-  status: StatusResponse | undefined;
-  isLoading: boolean;
-  error: Error | null;
-  plugins: VersionResponse[];
-  isPluginInstalled: (componentName: string) => boolean;
-  getPluginVersion: (componentName: string) => string | undefined;
-}
-
-const PluginContext = createContext<PluginContextValue | null>(null);
-
-export const usePlugins = () => {
-  const context = useContext(PluginContext);
-  if (!context) {
-    throw new Error("usePlugins must be used within a PluginProvider");
-  }
-  return context;
-};
-
+import { PluginContext } from "./plugin-context";
+import type { PluginContextValue } from "./plugin-context";
 export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -50,7 +32,5 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     getPluginVersion,
   };
 
-  return (
-    <PluginContext.Provider value={value}>{children}</PluginContext.Provider>
-  );
+  return <PluginContext value={value}>{children}</PluginContext>;
 };

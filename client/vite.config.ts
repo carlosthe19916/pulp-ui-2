@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { ViteEjsPlugin } from "vite-plugin-ejs";
@@ -32,7 +32,7 @@ const faviconPath = path.resolve(brandingPath, "favicon.ico");
 export default defineConfig({
   base: process.env.BASE_URL,
   plugins: [
-    TanStackRouterVite({
+    tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
       routesDirectory: "./src/routes",
@@ -116,18 +116,11 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
+        // Session cookies from the browser login flow are forwarded automatically.
+        // Do not inject Basic Auth here — that fights cookie/session auth (ADR Decision 6).
         target: PULP_ENV.PULP_API_URL || "http://localhost:8080",
         changeOrigin: true,
-        configure: (proxy, _options) => {
-          proxy.on("proxyReq", (proxyReq, _req, _res) => {
-            if (PULP_ENV.MOCK === "off") {
-              // Add Basic Auth header to all proxied requests
-              const credentials = `${PULP_ENV.PULP_USERNAME}:${PULP_ENV.PULP_PASSWORD}`;
-              const encoded = Buffer.from(credentials).toString("base64");
-              proxyReq.setHeader("Authorization", `Basic ${encoded}`);
-            }
-          });
-        },
+        cookieDomainRewrite: "",
       },
     },
   },

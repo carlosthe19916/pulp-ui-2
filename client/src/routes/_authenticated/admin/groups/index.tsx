@@ -1,15 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Content, ContentVariants, PageSection } from "@patternfly/react-core";
+
+import { ComingSoon } from "@app/pages/resources/ComingSoon";
 
 export const Route = createFileRoute("/_authenticated/admin/groups/")({
-  component: GroupsPlaceholder,
+  component: () => <ComingSoon title="Groups" />,
 });
-
-function GroupsPlaceholder() {
-  return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Groups</Content>
-      <Content component={ContentVariants.p}>Coming in a future phase.</Content>
-    </PageSection>
-  );
-}

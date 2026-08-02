@@ -32,7 +32,7 @@ import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 import BarsIcon from "@patternfly/react-icons/dist/js/icons/bars-icon";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/js/icons/external-link-alt-icon";
 
-import { useAuth } from "@app/context/AuthContext";
+import { useAuth } from "@app/context/useAuth";
 import useBranding from "@app/hooks/useBranding";
 
 import { AboutApp } from "./about";
@@ -61,8 +61,10 @@ export const HeaderApp: React.FC = () => {
   };
 
   const onLogout = () => {
-    auth.logout();
-    navigate({ to: "/login" });
+    void (async () => {
+      await auth.logout();
+      await navigate({ to: "/login" });
+    })();
   };
 
   return (

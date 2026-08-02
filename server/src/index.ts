@@ -14,10 +14,12 @@ import {
   brandingStrings,
   encodeEnv,
 } from "@pulp-ui/common";
-import proxies from "./proxies";
+import proxies from "./proxies.js";
 
 const debugMode = process.env.DEBUG === "1";
-debugMode && console.log("CONSOLE_ENV", PULP_ENV);
+if (debugMode) {
+  console.log("CONSOLE_ENV", PULP_ENV);
+}
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const pathToClientDist = path.join(__dirname, "../../client/dist");
@@ -63,7 +65,7 @@ const server = app.listen(port, (error) => {
 // Handle shutdown signals Ctrl-C (SIGINT) and default podman/docker stop (SIGTERM)
 const httpTerminator = createHttpTerminator({ server });
 
-const shutdown = async (signal) => {
+const shutdown = async (signal: NodeJS.Signals) => {
   if (!server) {
     console.log(`${signal}, no server running.`);
     return;

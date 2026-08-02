@@ -19,7 +19,7 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-import { usePlugins } from "@app/context/PluginContext";
+import { usePlugins } from "@app/context/usePlugins";
 
 export const Dashboard: React.FC = () => {
   const { status, isLoading, error } = usePlugins();

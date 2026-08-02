@@ -1,15 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Content, ContentVariants, PageSection } from "@patternfly/react-core";
+
+import { ComingSoon } from "@app/pages/resources/ComingSoon";
 
 export const Route = createFileRoute("/_authenticated/publications/")({
-  component: PublicationsPlaceholder,
+  component: () => <ComingSoon title="Publications" />,
 });
-
-function PublicationsPlaceholder() {
-  return (
-    <PageSection>
-      <Content component={ContentVariants.h1}>Publications</Content>
-      <Content component={ContentVariants.p}>Coming in a future phase.</Content>
-    </PageSection>
-  );
-}

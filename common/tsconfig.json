@@ -5,6 +5,7 @@
 
   "compilerOptions": {
     "strict": true,
+    "types": ["node"],
     "target": "es2021",
     "module": "node16",
     "moduleResolution": "node16",

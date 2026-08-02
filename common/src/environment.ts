@@ -2,6 +2,7 @@
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace NodeJS {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface ProcessEnv extends Partial<Readonly<PulpEnvType>> {}
   }
 }
@@ -12,9 +13,6 @@ declare global {
 export type PulpEnvType = {
   NODE_ENV: "development" | "production" | "test";
   VERSION: string;
-
-  /** Controls how mock data is injected on the client */
-  MOCK: string;
 
   /** UI upload file size limit in megabytes (MB), suffixed with "m" */
   UI_INGRESS_PROXY_BODY_SIZE: string;
@@ -57,7 +55,6 @@ export const buildPulpEnv = ({
   NODE_ENV = "production",
   PORT,
   VERSION = "99.0.0",
-  MOCK = "off",
 
   UI_INGRESS_PROXY_BODY_SIZE = "500m",
 
@@ -71,7 +68,6 @@ export const buildPulpEnv = ({
   NODE_ENV,
   PORT,
   VERSION,
-  MOCK,
 
   UI_INGRESS_PROXY_BODY_SIZE,
 

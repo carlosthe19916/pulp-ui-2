@@ -1,58 +1,86 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import * as yup from "yup";
 
 import { LoginForm, LoginPage as PFLoginPage } from "@patternfly/react-core";
 
+import { useAuth } from "@app/context/useAuth";
 import useBranding from "@app/hooks/useBranding";
-import { useAuth } from "@app/context/AuthContext";
+
+const loginSchema = yup.object({
+  username: yup.string().required("Username is required"),
+  password: yup.string().required("Password is required"),
+});
+
+type LoginFormValues = yup.InferType<typeof loginSchema>;
 
 export const LoginPage: React.FC = () => {
   const auth = useAuth();
   const navigate = useNavigate();
-  const search = useSearch({ strict: false }) as { redirect?: string };
+  const { redirect } = useSearch({ from: "/login" });
   const branding = useBranding();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isSubmitting, errors },
+    setError,
+  } = useForm<LoginFormValues>({
+    resolver: yupResolver(loginSchema),
+    defaultValues: { username: "", password: "" },
+  });
 
-  const handleLogin = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  const username = watch("username");
+  const password = watch("password");
 
+  // Keep RHF register in sync with PatternFly controlled inputs
+  register("username");
+  register("password");
+
+  const onSubmit = handleSubmit(async (values) => {
     try {
-      await auth.login(username, password);
-      const redirectTo = search.redirect || "/";
-      navigate({ to: redirectTo });
+      await auth.login(values.username, values.password);
+      await navigate({ href: redirect || "/" });
     } catch {
-      setError("Invalid username or password.");
-    } finally {
-      setIsLoading(false);
+      setError("root", { message: "Invalid username or password." });
     }
-  };
+  });
 
   return (
     <PFLoginPage
-      brandImgSrc={branding.masthead.leftImageUrl}
-      brandImgAlt={branding.application.title}
+      brandImgSrc={branding.masthead.leftBrand?.src}
+      brandImgAlt={
+        branding.masthead.leftBrand?.alt ?? branding.application.title
+      }
       loginTitle={`Log in to ${branding.application.title}`}
     >
       <LoginForm
         usernameLabel="Username"
         usernameValue={username}
-        onChangeUsername={(_e, v) => setUsername(v)}
+        onChangeUsername={(_e, v) =>
+          setValue("username", v, { shouldValidate: true })
+        }
         passwordLabel="Password"
         passwordValue={password}
-        onChangePassword={(_e, v) => setPassword(v)}
-        onLoginButtonClick={handleLogin}
-        loginButtonLabel={isLoading ? "Logging in..." : "Log in"}
-        isLoginButtonDisabled={isLoading || !username || !password}
-        showHelperText={!!error}
-        helperText={error}
+        onChangePassword={(_e, v) =>
+          setValue("password", v, { shouldValidate: true })
+        }
+        onLoginButtonClick={(e) => {
+          e.preventDefault();
+          void onSubmit();
+        }}
+        loginButtonLabel={isSubmitting ? "Logging in..." : "Log in"}
+        isLoginButtonDisabled={isSubmitting || !username || !password}
+        showHelperText={!!(errors.root || errors.username || errors.password)}
+        helperText={
+          errors.root?.message ||
+          errors.username?.message ||
+          errors.password?.message
+        }
       />
     </PFLoginPage>
   );

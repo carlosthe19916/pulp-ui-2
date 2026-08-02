@@ -28,19 +28,20 @@ import {
 } from "@patternfly/react-core";
 
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
-import { useNotifications } from "@app/context/NotificationsContext";
+import { useNotifications } from "@app/context/useNotifications";
 import { useTaskCancelMutation, useTaskDetailQuery } from "@app/queries/tasks";
+import { buildTaskHref, extractTaskId } from "@app/utils/taskHref";
 
 const stateColors: Record<
   string,
-  "green" | "blue" | "red" | "orange" | "grey" | "cyan"
+  "green" | "blue" | "red" | "orange" | "grey" | "teal"
 > = {
   completed: "green",
   running: "blue",
   failed: "red",
   canceled: "orange",
   canceling: "orange",
-  waiting: "cyan",
+  waiting: "teal",
   skipped: "grey",
 };
 
@@ -49,7 +50,7 @@ interface TaskDetailProps {
 }
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
-  const taskHref = `/api/pulp/default/api/v3/tasks/${taskId}/`;
+  const taskHref = buildTaskHref(taskId);
   const { data: task, isLoading } = useTaskDetailQuery(taskHref);
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
@@ -167,8 +168,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             <StackItem>
               <Content component={ContentVariants.h2}>Progress Reports</Content>
               <Stack hasGutter>
-                {task.progress_reports.map((report, idx) => (
-                  <StackItem key={idx}>
+                {task.progress_reports.map((report) => (
+                  <StackItem
+                    key={`${report.code ?? "report"}-${report.message ?? ""}-${report.state ?? ""}`}
+                  >
                     <Content component={ContentVariants.p}>
                       {report.message}
                     </Content>
@@ -185,7 +188,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
             </StackItem>
           )}
 
-          {task.state === "failed" && task.result && (
+          {task.state === "failed" && task.result != null && (
             <StackItem>
               <Content component={ContentVariants.h2}>Error</Content>
               <CodeBlock>
@@ -218,7 +221,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               <Content component={ContentVariants.h2}>Child Tasks</Content>
               <Content component="ul">
                 {task.child_tasks.map((href) => {
-                  const childId = href.split("/").filter(Boolean).pop() ?? href;
+                  const childId = extractTaskId(href);
                   return (
                     <Content component="li" key={href}>
                       <Link to="/tasks/$taskId" params={{ taskId: childId }}>
@@ -243,7 +246,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         <ModalFooter>
           <Button
             variant="danger"
-            onClick={handleCancel}
+            onClick={() => void handleCancel()}
             isLoading={cancelMutation.isPending}
           >
             Cancel Task
