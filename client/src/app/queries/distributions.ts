@@ -11,7 +11,7 @@ type DistributionOrdering = NonNullable<
   Parameters<typeof distributionsList>[0]["query"]
 >["ordering"];
 
-interface DistributionListParams {
+export interface DistributionListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<DistributionOrdering>[number];

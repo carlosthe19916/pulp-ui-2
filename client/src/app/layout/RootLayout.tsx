@@ -2,6 +2,7 @@ import { Outlet, useRouterState } from "@tanstack/react-router";
 
 import { NotificationsProvider } from "@app/context/NotificationsContext";
 import { PluginProvider } from "@app/context/PluginContext";
+import { BrowseLayout } from "./browse-layout";
 import { DefaultLayout } from "./default-layout";
 
 export function RootComponent() {
@@ -15,6 +16,8 @@ export function RootComponent() {
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLoginRoute = pathname === "/login";
+  const isBrowseRoute =
+    pathname === "/browse" || pathname.startsWith("/browse/");
 
   if (isLoginRoute) {
     return <Outlet />;
@@ -22,9 +25,15 @@ function RootLayout() {
 
   return (
     <PluginProvider>
-      <DefaultLayout>
-        <Outlet />
-      </DefaultLayout>
+      {isBrowseRoute ? (
+        <BrowseLayout>
+          <Outlet />
+        </BrowseLayout>
+      ) : (
+        <DefaultLayout>
+          <Outlet />
+        </DefaultLayout>
+      )}
     </PluginProvider>
   );
 }

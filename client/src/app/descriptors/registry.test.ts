@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { fileContentDescriptor } from "./file/file-content";
+import { fileDistributionDescriptor } from "./file/file-distribution";
 import { fileRemoteDescriptor } from "./file/file-remote";
 import { fileRepositoryDescriptor } from "./file/file-repository";
 import {
@@ -16,6 +17,7 @@ describe("descriptor registry", () => {
     registerDescriptor(fileRepositoryDescriptor);
     registerDescriptor(fileRemoteDescriptor);
     registerDescriptor(fileContentDescriptor);
+    registerDescriptor(fileDistributionDescriptor);
   });
 
   it("stores descriptors under a kind+pulpType composite key", () => {
@@ -41,5 +43,14 @@ describe("descriptor registry", () => {
 
   it("returns undefined for unknown types", () => {
     expect(getDescriptor("repository", "rpm.package")).toBeUndefined();
+  });
+
+  it("exposes browse presentation fields for file distribution and content", () => {
+    expect(
+      getDescriptor("distribution", "file.file")?.browseCardFields?.length,
+    ).toBeGreaterThan(0);
+    expect(
+      getDescriptor("content", "file.file")?.browseDetailFields?.length,
+    ).toBeGreaterThan(0);
   });
 });

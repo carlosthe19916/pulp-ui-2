@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildContentHref,
+  buildDistributionContentUrl,
   buildDistributionHref,
   buildGroupHref,
   buildPublicationHref,
@@ -31,5 +32,20 @@ describe("pulpHref helpers", () => {
 
   it("extracts the trailing id from a pulp_href", () => {
     expect(extractIdFromHref("/api/pulp/default/api/v3/users/42/")).toBe("42");
+  });
+
+  it("joins distribution base_url and relative_path for downloads", () => {
+    expect(
+      buildDistributionContentUrl(
+        "http://pulp.example/pulp/content/files/",
+        "docs/readme.txt",
+      ),
+    ).toBe("http://pulp.example/pulp/content/files/docs/readme.txt");
+    expect(
+      buildDistributionContentUrl(
+        "http://pulp.example/pulp/content/files",
+        "/docs/readme.txt",
+      ),
+    ).toBe("http://pulp.example/pulp/content/files/docs/readme.txt");
   });
 });

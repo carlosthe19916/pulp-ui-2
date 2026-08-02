@@ -161,15 +161,29 @@ export const DistributionList: React.FC = () => {
             return <ReadOnlyBadge pulpType={pulpType} />;
           }
 
+          const distId = extractIdFromHref(row.original.pulp_href ?? "");
+
           return (
-            <Button
-              variant="link"
-              isInline
-              isDanger
-              onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
-            >
-              Delete
-            </Button>
+            <>
+              {distId ? (
+                <>
+                  <Link
+                    to="/browse/$distributionId"
+                    params={{ distributionId: distId }}
+                  >
+                    Browse
+                  </Link>{" "}
+                </>
+              ) : null}
+              <Button
+                variant="link"
+                isInline
+                isDanger
+                onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
+              >
+                Delete
+              </Button>
+            </>
           );
         },
       },

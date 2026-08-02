@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@app/pages/resources/ComingSoon";
+import { DistributionBrowser } from "@app/pages/browse/DistributionBrowser";
 
 export const Route = createFileRoute("/browse/")({
-  component: () => <ComingSoon title="Content Browser" />,
+  component: DistributionBrowser,
 });

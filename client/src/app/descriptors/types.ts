@@ -36,6 +36,12 @@ export interface ResourceDescriptor {
   /** Extra fields shown in detail DescriptionList */
   detailFields?: FieldDescriptor[];
 
+  /** Extra fields shown on browse distribution cards */
+  browseCardFields?: FieldDescriptor[];
+
+  /** Fields shown on browse content detail (consumer surface) */
+  browseDetailFields?: FieldDescriptor[];
+
   /** Whether this resource type supports sync (repositories only) */
   supportsSync?: boolean;
 

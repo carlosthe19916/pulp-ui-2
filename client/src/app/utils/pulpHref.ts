@@ -45,3 +45,16 @@ export function extractIdFromHref(href: string): string {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;
 }
+
+/**
+ * Build a consumer download URL for a unit served by a distribution.
+ * Joins `base_url` and `relative_path` with normalized slashes.
+ */
+export function buildDistributionContentUrl(
+  baseUrl: string,
+  relativePath: string,
+): string {
+  const base = baseUrl.replace(/\/+$/, "");
+  const path = relativePath.replace(/^\/+/, "");
+  return `${base}/${path}`;
+}

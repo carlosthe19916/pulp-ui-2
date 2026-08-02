@@ -11,7 +11,7 @@ type ContentOrdering = NonNullable<
   Parameters<typeof contentList>[0]["query"]
 >["ordering"];
 
-interface ContentListParams {
+export interface ContentListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<ContentOrdering>[number];

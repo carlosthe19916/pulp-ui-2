@@ -110,6 +110,13 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
               </StackItem>
 
               <StackItem>
+                <Link
+                  to="/browse/$distributionId"
+                  params={{ distributionId: distId }}
+                  style={{ marginRight: "var(--pf-t--global--spacer--sm)" }}
+                >
+                  <Button variant="secondary">Browse</Button>
+                </Link>
                 <Button
                   variant="secondary"
                   onClick={() => setIsEditOpen(true)}

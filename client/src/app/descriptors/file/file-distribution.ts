@@ -43,6 +43,10 @@ export const fileDistributionDescriptor: ResourceDescriptor = {
     { key: "publication", label: "Publication", type: "text" },
     { key: "content_guard", label: "Content Guard", type: "text" },
   ],
+  browseCardFields: [
+    { key: "base_path", label: "Base path", type: "text" },
+    { key: "base_url", label: "Base URL", type: "text" },
+  ],
   isAvailable: (plugins) =>
     plugins.some((p) => p.component === "file" || p.package === "pulp-file"),
 };
