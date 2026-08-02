@@ -15,6 +15,31 @@ export function buildRoleHref(roleId: string): string {
   return `/api/pulp/${PULP_DOMAIN}/api/v3/roles/${roleId}/`;
 }
 
+/** Build a file repository pulp_href from a repository ID. */
+export function buildRepositoryHref(repoId: string): string {
+  return `/api/pulp/${PULP_DOMAIN}/api/v3/repositories/file/file/${repoId}/`;
+}
+
+/** Build a file remote pulp_href from a remote ID. */
+export function buildRemoteHref(remoteId: string): string {
+  return `/api/pulp/${PULP_DOMAIN}/api/v3/remotes/file/file/${remoteId}/`;
+}
+
+/** Build a file distribution pulp_href from a distribution ID. */
+export function buildDistributionHref(distId: string): string {
+  return `/api/pulp/${PULP_DOMAIN}/api/v3/distributions/file/file/${distId}/`;
+}
+
+/** Build a file publication pulp_href from a publication ID. */
+export function buildPublicationHref(pubId: string): string {
+  return `/api/pulp/${PULP_DOMAIN}/api/v3/publications/file/file/${pubId}/`;
+}
+
+/** Build a file content pulp_href from a content ID. */
+export function buildContentHref(contentId: string): string {
+  return `/api/pulp/${PULP_DOMAIN}/api/v3/content/file/files/${contentId}/`;
+}
+
 /** Extract the trailing ID (last path segment) from any pulp_href. */
 export function extractIdFromHref(href: string): string {
   const parts = href.split("/").filter(Boolean);

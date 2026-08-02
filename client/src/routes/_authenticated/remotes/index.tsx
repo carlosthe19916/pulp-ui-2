@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@app/pages/resources/ComingSoon";
+import { RemoteList } from "@app/pages/resources/RemoteList";
 
 export const Route = createFileRoute("/_authenticated/remotes/")({
-  component: () => <ComingSoon title="Remotes" />,
+  component: RemoteList,
 });

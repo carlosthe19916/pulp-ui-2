@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@app/pages/resources/ComingSoon";
+import { PublicationList } from "@app/pages/resources/PublicationList";
 
 export const Route = createFileRoute("/_authenticated/publications/")({
-  component: () => <ComingSoon title="Publications" />,
+  component: PublicationList,
 });

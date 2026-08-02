@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildContentHref,
+  buildDistributionHref,
   buildGroupHref,
+  buildPublicationHref,
+  buildRemoteHref,
+  buildRepositoryHref,
   buildRoleHref,
   buildUserHref,
   extractIdFromHref,
@@ -12,6 +17,16 @@ describe("pulpHref helpers", () => {
     expect(buildUserHref("42")).toContain("/users/42/");
     expect(buildGroupHref("7")).toContain("/groups/7/");
     expect(buildRoleHref("abc")).toContain("/roles/abc/");
+  });
+
+  it("builds file-typed resource hrefs", () => {
+    expect(buildRepositoryHref("r1")).toContain("/repositories/file/file/r1/");
+    expect(buildRemoteHref("rm1")).toContain("/remotes/file/file/rm1/");
+    expect(buildDistributionHref("d1")).toContain(
+      "/distributions/file/file/d1/",
+    );
+    expect(buildPublicationHref("p1")).toContain("/publications/file/file/p1/");
+    expect(buildContentHref("c1")).toContain("/content/file/files/c1/");
   });
 
   it("extracts the trailing id from a pulp_href", () => {
