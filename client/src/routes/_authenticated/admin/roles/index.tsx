@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@app/pages/resources/ComingSoon";
+import { RoleList } from "@app/pages/platform/admin/roles/RoleList";
 
 export const Route = createFileRoute("/_authenticated/admin/roles/")({
-  component: () => <ComingSoon title="Roles" />,
+  component: RoleList,
 });

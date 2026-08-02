@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ComingSoon } from "@app/pages/resources/ComingSoon";
+import { GroupList } from "@app/pages/platform/admin/groups/GroupList";
 
 export const Route = createFileRoute("/_authenticated/admin/groups/")({
-  component: () => <ComingSoon title="Groups" />,
+  component: GroupList,
 });
