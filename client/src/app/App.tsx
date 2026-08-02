@@ -1,4 +1,5 @@
 import { RouterProvider } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { AppPlaceholder } from "@app/components/AppPlaceholder";
 import { useAuth } from "@app/context/useAuth";
@@ -13,5 +14,10 @@ export function App({ router }: { router: AppRouter }) {
     return <AppPlaceholder />;
   }
 
-  return <RouterProvider router={router} context={{ queryClient, auth }} />;
+  return (
+    <>
+      <RouterProvider router={router} context={{ queryClient, auth }} />
+      <TanStackRouterDevtools router={router} initialIsOpen={false} />
+    </>
+  );
 }

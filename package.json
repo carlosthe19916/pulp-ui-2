@@ -29,13 +29,6 @@
     "e2e"
   ],
   "dependencies": {
-    "@types/express": "^5.0.3",
-    "http-proxy-middleware": "^3.0.5",
-    "typescript": "~6.0.3"
-  },
-  "peerDependencies": {
-    "react": "^19.1.1",
-    "react-dom": "19.1.1",
     "typescript": "~6.0.3"
   },
   "devDependencies": {
@@ -67,7 +60,6 @@
     "rimraf": "^6.0.1",
     "rollup": "^4.54.0",
     "rollup-plugin-copy": "^3.5.0",
-    "ts-node": "^10.9.1",
     "typescript-eslint": "^8.65.0"
   },
   "lint-staged": {
