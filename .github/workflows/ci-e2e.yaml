@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Start Pulp
-        run: docker compose -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yml up -d
 
       - name: Wait for Pulp API
         run: |
@@ -30,12 +30,12 @@ jobs:
             sleep 5
           done
           echo "Pulp did not become ready in time"
-          docker compose -f docker-compose.e2e.yml logs
+          docker compose -f docker-compose.yml logs
           exit 1
 
       - name: Set Pulp admin password
         run: >
-          docker compose -f docker-compose.e2e.yml exec -T pulp
+          docker compose -f docker-compose.yml exec -T pulp
           pulpcore-manager reset-admin-password --password "${E2E_PASSWORD}"
 
       - uses: actions/setup-node@v6
@@ -59,4 +59,4 @@ jobs:
 
       - name: Stop Pulp
         if: always()
-        run: docker compose -f docker-compose.e2e.yml down -v
+        run: docker compose -f docker-compose.yml down -v

@@ -7,9 +7,12 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import "@app/dayjs";
 import "@app/descriptors";
 import { App } from "@app/App";
-import { AuthProvider } from "@app/context/AuthContext";
+import { initInterceptors } from "@app/axios-config/apiInit";
 import { queryClient } from "@app/queries/config";
 import { router } from "./router";
+import { AuthProvider } from "@app/context/Auth/AuthProvider";
+
+initInterceptors();
 
 const container = document.getElementById("root");
 const root = createRoot(container!);
@@ -17,14 +20,7 @@ const root = createRoot(container!);
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider
-        onUnauthorized={() => {
-          void router.navigate({
-            to: "/login",
-            search: { redirect: router.state.location.href },
-          });
-        }}
-      >
+      <AuthProvider>
         <App router={router} />
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

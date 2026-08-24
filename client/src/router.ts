@@ -1,19 +1,19 @@
 import { createRouter } from "@tanstack/react-router";
 
-import type { AuthContextValue } from "@app/context/AuthContext";
 import { queryClient } from "@app/queries/config";
+import type { IAuthContext } from "@app/context/Auth/AuthContext";
 import { routeTree } from "./routeTree.gen";
 
 export interface RouterContext {
   queryClient: typeof queryClient;
-  auth: AuthContextValue;
+  auth: IAuthContext | null;
 }
 
 export const router = createRouter({
   routeTree,
   context: {
     queryClient,
-    auth: undefined!,
+    auth: null,
   },
   defaultPreload: "intent",
 });

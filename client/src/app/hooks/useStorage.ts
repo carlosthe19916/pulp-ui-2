@@ -1,4 +1,5 @@
-import * as React from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type StorageType = "localStorage" | "sessionStorage";
 
@@ -60,14 +61,14 @@ const useStorage = <T>({
   key,
   defaultValue,
 }: IUseStorageOptions<T>): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [cachedValue, setCachedValue] = React.useState<T>(() =>
+  const [cachedValue, setCachedValue] = useState<T>(() =>
     getValueFromStorage(type, key, defaultValue),
   );
 
   const usingStorageEvents =
     type === "localStorage" && typeof window !== "undefined" && isEnabled;
 
-  const setValue: React.Dispatch<React.SetStateAction<T>> = React.useCallback(
+  const setValue: React.Dispatch<React.SetStateAction<T>> = useCallback(
     (newValueOrFn: T | ((prevState: T) => T)) => {
       const newValue =
         newValueOrFn instanceof Function
@@ -81,7 +82,7 @@ const useStorage = <T>({
     [type, key, defaultValue, usingStorageEvents],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!usingStorageEvents) return;
     const onStorageUpdated = (event: StorageEvent) => {
       if (event.key === key) {

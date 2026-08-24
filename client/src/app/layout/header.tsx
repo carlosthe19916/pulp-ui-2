@@ -1,6 +1,5 @@
-import type React from "react";
+import React, { use } from "react";
 import { useReducer, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 
 import {
   Brand,
@@ -33,12 +32,15 @@ import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
 import { ThemeSelector } from "@app/components/Theme";
-import { useAuth } from "@app/context/useAuth";
+import ENV from "@app/env";
 import useBranding from "@app/hooks/useBranding";
+import { AuthContext } from "@app/context/Auth/AuthContext";
 
 import { AboutApp } from "./about";
 
 export const HeaderApp: React.FC = () => {
+  const auth = use(AuthContext);
+
   const {
     masthead: { leftBrand, leftTitle, rightBrand, supportUrl },
   } = useBranding();
@@ -47,8 +49,6 @@ export const HeaderApp: React.FC = () => {
     (state) => !state,
     false,
   );
-  const auth = useAuth();
-  const navigate = useNavigate();
   const [isHelpDropdownOpen, setIsHelpDropdownOpen] = useState(false);
   const [isKebabDropdownOpen, setIsKebabDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -61,11 +61,8 @@ export const HeaderApp: React.FC = () => {
     setIsKebabDropdownOpen(!isKebabDropdownOpen);
   };
 
-  const onLogout = () => {
-    void (async () => {
-      await auth.logout();
-      await navigate({ to: "/login" });
-    })();
+  const onLogout = async () => {
+    auth?.logout();
   };
 
   return (
@@ -173,11 +170,11 @@ export const HeaderApp: React.FC = () => {
                   </Dropdown>
                 </ToolbarItem>
                 <ToolbarItem>
-                  <ThemeSelector />
+                  <ThemeSelector id="theme-selector-desktop" />
                 </ToolbarItem>
               </ToolbarGroup>
 
-              {auth.isAuthenticated && (
+              {ENV.AUTH !== "none" && auth?.isAuthenticated() && (
                 <ToolbarGroup variant="action-group-plain">
                   <ToolbarItem>
                     <Dropdown
@@ -216,7 +213,7 @@ export const HeaderApp: React.FC = () => {
                 visibility={{ lg: "hidden" }}
               >
                 <ToolbarItem>
-                  <ThemeSelector />
+                  <ThemeSelector id="theme-selector-mobile" />
                 </ToolbarItem>
                 <ToolbarItem>
                   <Dropdown

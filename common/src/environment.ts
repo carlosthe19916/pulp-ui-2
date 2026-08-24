@@ -17,6 +17,18 @@ export type PulpEnvType = {
   /** UI upload file size limit in megabytes (MB), suffixed with "m" */
   UI_INGRESS_PROXY_BODY_SIZE: string;
 
+  /** Authentication mode: none (anonymous), basic (username/password), oidc (SSO) */
+  AUTH: "none" | "basic" | "oidc";
+
+  /** SSO / OIDC client id */
+  OIDC_CLIENT_ID?: string;
+
+  /** SSO / OIDC server URL (Keycloak realm, Cognito domain, etc.) */
+  OIDC_SERVER_URL?: string;
+
+  /** SSO / OIDC scope */
+  OIDC_SCOPE?: string;
+
   /** The listen port for the UI's server */
   PORT?: string;
 
@@ -43,6 +55,11 @@ export const buildPulpEnv = ({
 
   UI_INGRESS_PROXY_BODY_SIZE = "500m",
 
+  AUTH = "none",
+  OIDC_CLIENT_ID,
+  OIDC_SERVER_URL,
+  OIDC_SCOPE,
+
   PULP_API_URL,
 
   BRANDING,
@@ -52,6 +69,11 @@ export const buildPulpEnv = ({
   VERSION,
 
   UI_INGRESS_PROXY_BODY_SIZE,
+
+  AUTH,
+  OIDC_CLIENT_ID,
+  OIDC_SERVER_URL,
+  OIDC_SCOPE,
 
   PULP_API_URL,
 

@@ -7,7 +7,10 @@ export const E2E_PASSWORD = process.env.E2E_PASSWORD ?? "password";
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto("/login");
   await page.getByRole("textbox", { name: /username/i }).fill(E2E_USERNAME);
-  await page.getByLabel(/password/i).fill(E2E_PASSWORD);
+  await page.getByRole("textbox", { name: /^password$/i }).fill(E2E_PASSWORD);
+  await page
+    .getByRole("checkbox", { name: /keep credentials in localstorage/i })
+    .check();
   await page.getByRole("button", { name: /log in/i }).click();
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 }
