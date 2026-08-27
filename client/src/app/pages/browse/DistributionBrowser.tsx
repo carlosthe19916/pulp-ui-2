@@ -35,7 +35,7 @@ import {
   extractIdFromHref,
   inferPulpTypeFromHref,
   resolvePulpType,
-} from "@app/utils/pulpHref";
+} from "@app/queries/utils/pulpHref";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated

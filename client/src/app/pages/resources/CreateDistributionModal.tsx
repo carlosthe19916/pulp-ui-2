@@ -25,7 +25,7 @@ import {
 import { useFileDistributionCreateMutation } from "@app/queries/file-distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 

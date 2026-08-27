@@ -35,7 +35,7 @@ import {
   useGroupsListQuery,
 } from "@app/queries/groups";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateGroupModal } from "./CreateGroupModal";

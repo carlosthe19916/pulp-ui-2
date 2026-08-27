@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   flexRender,
@@ -33,7 +33,7 @@ import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
-import { usePlugins } from "@app/context/usePlugins";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
@@ -41,7 +41,7 @@ import {
 import { useFilePublicationDeleteMutation } from "@app/queries/file-publications";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreatePublicationModal } from "./CreatePublicationModal";
@@ -64,7 +64,7 @@ export const PublicationList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { addNotification } = useNotifications();
-  const { plugins } = usePlugins();
+  const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFilePublicationDeleteMutation();
 
   const { data, isLoading, error } = usePublicationsListQuery({

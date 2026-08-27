@@ -1,8 +1,8 @@
-import { PULP_DOMAIN } from "@app/Constants";
+import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 
 /** Build a Pulp task pulp_href from a task UUID. */
 export function buildTaskHref(taskId: string): string {
-  return `/api/pulp/${PULP_DOMAIN}/api/v3/tasks/${taskId}/`;
+  return `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/tasks/${taskId}/`;
 }
 
 /** Extract the trailing UUID (or last path segment) from a pulp_href. */

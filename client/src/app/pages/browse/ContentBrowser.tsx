@@ -27,13 +27,17 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { FileFileContentResponse } from "@app/client";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useBrowseDistributionDetailQuery,
   useBrowseFileContentListQuery,
   useBrowsePublicationDetailQuery,
   useBrowseRepositoryDetailQuery,
 } from "@app/queries/browse";
-import { buildDistributionHref, extractIdFromHref } from "@app/utils/pulpHref";
+import {
+  buildDistributionHref,
+  extractIdFromHref,
+} from "@app/queries/utils/pulpHref";
 
 type ContentRow = FileFileContentResponse & {
   size?: number;
@@ -57,7 +61,8 @@ export const ContentBrowser: React.FC<ContentBrowserProps> = ({
   const [perPage, setPerPage] = useState(20);
   const [pathFilter, setPathFilter] = useState("");
 
-  const distHref = buildDistributionHref(distributionId);
+  const domain = useApiDomain();
+  const distHref = buildDistributionHref(distributionId, domain);
   const {
     data: distribution,
     isLoading: isDistLoading,

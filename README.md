@@ -23,6 +23,7 @@ Playwright, and CI.
 | Variable                     | Default                                  | Purpose                                                                                         |
 | ---------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `PULP_API_URL`               | `http://localhost:8080` (proxy fallback) | Upstream Pulp for `/api` proxy. Required in Docker/`entrypoint.sh`; recommended for `start:dev` |
+| `PULP_API_ROOT`              | `/pulp`                                  | Pulp `API_ROOT` the proxy rewrites                                                              |
 | `AUTH`                       | none, basic, oidc                        | Enable/Disable authentication                                                                   |
 | `OIDC_CLIENT_ID`             | frontend                                 | Set OIDC client                                                                                 |
 | `OIDC_SERVER_URL`            | `http://localhost:8090/realms/pulp`      | Set OIDC Server URL                                                                             |
@@ -40,8 +41,12 @@ Playwright, and CI.
 | `E2E_PASSWORD`               | `password`                               | Playwright login password                                                                       |
 | `CI`                         | unset                                    | Playwright: forbid `.only`, retry once, 1 worker, no server reuse                               |
 
-`PORT`, `PULP_API_URL`, and `BRANDING` are server-only (`SERVER_ENV_KEYS`) and stripped from browser `_env`. E2e/CI pass
-`PULP_API_URL` into `start:dev`; see `.github/workflows/ci-e2e.yaml`.
+`PORT`, `PULP_API_URL`, `PULP_API_ROOT`, and `BRANDING` are server-only (`SERVER_ENV_KEYS`) and stripped from browser
+`_env`. E2e/CI pass `PULP_API_URL` into `start:dev`; see `.github/workflows/ci-e2e.yaml`. For a pulpcore default root:
+
+```bash
+PULP_API_URL="http://localhost:8080" PULP_API_ROOT="/pulp" npm run start:dev
+```
 
 ## Project Structure
 

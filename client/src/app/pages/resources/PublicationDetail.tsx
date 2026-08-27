@@ -29,11 +29,15 @@ import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFilePublicationDeleteMutation,
   useFilePublicationDetailQuery,
 } from "@app/queries/file-publications";
-import { buildPublicationHref, extractIdFromHref } from "@app/utils/pulpHref";
+import {
+  buildPublicationHref,
+  extractIdFromHref,
+} from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface PublicationDetailProps {
@@ -44,7 +48,8 @@ export const PublicationDetail: React.FC<PublicationDetailProps> = ({
   pubId,
 }) => {
   const navigate = useNavigate();
-  const pubHref = buildPublicationHref(pubId);
+  const domain = useApiDomain();
+  const pubHref = buildPublicationHref(pubId, domain);
   const {
     data: publication,
     isLoading,

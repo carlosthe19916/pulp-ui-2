@@ -17,8 +17,9 @@ import {
   encodeBasicAuthHeader,
   saveCredentials,
 } from "@app/context/Auth/basicAuthHelpers";
-import { PULP_DOMAIN } from "@app/Constants";
 import useBranding from "@app/hooks/useBranding";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 
 const INVALID_CREDENTIALS = "Invalid login credentials.";
 const SERVER_ERROR = "Server error. Please come back later.";
@@ -26,6 +27,8 @@ const storageWarning =
   "Pulp UI is currently using HTTP Basic Authentication. Your credentials will be stored in your browser's sessionStorage or localStorage, in plain text.";
 
 export const LoginPage: React.FC = () => {
+  const apiStatus = use(ApiStatusContext);
+
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
   const branding = useBranding();
@@ -87,7 +90,9 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `/api/pulp/${PULP_DOMAIN}/api/v3/groups/?limit=0&offset=0`,
+        apiStatus?.status?.domain_enabled
+          ? `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/groups/?limit=0&offset=0`
+          : `/api/pulp/api/v3/groups/?limit=0&offset=0`,
         {
           headers: {
             Authorization: encodeBasicAuthHeader(username, password),

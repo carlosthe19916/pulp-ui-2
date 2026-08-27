@@ -26,8 +26,9 @@ import {
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useRoleDeleteMutation, useRoleDetailQuery } from "@app/queries/roles";
-import { buildRoleHref } from "@app/utils/pulpHref";
+import { buildRoleHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRoleModal } from "./EditRoleModal";
@@ -38,7 +39,8 @@ interface RoleDetailProps {
 
 export const RoleDetail: React.FC<RoleDetailProps> = ({ roleId }) => {
   const navigate = useNavigate();
-  const roleHref = buildRoleHref(roleId);
+  const domain = useApiDomain();
+  const roleHref = buildRoleHref(roleId, domain);
   const { data: role, isLoading, error } = useRoleDetailQuery(roleHref);
   const deleteMutation = useRoleDeleteMutation();
   const { addNotification } = useNotifications();

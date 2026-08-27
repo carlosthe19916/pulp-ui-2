@@ -5,24 +5,19 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   FileFileRepository,
   FileFileRepositoryResponse,
   PaginatedRepositoryVersionResponseList,
   PatchedfileFileRepository,
+  RepositoriesFileFileVersionsListData,
   RepositorySyncUrl,
 } from "@app/client";
-import {
-  repositoriesFileFileCreate,
-  repositoriesFileFileDelete,
-  repositoriesFileFilePartialUpdate,
-  repositoriesFileFileRead,
-  repositoriesFileFileSync,
-  repositoriesFileFileVersionsList,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
-import { isEmptyDetailPayload } from "@app/utils/pulpHref";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { repositoriesRootQueryOptions } from "./repositories";
 
@@ -35,10 +30,9 @@ export const fileRepositoryDetailQueryOptions = (href: string) =>
       href,
     ],
     queryFn: async (): Promise<FileFileRepositoryResponse> => {
-      const response = await repositoriesFileFileRead({
-        client,
-        path: { file_file_repository_href: href },
-      });
+      const response = await axiosInstance.get<FileFileRepositoryResponse>(
+        toProxyHref(href),
+      );
       if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty file repository detail response");
       }
@@ -48,7 +42,7 @@ export const fileRepositoryDetailQueryOptions = (href: string) =>
   });
 
 type RepositoryVersionOrdering = NonNullable<
-  Parameters<typeof repositoriesFileFileVersionsList>[0]["query"]
+  RepositoriesFileFileVersionsListData["query"]
 >["ordering"];
 
 interface FileRepositoryVersionsListParams {
@@ -70,16 +64,18 @@ export const fileRepositoryVersionsListQueryOptions = (
       params,
     ],
     queryFn: async (): Promise<PaginatedRepositoryVersionResponseList> => {
-      const response = await repositoriesFileFileVersionsList({
-        client,
-        path: { file_file_repository_href: repoHref },
-        query: {
-          limit: params?.limit ?? 20,
-          offset: params?.offset,
-          number: params?.number,
-          ordering: params?.ordering,
-        },
-      });
+      const response =
+        await axiosInstance.get<PaginatedRepositoryVersionResponseList>(
+          `${toProxyHref(repoHref)}versions/`,
+          {
+            params: {
+              limit: params?.limit ?? 20,
+              offset: params?.offset,
+              number: params?.number,
+              ordering: params?.ordering,
+            },
+          },
+        );
       if (!response.data) {
         throw new Error("Empty file repository versions list response");
       }
@@ -101,13 +97,13 @@ export const useFileRepositoryVersionsListQuery = (
 
 export const useFileRepositoryCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: FileFileRepository) => {
-      const response = await repositoriesFileFileCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<FileFileRepositoryResponse>(
+        pulpApiPath("repositories/file/file/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -128,11 +124,9 @@ export const useFileRepositoryUpdateMutation = () => {
       href: string;
       body: PatchedfileFileRepository;
     }) => {
-      const response = await repositoriesFileFilePartialUpdate({
-        client,
-        path: { file_file_repository_href: href },
-        body,
-      });
+      const response = await axiosInstance.patch<
+        FileFileRepositoryResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
       return response.data;
     },
     onSuccess: () => {
@@ -147,10 +141,9 @@ export const useFileRepositoryDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (href: string) => {
-      const response = await repositoriesFileFileDelete({
-        client,
-        path: { file_file_repository_href: href },
-      });
+      const response = await axiosInstance.delete<AsyncOperationResponse>(
+        toProxyHref(href),
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -171,11 +164,10 @@ export const useFileRepositorySyncMutation = () => {
       repoHref: string;
       body: RepositorySyncUrl;
     }) => {
-      const response = await repositoriesFileFileSync({
-        client,
-        path: { file_file_repository_href: repoHref },
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        `${toProxyHref(repoHref)}sync/`,
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {

@@ -1,4 +1,5 @@
 import type React from "react";
+import { use } from "react";
 import { Link } from "@tanstack/react-router";
 import prettyBytes from "pretty-bytes";
 
@@ -21,10 +22,10 @@ import {
 } from "@patternfly/react-core";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { usePlugins } from "@app/context/usePlugins";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 
 export const Dashboard: React.FC = () => {
-  const { status, isLoading, error } = usePlugins();
+  const { status, isLoading, error } = use(ApiStatusContext) ?? {};
 
   return (
     <>

@@ -3,7 +3,10 @@ import { Link } from "@tanstack/react-router";
 
 import type { ResourceKind } from "@app/descriptors/types";
 import { getDescriptor } from "@app/descriptors/registry";
-import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
+import {
+  extractIdFromHref,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 
 interface ResourceHrefLinkProps {
   kind: ResourceKind;

@@ -1,21 +1,18 @@
 import {
-  queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
+  queryOptions,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   FileFilePublication,
   FileFilePublicationResponse,
 } from "@app/client";
-import {
-  publicationsFileFileCreate,
-  publicationsFileFileDelete,
-  publicationsFileFileRead,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 import { publicationsRootQueryOptions } from "./publications";
 
@@ -28,10 +25,9 @@ export const filePublicationDetailQueryOptions = (href: string) =>
       href,
     ],
     queryFn: async (): Promise<FileFilePublicationResponse> => {
-      const response = await publicationsFileFileRead({
-        client,
-        path: { file_file_publication_href: href },
-      });
+      const response = await axiosInstance.get<FileFilePublicationResponse>(
+        toProxyHref(href),
+      );
       if (!response.data) {
         throw new Error("Empty file publication detail response");
       }
@@ -46,13 +42,13 @@ export const useFilePublicationDetailQuery = (href: string) => {
 
 export const useFilePublicationCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: FileFilePublication) => {
-      const response = await publicationsFileFileCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath("publications/file/file/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -67,10 +63,9 @@ export const useFilePublicationDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (href: string) => {
-      const response = await publicationsFileFileDelete({
-        client,
-        path: { file_file_publication_href: href },
-      });
+      const response = await axiosInstance.delete<AsyncOperationResponse>(
+        toProxyHref(href),
+      );
       return response.data;
     },
     onSuccess: () => {

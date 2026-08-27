@@ -5,11 +5,18 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
-import type { PaginatedTaskResponseList, TaskResponse } from "@app/client";
-import { tasksList, tasksRead, tasksCancel, tasksPurge } from "@app/client";
-import { DEFAULT_REFETCH_INTERVAL, PULP_DOMAIN } from "@app/Constants";
-import { isEmptyDetailPayload } from "@app/utils/pulpHref";
+import { axiosInstance } from "@app/axios-config/apiInit";
+import type {
+  AsyncOperationResponse,
+  PaginatedTaskResponseList,
+  TaskResponse,
+  TasksListData,
+} from "@app/client";
+import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const TasksQueryKey = "tasks";
 
@@ -22,9 +29,7 @@ export type TaskState =
   | "skipped"
   | "waiting";
 
-type TaskOrdering = NonNullable<
-  Parameters<typeof tasksList>[0]["query"]
->["ordering"];
+type TaskOrdering = NonNullable<TasksListData["query"]>["ordering"];
 
 interface TaskListParams {
   limit?: number;
@@ -43,22 +48,26 @@ export const tasksRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
-export const tasksListQueryOptions = (params: TaskListParams = {}) =>
+export const tasksListQueryOptions = (
+  domain: PulpDomain,
+  params: TaskListParams = {},
+) =>
   queryOptions({
-    queryKey: [...tasksRootQueryOptions.queryKey, "list", params],
+    queryKey: [...tasksRootQueryOptions.queryKey, "list", domain, params],
     queryFn: async (): Promise<PaginatedTaskResponseList> => {
-      const response = await tasksList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          ordering: params.ordering ? [params.ordering] : undefined,
-          state: params.state,
-          state__in: params.state__in,
-          name__contains: params.name__contains,
+      const response = await axiosInstance.get<PaginatedTaskResponseList>(
+        pulpApiPath("tasks/", domain),
+        {
+          params: {
+            limit: params.limit ?? 20,
+            offset: params.offset,
+            ordering: params.ordering ? [params.ordering] : undefined,
+            state: params.state,
+            state__in: params.state__in,
+            name__contains: params.name__contains,
+          },
         },
-      });
+      );
       if (!response.data) {
         throw new Error("Empty tasks list response");
       }
@@ -76,10 +85,9 @@ export const taskDetailQueryOptions = (taskHref: string) =>
   queryOptions({
     queryKey: [...tasksRootQueryOptions.queryKey, "detail", taskHref],
     queryFn: async (): Promise<TaskResponse> => {
-      const response = await tasksRead({
-        client,
-        path: { task_href: taskHref },
-      });
+      const response = await axiosInstance.get<TaskResponse>(
+        toProxyHref(taskHref),
+      );
       if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty task detail response");
       }
@@ -91,7 +99,8 @@ export const taskDetailQueryOptions = (taskHref: string) =>
   });
 
 export const useTasksListQuery = (params: TaskListParams = {}) => {
-  return useQuery(tasksListQueryOptions(params));
+  const domain = useApiDomain();
+  return useQuery(tasksListQueryOptions(domain, params));
 };
 
 export const useTaskDetailQuery = (taskHref: string) => {
@@ -102,11 +111,10 @@ export const useTaskCancelMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (taskHref: string) => {
-      const response = await tasksCancel({
-        client,
-        path: { task_href: taskHref },
-        body: { state: "canceled" },
-      });
+      const response = await axiosInstance.patch<TaskResponse>(
+        toProxyHref(taskHref),
+        { state: "canceled" },
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -119,19 +127,19 @@ export const useTaskCancelMutation = () => {
 
 export const useTaskPurgeMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: {
       finished_before?: string;
       states?: Array<"completed" | "failed" | "canceled" | "skipped">;
     }) => {
-      const response = await tasksPurge({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        body: {
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath("tasks/purge/", domain),
+        {
           finished_before: body.finished_before,
           states: body.states,
         },
-      });
+      );
       return response.data;
     },
     onSuccess: () => {

@@ -1,14 +1,17 @@
 import { Outlet, useRouterState } from "@tanstack/react-router";
 
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import {
   ThemeProvider,
   type ContrastMode,
   type ThemeMode,
   type ThemeVariant,
 } from "@app/components/Theme";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
 import { NotificationsProvider } from "@app/context/NotificationsContext";
-import { PluginProvider } from "@app/context/PluginContext";
 import { useLocalStorage } from "@app/hooks/useStorage";
+import { use } from "react";
 import { BrowseLayout } from "./browse-layout";
 import { DefaultLayout } from "./default-layout";
 
@@ -36,11 +39,26 @@ export function RootComponent() {
       setContrast={setContrast}
     >
       <NotificationsProvider>
-        <RootLayout />
+        <ApiStatusProvider>
+          <WaitForApiStatus>
+            <RootLayout />
+          </WaitForApiStatus>
+        </ApiStatusProvider>
       </NotificationsProvider>
     </ThemeProvider>
   );
 }
+
+export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const apiStatus = use(ApiStatusContext);
+  return (
+    <LoadingWrapper isFetching={apiStatus?.isLoading ?? false}>
+      {children}
+    </LoadingWrapper>
+  );
+};
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -52,17 +70,13 @@ function RootLayout() {
     return <Outlet />;
   }
 
-  return (
-    <PluginProvider>
-      {isBrowseRoute ? (
-        <BrowseLayout>
-          <Outlet />
-        </BrowseLayout>
-      ) : (
-        <DefaultLayout>
-          <Outlet />
-        </DefaultLayout>
-      )}
-    </PluginProvider>
+  return isBrowseRoute ? (
+    <BrowseLayout>
+      <Outlet />
+    </BrowseLayout>
+  ) : (
+    <DefaultLayout>
+      <Outlet />
+    </DefaultLayout>
   );
 }

@@ -29,11 +29,12 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFileRemoteDeleteMutation,
   useFileRemoteDetailQuery,
 } from "@app/queries/file-remotes";
-import { buildRemoteHref } from "@app/utils/pulpHref";
+import { buildRemoteHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -45,7 +46,8 @@ interface RemoteDetailProps {
 
 export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
   const navigate = useNavigate();
-  const remoteHref = buildRemoteHref(remoteId);
+  const domain = useApiDomain();
+  const remoteHref = buildRemoteHref(remoteId, domain);
   const {
     data: remote,
     isLoading,

@@ -46,6 +46,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useRolesListQuery } from "@app/queries/roles";
 import {
   useUserDeleteMutation,
@@ -54,7 +55,7 @@ import {
   useUserRoleDeleteMutation,
   useUserRolesListQuery,
 } from "@app/queries/users";
-import { extractIdFromHref, buildUserHref } from "@app/utils/pulpHref";
+import { extractIdFromHref, buildUserHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditUserModal } from "./EditUserModal";
@@ -71,7 +72,8 @@ interface UserDetailProps {
 
 export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
   const navigate = useNavigate();
-  const userHref = buildUserHref(userId);
+  const domain = useApiDomain();
+  const userHref = buildUserHref(userId, domain);
   const { data: user, isLoading, error } = useUserDetailQuery(userHref);
   const userDisplayName = user?.username || userId;
   const { data: rolesData, isLoading: isRolesLoading } =

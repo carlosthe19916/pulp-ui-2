@@ -1,23 +1,23 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
-import type { PaginatedPublicationResponseList } from "@app/client";
-import { publicationsList } from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { axiosInstance } from "@app/axios-config/apiInit";
+import type {
+  PaginatedPublicationResponseList,
+  PublicationsListData,
+} from "@app/client";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
 
-type PublicationOrdering = NonNullable<
-  Parameters<typeof publicationsList>[0]["query"]
->["ordering"];
+type PublicationQuery = NonNullable<PublicationsListData["query"]>;
 
 interface PublicationListParams {
   limit?: number;
   offset?: number;
-  ordering?: NonNullable<PublicationOrdering>[number];
-  pulp_type?: NonNullable<
-    Parameters<typeof publicationsList>[0]["query"]
-  >["pulp_type"];
+  ordering?: NonNullable<PublicationQuery["ordering"]>[number];
+  pulp_type?: PublicationQuery["pulp_type"];
 }
 
 export const publicationsRootQueryOptions = queryOptions({
@@ -26,21 +26,29 @@ export const publicationsRootQueryOptions = queryOptions({
 });
 
 export const publicationsListQueryOptions = (
+  domain: PulpDomain,
   params: PublicationListParams = {},
 ) =>
   queryOptions({
-    queryKey: [...publicationsRootQueryOptions.queryKey, "list", params],
+    queryKey: [
+      ...publicationsRootQueryOptions.queryKey,
+      "list",
+      domain,
+      params,
+    ],
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
-      const response = await publicationsList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          ordering: params.ordering ? [params.ordering] : undefined,
-          pulp_type: params.pulp_type,
-        },
-      });
+      const response =
+        await axiosInstance.get<PaginatedPublicationResponseList>(
+          pulpApiPath("publications/", domain),
+          {
+            params: {
+              limit: params.limit ?? 20,
+              offset: params.offset,
+              ordering: params.ordering ? [params.ordering] : undefined,
+              pulp_type: params.pulp_type,
+            },
+          },
+        );
       if (!response.data) {
         throw new Error("Empty publications list response");
       }
@@ -51,5 +59,6 @@ export const publicationsListQueryOptions = (
 export const usePublicationsListQuery = (
   params: PublicationListParams = {},
 ) => {
-  return useQuery(publicationsListQueryOptions(params));
+  const domain = useApiDomain();
+  return useQuery(publicationsListQueryOptions(domain, params));
 };

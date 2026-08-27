@@ -17,20 +17,44 @@ import {
 } from "./pulpHref";
 
 describe("pulpHref helpers", () => {
-  it("builds domain-scoped hrefs", () => {
-    expect(buildUserHref("42")).toContain("/users/42/");
-    expect(buildGroupHref("7")).toContain("/groups/7/");
-    expect(buildRoleHref("abc")).toContain("/roles/abc/");
+  const enabled = { enabled: true, name: "default" };
+  const disabled = { enabled: false, name: "default" };
+
+  it("builds domain-scoped hrefs with the domain segment when enabled", () => {
+    expect(buildUserHref("42", enabled)).toBe(
+      "/api/pulp/default/api/v3/users/42/",
+    );
+    expect(buildGroupHref("7", enabled)).toBe(
+      "/api/pulp/default/api/v3/groups/7/",
+    );
+    expect(buildRoleHref("abc", enabled)).toBe(
+      "/api/pulp/default/api/v3/roles/abc/",
+    );
+  });
+
+  it("omits the domain segment when the domain is disabled", () => {
+    expect(buildUserHref("42", disabled)).toBe("/api/pulp/api/v3/users/42/");
+    expect(buildRepositoryHref("r1", disabled)).toBe(
+      "/api/pulp/api/v3/repositories/file/file/r1/",
+    );
   });
 
   it("builds file-typed resource hrefs", () => {
-    expect(buildRepositoryHref("r1")).toContain("/repositories/file/file/r1/");
-    expect(buildRemoteHref("rm1")).toContain("/remotes/file/file/rm1/");
-    expect(buildDistributionHref("d1")).toContain(
+    expect(buildRepositoryHref("r1", enabled)).toContain(
+      "/repositories/file/file/r1/",
+    );
+    expect(buildRemoteHref("rm1", enabled)).toContain(
+      "/remotes/file/file/rm1/",
+    );
+    expect(buildDistributionHref("d1", enabled)).toContain(
       "/distributions/file/file/d1/",
     );
-    expect(buildPublicationHref("p1")).toContain("/publications/file/file/p1/");
-    expect(buildContentHref("c1")).toContain("/content/file/files/c1/");
+    expect(buildPublicationHref("p1", enabled)).toContain(
+      "/publications/file/file/p1/",
+    );
+    expect(buildContentHref("c1", enabled)).toContain(
+      "/content/file/files/c1/",
+    );
   });
 
   it("extracts the trailing id from a pulp_href", () => {

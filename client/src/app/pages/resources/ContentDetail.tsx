@@ -21,15 +21,17 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useFileContentDetailQuery } from "@app/queries/file-content";
-import { buildContentHref } from "@app/utils/pulpHref";
+import { buildContentHref } from "@app/queries/utils/pulpHref";
 
 interface ContentDetailProps {
   contentId: string;
 }
 
 export const ContentDetail: React.FC<ContentDetailProps> = ({ contentId }) => {
-  const contentHref = buildContentHref(contentId);
+  const domain = useApiDomain();
+  const contentHref = buildContentHref(contentId, domain);
   const {
     data: content,
     isLoading,

@@ -1,23 +1,19 @@
 import {
-  queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
+  queryOptions,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
-  FileFileDistributionResponse,
+  AsyncOperationResponse,
   FileFileDistribution,
+  FileFileDistributionResponse,
   PatchedfileFileDistribution,
 } from "@app/client";
-import {
-  distributionsFileFileCreate,
-  distributionsFileFileDelete,
-  distributionsFileFilePartialUpdate,
-  distributionsFileFileRead,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 import { distributionsRootQueryOptions } from "./distributions";
 
@@ -30,10 +26,9 @@ export const fileDistributionDetailQueryOptions = (href: string) =>
       href,
     ],
     queryFn: async (): Promise<FileFileDistributionResponse> => {
-      const response = await distributionsFileFileRead({
-        client,
-        path: { file_file_distribution_href: href },
-      });
+      const response = await axiosInstance.get<FileFileDistributionResponse>(
+        toProxyHref(href),
+      );
       if (!response.data) {
         throw new Error("Empty file distribution detail response");
       }
@@ -48,13 +43,13 @@ export const useFileDistributionDetailQuery = (href: string) => {
 
 export const useFileDistributionCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: FileFileDistribution) => {
-      const response = await distributionsFileFileCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath("distributions/file/file/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -75,11 +70,10 @@ export const useFileDistributionUpdateMutation = () => {
       href: string;
       body: PatchedfileFileDistribution;
     }) => {
-      const response = await distributionsFileFilePartialUpdate({
-        client,
-        path: { file_file_distribution_href: href },
+      const response = await axiosInstance.patch<AsyncOperationResponse>(
+        toProxyHref(href),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -94,10 +88,9 @@ export const useFileDistributionDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (href: string) => {
-      const response = await distributionsFileFileDelete({
-        client,
-        path: { file_file_distribution_href: href },
-      });
+      const response = await axiosInstance.delete<AsyncOperationResponse>(
+        toProxyHref(href),
+      );
       return response.data;
     },
     onSuccess: () => {

@@ -1,23 +1,23 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   PaginatedSigningServiceResponseList,
   SigningServiceResponse,
+  SigningServicesListData,
 } from "@app/client";
-import { signingServicesList, signingServicesRead } from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
 
 export const SigningServicesQueryKey = "signing-services";
 
-type SigningServiceOrdering = NonNullable<
-  Parameters<typeof signingServicesList>[0]["query"]
->["ordering"];
+type SigningServiceQuery = NonNullable<SigningServicesListData["query"]>;
 
 interface SigningServiceListParams {
   limit?: number;
   offset?: number;
-  ordering?: NonNullable<SigningServiceOrdering>[number];
+  ordering?: NonNullable<SigningServiceQuery["ordering"]>[number];
   name?: string;
 }
 
@@ -27,21 +27,29 @@ export const signingServicesRootQueryOptions = queryOptions({
 });
 
 export const signingServicesListQueryOptions = (
+  domain: PulpDomain,
   params: SigningServiceListParams = {},
 ) =>
   queryOptions({
-    queryKey: [...signingServicesRootQueryOptions.queryKey, "list", params],
+    queryKey: [
+      ...signingServicesRootQueryOptions.queryKey,
+      "list",
+      domain,
+      params,
+    ],
     queryFn: async (): Promise<PaginatedSigningServiceResponseList> => {
-      const response = await signingServicesList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          ordering: params.ordering ? [params.ordering] : undefined,
-          name: params.name,
-        },
-      });
+      const response =
+        await axiosInstance.get<PaginatedSigningServiceResponseList>(
+          pulpApiPath("signing-services/", domain),
+          {
+            params: {
+              limit: params.limit ?? 20,
+              offset: params.offset,
+              ordering: params.ordering ? [params.ordering] : undefined,
+              name: params.name,
+            },
+          },
+        );
       if (!response.data) {
         throw new Error("Empty signing services list response");
       }
@@ -53,10 +61,9 @@ export const signingServiceDetailQueryOptions = (href: string) =>
   queryOptions({
     queryKey: [...signingServicesRootQueryOptions.queryKey, "detail", href],
     queryFn: async (): Promise<SigningServiceResponse> => {
-      const response = await signingServicesRead({
-        client,
-        path: { signing_service_href: href },
-      });
+      const response = await axiosInstance.get<SigningServiceResponse>(
+        toProxyHref(href),
+      );
       if (!response.data) {
         throw new Error("Empty signing service detail response");
       }
@@ -68,7 +75,8 @@ export const signingServiceDetailQueryOptions = (href: string) =>
 export const useSigningServicesListQuery = (
   params: SigningServiceListParams = {},
 ) => {
-  return useQuery(signingServicesListQueryOptions(params));
+  const domain = useApiDomain();
+  return useQuery(signingServicesListQueryOptions(domain, params));
 };
 
 export const useSigningServiceDetailQuery = (href: string) => {

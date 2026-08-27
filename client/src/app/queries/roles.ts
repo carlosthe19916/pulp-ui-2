@@ -5,28 +5,22 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   PaginatedRoleResponseList,
   PatchedRole,
   Role,
   RoleResponse,
+  RolesListData,
 } from "@app/client";
-import {
-  rolesCreate,
-  rolesDelete,
-  rolesList,
-  rolesPartialUpdate,
-  rolesRead,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
-import { isEmptyDetailPayload } from "@app/utils/pulpHref";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
-type RoleOrdering = NonNullable<
-  Parameters<typeof rolesList>[0]["query"]
->["ordering"];
+type RoleOrdering = NonNullable<RolesListData["query"]>["ordering"];
 
 interface RoleListParams {
   limit?: number;
@@ -40,20 +34,24 @@ export const rolesRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
-export const rolesListQueryOptions = (params: RoleListParams = {}) =>
+export const rolesListQueryOptions = (
+  domain: PulpDomain,
+  params: RoleListParams = {},
+) =>
   queryOptions({
-    queryKey: [...rolesRootQueryOptions.queryKey, "list", params],
+    queryKey: [...rolesRootQueryOptions.queryKey, "list", domain, params],
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
-      const response = await rolesList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          ordering: params.ordering ? [params.ordering] : undefined,
-          name__icontains: params.name__icontains,
+      const response = await axiosInstance.get<PaginatedRoleResponseList>(
+        pulpApiPath("roles/", domain),
+        {
+          params: {
+            limit: params.limit ?? 20,
+            offset: params.offset,
+            ordering: params.ordering ? [params.ordering] : undefined,
+            name__icontains: params.name__icontains,
+          },
         },
-      });
+      );
       if (!response.data) {
         throw new Error("Empty roles list response");
       }
@@ -65,10 +63,9 @@ export const roleDetailQueryOptions = (roleHref: string) =>
   queryOptions({
     queryKey: [...rolesRootQueryOptions.queryKey, "detail", roleHref],
     queryFn: async (): Promise<RoleResponse> => {
-      const response = await rolesRead({
-        client,
-        path: { role_href: roleHref },
-      });
+      const response = await axiosInstance.get<RoleResponse>(
+        toProxyHref(roleHref),
+      );
       if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty role detail response");
       }
@@ -78,7 +75,8 @@ export const roleDetailQueryOptions = (roleHref: string) =>
   });
 
 export const useRolesListQuery = (params: RoleListParams = {}) => {
-  return useQuery(rolesListQueryOptions(params));
+  const domain = useApiDomain();
+  return useQuery(rolesListQueryOptions(domain, params));
 };
 
 export const useRoleDetailQuery = (roleHref: string) => {
@@ -87,13 +85,13 @@ export const useRoleDetailQuery = (roleHref: string) => {
 
 export const useRoleCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: Role) => {
-      const response = await rolesCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<RoleResponse>(
+        pulpApiPath("roles/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -108,11 +106,10 @@ export const useRoleUpdateMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ href, body }: { href: string; body: PatchedRole }) => {
-      const response = await rolesPartialUpdate({
-        client,
-        path: { role_href: href },
+      const response = await axiosInstance.patch<RoleResponse>(
+        toProxyHref(href),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -127,10 +124,7 @@ export const useRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (roleHref: string) => {
-      const response = await rolesDelete({
-        client,
-        path: { role_href: roleHref },
-      });
+      const response = await axiosInstance.delete<void>(toProxyHref(roleHref));
       return response.data;
     },
     onSuccess: () => {

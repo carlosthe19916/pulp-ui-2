@@ -1,4 +1,4 @@
-import { PULP_ENV } from "@pulp-ui/common";
+import { PULP_ENV, rewritePulpApiPath } from "@pulp-ui/common";
 
 type Logger = {
   info: (...args: unknown[]) => void;
@@ -19,6 +19,8 @@ export default {
   api: {
     pathFilter: "/api",
     target: PULP_ENV.PULP_API_URL ?? "http://localhost:8080",
+    pathRewrite: (path: string) =>
+      rewritePulpApiPath(path, PULP_ENV.PULP_API_ROOT ?? ""),
     logger,
     changeOrigin: true,
   },

@@ -46,6 +46,7 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useGroupDeleteMutation,
   useGroupDetailQuery,
@@ -59,7 +60,7 @@ import {
 } from "@app/queries/groups";
 import { useRolesListQuery } from "@app/queries/roles";
 import { useUsersListQuery } from "@app/queries/users";
-import { buildGroupHref, extractIdFromHref } from "@app/utils/pulpHref";
+import { buildGroupHref, extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editNameSchema = yup.object({
@@ -85,7 +86,8 @@ interface GroupDetailProps {
 
 export const GroupDetail: React.FC<GroupDetailProps> = ({ groupId }) => {
   const navigate = useNavigate();
-  const groupHref = buildGroupHref(groupId);
+  const domain = useApiDomain();
+  const groupHref = buildGroupHref(groupId, domain);
   const { addNotification } = useNotifications();
 
   const { data: group, isLoading, error } = useGroupDetailQuery(groupHref);

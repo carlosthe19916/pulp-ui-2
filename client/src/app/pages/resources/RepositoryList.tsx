@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   flexRender,
@@ -33,7 +33,7 @@ import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
-import { usePlugins } from "@app/context/usePlugins";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
@@ -41,7 +41,10 @@ import {
 import { useFileRepositoryDeleteMutation } from "@app/queries/file-repositories";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref, resolvePulpType } from "@app/utils/pulpHref";
+import {
+  extractIdFromHref,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -71,7 +74,7 @@ export const RepositoryList: React.FC = () => {
   const [publishRepoHref, setPublishRepoHref] = useState<string | null>(null);
 
   const { addNotification } = useNotifications();
-  const { plugins } = usePlugins();
+  const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFileRepositoryDeleteMutation();
 
   const { data, isLoading, error } = useRepositoriesListQuery({

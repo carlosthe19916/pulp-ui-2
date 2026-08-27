@@ -1,7 +1,6 @@
 import axios from "axios";
 import { User, UserManager } from "oidc-client-ts";
 
-import { createClient } from "@app/client/client";
 import ENV from "@app/env";
 import {
   OIDC_CLIENT_ID,
@@ -27,12 +26,19 @@ function getOidcUser() {
 export const axiosInstance = axios.create({
   adapter: "fetch",
   withCredentials: false,
-});
-
-export const client = createClient({
-  baseURL: "",
-  axios: axiosInstance,
-  throwOnError: true,
+  // Match the OpenAPI spec's array serialization (`style: form, explode: false`):
+  // arrays become comma-joined (`ordering=a,b`) and undefined/null values are
+  // dropped from the query string.
+  paramsSerializer: {
+    serialize: (params) => {
+      const sp = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === null) continue;
+        sp.append(key, Array.isArray(value) ? value.join(",") : String(value));
+      }
+      return sp.toString();
+    },
+  },
 });
 
 export const initInterceptors = () => {

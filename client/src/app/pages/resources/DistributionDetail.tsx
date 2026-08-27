@@ -30,11 +30,12 @@ import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFileDistributionDeleteMutation,
   useFileDistributionDetailQuery,
 } from "@app/queries/file-distributions";
-import { buildDistributionHref } from "@app/utils/pulpHref";
+import { buildDistributionHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -48,7 +49,8 @@ export const DistributionDetail: React.FC<DistributionDetailProps> = ({
   distId,
 }) => {
   const navigate = useNavigate();
-  const distHref = buildDistributionHref(distId);
+  const domain = useApiDomain();
+  const distHref = buildDistributionHref(distId, domain);
   const {
     data: distribution,
     isLoading,

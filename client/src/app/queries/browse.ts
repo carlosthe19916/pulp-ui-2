@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { useApiDomain } from "@app/hooks/useApiDomain";
+
 import type { DistributionListParams } from "./distributions";
 import type { FileContentListParams } from "./file-content";
 import { artifactDetailQueryOptions } from "./artifacts";
@@ -23,8 +25,9 @@ const BROWSE_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 export const useBrowseDistributionsQuery = (
   params: DistributionListParams = {},
 ) => {
+  const domain = useApiDomain();
   return useQuery({
-    ...distributionsListQueryOptions(params),
+    ...distributionsListQueryOptions(domain, params),
     staleTime: BROWSE_STALE_TIME,
   });
 };
@@ -56,8 +59,9 @@ export const useBrowseFileContentListQuery = (
   params: FileContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
+  const domain = useApiDomain();
   return useQuery({
-    ...fileContentListQueryOptions(params, options),
+    ...fileContentListQueryOptions(domain, params, options),
     staleTime: BROWSE_STALE_TIME,
   });
 };

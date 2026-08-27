@@ -19,6 +19,7 @@ import {
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useBrowseArtifactDetailQuery,
   useBrowseContentDetailQuery,
@@ -28,7 +29,7 @@ import {
   buildContentHref,
   buildDistributionContentUrl,
   buildDistributionHref,
-} from "@app/utils/pulpHref";
+} from "@app/queries/utils/pulpHref";
 
 interface BrowseContentDetailProps {
   distributionId: string;
@@ -46,8 +47,9 @@ export const BrowseContentDetail: React.FC<BrowseContentDetailProps> = ({
   distributionId,
   contentId,
 }) => {
-  const contentHref = buildContentHref(contentId);
-  const distHref = buildDistributionHref(distributionId);
+  const domain = useApiDomain();
+  const contentHref = buildContentHref(contentId, domain);
+  const distHref = buildDistributionHref(distributionId, domain);
   const descriptor = getDescriptor("content", "file.file");
 
   const {

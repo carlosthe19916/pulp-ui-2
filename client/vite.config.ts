@@ -16,6 +16,7 @@ import {
   PULP_ENV,
   encodeEnv,
   SERVER_ENV_KEYS,
+  rewritePulpApiPath,
 } from "@pulp-ui/common";
 
 const require = createRequire(import.meta.url);
@@ -120,6 +121,8 @@ export default defineConfig({
         // Session cookies from the browser login flow are forwarded automatically.
         // Do not inject Basic Auth here — that fights cookie/session auth (ADR Decision 6).
         target: PULP_ENV.PULP_API_URL || "http://localhost:8080",
+        rewrite: (path) =>
+          rewritePulpApiPath(path, PULP_ENV.PULP_API_ROOT ?? ""),
         changeOrigin: true,
         cookieDomainRewrite: "",
       },

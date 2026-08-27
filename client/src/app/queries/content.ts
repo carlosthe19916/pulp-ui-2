@@ -1,23 +1,23 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
-import type { PaginatedMultipleArtifactContentResponseList } from "@app/client";
-import { contentList } from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { axiosInstance } from "@app/axios-config/apiInit";
+import type {
+  ContentListData,
+  PaginatedMultipleArtifactContentResponseList,
+} from "@app/client";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
 
-type ContentOrdering = NonNullable<
-  Parameters<typeof contentList>[0]["query"]
->["ordering"];
+type ContentQuery = NonNullable<ContentListData["query"]>;
 
 export interface ContentListParams {
   limit?: number;
   offset?: number;
-  ordering?: NonNullable<ContentOrdering>[number];
-  pulp_type?: NonNullable<
-    Parameters<typeof contentList>[0]["query"]
-  >["pulp_type"];
+  ordering?: NonNullable<ContentQuery["ordering"]>[number];
+  pulp_type?: ContentQuery["pulp_type"];
   repository_version?: string;
 }
 
@@ -27,24 +27,27 @@ export const contentRootQueryOptions = queryOptions({
 });
 
 export const contentListQueryOptions = (
+  domain: PulpDomain,
   params: ContentListParams = {},
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
-    queryKey: [...contentRootQueryOptions.queryKey, "list", params],
+    queryKey: [...contentRootQueryOptions.queryKey, "list", domain, params],
     queryFn:
       async (): Promise<PaginatedMultipleArtifactContentResponseList> => {
-        const response = await contentList({
-          client,
-          path: { pulp_domain: PULP_DOMAIN },
-          query: {
-            limit: params.limit ?? 20,
-            offset: params.offset,
-            ordering: params.ordering ? [params.ordering] : undefined,
-            pulp_type: params.pulp_type,
-            repository_version: params.repository_version,
-          },
-        });
+        const response =
+          await axiosInstance.get<PaginatedMultipleArtifactContentResponseList>(
+            pulpApiPath("content/", domain),
+            {
+              params: {
+                limit: params.limit ?? 20,
+                offset: params.offset,
+                ordering: params.ordering ? [params.ordering] : undefined,
+                pulp_type: params.pulp_type,
+                repository_version: params.repository_version,
+              },
+            },
+          );
         if (!response.data) {
           throw new Error("Empty content list response");
         }
@@ -57,5 +60,6 @@ export const useContentListQuery = (
   params: ContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
-  return useQuery(contentListQueryOptions(params, options));
+  const domain = useApiDomain();
+  return useQuery(contentListQueryOptions(domain, params, options));
 };

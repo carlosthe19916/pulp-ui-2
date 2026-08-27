@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   flexRender,
@@ -25,14 +25,14 @@ import type { MultipleArtifactContentResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { usePlugins } from "@app/context/usePlugins";
+import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
 import { useContentListQuery } from "@app/queries/content";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { UploadModal } from "./actions/UploadModal";
 
@@ -57,7 +57,7 @@ export const ContentList: React.FC = () => {
   const [perPage, setPerPage] = useState(20);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-  const { plugins } = usePlugins();
+  const plugins = use(ApiStatusContext)?.plugins ?? [];
 
   const { data, isLoading, error } = useContentListQuery({
     limit: perPage,

@@ -35,6 +35,11 @@ export type PulpEnvType = {
   /** Target URL for the UI server's `/api` proxy */
   PULP_API_URL?: string;
 
+  /**
+   * Pulp `API_ROOT` the `/api` proxy rewrites to
+   */
+  PULP_API_ROOT?: string;
+
   /** Location of branding files (relative paths computed from the project source root) */
   BRANDING?: string;
 };
@@ -46,6 +51,21 @@ export type PulpEnvType = {
 export const SERVER_ENV_KEYS = ["PORT", "PULP_API_URL", "BRANDING"];
 
 /**
+ * Normalize Pulp `API_ROOT`: leading slash, no trailing slash.
+ * `pulp` → `/pulp`, `/api/pulp/` → `/api/pulp`.
+ */
+export const normalizePulpApiRoot = (apiRoot: string): string => {
+  return apiRoot.replace(/\/+$/, "").replace(/^(?!\/)/, "/");
+};
+
+/**
+ * Rewrite a client path (`/api/pulp/...`) to Pulp's `API_ROOT`.
+ */
+export const rewritePulpApiPath = (path: string, apiRoot: string): string => {
+  return path.replace(/^\/api\/pulp/, normalizePulpApiRoot(apiRoot));
+};
+
+/**
  * Create a `PulpEnv` from a partial `PulpEnv` with a set of default values.
  */
 export const buildPulpEnv = ({
@@ -55,12 +75,13 @@ export const buildPulpEnv = ({
 
   UI_INGRESS_PROXY_BODY_SIZE = "500m",
 
-  AUTH = "none",
+  AUTH = "basic",
   OIDC_CLIENT_ID,
   OIDC_SERVER_URL,
   OIDC_SCOPE,
 
   PULP_API_URL,
+  PULP_API_ROOT = "/pulp",
 
   BRANDING,
 }: Partial<PulpEnvType> = {}): PulpEnvType => ({
@@ -76,6 +97,7 @@ export const buildPulpEnv = ({
   OIDC_SCOPE,
 
   PULP_API_URL,
+  PULP_API_ROOT,
 
   BRANDING,
 });

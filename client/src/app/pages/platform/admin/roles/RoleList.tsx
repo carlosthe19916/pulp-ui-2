@@ -34,7 +34,7 @@ import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateRoleModal } from "./CreateRoleModal";

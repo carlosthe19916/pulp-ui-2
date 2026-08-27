@@ -51,6 +51,7 @@ import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
+import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import {
@@ -58,7 +59,10 @@ import {
   useFileRepositoryDetailQuery,
   useFileRepositoryVersionsListQuery,
 } from "@app/queries/file-repositories";
-import { buildRepositoryHref, extractIdFromHref } from "@app/utils/pulpHref";
+import {
+  buildRepositoryHref,
+  extractIdFromHref,
+} from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -80,7 +84,8 @@ export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
   repoId,
 }) => {
   const navigate = useNavigate();
-  const repoHref = buildRepositoryHref(repoId);
+  const domain = useApiDomain();
+  const repoHref = buildRepositoryHref(repoId, domain);
   const {
     data: repo,
     isLoading,

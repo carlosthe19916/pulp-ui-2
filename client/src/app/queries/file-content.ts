@@ -5,18 +5,16 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   FileFileContentResponse,
   FileFileContentWritable,
   PaginatedfileFileContentResponseList,
 } from "@app/client";
-import {
-  contentFileFilesCreate,
-  contentFileFilesList,
-  contentFileFilesRead,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
 
 import { contentRootQueryOptions } from "./content";
 
@@ -28,22 +26,31 @@ export interface FileContentListParams {
 }
 
 export const fileContentListQueryOptions = (
+  domain: PulpDomain,
   params: FileContentListParams = {},
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
-    queryKey: [...contentRootQueryOptions.queryKey, "file", "list", params],
+    queryKey: [
+      ...contentRootQueryOptions.queryKey,
+      "file",
+      "list",
+      domain,
+      params,
+    ],
     queryFn: async (): Promise<PaginatedfileFileContentResponseList> => {
-      const response = await contentFileFilesList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          repository_version: params.repository_version,
-          relative_path__icontains: params.relative_path__icontains,
-        },
-      });
+      const response =
+        await axiosInstance.get<PaginatedfileFileContentResponseList>(
+          pulpApiPath("content/file/files/", domain),
+          {
+            params: {
+              limit: params.limit ?? 20,
+              offset: params.offset,
+              repository_version: params.repository_version,
+              relative_path__icontains: params.relative_path__icontains,
+            },
+          },
+        );
       if (!response.data) {
         throw new Error("Empty file content list response");
       }
@@ -56,17 +63,17 @@ export const useFileContentListQuery = (
   params: FileContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
-  return useQuery(fileContentListQueryOptions(params, options));
+  const domain = useApiDomain();
+  return useQuery(fileContentListQueryOptions(domain, params, options));
 };
 
 export const fileContentDetailQueryOptions = (href: string) =>
   queryOptions({
     queryKey: [...contentRootQueryOptions.queryKey, "file", "detail", href],
     queryFn: async (): Promise<FileFileContentResponse> => {
-      const response = await contentFileFilesRead({
-        client,
-        path: { file_file_content_href: href },
-      });
+      const response = await axiosInstance.get<FileFileContentResponse>(
+        toProxyHref(href),
+      );
       if (!response.data) {
         throw new Error("Empty file content detail response");
       }
@@ -81,13 +88,13 @@ export const useFileContentDetailQuery = (href: string) => {
 
 export const useFileContentCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: FileFileContentWritable) => {
-      const response = await contentFileFilesCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath("content/file/files/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {

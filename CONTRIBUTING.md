@@ -13,7 +13,7 @@ npm ci
 PULP_API_URL="http://localhost:8080" npm run start:dev
 ```
 
-The app starts at `http://localhost:3000`. Point `PULP_API_URL` at a running Pulp whose API root matches the generated client (`API_ROOT=/api/pulp/` with `DOMAIN_ENABLED`).
+The app starts at `http://localhost:3000`
 
 ### Local Pulp for UI / e2e
 

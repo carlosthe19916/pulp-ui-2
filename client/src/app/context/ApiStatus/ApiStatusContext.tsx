@@ -2,7 +2,7 @@ import { createContext } from "react";
 
 import type { StatusResponse, VersionResponse } from "@app/client";
 
-export interface PluginContextValue {
+export interface IApiStatusContext {
   status: StatusResponse | undefined;
   isLoading: boolean;
   error: Error | null;
@@ -11,4 +11,4 @@ export interface PluginContextValue {
   getPluginVersion: (componentName: string) => string | undefined;
 }
 
-export const PluginContext = createContext<PluginContextValue | null>(null);
+export const ApiStatusContext = createContext<IApiStatusContext | null>(null);

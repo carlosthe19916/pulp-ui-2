@@ -2,9 +2,10 @@ import React, { useMemo } from "react";
 
 import { useStatusQuery } from "@app/queries/status";
 
-import { PluginContext } from "./plugin-context";
-import type { PluginContextValue } from "./plugin-context";
-export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
+import { ApiStatusContext } from "./ApiStatusContext";
+import type { IApiStatusContext } from "./ApiStatusContext";
+
+export const ApiStatusProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { data: status, isLoading, error } = useStatusQuery();
@@ -23,7 +24,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     [plugins],
   );
 
-  const value: PluginContextValue = {
+  const value: IApiStatusContext = {
     status,
     isLoading,
     error: error as Error | null,
@@ -32,5 +33,5 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     getPluginVersion,
   };
 
-  return <PluginContext value={value}>{children}</PluginContext>;
+  return <ApiStatusContext value={value}>{children}</ApiStatusContext>;
 };

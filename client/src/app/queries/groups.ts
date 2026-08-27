@@ -5,37 +5,27 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { client } from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   Group,
   GroupResponse,
   GroupRole,
+  GroupRoleResponse,
+  GroupsListData,
   GroupUser,
+  GroupUserResponse,
   PaginatedGroupResponseList,
   PaginatedGroupRoleResponseList,
   PaginatedGroupUserResponseList,
   PatchedGroup,
 } from "@app/client";
-import {
-  groupsCreate,
-  groupsDelete,
-  groupsList,
-  groupsPartialUpdate,
-  groupsRead,
-  groupsRolesCreate,
-  groupsRolesDelete,
-  groupsRolesList,
-  groupsUsersCreate,
-  groupsUsersDelete,
-  groupsUsersList,
-} from "@app/client";
-import { PULP_DOMAIN } from "@app/Constants";
+import { useApiDomain } from "@app/hooks/useApiDomain";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { PulpDomain } from "./utils/pulpApi";
 
 export const GroupsQueryKey = "groups";
 
-type GroupOrdering = NonNullable<
-  Parameters<typeof groupsList>[0]["query"]
->["ordering"];
+type GroupOrdering = NonNullable<GroupsListData["query"]>["ordering"];
 
 interface GroupListParams {
   limit?: number;
@@ -49,20 +39,24 @@ export const groupsRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
-export const groupsListQueryOptions = (params: GroupListParams = {}) =>
+export const groupsListQueryOptions = (
+  domain: PulpDomain,
+  params: GroupListParams = {},
+) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "list", params],
+    queryKey: [...groupsRootQueryOptions.queryKey, "list", domain, params],
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
-      const response = await groupsList({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
-        query: {
-          limit: params.limit ?? 20,
-          offset: params.offset,
-          ordering: params.ordering ? [params.ordering] : undefined,
-          name__icontains: params.name__icontains,
+      const response = await axiosInstance.get<PaginatedGroupResponseList>(
+        pulpApiPath("groups/", domain),
+        {
+          params: {
+            limit: params.limit ?? 20,
+            offset: params.offset,
+            ordering: params.ordering ? [params.ordering] : undefined,
+            name__icontains: params.name__icontains,
+          },
         },
-      });
+      );
       if (!response.data) {
         throw new Error("Empty groups list response");
       }
@@ -74,10 +68,9 @@ export const groupDetailQueryOptions = (groupHref: string) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "detail", groupHref],
     queryFn: async (): Promise<GroupResponse> => {
-      const response = await groupsRead({
-        client,
-        path: { group_href: groupHref },
-      });
+      const response = await axiosInstance.get<GroupResponse>(
+        toProxyHref(groupHref),
+      );
       if (!response.data) {
         throw new Error("Empty group detail response");
       }
@@ -90,10 +83,9 @@ export const groupUsersListQueryOptions = (groupHref: string) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "users", groupHref],
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
-      const response = await groupsUsersList({
-        client,
-        path: { group_href: groupHref },
-      });
+      const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
+        `${toProxyHref(groupHref)}users/`,
+      );
       if (!response.data) {
         throw new Error("Empty group users list response");
       }
@@ -106,10 +98,9 @@ export const groupRolesListQueryOptions = (groupHref: string) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "roles", groupHref],
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
-      const response = await groupsRolesList({
-        client,
-        path: { group_href: groupHref },
-      });
+      const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
+        `${toProxyHref(groupHref)}roles/`,
+      );
       if (!response.data) {
         throw new Error("Empty group roles list response");
       }
@@ -119,7 +110,8 @@ export const groupRolesListQueryOptions = (groupHref: string) =>
   });
 
 export const useGroupsListQuery = (params: GroupListParams = {}) => {
-  return useQuery(groupsListQueryOptions(params));
+  const domain = useApiDomain();
+  return useQuery(groupsListQueryOptions(domain, params));
 };
 
 export const useGroupDetailQuery = (groupHref: string) => {
@@ -136,13 +128,13 @@ export const useGroupRolesListQuery = (groupHref: string) => {
 
 export const useGroupCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async (body: Group) => {
-      const response = await groupsCreate({
-        client,
-        path: { pulp_domain: PULP_DOMAIN },
+      const response = await axiosInstance.post<GroupResponse>(
+        pulpApiPath("groups/", domain),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -163,11 +155,10 @@ export const useGroupUpdateMutation = () => {
       href: string;
       body: PatchedGroup;
     }) => {
-      const response = await groupsPartialUpdate({
-        client,
-        path: { group_href: href },
+      const response = await axiosInstance.patch<GroupResponse>(
+        toProxyHref(href),
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -182,10 +173,7 @@ export const useGroupDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (groupHref: string) => {
-      const response = await groupsDelete({
-        client,
-        path: { group_href: groupHref },
-      });
+      const response = await axiosInstance.delete<void>(toProxyHref(groupHref));
       return response.data;
     },
     onSuccess: () => {
@@ -206,11 +194,10 @@ export const useGroupUserCreateMutation = () => {
       groupHref: string;
       body: GroupUser;
     }) => {
-      const response = await groupsUsersCreate({
-        client,
-        path: { group_href: groupHref },
+      const response = await axiosInstance.post<GroupUserResponse>(
+        `${toProxyHref(groupHref)}users/`,
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -225,10 +212,7 @@ export const useGroupUserDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userHref: string) => {
-      const response = await groupsUsersDelete({
-        client,
-        path: { groups_user_href: userHref },
-      });
+      const response = await axiosInstance.delete<void>(toProxyHref(userHref));
       return response.data;
     },
     onSuccess: () => {
@@ -249,11 +233,10 @@ export const useGroupRoleCreateMutation = () => {
       groupHref: string;
       body: GroupRole;
     }) => {
-      const response = await groupsRolesCreate({
-        client,
-        path: { group_href: groupHref },
+      const response = await axiosInstance.post<GroupRoleResponse>(
+        `${toProxyHref(groupHref)}roles/`,
         body,
-      });
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -268,10 +251,7 @@ export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (roleHref: string) => {
-      const response = await groupsRolesDelete({
-        client,
-        path: { groups_group_role_href: roleHref },
-      });
+      const response = await axiosInstance.delete<void>(toProxyHref(roleHref));
       return response.data;
     },
     onSuccess: () => {
