@@ -19,10 +19,8 @@ dist/
 
 # misc
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env
 
 npm-debug.log*
 
@@ -49,6 +47,7 @@ e2e/pulp/settings/keys/
 e2e/pulp/settings/database_fields.symmetric.key
 
 # Claude
+.claude/settings.local.json
 managed_context/
 test_suite_analysis/
 .playwright-mcp/

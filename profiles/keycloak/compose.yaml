@@ -1,0 +1,44 @@
+services:
+  pulp-ui-2-keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN: "{KEYCLOAK_ADMIN}"
+      KEYCLOAK_ADMIN_PASSWORD: "{KEYCLOAK_ADMIN_PASSWORD}"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HOSTNAME: "http://localhost:{KEYCLOAK_PORT}"
+      KC_PROXY_HEADERS: xforwarded
+    ports:
+      - "{KEYCLOAK_PORT}:8080"
+    command: ["start-dev"]
+
+  pulp-ui-2-keycloak-wait:
+    image: docker.io/alpine/curl:latest
+    volumes:
+      - "{SRC_DIR}/pulp-ui-2/profiles/keycloak/kc-wait.sh:/tmp/kc-wait.sh:Z"
+    entrypoint: ["/bin/sh"]
+    command: /tmp/kc-wait.sh
+    environment:
+      SERVER_URL: "http://pulp-ui-2-keycloak:8080"
+    depends_on:
+      pulp-ui-2-keycloak:
+        condition: service_started
+
+  pulp-ui-2-keycloak-init:
+    image: quay.io/keycloak/keycloak:latest
+    volumes:
+      - "{SRC_DIR}/pulp-ui-2/profiles/keycloak/kc-init.sh:/tmp/kc-init.sh:Z"
+    entrypoint: ["/bin/sh"]
+    command: /tmp/kc-init.sh
+    environment:
+      SERVER_URL: "http://pulp-ui-2-keycloak:8080"
+      KEYCLOAK_REALM: "{KEYCLOAK_REALM}"
+      KEYCLOAK_ADMIN: "{KEYCLOAK_ADMIN}"
+      KEYCLOAK_ADMIN_PASSWORD: "{KEYCLOAK_ADMIN_PASSWORD}"
+      KEYCLOAK_UI_CLIENT_ID: "{KEYCLOAK_UI_CLIENT_ID}"
+      KEYCLOAK_PULP_CLIENT_ID: "{KEYCLOAK_PULP_CLIENT_ID}"
+      KEYCLOAK_PULP_CLIENT_SECRET: "{KEYCLOAK_PULP_CLIENT_SECRET}"
+      KEYCLOAK_DEV_USER: "{KEYCLOAK_DEV_USER}"
+      KEYCLOAK_DEV_PASSWORD: "{KEYCLOAK_DEV_PASSWORD}"
+    depends_on:
+      pulp-ui-2-keycloak-wait:
+        condition: service_completed_successfully
