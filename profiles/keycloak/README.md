@@ -12,12 +12,11 @@ oci-env -e compose.env compose build
 oci-env -e compose.env compose up
 ```
 
-| Service             | URL                                           |
-| ------------------- | --------------------------------------------- |
-| Pulp API (direct)   | http://localhost:5003/api/pulp/api/v3/status/ |
-| Pulp API (gateway)  | http://localhost:5010/api/pulp/api/v3/status/ |
-| Keycloak admin      | http://localhost:8090 (admin / admin)         |
-| Pulp Keycloak login | http://localhost:5003/api/pulp/login/keycloak |
+| Service            | URL                                           |
+| ------------------ | --------------------------------------------- |
+| Pulp API (direct)  | http://localhost:5003/api/pulp/api/v3/status/ |
+| Pulp API (gateway) | http://localhost:5010/api/pulp/api/v3/status/ |
+| Keycloak admin     | http://localhost:8090 (admin / admin)         |
 
 ## How authentication works
 
@@ -35,10 +34,8 @@ This is Pulp's official external/reverse-proxy auth pattern (see pulpcore
 > The auth wiring lives in `pulp_config.env` as `PULP_`-prefixed env vars
 > (`PULP_REST_FRAMEWORK__DEFAULT_AUTHENTICATION_CLASSES`, `PULP_AUTHENTICATION_BACKENDS`,
 > `PULP_REMOTE_USER_ENVIRON_NAME`), **not** in a settings file. The pulp container's s6 services
-> hardcode `PULP_SETTINGS=/etc/pulp/settings.py`, so a profile-generated settings file
-> (`settings-keycloak.py`) is never loaded by the api/content/worker processes — but dynaconf reads
-> `PULP_` env vars in every process. `init.sh`/`settings-keycloak.py` only carry the (separate,
-> still-incomplete) interactive `/login/keycloak` social-auth wiring.
+> hardcode `PULP_SETTINGS=/etc/pulp/settings.py`, so a profile-generated settings file is never
+> loaded by the api/content/worker processes — but dynaconf reads `PULP_` env vars in every process.
 
 > Caveat: oci-env always publishes Pulp on `:5003` too, so Pulp stays directly reachable on the host,
 > bypassing the gateway. This is a known dev-only limitation — only the gateway port enforces auth.
@@ -61,4 +58,4 @@ Open http://localhost:3000 and sign in via Keycloak (`admin` / `password`).
 ## Variables
 
 See `profile_default_config.env` for defaults (`KEYCLOAK_PORT=8090`, `KEYCLOAK_GATEWAY_PORT=5010`,
-realm `pulp`, clients `frontend` and `pulp`).
+realm `pulp`, client `frontend`).

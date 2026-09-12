@@ -7,8 +7,6 @@ PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}"
 MASTER_REALM="master"
 PULP_REALM="${KEYCLOAK_REALM:-pulp}"
 UI_CLIENT_ID="${KEYCLOAK_UI_CLIENT_ID:-frontend}"
-PULP_CLIENT_ID="${KEYCLOAK_PULP_CLIENT_ID:-pulp}"
-PULP_CLIENT_SECRET="${KEYCLOAK_PULP_CLIENT_SECRET:-dev-pulp-secret}"
 DEV_USER="${KEYCLOAK_DEV_USER:-admin}"
 DEV_PASSWORD="${KEYCLOAK_DEV_PASSWORD:-password}"
 
@@ -85,34 +83,6 @@ else
     "id.token.claim": "false",
     "access.token.claim": "true"
   }
-}
-EOF
-fi
-
-# Confidential client for Pulp social-auth (/login/keycloak)
-if kcadm get clients -r "${PULP_REALM}" --fields clientId --format csv --noquotes \
-  | grep -qx "${PULP_CLIENT_ID}"; then
-  echo "Client ${PULP_CLIENT_ID} already exists"
-else
-  kcadm create clients -r "${PULP_REALM}" -f - <<EOF
-{
-  "clientId": "${PULP_CLIENT_ID}",
-  "publicClient": false,
-  "standardFlowEnabled": true,
-  "directAccessGrantsEnabled": false,
-  "secret": "${PULP_CLIENT_SECRET}",
-  "webOrigins": ["*"],
-  "redirectUris": [
-    "http://localhost:5003/*",
-    "*"
-  ],
-  "defaultClientScopes": [
-    "acr",
-    "basic",
-    "email",
-    "profile",
-    "roles"
-  ]
 }
 EOF
 fi
