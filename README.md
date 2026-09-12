@@ -6,8 +6,10 @@ React admin + browse UI for Pulp (pulpcore + plugins).
 
 ```bash
 npm ci
-PULP_API_URL="http://localhost:8080" npm run start:dev
+npm run start:dev
 ```
+
+Customize [.env](.env) as per your needs
 
 Open http://localhost:3000 and sign in via the browser login form when `AUTH=basic` (HTTP Basic Auth with credentials stored in browser storage; no auth env vars beyond `AUTH`). Vite proxies
 `/api` to `PULP_API_URL`. Pulp domain is the client constant `PULP_DOMAIN` in `client/src/app/Constants.ts` (default

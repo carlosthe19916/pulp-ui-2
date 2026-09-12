@@ -64,6 +64,31 @@ else
 EOF
 fi
 
+# Audience mapper so UI access tokens carry aud=<frontend>. The gateway validates
+# aud against its client_id, but Keycloak public-client tokens omit it by default.
+# Mirrors step 8 of Pulp's official keycloak auth guide.
+UI_CLIENT_UUID="$(
+  kcadm get clients -r "${PULP_REALM}" -q "clientId=${UI_CLIENT_ID}" \
+    --fields id --format csv --noquotes | head -n1
+)"
+if kcadm get "clients/${UI_CLIENT_UUID}/protocol-mappers/models" -r "${PULP_REALM}" \
+  --fields name --format csv --noquotes | grep -qx "audience-${UI_CLIENT_ID}"; then
+  echo "Audience mapper for ${UI_CLIENT_ID} already exists"
+else
+  kcadm create "clients/${UI_CLIENT_UUID}/protocol-mappers/models" -r "${PULP_REALM}" -f - <<EOF
+{
+  "name": "audience-${UI_CLIENT_ID}",
+  "protocol": "openid-connect",
+  "protocolMapper": "oidc-audience-mapper",
+  "config": {
+    "included.client.audience": "${UI_CLIENT_ID}",
+    "id.token.claim": "false",
+    "access.token.claim": "true"
+  }
+}
+EOF
+fi
+
 # Confidential client for Pulp social-auth (/login/keycloak)
 if kcadm get clients -r "${PULP_REALM}" --fields clientId --format csv --noquotes \
   | grep -qx "${PULP_CLIENT_ID}"; then
@@ -100,6 +125,7 @@ else
   kcadm create users -r "${PULP_REALM}" \
     -s "username=${DEV_USER}" \
     -s enabled=true \
+    -s emailVerified=true \
     -s firstName=admin \
     -s lastName=admin \
     -s email=admin@example.com
