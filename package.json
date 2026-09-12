@@ -17,8 +17,8 @@
     "start:dev:common": "npm run start:dev -w common",
     "start:dev:server": "npm run start:dev -w server",
     "start:dev:client": "npm run start:dev -w client",
-    "start:dev": "npm run build -w common && concurrently -n common,client -c 'white.bold.inverse,green.bold.inverse,blue.bold.inverse' 'npm:start:dev:common' 'npm:start:dev:client'",
-    "start": "npm run build -w common -w client && npm run start -w server",
+    "start:dev": "dotenv -- npm run build -w common && dotenv -- concurrently -n common,client -c 'white.bold.inverse,green.bold.inverse,blue.bold.inverse' 'npm:start:dev:common' 'npm:start:dev:client'",
+    "start": "dotenv -- npm run build -w common -w client && dotenv -- npm run start -w server",
     "test": "npm run test -w common -w client -w server --if-present --",
     "test:e2e": "npm run test -w e2e"
   },
@@ -48,6 +48,7 @@
     "concurrently": "^9.2.1",
     "copyfiles": "^2.4.1",
     "cross-env": "^10.0.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsx-a11y": "^6.10.2",
