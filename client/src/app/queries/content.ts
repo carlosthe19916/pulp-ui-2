@@ -7,13 +7,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
 
 type ContentQuery = NonNullable<ContentListData["query"]>;
 
-export interface ContentListParams {
+export interface IContentListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<ContentQuery["ordering"]>[number];
@@ -27,8 +27,8 @@ export const contentRootQueryOptions = queryOptions({
 });
 
 export const contentListQueryOptions = (
-  domain: PulpDomain,
-  params: ContentListParams = {},
+  domain: IPulpDomain,
+  params: IContentListParams = {},
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
@@ -57,7 +57,7 @@ export const contentListQueryOptions = (
   });
 
 export const useContentListQuery = (
-  params: ContentListParams = {},
+  params: IContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

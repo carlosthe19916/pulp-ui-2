@@ -2,7 +2,7 @@ import { use } from "react";
 
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import type { PulpDomain } from "@app/queries/utils/pulpApi";
+import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 
 /**
  * Read the live domain config from API status.
@@ -12,7 +12,7 @@ import type { PulpDomain } from "@app/queries/utils/pulpApi";
  * synchronously because `WaitForApiStatus` (RootLayout) gates rendering until
  * status has loaded.
  */
-export const useApiDomain = (): PulpDomain => {
+export const useApiDomain = (): IPulpDomain => {
   const apiStatus = use(ApiStatusContext);
   return {
     enabled: apiStatus?.status?.domain_enabled ?? false,

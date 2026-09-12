@@ -12,16 +12,16 @@ import {
   SelectOption,
 } from "@patternfly/react-core";
 
-export interface TypeaheadOption {
+export interface ITypeaheadOption {
   value: string;
   label: string;
 }
 
-interface TypeaheadSelectProps {
+interface ITypeaheadSelectProps {
   id: string;
   ariaLabel: string;
   placeholder?: string;
-  options: TypeaheadOption[];
+  options: ITypeaheadOption[];
   value: string;
   onChange: (value: string) => void;
   isDisabled?: boolean;
@@ -36,7 +36,7 @@ export function TypeaheadSelect({
   value,
   onChange,
   isDisabled,
-}: TypeaheadSelectProps) {
+}: ITypeaheadSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
 

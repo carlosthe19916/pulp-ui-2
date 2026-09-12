@@ -37,12 +37,12 @@ const createUserSchema = yup.object({
 
 type CreateUserFormValues = yup.InferType<typeof createUserSchema>;
 
-interface CreateUserModalProps {
+interface ICreateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CreateUserModal: React.FC<CreateUserModalProps> = ({
+export const CreateUserModal: React.FC<ICreateUserModalProps> = ({
   isOpen,
   onClose,
 }) => {

@@ -47,11 +47,11 @@ const stateColors: Record<
   skipped: "grey",
 };
 
-interface TaskDetailProps {
+interface ITaskDetailProps {
   taskId: string;
 }
 
-export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
+export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
   const taskHref = buildTaskHref(taskId);
   const { data: task, isLoading, error } = useTaskDetailQuery(taskHref);
   const cancelMutation = useTaskCancelMutation();

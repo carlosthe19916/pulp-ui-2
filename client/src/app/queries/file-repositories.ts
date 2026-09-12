@@ -45,7 +45,7 @@ type RepositoryVersionOrdering = NonNullable<
   RepositoriesFileFileVersionsListData["query"]
 >["ordering"];
 
-interface FileRepositoryVersionsListParams {
+interface IFileRepositoryVersionsListParams {
   limit?: number;
   offset?: number;
   number?: number;
@@ -54,7 +54,7 @@ interface FileRepositoryVersionsListParams {
 
 export const fileRepositoryVersionsListQueryOptions = (
   repoHref: string,
-  params?: FileRepositoryVersionsListParams,
+  params?: IFileRepositoryVersionsListParams,
 ) =>
   queryOptions({
     queryKey: [
@@ -90,7 +90,7 @@ export const useFileRepositoryDetailQuery = (href: string) => {
 
 export const useFileRepositoryVersionsListQuery = (
   repoHref: string,
-  params?: FileRepositoryVersionsListParams,
+  params?: IFileRepositoryVersionsListParams,
 ) => {
   return useQuery(fileRepositoryVersionsListQueryOptions(repoHref, params));
 };

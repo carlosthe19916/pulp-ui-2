@@ -1,16 +1,16 @@
-export interface MastheadBrand {
+export interface IMastheadBrand {
   src: string;
   alt: string;
   height: string;
 }
 
-export interface MastheadTitle {
+export interface IMastheadTitle {
   text: string;
   heading?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   size?: "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 }
 
-export interface BrandingStrings {
+export interface IBrandingStrings {
   application: {
     title: string;
     name?: string;
@@ -24,9 +24,9 @@ export interface BrandingStrings {
   };
 
   masthead: {
-    leftBrand?: MastheadBrand;
-    leftTitle?: MastheadTitle;
-    rightBrand?: MastheadBrand;
+    leftBrand?: IMastheadBrand;
+    leftTitle?: IMastheadTitle;
+    rightBrand?: IMastheadBrand;
     supportUrl?: string;
   };
 }
@@ -37,4 +37,4 @@ export interface BrandingStrings {
 //       JSON import with the actual branding information.
 import stringsStub from "@branding/strings.json";
 
-export const brandingStrings: BrandingStrings = stringsStub;
+export const brandingStrings: IBrandingStrings = stringsStub;

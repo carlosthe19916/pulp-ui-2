@@ -25,11 +25,11 @@ import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useFileContentDetailQuery } from "@app/queries/file-content";
 import { buildContentHref } from "@app/queries/utils/pulpHref";
 
-interface ContentDetailProps {
+interface IContentDetailProps {
   contentId: string;
 }
 
-export const ContentDetail: React.FC<ContentDetailProps> = ({ contentId }) => {
+export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
   const domain = useApiDomain();
   const contentHref = buildContentHref(contentId, domain);
   const {

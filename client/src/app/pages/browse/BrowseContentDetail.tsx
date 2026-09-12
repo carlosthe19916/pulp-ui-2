@@ -31,7 +31,7 @@ import {
   buildDistributionHref,
 } from "@app/queries/utils/pulpHref";
 
-interface BrowseContentDetailProps {
+interface IBrowseContentDetailProps {
   distributionId: string;
   contentId: string;
 }
@@ -43,7 +43,7 @@ function formatBytes(size: number | undefined): string {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export const BrowseContentDetail: React.FC<BrowseContentDetailProps> = ({
+export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
   distributionId,
   contentId,
 }) => {

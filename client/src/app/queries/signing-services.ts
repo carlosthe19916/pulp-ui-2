@@ -8,13 +8,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const SigningServicesQueryKey = "signing-services";
 
 type SigningServiceQuery = NonNullable<SigningServicesListData["query"]>;
 
-interface SigningServiceListParams {
+interface ISigningServiceListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<SigningServiceQuery["ordering"]>[number];
@@ -27,8 +27,8 @@ export const signingServicesRootQueryOptions = queryOptions({
 });
 
 export const signingServicesListQueryOptions = (
-  domain: PulpDomain,
-  params: SigningServiceListParams = {},
+  domain: IPulpDomain,
+  params: ISigningServiceListParams = {},
 ) =>
   queryOptions({
     queryKey: [
@@ -73,7 +73,7 @@ export const signingServiceDetailQueryOptions = (href: string) =>
   });
 
 export const useSigningServicesListQuery = (
-  params: SigningServiceListParams = {},
+  params: ISigningServiceListParams = {},
 ) => {
   const domain = useApiDomain();
   return useQuery(signingServicesListQueryOptions(domain, params));

@@ -1,8 +1,8 @@
 import type { VersionResponse } from "@app/client";
 
-import type { ResourceDescriptor, ResourceKind } from "./types";
+import type { IResourceDescriptor, ResourceKind } from "./types";
 
-const descriptorMap = new Map<string, ResourceDescriptor>();
+const descriptorMap = new Map<string, IResourceDescriptor>();
 
 /** Descriptors are keyed by kind+pulpType since the same pulp_type (e.g. "file.file") can back multiple resource kinds (repository, remote, distribution, publication, content). */
 function compositeKey(kind: ResourceKind, pulpType: string): string {
@@ -10,7 +10,7 @@ function compositeKey(kind: ResourceKind, pulpType: string): string {
 }
 
 /** Register a resource descriptor in the global registry. */
-export function registerDescriptor(descriptor: ResourceDescriptor): void {
+export function registerDescriptor(descriptor: IResourceDescriptor): void {
   descriptorMap.set(
     compositeKey(descriptor.kind, descriptor.pulpType),
     descriptor,
@@ -21,27 +21,27 @@ export function registerDescriptor(descriptor: ResourceDescriptor): void {
 export function getDescriptor(
   kind: ResourceKind,
   pulpType: string,
-): ResourceDescriptor | undefined {
+): IResourceDescriptor | undefined {
   return descriptorMap.get(compositeKey(kind, pulpType));
 }
 
 /** Return all registered descriptors for a given resource kind. */
 export function getDescriptorsForKind(
   kind: ResourceKind,
-): ResourceDescriptor[] {
+): IResourceDescriptor[] {
   return Array.from(descriptorMap.values()).filter((d) => d.kind === kind);
 }
 
 /** Return all registered descriptors that are available given the installed plugins. */
 export function getAvailableDescriptors(
   plugins: VersionResponse[],
-): ResourceDescriptor[] {
+): IResourceDescriptor[] {
   return Array.from(descriptorMap.values()).filter((d) =>
     d.isAvailable(plugins),
   );
 }
 
 /** Return all registered descriptors. */
-export function getAllDescriptors(): ResourceDescriptor[] {
+export function getAllDescriptors(): IResourceDescriptor[] {
   return Array.from(descriptorMap.values());
 }

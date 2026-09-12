@@ -15,14 +15,14 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
 type RoleOrdering = NonNullable<RolesListData["query"]>["ordering"];
 
-interface RoleListParams {
+interface IRoleListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<RoleOrdering>[number];
@@ -35,8 +35,8 @@ export const rolesRootQueryOptions = queryOptions({
 });
 
 export const rolesListQueryOptions = (
-  domain: PulpDomain,
-  params: RoleListParams = {},
+  domain: IPulpDomain,
+  params: IRoleListParams = {},
 ) =>
   queryOptions({
     queryKey: [...rolesRootQueryOptions.queryKey, "list", domain, params],
@@ -74,7 +74,7 @@ export const roleDetailQueryOptions = (roleHref: string) =>
     enabled: !!roleHref,
   });
 
-export const useRolesListQuery = (params: RoleListParams = {}) => {
+export const useRolesListQuery = (params: IRoleListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(rolesListQueryOptions(domain, params));
 };

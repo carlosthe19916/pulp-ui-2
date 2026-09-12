@@ -6,7 +6,7 @@ export type ResourceKind =
 export type FieldType =
   "text" | "textarea" | "number" | "boolean" | "select" | "file" | "resource";
 
-export interface FieldDescriptor {
+export interface IFieldDescriptor {
   key: string;
   label: string;
   type: FieldType;
@@ -17,7 +17,7 @@ export interface FieldDescriptor {
   resourceKind?: ResourceKind;
 }
 
-export interface ResourceDescriptor {
+export interface IResourceDescriptor {
   /** Pulp type identifier, e.g. "file.file" */
   pulpType: string;
 
@@ -28,19 +28,19 @@ export interface ResourceDescriptor {
   label: string;
 
   /** Fields shown in create modal (beyond common fields the shell handles) */
-  createFields?: FieldDescriptor[];
+  createFields?: IFieldDescriptor[];
 
   /** Fields shown in edit modal */
-  editFields?: FieldDescriptor[];
+  editFields?: IFieldDescriptor[];
 
   /** Extra fields shown in detail DescriptionList */
-  detailFields?: FieldDescriptor[];
+  detailFields?: IFieldDescriptor[];
 
   /** Extra fields shown on browse distribution cards */
-  browseCardFields?: FieldDescriptor[];
+  browseCardFields?: IFieldDescriptor[];
 
   /** Fields shown on browse content detail (consumer surface) */
-  browseDetailFields?: FieldDescriptor[];
+  browseDetailFields?: IFieldDescriptor[];
 
   /** Whether this resource type supports sync (repositories only) */
   supportsSync?: boolean;

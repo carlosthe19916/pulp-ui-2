@@ -41,11 +41,11 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditDistributionModal } from "./components/EditDistributionModal";
 
-interface DistributionDetailProps {
+interface IDistributionDetailProps {
   distId: string;
 }
 
-export const DistributionDetail: React.FC<DistributionDetailProps> = ({
+export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   distId,
 }) => {
   const navigate = useNavigate();

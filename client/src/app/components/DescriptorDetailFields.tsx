@@ -8,19 +8,19 @@ import {
 } from "@patternfly/react-core";
 
 import { getFieldValue } from "@app/descriptors/formSchema";
-import type { FieldDescriptor } from "@app/descriptors/types";
+import type { IFieldDescriptor } from "@app/descriptors/types";
 import type { ResourceKind } from "@app/descriptors/types";
 
 import { ResourceHrefLink } from "./ResourceHrefLink";
 
-interface DescriptorDetailFieldsProps {
-  fields: FieldDescriptor[] | undefined;
+interface IDescriptorDetailFieldsProps {
+  fields: IFieldDescriptor[] | undefined;
   entity: object;
   /** Keys already rendered by the shell; skip to avoid duplicates. */
   skipKeys?: string[];
 }
 
-function formatValue(field: FieldDescriptor, value: unknown): React.ReactNode {
+function formatValue(field: IFieldDescriptor, value: unknown): React.ReactNode {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
@@ -46,7 +46,7 @@ function formatValue(field: FieldDescriptor, value: unknown): React.ReactNode {
 }
 
 /** Render descriptor `detailFields` as DescriptionList groups. */
-export const DescriptorDetailFields: React.FC<DescriptorDetailFieldsProps> = ({
+export const DescriptorDetailFields: React.FC<IDescriptorDetailFieldsProps> = ({
   fields,
   entity,
   skipKeys = [],

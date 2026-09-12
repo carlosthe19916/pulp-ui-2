@@ -14,11 +14,11 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 import { contentRootQueryOptions } from "./content";
 
-export interface FileContentListParams {
+export interface IFileContentListParams {
   limit?: number;
   offset?: number;
   repository_version?: string;
@@ -26,8 +26,8 @@ export interface FileContentListParams {
 }
 
 export const fileContentListQueryOptions = (
-  domain: PulpDomain,
-  params: FileContentListParams = {},
+  domain: IPulpDomain,
+  params: IFileContentListParams = {},
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
@@ -60,7 +60,7 @@ export const fileContentListQueryOptions = (
   });
 
 export const useFileContentListQuery = (
-  params: FileContentListParams = {},
+  params: IFileContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

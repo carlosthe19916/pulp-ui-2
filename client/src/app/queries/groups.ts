@@ -21,13 +21,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const GroupsQueryKey = "groups";
 
 type GroupOrdering = NonNullable<GroupsListData["query"]>["ordering"];
 
-interface GroupListParams {
+interface IGroupListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<GroupOrdering>[number];
@@ -40,8 +40,8 @@ export const groupsRootQueryOptions = queryOptions({
 });
 
 export const groupsListQueryOptions = (
-  domain: PulpDomain,
-  params: GroupListParams = {},
+  domain: IPulpDomain,
+  params: IGroupListParams = {},
 ) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "list", domain, params],
@@ -109,7 +109,7 @@ export const groupRolesListQueryOptions = (groupHref: string) =>
     enabled: !!groupHref,
   });
 
-export const useGroupsListQuery = (params: GroupListParams = {}) => {
+export const useGroupsListQuery = (params: IGroupListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(groupsListQueryOptions(domain, params));
 };

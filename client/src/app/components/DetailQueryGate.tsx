@@ -12,7 +12,7 @@ import { NotFoundEmptyState } from "@app/components/NotFoundEmptyState";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError, isNotFoundError } from "@app/utils/isHttpError";
 
-interface DetailQueryGateProps {
+interface IDetailQueryGateProps {
   isLoading: boolean;
   error: unknown;
   hasData: boolean;
@@ -27,7 +27,7 @@ export function DetailQueryGate({
   hasData,
   loadingLabel,
   children,
-}: DetailQueryGateProps) {
+}: IDetailQueryGateProps) {
   if (isLoading) {
     return (
       <PageSection>

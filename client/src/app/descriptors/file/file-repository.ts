@@ -1,6 +1,6 @@
-import type { ResourceDescriptor } from "../types";
+import type { IResourceDescriptor } from "../types";
 
-export const fileRepositoryDescriptor: ResourceDescriptor = {
+export const fileRepositoryDescriptor: IResourceDescriptor = {
   pulpType: "file.file",
   kind: "repository",
   label: "File",

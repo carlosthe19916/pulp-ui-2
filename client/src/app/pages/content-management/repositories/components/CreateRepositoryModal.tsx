@@ -14,7 +14,7 @@ import {
 
 import type { FileFileRepository } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
-import type { TypeaheadOption } from "@app/components/TypeaheadSelect";
+import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { fileRepositoryDescriptor } from "@app/descriptors/file/file-repository";
 import {
@@ -29,12 +29,12 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const createFields = fileRepositoryDescriptor.createFields ?? [];
 const createRepositorySchema = buildFieldSchema(createFields);
 
-interface CreateRepositoryModalProps {
+interface ICreateRepositoryModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CreateRepositoryModal: React.FC<CreateRepositoryModalProps> = ({
+export const CreateRepositoryModal: React.FC<ICreateRepositoryModalProps> = ({
   isOpen,
   onClose,
 }) => {
@@ -42,7 +42,7 @@ export const CreateRepositoryModal: React.FC<CreateRepositoryModalProps> = ({
   const createMutation = useFileRepositoryCreateMutation();
   const { data: remotesData } = useRemotesListQuery({ limit: 100 });
 
-  const remoteOptions = useMemo<TypeaheadOption[]>(
+  const remoteOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (remotesData?.results ?? [])
         .filter((remote) => !!remote.pulp_href)

@@ -18,14 +18,14 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const UsersQueryKey = "users";
 
 type UserOrdering = NonNullable<UsersListData["query"]>["ordering"];
 
-interface UserListParams {
+interface IUserListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<UserOrdering>[number];
@@ -38,8 +38,8 @@ export const usersRootQueryOptions = queryOptions({
 });
 
 export const usersListQueryOptions = (
-  domain: PulpDomain,
-  params: UserListParams = {},
+  domain: IPulpDomain,
+  params: IUserListParams = {},
 ) =>
   queryOptions({
     queryKey: [...usersRootQueryOptions.queryKey, "list", domain, params],
@@ -92,7 +92,7 @@ export const userRolesListQueryOptions = (userHref: string) =>
     enabled: !!userHref,
   });
 
-export const useUsersListQuery = (params: UserListParams = {}) => {
+export const useUsersListQuery = (params: IUserListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(usersListQueryOptions(domain, params));
 };

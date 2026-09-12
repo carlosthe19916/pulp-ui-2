@@ -7,13 +7,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RemotesQueryKey = "remotes";
 
 type RemoteQuery = NonNullable<RemotesListData["query"]>;
 
-interface RemoteListParams {
+interface IRemoteListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<RemoteQuery["ordering"]>[number];
@@ -27,8 +27,8 @@ export const remotesRootQueryOptions = queryOptions({
 });
 
 export const remotesListQueryOptions = (
-  domain: PulpDomain,
-  params: RemoteListParams = {},
+  domain: IPulpDomain,
+  params: IRemoteListParams = {},
 ) =>
   queryOptions({
     queryKey: [...remotesRootQueryOptions.queryKey, "list", domain, params],
@@ -53,7 +53,7 @@ export const remotesListQueryOptions = (
     },
   });
 
-export const useRemotesListQuery = (params: RemoteListParams = {}) => {
+export const useRemotesListQuery = (params: IRemoteListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(remotesListQueryOptions(domain, params));
 };

@@ -36,7 +36,7 @@ export const isContrastModeValid = (value: string): value is ContrastMode => {
   return Object.values(CONTRAST_MODES).includes(value as ContrastMode);
 };
 
-export interface ThemeState {
+export interface IThemeState {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   isDark: boolean;
@@ -47,7 +47,7 @@ export interface ThemeState {
   isGlass: boolean;
 }
 
-export const ThemeContext = createContext<ThemeState>({
+export const ThemeContext = createContext<IThemeState>({
   mode: "system",
   setMode: () => {},
   isDark: false,

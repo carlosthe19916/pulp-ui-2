@@ -5,11 +5,11 @@ import { Page, SkipToContent } from "@patternfly/react-core";
 import { HeaderApp } from "./header";
 import { SidebarApp } from "./sidebar";
 
-interface DefaultLayoutProps {
+interface IDefaultLayoutProps {
   children?: React.ReactNode;
 }
 
-export const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
+export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   const pageId = "main-content-page-layout-horizontal-nav";
   const PageSkipToContent = (
     <SkipToContent href={`#${pageId}`}>Skip to content</SkipToContent>

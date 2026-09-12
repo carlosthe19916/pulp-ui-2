@@ -17,7 +17,7 @@ import type {
   PatchedfileFileRepository,
 } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
-import type { TypeaheadOption } from "@app/components/TypeaheadSelect";
+import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { fileRepositoryDescriptor } from "@app/descriptors/file/file-repository";
 import {
@@ -31,13 +31,13 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const editFields = fileRepositoryDescriptor.editFields ?? [];
 const editRepositorySchema = buildFieldSchema(editFields);
 
-interface EditRepositoryModalProps {
+interface IEditRepositoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   repository: FileFileRepositoryResponse;
 }
 
-export const EditRepositoryModal: React.FC<EditRepositoryModalProps> = ({
+export const EditRepositoryModal: React.FC<IEditRepositoryModalProps> = ({
   isOpen,
   onClose,
   repository,
@@ -46,7 +46,7 @@ export const EditRepositoryModal: React.FC<EditRepositoryModalProps> = ({
   const updateMutation = useFileRepositoryUpdateMutation();
   const { data: remotesData } = useRemotesListQuery({ limit: 100 });
 
-  const remoteOptions = useMemo<TypeaheadOption[]>(
+  const remoteOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (remotesData?.results ?? [])
         .filter((remote) => !!remote.pulp_href)

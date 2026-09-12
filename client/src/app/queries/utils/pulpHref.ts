@@ -1,5 +1,5 @@
 import { pulpApiPath } from "./pulpApi";
-import type { PulpDomain } from "./pulpApi";
+import type { IPulpDomain } from "./pulpApi";
 
 /**
  * Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the
@@ -47,37 +47,37 @@ export function isEmptyDetailPayload(
 }
 
 /** Build a Pulp user pulp_href from a user ID. */
-export function buildUserHref(userId: string, domain: PulpDomain): string {
+export function buildUserHref(userId: string, domain: IPulpDomain): string {
   return pulpApiPath(`users/${userId}/`, domain);
 }
 
 /** Build a Pulp group pulp_href from a group ID. */
-export function buildGroupHref(groupId: string, domain: PulpDomain): string {
+export function buildGroupHref(groupId: string, domain: IPulpDomain): string {
   return pulpApiPath(`groups/${groupId}/`, domain);
 }
 
 /** Build a Pulp role pulp_href from a role ID. */
-export function buildRoleHref(roleId: string, domain: PulpDomain): string {
+export function buildRoleHref(roleId: string, domain: IPulpDomain): string {
   return pulpApiPath(`roles/${roleId}/`, domain);
 }
 
 /** Build a file repository pulp_href from a repository ID. */
 export function buildRepositoryHref(
   repoId: string,
-  domain: PulpDomain,
+  domain: IPulpDomain,
 ): string {
   return pulpApiPath(`repositories/file/file/${repoId}/`, domain);
 }
 
 /** Build a file remote pulp_href from a remote ID. */
-export function buildRemoteHref(remoteId: string, domain: PulpDomain): string {
+export function buildRemoteHref(remoteId: string, domain: IPulpDomain): string {
   return pulpApiPath(`remotes/file/file/${remoteId}/`, domain);
 }
 
 /** Build a file distribution pulp_href from a distribution ID. */
 export function buildDistributionHref(
   distId: string,
-  domain: PulpDomain,
+  domain: IPulpDomain,
 ): string {
   return pulpApiPath(`distributions/file/file/${distId}/`, domain);
 }
@@ -85,7 +85,7 @@ export function buildDistributionHref(
 /** Build a file publication pulp_href from a publication ID. */
 export function buildPublicationHref(
   pubId: string,
-  domain: PulpDomain,
+  domain: IPulpDomain,
 ): string {
   return pulpApiPath(`publications/file/file/${pubId}/`, domain);
 }
@@ -93,7 +93,7 @@ export function buildPublicationHref(
 /** Build a file content pulp_href from a content ID. */
 export function buildContentHref(
   contentId: string,
-  domain: PulpDomain,
+  domain: IPulpDomain,
 ): string {
   return pulpApiPath(`content/file/files/${contentId}/`, domain);
 }

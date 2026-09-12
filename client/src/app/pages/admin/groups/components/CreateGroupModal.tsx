@@ -27,12 +27,12 @@ const createGroupSchema = yup.object({
 
 type CreateGroupFormValues = yup.InferType<typeof createGroupSchema>;
 
-interface CreateGroupModalProps {
+interface ICreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
+export const CreateGroupModal: React.FC<ICreateGroupModalProps> = ({
   isOpen,
   onClose,
 }) => {

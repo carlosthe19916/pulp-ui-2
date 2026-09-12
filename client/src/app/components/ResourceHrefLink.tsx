@@ -8,7 +8,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-interface ResourceHrefLinkProps {
+interface IResourceHrefLinkProps {
   kind: ResourceKind;
   href: string | null | undefined;
   /** Assumed pulp_type when linking into typed detail routes (v1: file.file). */
@@ -23,7 +23,7 @@ function truncate(value: string, max: number): string {
 }
 
 /** Link a pulp_href to the matching resource detail when a descriptor exists. */
-export const ResourceHrefLink: React.FC<ResourceHrefLinkProps> = ({
+export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   kind,
   href,
   pulpType = "file.file",

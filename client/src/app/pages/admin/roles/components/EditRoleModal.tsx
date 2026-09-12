@@ -29,13 +29,13 @@ const editRoleSchema = yup.object({
 
 type EditRoleFormValues = yup.InferType<typeof editRoleSchema>;
 
-interface EditRoleModalProps {
+interface IEditRoleModalProps {
   isOpen: boolean;
   onClose: () => void;
   role: RoleResponse;
 }
 
-export const EditRoleModal: React.FC<EditRoleModalProps> = ({
+export const EditRoleModal: React.FC<IEditRoleModalProps> = ({
   isOpen,
   onClose,
   role,

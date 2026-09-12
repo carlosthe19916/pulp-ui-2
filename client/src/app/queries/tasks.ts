@@ -15,7 +15,7 @@ import type {
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const TasksQueryKey = "tasks";
@@ -31,7 +31,7 @@ export type TaskState =
 
 type TaskOrdering = NonNullable<TasksListData["query"]>["ordering"];
 
-interface TaskListParams {
+interface ITaskListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<TaskOrdering>[number];
@@ -49,8 +49,8 @@ export const tasksRootQueryOptions = queryOptions({
 });
 
 export const tasksListQueryOptions = (
-  domain: PulpDomain,
-  params: TaskListParams = {},
+  domain: IPulpDomain,
+  params: ITaskListParams = {},
 ) =>
   queryOptions({
     queryKey: [...tasksRootQueryOptions.queryKey, "list", domain, params],
@@ -98,7 +98,7 @@ export const taskDetailQueryOptions = (taskHref: string) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
 
-export const useTasksListQuery = (params: TaskListParams = {}) => {
+export const useTasksListQuery = (params: ITaskListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(tasksListQueryOptions(domain, params));
 };

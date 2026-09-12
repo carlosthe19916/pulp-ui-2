@@ -4,7 +4,7 @@ import { queryClient } from "@app/queries/config";
 import type { IAuthContext } from "@app/context/Auth/AuthContext";
 import { routeTree } from "./routeTree.gen";
 
-export interface RouterContext {
+export interface IRouterContext {
   queryClient: typeof queryClient;
   auth: IAuthContext | null;
 }

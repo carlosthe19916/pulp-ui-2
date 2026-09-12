@@ -12,13 +12,13 @@ import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclam
 
 import { useNavigate } from "@tanstack/react-router";
 
-interface RouteErrorFallbackProps {
+interface IRouteErrorFallbackProps {
   error: unknown;
   reset: () => void;
 }
 
 /** Full-page error boundary fallback for TanStack Router errorComponent. */
-export const RouteErrorFallback: React.FC<RouteErrorFallbackProps> = ({
+export const RouteErrorFallback: React.FC<IRouteErrorFallbackProps> = ({
   error,
   reset,
 }) => {

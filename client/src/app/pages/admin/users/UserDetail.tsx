@@ -66,11 +66,11 @@ const addRoleSchema = yup.object({
 
 type AddRoleFormValues = yup.InferType<typeof addRoleSchema>;
 
-interface UserDetailProps {
+interface IUserDetailProps {
   userId: string;
 }
 
-export const UserDetail: React.FC<UserDetailProps> = ({ userId }) => {
+export const UserDetail: React.FC<IUserDetailProps> = ({ userId }) => {
   const navigate = useNavigate();
   const domain = useApiDomain();
   const userHref = buildUserHref(userId, domain);

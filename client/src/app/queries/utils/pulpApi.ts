@@ -3,13 +3,13 @@ import { normalizePulpApiRoot } from "@pulp-ui/common";
 import ENV from "@app/env";
 
 /** Live API domain: whether pulpcore has DOMAIN_ENABLED, and the active slug. */
-export interface PulpDomain {
+export interface IPulpDomain {
   enabled: boolean;
   name: string; // e.g. "default"
 }
 
 /** Domain path segment: "/default" when enabled, "" when disabled. */
-const domainSegment = (domain: PulpDomain): string =>
+const domainSegment = (domain: IPulpDomain): string =>
   domain.enabled ? `/${domain.name}` : "";
 
 /** Strip any leading slash(es) so the endpoint joins with exactly one separator. */
@@ -22,7 +22,7 @@ const stripLeadingSlash = (endpoint: string): string =>
  * `"/repositories/"` both yield `/api/pulp[/default]/api/v3/repositories/`. The
  * trailing slash is preserved as-is (Pulp URLs are trailing-slash-significant).
  */
-export const pulpApiPath = (endpoint: string, domain: PulpDomain): string =>
+export const pulpApiPath = (endpoint: string, domain: IPulpDomain): string =>
   `/api/pulp${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
 
 /**

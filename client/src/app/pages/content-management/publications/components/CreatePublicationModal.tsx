@@ -14,7 +14,7 @@ import {
 
 import type { FileFilePublication } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
-import type { TypeaheadOption } from "@app/components/TypeaheadSelect";
+import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { filePublicationDescriptor } from "@app/descriptors/file/file-publication";
 import {
@@ -30,13 +30,13 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const createFields = filePublicationDescriptor.createFields ?? [];
 const createPublicationSchema = buildFieldSchema(createFields);
 
-interface CreatePublicationModalProps {
+interface ICreatePublicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   repoHref?: string;
 }
 
-export const CreatePublicationModal: React.FC<CreatePublicationModalProps> = ({
+export const CreatePublicationModal: React.FC<ICreatePublicationModalProps> = ({
   isOpen,
   onClose,
   repoHref,
@@ -45,7 +45,7 @@ export const CreatePublicationModal: React.FC<CreatePublicationModalProps> = ({
   const createMutation = useFilePublicationCreateMutation();
   const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
 
-  const repositoryOptions = useMemo<TypeaheadOption[]>(
+  const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (repositoriesData?.results ?? [])
         .filter((repo) => !!repo.pulp_href)

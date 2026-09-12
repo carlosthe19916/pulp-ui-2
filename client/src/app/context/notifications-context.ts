@@ -4,16 +4,16 @@ import type { ReactNode } from "react";
 export type NotificationVariant =
   "success" | "danger" | "warning" | "info" | "custom";
 
-export interface Notification {
+export interface INotification {
   id: number;
   title: string;
   variant: NotificationVariant;
   description?: ReactNode;
 }
 
-export interface NotificationsContextValue {
-  addNotification: (notification: Omit<Notification, "id">) => void;
+export interface INotificationsContextValue {
+  addNotification: (notification: Omit<INotification, "id">) => void;
 }
 
 export const NotificationsContext =
-  createContext<NotificationsContextValue | null>(null);
+  createContext<INotificationsContextValue | null>(null);

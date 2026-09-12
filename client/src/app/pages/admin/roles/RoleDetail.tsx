@@ -33,11 +33,11 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRoleModal } from "./components/EditRoleModal";
 
-interface RoleDetailProps {
+interface IRoleDetailProps {
   roleId: string;
 }
 
-export const RoleDetail: React.FC<RoleDetailProps> = ({ roleId }) => {
+export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
   const navigate = useNavigate();
   const domain = useApiDomain();
   const roleHref = buildRoleHref(roleId, domain);

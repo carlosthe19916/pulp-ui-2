@@ -20,7 +20,7 @@ import {
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
-interface PermissionMultiSelectProps {
+interface IPermissionMultiSelectProps {
   id: string;
   options: string[];
   value: string[];
@@ -35,7 +35,7 @@ export function PermissionMultiSelect({
   value,
   onChange,
   isDisabled,
-}: PermissionMultiSelectProps) {
+}: IPermissionMultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [customPermission, setCustomPermission] = useState("");

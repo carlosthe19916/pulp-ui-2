@@ -8,7 +8,7 @@ import {
 
 import {
   NotificationsContext,
-  type Notification,
+  type INotification,
 } from "./notifications-context";
 
 let notificationId = 0;
@@ -16,14 +16,14 @@ let notificationId = 0;
 export const NotificationsProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
 
   const removeNotification = useCallback((id: number) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
   const addNotification = useCallback(
-    (notification: Omit<Notification, "id">) => {
+    (notification: Omit<INotification, "id">) => {
       const id = ++notificationId;
       setNotifications((prev) => [...prev, { ...notification, id }]);
       setTimeout(() => removeNotification(id), 8000);

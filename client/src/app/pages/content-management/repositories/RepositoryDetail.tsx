@@ -76,11 +76,11 @@ type ContentRow = MultipleArtifactContentResponse & {
   sha256?: string;
 };
 
-interface RepositoryDetailProps {
+interface IRepositoryDetailProps {
   repoId: string;
 }
 
-export const RepositoryDetail: React.FC<RepositoryDetailProps> = ({
+export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   repoId,
 }) => {
   const navigate = useNavigate();

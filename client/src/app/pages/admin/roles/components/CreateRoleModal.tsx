@@ -32,12 +32,12 @@ const createRoleSchema = yup.object({
 
 type CreateRoleFormValues = yup.InferType<typeof createRoleSchema>;
 
-interface CreateRoleModalProps {
+interface ICreateRoleModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
+export const CreateRoleModal: React.FC<ICreateRoleModalProps> = ({
   isOpen,
   onClose,
 }) => {

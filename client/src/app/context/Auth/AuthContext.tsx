@@ -1,11 +1,11 @@
 import { createContext } from "react";
 
-export interface User {
+export interface IUser {
   username: string;
 }
 
 export interface IAuthContext {
-  user: User | null;
+  user: IUser | null;
   isAuthenticated: () => boolean;
   isLoading: boolean;
   /** Start the login flow (OIDC redirect, or route guard redirect to /login). */

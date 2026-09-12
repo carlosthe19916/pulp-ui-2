@@ -2,7 +2,7 @@ const STORAGE_KEY = "pulp-credentials";
 
 const listeners = new Set<() => void>();
 
-export interface StoredCredentials {
+export interface IStoredCredentials {
   username: string;
   password: string;
   remember: boolean;
@@ -37,20 +37,20 @@ function notify(): void {
   }
 }
 
-export function loadCredentials(): StoredCredentials | null {
+export function loadCredentials(): IStoredCredentials | null {
   const raw = getSnapshot();
   if (!raw) {
     return null;
   }
 
   try {
-    return JSON.parse(raw) as StoredCredentials;
+    return JSON.parse(raw) as IStoredCredentials;
   } catch {
     return null;
   }
 }
 
-export function saveCredentials(credentials: StoredCredentials): void {
+export function saveCredentials(credentials: IStoredCredentials): void {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));
   if (credentials.remember) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));

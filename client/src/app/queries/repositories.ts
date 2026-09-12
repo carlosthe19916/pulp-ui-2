@@ -7,13 +7,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RepositoriesQueryKey = "repositories";
 
 type RepositoryQuery = NonNullable<RepositoriesListData["query"]>;
 
-interface RepositoryListParams {
+interface IRepositoryListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<RepositoryQuery["ordering"]>[number];
@@ -27,8 +27,8 @@ export const repositoriesRootQueryOptions = queryOptions({
 });
 
 export const repositoriesListQueryOptions = (
-  domain: PulpDomain,
-  params: RepositoryListParams = {},
+  domain: IPulpDomain,
+  params: IRepositoryListParams = {},
 ) =>
   queryOptions({
     queryKey: [
@@ -57,7 +57,9 @@ export const repositoriesListQueryOptions = (
     },
   });
 
-export const useRepositoriesListQuery = (params: RepositoryListParams = {}) => {
+export const useRepositoriesListQuery = (
+  params: IRepositoryListParams = {},
+) => {
   const domain = useApiDomain();
   return useQuery(repositoriesListQueryOptions(domain, params));
 };

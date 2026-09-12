@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { extractTaskId } from "./taskHref";
 
-interface NotifyFn {
+interface INotifyFn {
   (notification: {
     title: string;
     variant: "success" | "danger" | "warning" | "info" | "custom";
@@ -13,7 +13,7 @@ interface NotifyFn {
 
 /** Toast helper for task-producing operations (202 responses). */
 export function notifyTaskStarted(
-  addNotification: NotifyFn,
+  addNotification: INotifyFn,
   taskHref: string,
   title = "Task started",
 ) {

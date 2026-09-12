@@ -29,13 +29,13 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const editFields = fileRemoteDescriptor.editFields ?? [];
 const editRemoteSchema = buildFieldSchema(editFields);
 
-interface EditRemoteModalProps {
+interface IEditRemoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   remote: FileFileRemoteResponse;
 }
 
-export const EditRemoteModal: React.FC<EditRemoteModalProps> = ({
+export const EditRemoteModal: React.FC<IEditRemoteModalProps> = ({
   isOpen,
   onClose,
   remote,

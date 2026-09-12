@@ -17,7 +17,7 @@ import {
 
 import {
   TypeaheadSelect,
-  type TypeaheadOption,
+  type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useFileRepositorySyncMutation } from "@app/queries/file-repositories";
@@ -31,14 +31,14 @@ const syncSchema = yup.object({
 
 type SyncFormValues = yup.InferType<typeof syncSchema>;
 
-interface SyncModalProps {
+interface ISyncModalProps {
   isOpen: boolean;
   onClose: () => void;
   repoHref: string;
   remoteSuggestion?: string;
 }
 
-export const SyncModal: React.FC<SyncModalProps> = ({
+export const SyncModal: React.FC<ISyncModalProps> = ({
   isOpen,
   onClose,
   repoHref,
@@ -48,7 +48,7 @@ export const SyncModal: React.FC<SyncModalProps> = ({
   const syncMutation = useFileRepositorySyncMutation();
   const { data: remotesData } = useRemotesListQuery({ limit: 100 });
 
-  const remoteOptions = useMemo<TypeaheadOption[]>(
+  const remoteOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (remotesData?.results ?? [])
         .filter((remote) => !!remote.pulp_href)

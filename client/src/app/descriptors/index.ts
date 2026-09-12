@@ -19,8 +19,8 @@ export {
   getAvailableDescriptors,
 } from "./registry";
 export type {
-  ResourceDescriptor,
+  IResourceDescriptor,
   ResourceKind,
-  FieldDescriptor,
+  IFieldDescriptor,
   FieldType,
 } from "./types";

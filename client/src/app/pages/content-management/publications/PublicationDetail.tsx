@@ -40,11 +40,11 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-interface PublicationDetailProps {
+interface IPublicationDetailProps {
   pubId: string;
 }
 
-export const PublicationDetail: React.FC<PublicationDetailProps> = ({
+export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   pubId,
 }) => {
   const navigate = useNavigate();

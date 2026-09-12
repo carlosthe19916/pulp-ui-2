@@ -34,13 +34,13 @@ const editUserSchema = yup.object({
 
 type EditUserFormValues = yup.InferType<typeof editUserSchema>;
 
-interface EditUserModalProps {
+interface IEditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserResponse;
 }
 
-export const EditUserModal: React.FC<EditUserModalProps> = ({
+export const EditUserModal: React.FC<IEditUserModalProps> = ({
   isOpen,
   onClose,
   user,

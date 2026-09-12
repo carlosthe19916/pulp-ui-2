@@ -5,9 +5,9 @@ import {
   buildFieldSchema,
   cleanFormValues,
 } from "./formSchema";
-import type { FieldDescriptor } from "./types";
+import type { IFieldDescriptor } from "./types";
 
-const fields: FieldDescriptor[] = [
+const fields: IFieldDescriptor[] = [
   { key: "name", label: "Name", type: "text", required: true },
   { key: "description", label: "Description", type: "textarea" },
   {

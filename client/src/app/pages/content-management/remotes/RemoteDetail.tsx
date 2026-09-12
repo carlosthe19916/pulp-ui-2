@@ -40,11 +40,11 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRemoteModal } from "./components/EditRemoteModal";
 
-interface RemoteDetailProps {
+interface IRemoteDetailProps {
   remoteId: string;
 }
 
-export const RemoteDetail: React.FC<RemoteDetailProps> = ({ remoteId }) => {
+export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
   const navigate = useNavigate();
   const domain = useApiDomain();
   const remoteHref = buildRemoteHref(remoteId, domain);

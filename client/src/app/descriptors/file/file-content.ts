@@ -1,6 +1,6 @@
-import type { ResourceDescriptor } from "../types";
+import type { IResourceDescriptor } from "../types";
 
-export const fileContentDescriptor: ResourceDescriptor = {
+export const fileContentDescriptor: IResourceDescriptor = {
   pulpType: "file.file",
   kind: "content",
   label: "File",

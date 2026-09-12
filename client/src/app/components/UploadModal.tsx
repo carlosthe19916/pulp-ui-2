@@ -20,7 +20,7 @@ import {
 
 import {
   TypeaheadSelect,
-  type TypeaheadOption,
+  type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useFileContentCreateMutation } from "@app/queries/file-content";
@@ -35,13 +35,13 @@ const uploadSchema = yup.object({
 
 type UploadFormValues = yup.InferType<typeof uploadSchema>;
 
-interface UploadModalProps {
+interface IUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   repositoryHref?: string;
 }
 
-export const UploadModal: React.FC<UploadModalProps> = ({
+export const UploadModal: React.FC<IUploadModalProps> = ({
   isOpen,
   onClose,
   repositoryHref,
@@ -50,7 +50,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   const createMutation = useFileContentCreateMutation();
   const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
 
-  const repositoryOptions = useMemo<TypeaheadOption[]>(
+  const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (repositoriesData?.results ?? [])
         .filter((repo) => !!repo.pulp_href)

@@ -14,7 +14,7 @@ import {
 
 import type { FileFileDistribution } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
-import type { TypeaheadOption } from "@app/components/TypeaheadSelect";
+import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { fileDistributionDescriptor } from "@app/descriptors/file/file-distribution";
 import {
@@ -32,20 +32,20 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const createFields = fileDistributionDescriptor.createFields ?? [];
 const createDistributionSchema = buildFieldSchema(createFields);
 
-interface CreateDistributionModalProps {
+interface ICreateDistributionModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const CreateDistributionModal: React.FC<
-  CreateDistributionModalProps
+  ICreateDistributionModalProps
 > = ({ isOpen, onClose }) => {
   const { addNotification } = useNotifications();
   const createMutation = useFileDistributionCreateMutation();
   const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
   const { data: publicationsData } = usePublicationsListQuery({ limit: 100 });
 
-  const repositoryOptions = useMemo<TypeaheadOption[]>(
+  const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (repositoriesData?.results ?? [])
         .filter((repo) => !!repo.pulp_href)
@@ -56,7 +56,7 @@ export const CreateDistributionModal: React.FC<
     [repositoriesData?.results],
   );
 
-  const publicationOptions = useMemo<TypeaheadOption[]>(
+  const publicationOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (publicationsData?.results ?? [])
         .filter((pub) => !!pub.pulp_href)

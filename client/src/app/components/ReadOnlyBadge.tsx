@@ -2,13 +2,13 @@ import type React from "react";
 
 import { Label, Tooltip } from "@patternfly/react-core";
 
-interface ReadOnlyBadgeProps {
+interface IReadOnlyBadgeProps {
   pulpType?: string;
   /** Optional override explaining why this resource is read-only. */
   reason?: string;
 }
 
-export const ReadOnlyBadge: React.FC<ReadOnlyBadgeProps> = ({
+export const ReadOnlyBadge: React.FC<IReadOnlyBadgeProps> = ({
   pulpType,
   reason,
 }) => {

@@ -17,7 +17,7 @@ import {
 
 import {
   TypeaheadSelect,
-  type TypeaheadOption,
+  type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
@@ -32,14 +32,14 @@ const publishSchema = yup.object({
 
 type PublishFormValues = yup.InferType<typeof publishSchema>;
 
-interface PublishModalProps {
+interface IPublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   repoHref?: string;
   repoVersionHref?: string;
 }
 
-export const PublishModal: React.FC<PublishModalProps> = ({
+export const PublishModal: React.FC<IPublishModalProps> = ({
   isOpen,
   onClose,
   repoHref,
@@ -49,7 +49,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const createMutation = useFilePublicationCreateMutation();
   const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
 
-  const repositoryOptions = useMemo<TypeaheadOption[]>(
+  const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (repositoriesData?.results ?? [])
         .filter((repo) => !!repo.pulp_href)

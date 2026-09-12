@@ -80,11 +80,11 @@ type EditNameFormValues = yup.InferType<typeof editNameSchema>;
 type AddUserFormValues = yup.InferType<typeof addUserSchema>;
 type AddRoleFormValues = yup.InferType<typeof addRoleSchema>;
 
-interface GroupDetailProps {
+interface IGroupDetailProps {
   groupId: string;
 }
 
-export const GroupDetail: React.FC<GroupDetailProps> = ({ groupId }) => {
+export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const navigate = useNavigate();
   const domain = useApiDomain();
   const groupHref = buildGroupHref(groupId, domain);

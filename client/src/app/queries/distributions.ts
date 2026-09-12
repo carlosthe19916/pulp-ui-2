@@ -7,13 +7,13 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath } from "./utils/pulpApi";
-import type { PulpDomain } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
 
 export const DistributionsQueryKey = "distributions";
 
 type DistributionQuery = NonNullable<DistributionsListData["query"]>;
 
-export interface DistributionListParams {
+export interface IDistributionListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<DistributionQuery["ordering"]>[number];
@@ -29,8 +29,8 @@ export const distributionsRootQueryOptions = queryOptions({
 });
 
 export const distributionsListQueryOptions = (
-  domain: PulpDomain,
-  params: DistributionListParams = {},
+  domain: IPulpDomain,
+  params: IDistributionListParams = {},
 ) =>
   queryOptions({
     queryKey: [
@@ -63,7 +63,7 @@ export const distributionsListQueryOptions = (
   });
 
 export const useDistributionsListQuery = (
-  params: DistributionListParams = {},
+  params: IDistributionListParams = {},
 ) => {
   const domain = useApiDomain();
   return useQuery(distributionsListQueryOptions(domain, params));

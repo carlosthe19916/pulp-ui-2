@@ -43,7 +43,7 @@ type ContentRow = FileFileContentResponse & {
   size?: number;
 };
 
-interface ContentBrowserProps {
+interface IContentBrowserProps {
   distributionId: string;
 }
 
@@ -54,7 +54,7 @@ function formatBytes(size: number | undefined): string {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export const ContentBrowser: React.FC<ContentBrowserProps> = ({
+export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   distributionId,
 }) => {
   const [page, setPage] = useState(1);

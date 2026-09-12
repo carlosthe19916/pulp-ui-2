@@ -26,12 +26,12 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const createFields = fileRemoteDescriptor.createFields ?? [];
 const createRemoteSchema = buildFieldSchema(createFields);
 
-interface CreateRemoteModalProps {
+interface ICreateRemoteModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CreateRemoteModal: React.FC<CreateRemoteModalProps> = ({
+export const CreateRemoteModal: React.FC<ICreateRemoteModalProps> = ({
   isOpen,
   onClose,
 }) => {

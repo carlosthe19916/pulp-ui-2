@@ -15,22 +15,22 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { FieldDescriptor, ResourceKind } from "@app/descriptors/types";
+import type { IFieldDescriptor, ResourceKind } from "@app/descriptors/types";
 
-import { TypeaheadSelect, type TypeaheadOption } from "./TypeaheadSelect";
+import { TypeaheadSelect, type ITypeaheadOption } from "./TypeaheadSelect";
 
 function isFile(value: unknown): value is File {
   return typeof File !== "undefined" && value instanceof File;
 }
 
-interface DescriptorFormFieldsProps<
+interface IDescriptorFormFieldsProps<
   TFieldValues extends FieldValues = Record<string, unknown>,
 > {
-  fields: FieldDescriptor[];
+  fields: IFieldDescriptor[];
   control: Control<TFieldValues>;
   idPrefix: string;
   /** Options for `type: "resource"` fields, keyed by the field's resourceKind. */
-  resourceOptions?: Partial<Record<ResourceKind, TypeaheadOption[]>>;
+  resourceOptions?: Partial<Record<ResourceKind, ITypeaheadOption[]>>;
 }
 
 /**
@@ -45,7 +45,7 @@ export function DescriptorFormFields<
   control,
   idPrefix,
   resourceOptions,
-}: DescriptorFormFieldsProps<TFieldValues>) {
+}: IDescriptorFormFieldsProps<TFieldValues>) {
   return (
     <>
       {fields.map((field) => {

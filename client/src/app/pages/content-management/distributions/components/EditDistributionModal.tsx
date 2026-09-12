@@ -17,7 +17,7 @@ import type {
   PatchedfileFileDistribution,
 } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
-import type { TypeaheadOption } from "@app/components/TypeaheadSelect";
+import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { fileDistributionDescriptor } from "@app/descriptors/file/file-distribution";
 import {
@@ -34,13 +34,13 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const editFields = fileDistributionDescriptor.editFields ?? [];
 const editDistributionSchema = buildFieldSchema(editFields);
 
-interface EditDistributionModalProps {
+interface IEditDistributionModalProps {
   isOpen: boolean;
   onClose: () => void;
   distribution: FileFileDistributionResponse;
 }
 
-export const EditDistributionModal: React.FC<EditDistributionModalProps> = ({
+export const EditDistributionModal: React.FC<IEditDistributionModalProps> = ({
   isOpen,
   onClose,
   distribution,
@@ -50,7 +50,7 @@ export const EditDistributionModal: React.FC<EditDistributionModalProps> = ({
   const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
   const { data: publicationsData } = usePublicationsListQuery({ limit: 100 });
 
-  const repositoryOptions = useMemo<TypeaheadOption[]>(
+  const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (repositoriesData?.results ?? [])
         .filter((repo) => !!repo.pulp_href)
@@ -61,7 +61,7 @@ export const EditDistributionModal: React.FC<EditDistributionModalProps> = ({
     [repositoriesData?.results],
   );
 
-  const publicationOptions = useMemo<TypeaheadOption[]>(
+  const publicationOptions = useMemo<ITypeaheadOption[]>(
     () =>
       (publicationsData?.results ?? [])
         .filter((pub) => !!pub.pulp_href)

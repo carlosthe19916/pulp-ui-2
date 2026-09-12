@@ -8,7 +8,7 @@ import {
   getSnapshot,
   loadCredentials,
   subscribe,
-  type StoredCredentials,
+  type IStoredCredentials,
 } from "./basicAuthHelpers";
 import { router } from "../../../router.ts";
 
@@ -21,7 +21,7 @@ export const BasicAuthProvider: React.FC<{
       return null;
     }
     try {
-      const credentials = JSON.parse(raw) as StoredCredentials;
+      const credentials = JSON.parse(raw) as IStoredCredentials;
       return { username: credentials.username };
     } catch {
       return null;

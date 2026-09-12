@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useApiDomain } from "@app/hooks/useApiDomain";
 
-import type { DistributionListParams } from "./distributions";
-import type { FileContentListParams } from "./file-content";
+import type { IDistributionListParams } from "./distributions";
+import type { IFileContentListParams } from "./file-content";
 import { artifactDetailQueryOptions } from "./artifacts";
 import { distributionsListQueryOptions } from "./distributions";
 import {
@@ -23,7 +23,7 @@ import { fileRepositoryDetailQueryOptions } from "./file-repositories";
 const BROWSE_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 export const useBrowseDistributionsQuery = (
-  params: DistributionListParams = {},
+  params: IDistributionListParams = {},
 ) => {
   const domain = useApiDomain();
   return useQuery({
@@ -56,7 +56,7 @@ export const useBrowsePublicationDetailQuery = (href: string) => {
 };
 
 export const useBrowseFileContentListQuery = (
-  params: FileContentListParams = {},
+  params: IFileContentListParams = {},
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();
