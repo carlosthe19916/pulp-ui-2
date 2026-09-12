@@ -32,20 +32,20 @@ export const SidebarApp: React.FC = () => {
           </NavGroup>
 
           <NavGroup title="Content Management">
-            <NavItem isActive={isActive("/repositories")}>
-              <Link to="/repositories">Repositories</Link>
+            <NavItem isActive={isActive("/content-management/repositories")}>
+              <Link to="/content-management/repositories">Repositories</Link>
             </NavItem>
-            <NavItem isActive={isActive("/remotes")}>
-              <Link to="/remotes">Remotes</Link>
+            <NavItem isActive={isActive("/content-management/remotes")}>
+              <Link to="/content-management/remotes">Remotes</Link>
             </NavItem>
-            <NavItem isActive={isActive("/distributions")}>
-              <Link to="/distributions">Distributions</Link>
+            <NavItem isActive={isActive("/content-management/distributions")}>
+              <Link to="/content-management/distributions">Distributions</Link>
             </NavItem>
-            <NavItem isActive={isActive("/publications")}>
-              <Link to="/publications">Publications</Link>
+            <NavItem isActive={isActive("/content-management/publications")}>
+              <Link to="/content-management/publications">Publications</Link>
             </NavItem>
-            <NavItem isActive={isActive("/content")}>
-              <Link to="/content">Content</Link>
+            <NavItem isActive={isActive("/content-management/content")}>
+              <Link to="/content-management/content">Content</Link>
             </NavItem>
           </NavGroup>
 

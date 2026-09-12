@@ -49,31 +49,46 @@ export const ResourceHrefLink: React.FC<ResourceHrefLinkProps> = ({
   switch (kind) {
     case "repository":
       return (
-        <Link to="/repositories/$repoId" params={{ repoId: id }}>
+        <Link
+          to="/content-management/repositories/$repoId"
+          params={{ repoId: id }}
+        >
           {displayLabel}
         </Link>
       );
     case "remote":
       return (
-        <Link to="/remotes/$remoteId" params={{ remoteId: id }}>
+        <Link
+          to="/content-management/remotes/$remoteId"
+          params={{ remoteId: id }}
+        >
           {displayLabel}
         </Link>
       );
     case "distribution":
       return (
-        <Link to="/distributions/$distId" params={{ distId: id }}>
+        <Link
+          to="/content-management/distributions/$distId"
+          params={{ distId: id }}
+        >
           {displayLabel}
         </Link>
       );
     case "publication":
       return (
-        <Link to="/publications/$pubId" params={{ pubId: id }}>
+        <Link
+          to="/content-management/publications/$pubId"
+          params={{ pubId: id }}
+        >
           {displayLabel}
         </Link>
       );
     case "content":
       return (
-        <Link to="/content/$contentId" params={{ contentId: id }}>
+        <Link
+          to="/content-management/content/$contentId"
+          params={{ contentId: id }}
+        >
           {displayLabel}
         </Link>
       );

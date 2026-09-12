@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import ENV from "@app/env";
-import { LoginPage } from "@app/pages/platform/login/LoginPage";
+import { LoginPage } from "@app/pages/login/LoginPage";
 
 type LoginSearch = {
   redirect?: string;

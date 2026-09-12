@@ -12,6 +12,7 @@ coverage/
 # generated files
 client/src/app/client/
 routeTree.gen.ts
+.tanstack/
 
 # production
 dist/
