@@ -53,12 +53,27 @@ export default defineConfig([
           ignoreRestSiblings: true,
         },
       ],
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          selector: "interface",
+          format: ["PascalCase"],
+          prefix: ["I"],
+          filter: {
+            regex: "^(Register|Window|Global|ProcessEnv)$",
+            match: false,
+          },
+        },
+      ],
     },
     ignores: [
       "client/config/**",
       "client/src/app/client/**",
       "client/src/app/specs/**",
       "client/types/**",
+      "client/src/vite-env.d.ts",
+      "client/src/routeTree.gen.ts",
+      "client/test-setup.ts",
     ],
   },
 ]);
