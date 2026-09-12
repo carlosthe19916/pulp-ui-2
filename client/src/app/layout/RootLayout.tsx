@@ -1,4 +1,14 @@
+import { use } from "react";
+
 import { Outlet, useRouterState } from "@tanstack/react-router";
+
+import {
+  Bullseye,
+  EmptyState,
+  EmptyStateBody,
+  EmptyStateVariant,
+} from "@patternfly/react-core";
+import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import {
@@ -11,7 +21,7 @@ import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
 import { NotificationsProvider } from "@app/context/NotificationsContext";
 import { useLocalStorage } from "@app/hooks/useStorage";
-import { use } from "react";
+
 import { BrowseLayout } from "./browse-layout";
 import { DefaultLayout } from "./default-layout";
 
@@ -54,7 +64,23 @@ export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const apiStatus = use(ApiStatusContext);
   return (
-    <LoadingWrapper isFetching={apiStatus?.isLoading ?? false}>
+    <LoadingWrapper
+      isFetching={apiStatus?.isLoading ?? false}
+      fetchError={apiStatus?.error}
+      fetchErrorState={(error) => (
+        <Bullseye>
+          <EmptyState
+            status="danger"
+            titleText="Could not load Server Status"
+            headingLevel="h4"
+            icon={ExclamationCircleIcon}
+            variant={EmptyStateVariant.sm}
+          >
+            <EmptyStateBody>{error.message}</EmptyStateBody>
+          </EmptyState>
+        </Bullseye>
+      )}
+    >
       {children}
     </LoadingWrapper>
   );

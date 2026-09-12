@@ -9,7 +9,6 @@ import {
 } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
-import { AppPlaceholder } from "@app/components/AppPlaceholder";
 import { oidcClientSettings, oidcSignoutArgs } from "@app/oidc";
 import { AuthContext, type IAuthContext } from "./AuthContext";
 
@@ -69,12 +68,6 @@ const OidcAuthBridge: React.FC<{ children: React.ReactNode }> = ({
     [auth, login, logout],
   );
 
-  if (auth.isAuthenticated) {
-    return <AuthContext value={value}>{children}</AuthContext>;
-  }
-  if (auth.isLoading) {
-    return <AppPlaceholder />;
-  }
   if (auth.error) {
     return (
       <Bullseye>
@@ -94,5 +87,5 @@ const OidcAuthBridge: React.FC<{ children: React.ReactNode }> = ({
     );
   }
 
-  return <p>Login in...</p>;
+  return <AuthContext value={value}>{children}</AuthContext>;
 };

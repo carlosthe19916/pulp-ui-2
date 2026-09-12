@@ -27,7 +27,7 @@ export const ApiStatusProvider: React.FC<{ children: React.ReactNode }> = ({
   const value: IApiStatusContext = {
     status,
     isLoading,
-    error: error as Error | null,
+    error,
     plugins,
     isPluginInstalled,
     getPluginVersion,
