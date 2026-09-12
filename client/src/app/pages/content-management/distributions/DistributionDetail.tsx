@@ -39,7 +39,7 @@ import { buildDistributionHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditDistributionModal } from "./EditDistributionModal";
+import { EditDistributionModal } from "./components/EditDistributionModal";
 
 interface DistributionDetailProps {
   distId: string;

@@ -34,7 +34,7 @@ import { useContentListQuery } from "@app/queries/content";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { UploadModal } from "../actions/UploadModal";
+import { UploadModal } from "@app/components/UploadModal";
 
 /**
  * The aggregation endpoint returns extra fields at runtime that the generated

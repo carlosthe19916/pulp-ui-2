@@ -38,7 +38,7 @@ import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateGroupModal } from "./CreateGroupModal";
+import { CreateGroupModal } from "./components/CreateGroupModal";
 
 export const GroupList: React.FC = () => {
   const [page, setPage] = useState(1);

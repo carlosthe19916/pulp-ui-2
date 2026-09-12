@@ -48,9 +48,9 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateRepositoryModal } from "./CreateRepositoryModal";
-import { PublishModal } from "../actions/PublishModal";
-import { SyncModal } from "../actions/SyncModal";
+import { CreateRepositoryModal } from "./components/CreateRepositoryModal";
+import { PublishModal } from "@app/components/PublishModal";
+import { SyncModal } from "@app/components/SyncModal";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated

@@ -38,7 +38,7 @@ import { buildRemoteHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRemoteModal } from "./EditRemoteModal";
+import { EditRemoteModal } from "./components/EditRemoteModal";
 
 interface RemoteDetailProps {
   remoteId: string;

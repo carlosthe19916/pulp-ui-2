@@ -48,7 +48,7 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateRemoteModal } from "./CreateRemoteModal";
+import { CreateRemoteModal } from "./components/CreateRemoteModal";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated

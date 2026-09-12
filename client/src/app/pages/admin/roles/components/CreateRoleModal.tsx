@@ -18,10 +18,10 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import { PermissionMultiSelect } from "@app/components/PermissionMultiSelect";
+import { PermissionMultiSelect } from "./PermissionMultiSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleCreateMutation, useRolesListQuery } from "@app/queries/roles";
-import { collectPermissionOptions } from "@app/utils/permissionOptions";
+import { collectPermissionOptions } from "../utils/permissionOptions";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createRoleSchema = yup.object({

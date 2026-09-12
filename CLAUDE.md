@@ -117,6 +117,8 @@ Keep the `createContext` call and the provider in separate files so provider-onl
 
 > Some existing contexts under `context/` (e.g. `notifications-context.ts`, `plugin-context.ts`) predate this standard and use flat kebab-case files. Use the `Auth/` layout above for **new** contexts.
 
+### Client structure patterns (`client/src/app/`)
+
 ## Development
 
 ### `npm run start:dev` (development mode)

@@ -66,10 +66,10 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRepositoryModal } from "./EditRepositoryModal";
-import { PublishModal } from "../actions/PublishModal";
-import { SyncModal } from "../actions/SyncModal";
-import { UploadModal } from "../actions/UploadModal";
+import { EditRepositoryModal } from "./components/EditRepositoryModal";
+import { PublishModal } from "@app/components/PublishModal";
+import { SyncModal } from "@app/components/SyncModal";
+import { UploadModal } from "@app/components/UploadModal";
 
 type ContentRow = MultipleArtifactContentResponse & {
   relative_path?: string;

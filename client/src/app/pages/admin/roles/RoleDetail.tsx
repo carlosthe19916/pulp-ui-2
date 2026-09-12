@@ -31,7 +31,7 @@ import { useRoleDeleteMutation, useRoleDetailQuery } from "@app/queries/roles";
 import { buildRoleHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRoleModal } from "./EditRoleModal";
+import { EditRoleModal } from "./components/EditRoleModal";
 
 interface RoleDetailProps {
   roleId: string;

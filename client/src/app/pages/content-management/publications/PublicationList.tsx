@@ -44,7 +44,7 @@ import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreatePublicationModal } from "./CreatePublicationModal";
+import { CreatePublicationModal } from "./components/CreatePublicationModal";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated

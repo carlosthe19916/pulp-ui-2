@@ -38,7 +38,7 @@ import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateUserModal } from "./CreateUserModal";
+import { CreateUserModal } from "./components/CreateUserModal";
 
 export const UserList: React.FC = () => {
   const [page, setPage] = useState(1);

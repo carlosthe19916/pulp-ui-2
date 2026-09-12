@@ -117,6 +117,39 @@ Keep the `createContext` call and the provider in separate files so provider-onl
 
 > Some existing contexts under `context/` (e.g. `notifications-context.ts`, `plugin-context.ts`) predate this standard and use flat kebab-case files. Use the `Auth/` layout above for **new** contexts.
 
+### Client structure patterns (`client/src/app/`)
+
+Placement is by **scope**, not type. **Only two layers exist:**
+
+- **Shared by >1 page → app root** (`@app/components/…`).
+- **Used by exactly one page → that page's matching sub-directory** (relative
+  `./components/X`).
+
+An **area** dir (`pages/<area>/`) is grouping only — never put `components/`,
+`hooks/`, etc. there. Anything shared across pages, even within one area, is
+shared and goes to the app root; "area-shared" is not a scope. A page's main
+component(s) stay at the page root; page-local helpers go in same-named
+sub-dirs beside them.
+
+```
+client/src/app/
+  components/  hooks/  context/  utils/   # shared, app-root layers
+  pages/
+    content-management/                   # area — NO sub-dirs of its own
+      repositories/
+        RepositoryList.tsx                # main component (page root)
+        RepositoryDetail.tsx              # main component (page root)
+        RepositoryDetailRoute.tsx         # route → component adapter (page root)
+        components/                       # used only by this page
+          CreateRepositoryModal.tsx
+        hooks/  context/  utils/          # other page-local layers
+      content/
+        ContentList.tsx  …
+```
+
+`UploadModal` is used by both `repositories` and `content` → shared, so it
+lives in `@app/components/`, not `pages/content-management/components/`.
+
 ## Development
 
 ### `npm run start:dev` (development mode)

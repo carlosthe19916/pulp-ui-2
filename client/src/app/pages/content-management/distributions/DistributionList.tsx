@@ -50,7 +50,7 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateDistributionModal } from "./CreateDistributionModal";
+import { CreateDistributionModal } from "./components/CreateDistributionModal";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated

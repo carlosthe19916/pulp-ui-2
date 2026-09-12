@@ -58,7 +58,7 @@ import {
 import { extractIdFromHref, buildUserHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditUserModal } from "./EditUserModal";
+import { EditUserModal } from "./components/EditUserModal";
 
 const addRoleSchema = yup.object({
   role: yup.string().required("Role is required"),

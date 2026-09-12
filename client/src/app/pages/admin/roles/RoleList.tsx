@@ -37,7 +37,7 @@ import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateRoleModal } from "./CreateRoleModal";
+import { CreateRoleModal } from "./components/CreateRoleModal";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
 function getRolePlugin(name: string): string {

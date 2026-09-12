@@ -16,10 +16,10 @@ import {
 } from "@patternfly/react-core";
 
 import type { RoleResponse } from "@app/client";
-import { PermissionMultiSelect } from "@app/components/PermissionMultiSelect";
+import { PermissionMultiSelect } from "./PermissionMultiSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRolesListQuery, useRoleUpdateMutation } from "@app/queries/roles";
-import { collectPermissionOptions } from "@app/utils/permissionOptions";
+import { collectPermissionOptions } from "../utils/permissionOptions";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editRoleSchema = yup.object({
