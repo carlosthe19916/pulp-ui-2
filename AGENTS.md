@@ -150,6 +150,17 @@ client/src/app/
 `UploadModal` is used by both `repositories` and `content` → shared, so it
 lives in `@app/components/`, not `pages/content-management/components/`.
 
+### Import rules
+
+- **Import Order**: Group imports alphabetically and follow the order below,
+  with each block separated by a blank line:
+  1. **React/Router block**: Dependencies from `react`, `react-*`
+  2. **Package dependencies block**: Any dependency declared in
+     `package.json` (e.g., `axios`, `dayjs`, `yup`, `lodash`, etc.)
+  3. **PatternFly block**: Any `@patternfly/*` dependency
+  4. **App imports block**: Any `@app/*` dependency
+  5. **Relative imports block**: Local relative imports (`./`, `../`, etc.)
+
 ## Development
 
 ### `npm run start:dev` (development mode)

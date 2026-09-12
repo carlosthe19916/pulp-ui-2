@@ -145,16 +145,6 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     [allRolesData?.results],
   );
 
-  const usernameToId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const user of allUsersData?.results ?? []) {
-      if (user.pulp_href) {
-        map.set(user.username, extractIdFromHref(user.pulp_href));
-      }
-    }
-    return map;
-  }, [allUsersData?.results]);
-
   const roleNameToId = useMemo(() => {
     const map = new Map<string, string>();
     for (const role of allRolesData?.results ?? []) {
@@ -170,16 +160,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
       {
         id: "username",
         header: "Username",
-        cell: ({ row }) => {
-          const userId = usernameToId.get(row.original.username);
-          return userId ? (
-            <Link to="/admin/users/$userId" params={{ userId }}>
-              {row.original.username}
-            </Link>
-          ) : (
-            row.original.username
-          );
-        },
+        cell: ({ row }) => row.original.username,
       },
       {
         id: "actions",
@@ -196,7 +177,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         ),
       },
     ],
-    [usernameToId],
+    [],
   );
 
   const roleColumns = useMemo<ColumnDef<GroupRoleResponse>[]>(

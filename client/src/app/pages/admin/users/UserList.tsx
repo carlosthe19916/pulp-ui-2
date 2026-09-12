@@ -1,11 +1,11 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type RowData,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
@@ -14,10 +14,6 @@ import {
   Content,
   ContentVariants,
   Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
   SearchInput,
@@ -26,29 +22,54 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
+import {
+  ActionsColumn,
+  Table,
+  TableText,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@patternfly/react-table";
 
 import type { UserResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
-import { useNotifications } from "@app/context/useNotifications";
-import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
+import { useUsersListQuery } from "@app/queries/users";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateUserModal } from "./components/CreateUserModal";
+import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
+import { UserCreateModal, UserEditModal } from "./components/UserModal";
+import { useUserActions } from "./hooks/useUserActions";
+
+// Per-column PatternFly Th/Td props, carried on the TanStack column definition so
+// the generic render loop below can apply them (e.g. action-cell styling).
+declare module "@tanstack/react-table" {
+  // Augmenting a third-party interface, so the name and unused type params are fixed.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** Renders the header cell as visually-hidden text for accessibility. */
+    screenReaderHeader?: string;
+    /** Marks the body cell as an action cell (kebab/dropdown). */
+    isActionCell?: boolean;
+    /** Aligns an interactive body cell (e.g. inline button) with text cells. */
+    hasAction?: boolean;
+    /** Shrinks the column to fit its content. */
+    fitContent?: boolean;
+  }
+}
 
 export const UserList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [usernameFilter, setUsernameFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UserResponse | null>(null);
   const [deleteHref, setDeleteHref] = useState<string | null>(null);
 
-  const { addNotification } = useNotifications();
-  const deleteMutation = useUserDeleteMutation();
+  const { deleteUser, isDeleting } = useUserActions();
 
   const { data, isLoading, error } = useUsersListQuery({
     limit: perPage,
@@ -64,14 +85,7 @@ export const UserList: React.FC = () => {
       {
         id: "username",
         header: "Username",
-        cell: ({ row }) => {
-          const userId = extractIdFromHref(row.original.pulp_href ?? "");
-          return (
-            <Link to="/admin/users/$userId" params={{ userId }}>
-              {row.original.username}
-            </Link>
-          );
-        },
+        cell: ({ row }) => row.original.username,
       },
       {
         id: "email",
@@ -101,17 +115,38 @@ export const UserList: React.FC = () => {
             : "—",
       },
       {
-        id: "actions",
-        header: "Actions",
+        id: "edit",
+        header: "",
+        meta: {
+          screenReaderHeader: "Edit user",
+          hasAction: true,
+          fitContent: true,
+        },
         cell: ({ row }) => (
-          <Button
-            variant="link"
-            isInline
-            isDanger
-            onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
-          >
-            Delete
-          </Button>
+          <TableText>
+            <Button
+              variant="secondary"
+              onClick={() => setEditUser(row.original)}
+            >
+              Edit
+            </Button>
+          </TableText>
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        meta: { screenReaderHeader: "Actions", isActionCell: true },
+        cell: ({ row }) => (
+          <ActionsColumn
+            items={[
+              {
+                title: "Delete",
+                isDanger: true,
+                onClick: () => setDeleteHref(row.original.pulp_href ?? null),
+              },
+            ]}
+          />
         ),
       },
     ],
@@ -128,16 +163,9 @@ export const UserList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteHref) return;
     try {
-      await deleteMutation.mutateAsync(deleteHref);
-      addNotification({
-        title: "User deleted",
-        variant: "success",
-      });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete user"),
-        variant: "danger",
-      });
+      await deleteUser(deleteHref);
+    } catch {
+      // Notifications are handled in useUserActions.
     }
     setDeleteHref(null);
   };
@@ -197,30 +225,44 @@ export const UserList: React.FC = () => {
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </Th>
-                    ))}
+                    {headerGroup.headers.map((header) => {
+                      const meta = header.column.columnDef.meta;
+                      return (
+                        <Th
+                          key={header.id}
+                          screenReaderText={meta?.screenReaderHeader}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </Th>
+                      );
+                    })}
                   </Tr>
                 ))}
               </Thead>
               <Tbody>
                 {table.getRowModel().rows.map((row) => (
                   <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Td>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const meta = cell.column.columnDef.meta;
+                      return (
+                        <Td
+                          key={cell.id}
+                          isActionCell={meta?.isActionCell}
+                          hasAction={meta?.hasAction}
+                          modifier={meta?.fitContent ? "fitContent" : undefined}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </Td>
+                      );
+                    })}
                   </Tr>
                 ))}
                 {users.length === 0 && (
@@ -244,34 +286,27 @@ export const UserList: React.FC = () => {
             variant="bottom"
           />
 
-          <CreateUserModal
+          <UserCreateModal
             isOpen={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
           />
 
-          <Modal
+          {editUser && (
+            <UserEditModal
+              isOpen
+              user={editUser}
+              onClose={() => setEditUser(null)}
+            />
+          )}
+
+          <ConfirmDeleteModal
             isOpen={!!deleteHref}
-            onClose={() => setDeleteHref(null)}
-            variant="small"
-          >
-            <ModalHeader title="Delete User" />
-            <ModalBody>
-              Are you sure you want to delete this user? This action cannot be
-              undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setDeleteHref(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
+            title="Delete User"
+            body="Are you sure you want to delete this user? This action cannot be undone."
+            isDeleting={isDeleting}
+            onConfirm={() => void handleDelete()}
+            onCancel={() => setDeleteHref(null)}
+          />
         </PageSection>
       )}
     </>
