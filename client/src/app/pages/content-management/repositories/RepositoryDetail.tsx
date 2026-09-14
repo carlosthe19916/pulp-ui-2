@@ -255,11 +255,11 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         notifyTaskStarted(
           addNotification,
           result.task,
-          "Repository deletion started",
+          `Repository "${repoDisplayName}" deletion started`,
         );
       } else {
         addNotification({
-          title: "Repository deleted",
+          title: `Repository "${repoDisplayName}" deleted`,
           variant: "success",
         });
       }

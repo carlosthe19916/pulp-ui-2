@@ -92,7 +92,16 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       });
       const taskHref = result?.task;
       if (taskHref) {
-        notifyTaskStarted(addNotification, taskHref, "Publication started");
+        const repositoryName = repositoryOptions.find(
+          (option) => option.value === values.repository,
+        )?.label;
+        notifyTaskStarted(
+          addNotification,
+          taskHref,
+          repositoryName
+            ? `Publication started for "${repositoryName}"`
+            : "Publication started",
+        );
       }
     } catch (error) {
       addNotification({

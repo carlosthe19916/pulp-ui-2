@@ -66,9 +66,9 @@ export const CreateRepositoryModal: React.FC<ICreateRepositoryModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const body = cleanFormValues<FileFileRepository>(values);
-      await createMutation.mutateAsync(body);
+      const result = await createMutation.mutateAsync(body);
       addNotification({
-        title: "Repository created",
+        title: `Repository "${result.name}" created`,
         variant: "success",
       });
       reset(buildDefaultValues(createFields));

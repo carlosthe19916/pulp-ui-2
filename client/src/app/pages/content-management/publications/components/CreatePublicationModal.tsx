@@ -24,6 +24,7 @@ import {
 } from "@app/descriptors/formSchema";
 import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -78,11 +79,28 @@ export const CreatePublicationModal: React.FC<ICreatePublicationModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const body = cleanFormValues<FileFilePublication>(values);
+      const repositoryHref =
+        typeof values.repository === "string" ? values.repository : undefined;
+      const repositoryName = repositoryHref
+        ? (repositoryOptions.find((o) => o.value === repositoryHref)?.label ??
+          extractIdFromHref(repositoryHref))
+        : undefined;
       const result = await createMutation.mutateAsync(body);
       if (result?.task) {
-        notifyTaskStarted(addNotification, result.task, "Publication started");
+        notifyTaskStarted(
+          addNotification,
+          result.task,
+          repositoryName
+            ? `Publication started for "${repositoryName}"`
+            : "Publication started",
+        );
       } else {
-        addNotification({ title: "Publication created", variant: "success" });
+        addNotification({
+          title: repositoryName
+            ? `Publication created for "${repositoryName}"`
+            : "Publication created",
+          variant: "success",
+        });
       }
       reset(defaultValues);
       onClose();

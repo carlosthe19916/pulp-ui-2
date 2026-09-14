@@ -108,8 +108,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const [isEditNameOpen, setIsEditNameOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
-  const [removeUserHref, setRemoveUserHref] = useState<string | null>(null);
-  const [removeRoleHref, setRemoveRoleHref] = useState<string | null>(null);
+  const [removeUserTarget, setRemoveUserTarget] =
+    useState<GroupUserResponse | null>(null);
+  const [removeRoleTarget, setRemoveRoleTarget] =
+    useState<GroupRoleResponse | null>(null);
 
   const editNameForm = useForm<EditNameFormValues>({
     resolver: yupResolver(editNameSchema),
@@ -170,7 +172,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             variant="link"
             isDanger
             isInline
-            onClick={() => setRemoveUserHref(row.original.pulp_href ?? null)}
+            onClick={() => setRemoveUserTarget(row.original)}
           >
             Remove
           </Button>
@@ -214,7 +216,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             variant="link"
             isDanger
             isInline
-            onClick={() => setRemoveRoleHref(row.original.pulp_href ?? null)}
+            onClick={() => setRemoveRoleTarget(row.original)}
           >
             Remove
           </Button>
@@ -242,7 +244,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     try {
       await deleteMutation.mutateAsync(groupHref);
       addNotification({
-        title: "Group deleted",
+        title: `Group "${group?.name}" deleted`,
         variant: "success",
       });
       void navigate({ to: "/admin/groups" });
@@ -257,12 +259,12 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
 
   const onEditName = editNameForm.handleSubmit(async (values) => {
     try {
-      await updateMutation.mutateAsync({
+      const result = await updateMutation.mutateAsync({
         href: groupHref,
         body: { name: values.name },
       });
       addNotification({
-        title: "Group name updated",
+        title: `Group name updated for "${result.name}"`,
         variant: "success",
       });
       setIsEditNameOpen(false);
@@ -281,7 +283,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         body: { username: values.username },
       });
       addNotification({
-        title: "User added to group",
+        title: `User "${values.username}" added to group "${group?.name}"`,
         variant: "success",
       });
       addUserForm.reset();
@@ -295,11 +297,11 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   });
 
   const handleRemoveUser = async () => {
-    if (!removeUserHref) return;
+    if (!removeUserTarget?.pulp_href) return;
     try {
-      await userDeleteMutation.mutateAsync(removeUserHref);
+      await userDeleteMutation.mutateAsync(removeUserTarget.pulp_href);
       addNotification({
-        title: "User removed from group",
+        title: `User "${removeUserTarget.username}" removed from group "${group?.name}"`,
         variant: "success",
       });
     } catch {
@@ -308,7 +310,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         variant: "danger",
       });
     }
-    setRemoveUserHref(null);
+    setRemoveUserTarget(null);
   };
 
   const onAddRole = addRoleForm.handleSubmit(async (values) => {
@@ -321,7 +323,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         },
       });
       addNotification({
-        title: "Role assigned to group",
+        title: `Role "${values.role}" assigned to group "${group?.name}"`,
         variant: "success",
       });
       addRoleForm.reset();
@@ -335,11 +337,11 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   });
 
   const handleRemoveRole = async () => {
-    if (!removeRoleHref) return;
+    if (!removeRoleTarget?.pulp_href) return;
     try {
-      await roleDeleteMutation.mutateAsync(removeRoleHref);
+      await roleDeleteMutation.mutateAsync(removeRoleTarget.pulp_href);
       addNotification({
-        title: "Role removed from group",
+        title: `Role "${removeRoleTarget.role}" removed from group "${group?.name}"`,
         variant: "success",
       });
     } catch {
@@ -348,7 +350,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         variant: "danger",
       });
     }
-    setRemoveRoleHref(null);
+    setRemoveRoleTarget(null);
   };
 
   return (
@@ -703,13 +705,14 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             </Modal>
 
             <Modal
-              isOpen={!!removeUserHref}
-              onClose={() => setRemoveUserHref(null)}
+              isOpen={!!removeUserTarget}
+              onClose={() => setRemoveUserTarget(null)}
               variant="small"
             >
               <ModalHeader title="Remove User" />
               <ModalBody>
-                Are you sure you want to remove this user from the group?
+                Are you sure you want to remove user &quot;
+                {removeUserTarget?.username}&quot; from the group?
               </ModalBody>
               <ModalFooter>
                 <Button
@@ -719,7 +722,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                 >
                   Remove
                 </Button>
-                <Button variant="link" onClick={() => setRemoveUserHref(null)}>
+                <Button
+                  variant="link"
+                  onClick={() => setRemoveUserTarget(null)}
+                >
                   Cancel
                 </Button>
               </ModalFooter>
@@ -807,13 +813,14 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             </Modal>
 
             <Modal
-              isOpen={!!removeRoleHref}
-              onClose={() => setRemoveRoleHref(null)}
+              isOpen={!!removeRoleTarget}
+              onClose={() => setRemoveRoleTarget(null)}
               variant="small"
             >
               <ModalHeader title="Remove Role" />
               <ModalBody>
-                Are you sure you want to remove this role from the group?
+                Are you sure you want to remove role &quot;
+                {removeRoleTarget?.role}&quot; from the group?
               </ModalBody>
               <ModalFooter>
                 <Button
@@ -823,7 +830,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                 >
                   Remove
                 </Button>
-                <Button variant="link" onClick={() => setRemoveRoleHref(null)}>
+                <Button
+                  variant="link"
+                  onClick={() => setRemoveRoleTarget(null)}
+                >
                   Cancel
                 </Button>
               </ModalFooter>

@@ -85,10 +85,13 @@ export const CreateDistributionModal: React.FC<
         notifyTaskStarted(
           addNotification,
           result.task,
-          "Distribution creation started",
+          `Distribution "${body.name}" creation started`,
         );
       } else {
-        addNotification({ title: "Distribution created", variant: "success" });
+        addNotification({
+          title: `Distribution "${body.name}" created`,
+          variant: "success",
+        });
       }
       reset(buildDefaultValues(createFields));
       onClose();

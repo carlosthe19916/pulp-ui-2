@@ -76,13 +76,13 @@ export const CreateRoleModal: React.FC<ICreateRoleModalProps> = ({
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await createMutation.mutateAsync({
+      const result = await createMutation.mutateAsync({
         name: values.name,
         description: values.description || undefined,
         permissions: values.permissions ?? [],
       });
       addNotification({
-        title: `Role "${values.name}" created`,
+        title: `Role "${result.name}" created`,
         variant: "success",
       });
       reset();

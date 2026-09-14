@@ -109,7 +109,16 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
       });
       const taskHref = result?.task;
       if (taskHref) {
-        notifyTaskStarted(addNotification, taskHref, "Upload started");
+        const repositoryName = repositoryOptions.find(
+          (option) => option.value === values.repository,
+        )?.label;
+        notifyTaskStarted(
+          addNotification,
+          taskHref,
+          repositoryName
+            ? `Upload started for "${repositoryName}"`
+            : "Upload started",
+        );
       }
     } catch {
       addNotification({

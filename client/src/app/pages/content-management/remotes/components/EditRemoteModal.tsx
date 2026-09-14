@@ -65,7 +65,7 @@ export const EditRemoteModal: React.FC<IEditRemoteModalProps> = ({
         body: values as PatchedfileFileRemoteWritable,
       });
       addNotification({
-        title: "Remote updated",
+        title: `Remote "${remote.name}" updated`,
         variant: "success",
       });
       onClose();

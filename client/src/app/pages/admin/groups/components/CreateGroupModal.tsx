@@ -54,9 +54,9 @@ export const CreateGroupModal: React.FC<ICreateGroupModalProps> = ({
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await createMutation.mutateAsync({ name: values.name });
+      const result = await createMutation.mutateAsync({ name: values.name });
       addNotification({
-        title: "Group created",
+        title: `Group "${result.name}" created`,
         variant: "success",
       });
       reset();

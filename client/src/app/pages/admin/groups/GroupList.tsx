@@ -46,7 +46,7 @@ export const GroupList: React.FC = () => {
   const [perPage, setPerPage] = useState(20);
   const [nameFilter, setNameFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [deleteHref, setDeleteHref] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<GroupResponse | null>(null);
 
   const { addNotification } = useNotifications();
   const deleteMutation = useGroupDeleteMutation();
@@ -83,7 +83,7 @@ export const GroupList: React.FC = () => {
             variant="link"
             isDanger
             isInline
-            onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
+            onClick={() => setDeleteTarget(row.original)}
           >
             Delete
           </Button>
@@ -101,11 +101,11 @@ export const GroupList: React.FC = () => {
   });
 
   const handleDelete = async () => {
-    if (!deleteHref) return;
+    if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(deleteHref);
+      await deleteMutation.mutateAsync(deleteTarget.pulp_href);
       addNotification({
-        title: "Group deleted",
+        title: `Group "${deleteTarget.name}" deleted`,
         variant: "success",
       });
     } catch (error) {
@@ -114,7 +114,7 @@ export const GroupList: React.FC = () => {
         variant: "danger",
       });
     }
-    setDeleteHref(null);
+    setDeleteTarget(null);
   };
 
   return (
@@ -226,14 +226,14 @@ export const GroupList: React.FC = () => {
           />
 
           <Modal
-            isOpen={!!deleteHref}
-            onClose={() => setDeleteHref(null)}
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
             variant="small"
           >
             <ModalHeader title="Delete Group" />
             <ModalBody>
-              Are you sure you want to delete this group? This action cannot be
-              undone.
+              Are you sure you want to delete group &quot;{deleteTarget?.name}
+              &quot;? This action cannot be undone.
             </ModalBody>
             <ModalFooter>
               <Button
@@ -243,7 +243,7 @@ export const GroupList: React.FC = () => {
               >
                 Delete
               </Button>
-              <Button variant="link" onClick={() => setDeleteHref(null)}>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </Button>
             </ModalFooter>

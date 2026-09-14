@@ -87,7 +87,16 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
       });
       const taskHref = result?.task;
       if (taskHref) {
-        notifyTaskStarted(addNotification, taskHref, "Sync started");
+        const remoteName = remoteOptions.find(
+          (option) => option.value === values.remote,
+        )?.label;
+        notifyTaskStarted(
+          addNotification,
+          taskHref,
+          remoteName
+            ? `Sync started from remote "${remoteName}"`
+            : "Sync started",
+        );
       }
     } catch {
       addNotification({

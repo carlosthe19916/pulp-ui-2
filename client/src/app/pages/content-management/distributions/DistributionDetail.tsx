@@ -70,11 +70,11 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
         notifyTaskStarted(
           addNotification,
           result.task,
-          "Distribution deletion started",
+          `Distribution "${distribution?.name}" deletion started`,
         );
       } else {
         addNotification({
-          title: "Distribution deleted",
+          title: `Distribution "${distribution?.name}" deleted`,
           variant: "success",
         });
       }

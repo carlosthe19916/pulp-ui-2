@@ -64,7 +64,9 @@ export const DistributionList: React.FC = () => {
   const [perPage, setPerPage] = useState(20);
   const [nameFilter, setNameFilter] = useState("");
   const [pulpTypeFilter, setPulpTypeFilter] = useState("");
-  const [deleteHref, setDeleteHref] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DistributionRow | null>(
+    null,
+  );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { addNotification } = useNotifications();
@@ -101,16 +103,21 @@ export const DistributionList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteHref) return;
+    if (!deleteTarget?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(deleteHref);
+      const result = await deleteMutation.mutateAsync(deleteTarget.pulp_href);
       const taskHref = result?.task;
       if (taskHref) {
         notifyTaskStarted(
           addNotification,
           taskHref,
-          "Distribution delete started",
+          `Distribution "${deleteTarget.name}" delete started`,
         );
+      } else {
+        addNotification({
+          title: `Distribution "${deleteTarget.name}" deleted`,
+          variant: "success",
+        });
       }
     } catch (error) {
       addNotification({
@@ -118,7 +125,7 @@ export const DistributionList: React.FC = () => {
         variant: "danger",
       });
     }
-    setDeleteHref(null);
+    setDeleteTarget(null);
   };
 
   const columns = useMemo<ColumnDef<DistributionRow>[]>(
@@ -210,7 +217,7 @@ export const DistributionList: React.FC = () => {
                 variant="link"
                 isInline
                 isDanger
-                onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
+                onClick={() => setDeleteTarget(row.original)}
               >
                 Delete
               </Button>
@@ -355,14 +362,14 @@ export const DistributionList: React.FC = () => {
           />
 
           <Modal
-            isOpen={!!deleteHref}
-            onClose={() => setDeleteHref(null)}
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
             variant="small"
           >
             <ModalHeader title="Delete Distribution" />
             <ModalBody>
-              Are you sure you want to delete this distribution? This action
-              cannot be undone.
+              Are you sure you want to delete distribution &quot;
+              {deleteTarget?.name}&quot;? This action cannot be undone.
             </ModalBody>
             <ModalFooter>
               <Button
@@ -372,7 +379,7 @@ export const DistributionList: React.FC = () => {
               >
                 Delete
               </Button>
-              <Button variant="link" onClick={() => setDeleteHref(null)}>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </Button>
             </ModalFooter>

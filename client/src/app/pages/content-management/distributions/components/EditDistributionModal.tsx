@@ -98,10 +98,13 @@ export const EditDistributionModal: React.FC<IEditDistributionModalProps> = ({
         notifyTaskStarted(
           addNotification,
           taskHref,
-          "Distribution update started",
+          `Distribution "${distribution.name}" update started`,
         );
       } else {
-        addNotification({ title: "Distribution updated", variant: "success" });
+        addNotification({
+          title: `Distribution "${distribution.name}" updated`,
+          variant: "success",
+        });
       }
       onClose();
     } catch (error) {

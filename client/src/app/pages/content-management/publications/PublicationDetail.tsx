@@ -65,7 +65,7 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
     try {
       await deleteMutation.mutateAsync(pubHref);
       addNotification({
-        title: "Publication deleted",
+        title: `Publication "${publicationLabel}" deleted`,
         variant: "success",
       });
       void navigate({ to: "/content-management/publications" });

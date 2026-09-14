@@ -61,7 +61,7 @@ function truncate(value: string | null | undefined, max = 40): string {
 export const PublicationList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-  const [deleteHref, setDeleteHref] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PublicationRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { addNotification } = useNotifications();
@@ -81,11 +81,12 @@ export const PublicationList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteHref) return;
+    if (!deleteTarget?.pulp_href) return;
+    const identifier = extractIdFromHref(deleteTarget.pulp_href);
     try {
-      await deleteMutation.mutateAsync(deleteHref);
+      await deleteMutation.mutateAsync(deleteTarget.pulp_href);
       addNotification({
-        title: "Publication deleted",
+        title: `Publication "${identifier}" deleted`,
         variant: "success",
       });
     } catch (error) {
@@ -94,7 +95,7 @@ export const PublicationList: React.FC = () => {
         variant: "danger",
       });
     }
-    setDeleteHref(null);
+    setDeleteTarget(null);
   };
 
   const columns = useMemo<ColumnDef<PublicationRow>[]>(
@@ -167,7 +168,7 @@ export const PublicationList: React.FC = () => {
               variant="link"
               isInline
               isDanger
-              onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
+              onClick={() => setDeleteTarget(row.original)}
             >
               Delete
             </Button>
@@ -285,14 +286,17 @@ export const PublicationList: React.FC = () => {
           />
 
           <Modal
-            isOpen={!!deleteHref}
-            onClose={() => setDeleteHref(null)}
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
             variant="small"
           >
             <ModalHeader title="Delete Publication" />
             <ModalBody>
-              Are you sure you want to delete this publication? This action
-              cannot be undone.
+              {deleteTarget?.pulp_href
+                ? `Are you sure you want to delete publication "${extractIdFromHref(
+                    deleteTarget.pulp_href,
+                  )}"? This action cannot be undone.`
+                : "Are you sure you want to delete this publication? This action cannot be undone."}
             </ModalBody>
             <ModalFooter>
               <Button
@@ -302,7 +306,7 @@ export const PublicationList: React.FC = () => {
               >
                 Delete
               </Button>
-              <Button variant="link" onClick={() => setDeleteHref(null)}>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </Button>
             </ModalFooter>

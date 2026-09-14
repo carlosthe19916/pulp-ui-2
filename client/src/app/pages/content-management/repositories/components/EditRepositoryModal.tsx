@@ -79,7 +79,7 @@ export const EditRepositoryModal: React.FC<IEditRepositoryModalProps> = ({
         body: values as PatchedfileFileRepository,
       });
       addNotification({
-        title: "Repository updated",
+        title: `Repository "${repository.name}" updated`,
         variant: "success",
       });
       onClose();

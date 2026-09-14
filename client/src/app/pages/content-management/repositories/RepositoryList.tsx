@@ -69,7 +69,7 @@ export const RepositoryList: React.FC = () => {
   const [perPage, setPerPage] = useState(20);
   const [nameFilter, setNameFilter] = useState("");
   const [pulpTypeFilter, setPulpTypeFilter] = useState("");
-  const [deleteHref, setDeleteHref] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RepositoryRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [syncTarget, setSyncTarget] = useState<RepositoryRow | null>(null);
   const [publishRepoHref, setPublishRepoHref] = useState<string | null>(null);
@@ -97,15 +97,15 @@ export const RepositoryList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteHref) return;
+    if (!deleteTarget?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(deleteHref);
+      const result = await deleteMutation.mutateAsync(deleteTarget.pulp_href);
       const taskHref = result?.task;
       if (taskHref) {
         notifyTaskStarted(
           addNotification,
           taskHref,
-          "Repository delete started",
+          `Repository "${deleteTarget.name}" delete started`,
         );
       }
     } catch (error) {
@@ -114,7 +114,7 @@ export const RepositoryList: React.FC = () => {
         variant: "danger",
       });
     }
-    setDeleteHref(null);
+    setDeleteTarget(null);
   };
 
   const columns = useMemo<ColumnDef<RepositoryRow>[]>(
@@ -204,7 +204,7 @@ export const RepositoryList: React.FC = () => {
                 variant="link"
                 isInline
                 isDanger
-                onClick={() => setDeleteHref(row.original.pulp_href ?? null)}
+                onClick={() => setDeleteTarget(row.original)}
               >
                 Delete
               </Button>
@@ -366,14 +366,14 @@ export const RepositoryList: React.FC = () => {
           )}
 
           <Modal
-            isOpen={!!deleteHref}
-            onClose={() => setDeleteHref(null)}
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
             variant="small"
           >
             <ModalHeader title="Delete Repository" />
             <ModalBody>
-              Are you sure you want to delete this repository? This action
-              cannot be undone.
+              Are you sure you want to delete repository &quot;
+              {deleteTarget?.name}&quot;? This action cannot be undone.
             </ModalBody>
             <ModalFooter>
               <Button
@@ -383,7 +383,7 @@ export const RepositoryList: React.FC = () => {
               >
                 Delete
               </Button>
-              <Button variant="link" onClick={() => setDeleteHref(null)}>
+              <Button variant="link" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </Button>
             </ModalFooter>

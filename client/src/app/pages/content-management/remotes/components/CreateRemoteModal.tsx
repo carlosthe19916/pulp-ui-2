@@ -51,9 +51,9 @@ export const CreateRemoteModal: React.FC<ICreateRemoteModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const body = cleanFormValues<FileFileRemoteWritable>(values);
-      await createMutation.mutateAsync(body);
+      const result = await createMutation.mutateAsync(body);
       addNotification({
-        title: "Remote created",
+        title: `Remote "${result.name}" created`,
         variant: "success",
       });
       reset(buildDefaultValues(createFields));

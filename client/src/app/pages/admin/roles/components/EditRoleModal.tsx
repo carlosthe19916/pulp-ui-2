@@ -82,7 +82,7 @@ export const EditRoleModal: React.FC<IEditRoleModalProps> = ({
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await updateMutation.mutateAsync({
+      const result = await updateMutation.mutateAsync({
         href: role.pulp_href ?? "",
         body: {
           description: values.description || undefined,
@@ -90,7 +90,7 @@ export const EditRoleModal: React.FC<IEditRoleModalProps> = ({
         },
       });
       addNotification({
-        title: `Role "${role.name}" updated`,
+        title: `Role "${result.name}" updated`,
         variant: "success",
       });
       onClose();
