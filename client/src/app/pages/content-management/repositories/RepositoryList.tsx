@@ -1,12 +1,6 @@
 import type React from "react";
 import { use, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Button,
@@ -25,9 +19,13 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
@@ -117,7 +115,7 @@ export const RepositoryList: React.FC = () => {
     setDeleteTarget(null);
   };
 
-  const columns = useMemo<ColumnDef<RepositoryRow>[]>(
+  const columns = useMemo<AppColumnDef<RepositoryRow>[]>(
     () => [
       {
         id: "name",
@@ -216,11 +214,9 @@ export const RepositoryList: React.FC = () => {
     [],
   );
 
-  const table = useReactTable({
+  const table = useDataTable({
     data: repositories,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
   return (
@@ -292,43 +288,12 @@ export const RepositoryList: React.FC = () => {
             isFetching={isLoading}
             isFetchingState={<Spinner aria-label="Loading repositories" />}
           >
-            <Table aria-label="Repositories table" variant="compact">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-                {repositories.length === 0 && (
-                  <Tr>
-                    <Td colSpan={columns.length}>No repositories found.</Td>
-                  </Tr>
-                )}
-              </Tbody>
-            </Table>
+            <DataTable
+              table={table}
+              ariaLabel="Repositories table"
+              isEmpty={repositories.length === 0}
+              emptyStateContent="No repositories found."
+            />
           </LoadingWrapper>
 
           <Pagination

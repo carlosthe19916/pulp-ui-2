@@ -1,12 +1,5 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-  type RowData,
-} from "@tanstack/react-table";
 
 import {
   Button,
@@ -21,18 +14,14 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import {
-  ActionsColumn,
-  Table,
-  TableText,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@patternfly/react-table";
+import { ActionsColumn, TableText } from "@patternfly/react-table";
 
 import type { UserResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -44,23 +33,6 @@ import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { UserCreateModal, UserEditModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
-
-// Per-column PatternFly Th/Td props, carried on the TanStack column definition so
-// the generic render loop below can apply them (e.g. action-cell styling).
-declare module "@tanstack/react-table" {
-  // Augmenting a third-party interface, so the name and unused type params are fixed.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/naming-convention
-  interface ColumnMeta<TData extends RowData, TValue> {
-    /** Renders the header cell as visually-hidden text for accessibility. */
-    screenReaderHeader?: string;
-    /** Marks the body cell as an action cell (kebab/dropdown). */
-    isActionCell?: boolean;
-    /** Aligns an interactive body cell (e.g. inline button) with text cells. */
-    hasAction?: boolean;
-    /** Shrinks the column to fit its content. */
-    fitContent?: boolean;
-  }
-}
 
 export const UserList: React.FC = () => {
   const [page, setPage] = useState(1);
@@ -82,7 +54,7 @@ export const UserList: React.FC = () => {
   const users = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<ColumnDef<UserResponse>[]>(
+  const columns = useMemo<AppColumnDef<UserResponse>[]>(
     () => [
       {
         id: "username",
@@ -156,12 +128,7 @@ export const UserList: React.FC = () => {
     [],
   );
 
-  const table = useReactTable({
-    data: users,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-  });
+  const table = useDataTable({ data: users, columns });
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
@@ -225,57 +192,12 @@ export const UserList: React.FC = () => {
             isFetching={isLoading}
             isFetchingState={<Spinner aria-label="Loading users" />}
           >
-            <Table aria-label="Users table" variant="compact">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const meta = header.column.columnDef.meta;
-                      return (
-                        <Th
-                          key={header.id}
-                          screenReaderText={meta?.screenReaderHeader}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </Th>
-                      );
-                    })}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => {
-                      const meta = cell.column.columnDef.meta;
-                      return (
-                        <Td
-                          key={cell.id}
-                          isActionCell={meta?.isActionCell}
-                          hasAction={meta?.hasAction}
-                          modifier={meta?.fitContent ? "fitContent" : undefined}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </Td>
-                      );
-                    })}
-                  </Tr>
-                ))}
-                {users.length === 0 && (
-                  <Tr>
-                    <Td colSpan={columns.length}>No users found.</Td>
-                  </Tr>
-                )}
-              </Tbody>
-            </Table>
+            <DataTable
+              table={table}
+              ariaLabel="Users table"
+              isEmpty={users.length === 0}
+              emptyStateContent="No users found."
+            />
           </LoadingWrapper>
 
           <Pagination

@@ -1,12 +1,6 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Breadcrumb,
@@ -23,9 +17,13 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { FileFileContentResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
@@ -98,7 +96,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     (!!repoHref && isRepoLoading) ||
     (!!publicationHref && !repoHref && isPublicationLoading);
 
-  const columns = useMemo<ColumnDef<ContentRow>[]>(
+  const columns = useMemo<AppColumnDef<ContentRow>[]>(
     () => [
       {
         id: "relative_path",
@@ -136,11 +134,9 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     [distributionId],
   );
 
-  const table = useReactTable({
+  const table = useDataTable({
     data: contentUnits,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
   return (
@@ -209,47 +205,16 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
               </EmptyState>
             ) : (
               <>
-                <Table aria-label="Content table" variant="compact">
-                  <Thead>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <Tr key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <Th key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </Th>
-                        ))}
-                      </Tr>
-                    ))}
-                  </Thead>
-                  <Tbody>
-                    {table.getRowModel().rows.map((row) => (
-                      <Tr key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                          <Td key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </Td>
-                        ))}
-                      </Tr>
-                    ))}
-                    {contentUnits.length === 0 && (
-                      <Tr>
-                        <Td colSpan={columns.length}>
-                          {pathFilter
-                            ? "No content matches the current filter."
-                            : "No content in this distribution version."}
-                        </Td>
-                      </Tr>
-                    )}
-                  </Tbody>
-                </Table>
+                <DataTable
+                  table={table}
+                  ariaLabel="Content table"
+                  isEmpty={contentUnits.length === 0}
+                  emptyStateContent={
+                    pathFilter
+                      ? "No content matches the current filter."
+                      : "No content in this distribution version."
+                  }
+                />
 
                 <Pagination
                   itemCount={totalCount}

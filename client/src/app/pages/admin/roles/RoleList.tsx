@@ -1,12 +1,6 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Button,
@@ -26,9 +20,12 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
-
 import type { RoleResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -76,7 +73,7 @@ export const RoleList: React.FC = () => {
   );
   const totalCount = pluginFilter ? roles.length : (data?.count ?? 0);
 
-  const columns = useMemo<ColumnDef<RoleResponse>[]>(
+  const columns = useMemo<AppColumnDef<RoleResponse>[]>(
     () => [
       {
         id: "name",
@@ -147,11 +144,9 @@ export const RoleList: React.FC = () => {
     [],
   );
 
-  const table = useReactTable({
+  const table = useDataTable({
     data: roles,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
   const handleDelete = async () => {
@@ -235,43 +230,12 @@ export const RoleList: React.FC = () => {
             isFetching={isLoading}
             isFetchingState={<Spinner aria-label="Loading roles" />}
           >
-            <Table aria-label="Roles table" variant="compact">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-                {roles.length === 0 && (
-                  <Tr>
-                    <Td colSpan={columns.length}>No roles found.</Td>
-                  </Tr>
-                )}
-              </Tbody>
-            </Table>
+            <DataTable
+              table={table}
+              ariaLabel="Roles table"
+              isEmpty={roles.length === 0}
+              emptyStateContent="No roles found."
+            />
           </LoadingWrapper>
 
           <Pagination

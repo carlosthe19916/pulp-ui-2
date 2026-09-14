@@ -1,12 +1,6 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Breadcrumb,
@@ -30,7 +24,6 @@ import {
   TabTitleText,
   Tabs,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type {
@@ -43,6 +36,11 @@ type DistributionRow = DistributionResponse & {
   publication?: string | null;
   repository?: string | null;
 };
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -122,7 +120,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const distributions = (distributionsData?.results ?? []) as DistributionRow[];
   const contentUnits = (contentData?.results ?? []) as ContentRow[];
 
-  const versionColumns = useMemo<ColumnDef<RepositoryVersionResponse>[]>(
+  const versionColumns = useMemo<AppColumnDef<RepositoryVersionResponse>[]>(
     () => [
       {
         id: "number",
@@ -151,14 +149,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     [],
   );
 
-  const versionsTable = useReactTable({
+  const versionsTable = useDataTable({
     data: versions,
     columns: versionColumns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
-  const distributionColumns = useMemo<ColumnDef<DistributionRow>[]>(
+  const distributionColumns = useMemo<AppColumnDef<DistributionRow>[]>(
     () => [
       {
         id: "name",
@@ -196,14 +192,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     [],
   );
 
-  const distributionsTable = useReactTable({
+  const distributionsTable = useDataTable({
     data: distributions,
     columns: distributionColumns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
-  const contentColumns = useMemo<ColumnDef<ContentRow>[]>(
+  const contentColumns = useMemo<AppColumnDef<ContentRow>[]>(
     () => [
       {
         id: "path",
@@ -236,11 +230,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     [],
   );
 
-  const contentTable = useReactTable({
+  const contentTable = useDataTable({
     data: contentUnits,
     columns: contentColumns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
   const handleDelete = async () => {
@@ -403,50 +395,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                             Loading versions...
                           </Content>
                         ) : (
-                          <Table
-                            aria-label="Repository versions table"
-                            variant="compact"
-                          >
-                            <Thead>
-                              {versionsTable
-                                .getHeaderGroups()
-                                .map((headerGroup) => (
-                                  <Tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                      <Th key={header.id}>
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext(),
-                                            )}
-                                      </Th>
-                                    ))}
-                                  </Tr>
-                                ))}
-                            </Thead>
-                            <Tbody>
-                              {versionsTable.getRowModel().rows.map((row) => (
-                                <Tr key={row.id}>
-                                  {row.getVisibleCells().map((cell) => (
-                                    <Td key={cell.id}>
-                                      {flexRender(
-                                        cell.column.columnDef.cell,
-                                        cell.getContext(),
-                                      )}
-                                    </Td>
-                                  ))}
-                                </Tr>
-                              ))}
-                              {versions.length === 0 && (
-                                <Tr>
-                                  <Td colSpan={versionColumns.length}>
-                                    No versions found.
-                                  </Td>
-                                </Tr>
-                              )}
-                            </Tbody>
-                          </Table>
+                          <DataTable
+                            table={versionsTable}
+                            ariaLabel="Repository versions table"
+                            isEmpty={versions.length === 0}
+                            emptyStateContent="No versions found."
+                          />
                         )}
                       </TabContentBody>
                     </Tab>
@@ -465,52 +419,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                             Loading distributions...
                           </Content>
                         ) : (
-                          <Table
-                            aria-label="Repository distributions table"
-                            variant="compact"
-                          >
-                            <Thead>
-                              {distributionsTable
-                                .getHeaderGroups()
-                                .map((headerGroup) => (
-                                  <Tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                      <Th key={header.id}>
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext(),
-                                            )}
-                                      </Th>
-                                    ))}
-                                  </Tr>
-                                ))}
-                            </Thead>
-                            <Tbody>
-                              {distributionsTable
-                                .getRowModel()
-                                .rows.map((row) => (
-                                  <Tr key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                      <Td key={cell.id}>
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext(),
-                                        )}
-                                      </Td>
-                                    ))}
-                                  </Tr>
-                                ))}
-                              {distributions.length === 0 && (
-                                <Tr>
-                                  <Td colSpan={distributionColumns.length}>
-                                    No distributions point at this repository.
-                                  </Td>
-                                </Tr>
-                              )}
-                            </Tbody>
-                          </Table>
+                          <DataTable
+                            table={distributionsTable}
+                            ariaLabel="Repository distributions table"
+                            isEmpty={distributions.length === 0}
+                            emptyStateContent="No distributions point at this repository."
+                          />
                         )}
                       </TabContentBody>
                     </Tab>
@@ -546,53 +460,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                                 Loading content...
                               </Content>
                             ) : (
-                              <Table
-                                aria-label="Repository content table"
-                                variant="compact"
-                              >
-                                <Thead>
-                                  {contentTable
-                                    .getHeaderGroups()
-                                    .map((headerGroup) => (
-                                      <Tr key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                          <Th key={header.id}>
-                                            {header.isPlaceholder
-                                              ? null
-                                              : flexRender(
-                                                  header.column.columnDef
-                                                    .header,
-                                                  header.getContext(),
-                                                )}
-                                          </Th>
-                                        ))}
-                                      </Tr>
-                                    ))}
-                                </Thead>
-                                <Tbody>
-                                  {contentTable
-                                    .getRowModel()
-                                    .rows.map((row) => (
-                                      <Tr key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                          <Td key={cell.id}>
-                                            {flexRender(
-                                              cell.column.columnDef.cell,
-                                              cell.getContext(),
-                                            )}
-                                          </Td>
-                                        ))}
-                                      </Tr>
-                                    ))}
-                                  {contentUnits.length === 0 && (
-                                    <Tr>
-                                      <Td colSpan={contentColumns.length}>
-                                        No content in the latest version.
-                                      </Td>
-                                    </Tr>
-                                  )}
-                                </Tbody>
-                              </Table>
+                              <DataTable
+                                table={contentTable}
+                                ariaLabel="Repository content table"
+                                isEmpty={contentUnits.length === 0}
+                                emptyStateContent="No content in the latest version."
+                              />
                             )}
                           </StackItem>
                         </Stack>

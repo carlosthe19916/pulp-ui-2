@@ -1,12 +1,6 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Button,
@@ -30,9 +24,12 @@ import {
   MenuToggle,
   type MenuToggleElement,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
-
 import type { TaskResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -105,7 +102,7 @@ export const TaskList: React.FC = () => {
   const tasks = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<ColumnDef<TaskResponse>[]>(
+  const columns = useMemo<AppColumnDef<TaskResponse>[]>(
     () => [
       {
         id: "name",
@@ -161,12 +158,7 @@ export const TaskList: React.FC = () => {
     [],
   );
 
-  const table = useReactTable({
-    data: tasks,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-  });
+  const table = useDataTable({ data: tasks, columns });
 
   const handleCancel = async () => {
     if (!cancelHref) return;
@@ -292,43 +284,12 @@ export const TaskList: React.FC = () => {
             isFetching={isLoading}
             isFetchingState={<Spinner aria-label="Loading tasks" />}
           >
-            <Table aria-label="Tasks table" variant="compact">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-                {tasks.length === 0 && (
-                  <Tr>
-                    <Td colSpan={columns.length}>No tasks found.</Td>
-                  </Tr>
-                )}
-              </Tbody>
-            </Table>
+            <DataTable
+              table={table}
+              ariaLabel="Tasks table"
+              isEmpty={tasks.length === 0}
+              emptyStateContent="No tasks found."
+            />
           </LoadingWrapper>
 
           <Pagination

@@ -1,11 +1,5 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Content,
@@ -20,9 +14,13 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { SigningServiceResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
@@ -42,7 +40,7 @@ export const SigningServiceList: React.FC = () => {
   const services = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<ColumnDef<SigningServiceResponse>[]>(
+  const columns = useMemo<AppColumnDef<SigningServiceResponse>[]>(
     () => [
       {
         id: "name",
@@ -66,12 +64,7 @@ export const SigningServiceList: React.FC = () => {
     [],
   );
 
-  const table = useReactTable({
-    data: services,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-  });
+  const table = useDataTable({ data: services, columns });
 
   return (
     <>
@@ -123,47 +116,24 @@ export const SigningServiceList: React.FC = () => {
 
           {isLoading ? (
             <Spinner aria-label="Loading signing services" />
-          ) : services.length === 0 ? (
-            <EmptyState titleText="No signing services found" headingLevel="h4">
-              <EmptyStateBody>
-                {nameFilter
-                  ? "No signing services match the current filter. Try a different search term."
-                  : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
-              </EmptyStateBody>
-            </EmptyState>
           ) : (
-            <Table aria-label="Signing services table" variant="compact">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <Tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+            <DataTable
+              table={table}
+              ariaLabel="Signing services table"
+              isEmpty={services.length === 0}
+              emptyStateContent={
+                <EmptyState
+                  titleText="No signing services found"
+                  headingLevel="h4"
+                >
+                  <EmptyStateBody>
+                    {nameFilter
+                      ? "No signing services match the current filter. Try a different search term."
+                      : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
+                  </EmptyStateBody>
+                </EmptyState>
+              }
+            />
           )}
 
           <Pagination

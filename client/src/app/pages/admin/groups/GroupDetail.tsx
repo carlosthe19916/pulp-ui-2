@@ -4,12 +4,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table";
 
 import {
   Breadcrumb,
@@ -39,9 +33,12 @@ import {
   Tabs,
   TextInput,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
-
 import type { GroupRoleResponse, GroupUserResponse } from "@app/client";
+import {
+  DataTable,
+  useDataTable,
+  type AppColumnDef,
+} from "@app/components/DataTable";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
@@ -157,7 +154,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     return map;
   }, [allRolesData?.results]);
 
-  const userColumns = useMemo<ColumnDef<GroupUserResponse>[]>(
+  const userColumns = useMemo<AppColumnDef<GroupUserResponse>[]>(
     () => [
       {
         id: "username",
@@ -182,7 +179,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     [],
   );
 
-  const roleColumns = useMemo<ColumnDef<GroupRoleResponse>[]>(
+  const roleColumns = useMemo<AppColumnDef<GroupRoleResponse>[]>(
     () => [
       {
         id: "role",
@@ -226,18 +223,14 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     [roleNameToId],
   );
 
-  const usersTable = useReactTable({
+  const usersTable = useDataTable({
     data: users,
     columns: userColumns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
-  const rolesTable = useReactTable({
+  const rolesTable = useDataTable({
     data: roles,
     columns: roleColumns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
   });
 
   const handleDelete = async () => {
@@ -430,50 +423,12 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                             </Button>
                           </StackItem>
                           <StackItem>
-                            <Table
-                              aria-label="Group users table"
-                              variant="compact"
-                            >
-                              <Thead>
-                                {usersTable
-                                  .getHeaderGroups()
-                                  .map((headerGroup) => (
-                                    <Tr key={headerGroup.id}>
-                                      {headerGroup.headers.map((header) => (
-                                        <Th key={header.id}>
-                                          {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
-                                              )}
-                                        </Th>
-                                      ))}
-                                    </Tr>
-                                  ))}
-                              </Thead>
-                              <Tbody>
-                                {usersTable.getRowModel().rows.map((row) => (
-                                  <Tr key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                      <Td key={cell.id}>
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext(),
-                                        )}
-                                      </Td>
-                                    ))}
-                                  </Tr>
-                                ))}
-                                {users.length === 0 && (
-                                  <Tr>
-                                    <Td colSpan={userColumns.length}>
-                                      No users in this group.
-                                    </Td>
-                                  </Tr>
-                                )}
-                              </Tbody>
-                            </Table>
+                            <DataTable
+                              table={usersTable}
+                              ariaLabel="Group users table"
+                              isEmpty={users.length === 0}
+                              emptyStateContent="No users in this group."
+                            />
                           </StackItem>
                         </Stack>
                       </TabContentBody>
@@ -495,50 +450,12 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                             </Button>
                           </StackItem>
                           <StackItem>
-                            <Table
-                              aria-label="Group roles table"
-                              variant="compact"
-                            >
-                              <Thead>
-                                {rolesTable
-                                  .getHeaderGroups()
-                                  .map((headerGroup) => (
-                                    <Tr key={headerGroup.id}>
-                                      {headerGroup.headers.map((header) => (
-                                        <Th key={header.id}>
-                                          {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
-                                              )}
-                                        </Th>
-                                      ))}
-                                    </Tr>
-                                  ))}
-                              </Thead>
-                              <Tbody>
-                                {rolesTable.getRowModel().rows.map((row) => (
-                                  <Tr key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                      <Td key={cell.id}>
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext(),
-                                        )}
-                                      </Td>
-                                    ))}
-                                  </Tr>
-                                ))}
-                                {roles.length === 0 && (
-                                  <Tr>
-                                    <Td colSpan={roleColumns.length}>
-                                      No roles assigned to this group.
-                                    </Td>
-                                  </Tr>
-                                )}
-                              </Tbody>
-                            </Table>
+                            <DataTable
+                              table={rolesTable}
+                              ariaLabel="Group roles table"
+                              isEmpty={roles.length === 0}
+                              emptyStateContent="No roles assigned to this group."
+                            />
                           </StackItem>
                         </Stack>
                       </TabContentBody>
