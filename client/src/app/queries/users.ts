@@ -189,3 +189,39 @@ export const useUserRoleDeleteMutation = () => {
     },
   });
 };
+
+interface IUserRolesSyncArgs {
+  userHref: string;
+  /** Role names to assign. */
+  toAdd: string[];
+  /** Assignment hrefs to unassign. */
+  toRemove: string[];
+}
+
+/** Batches role assigns/unassigns for one user and invalidates once. */
+export const useUserRolesSyncMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userHref, toAdd, toRemove }: IUserRolesSyncArgs) => {
+      await Promise.all([
+        ...toAdd.map((role) =>
+          axiosInstance.post<UserRoleResponse>(
+            `${toProxyHref(userHref)}roles/`,
+            {
+              role,
+              content_object: null,
+            },
+          ),
+        ),
+        ...toRemove.map((roleHref) =>
+          axiosInstance.delete<void>(toProxyHref(roleHref)),
+        ),
+      ]);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: usersRootQueryOptions.queryKey,
+      });
+    },
+  });
+};

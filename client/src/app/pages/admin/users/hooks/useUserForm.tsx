@@ -93,6 +93,7 @@ export const useUserForm = ({
   const form = useForm<UserFormValues>({
     resolver: yupResolver(buildUserSchema(isCreate)),
     defaultValues: toDefaults(user),
+    mode: "onChange",
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
