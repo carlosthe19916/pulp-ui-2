@@ -29,6 +29,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { GenericRemoteResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -252,9 +253,10 @@ export const RemoteList: React.FC = () => {
             </ToolbarContent>
           </Toolbar>
 
-          {isLoading ? (
-            <Spinner aria-label="Loading remotes" />
-          ) : (
+          <LoadingWrapper
+            isFetching={isLoading}
+            isFetchingState={<Spinner aria-label="Loading remotes" />}
+          >
             <Table aria-label="Remotes table" variant="compact">
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -292,7 +294,7 @@ export const RemoteList: React.FC = () => {
                 )}
               </Tbody>
             </Table>
-          )}
+          </LoadingWrapper>
 
           <Pagination
             itemCount={totalCount}

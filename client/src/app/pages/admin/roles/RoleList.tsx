@@ -30,6 +30,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { RoleResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
@@ -230,9 +231,10 @@ export const RoleList: React.FC = () => {
             </ToolbarContent>
           </Toolbar>
 
-          {isLoading ? (
-            <Spinner aria-label="Loading roles" />
-          ) : (
+          <LoadingWrapper
+            isFetching={isLoading}
+            isFetchingState={<Spinner aria-label="Loading roles" />}
+          >
             <Table aria-label="Roles table" variant="compact">
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -270,7 +272,7 @@ export const RoleList: React.FC = () => {
                 )}
               </Tbody>
             </Table>
-          )}
+          </LoadingWrapper>
 
           <Pagination
             itemCount={totalCount}

@@ -28,6 +28,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { GroupResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -164,9 +165,10 @@ export const GroupList: React.FC = () => {
             </ToolbarContent>
           </Toolbar>
 
-          {isLoading ? (
-            <Spinner aria-label="Loading groups" />
-          ) : (
+          <LoadingWrapper
+            isFetching={isLoading}
+            isFetchingState={<Spinner aria-label="Loading groups" />}
+          >
             <Table aria-label="Groups table" variant="compact">
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -204,7 +206,7 @@ export const GroupList: React.FC = () => {
                 )}
               </Tbody>
             </Table>
-          )}
+          </LoadingWrapper>
 
           <Pagination
             itemCount={totalCount}

@@ -23,6 +23,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { MultipleArtifactContentResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
@@ -164,9 +165,10 @@ export const ContentList: React.FC = () => {
             </ToolbarContent>
           </Toolbar>
 
-          {isLoading ? (
-            <Spinner aria-label="Loading content" />
-          ) : (
+          <LoadingWrapper
+            isFetching={isLoading}
+            isFetchingState={<Spinner aria-label="Loading content" />}
+          >
             <Table aria-label="Content table" variant="compact">
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -204,7 +206,7 @@ export const ContentList: React.FC = () => {
                 )}
               </Tbody>
             </Table>
-          )}
+          </LoadingWrapper>
 
           <Pagination
             itemCount={totalCount}
