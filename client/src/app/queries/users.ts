@@ -55,9 +55,6 @@ export const usersListQueryOptions = (
           },
         },
       );
-      if (!response.data) {
-        throw new Error("Empty users list response");
-      }
       return response.data;
     },
   });
@@ -84,9 +81,6 @@ export const userRolesListQueryOptions = (userHref: string) =>
       const response = await axiosInstance.get<PaginatedUserRoleResponseList>(
         `${toProxyHref(userHref)}roles/`,
       );
-      if (!response.data) {
-        throw new Error("Empty user roles list response");
-      }
       return response.data;
     },
     enabled: !!userHref,

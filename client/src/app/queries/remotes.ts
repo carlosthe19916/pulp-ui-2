@@ -46,9 +46,6 @@ export const remotesListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty remotes list response");
-      }
       return response.data;
     },
   });

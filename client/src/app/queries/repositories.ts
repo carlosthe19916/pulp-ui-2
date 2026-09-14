@@ -50,9 +50,6 @@ export const repositoriesListQueryOptions = (
           },
         },
       );
-      if (!response.data) {
-        throw new Error("Empty repositories list response");
-      }
       return response.data;
     },
   });

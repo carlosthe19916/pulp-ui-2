@@ -22,6 +22,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const GroupsQueryKey = "groups";
 
@@ -57,9 +58,6 @@ export const groupsListQueryOptions = (
           },
         },
       );
-      if (!response.data) {
-        throw new Error("Empty groups list response");
-      }
       return response.data;
     },
   });
@@ -71,7 +69,7 @@ export const groupDetailQueryOptions = (groupHref: string) =>
       const response = await axiosInstance.get<GroupResponse>(
         toProxyHref(groupHref),
       );
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty group detail response");
       }
       return response.data;
@@ -86,9 +84,6 @@ export const groupUsersListQueryOptions = (groupHref: string) =>
       const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
         `${toProxyHref(groupHref)}users/`,
       );
-      if (!response.data) {
-        throw new Error("Empty group users list response");
-      }
       return response.data;
     },
     enabled: !!groupHref,
@@ -101,9 +96,6 @@ export const groupRolesListQueryOptions = (groupHref: string) =>
       const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
         `${toProxyHref(groupHref)}roles/`,
       );
-      if (!response.data) {
-        throw new Error("Empty group roles list response");
-      }
       return response.data;
     },
     enabled: !!groupHref,

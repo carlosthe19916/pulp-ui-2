@@ -15,6 +15,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { contentRootQueryOptions } from "./content";
 
@@ -51,9 +52,6 @@ export const fileContentListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty file content list response");
-      }
       return response.data;
     },
     enabled: options?.enabled ?? true,
@@ -74,7 +72,7 @@ export const fileContentDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<FileFileContentResponse>(
         toProxyHref(href),
       );
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.pulp_href) {
         throw new Error("Empty file content detail response");
       }
       return response.data;

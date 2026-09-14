@@ -68,9 +68,6 @@ export const tasksListQueryOptions = (
           },
         },
       );
-      if (!response.data) {
-        throw new Error("Empty tasks list response");
-      }
       return response.data;
     },
     refetchInterval: (query) => {

@@ -48,9 +48,6 @@ export const contentListQueryOptions = (
               },
             },
           );
-        if (!response.data) {
-          throw new Error("Empty content list response");
-        }
         return response.data;
       },
     enabled: options?.enabled ?? true,

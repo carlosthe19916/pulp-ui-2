@@ -55,9 +55,6 @@ export const distributionsListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty distributions list response");
-      }
       return response.data;
     },
   });

@@ -52,9 +52,6 @@ export const rolesListQueryOptions = (
           },
         },
       );
-      if (!response.data) {
-        throw new Error("Empty roles list response");
-      }
       return response.data;
     },
   });

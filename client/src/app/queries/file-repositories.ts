@@ -76,9 +76,6 @@ export const fileRepositoryVersionsListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty file repository versions list response");
-      }
       return response.data;
     },
     enabled: !!repoHref,

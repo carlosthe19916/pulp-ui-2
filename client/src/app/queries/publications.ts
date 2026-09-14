@@ -49,9 +49,6 @@ export const publicationsListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty publications list response");
-      }
       return response.data;
     },
   });

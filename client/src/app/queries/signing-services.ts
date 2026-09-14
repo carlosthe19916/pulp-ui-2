@@ -9,6 +9,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const SigningServicesQueryKey = "signing-services";
 
@@ -50,9 +51,6 @@ export const signingServicesListQueryOptions = (
             },
           },
         );
-      if (!response.data) {
-        throw new Error("Empty signing services list response");
-      }
       return response.data;
     },
   });
@@ -64,7 +62,7 @@ export const signingServiceDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<SigningServiceResponse>(
         toProxyHref(href),
       );
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty signing service detail response");
       }
       return response.data;

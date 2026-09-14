@@ -14,6 +14,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { remotesRootQueryOptions } from "./remotes";
 
@@ -24,7 +25,7 @@ export const fileRemoteDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<FileFileRemoteResponse>(
         toProxyHref(href),
       );
-      if (!response.data) {
+      if (isEmptyDetailPayload(response.data) || !response.data.name) {
         throw new Error("Empty file remote detail response");
       }
       return response.data;
