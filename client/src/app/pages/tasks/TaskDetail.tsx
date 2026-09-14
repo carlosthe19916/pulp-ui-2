@@ -1,7 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import dayjs from "dayjs";
 
 import {
   Breadcrumb,
@@ -28,11 +27,10 @@ import {
 
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { useTaskCancelMutation, useTaskDetailQuery } from "@app/queries/tasks";
 import { buildTaskHref, extractTaskId } from "@app/utils/taskHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const stateColors: Record<
   string,
@@ -159,25 +157,19 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Created</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {task.pulp_created
-                      ? dayjs(task.pulp_created).format(RENDER_DATETIME_FORMAT)
-                      : "—"}
+                    {formatDateTime(task.pulp_created) ?? "—"}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Started</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {task.started_at
-                      ? dayjs(task.started_at).format(RENDER_DATETIME_FORMAT)
-                      : "—"}
+                    {formatDateTime(task.started_at) ?? "—"}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Finished</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {task.finished_at
-                      ? dayjs(task.finished_at).format(RENDER_DATETIME_FORMAT)
-                      : "—"}
+                    {formatDateTime(task.finished_at) ?? "—"}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>

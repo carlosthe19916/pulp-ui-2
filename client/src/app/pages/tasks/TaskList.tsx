@@ -7,7 +7,6 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import dayjs from "dayjs";
 
 import {
   Button,
@@ -37,7 +36,6 @@ import type { TaskResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import {
   type TaskState,
@@ -48,7 +46,7 @@ import {
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractTaskId } from "@app/utils/taskHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const stateColors: Record<
   string,
@@ -136,18 +134,12 @@ export const TaskList: React.FC = () => {
       {
         id: "started",
         header: "Started",
-        cell: ({ row }) =>
-          row.original.started_at
-            ? dayjs(row.original.started_at).format(RENDER_DATETIME_FORMAT)
-            : "—",
+        cell: ({ row }) => formatDateTime(row.original.started_at) ?? "—",
       },
       {
         id: "finished",
         header: "Finished",
-        cell: ({ row }) =>
-          row.original.finished_at
-            ? dayjs(row.original.finished_at).format(RENDER_DATETIME_FORMAT)
-            : "—",
+        cell: ({ row }) => formatDateTime(row.original.finished_at) ?? "—",
       },
       {
         id: "actions",

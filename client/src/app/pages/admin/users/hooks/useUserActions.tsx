@@ -22,7 +22,10 @@ export const useUserActions = () => {
   const createUser = async (body: UserWritable) => {
     try {
       const result = await createMutation.mutateAsync(body);
-      addNotification({ title: "User created", variant: "success" });
+      addNotification({
+        title: `User "${result.username}" created`,
+        variant: "success",
+      });
       return result;
     } catch (error) {
       addNotification({
@@ -36,7 +39,10 @@ export const useUserActions = () => {
   const updateUser = async (href: string, body: PatchedUser) => {
     try {
       const result = await updateMutation.mutateAsync({ href, body });
-      addNotification({ title: "User updated", variant: "success" });
+      addNotification({
+        title: `User "${result.username}" updated`,
+        variant: "success",
+      });
       return result;
     } catch (error) {
       addNotification({
@@ -47,10 +53,13 @@ export const useUserActions = () => {
     }
   };
 
-  const deleteUser = async (href: string) => {
+  const deleteUser = async (href: string, username: string) => {
     try {
       await deleteMutation.mutateAsync(href);
-      addNotification({ title: "User deleted", variant: "success" });
+      addNotification({
+        title: `User "${username}" deleted`,
+        variant: "success",
+      });
     } catch (error) {
       addNotification({
         ...getMutationErrorMessage(error, "Failed to delete user"),

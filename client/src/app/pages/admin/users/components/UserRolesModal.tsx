@@ -43,7 +43,7 @@ interface IAssignedRole {
 }
 
 interface IUserRolesFormProps {
-  userHref: string;
+  user: UserResponse;
   /** Roles currently assigned to the user, with their assignment hrefs. */
   assignedRoles: IAssignedRole[];
   /** All role names available in the system. */
@@ -60,7 +60,7 @@ const toOptions = (names: string[]): IRoleOption[] =>
  * assignment on save, and applies the additions/removals in one batch.
  */
 const UserRolesForm: React.FC<IUserRolesFormProps> = ({
-  userHref,
+  user,
   assignedRoles,
   allRoleNames,
   onClose,
@@ -162,7 +162,7 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
       .filter((role) => !chosenNames.has(role.name))
       .map((role) => role.href);
     try {
-      await syncRoles({ userHref, toAdd, toRemove });
+      await syncRoles({ user, toAdd, toRemove });
       onClose();
     } catch {
       // Notification handled in useUserRoleActions; keep the modal open.
@@ -303,7 +303,7 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
         )}
       >
         <UserRolesForm
-          userHref={userHref}
+          user={user}
           assignedRoles={(assignedData?.results ?? [])
             .filter((userRole) => userRole.pulp_href)
             .map((userRole) => ({

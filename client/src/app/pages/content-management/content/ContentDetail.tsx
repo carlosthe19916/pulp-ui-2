@@ -1,6 +1,5 @@
 import type React from "react";
 import { Link } from "@tanstack/react-router";
-import dayjs from "dayjs";
 
 import {
   Breadcrumb,
@@ -19,11 +18,11 @@ import {
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useFileContentDetailQuery } from "@app/queries/file-content";
 import { buildContentHref } from "@app/queries/utils/pulpHref";
+import { formatDateTime } from "@app/utils/utils";
 
 interface IContentDetailProps {
   contentId: string;
@@ -80,11 +79,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
                     <DescriptionListGroup>
                       <DescriptionListTerm>Created</DescriptionListTerm>
                       <DescriptionListDescription>
-                        {content.pulp_created
-                          ? dayjs(content.pulp_created).format(
-                              RENDER_DATETIME_FORMAT,
-                            )
-                          : "—"}
+                        {formatDateTime(content.pulp_created) ?? "—"}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptorDetailFields

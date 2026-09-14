@@ -7,7 +7,6 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import dayjs from "dayjs";
 
 import {
   Button,
@@ -32,7 +31,6 @@ import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
@@ -43,7 +41,7 @@ import { useFilePublicationDeleteMutation } from "@app/queries/file-publications
 import { usePublicationsListQuery } from "@app/queries/publications";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreatePublicationModal } from "./components/CreatePublicationModal";
 
@@ -145,10 +143,7 @@ export const PublicationList: React.FC = () => {
       {
         id: "created",
         header: "Created",
-        cell: ({ row }) =>
-          row.original.pulp_created
-            ? dayjs(row.original.pulp_created).format(RENDER_DATETIME_FORMAT)
-            : "—",
+        cell: ({ row }) => formatDateTime(row.original.pulp_created) ?? "—",
       },
       {
         id: "actions",

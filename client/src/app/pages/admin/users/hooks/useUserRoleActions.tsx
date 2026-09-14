@@ -1,10 +1,11 @@
+import type { UserResponse } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
 import { useUserRolesSyncMutation } from "@app/queries/users";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface ISyncRolesArgs {
-  /** Href of the user whose roles are being changed. */
-  userHref: string;
+  /** User whose roles are being changed. */
+  user: UserResponse;
   /** Role names to assign. */
   toAdd: string[];
   /** Assignment hrefs (UserRoleResponse.pulp_href) to unassign. */
@@ -20,13 +21,20 @@ export const useUserRoleActions = () => {
   const { addNotification } = useNotifications();
   const rolesSyncMutation = useUserRolesSyncMutation();
 
-  const syncRoles = async ({ userHref, toAdd, toRemove }: ISyncRolesArgs) => {
+  const syncRoles = async ({ user, toAdd, toRemove }: ISyncRolesArgs) => {
     if (toAdd.length === 0 && toRemove.length === 0) {
       return;
     }
     try {
-      await rolesSyncMutation.mutateAsync({ userHref, toAdd, toRemove });
-      addNotification({ title: "Roles updated", variant: "success" });
+      await rolesSyncMutation.mutateAsync({
+        userHref: user.pulp_href ?? "",
+        toAdd,
+        toRemove,
+      });
+      addNotification({
+        title: `Roles updated for "${user.username}"`,
+        variant: "success",
+      });
     } catch (error) {
       addNotification({
         ...getMutationErrorMessage(error, "Failed to update roles"),

@@ -7,7 +7,6 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import dayjs from "dayjs";
 
 import {
   Breadcrumb,
@@ -48,7 +47,6 @@ import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useApiDomain } from "@app/hooks/useApiDomain";
@@ -64,7 +62,7 @@ import {
   extractIdFromHref,
 } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRepositoryModal } from "./components/EditRepositoryModal";
 import { PublishModal } from "@app/components/PublishModal";
@@ -134,10 +132,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       {
         id: "pulp_created",
         header: "Created",
-        cell: ({ row }) =>
-          row.original.pulp_created
-            ? dayjs(row.original.pulp_created).format(RENDER_DATETIME_FORMAT)
-            : "—",
+        cell: ({ row }) => formatDateTime(row.original.pulp_created) ?? "—",
       },
       {
         id: "content_summary",
@@ -382,11 +377,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                           <DescriptionListGroup>
                             <DescriptionListTerm>Created</DescriptionListTerm>
                             <DescriptionListDescription>
-                              {repo.pulp_created
-                                ? dayjs(repo.pulp_created).format(
-                                    RENDER_DATETIME_FORMAT,
-                                  )
-                                : "—"}
+                              {formatDateTime(repo.pulp_created) ?? "—"}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptorDetailFields

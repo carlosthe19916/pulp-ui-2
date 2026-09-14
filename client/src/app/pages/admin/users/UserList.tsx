@@ -7,7 +7,6 @@ import {
   type ColumnDef,
   type RowData,
 } from "@tanstack/react-table";
-import dayjs from "dayjs";
 
 import {
   Button,
@@ -37,9 +36,9 @@ import type { UserResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useUsersListQuery } from "@app/queries/users";
 import { isForbiddenError } from "@app/utils/isHttpError";
+import { formatDateTime } from "@app/utils/utils";
 
 import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { UserCreateModal, UserEditModal } from "./components/UserModal";
@@ -70,7 +69,7 @@ export const UserList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserResponse | null>(null);
   const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
-  const [deleteHref, setDeleteHref] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null);
 
   const { deleteUser, isDeleting } = useUserActions();
 
@@ -112,10 +111,7 @@ export const UserList: React.FC = () => {
       {
         id: "date_joined",
         header: "Date Joined",
-        cell: ({ row }) =>
-          row.original.date_joined
-            ? dayjs(row.original.date_joined).format(RENDER_DATETIME_FORMAT)
-            : "—",
+        cell: ({ row }) => formatDateTime(row.original.date_joined) ?? "—",
       },
       {
         id: "roles",
@@ -150,7 +146,7 @@ export const UserList: React.FC = () => {
               {
                 title: "Delete",
                 isDanger: true,
-                onClick: () => setDeleteHref(row.original.pulp_href ?? null),
+                onClick: () => setDeleteTarget(row.original),
               },
             ]}
           />
@@ -168,13 +164,13 @@ export const UserList: React.FC = () => {
   });
 
   const handleDelete = async () => {
-    if (!deleteHref) return;
+    if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteUser(deleteHref);
+      await deleteUser(deleteTarget.pulp_href, deleteTarget.username);
     } catch {
       // Notifications are handled in useUserActions.
     }
-    setDeleteHref(null);
+    setDeleteTarget(null);
   };
 
   return (
@@ -316,12 +312,12 @@ export const UserList: React.FC = () => {
           )}
 
           <ConfirmDeleteModal
-            isOpen={!!deleteHref}
+            isOpen={!!deleteTarget}
             title="Delete User"
-            body="Are you sure you want to delete this user? This action cannot be undone."
+            body={`Are you sure you want to delete "${deleteTarget?.username}"? This action cannot be undone.`}
             isDeleting={isDeleting}
             onConfirm={() => void handleDelete()}
-            onCancel={() => setDeleteHref(null)}
+            onCancel={() => setDeleteTarget(null)}
           />
         </PageSection>
       )}

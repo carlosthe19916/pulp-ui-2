@@ -1,7 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
 
 import {
   Breadcrumb,
@@ -27,7 +26,6 @@ import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useApiDomain } from "@app/hooks/useApiDomain";
@@ -37,7 +35,7 @@ import {
 } from "@app/queries/file-distributions";
 import { buildDistributionHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditDistributionModal } from "./components/EditDistributionModal";
 
@@ -158,11 +156,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
                     <DescriptionListGroup>
                       <DescriptionListTerm>Created</DescriptionListTerm>
                       <DescriptionListDescription>
-                        {distribution.pulp_created
-                          ? dayjs(distribution.pulp_created).format(
-                              RENDER_DATETIME_FORMAT,
-                            )
-                          : "—"}
+                        {formatDateTime(distribution.pulp_created) ?? "—"}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>

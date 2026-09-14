@@ -1,7 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
 
 import {
   Breadcrumb,
@@ -26,7 +25,6 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
 import { useApiDomain } from "@app/hooks/useApiDomain";
@@ -36,7 +34,7 @@ import {
 } from "@app/queries/file-remotes";
 import { buildRemoteHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { EditRemoteModal } from "./components/EditRemoteModal";
 
@@ -141,11 +139,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
                     <DescriptionListGroup>
                       <DescriptionListTerm>Created</DescriptionListTerm>
                       <DescriptionListDescription>
-                        {remote.pulp_created
-                          ? dayjs(remote.pulp_created).format(
-                              RENDER_DATETIME_FORMAT,
-                            )
-                          : "—"}
+                        {formatDateTime(remote.pulp_created) ?? "—"}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptorDetailFields
