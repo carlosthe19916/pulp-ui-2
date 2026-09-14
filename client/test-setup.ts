@@ -1,8 +1,9 @@
 /// <reference types="vitest/globals" />
 /// <reference lib="dom" />
 
-import { expect } from "vitest";
-import * as matchers from "@testing-library/jest-dom/matchers";
+// Registers jest-dom matchers on Vitest's `expect` (runtime) and augments its
+// `Assertion` type with `toBeInTheDocument` etc. (types) in one import.
+import "@testing-library/jest-dom/vitest";
 
 declare global {
   interface Window {
@@ -14,9 +15,6 @@ declare global {
     matchMedia?: Window["matchMedia"];
   }
 }
-
-// // add jest-dom matchers to Vitest's expect
-expect.extend(matchers);
 
 if (typeof window !== "undefined" && !window.matchMedia) {
   window.matchMedia = () => ({
