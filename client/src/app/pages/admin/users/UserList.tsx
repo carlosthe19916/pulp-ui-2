@@ -35,6 +35,7 @@ import {
 
 import type { UserResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { RENDER_DATETIME_FORMAT } from "@app/Constants";
 import { useUsersListQuery } from "@app/queries/users";
@@ -42,6 +43,7 @@ import { isForbiddenError } from "@app/utils/isHttpError";
 
 import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { UserCreateModal, UserEditModal } from "./components/UserModal";
+import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
 
 // Per-column PatternFly Th/Td props, carried on the TanStack column definition so
@@ -67,6 +69,7 @@ export const UserList: React.FC = () => {
   const [usernameFilter, setUsernameFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserResponse | null>(null);
+  const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
   const [deleteHref, setDeleteHref] = useState<string | null>(null);
 
   const { deleteUser, isDeleting } = useUserActions();
@@ -115,10 +118,10 @@ export const UserList: React.FC = () => {
             : "—",
       },
       {
-        id: "edit",
+        id: "roles",
         header: "",
         meta: {
-          screenReaderHeader: "Edit user",
+          screenReaderHeader: "Manage roles",
           hasAction: true,
           fitContent: true,
         },
@@ -126,9 +129,9 @@ export const UserList: React.FC = () => {
           <TableText>
             <Button
               variant="secondary"
-              onClick={() => setEditUser(row.original)}
+              onClick={() => setRolesUser(row.original)}
             >
-              Edit
+              Roles
             </Button>
           </TableText>
         ),
@@ -140,6 +143,10 @@ export const UserList: React.FC = () => {
         cell: ({ row }) => (
           <ActionsColumn
             items={[
+              {
+                title: "Edit",
+                onClick: () => setEditUser(row.original),
+              },
               {
                 title: "Delete",
                 isDanger: true,
@@ -218,9 +225,10 @@ export const UserList: React.FC = () => {
             </ToolbarContent>
           </Toolbar>
 
-          {isLoading ? (
-            <Spinner aria-label="Loading users" />
-          ) : (
+          <LoadingWrapper
+            isFetching={isLoading}
+            isFetchingState={<Spinner aria-label="Loading users" />}
+          >
             <Table aria-label="Users table" variant="compact">
               <Thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -272,7 +280,7 @@ export const UserList: React.FC = () => {
                 )}
               </Tbody>
             </Table>
-          )}
+          </LoadingWrapper>
 
           <Pagination
             itemCount={totalCount}
@@ -296,6 +304,14 @@ export const UserList: React.FC = () => {
               isOpen
               user={editUser}
               onClose={() => setEditUser(null)}
+            />
+          )}
+
+          {rolesUser && (
+            <UserRolesModal
+              isOpen
+              user={rolesUser}
+              onClose={() => setRolesUser(null)}
             />
           )}
 

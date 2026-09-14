@@ -2,20 +2,16 @@ import type React from "react";
 
 import {
   Button,
-  Divider,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
-  Stack,
-  StackItem,
 } from "@patternfly/react-core";
 
 import type { UserResponse } from "@app/client";
 
 import { useUserForm } from "../hooks/useUserForm";
 import { UserForm } from "./UserForm";
-import { UserRolesField } from "./UserRolesField";
 
 interface IUserModalProps {
   user?: UserResponse;
@@ -38,21 +34,7 @@ const UserModal: React.FC<IUserModalProps> = ({ user, onClose }) => {
         title={isCreate ? "Create User" : `Edit ${user?.username}`}
       />
       <ModalBody>
-        <Stack hasGutter>
-          <StackItem>
-            <UserForm form={form} isCreate={isCreate} onSubmit={onSubmit} />
-          </StackItem>
-          {!isCreate && user?.pulp_href && (
-            <>
-              <StackItem>
-                <Divider />
-              </StackItem>
-              <StackItem>
-                <UserRolesField userHref={user.pulp_href} />
-              </StackItem>
-            </>
-          )}
-        </Stack>
+        <UserForm form={form} isCreate={isCreate} onSubmit={onSubmit} />
       </ModalBody>
       <ModalFooter>
         <Button
