@@ -1,13 +1,14 @@
 import type React from "react";
-import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
+import { flexRender, type RowData } from "@tanstack/react-table";
 
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import "./columnMeta";
+import type { DataTableInstance } from "./useDataTable";
 
-interface IDataTableProps<TData> {
+interface IDataTableProps<TData extends RowData> {
   /** The TanStack Table instance, typically from {@link useDataTable}. */
-  table: TanStackTable<TData>;
+  table: DataTableInstance<TData>;
   /** Accessible label for the table. */
   ariaLabel: string;
   /** PatternFly table variant. Defaults to `"compact"`. */
@@ -26,14 +27,14 @@ interface IDataTableProps<TData> {
  * `meta` fields (see `columnMeta.ts`) drive per-cell PatternFly props such as
  * screen-reader headers and action-cell styling.
  */
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   table,
   ariaLabel,
   variant = "compact",
   isEmpty,
   emptyStateContent,
 }: IDataTableProps<TData>) {
-  const columnCount = table.getVisibleLeafColumns().length;
+  const columnCount = table.getAllLeafColumns().length;
 
   return (
     <Table aria-label={ariaLabel} variant={variant}>
@@ -64,7 +65,7 @@ export function DataTable<TData>({
         ) : (
           table.getRowModel().rows.map((row) => (
             <Tr key={row.id}>
-              {row.getVisibleCells().map((cell) => {
+              {row.getAllCells().map((cell) => {
                 const meta = cell.column.columnDef.meta;
                 return (
                   <Td
