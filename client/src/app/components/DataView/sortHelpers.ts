@@ -9,11 +9,11 @@ type DataViewOnSort = (
   direction: ISortBy["direction"],
 ) => void;
 
-interface IBuildThSortArgs {
-  /** All column keys in render order (index ↔ key bridge). */
-  columnKeys: string[];
-  /** Index of the column these `Th` sort props are for. */
-  columnIndex: number;
+interface IBuildThSortArgs<K extends string> {
+  /** All column keys in render order (key ↔ index bridge). */
+  columnKeys: readonly K[];
+  /** Key of the column these `Th` sort props are for. */
+  columnKey: K;
   /** Currently sorted column key (from `useDataViewSort`). */
   sortBy: string | undefined;
   /** Current sort direction (from `useDataViewSort`). */
@@ -25,24 +25,24 @@ interface IBuildThSortArgs {
 /**
  * Build PatternFly `Th` sort props for one column, bridging react-data-view's
  * **string-keyed** sort state to PatternFly's **index-based** `ThSortType`.
- * PatternFly reports the clicked column by index, so we map that index back to
- * this column's key before handing it to the hook's `onSort`.
+ * Callers pass a column key; the index PatternFly needs is derived from
+ * `columnKeys`, and the clicked column is reported back to `onSort` by key.
  */
-export function buildThSort({
+export const buildThSort = <K extends string>({
   columnKeys,
-  columnIndex,
+  columnKey,
   sortBy,
   direction,
   onSort,
-}: IBuildThSortArgs): ThProps["sort"] {
-  const columnKey = columnKeys[columnIndex];
+}: IBuildThSortArgs<K>): ThProps["sort"] => {
+  const columnIndex = columnKeys.indexOf(columnKey);
   return {
     sortBy: {
-      index: sortBy ? columnKeys.indexOf(sortBy) : undefined,
+      index: sortBy ? columnKeys.indexOf(sortBy as K) : undefined,
       direction: sortBy ? direction : undefined,
     },
     onSort: (event, _columnIndex, newDirection) =>
       onSort(event, columnKey, newDirection),
     columnIndex,
   };
-}
+};

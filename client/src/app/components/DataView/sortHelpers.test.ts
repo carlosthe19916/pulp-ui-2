@@ -4,12 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { buildThSort } from "./sortHelpers";
 
 describe("buildThSort", () => {
-  const columnKeys = ["username", "email", "date_joined"];
+  const columnKeys = ["username", "email", "date_joined"] as const;
 
   it("marks the active column with its index and direction", () => {
     const sort = buildThSort({
       columnKeys,
-      columnIndex: 2,
+      columnKey: "date_joined",
       sortBy: "date_joined",
       direction: "desc",
       onSort: vi.fn(),
@@ -22,7 +22,7 @@ describe("buildThSort", () => {
   it("leaves index/direction unset for non-active columns", () => {
     const sort = buildThSort({
       columnKeys,
-      columnIndex: 0,
+      columnKey: "username",
       sortBy: undefined,
       direction: undefined,
       onSort: vi.fn(),
@@ -35,7 +35,7 @@ describe("buildThSort", () => {
     const onSort = vi.fn();
     const sort = buildThSort({
       columnKeys,
-      columnIndex: 0,
+      columnKey: "username",
       sortBy: "username",
       direction: "asc",
       onSort,

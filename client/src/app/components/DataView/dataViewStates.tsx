@@ -23,9 +23,9 @@ interface IDataViewStateNodes {
  * `DataViewState`. Defaults mirror the loading / error / empty visuals the app
  * used before adopting react-data-view; any slot can be overridden per page.
  */
-export function dataViewBodyStates(
+export const dataViewBodyStates = (
   overrides: IDataViewStateNodes = {},
-): Partial<Record<DataViewState, React.ReactNode>> {
+): Partial<Record<DataViewState, React.ReactNode>> => {
   return {
     [DataViewState.loading]: overrides.loading ?? (
       <Bullseye>
@@ -48,7 +48,7 @@ export function dataViewBodyStates(
       <EmptyState titleText="No results found" headingLevel="h4" />
     ),
   };
-}
+};
 
 interface IComputeActiveStateArgs {
   isLoading?: boolean;
@@ -60,13 +60,13 @@ interface IComputeActiveStateArgs {
  * Resolve the single active `DataViewState` for `DataView.activeState`.
  * Precedence: loading → error → empty; otherwise `undefined` (render rows).
  */
-export function computeActiveState({
+export const computeActiveState = ({
   isLoading,
   isError,
   isEmpty,
-}: IComputeActiveStateArgs): DataViewState | undefined {
+}: IComputeActiveStateArgs): DataViewState | undefined => {
   if (isLoading) return DataViewState.loading;
   if (isError) return DataViewState.error;
   if (isEmpty) return DataViewState.empty;
   return undefined;
-}
+};

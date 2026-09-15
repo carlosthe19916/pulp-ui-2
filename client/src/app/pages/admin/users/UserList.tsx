@@ -9,6 +9,7 @@ import {
   Label,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
 import { ActionsColumn, TableText } from "@patternfly/react-table";
 import {
@@ -48,7 +49,8 @@ const COLUMN_KEYS = [
   "date_joined",
   "roles",
   "actions",
-];
+] as const;
+type UserColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IUserFilters {
   username: string;
@@ -98,24 +100,24 @@ export const UserList: React.FC = () => {
   const totalCount = filtered.length;
   const users = sorted.slice((page - 1) * perPage, page * perPage);
 
-  const sortProps = (columnIndex: number) =>
+  const sortProps = (columnKey: UserColumnKey) =>
     buildThSort({
       columnKeys: COLUMN_KEYS,
-      columnIndex,
+      columnKey,
       sortBy,
       direction,
-      onSort: (event, columnKey, newDirection) => {
-        onSort(event, columnKey, newDirection);
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
         onSetPage(undefined, 1);
       },
     });
 
   const columns = [
-    { cell: "Username", props: { sort: sortProps(0) } },
+    { cell: "Username", props: { sort: sortProps("username") } },
     "Email",
     "Active",
     "Groups",
-    { cell: "Date Joined", props: { sort: sortProps(4) } },
+    { cell: "Date Joined", props: { sort: sortProps("date_joined") } },
     { cell: "", props: { screenReaderText: "Manage roles" } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
@@ -172,8 +174,9 @@ export const UserList: React.FC = () => {
     isEmpty: users.length === 0,
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -222,7 +225,7 @@ export const UserList: React.FC = () => {
                   Create user
                 </Button>
               }
-              pagination={pagination}
+              pagination={pagination(PaginationVariant.top)}
             />
 
             <DataViewTable
@@ -236,7 +239,9 @@ export const UserList: React.FC = () => {
               })}
             />
 
-            <DataViewToolbar pagination={pagination} />
+            <DataViewToolbar
+              pagination={pagination(PaginationVariant.bottom)}
+            />
           </DataView>
 
           <UserCreateModal
