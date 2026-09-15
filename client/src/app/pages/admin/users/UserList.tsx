@@ -25,12 +25,12 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useAllUsersListQuery } from "@app/queries/users";
 import { formatDateTime, universalComparator } from "@app/utils/utils";
 
-import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { UserCreateModal, UserEditModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
@@ -249,11 +249,11 @@ export const UserList: React.FC = () => {
           />
         )}
 
-        <ConfirmDeleteModal
+        <ConfirmActionModal
           isOpen={!!deleteTarget}
           title="Delete User"
           body={`Are you sure you want to delete "${deleteTarget?.username}"? This action cannot be undone.`}
-          isDeleting={isDeleting}
+          isConfirming={isDeleting}
           onConfirm={() => void handleDelete()}
           onCancel={() => setDeleteTarget(null)}
         />

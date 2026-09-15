@@ -1,11 +1,10 @@
 import type { PatchedUser, UserWritable } from "@app/client";
-import { useNotifications } from "@app/context/useNotifications";
+import { useMutationAction } from "@app/hooks/useMutationAction";
 import {
   useUserCreateMutation,
   useUserDeleteMutation,
   useUserUpdateMutation,
 } from "@app/queries/users";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
 /**
  * Binds the user create/update/delete mutations to success/failure toast
@@ -14,60 +13,28 @@ import { getMutationErrorMessage } from "@app/utils/utils";
  * Each action rethrows on failure so callers can keep a modal open on error.
  */
 export const useUserActions = () => {
-  const { addNotification } = useNotifications();
+  const { runAction } = useMutationAction();
   const createMutation = useUserCreateMutation();
   const updateMutation = useUserUpdateMutation();
   const deleteMutation = useUserDeleteMutation();
 
-  const createUser = async (body: UserWritable) => {
-    try {
-      const result = await createMutation.mutateAsync(body);
-      addNotification({
-        title: `User "${result.username}" created`,
-        variant: "success",
-      });
-      return result;
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create user"),
-        variant: "danger",
-      });
-      throw error;
-    }
-  };
+  const createUser = async (body: UserWritable) =>
+    runAction(() => createMutation.mutateAsync(body), {
+      successTitle: (result) => `User "${result.username}" created`,
+      errorTitle: "Failed to create user",
+    });
 
-  const updateUser = async (href: string, body: PatchedUser) => {
-    try {
-      const result = await updateMutation.mutateAsync({ href, body });
-      addNotification({
-        title: `User "${result.username}" updated`,
-        variant: "success",
-      });
-      return result;
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update user"),
-        variant: "danger",
-      });
-      throw error;
-    }
-  };
+  const updateUser = async (href: string, body: PatchedUser) =>
+    runAction(() => updateMutation.mutateAsync({ href, body }), {
+      successTitle: (result) => `User "${result.username}" updated`,
+      errorTitle: "Failed to update user",
+    });
 
-  const deleteUser = async (href: string, username: string) => {
-    try {
-      await deleteMutation.mutateAsync(href);
-      addNotification({
-        title: `User "${username}" deleted`,
-        variant: "success",
-      });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete user"),
-        variant: "danger",
-      });
-      throw error;
-    }
-  };
+  const deleteUser = async (href: string, username: string) =>
+    runAction(() => deleteMutation.mutateAsync(href), {
+      successTitle: `User "${username}" deleted`,
+      errorTitle: "Failed to delete user",
+    });
 
   return {
     createUser,

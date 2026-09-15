@@ -14,24 +14,20 @@ import {
   DescriptionListTerm,
   Label,
   LabelGroup,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { useNotifications } from "@app/context/useNotifications";
 import { useApiDomain } from "@app/hooks/useApiDomain";
-import { useRoleDeleteMutation, useRoleDetailQuery } from "@app/queries/roles";
+import { useRoleDetailQuery } from "@app/queries/roles";
 import { buildRoleHref } from "@app/queries/utils/pulpHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRoleModal } from "./components/EditRoleModal";
+import { RoleEditModal } from "./components/RoleModal";
+import { useRoleActions } from "./hooks/useRoleActions";
 
 interface IRoleDetailProps {
   roleId: string;
@@ -42,24 +38,16 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
   const domain = useApiDomain();
   const roleHref = buildRoleHref(roleId, domain);
   const { data: role, isLoading, error } = useRoleDetailQuery(roleHref);
-  const deleteMutation = useRoleDeleteMutation();
-  const { addNotification } = useNotifications();
+  const { deleteRole, isDeleting } = useRoleActions();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(roleHref);
-      addNotification({
-        title: `Role "${role?.name}" deleted`,
-        variant: "success",
-      });
+      await deleteRole(roleHref, role?.name ?? "");
       void navigate({ to: "/admin/roles" });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete role"),
-        variant: "danger",
-      });
+    } catch {
+      // Notifications are handled in useRoleActions.
     }
     setIsDeleteOpen(false);
   };
@@ -157,35 +145,20 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
               </Stack>
             </PageSection>
 
-            <EditRoleModal
+            <RoleEditModal
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               role={role}
             />
 
-            <Modal
+            <ConfirmActionModal
               isOpen={isDeleteOpen}
-              onClose={() => setIsDeleteOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Delete Role" />
-              <ModalBody>
-                Are you sure you want to delete the role &quot;{role.name}
-                &quot;? This action cannot be undone.
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="danger"
-                  onClick={() => void handleDelete()}
-                  isLoading={deleteMutation.isPending}
-                >
-                  Delete
-                </Button>
-                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+              title="Delete Role"
+              body={`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`}
+              isConfirming={isDeleting}
+              onConfirm={() => void handleDelete()}
+              onCancel={() => setIsDeleteOpen(false)}
+            />
           </>
         ) : null}
       </DetailQueryGate>

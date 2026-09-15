@@ -28,6 +28,18 @@ interface IBuildThSortArgs<K extends string> {
  * Callers pass a column key; the index PatternFly needs is derived from
  * `columnKeys`, and the clicked column is reported back to `onSort` by key.
  */
+/**
+ * Turn react-data-view's string-keyed sort state into a Pulp `ordering` query
+ * param (`"name"` / `"-name"`). Returns `undefined` when nothing is sorted, so
+ * server-paginated lists can pass it straight to their list query. Callers cast
+ * the result to their domain's `ordering` enum type.
+ */
+export const toOrderingParam = (
+  sortBy: string | undefined,
+  direction: ISortBy["direction"],
+): string | undefined =>
+  sortBy ? (direction === "desc" ? `-${sortBy}` : sortBy) : undefined;
+
 export const buildThSort = <K extends string>({
   columnKeys,
   columnKey,

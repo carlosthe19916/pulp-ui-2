@@ -7,10 +7,6 @@ import {
   Content,
   ContentVariants,
   Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
   Select,
@@ -28,23 +24,22 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import { dataViewBodyStates } from "@app/components/DataView";
-import { DocumentTitle } from "@app/components/DocumentTitle";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useNotifications } from "@app/context/useNotifications";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
-  type TaskState,
-  useTaskCancelMutation,
-  useTaskPurgeMutation,
-  useTasksListQuery,
-} from "@app/queries/tasks";
-import { isForbiddenError } from "@app/utils/isHttpError";
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { type TaskState, useTasksListQuery } from "@app/queries/tasks";
 import { extractTaskId } from "@app/utils/taskHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+import { formatDateTime } from "@app/utils/utils";
+
+import { useTaskActions } from "./hooks/useTaskActions";
 
 const stateColors: Record<
   string,
@@ -79,6 +74,15 @@ function isCancelable(state?: string | null) {
   return state === "running" || state === "waiting";
 }
 
+const COLUMN_KEYS = [
+  "name",
+  "state",
+  "started_at",
+  "finished_at",
+  "actions",
+] as const;
+type TaskColumnKey = (typeof COLUMN_KEYS)[number];
+
 interface ITaskFilters {
   name: string;
 }
@@ -89,20 +93,25 @@ export const TaskList: React.FC = () => {
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
   const [cancelHref, setCancelHref] = useState<string | null>(null);
 
-  const { addNotification } = useNotifications();
-  const cancelMutation = useTaskCancelMutation();
-  const purgeMutation = useTaskPurgeMutation();
+  const { cancelTask, purgeTasks, isCanceling, isPurging } = useTaskActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
   });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "pulp_created", direction: "desc" },
+  });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ITaskFilters>({ initialFilters: { name: "" } });
+
+  const ordering = toOrderingParam(sortBy, direction) as NonNullable<
+    Parameters<typeof useTasksListQuery>[0]
+  >["ordering"];
 
   const { data, isLoading, error } = useTasksListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    ordering: "-pulp_created",
+    ordering,
     name__contains: filters.name || undefined,
     state: stateFilter || undefined,
   });
@@ -110,11 +119,23 @@ export const TaskList: React.FC = () => {
   const tasks = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
+  const sortProps = (columnKey: TaskColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const columns = [
-    "Name",
-    "State",
-    "Started",
-    "Finished",
+    { cell: "Name", props: { sort: sortProps("name") } },
+    { cell: "State", props: { sort: sortProps("state") } },
+    { cell: "Started", props: { sort: sortProps("started_at") } },
+    { cell: "Finished", props: { sort: sortProps("finished_at") } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
@@ -216,39 +237,18 @@ export const TaskList: React.FC = () => {
   const handleCancel = async () => {
     if (!cancelHref) return;
     try {
-      await cancelMutation.mutateAsync(cancelHref);
-      addNotification({
-        title: "Task cancel requested",
-        variant: "info",
-      });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to cancel task"),
-        variant: "danger",
-      });
+      await cancelTask(cancelHref);
+    } catch {
+      // Notifications are handled in useTaskActions.
     }
     setCancelHref(null);
   };
 
   const handlePurge = async () => {
     try {
-      const result = await purgeMutation.mutateAsync({
-        states: ["completed", "failed", "canceled", "skipped"],
-      });
-      const taskHref = result?.task;
-      if (taskHref) {
-        notifyTaskStarted(addNotification, taskHref, "Purge task started");
-      } else {
-        addNotification({
-          title: "Purge requested",
-          variant: "info",
-        });
-      }
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to purge tasks"),
-        variant: "danger",
-      });
+      await purgeTasks();
+    } catch {
+      // Notifications are handled in useTaskActions.
     }
     setIsPurgeOpen(false);
   };
@@ -256,95 +256,68 @@ export const TaskList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Tasks" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Tasks</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Tasks</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <>
-                  <DataViewFilters
-                    onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                    values={filters}
-                  >
-                    <DataViewTextFilter filterId="name" title="Name" />
-                  </DataViewFilters>
-                  {stateSelect}
-                </>
-              }
-              actions={
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsPurgeOpen(true)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <>
+                <DataViewFilters
+                  onChange={(_key, newFilters) => {
+                    onSetFilters(newFilters);
+                    onSetPage(undefined, 1);
+                  }}
+                  values={filters}
                 >
-                  Purge tasks
-                </Button>
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Tasks table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <Modal
-            isOpen={!!cancelHref}
-            onClose={() => setCancelHref(null)}
-            variant="small"
-          >
-            <ModalHeader title="Cancel Task" />
-            <ModalBody>Are you sure you want to cancel this task?</ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleCancel()}
-                isLoading={cancelMutation.isPending}
-              >
-                Cancel Task
+                  <DataViewTextFilter filterId="name" title="Name" />
+                </DataViewFilters>
+                {stateSelect}
+              </>
+            }
+            actions={
+              <Button variant="secondary" onClick={() => setIsPurgeOpen(true)}>
+                Purge tasks
               </Button>
-              <Button variant="link" onClick={() => setCancelHref(null)}>
-                Close
-              </Button>
-            </ModalFooter>
-          </Modal>
+            }
+            pagination={pagination}
+          />
 
-          <Modal
-            isOpen={isPurgeOpen}
-            onClose={() => setIsPurgeOpen(false)}
-            variant="small"
-          >
-            <ModalHeader title="Purge Tasks" />
-            <ModalBody>
-              Purge completed, failed, canceled, and skipped tasks? This starts
-              an asynchronous purge task.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handlePurge()}
-                isLoading={purgeMutation.isPending}
-              >
-                Purge
-              </Button>
-              <Button variant="link" onClick={() => setIsPurgeOpen(false)}>
-                Close
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </PageSection>
-      )}
+          <DataViewTable
+            aria-label="Tasks table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <ConfirmActionModal
+          isOpen={!!cancelHref}
+          title="Cancel Task"
+          body="Are you sure you want to cancel this task?"
+          isConfirming={isCanceling}
+          confirmLabel="Cancel Task"
+          cancelLabel="Close"
+          confirmVariant="primary"
+          onConfirm={() => void handleCancel()}
+          onCancel={() => setCancelHref(null)}
+        />
+
+        <ConfirmActionModal
+          isOpen={isPurgeOpen}
+          title="Purge Tasks"
+          body="Purge completed, failed, canceled, and skipped tasks? This starts an asynchronous purge task."
+          isConfirming={isPurging}
+          confirmLabel="Purge"
+          cancelLabel="Close"
+          confirmVariant="primary"
+          onConfirm={() => void handlePurge()}
+          onCancel={() => setIsPurgeOpen(false)}
+        />
+      </PageSection>
     </>
   );
 };

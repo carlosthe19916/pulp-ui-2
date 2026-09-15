@@ -1,31 +1,49 @@
 import type React from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
 import {
   Button,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
-  TextInput,
 } from "@patternfly/react-core";
 
-import { useNotifications } from "@app/context/useNotifications";
-import { useGroupCreateMutation } from "@app/queries/groups";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { useGroupForm } from "../hooks/useGroupForm";
+import { GroupForm } from "./GroupForm";
 
-const createGroupSchema = yup.object({
-  name: yup.string().required("Name is required"),
-});
+interface IGroupModalProps {
+  onClose: () => void;
+}
 
-type CreateGroupFormValues = yup.InferType<typeof createGroupSchema>;
+/**
+ * Inner modal that owns the form state. Only mounted while open (see the
+ * wrapper below) so react-hook-form re-initializes on every open.
+ */
+const GroupModal: React.FC<IGroupModalProps> = ({ onClose }) => {
+  const { form, onSubmit, isSubmitting } = useGroupForm({ onClose });
+
+  return (
+    <Modal isOpen onClose={onClose} variant="small">
+      <ModalHeader title="Create Group" />
+      <ModalBody>
+        <GroupForm form={form} onSubmit={onSubmit} />
+      </ModalBody>
+      <ModalFooter>
+        <Button
+          variant="primary"
+          onClick={onSubmit}
+          isLoading={isSubmitting}
+          isDisabled={isSubmitting}
+        >
+          Create
+        </Button>
+        <Button variant="link" onClick={onClose}>
+          Cancel
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+};
 
 interface ICreateGroupModalProps {
   isOpen: boolean;
@@ -35,90 +53,4 @@ interface ICreateGroupModalProps {
 export const CreateGroupModal: React.FC<ICreateGroupModalProps> = ({
   isOpen,
   onClose,
-}) => {
-  const { addNotification } = useNotifications();
-  const createMutation = useGroupCreateMutation();
-
-  const {
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateGroupFormValues>({
-    resolver: yupResolver(createGroupSchema),
-    defaultValues: { name: "" },
-  });
-
-  const name = watch("name");
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      const result = await createMutation.mutateAsync({ name: values.name });
-      addNotification({
-        title: `Group "${result.name}" created`,
-        variant: "success",
-      });
-      reset();
-      onClose();
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create group"),
-        variant: "danger",
-      });
-    }
-  });
-
-  const handleClose = () => {
-    reset();
-    onClose();
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={handleClose} variant="small">
-      <ModalHeader title="Create Group" />
-      <ModalBody>
-        <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void onSubmit();
-          }}
-        >
-          <FormGroup label="Name" isRequired fieldId="group-name">
-            <TextInput
-              id="group-name"
-              value={name}
-              onChange={(_e, value) =>
-                setValue("name", value, { shouldValidate: true })
-              }
-              isRequired
-              validated={errors.name ? "error" : "default"}
-            />
-            {errors.name && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant="error">
-                    {errors.name.message}
-                  </HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
-        </Form>
-      </ModalBody>
-      <ModalFooter>
-        <Button
-          variant="primary"
-          onClick={() => void onSubmit()}
-          isDisabled={isSubmitting || createMutation.isPending}
-          isLoading={isSubmitting || createMutation.isPending}
-        >
-          Create
-        </Button>
-        <Button variant="link" onClick={handleClose}>
-          Cancel
-        </Button>
-      </ModalFooter>
-    </Modal>
-  );
-};
+}) => (isOpen ? <GroupModal onClose={onClose} /> : null);

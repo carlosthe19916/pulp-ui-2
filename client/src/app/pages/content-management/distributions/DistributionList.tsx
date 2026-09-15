@@ -6,10 +6,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
 } from "@patternfly/react-core";
@@ -21,40 +17,50 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { DistributionResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/DataView";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useNotifications } from "@app/context/useNotifications";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
-import { useFileDistributionDeleteMutation } from "@app/queries/file-distributions";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
-import { isForbiddenError } from "@app/utils/isHttpError";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateDistributionModal } from "./components/CreateDistributionModal";
+import { useDistributionActions } from "./hooks/useDistributionActions";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated
  * type does not include it. Extend the base type for list usage.
  */
 type DistributionRow = DistributionResponse & { pulp_type?: string };
+
+const COLUMN_KEYS = [
+  "name",
+  "base_path",
+  "type",
+  "repository",
+  "actions",
+] as const;
+type DistributionColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IDistributionFilters {
   name: string;
@@ -67,21 +73,26 @@ export const DistributionList: React.FC = () => {
   );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const { addNotification } = useNotifications();
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const deleteMutation = useFileDistributionDeleteMutation();
+  const { deleteDistribution, isDeleting } = useDistributionActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
+  });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IDistributionFilters>({
       initialFilters: { name: "", pulp_type: "" },
     });
 
+  const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
+
   const { data, isLoading, error } = useDistributionsListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
+    ordering,
     name__icontains: filters.name || undefined,
     pulp_type: filters.pulp_type
       ? (filters.pulp_type as NonNullable<
@@ -108,8 +119,20 @@ export const DistributionList: React.FC = () => {
     d.isAvailable(plugins),
   );
 
+  const sortProps = (columnKey: DistributionColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const columns = [
-    "Name",
+    { cell: "Name", props: { sort: sortProps("name") } },
     "Base Path",
     "Type",
     "Repository",
@@ -219,25 +242,9 @@ export const DistributionList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(deleteTarget.pulp_href);
-      const taskHref = result?.task;
-      if (taskHref) {
-        notifyTaskStarted(
-          addNotification,
-          taskHref,
-          `Distribution "${deleteTarget.name}" delete started`,
-        );
-      } else {
-        addNotification({
-          title: `Distribution "${deleteTarget.name}" deleted`,
-          variant: "success",
-        });
-      }
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete distribution"),
-        variant: "danger",
-      });
+      await deleteDistribution(deleteTarget.pulp_href, deleteTarget.name);
+    } catch {
+      // Notifications are handled in useDistributionActions.
     }
     setDeleteTarget(null);
   };
@@ -245,83 +252,62 @@ export const DistributionList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Distributions" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Distributions</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Distributions</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="name" title="Name" />
-                  <DataViewTextFilter
-                    filterId="pulp_type"
-                    title="Type"
-                    placeholder="pulp_type (e.g. file.file)"
-                  />
-                </DataViewFilters>
-              }
-              actions={
-                canCreate ? (
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsCreateOpen(true)}
-                  >
-                    Create distribution
-                  </Button>
-                ) : undefined
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Distributions table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <CreateDistributionModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="name" title="Name" />
+                <DataViewTextFilter
+                  filterId="pulp_type"
+                  title="Type"
+                  placeholder="pulp_type (e.g. file.file)"
+                />
+              </DataViewFilters>
+            }
+            actions={
+              canCreate ? (
+                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                  Create distribution
+                </Button>
+              ) : undefined
+            }
+            pagination={pagination}
           />
 
-          <Modal
-            isOpen={!!deleteTarget}
-            onClose={() => setDeleteTarget(null)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Distribution" />
-            <ModalBody>
-              Are you sure you want to delete distribution &quot;
-              {deleteTarget?.name}&quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setDeleteTarget(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </PageSection>
-      )}
+          <DataViewTable
+            aria-label="Distributions table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <CreateDistributionModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
+
+        <ConfirmActionModal
+          isOpen={!!deleteTarget}
+          title="Delete Distribution"
+          body={`Are you sure you want to delete distribution "${deleteTarget?.name}"? This action cannot be undone.`}
+          isConfirming={isDeleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </PageSection>
     </>
   );
 };

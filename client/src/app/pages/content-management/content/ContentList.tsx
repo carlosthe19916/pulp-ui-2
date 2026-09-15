@@ -21,14 +21,12 @@ import type { MultipleArtifactContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
 import { useContentListQuery } from "@app/queries/content";
-import { isForbiddenError } from "@app/utils/isHttpError";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { UploadModal } from "@app/components/UploadModal";
@@ -129,45 +127,36 @@ export const ContentList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Content" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Content</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Content</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              actions={
-                canUpload ? (
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsUploadOpen(true)}
-                  >
-                    Upload content
-                  </Button>
-                ) : undefined
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Content table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <UploadModal
-            isOpen={isUploadOpen}
-            onClose={() => setIsUploadOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            actions={
+              canUpload ? (
+                <Button variant="primary" onClick={() => setIsUploadOpen(true)}>
+                  Upload content
+                </Button>
+              ) : undefined
+            }
+            pagination={pagination}
           />
-        </PageSection>
-      )}
+
+          <DataViewTable
+            aria-label="Content table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <UploadModal
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+        />
+      </PageSection>
     </>
   );
 };

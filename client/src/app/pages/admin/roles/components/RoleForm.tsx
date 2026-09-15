@@ -1,0 +1,75 @@
+import type React from "react";
+import { useMemo } from "react";
+import { Controller, type UseFormReturn } from "react-hook-form";
+
+import { Form, FormGroup } from "@patternfly/react-core";
+
+import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
+import { useRolesListQuery } from "@app/queries/roles";
+
+import type { RoleFormValues } from "../hooks/useRoleForm";
+import { collectPermissionOptions } from "../utils/permissionOptions";
+import { PermissionMultiSelect } from "./PermissionMultiSelect";
+
+interface IRoleFormProps {
+  form: UseFormReturn<RoleFormValues>;
+  isCreate: boolean;
+  onSubmit: () => void;
+}
+
+export const RoleForm: React.FC<IRoleFormProps> = ({
+  form,
+  isCreate,
+  onSubmit,
+}) => {
+  const { control, watch } = form;
+  const { data: rolesData } = useRolesListQuery({ limit: 200 });
+
+  const permissions = watch("permissions");
+  const permissionOptions = useMemo(
+    () =>
+      collectPermissionOptions(
+        (rolesData?.results ?? []).map((role) => role.permissions),
+        permissions ?? [],
+      ),
+    [permissions, rolesData?.results],
+  );
+
+  return (
+    <Form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
+      <HookFormPFTextInput
+        control={control}
+        name="name"
+        fieldId="role-name"
+        label="Name"
+        isRequired={isCreate}
+        isDisabled={!isCreate}
+      />
+      <HookFormPFTextInput
+        control={control}
+        name="description"
+        fieldId="role-description"
+        label="Description"
+      />
+      <FormGroup label="Permissions" fieldId="role-permissions">
+        <Controller
+          name="permissions"
+          control={control}
+          render={({ field }) => (
+            <PermissionMultiSelect
+              id="role-permissions"
+              options={permissionOptions}
+              value={field.value ?? []}
+              onChange={field.onChange}
+            />
+          )}
+        />
+      </FormGroup>
+    </Form>
+  );
+};

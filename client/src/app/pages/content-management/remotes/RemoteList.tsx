@@ -6,10 +6,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
 } from "@patternfly/react-core";
@@ -21,38 +17,42 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { GenericRemoteResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/DataView";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useNotifications } from "@app/context/useNotifications";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
-import { useFileRemoteDeleteMutation } from "@app/queries/file-remotes";
 import { useRemotesListQuery } from "@app/queries/remotes";
-import { isForbiddenError } from "@app/utils/isHttpError";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateRemoteModal } from "./components/CreateRemoteModal";
+import { useRemoteActions } from "./hooks/useRemoteActions";
 
 /**
  * The aggregation endpoint returns pulp_type at runtime but the generated
  * type does not include it. Extend the base type for list usage.
  */
 type RemoteRow = GenericRemoteResponse & { pulp_type?: string };
+
+const COLUMN_KEYS = ["name", "url", "policy", "type", "actions"] as const;
+type RemoteColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IRemoteFilters {
   name: string;
@@ -63,21 +63,27 @@ export const RemoteList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<RemoteRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const { addNotification } = useNotifications();
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const deleteMutation = useFileRemoteDeleteMutation();
+  const { deleteRemote, isDeleting } = useRemoteActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
+  });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRemoteFilters>({
       initialFilters: { name: "", pulp_type: "" },
     });
 
+  const ordering = toOrderingParam(sortBy, direction) as
+    "name" | "-name" | "url" | "-url" | "policy" | "-policy";
+
   const { data, isLoading, error } = useRemotesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
+    ordering,
     name__icontains: filters.name || undefined,
     pulp_type: filters.pulp_type
       ? (filters.pulp_type as NonNullable<
@@ -93,10 +99,22 @@ export const RemoteList: React.FC = () => {
     d.isAvailable(plugins),
   );
 
+  const sortProps = (columnKey: RemoteColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const columns = [
-    "Name",
-    "URL",
-    "Policy",
+    { cell: "Name", props: { sort: sortProps("name") } },
+    { cell: "URL", props: { sort: sortProps("url") } },
+    { cell: "Policy", props: { sort: sortProps("policy") } },
     "Type",
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
@@ -177,20 +195,9 @@ export const RemoteList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(deleteTarget.pulp_href);
-      const taskHref = result?.task;
-      if (taskHref) {
-        notifyTaskStarted(
-          addNotification,
-          taskHref,
-          `Remote "${deleteTarget.name}" delete started`,
-        );
-      }
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete remote"),
-        variant: "danger",
-      });
+      await deleteRemote(deleteTarget.pulp_href, deleteTarget.name);
+    } catch {
+      // Notifications are handled in useRemoteActions.
     }
     setDeleteTarget(null);
   };
@@ -198,83 +205,62 @@ export const RemoteList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Remotes" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Remotes</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Remotes</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="name" title="Name" />
-                  <DataViewTextFilter
-                    filterId="pulp_type"
-                    title="Type"
-                    placeholder="pulp_type (e.g. file.file)"
-                  />
-                </DataViewFilters>
-              }
-              actions={
-                canCreate ? (
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsCreateOpen(true)}
-                  >
-                    Create remote
-                  </Button>
-                ) : undefined
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Remotes table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <CreateRemoteModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="name" title="Name" />
+                <DataViewTextFilter
+                  filterId="pulp_type"
+                  title="Type"
+                  placeholder="pulp_type (e.g. file.file)"
+                />
+              </DataViewFilters>
+            }
+            actions={
+              canCreate ? (
+                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                  Create remote
+                </Button>
+              ) : undefined
+            }
+            pagination={pagination}
           />
 
-          <Modal
-            isOpen={!!deleteTarget}
-            onClose={() => setDeleteTarget(null)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Remote" />
-            <ModalBody>
-              Are you sure you want to delete remote &quot;{deleteTarget?.name}
-              &quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setDeleteTarget(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </PageSection>
-      )}
+          <DataViewTable
+            aria-label="Remotes table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <CreateRemoteModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
+
+        <ConfirmActionModal
+          isOpen={!!deleteTarget}
+          title="Delete Remote"
+          body={`Are you sure you want to delete remote "${deleteTarget?.name}"? This action cannot be undone.`}
+          isConfirming={isDeleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </PageSection>
     </>
   );
 };

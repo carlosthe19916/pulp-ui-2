@@ -7,10 +7,6 @@ import {
   Content,
   ContentVariants,
   Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
 } from "@patternfly/react-core";
@@ -22,25 +18,38 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { RoleResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/DataView";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useNotifications } from "@app/context/useNotifications";
-import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
-import { isForbiddenError } from "@app/utils/isHttpError";
+import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { CreateRoleModal } from "./components/CreateRoleModal";
+import { RoleCreateModal } from "./components/RoleModal";
+import { useRoleActions } from "./hooks/useRoleActions";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
 function getRolePlugin(name: string): string {
   return name.includes(".") ? name.split(".")[0] : "other";
 }
+
+const COLUMN_KEYS = [
+  "name",
+  "plugin",
+  "description",
+  "permissions",
+  "locked",
+  "actions",
+] as const;
+type RoleColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IRoleFilters {
   name: string;
@@ -49,22 +58,28 @@ interface IRoleFilters {
 
 export const RoleList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [deleteRole, setDeleteRole] = useState<RoleResponse | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RoleResponse | null>(null);
 
-  const { addNotification } = useNotifications();
-  const deleteMutation = useRoleDeleteMutation();
+  const { deleteRole, isDeleting } = useRoleActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
+  });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({
       initialFilters: { name: "", plugin: "" },
     });
 
+  const ordering = toOrderingParam(sortBy, direction) as
+    "name" | "-name" | "locked" | "-locked";
+
   const { data, isLoading, error } = useRolesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
+    ordering,
     name__icontains: filters.name || undefined,
   });
 
@@ -84,12 +99,24 @@ export const RoleList: React.FC = () => {
   );
   const totalCount = filters.plugin ? roles.length : (data?.count ?? 0);
 
+  const sortProps = (columnKey: RoleColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const columns = [
-    "Name",
+    { cell: "Name", props: { sort: sortProps("name") } },
     "Plugin",
     "Description",
     "Permissions",
-    "Locked",
+    { cell: "Locked", props: { sort: sortProps("locked") } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
@@ -143,7 +170,7 @@ export const RoleList: React.FC = () => {
               variant="link"
               isInline
               isDanger
-              onClick={() => setDeleteRole(role)}
+              onClick={() => setDeleteTarget(role)}
             >
               Delete
             </Button>
@@ -172,93 +199,68 @@ export const RoleList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteRole?.pulp_href) return;
+    if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(deleteRole.pulp_href);
-      addNotification({
-        title: `Role "${deleteRole.name}" deleted`,
-        variant: "success",
-      });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete role"),
-        variant: "danger",
-      });
+      await deleteRole(deleteTarget.pulp_href, deleteTarget.name);
+    } catch {
+      // Notifications are handled in useRoleActions.
     }
-    setDeleteRole(null);
+    setDeleteTarget(null);
   };
 
   return (
     <>
       <DocumentTitle title="Roles" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Roles</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Roles</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="name" title="Name" />
-                  <DataViewTextFilter filterId="plugin" title="Plugin" />
-                </DataViewFilters>
-              }
-              actions={
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                  Create Role
-                </Button>
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Roles table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <CreateRoleModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="name" title="Name" />
+                <DataViewTextFilter filterId="plugin" title="Plugin" />
+              </DataViewFilters>
+            }
+            actions={
+              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                Create Role
+              </Button>
+            }
+            pagination={pagination}
           />
 
-          <Modal
-            isOpen={!!deleteRole}
-            onClose={() => setDeleteRole(null)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Role" />
-            <ModalBody>
-              Are you sure you want to delete the role &quot;{deleteRole?.name}
-              &quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setDeleteRole(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </PageSection>
-      )}
+          <DataViewTable
+            aria-label="Roles table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <RoleCreateModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
+
+        <ConfirmActionModal
+          isOpen={!!deleteTarget}
+          title="Delete Role"
+          body={`Are you sure you want to delete the role "${deleteTarget?.name}"? This action cannot be undone.`}
+          isConfirming={isDeleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </PageSection>
     </>
   );
 };

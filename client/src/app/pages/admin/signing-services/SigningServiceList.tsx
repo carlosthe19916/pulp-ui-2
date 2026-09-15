@@ -16,14 +16,20 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import { dataViewBodyStates } from "@app/components/DataView";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
-import { isForbiddenError } from "@app/utils/isHttpError";
+
+const COLUMN_KEYS = ["name", "pubkey_fingerprint", "script"] as const;
+type SigningServiceColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface ISigningServiceFilters {
   name: string;
@@ -33,21 +39,43 @@ export const SigningServiceList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
   });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
+  });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ISigningServiceFilters>({
       initialFilters: { name: "" },
     });
 
+  const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
+
   const { data, isLoading, error } = useSigningServicesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
+    ordering,
     name: filters.name || undefined,
   });
 
   const services = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = ["Name", "Public Key Fingerprint", "Script"];
+  const sortProps = (columnKey: SigningServiceColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
+  const columns = [
+    { cell: "Name", props: { sort: sortProps("name") } },
+    "Public Key Fingerprint",
+    "Script",
+  ];
 
   const rows: DataViewTr[] = services.map((service) => {
     const fp = service.pubkey_fingerprint ?? "";
@@ -92,44 +120,40 @@ export const SigningServiceList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Signing Services" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Signing Services</Content>
-          <Content component={ContentVariants.p}>
-            Signing services are provisioned by an administrator via the Pulp
-            API or CLI; they can&apos;t be created, edited, or deleted from this
-            UI.
-          </Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Signing Services</Content>
+        <Content component={ContentVariants.p}>
+          Signing services are provisioned by an administrator via the Pulp API
+          or CLI; they can&apos;t be created, edited, or deleted from this UI.
+        </Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="name" title="Name" />
-                </DataViewFilters>
-              }
-              pagination={pagination}
-            />
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="name" title="Name" />
+              </DataViewFilters>
+            }
+            pagination={pagination}
+          />
 
-            <DataViewTable
-              aria-label="Signing services table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
+          <DataViewTable
+            aria-label="Signing services table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
 
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-        </PageSection>
-      )}
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+      </PageSection>
     </>
   );
 };

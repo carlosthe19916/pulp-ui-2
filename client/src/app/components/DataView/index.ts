@@ -4,4 +4,4 @@
 // PatternFly's index-based `Th` sort props, and rendering consistent
 // loading/empty/error states.
 export { dataViewBodyStates } from "./dataViewStates";
-export { buildThSort } from "./sortHelpers";
+export { buildThSort, toOrderingParam } from "./sortHelpers";

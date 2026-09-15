@@ -6,10 +6,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Pagination,
 } from "@patternfly/react-core";
@@ -21,23 +17,26 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { GroupResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/DataView";
-import { DocumentTitle } from "@app/components/DocumentTitle";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useNotifications } from "@app/context/useNotifications";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
-  useGroupDeleteMutation,
-  useGroupsListQuery,
-} from "@app/queries/groups";
-import { isForbiddenError } from "@app/utils/isHttpError";
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useGroupsListQuery } from "@app/queries/groups";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateGroupModal } from "./components/CreateGroupModal";
+import { useGroupActions } from "./hooks/useGroupActions";
+
+const COLUMN_KEYS = ["name", "actions"] as const;
+type GroupColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IGroupFilters {
   name: string;
@@ -47,27 +46,43 @@ export const GroupList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GroupResponse | null>(null);
 
-  const { addNotification } = useNotifications();
-  const deleteMutation = useGroupDeleteMutation();
+  const { deleteGroup, isDeleting } = useGroupActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 20,
   });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
+  });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IGroupFilters>({ initialFilters: { name: "" } });
+
+  const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
   const { data, isLoading, error } = useGroupsListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    ordering: "name",
+    ordering,
     name__icontains: filters.name || undefined,
   });
 
   const groups = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
+  const sortProps = (columnKey: GroupColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const columns = [
-    "Name",
+    { cell: "Name", props: { sort: sortProps("name") } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
@@ -121,16 +136,9 @@ export const GroupList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(deleteTarget.pulp_href);
-      addNotification({
-        title: `Group "${deleteTarget.name}" deleted`,
-        variant: "success",
-      });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete group"),
-        variant: "danger",
-      });
+      await deleteGroup(deleteTarget.pulp_href, deleteTarget.name);
+    } catch {
+      // Notifications are handled in useGroupActions.
     }
     setDeleteTarget(null);
   };
@@ -138,73 +146,55 @@ export const GroupList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Groups" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Groups</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Groups</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="name" title="Name" />
-                </DataViewFilters>
-              }
-              actions={
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                  Create Group
-                </Button>
-              }
-              pagination={pagination}
-            />
-
-            <DataViewTable
-              aria-label="Groups table"
-              columns={columns}
-              rows={rows}
-              bodyStates={bodyStates}
-            />
-
-            <DataViewToolbar pagination={pagination} />
-          </DataView>
-
-          <CreateGroupModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="name" title="Name" />
+              </DataViewFilters>
+            }
+            actions={
+              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                Create Group
+              </Button>
+            }
+            pagination={pagination}
           />
 
-          <Modal
-            isOpen={!!deleteTarget}
-            onClose={() => setDeleteTarget(null)}
-            variant="small"
-          >
-            <ModalHeader title="Delete Group" />
-            <ModalBody>
-              Are you sure you want to delete group &quot;{deleteTarget?.name}
-              &quot;? This action cannot be undone.
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => void handleDelete()}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete
-              </Button>
-              <Button variant="link" onClick={() => setDeleteTarget(null)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </Modal>
-        </PageSection>
-      )}
+          <DataViewTable
+            aria-label="Groups table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination} />
+        </DataView>
+
+        <CreateGroupModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
+
+        <ConfirmActionModal
+          isOpen={!!deleteTarget}
+          title="Delete Group"
+          body={`Are you sure you want to delete group "${deleteTarget?.name}"? This action cannot be undone.`}
+          isConfirming={isDeleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </PageSection>
     </>
   );
 };
