@@ -43,10 +43,10 @@ type ContentRow = MultipleArtifactContentResponse & {
   sha256?: string;
 };
 
-function truncate(value: string | null | undefined, max = 20): string {
+const truncate = (value: string | null | undefined, max = 20): string => {
   if (!value) return "—";
   return value.length > max ? `${value.slice(0, max)}...` : value;
-}
+};
 
 export const ContentList: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);

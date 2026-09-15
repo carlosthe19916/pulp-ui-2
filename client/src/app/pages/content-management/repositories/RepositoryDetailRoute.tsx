@@ -6,7 +6,7 @@ const repositoryDetailRouteApi = getRouteApi(
   "/_authenticated/content-management/repositories/$repoId",
 );
 
-export function RepositoryDetailRoute() {
+export const RepositoryDetailRoute = () => {
   const { repoId } = repositoryDetailRouteApi.useParams();
   return <RepositoryDetail repoId={repoId} />;
-}
+};

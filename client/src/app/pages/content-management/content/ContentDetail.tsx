@@ -4,8 +4,6 @@ import { Link } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Content,
-  ContentVariants,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -14,6 +12,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -49,25 +48,22 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
       >
         {content ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/content-management/content">Content</Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>
-                  {content.relative_path}
-                </BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
+            <PageHeader
+              title={content.relative_path}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/content-management/content">Content</Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>
+                    {content.relative_path}
+                  </BreadcrumbItem>
+                </Breadcrumb>
+              }
+            />
 
             <PageSection>
               <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>
-                    {content.relative_path}
-                  </Content>
-                </StackItem>
-
                 <StackItem>
                   <DescriptionList isHorizontal>
                     <DescriptionListGroup>

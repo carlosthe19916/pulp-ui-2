@@ -6,7 +6,7 @@ const contentDetailRouteApi = getRouteApi(
   "/_authenticated/content-management/content/$contentId",
 );
 
-export function ContentDetailRoute() {
+export const ContentDetailRoute = () => {
   const { contentId } = contentDetailRouteApi.useParams();
   return <ContentDetail contentId={contentId} />;
-}
+};

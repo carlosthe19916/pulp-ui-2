@@ -24,6 +24,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -109,37 +110,35 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
         hasData
         loadingLabel="Loading task..."
       >
-        <PageSection>
-          <Breadcrumb>
-            <BreadcrumbItem>
-              <Link to="/tasks">Tasks</Link>
-            </BreadcrumbItem>
-            <BreadcrumbItem isActive>{taskName}</BreadcrumbItem>
-          </Breadcrumb>
-        </PageSection>
+        <PageHeader
+          title={taskName}
+          label={
+            <Label color={stateColors[task.state ?? ""] ?? "grey"}>
+              {task.state}
+            </Label>
+          }
+          breadcrumbs={
+            <Breadcrumb>
+              <BreadcrumbItem>
+                <Link to="/tasks">Tasks</Link>
+              </BreadcrumbItem>
+              <BreadcrumbItem isActive>{taskName}</BreadcrumbItem>
+            </Breadcrumb>
+          }
+          actionMenu={
+            isRunning ? (
+              <Button
+                variant="danger"
+                onClick={() => setIsCancelModalOpen(true)}
+              >
+                Cancel Task
+              </Button>
+            ) : undefined
+          }
+        />
 
         <PageSection>
           <Stack hasGutter>
-            <StackItem>
-              <Content component={ContentVariants.h1}>
-                {taskName}{" "}
-                <Label color={stateColors[task.state ?? ""] ?? "grey"}>
-                  {task.state}
-                </Label>
-              </Content>
-            </StackItem>
-
-            {isRunning && (
-              <StackItem>
-                <Button
-                  variant="danger"
-                  onClick={() => setIsCancelModalOpen(true)}
-                >
-                  Cancel Task
-                </Button>
-              </StackItem>
-            )}
-
             <StackItem>
               <DescriptionList isHorizontal>
                 <DescriptionListGroup>

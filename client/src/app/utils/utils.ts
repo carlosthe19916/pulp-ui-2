@@ -24,10 +24,10 @@ export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
  * Build a user-facing mutation failure message from an unknown thrown value.
  * Surfaces Pulp permission (403) and validation detail when available.
  */
-export function getMutationErrorMessage(
+export const getMutationErrorMessage = (
   error: unknown,
   fallback: string,
-): { title: string; description?: string } {
+): { title: string; description?: string } => {
   if (!axios.isAxiosError(error)) {
     if (error instanceof Error && error.message) {
       return { title: fallback, description: error.message };
@@ -67,7 +67,7 @@ export function getMutationErrorMessage(
   return detail && detail !== fallback
     ? { title: fallback, description: detail }
     : { title: fallback };
-}
+};
 
 // ToolbarChip
 

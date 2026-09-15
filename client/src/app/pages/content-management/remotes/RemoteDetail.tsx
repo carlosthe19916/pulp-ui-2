@@ -6,8 +6,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Content,
-  ContentVariants,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -20,6 +18,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
@@ -95,24 +94,18 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
       >
         {remote ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/content-management/remotes">Remotes</Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{remote.name}</BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
-
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>
-                    {remote.name}
-                  </Content>
-                </StackItem>
-
-                <StackItem>
+            <PageHeader
+              title={remote.name}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/content-management/remotes">Remotes</Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>{remote.name}</BreadcrumbItem>
+                </Breadcrumb>
+              }
+              actionMenu={
+                <>
                   <Button
                     variant="secondary"
                     onClick={() => setIsEditOpen(true)}
@@ -126,8 +119,12 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
                   >
                     Delete
                   </Button>
-                </StackItem>
+                </>
+              }
+            />
 
+            <PageSection>
+              <Stack hasGutter>
                 <StackItem>
                   <DescriptionList isHorizontal>
                     <DescriptionListGroup>

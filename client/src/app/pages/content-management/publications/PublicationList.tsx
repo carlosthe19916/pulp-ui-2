@@ -48,10 +48,10 @@ import { usePublicationActions } from "./hooks/usePublicationActions";
  */
 type PublicationRow = PublicationResponse & { pulp_type?: string };
 
-function truncate(value: string | null | undefined, max = 40): string {
+const truncate = (value: string | null | undefined, max = 40): string => {
   if (!value) return "—";
   return value.length > max ? `${value.slice(0, max)}...` : value;
-}
+};
 
 const COLUMN_KEYS = [
   "publication",

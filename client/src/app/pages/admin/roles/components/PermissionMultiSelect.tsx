@@ -29,13 +29,13 @@ interface IPermissionMultiSelectProps {
 }
 
 /** Searchable multi-select for role permissions, with custom add escape hatch. */
-export function PermissionMultiSelect({
+export const PermissionMultiSelect = ({
   id,
   options,
   value,
   onChange,
   isDisabled,
-}: IPermissionMultiSelectProps) {
+}: IPermissionMultiSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [customPermission, setCustomPermission] = useState("");
@@ -177,4 +177,4 @@ export function PermissionMultiSelect({
       </TextInputGroup>
     </>
   );
-}
+};

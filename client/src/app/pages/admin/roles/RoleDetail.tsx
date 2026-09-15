@@ -18,6 +18,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -63,22 +64,18 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
       >
         {role ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/admin/roles">Roles</Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{role.name}</BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
-
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>{role.name}</Content>
-                </StackItem>
-
-                <StackItem>
+            <PageHeader
+              title={role.name}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/admin/roles">Roles</Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>{role.name}</BreadcrumbItem>
+                </Breadcrumb>
+              }
+              actionMenu={
+                <>
                   <Button
                     variant="primary"
                     onClick={() => setIsEditOpen(true)}
@@ -93,8 +90,12 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
                   >
                     Delete
                   </Button>
-                </StackItem>
+                </>
+              }
+            />
 
+            <PageSection>
+              <Stack hasGutter>
                 <StackItem>
                   <DescriptionList isHorizontal>
                     <DescriptionListGroup>

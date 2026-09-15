@@ -5,8 +5,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Content,
-  ContentVariants,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -15,6 +13,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -36,12 +35,12 @@ interface IBrowseContentDetailProps {
   contentId: string;
 }
 
-function formatBytes(size: number | undefined): string {
+const formatBytes = (size: number | undefined): string => {
   if (size === undefined || size === null) return "—";
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
+};
 
 export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
   distributionId,
@@ -81,28 +80,43 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
     >
       {content ? (
         <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/browse">Browse</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem>
-                <Link to="/browse/$distributionId" params={{ distributionId }}>
-                  {distributionName}
-                </Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{content.relative_path}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+          <PageHeader
+            title={content.relative_path}
+            breadcrumbs={
+              <Breadcrumb>
+                <BreadcrumbItem>
+                  <Link to="/browse">Browse</Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem>
+                  <Link
+                    to="/browse/$distributionId"
+                    params={{ distributionId }}
+                  >
+                    {distributionName}
+                  </Link>
+                </BreadcrumbItem>
+                <BreadcrumbItem isActive>
+                  {content.relative_path}
+                </BreadcrumbItem>
+              </Breadcrumb>
+            }
+            actionMenu={
+              downloadUrl ? (
+                <Button
+                  variant="primary"
+                  component="a"
+                  href={downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download
+                </Button>
+              ) : undefined
+            }
+          />
 
           <PageSection>
             <Stack hasGutter>
-              <StackItem>
-                <Content component={ContentVariants.h1}>
-                  {content.relative_path}
-                </Content>
-              </StackItem>
-
               <StackItem>
                 <DescriptionList isHorizontal>
                   <DescriptionListGroup>
@@ -117,20 +131,6 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
                   />
                 </DescriptionList>
               </StackItem>
-
-              {downloadUrl && (
-                <StackItem>
-                  <Button
-                    variant="primary"
-                    component="a"
-                    href={downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Download
-                  </Button>
-                </StackItem>
-              )}
             </Stack>
           </PageSection>
         </>

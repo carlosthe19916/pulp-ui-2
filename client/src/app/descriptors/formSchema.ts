@@ -3,19 +3,19 @@ import * as yup from "yup";
 import type { IFieldDescriptor } from "./types";
 
 /** Dynamic property access for descriptor-driven UI over OpenAPI objects. */
-export function getFieldValue(entity: object, key: string): unknown {
+export const getFieldValue = (entity: object, key: string): unknown => {
   return Object.hasOwn(entity, key)
     ? Object.getOwnPropertyDescriptor(entity, key)?.value
     : undefined;
-}
+};
 
 /** Convert a typed API entity into a field record for descriptor forms. */
-export function toFieldRecord(entity: object): Record<string, unknown> {
+export const toFieldRecord = (entity: object): Record<string, unknown> => {
   return Object.fromEntries(Object.entries(entity));
-}
+};
 
 /** Build a yup validator for a single field descriptor. */
-function buildFieldValidator(field: IFieldDescriptor): yup.AnySchema {
+const buildFieldValidator = (field: IFieldDescriptor): yup.AnySchema => {
   switch (field.type) {
     case "number": {
       const schema = yup
@@ -47,24 +47,24 @@ function buildFieldValidator(field: IFieldDescriptor): yup.AnySchema {
         : schema;
     }
   }
-}
+};
 
 /** Build a yup object schema mirroring the shape of the given field descriptors. */
-export function buildFieldSchema(
+export const buildFieldSchema = (
   fields: IFieldDescriptor[],
-): yup.AnyObjectSchema {
+): yup.AnyObjectSchema => {
   const shape: Record<string, yup.AnySchema> = {};
   for (const field of fields) {
     shape[field.key] = buildFieldValidator(field);
   }
   return yup.object(shape);
-}
+};
 
 /** Build default form values for the given field descriptors, optionally seeded from an existing record (for edit forms). */
-export function buildDefaultValues(
+export const buildDefaultValues = (
   fields: IFieldDescriptor[],
   source?: object | null,
-): Record<string, unknown> {
+): Record<string, unknown> => {
   const values: Record<string, unknown> = {};
   for (const field of fields) {
     const sourceValue =
@@ -81,12 +81,12 @@ export function buildDefaultValues(
     values[field.key] = field.type === "boolean" ? false : "";
   }
   return values;
-}
+};
 
 /** Strip empty-string/undefined/null values from a submitted form payload, leaving booleans and numbers intact. */
-export function cleanFormValues<T extends Record<string, unknown>>(
+export const cleanFormValues = <T extends Record<string, unknown>>(
   values: Record<string, unknown>,
-): T {
+): T => {
   const cleaned: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(values)) {
     if (value === "" || value === undefined || value === null) {
@@ -95,4 +95,4 @@ export function cleanFormValues<T extends Record<string, unknown>>(
     cleaned[key] = value;
   }
   return cleaned as T;
-}
+};

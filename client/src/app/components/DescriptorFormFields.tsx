@@ -19,9 +19,9 @@ import type { IFieldDescriptor, ResourceKind } from "@app/descriptors/types";
 
 import { TypeaheadSelect, type ITypeaheadOption } from "./TypeaheadSelect";
 
-function isFile(value: unknown): value is File {
+const isFile = (value: unknown): value is File => {
   return typeof File !== "undefined" && value instanceof File;
-}
+};
 
 interface IDescriptorFormFieldsProps<
   TFieldValues extends FieldValues = Record<string, unknown>,
@@ -38,14 +38,14 @@ interface IDescriptorFormFieldsProps<
  * following the same PatternFly Form/FormGroup structure used by the admin
  * user modals (CreateUserModal / EditUserModal).
  */
-export function DescriptorFormFields<
+export const DescriptorFormFields = <
   TFieldValues extends FieldValues = Record<string, unknown>,
 >({
   fields,
   control,
   idPrefix,
   resourceOptions,
-}: IDescriptorFormFieldsProps<TFieldValues>) {
+}: IDescriptorFormFieldsProps<TFieldValues>) => {
   return (
     <>
       {fields.map((field) => {
@@ -222,4 +222,4 @@ export function DescriptorFormFields<
       })}
     </>
   );
-}
+};

@@ -6,7 +6,7 @@ const publicationDetailRouteApi = getRouteApi(
   "/_authenticated/content-management/publications/$pubId",
 );
 
-export function PublicationDetailRoute() {
+export const PublicationDetailRoute = () => {
   const { pubId } = publicationDetailRouteApi.useParams();
   return <PublicationDetail pubId={pubId} />;
-}
+};

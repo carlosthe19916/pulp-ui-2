@@ -6,7 +6,7 @@ const browseContentDetailRouteApi = getRouteApi(
   "/browse/$distributionId/$contentId",
 );
 
-export function BrowseContentDetailRoute() {
+export const BrowseContentDetailRoute = () => {
   const { distributionId, contentId } = browseContentDetailRouteApi.useParams();
   return (
     <BrowseContentDetail
@@ -14,4 +14,4 @@ export function BrowseContentDetailRoute() {
       contentId={contentId}
     />
   );
-}
+};

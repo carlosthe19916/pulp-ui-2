@@ -9,8 +9,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Content,
-  ContentVariants,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -33,6 +31,7 @@ import {
   Tabs,
   TextInput,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
@@ -364,22 +363,18 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
       >
         {group ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/admin/groups">Groups</Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{group.name}</BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
-
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>{group.name}</Content>
-                </StackItem>
-
-                <StackItem>
+            <PageHeader
+              title={group.name}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/admin/groups">Groups</Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>{group.name}</BreadcrumbItem>
+                </Breadcrumb>
+              }
+              actionMenu={
+                <>
                   <Button
                     variant="secondary"
                     onClick={() => {
@@ -395,8 +390,12 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                   >
                     Delete Group
                   </Button>
-                </StackItem>
+                </>
+              }
+            />
 
+            <PageSection>
+              <Stack hasGutter>
                 <StackItem>
                   <DescriptionList isHorizontal>
                     <DescriptionListGroup>

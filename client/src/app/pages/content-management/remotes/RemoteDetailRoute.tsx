@@ -6,7 +6,7 @@ const remoteDetailRouteApi = getRouteApi(
   "/_authenticated/content-management/remotes/$remoteId",
 );
 
-export function RemoteDetailRoute() {
+export const RemoteDetailRoute = () => {
   const { remoteId } = remoteDetailRouteApi.useParams();
   return <RemoteDetail remoteId={remoteId} />;
-}
+};

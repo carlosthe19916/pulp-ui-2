@@ -4,7 +4,7 @@ import { ContentBrowser } from "./ContentBrowser";
 
 const browseDistributionRouteApi = getRouteApi("/browse/$distributionId/");
 
-export function ContentBrowserRoute() {
+export const ContentBrowserRoute = () => {
   const { distributionId } = browseDistributionRouteApi.useParams();
   return <ContentBrowser distributionId={distributionId} />;
-}
+};

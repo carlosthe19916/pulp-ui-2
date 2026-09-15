@@ -39,9 +39,9 @@ import { RoleCreateModal } from "./components/RoleModal";
 import { useRoleActions } from "./hooks/useRoleActions";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
-function getRolePlugin(name: string): string {
+const getRolePlugin = (name: string): string => {
   return name.includes(".") ? name.split(".")[0] : "other";
-}
+};
 
 const COLUMN_KEYS = [
   "name",

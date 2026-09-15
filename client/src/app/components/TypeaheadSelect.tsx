@@ -28,7 +28,7 @@ interface ITypeaheadSelectProps {
 }
 
 /** Single-select typeahead built on PatternFly Select. */
-export function TypeaheadSelect({
+export const TypeaheadSelect = ({
   id,
   ariaLabel,
   placeholder = "Select…",
@@ -36,7 +36,7 @@ export function TypeaheadSelect({
   value,
   onChange,
   isDisabled,
-}: ITypeaheadSelectProps) {
+}: ITypeaheadSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
 
@@ -110,4 +110,4 @@ export function TypeaheadSelect({
       </SelectList>
     </Select>
   );
-}
+};

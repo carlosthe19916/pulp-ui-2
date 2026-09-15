@@ -2,7 +2,7 @@ import { AxiosError } from "axios";
 
 import { isForbiddenError, isHttpError, isNotFoundError } from "./isHttpError";
 
-function axiosErrorWithStatus(status: number): AxiosError {
+const axiosErrorWithStatus = (status: number): AxiosError => {
   const error = new AxiosError("request failed");
   error.response = {
     status,
@@ -12,7 +12,7 @@ function axiosErrorWithStatus(status: number): AxiosError {
     data: {},
   };
   return error;
-}
+};
 
 describe("isHttpError helpers", () => {
   it("detects matching axios status codes", () => {

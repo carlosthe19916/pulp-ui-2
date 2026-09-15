@@ -12,11 +12,11 @@ interface INotifyFn {
 }
 
 /** Toast helper for task-producing operations (202 responses). */
-export function notifyTaskStarted(
+export const notifyTaskStarted = (
   addNotification: INotifyFn,
   taskHref: string,
   title = "Task started",
-) {
+) => {
   const taskId = extractTaskId(taskHref);
   addNotification({
     title,
@@ -31,4 +31,4 @@ export function notifyTaskStarted(
       </>
     ),
   });
-}
+};

@@ -25,7 +25,7 @@ import { useLocalStorage } from "@app/hooks/useStorage";
 import { BrowseLayout } from "./browse-layout";
 import { DefaultLayout } from "./default-layout";
 
-export function RootComponent() {
+export const RootComponent = () => {
   const [mode, setMode] = useLocalStorage<ThemeMode>({
     key: "theme-preference",
     defaultValue: "system",
@@ -57,7 +57,7 @@ export function RootComponent() {
       </NotificationsProvider>
     </ThemeProvider>
   );
-}
+};
 
 export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -86,7 +86,7 @@ export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-function RootLayout() {
+const RootLayout = () => {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLoginRoute = pathname === "/login";
   const isBrowseRoute =
@@ -105,4 +105,4 @@ function RootLayout() {
       <Outlet />
     </DefaultLayout>
   );
-}
+};

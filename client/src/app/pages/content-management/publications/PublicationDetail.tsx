@@ -6,8 +6,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Content,
-  ContentVariants,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -20,6 +18,7 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
@@ -92,34 +91,27 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
       >
         {publication ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/content-management/publications">
-                    Publications
-                  </Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{publicationLabel}</BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
+            <PageHeader
+              title={`Publication ${publicationLabel}`}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/content-management/publications">
+                      Publications
+                    </Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>{publicationLabel}</BreadcrumbItem>
+                </Breadcrumb>
+              }
+              actionMenu={
+                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
+                  Delete
+                </Button>
+              }
+            />
 
             <PageSection>
               <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>
-                    Publication {publicationLabel}
-                  </Content>
-                </StackItem>
-
-                <StackItem>
-                  <Button
-                    variant="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                  >
-                    Delete
-                  </Button>
-                </StackItem>
-
                 <StackItem>
                   <DescriptionList isHorizontal>
                     <DescriptionListGroup>

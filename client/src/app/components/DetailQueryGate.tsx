@@ -21,13 +21,13 @@ interface IDetailQueryGateProps {
 }
 
 /** Shared loading / 403 / 404 / error gate for admin detail pages. */
-export function DetailQueryGate({
+export const DetailQueryGate = ({
   isLoading,
   error,
   hasData,
   loadingLabel,
   children,
-}: IDetailQueryGateProps) {
+}: IDetailQueryGateProps) => {
   if (isLoading) {
     return (
       <PageSection>
@@ -69,4 +69,4 @@ export function DetailQueryGate({
   }
 
   return children;
-}
+};

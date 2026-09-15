@@ -20,7 +20,10 @@ interface IDescriptorDetailFieldsProps {
   skipKeys?: string[];
 }
 
-function formatValue(field: IFieldDescriptor, value: unknown): React.ReactNode {
+const formatValue = (
+  field: IFieldDescriptor,
+  value: unknown,
+): React.ReactNode => {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
@@ -43,7 +46,7 @@ function formatValue(field: IFieldDescriptor, value: unknown): React.ReactNode {
   }
 
   return String(value);
-}
+};
 
 /** Render descriptor `detailFields` as DescriptionList groups. */
 export const DescriptorDetailFields: React.FC<IDescriptorDetailFieldsProps> = ({

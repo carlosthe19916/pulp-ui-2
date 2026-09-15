@@ -67,14 +67,14 @@ const TASK_STATES: Array<TaskState | ""> = [
   "skipped",
 ];
 
-function getTaskName(name: string): string {
+const getTaskName = (name: string): string => {
   const parts = name.split(".");
   return parts[parts.length - 1] ?? name;
-}
+};
 
-function isCancelable(state?: string | null) {
+const isCancelable = (state?: string | null) => {
   return state === "running" || state === "waiting";
-}
+};
 
 const COLUMN_KEYS = [
   "name",

@@ -6,7 +6,7 @@ const distributionDetailRouteApi = getRouteApi(
   "/_authenticated/content-management/distributions/$distId",
 );
 
-export function DistributionDetailRoute() {
+export const DistributionDetailRoute = () => {
   const { distId } = distributionDetailRouteApi.useParams();
   return <DistributionDetail distId={distId} />;
-}
+};

@@ -1,8 +1,8 @@
 /** Collect a sorted unique list of permission strings from role permission arrays. */
-export function collectPermissionOptions(
+export const collectPermissionOptions = (
   rolePermissionLists: Array<string[] | undefined | null>,
   selected: string[] = [],
-): string[] {
+): string[] => {
   const set = new Set<string>();
   for (const list of rolePermissionLists) {
     for (const permission of list ?? []) {
@@ -17,4 +17,4 @@ export function collectPermissionOptions(
     }
   }
   return Array.from(set).sort((a, b) => a.localeCompare(b));
-}
+};

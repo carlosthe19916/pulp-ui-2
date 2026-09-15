@@ -17,7 +17,7 @@ describe("utils", () => {
 
   // getMutationErrorMessage
 
-  function makeAxiosError(status: number, data?: unknown): AxiosError {
+  const makeAxiosError = (status: number, data?: unknown): AxiosError => {
     return new AxiosError(
       "Request failed",
       String(status),
@@ -31,7 +31,7 @@ describe("utils", () => {
         data,
       },
     );
-  }
+  };
 
   it("getMutationErrorMessage: returns fallback only for a plain non-Error value", () => {
     expect(getMutationErrorMessage("boom", "Failed to create thing")).toEqual({

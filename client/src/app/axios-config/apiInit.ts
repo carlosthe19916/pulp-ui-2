@@ -13,7 +13,7 @@ import {
   encodeBasicAuthHeader,
 } from "@app/context/Auth/basicAuthHelpers";
 
-function getOidcUser() {
+const getOidcUser = () => {
   const oidcStorage = sessionStorage.getItem(
     `oidc.user:${OIDC_SERVER_URL}:${OIDC_CLIENT_ID}`,
   );
@@ -21,7 +21,7 @@ function getOidcUser() {
     return null;
   }
   return User.fromStorageString(oidcStorage);
-}
+};
 
 export const axiosInstance = axios.create({
   adapter: "fetch",

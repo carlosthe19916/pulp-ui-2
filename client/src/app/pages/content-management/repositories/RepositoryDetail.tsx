@@ -24,6 +24,7 @@ import {
   TabTitleText,
   Tabs,
 } from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 import {
   DataView,
@@ -255,26 +256,20 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       >
         {repo ? (
           <>
-            <PageSection>
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/content-management/repositories">
-                    Repositories
-                  </Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
-              </Breadcrumb>
-            </PageSection>
-
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <Content component={ContentVariants.h1}>
-                    {repoDisplayName}
-                  </Content>
-                </StackItem>
-
-                <StackItem>
+            <PageHeader
+              title={repoDisplayName}
+              breadcrumbs={
+                <Breadcrumb>
+                  <BreadcrumbItem>
+                    <Link to="/content-management/repositories">
+                      Repositories
+                    </Link>
+                  </BreadcrumbItem>
+                  <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
+                </Breadcrumb>
+              }
+              actionMenu={
+                <>
                   <Button
                     variant="secondary"
                     onClick={() => setIsEditOpen(true)}
@@ -306,8 +301,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   >
                     Delete
                   </Button>
-                </StackItem>
+                </>
+              }
+            />
 
+            <PageSection>
+              <Stack hasGutter>
                 <StackItem>
                   <Tabs
                     activeKey={activeTab}

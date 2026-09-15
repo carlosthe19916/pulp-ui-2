@@ -9,7 +9,7 @@ import { queryClient } from "@app/queries/config";
 import type { AppRouter } from "../router";
 import { AuthContext } from "./context/Auth/AuthContext";
 
-export function App({ router }: { router: AppRouter }) {
+export const App = ({ router }: { router: AppRouter }) => {
   const authContext = use(AuthContext);
 
   if (authContext?.isLoading) {
@@ -25,4 +25,4 @@ export function App({ router }: { router: AppRouter }) {
       <TanStackRouterDevtools router={router} initialIsOpen={false} />
     </>
   );
-}
+};

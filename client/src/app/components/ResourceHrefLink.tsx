@@ -18,9 +18,9 @@ interface IResourceHrefLinkProps {
   truncateAt?: number;
 }
 
-function truncate(value: string, max: number): string {
+const truncate = (value: string, max: number): string => {
   return value.length > max ? `${value.slice(0, max)}...` : value;
-}
+};
 
 /** Link a pulp_href to the matching resource detail when a descriptor exists. */
 export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({

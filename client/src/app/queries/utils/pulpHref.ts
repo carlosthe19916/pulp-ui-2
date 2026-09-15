@@ -5,9 +5,9 @@ import type { IPulpDomain } from "./pulpApi";
  * Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the
  * aggregation API omits `pulp_type`.
  */
-export function inferPulpTypeFromHref(
+export const inferPulpTypeFromHref = (
   href: string | null | undefined,
-): string | undefined {
+): string | undefined => {
   if (!href) return undefined;
 
   const typed = href.match(
@@ -27,92 +27,98 @@ export function inferPulpTypeFromHref(
   }
 
   return undefined;
-}
+};
 
 /** Prefer an explicit pulp_type, otherwise infer from the resource href. */
-export function resolvePulpType(
+export const resolvePulpType = (
   pulpType: string | null | undefined,
   href: string | null | undefined,
-): string | undefined {
+): string | undefined => {
   return pulpType || inferPulpTypeFromHref(href);
-}
+};
 
 /** True when a detail payload is missing or an empty object (`data ?? {}`). */
-export function isEmptyDetailPayload(
+export const isEmptyDetailPayload = (
   data: unknown,
-): data is null | undefined | Record<string, never> {
+): data is null | undefined | Record<string, never> => {
   if (data == null) return true;
   if (typeof data !== "object") return false;
   return Object.keys(data as object).length === 0;
-}
+};
 
 /** Build a Pulp user pulp_href from a user ID. */
-export function buildUserHref(userId: string, domain: IPulpDomain): string {
+export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`users/${userId}/`, domain);
-}
+};
 
 /** Build a Pulp group pulp_href from a group ID. */
-export function buildGroupHref(groupId: string, domain: IPulpDomain): string {
+export const buildGroupHref = (
+  groupId: string,
+  domain: IPulpDomain,
+): string => {
   return pulpApiPath(`groups/${groupId}/`, domain);
-}
+};
 
 /** Build a Pulp role pulp_href from a role ID. */
-export function buildRoleHref(roleId: string, domain: IPulpDomain): string {
+export const buildRoleHref = (roleId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`roles/${roleId}/`, domain);
-}
+};
 
 /** Build a file repository pulp_href from a repository ID. */
-export function buildRepositoryHref(
+export const buildRepositoryHref = (
   repoId: string,
   domain: IPulpDomain,
-): string {
+): string => {
   return pulpApiPath(`repositories/file/file/${repoId}/`, domain);
-}
+};
 
 /** Build a file remote pulp_href from a remote ID. */
-export function buildRemoteHref(remoteId: string, domain: IPulpDomain): string {
+export const buildRemoteHref = (
+  remoteId: string,
+  domain: IPulpDomain,
+): string => {
   return pulpApiPath(`remotes/file/file/${remoteId}/`, domain);
-}
+};
 
 /** Build a file distribution pulp_href from a distribution ID. */
-export function buildDistributionHref(
+export const buildDistributionHref = (
   distId: string,
   domain: IPulpDomain,
-): string {
+): string => {
   return pulpApiPath(`distributions/file/file/${distId}/`, domain);
-}
+};
 
 /** Build a file publication pulp_href from a publication ID. */
-export function buildPublicationHref(
+export const buildPublicationHref = (
   pubId: string,
   domain: IPulpDomain,
-): string {
+): string => {
   return pulpApiPath(`publications/file/file/${pubId}/`, domain);
-}
+};
 
 /** Build a file content pulp_href from a content ID. */
-export function buildContentHref(
+export const buildContentHref = (
   contentId: string,
   domain: IPulpDomain,
-): string {
+): string => {
   return pulpApiPath(`content/file/files/${contentId}/`, domain);
-}
+};
 
 /** Extract the trailing ID (last path segment) from any pulp_href. */
-export function extractIdFromHref(href: string): string {
+export const extractIdFromHref = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;
-}
+};
 
 /**
  * Build a consumer download URL for a unit served by a distribution.
  * Joins `base_url` and `relative_path` with normalized slashes.
  */
-export function buildDistributionContentUrl(
+export const buildDistributionContentUrl = (
   baseUrl: string,
   relativePath: string,
-): string {
+): string => {
   const base = baseUrl.replace(/\/+$/, "");
   const path = relativePath.replace(/^\/+/, "");
   return `${base}/${path}`;
-}
+};
