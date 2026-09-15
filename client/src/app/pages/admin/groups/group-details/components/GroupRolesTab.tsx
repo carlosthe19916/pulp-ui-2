@@ -28,6 +28,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GroupRoleResponse } from "@app/client";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
@@ -284,29 +285,15 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
         </ModalFooter>
       </Modal>
 
-      <Modal
+      <ConfirmActionModal
         isOpen={!!removeRoleTarget}
-        onClose={() => setRemoveRoleTarget(null)}
-        variant="small"
-      >
-        <ModalHeader title="Remove Role" />
-        <ModalBody>
-          Are you sure you want to remove role &quot;
-          {removeRoleTarget?.role}&quot; from the group?
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleRemoveRole()}
-            isLoading={roleDeleteMutation.isPending}
-          >
-            Remove
-          </Button>
-          <Button variant="link" onClick={() => setRemoveRoleTarget(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
+        title="Remove Role"
+        body={`Are you sure you want to remove role "${removeRoleTarget?.role}" from the group?`}
+        isConfirming={roleDeleteMutation.isPending}
+        confirmLabel="Remove"
+        onConfirm={() => void handleRemoveRole()}
+        onCancel={() => setRemoveRoleTarget(null)}
+      />
     </>
   );
 };

@@ -10,10 +10,6 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Stack,
   StackItem,
@@ -21,6 +17,7 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -146,29 +143,14 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
               remote={remote}
             />
 
-            <Modal
+            <ConfirmActionModal
               isOpen={isDeleteOpen}
-              onClose={() => setIsDeleteOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Delete Remote" />
-              <ModalBody>
-                Are you sure you want to delete remote &quot;{remote.name}
-                &quot;? This action cannot be undone.
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="danger"
-                  onClick={() => void handleDelete()}
-                  isLoading={deleteMutation.isPending}
-                >
-                  Delete
-                </Button>
-                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+              title="Delete Remote"
+              body={`Are you sure you want to delete remote "${remote.name}"? This action cannot be undone.`}
+              isConfirming={deleteMutation.isPending}
+              onConfirm={() => void handleDelete()}
+              onCancel={() => setIsDeleteOpen(false)}
+            />
           </>
         ) : null}
       </DetailQueryGate>

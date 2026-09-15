@@ -6,10 +6,6 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Stack,
   StackItem,
@@ -21,6 +17,7 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PublishModal } from "@app/components/PublishModal";
@@ -250,29 +247,14 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               repoHref={repo.pulp_href ?? ""}
             />
 
-            <Modal
+            <ConfirmActionModal
               isOpen={isDeleteOpen}
-              onClose={() => setIsDeleteOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Delete Repository" />
-              <ModalBody>
-                Are you sure you want to delete repository &quot;
-                {repoDisplayName}&quot;? This action cannot be undone.
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="danger"
-                  onClick={() => void handleDelete()}
-                  isLoading={deleteMutation.isPending}
-                >
-                  Delete
-                </Button>
-                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+              title="Delete Repository"
+              body={`Are you sure you want to delete repository "${repoDisplayName}"? This action cannot be undone.`}
+              isConfirming={deleteMutation.isPending}
+              onConfirm={() => void handleDelete()}
+              onCancel={() => setIsDeleteOpen(false)}
+            />
           </>
         ) : null}
       </DetailQueryGate>

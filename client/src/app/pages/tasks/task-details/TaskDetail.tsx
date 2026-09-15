@@ -15,10 +15,6 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Progress,
   Stack,
@@ -26,6 +22,7 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
@@ -254,26 +251,17 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
           </Stack>
         </PageSection>
 
-        <Modal
+        <ConfirmActionModal
           isOpen={isCancelModalOpen}
-          onClose={() => setIsCancelModalOpen(false)}
-          variant="small"
-        >
-          <ModalHeader title="Cancel Task" />
-          <ModalBody>Are you sure you want to cancel this task?</ModalBody>
-          <ModalFooter>
-            <Button
-              variant="danger"
-              onClick={() => void handleCancel()}
-              isLoading={cancelMutation.isPending}
-            >
-              Cancel Task
-            </Button>
-            <Button variant="link" onClick={() => setIsCancelModalOpen(false)}>
-              Close
-            </Button>
-          </ModalFooter>
-        </Modal>
+          title="Cancel Task"
+          body="Are you sure you want to cancel this task?"
+          isConfirming={cancelMutation.isPending}
+          confirmLabel="Cancel Task"
+          cancelLabel="Close"
+          confirmVariant="danger"
+          onConfirm={() => void handleCancel()}
+          onCancel={() => setIsCancelModalOpen(false)}
+        />
       </DetailQueryGate>
     </>
   );

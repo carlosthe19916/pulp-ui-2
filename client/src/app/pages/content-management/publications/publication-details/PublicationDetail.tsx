@@ -10,16 +10,13 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -142,29 +139,14 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
               </Stack>
             </PageSection>
 
-            <Modal
+            <ConfirmActionModal
               isOpen={isDeleteOpen}
-              onClose={() => setIsDeleteOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Delete Publication" />
-              <ModalBody>
-                Are you sure you want to delete this publication? This action
-                cannot be undone.
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="danger"
-                  onClick={() => void handleDelete()}
-                  isLoading={deleteMutation.isPending}
-                >
-                  Delete
-                </Button>
-                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+              title="Delete Publication"
+              body="Are you sure you want to delete this publication? This action cannot be undone."
+              isConfirming={deleteMutation.isPending}
+              onConfirm={() => void handleDelete()}
+              onCancel={() => setIsDeleteOpen(false)}
+            />
           </>
         ) : null}
       </DetailQueryGate>

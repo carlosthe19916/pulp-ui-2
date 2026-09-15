@@ -33,6 +33,7 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
@@ -268,29 +269,14 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
               </ModalFooter>
             </Modal>
 
-            <Modal
+            <ConfirmActionModal
               isOpen={isDeleteOpen}
-              onClose={() => setIsDeleteOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Delete Group" />
-              <ModalBody>
-                Are you sure you want to delete group &quot;{group.name}&quot;?
-                This action cannot be undone.
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="danger"
-                  onClick={() => void handleDelete()}
-                  isLoading={deleteMutation.isPending}
-                >
-                  Delete
-                </Button>
-                <Button variant="link" onClick={() => setIsDeleteOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+              title="Delete Group"
+              body={`Are you sure you want to delete group "${group.name}"? This action cannot be undone.`}
+              isConfirming={deleteMutation.isPending}
+              onConfirm={() => void handleDelete()}
+              onCancel={() => setIsDeleteOpen(false)}
+            />
           </>
         ) : null}
       </DetailQueryGate>

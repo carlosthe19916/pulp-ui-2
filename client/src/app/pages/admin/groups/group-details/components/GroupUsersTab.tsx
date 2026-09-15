@@ -26,6 +26,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GroupUserResponse } from "@app/client";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
@@ -235,29 +236,15 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
         </ModalFooter>
       </Modal>
 
-      <Modal
+      <ConfirmActionModal
         isOpen={!!removeUserTarget}
-        onClose={() => setRemoveUserTarget(null)}
-        variant="small"
-      >
-        <ModalHeader title="Remove User" />
-        <ModalBody>
-          Are you sure you want to remove user &quot;
-          {removeUserTarget?.username}&quot; from the group?
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="danger"
-            onClick={() => void handleRemoveUser()}
-            isLoading={userDeleteMutation.isPending}
-          >
-            Remove
-          </Button>
-          <Button variant="link" onClick={() => setRemoveUserTarget(null)}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
+        title="Remove User"
+        body={`Are you sure you want to remove user "${removeUserTarget?.username}" from the group?`}
+        isConfirming={userDeleteMutation.isPending}
+        confirmLabel="Remove"
+        onConfirm={() => void handleRemoveUser()}
+        onCancel={() => setRemoveUserTarget(null)}
+      />
     </>
   );
 };
