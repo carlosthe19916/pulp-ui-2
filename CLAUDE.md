@@ -75,7 +75,7 @@ npm run build
 - **Build**: [Vite](https://vite.dev/guide/) (client), [Rollup](https://rollupjs.org/) (common, server)
 - **Routing**: [TanStack Router](https://tanstack.com/router/latest) (file-based, code-split routes)
 - **Data fetching**: [TanStack React Query](https://tanstack.com/query/latest)
-- **Tables**: [TanStack Table](https://tanstack.com/table/latest)
+- **Tables**: [@patternfly/react-data-view](https://www.patternfly.org/extensions/data-view/overview)
 - **HTTP client**: [Axios](https://axios-http.com/)
 - **API client codegen**: [@hey-api/openapi-ts](https://heyapi.dev/)
 - **Forms**: [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup)
@@ -89,7 +89,7 @@ npm run build
 ### PatternFly & UI Patterns
 
 - **Use PatternFly components** for all UI.
-- **Tables**: Use [TanStack Table](https://tanstack.com/table/latest) (`@tanstack/react-table`) for pagination/sorting/filtering, rendered with PatternFly table components.
+- **Tables**: Use [`@patternfly/react-data-view`](https://www.patternfly.org/extensions/data-view/overview) — for pagination/sorting/filtering, rendered with PatternFly table components.
 - **Detail pages** use tab-based layouts. Tab content components **must not** include their own `<PageSection>` wrapper.
 - **Forms**: Use `react-hook-form` + `yup` validation.
 - **Empty states**: Use PatternFly `EmptyState` components.
