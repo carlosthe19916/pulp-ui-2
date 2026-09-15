@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -12,20 +12,21 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewTable,
+  DataViewToolbar,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { PublicationResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -55,14 +56,16 @@ function truncate(value: string | null | undefined, max = 40): string {
 }
 
 export const PublicationList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
   const [deleteTarget, setDeleteTarget] = useState<PublicationRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { addNotification } = useNotifications();
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFilePublicationDeleteMutation();
+
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
 
   const { data, isLoading, error } = usePublicationsListQuery({
     limit: perPage,
@@ -94,88 +97,88 @@ export const PublicationList: React.FC = () => {
     setDeleteTarget(null);
   };
 
-  const columns = useMemo<AppColumnDef<PublicationRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Publication",
-        cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("publication", pulpType)
-            : undefined;
-          const href = row.original.pulp_href;
-          const label = href ? `Publication ${extractIdFromHref(href)}` : "—";
-          if (!descriptor || !href) {
-            return label;
-          }
-          const pubId = extractIdFromHref(href);
-          return (
-            <Link
-              to="/content-management/publications/$pubId"
-              params={{ pubId }}
-            >
-              {label}
-            </Link>
-          );
+  const columns = [
+    "Publication",
+    "Type",
+    "Repository Version",
+    "Created",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = publications.map((pub) => {
+    const pulpType = pub.pulp_type;
+    const descriptor = pulpType
+      ? getDescriptor("publication", pulpType)
+      : undefined;
+    const href = pub.pulp_href;
+    const label = href ? `Publication ${extractIdFromHref(href)}` : "—";
+    return {
+      id: href,
+      row: [
+        {
+          cell:
+            descriptor && href ? (
+              <Link
+                to="/content-management/publications/$pubId"
+                params={{ pubId: extractIdFromHref(href) }}
+              >
+                {label}
+              </Link>
+            ) : (
+              label
+            ),
+          props: { dataLabel: "Publication" },
         },
-      },
-      {
-        id: "pulp_type",
-        header: "Type",
-        cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          return pulpType ? (
+        {
+          cell: pulpType ? (
             <PulpTypeLabel kind="publication" pulpType={pulpType} />
           ) : (
             "—"
-          );
+          ),
+          props: { dataLabel: "Type" },
         },
-      },
-      {
-        id: "repository_version",
-        header: "Repository Version",
-        cell: ({ row }) =>
-          truncate(row.original.repository_version ?? row.original.repository),
-      },
-      {
-        id: "created",
-        header: "Created",
-        cell: ({ row }) => formatDateTime(row.original.pulp_created) ?? "—",
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("publication", pulpType)
-            : undefined;
-
-          if (!descriptor) {
-            return <ReadOnlyBadge pulpType={pulpType} />;
-          }
-
-          return (
+        {
+          cell: truncate(pub.repository_version ?? pub.repository),
+          props: { dataLabel: "Repository Version" },
+        },
+        {
+          cell: formatDateTime(pub.pulp_created) ?? "—",
+          props: { dataLabel: "Created" },
+        },
+        {
+          cell: descriptor ? (
             <Button
               variant="link"
               isInline
               isDanger
-              onClick={() => setDeleteTarget(row.original)}
+              onClick={() => setDeleteTarget(pub)}
             >
               Delete
             </Button>
-          );
+          ) : (
+            <ReadOnlyBadge pulpType={pulpType} />
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
         },
-      },
-    ],
-    [],
-  );
-
-  const table = useDataTable({
-    data: publications,
-    columns,
+      ],
+    };
   });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: publications.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <>
@@ -188,57 +191,32 @@ export const PublicationList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Publications</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              {canCreate && (
-                <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              actions={
+                canCreate ? (
                   <Button
                     variant="primary"
                     onClick={() => setIsCreateOpen(true)}
                   >
                     Create publication
                   </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading publications" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Publications table"
-              isEmpty={publications.length === 0}
-              emptyStateContent="No publications found."
+                ) : undefined
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Publications table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({
+                empty: "No publications found.",
+              })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreatePublicationModal
             isOpen={isCreateOpen}

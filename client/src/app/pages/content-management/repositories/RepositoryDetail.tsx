@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import {
@@ -25,11 +25,15 @@ import {
   Tabs,
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
+import {
+  DataView,
+  DataViewTable,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type {
   DistributionResponse,
   MultipleArtifactContentResponse,
-  RepositoryVersionResponse,
 } from "@app/client";
 
 type DistributionRow = DistributionResponse & {
@@ -37,10 +41,9 @@ type DistributionRow = DistributionResponse & {
   repository?: string | null;
 };
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -120,119 +123,87 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const distributions = (distributionsData?.results ?? []) as DistributionRow[];
   const contentUnits = (contentData?.results ?? []) as ContentRow[];
 
-  const versionColumns = useMemo<AppColumnDef<RepositoryVersionResponse>[]>(
-    () => [
-      {
-        id: "number",
-        header: "Version",
-        cell: ({ row }) => row.original.number ?? "—",
-      },
-      {
-        id: "pulp_created",
-        header: "Created",
-        cell: ({ row }) => formatDateTime(row.original.pulp_created) ?? "—",
-      },
-      {
-        id: "content_summary",
-        header: "Content count",
-        cell: ({ row }) => {
-          const summary = row.original.content_summary;
-          if (!summary?.present) return "—";
-          const total = Object.values(summary.present).reduce(
-            (sum, entry) => sum + ((entry as { count?: number }).count ?? 0),
-            0,
-          );
-          return total;
-        },
-      },
-    ],
-    [],
-  );
+  const versionColumns = ["Version", "Created", "Content count"];
 
-  const versionsTable = useDataTable({
-    data: versions,
-    columns: versionColumns,
+  const versionRows: DataViewTr[] = versions.map((version) => {
+    const summary = version.content_summary;
+    const contentCount = summary?.present
+      ? Object.values(summary.present).reduce(
+          (sum, entry) => sum + ((entry as { count?: number }).count ?? 0),
+          0,
+        )
+      : "—";
+    return {
+      id: version.pulp_href,
+      row: [
+        { cell: version.number ?? "—", props: { dataLabel: "Version" } },
+        {
+          cell: formatDateTime(version.pulp_created) ?? "—",
+          props: { dataLabel: "Created" },
+        },
+        { cell: contentCount, props: { dataLabel: "Content count" } },
+      ],
+    };
   });
 
-  const distributionColumns = useMemo<AppColumnDef<DistributionRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const href = row.original.pulp_href;
-          if (!href) return row.original.name;
-          const distId = extractIdFromHref(href);
-          return (
-            <Link
-              to="/content-management/distributions/$distId"
-              params={{ distId }}
-            >
-              {row.original.name}
-            </Link>
-          );
-        },
-      },
-      {
-        id: "base_path",
-        header: "Base path",
-        cell: ({ row }) => row.original.base_path || "—",
-      },
-      {
-        id: "publication",
-        header: "Publication",
-        cell: ({ row }) => (
-          <ResourceHrefLink
-            kind="publication"
-            href={row.original.publication}
-          />
-        ),
-      },
-    ],
-    [],
-  );
+  const distributionColumns = ["Name", "Base path", "Publication"];
 
-  const distributionsTable = useDataTable({
-    data: distributions,
-    columns: distributionColumns,
+  const distributionRows: DataViewTr[] = distributions.map((dist) => {
+    const href = dist.pulp_href;
+    return {
+      id: href,
+      row: [
+        {
+          cell:
+            href != null ? (
+              <Link
+                to="/content-management/distributions/$distId"
+                params={{ distId: extractIdFromHref(href) }}
+              >
+                {dist.name}
+              </Link>
+            ) : (
+              dist.name
+            ),
+          props: { dataLabel: "Name" },
+        },
+        { cell: dist.base_path || "—", props: { dataLabel: "Base path" } },
+        {
+          cell: <ResourceHrefLink kind="publication" href={dist.publication} />,
+          props: { dataLabel: "Publication" },
+        },
+      ],
+    };
   });
 
-  const contentColumns = useMemo<AppColumnDef<ContentRow>[]>(
-    () => [
-      {
-        id: "path",
-        header: "Path",
-        cell: ({ row }) => {
-          const href = row.original.pulp_href;
-          const label = row.original.relative_path ?? "—";
-          if (!href) return label;
-          const contentId = extractIdFromHref(href);
-          return (
+  const contentColumns = ["Path", "SHA256"];
+
+  const contentRows: DataViewTr[] = contentUnits.map((unit) => {
+    const href = unit.pulp_href;
+    const label = unit.relative_path ?? "—";
+    const sha = unit.sha256;
+    return {
+      id: href,
+      row: [
+        {
+          cell: href ? (
             <Link
               to="/content-management/content/$contentId"
-              params={{ contentId }}
+              params={{ contentId: extractIdFromHref(href) }}
             >
               {label}
             </Link>
-          );
+          ) : (
+            label
+          ),
+          props: { dataLabel: "Path" },
         },
-      },
-      {
-        id: "sha256",
-        header: "SHA256",
-        cell: ({ row }) => {
-          const value = row.original.sha256;
-          if (!value) return "—";
-          return value.length > 20 ? `${value.slice(0, 20)}...` : value;
+        {
+          cell: !sha ? "—" : sha.length > 20 ? `${sha.slice(0, 20)}...` : sha,
+          props: { dataLabel: "SHA256" },
         },
-      },
-    ],
-    [],
-  );
-
-  const contentTable = useDataTable({
-    data: contentUnits,
-    columns: contentColumns,
+      ],
+    };
   });
 
   const handleDelete = async () => {
@@ -390,18 +361,21 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                       }
                     >
                       <TabContentBody hasPadding>
-                        {isVersionsLoading ? (
-                          <Content component={ContentVariants.p}>
-                            Loading versions...
-                          </Content>
-                        ) : (
-                          <DataTable
-                            table={versionsTable}
-                            ariaLabel="Repository versions table"
-                            isEmpty={versions.length === 0}
-                            emptyStateContent="No versions found."
+                        <DataView
+                          activeState={computeActiveState({
+                            isLoading: isVersionsLoading,
+                            isEmpty: versions.length === 0,
+                          })}
+                        >
+                          <DataViewTable
+                            aria-label="Repository versions table"
+                            columns={versionColumns}
+                            rows={versionRows}
+                            bodyStates={dataViewBodyStates({
+                              empty: "No versions found.",
+                            })}
                           />
-                        )}
+                        </DataView>
                       </TabContentBody>
                     </Tab>
 
@@ -414,18 +388,22 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                       }
                     >
                       <TabContentBody hasPadding>
-                        {isDistributionsLoading ? (
-                          <Content component={ContentVariants.p}>
-                            Loading distributions...
-                          </Content>
-                        ) : (
-                          <DataTable
-                            table={distributionsTable}
-                            ariaLabel="Repository distributions table"
-                            isEmpty={distributions.length === 0}
-                            emptyStateContent="No distributions point at this repository."
+                        <DataView
+                          activeState={computeActiveState({
+                            isLoading: isDistributionsLoading,
+                            isEmpty: distributions.length === 0,
+                          })}
+                        >
+                          <DataViewTable
+                            aria-label="Repository distributions table"
+                            columns={distributionColumns}
+                            rows={distributionRows}
+                            bodyStates={dataViewBodyStates({
+                              empty:
+                                "No distributions point at this repository.",
+                            })}
                           />
-                        )}
+                        </DataView>
                       </TabContentBody>
                     </Tab>
 
@@ -455,17 +433,22 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                                 No repository version yet. Sync or upload
                                 content to create one.
                               </Content>
-                            ) : isContentLoading ? (
-                              <Content component={ContentVariants.p}>
-                                Loading content...
-                              </Content>
                             ) : (
-                              <DataTable
-                                table={contentTable}
-                                ariaLabel="Repository content table"
-                                isEmpty={contentUnits.length === 0}
-                                emptyStateContent="No content in the latest version."
-                              />
+                              <DataView
+                                activeState={computeActiveState({
+                                  isLoading: isContentLoading,
+                                  isEmpty: contentUnits.length === 0,
+                                })}
+                              >
+                                <DataViewTable
+                                  aria-label="Repository content table"
+                                  columns={contentColumns}
+                                  rows={contentRows}
+                                  bodyStates={dataViewBodyStates({
+                                    empty: "No content in the latest version.",
+                                  })}
+                                />
+                              </DataView>
                             )}
                           </StackItem>
                         </Stack>

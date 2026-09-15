@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo, useState } from "react";
 
 import {
   Content,
@@ -8,63 +7,81 @@ import {
   EmptyStateBody,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
-
-import type { SigningServiceResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
+import {
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
+interface ISigningServiceFilters {
+  name: string;
+}
+
 export const SigningServiceList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<ISigningServiceFilters>({
+      initialFilters: { name: "" },
+    });
 
   const { data, isLoading, error } = useSigningServicesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    name: nameFilter || undefined,
+    name: filters.name || undefined,
   });
 
   const services = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<AppColumnDef<SigningServiceResponse>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => row.original.name,
-      },
-      {
-        id: "pubkey_fingerprint",
-        header: "Public Key Fingerprint",
-        cell: ({ row }) => {
-          const fp = row.original.pubkey_fingerprint ?? "";
-          return fp.length > 24 ? `${fp.slice(0, 24)}...` : fp || "—";
-        },
-      },
-      {
-        id: "script",
-        header: "Script",
-        cell: ({ row }) => row.original.script ?? "—",
-      },
-    ],
-    [],
-  );
+  const columns = ["Name", "Public Key Fingerprint", "Script"];
 
-  const table = useDataTable({ data: services, columns });
+  const rows: DataViewTr[] = services.map((service) => {
+    const fp = service.pubkey_fingerprint ?? "";
+    return {
+      id: service.pulp_href,
+      row: [
+        { cell: service.name, props: { dataLabel: "Name" } },
+        {
+          cell: fp.length > 24 ? `${fp.slice(0, 24)}...` : fp || "—",
+          props: { dataLabel: "Public Key Fingerprint" },
+        },
+        { cell: service.script ?? "—", props: { dataLabel: "Script" } },
+      ],
+    };
+  });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: services.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <>
@@ -82,71 +99,42 @@ export const SigningServiceList: React.FC = () => {
             UI.
           </Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          {isLoading ? (
-            <Spinner aria-label="Loading signing services" />
-          ) : (
-            <DataTable
-              table={table}
-              ariaLabel="Signing services table"
-              isEmpty={services.length === 0}
-              emptyStateContent={
-                <EmptyState
-                  titleText="No signing services found"
-                  headingLevel="h4"
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
                 >
-                  <EmptyStateBody>
-                    {nameFilter
-                      ? "No signing services match the current filter. Try a different search term."
-                      : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
-                  </EmptyStateBody>
-                </EmptyState>
+                  <DataViewTextFilter filterId="name" title="Name" />
+                </DataViewFilters>
               }
+              pagination={pagination}
             />
-          )}
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Signing services table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({
+                empty: (
+                  <EmptyState
+                    titleText="No signing services found"
+                    headingLevel="h4"
+                  >
+                    <EmptyStateBody>
+                      {filters.name
+                        ? "No signing services match the current filter. Try a different search term."
+                        : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
+                    </EmptyStateBody>
+                  </EmptyState>
+                ),
+              })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
         </PageSection>
       )}
     </>

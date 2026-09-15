@@ -25,7 +25,7 @@ export const UsersQueryKey = "users";
 
 type UserOrdering = NonNullable<UsersListData["query"]>["ordering"];
 
-interface IUserListParams {
+export interface IUserListParams {
   limit?: number;
   offset?: number;
   ordering?: NonNullable<UserOrdering>[number];
@@ -59,6 +59,26 @@ export const usersListQueryOptions = (
     },
   });
 
+export const usersAllListQueryOptions = (domain: IPulpDomain) =>
+  queryOptions({
+    queryKey: [...usersRootQueryOptions.queryKey, "list-all", domain],
+    queryFn: async (): Promise<UserResponse[]> => {
+      const pageSize = 100;
+      const all: UserResponse[] = [];
+      let offset = 0;
+      for (;;) {
+        const { data } = await axiosInstance.get<PaginatedUserResponseList>(
+          pulpApiPath("users/", domain),
+          { params: { limit: pageSize, offset } },
+        );
+        all.push(...(data.results ?? []));
+        if (!data.next || all.length >= (data.count ?? all.length)) break;
+        offset += pageSize;
+      }
+      return all;
+    },
+  });
+
 export const userDetailQueryOptions = (userHref: string) =>
   queryOptions({
     queryKey: [...usersRootQueryOptions.queryKey, "detail", userHref],
@@ -89,6 +109,11 @@ export const userRolesListQueryOptions = (userHref: string) =>
 export const useUsersListQuery = (params: IUserListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(usersListQueryOptions(domain, params));
+};
+
+export const useAllUsersListQuery = () => {
+  const domain = useApiDomain();
+  return useQuery(usersAllListQueryOptions(domain));
 };
 
 export const useUserDetailQuery = (userHref: string) => {

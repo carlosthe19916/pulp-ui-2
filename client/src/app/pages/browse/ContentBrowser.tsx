@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -11,19 +10,23 @@ import {
   EmptyStateBody,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { FileFileContentResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
@@ -45,6 +48,10 @@ interface IContentBrowserProps {
   distributionId: string;
 }
 
+interface IContentBrowserFilters {
+  relative_path: string;
+}
+
 function formatBytes(size: number | undefined): string {
   if (size === undefined || size === null) return "—";
   if (size < 1024) return `${size} B`;
@@ -55,9 +62,13 @@ function formatBytes(size: number | undefined): string {
 export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   distributionId,
 }) => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [pathFilter, setPathFilter] = useState("");
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IContentBrowserFilters>({
+      initialFilters: { relative_path: "" },
+    });
 
   const domain = useApiDomain();
   const distHref = buildDistributionHref(distributionId, domain);
@@ -83,7 +94,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     useBrowseFileContentListQuery(
       {
         repository_version: repositoryVersionHref,
-        relative_path__icontains: pathFilter || undefined,
+        relative_path__icontains: filters.relative_path || undefined,
         limit: perPage,
         offset: (page - 1) * perPage,
       },
@@ -96,48 +107,46 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     (!!repoHref && isRepoLoading) ||
     (!!publicationHref && !repoHref && isPublicationLoading);
 
-  const columns = useMemo<AppColumnDef<ContentRow>[]>(
-    () => [
-      {
-        id: "relative_path",
-        header: "Path",
-        cell: ({ row }) => {
-          const href = row.original.pulp_href;
-          const label = row.original.relative_path ?? "—";
-          if (!href) return label;
-          const contentId = extractIdFromHref(href);
-          return (
+  const columns = ["Path", "Size", "Digest (SHA256)"];
+
+  const rows: DataViewTr[] = contentUnits.map((unit) => {
+    const href = unit.pulp_href;
+    const label = unit.relative_path ?? "—";
+    const sha = unit.sha256;
+    return {
+      id: href,
+      row: [
+        {
+          cell: href ? (
             <Link
               to="/browse/$distributionId/$contentId"
-              params={{ distributionId, contentId }}
+              params={{ distributionId, contentId: extractIdFromHref(href) }}
             >
               {label}
             </Link>
-          );
+          ) : (
+            label
+          ),
+          props: { dataLabel: "Path" },
         },
-      },
-      {
-        id: "size",
-        header: "Size",
-        cell: ({ row }) => formatBytes(row.original.size),
-      },
-      {
-        id: "sha256",
-        header: "Digest (SHA256)",
-        cell: ({ row }) => {
-          const value = row.original.sha256;
-          if (!value) return "—";
-          return value.length > 16 ? `${value.slice(0, 16)}...` : value;
+        { cell: formatBytes(unit.size), props: { dataLabel: "Size" } },
+        {
+          cell: !sha ? "—" : sha.length > 16 ? `${sha.slice(0, 16)}...` : sha,
+          props: { dataLabel: "Digest (SHA256)" },
         },
-      },
-    ],
-    [distributionId],
-  );
-
-  const table = useDataTable({
-    data: contentUnits,
-    columns,
+      ],
+    };
   });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <DetailQueryGate
@@ -162,41 +171,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
               {distribution.name}
             </Content>
 
-            <Toolbar>
-              <ToolbarContent>
-                <ToolbarItem>
-                  <SearchInput
-                    placeholder="Filter by path..."
-                    value={pathFilter}
-                    onChange={(_e, value) => {
-                      setPathFilter(value);
-                      setPage(1);
-                    }}
-                    onClear={() => {
-                      setPathFilter("");
-                      setPage(1);
-                    }}
-                  />
-                </ToolbarItem>
-                <ToolbarItem variant="pagination">
-                  <Pagination
-                    itemCount={totalCount}
-                    perPage={perPage}
-                    page={page}
-                    onSetPage={(_e, p) => setPage(p)}
-                    onPerPageSelect={(_e, pp) => {
-                      setPerPage(pp);
-                      setPage(1);
-                    }}
-                    isCompact
-                  />
-                </ToolbarItem>
-              </ToolbarContent>
-            </Toolbar>
-
-            {isResolvingVersion || isContentLoading ? (
-              <Spinner aria-label="Loading content" />
-            ) : !repositoryVersionHref ? (
+            {!repositoryVersionHref && !isResolvingVersion ? (
               <EmptyState titleText="No content available" headingLevel="h4">
                 <EmptyStateBody>
                   This distribution is not linked to a repository version or
@@ -204,30 +179,41 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
                 </EmptyStateBody>
               </EmptyState>
             ) : (
-              <>
-                <DataTable
-                  table={table}
-                  ariaLabel="Content table"
-                  isEmpty={contentUnits.length === 0}
-                  emptyStateContent={
-                    pathFilter
-                      ? "No content matches the current filter."
-                      : "No content in this distribution version."
+              <DataView
+                activeState={computeActiveState({
+                  isLoading: isResolvingVersion || isContentLoading,
+                  isEmpty: contentUnits.length === 0,
+                })}
+              >
+                <DataViewToolbar
+                  clearAllFilters={clearAllFilters}
+                  filters={
+                    <DataViewFilters
+                      onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                      values={filters}
+                    >
+                      <DataViewTextFilter
+                        filterId="relative_path"
+                        title="Path"
+                      />
+                    </DataViewFilters>
                   }
+                  pagination={pagination}
                 />
 
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  variant="bottom"
+                <DataViewTable
+                  aria-label="Content table"
+                  columns={columns}
+                  rows={rows}
+                  bodyStates={dataViewBodyStates({
+                    empty: filters.relative_path
+                      ? "No content matches the current filter."
+                      : "No content in this distribution version.",
+                  })}
                 />
-              </>
+
+                <DataViewToolbar pagination={pagination} />
+              </DataView>
             )}
           </PageSection>
         </>

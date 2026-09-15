@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -12,22 +12,24 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { GenericRemoteResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -55,11 +57,12 @@ import { CreateRemoteModal } from "./components/CreateRemoteModal";
  */
 type RemoteRow = GenericRemoteResponse & { pulp_type?: string };
 
+interface IRemoteFilters {
+  name: string;
+  pulp_type: string;
+}
+
 export const RemoteList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
-  const [pulpTypeFilter, setPulpTypeFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<RemoteRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -67,12 +70,20 @@ export const RemoteList: React.FC = () => {
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFileRemoteDeleteMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IRemoteFilters>({
+      initialFilters: { name: "", pulp_type: "" },
+    });
+
   const { data, isLoading, error } = useRemotesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    name__icontains: nameFilter || undefined,
-    pulp_type: pulpTypeFilter
-      ? (pulpTypeFilter as NonNullable<
+    name__icontains: filters.name || undefined,
+    pulp_type: filters.pulp_type
+      ? (filters.pulp_type as NonNullable<
           Parameters<typeof useRemotesListQuery>[0]
         >["pulp_type"])
       : undefined,
@@ -83,6 +94,86 @@ export const RemoteList: React.FC = () => {
 
   const canCreate = getDescriptorsForKind("remote").some((d) =>
     d.isAvailable(plugins),
+  );
+
+  const columns = [
+    "Name",
+    "URL",
+    "Policy",
+    "Type",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = remotes.map((remote) => {
+    const remoteId = extractIdFromHref(remote.pulp_href ?? "");
+    const pulpType = resolvePulpType(remote.pulp_type, remote.pulp_href);
+    const descriptor = pulpType ? getDescriptor("remote", pulpType) : undefined;
+
+    return {
+      id: remote.pulp_href,
+      row: [
+        {
+          cell: remoteId ? (
+            <Link
+              to="/content-management/remotes/$remoteId"
+              params={{ remoteId }}
+            >
+              {remote.name}
+            </Link>
+          ) : (
+            remote.name
+          ),
+          props: { dataLabel: "Name" },
+        },
+        {
+          cell: remote.url || "—",
+          props: { dataLabel: "URL" },
+        },
+        {
+          cell: remote.policy ?? "—",
+          props: { dataLabel: "Policy" },
+        },
+        {
+          cell: pulpType ? (
+            <PulpTypeLabel kind="remote" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
+          props: { dataLabel: "Type" },
+        },
+        {
+          cell: !descriptor ? (
+            <ReadOnlyBadge pulpType={pulpType} />
+          ) : (
+            <Button
+              variant="link"
+              isInline
+              isDanger
+              onClick={() => setDeleteTarget(remote)}
+            >
+              Delete
+            </Button>
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
+  });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: remotes.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
   );
 
   const handleDelete = async () => {
@@ -106,88 +197,6 @@ export const RemoteList: React.FC = () => {
     setDeleteTarget(null);
   };
 
-  const columns = useMemo<AppColumnDef<RemoteRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const remoteId = extractIdFromHref(row.original.pulp_href ?? "");
-          if (!remoteId) {
-            return row.original.name;
-          }
-          return (
-            <Link
-              to="/content-management/remotes/$remoteId"
-              params={{ remoteId }}
-            >
-              {row.original.name}
-            </Link>
-          );
-        },
-      },
-      {
-        id: "url",
-        header: "URL",
-        cell: ({ row }) => row.original.url || "—",
-      },
-      {
-        id: "policy",
-        header: "Policy",
-        cell: ({ row }) => row.original.policy ?? "—",
-      },
-      {
-        id: "pulp_type",
-        header: "Type",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          return pulpType ? (
-            <PulpTypeLabel kind="remote" pulpType={pulpType} />
-          ) : (
-            "—"
-          );
-        },
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          const descriptor = pulpType
-            ? getDescriptor("remote", pulpType)
-            : undefined;
-
-          if (!descriptor) {
-            return <ReadOnlyBadge pulpType={pulpType} />;
-          }
-
-          return (
-            <Button
-              variant="link"
-              isInline
-              isDanger
-              onClick={() => setDeleteTarget(row.original)}
-            >
-              Delete
-            </Button>
-          );
-        },
-      },
-    ],
-    [],
-  );
-
-  const table = useDataTable({
-    data: remotes,
-    columns,
-  });
-
   return (
     <>
       <DocumentTitle title="Remotes" />
@@ -199,83 +208,44 @@ export const RemoteList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Remotes</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <TextInput
-                  id="remote-pulp-type-filter"
-                  aria-label="Filter by pulp type"
-                  placeholder="pulp_type (e.g. file.file)"
-                  value={pulpTypeFilter}
-                  onChange={(_e, value) => {
-                    setPulpTypeFilter(value);
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              {canCreate && (
-                <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                  <DataViewTextFilter
+                    filterId="pulp_type"
+                    title="Type"
+                    placeholder="pulp_type (e.g. file.file)"
+                  />
+                </DataViewFilters>
+              }
+              actions={
+                canCreate ? (
                   <Button
                     variant="primary"
                     onClick={() => setIsCreateOpen(true)}
                   >
                     Create remote
                   </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading remotes" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Remotes table"
-              isEmpty={remotes.length === 0}
-              emptyStateContent="No remotes found."
+                ) : undefined
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Remotes table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({ empty: "No remotes found." })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreateRemoteModal
             isOpen={isCreateOpen}

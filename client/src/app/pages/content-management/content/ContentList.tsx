@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -8,20 +8,21 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewTable,
+  DataViewToolbar,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { MultipleArtifactContentResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
@@ -52,11 +53,13 @@ function truncate(value: string | null | undefined, max = 20): string {
 }
 
 export const ContentList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const plugins = use(ApiStatusContext)?.plugins ?? [];
+
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
 
   const { data, isLoading, error } = useContentListQuery({
     limit: perPage,
@@ -70,57 +73,60 @@ export const ContentList: React.FC = () => {
     (d) => d.supportsUpload && d.isAvailable(plugins),
   );
 
-  const columns = useMemo<AppColumnDef<ContentRow>[]>(
-    () => [
-      {
-        id: "name_or_path",
-        header: "Name / Path",
-        cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          const descriptor = pulpType
-            ? getDescriptor("content", pulpType)
-            : undefined;
-          const label = row.original.relative_path ?? row.original.name ?? "—";
-          const href = row.original.pulp_href;
-          if (!descriptor || !href) {
-            return label;
-          }
-          const contentId = extractIdFromHref(href);
-          return (
-            <Link
-              to="/content-management/content/$contentId"
-              params={{ contentId }}
-            >
-              {label}
-            </Link>
-          );
+  const columns = ["Name / Path", "Type", "SHA256"];
+
+  const rows: DataViewTr[] = content.map((item) => {
+    const pulpType = item.pulp_type;
+    const descriptor = pulpType
+      ? getDescriptor("content", pulpType)
+      : undefined;
+    const label = item.relative_path ?? item.name ?? "—";
+    const href = item.pulp_href;
+    return {
+      id: href,
+      row: [
+        {
+          cell:
+            descriptor && href ? (
+              <Link
+                to="/content-management/content/$contentId"
+                params={{ contentId: extractIdFromHref(href) }}
+              >
+                {label}
+              </Link>
+            ) : (
+              label
+            ),
+          props: { dataLabel: "Name / Path" },
         },
-      },
-      {
-        id: "pulp_type",
-        header: "Type",
-        cell: ({ row }) => {
-          const pulpType = row.original.pulp_type;
-          return pulpType ? (
+        {
+          cell: pulpType ? (
             <PulpTypeLabel kind="content" pulpType={pulpType} />
           ) : (
             "—"
-          );
+          ),
+          props: { dataLabel: "Type" },
         },
-      },
-      {
-        id: "sha256",
-        header: "SHA256",
-        cell: ({ row }) => truncate(row.original.sha256),
-      },
-    ],
-    [],
-  );
-
-  const table = useDataTable({
-    data: content,
-    columns,
+        { cell: truncate(item.sha256), props: { dataLabel: "SHA256" } },
+      ],
+    };
   });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: content.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <>
@@ -133,57 +139,30 @@ export const ContentList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Content</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              {canUpload && (
-                <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              actions={
+                canUpload ? (
                   <Button
                     variant="primary"
                     onClick={() => setIsUploadOpen(true)}
                   >
                     Upload content
                   </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading content" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Content table"
-              isEmpty={content.length === 0}
-              emptyStateContent="No content found."
+                ) : undefined
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Content table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({ empty: "No content found." })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <UploadModal
             isOpen={isUploadOpen}

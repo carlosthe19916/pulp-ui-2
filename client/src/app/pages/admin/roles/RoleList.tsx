@@ -13,21 +13,24 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
 import type { RoleResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
@@ -42,78 +45,89 @@ function getRolePlugin(name: string): string {
   return name.includes(".") ? name.split(".")[0] : "other";
 }
 
+interface IRoleFilters {
+  name: string;
+  plugin: string;
+}
+
 export const RoleList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
-  const [pluginFilter, setPluginFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteRole, setDeleteRole] = useState<RoleResponse | null>(null);
 
   const { addNotification } = useNotifications();
   const deleteMutation = useRoleDeleteMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IRoleFilters>({
+      initialFilters: { name: "", plugin: "" },
+    });
+
   const { data, isLoading, error } = useRolesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    name__icontains: nameFilter || undefined,
+    name__icontains: filters.name || undefined,
   });
 
+  // The `plugin` filter is derived client-side from the role name, so it filters
+  // the current page in-memory and adjusts the reported total accordingly.
   const allRoles = useMemo(() => data?.results ?? [], [data?.results]);
   const roles = useMemo(
     () =>
-      pluginFilter
+      filters.plugin
         ? allRoles.filter((role) =>
             getRolePlugin(role.name)
               .toLowerCase()
-              .includes(pluginFilter.toLowerCase()),
+              .includes(filters.plugin.toLowerCase()),
           )
         : allRoles,
-    [allRoles, pluginFilter],
+    [allRoles, filters.plugin],
   );
-  const totalCount = pluginFilter ? roles.length : (data?.count ?? 0);
+  const totalCount = filters.plugin ? roles.length : (data?.count ?? 0);
 
-  const columns = useMemo<AppColumnDef<RoleResponse>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const roleId = extractIdFromHref(row.original.pulp_href ?? "");
-          return (
+  const columns = [
+    "Name",
+    "Plugin",
+    "Description",
+    "Permissions",
+    "Locked",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = roles.map((role) => {
+    const roleId = extractIdFromHref(role.pulp_href ?? "");
+    const desc = role.description ?? "";
+    return {
+      id: role.pulp_href,
+      row: [
+        {
+          cell: (
             <Link to="/admin/roles/$roleId" params={{ roleId }}>
-              {row.original.name}
+              {role.name}
             </Link>
-          );
+          ),
+          props: { dataLabel: "Name" },
         },
-      },
-      {
-        id: "plugin",
-        header: "Plugin",
-        cell: ({ row }) => (
-          <Label isCompact color="blue">
-            {getRolePlugin(row.original.name)}
-          </Label>
-        ),
-      },
-      {
-        id: "description",
-        header: "Description",
-        cell: ({ row }) => {
-          const desc = row.original.description ?? "";
-          return desc.length > 80 ? `${desc.slice(0, 80)}...` : desc || "—";
+        {
+          cell: (
+            <Label isCompact color="blue">
+              {getRolePlugin(role.name)}
+            </Label>
+          ),
+          props: { dataLabel: "Plugin" },
         },
-      },
-      {
-        id: "permissions",
-        header: "Permissions",
-        cell: ({ row }) => (row.original.permissions ?? []).length,
-      },
-      {
-        id: "locked",
-        header: "Locked",
-        cell: ({ row }) =>
-          row.original.locked ? (
+        {
+          cell: desc.length > 80 ? `${desc.slice(0, 80)}...` : desc || "—",
+          props: { dataLabel: "Description" },
+        },
+        {
+          cell: (role.permissions ?? []).length,
+          props: { dataLabel: "Permissions" },
+        },
+        {
+          cell: role.locked ? (
             <Label color="green" isCompact>
               Yes
             </Label>
@@ -122,32 +136,42 @@ export const RoleList: React.FC = () => {
               No
             </Label>
           ),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) =>
-          row.original.locked ? (
+          props: { dataLabel: "Locked" },
+        },
+        {
+          cell: role.locked ? (
             "—"
           ) : (
             <Button
               variant="link"
               isInline
               isDanger
-              onClick={() => setDeleteRole(row.original)}
+              onClick={() => setDeleteRole(role)}
             >
               Delete
             </Button>
           ),
-      },
-    ],
-    [],
-  );
-
-  const table = useDataTable({
-    data: roles,
-    columns,
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
   });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: roles.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   const handleDelete = async () => {
     if (!deleteRole?.pulp_href) return;
@@ -177,78 +201,35 @@ export const RoleList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Roles</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <TextInput
-                  id="role-plugin-filter"
-                  aria-label="Filter by plugin"
-                  placeholder="Filter by plugin (e.g. rpm)"
-                  value={pluginFilter}
-                  onChange={(_e, value) => {
-                    setPluginFilter(value);
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                  <DataViewTextFilter filterId="plugin" title="Plugin" />
+                </DataViewFilters>
+              }
+              actions={
                 <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
                   Create Role
                 </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading roles" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Roles table"
-              isEmpty={roles.length === 0}
-              emptyStateContent="No roles found."
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Roles table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({ empty: "No roles found." })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreateRoleModal
             isOpen={isCreateOpen}

@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -12,22 +12,24 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { RepositoryResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -57,16 +59,17 @@ import { SyncModal } from "@app/components/SyncModal";
  */
 type RepositoryRow = RepositoryResponse & { pulp_type?: string };
 
+interface IRepositoryFilters {
+  name: string;
+  pulp_type: string;
+}
+
 function truncate(value: string | null | undefined, max = 40): string {
   if (!value) return "—";
   return value.length > max ? `${value.slice(0, max)}...` : value;
 }
 
 export const RepositoryList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
-  const [pulpTypeFilter, setPulpTypeFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<RepositoryRow | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [syncTarget, setSyncTarget] = useState<RepositoryRow | null>(null);
@@ -76,12 +79,20 @@ export const RepositoryList: React.FC = () => {
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFileRepositoryDeleteMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IRepositoryFilters>({
+      initialFilters: { name: "", pulp_type: "" },
+    });
+
   const { data, isLoading, error } = useRepositoriesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    name__icontains: nameFilter || undefined,
-    pulp_type: pulpTypeFilter
-      ? (pulpTypeFilter as NonNullable<
+    name__icontains: filters.name || undefined,
+    pulp_type: filters.pulp_type
+      ? (filters.pulp_type as NonNullable<
           Parameters<typeof useRepositoriesListQuery>[0]
         >["pulp_type"])
       : undefined,
@@ -92,6 +103,113 @@ export const RepositoryList: React.FC = () => {
 
   const canCreate = getDescriptorsForKind("repository").some((d) =>
     d.isAvailable(plugins),
+  );
+
+  const columns = [
+    "Name",
+    "Description",
+    "Type",
+    "Remote",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = repositories.map((repository) => {
+    const repoId = extractIdFromHref(repository.pulp_href ?? "");
+    const pulpType = resolvePulpType(
+      repository.pulp_type,
+      repository.pulp_href,
+    );
+    const descriptor = pulpType
+      ? getDescriptor("repository", pulpType)
+      : undefined;
+
+    return {
+      id: repository.pulp_href,
+      row: [
+        {
+          cell: repoId ? (
+            <Link
+              to="/content-management/repositories/$repoId"
+              params={{ repoId }}
+            >
+              {repository.name}
+            </Link>
+          ) : (
+            repository.name
+          ),
+          props: { dataLabel: "Name" },
+        },
+        {
+          cell: truncate(repository.description),
+          props: { dataLabel: "Description" },
+        },
+        {
+          cell: pulpType ? (
+            <PulpTypeLabel kind="repository" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
+          props: { dataLabel: "Type" },
+        },
+        {
+          cell: truncate(repository.remote),
+          props: { dataLabel: "Remote" },
+        },
+        {
+          cell: !descriptor ? (
+            <ReadOnlyBadge pulpType={pulpType} />
+          ) : (
+            <>
+              {descriptor.supportsSync && (
+                <Button
+                  variant="link"
+                  isInline
+                  onClick={() => setSyncTarget(repository)}
+                >
+                  Sync
+                </Button>
+              )}
+              {descriptor.supportsPublish && (
+                <Button
+                  variant="link"
+                  isInline
+                  onClick={() =>
+                    setPublishRepoHref(repository.pulp_href ?? null)
+                  }
+                >
+                  Publish
+                </Button>
+              )}
+              <Button
+                variant="link"
+                isInline
+                isDanger
+                onClick={() => setDeleteTarget(repository)}
+              >
+                Delete
+              </Button>
+            </>
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
+  });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: repositories.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
   );
 
   const handleDelete = async () => {
@@ -115,110 +233,6 @@ export const RepositoryList: React.FC = () => {
     setDeleteTarget(null);
   };
 
-  const columns = useMemo<AppColumnDef<RepositoryRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const repoId = extractIdFromHref(row.original.pulp_href ?? "");
-          if (!repoId) {
-            return row.original.name;
-          }
-          return (
-            <Link
-              to="/content-management/repositories/$repoId"
-              params={{ repoId }}
-            >
-              {row.original.name}
-            </Link>
-          );
-        },
-      },
-      {
-        id: "description",
-        header: "Description",
-        cell: ({ row }) => truncate(row.original.description),
-      },
-      {
-        id: "pulp_type",
-        header: "Type",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          return pulpType ? (
-            <PulpTypeLabel kind="repository" pulpType={pulpType} />
-          ) : (
-            "—"
-          );
-        },
-      },
-      {
-        id: "remote",
-        header: "Remote",
-        cell: ({ row }) => truncate(row.original.remote),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          const descriptor = pulpType
-            ? getDescriptor("repository", pulpType)
-            : undefined;
-
-          if (!descriptor) {
-            return <ReadOnlyBadge pulpType={pulpType} />;
-          }
-
-          return (
-            <>
-              {descriptor.supportsSync && (
-                <Button
-                  variant="link"
-                  isInline
-                  onClick={() => setSyncTarget(row.original)}
-                >
-                  Sync
-                </Button>
-              )}
-              {descriptor.supportsPublish && (
-                <Button
-                  variant="link"
-                  isInline
-                  onClick={() =>
-                    setPublishRepoHref(row.original.pulp_href ?? null)
-                  }
-                >
-                  Publish
-                </Button>
-              )}
-              <Button
-                variant="link"
-                isInline
-                isDanger
-                onClick={() => setDeleteTarget(row.original)}
-              >
-                Delete
-              </Button>
-            </>
-          );
-        },
-      },
-    ],
-    [],
-  );
-
-  const table = useDataTable({
-    data: repositories,
-    columns,
-  });
-
   return (
     <>
       <DocumentTitle title="Repositories" />
@@ -230,83 +244,46 @@ export const RepositoryList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Repositories</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <TextInput
-                  id="repo-pulp-type-filter"
-                  aria-label="Filter by pulp type"
-                  placeholder="pulp_type (e.g. file.file)"
-                  value={pulpTypeFilter}
-                  onChange={(_e, value) => {
-                    setPulpTypeFilter(value);
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              {canCreate && (
-                <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                  <DataViewTextFilter
+                    filterId="pulp_type"
+                    title="Type"
+                    placeholder="pulp_type (e.g. file.file)"
+                  />
+                </DataViewFilters>
+              }
+              actions={
+                canCreate ? (
                   <Button
                     variant="primary"
                     onClick={() => setIsCreateOpen(true)}
                   >
                     Create repository
                   </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading repositories" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Repositories table"
-              isEmpty={repositories.length === 0}
-              emptyStateContent="No repositories found."
+                ) : undefined
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Repositories table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({
+                empty: "No repositories found.",
+              })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreateRepositoryModal
             isOpen={isCreateOpen}

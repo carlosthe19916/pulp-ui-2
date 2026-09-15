@@ -33,12 +33,17 @@ import {
   Tabs,
   TextInput,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewTable,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
 import type { GroupRoleResponse, GroupUserResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
@@ -154,83 +159,76 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     return map;
   }, [allRolesData?.results]);
 
-  const userColumns = useMemo<AppColumnDef<GroupUserResponse>[]>(
-    () => [
+  const userColumns = [
+    "Username",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const userRows: DataViewTr[] = users.map((user) => ({
+    id: user.pulp_href,
+    row: [
+      { cell: user.username, props: { dataLabel: "Username" } },
       {
-        id: "username",
-        header: "Username",
-        cell: ({ row }) => row.original.username,
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
+        cell: (
           <Button
             variant="link"
             isDanger
             isInline
-            onClick={() => setRemoveUserTarget(row.original)}
+            onClick={() => setRemoveUserTarget(user)}
           >
             Remove
           </Button>
         ),
+        props: { dataLabel: "Actions", isActionCell: true },
       },
     ],
-    [],
-  );
+  }));
 
-  const roleColumns = useMemo<AppColumnDef<GroupRoleResponse>[]>(
-    () => [
-      {
-        id: "role",
-        header: "Role",
-        cell: ({ row }) => {
-          const roleId = roleNameToId.get(row.original.role);
-          return roleId ? (
+  const roleColumns = [
+    "Role",
+    "Description",
+    "Permissions",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const roleRows: DataViewTr[] = roles.map((role) => {
+    const roleId = roleNameToId.get(role.role);
+    return {
+      id: role.pulp_href,
+      row: [
+        {
+          cell: roleId ? (
             <Link to="/admin/roles/$roleId" params={{ roleId }}>
-              {row.original.role}
+              {role.role}
             </Link>
           ) : (
-            row.original.role
-          );
+            role.role
+          ),
+          props: { dataLabel: "Role" },
         },
-      },
-      {
-        id: "description",
-        header: "Description",
-        cell: ({ row }) => row.original.description ?? "—",
-      },
-      {
-        id: "permissions",
-        header: "Permissions",
-        cell: ({ row }) => row.original.permissions?.length ?? 0,
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <Button
-            variant="link"
-            isDanger
-            isInline
-            onClick={() => setRemoveRoleTarget(row.original)}
-          >
-            Remove
-          </Button>
-        ),
-      },
-    ],
-    [roleNameToId],
-  );
-
-  const usersTable = useDataTable({
-    data: users,
-    columns: userColumns,
-  });
-
-  const rolesTable = useDataTable({
-    data: roles,
-    columns: roleColumns,
+        {
+          cell: role.description ?? "—",
+          props: { dataLabel: "Description" },
+        },
+        {
+          cell: role.permissions?.length ?? 0,
+          props: { dataLabel: "Permissions" },
+        },
+        {
+          cell: (
+            <Button
+              variant="link"
+              isDanger
+              isInline
+              onClick={() => setRemoveRoleTarget(role)}
+            >
+              Remove
+            </Button>
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
   });
 
   const handleDelete = async () => {
@@ -423,12 +421,20 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                             </Button>
                           </StackItem>
                           <StackItem>
-                            <DataTable
-                              table={usersTable}
-                              ariaLabel="Group users table"
-                              isEmpty={users.length === 0}
-                              emptyStateContent="No users in this group."
-                            />
+                            <DataView
+                              activeState={computeActiveState({
+                                isEmpty: users.length === 0,
+                              })}
+                            >
+                              <DataViewTable
+                                aria-label="Group users table"
+                                columns={userColumns}
+                                rows={userRows}
+                                bodyStates={dataViewBodyStates({
+                                  empty: "No users in this group.",
+                                })}
+                              />
+                            </DataView>
                           </StackItem>
                         </Stack>
                       </TabContentBody>
@@ -450,12 +456,20 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                             </Button>
                           </StackItem>
                           <StackItem>
-                            <DataTable
-                              table={rolesTable}
-                              ariaLabel="Group roles table"
-                              isEmpty={roles.length === 0}
-                              emptyStateContent="No roles assigned to this group."
-                            />
+                            <DataView
+                              activeState={computeActiveState({
+                                isEmpty: roles.length === 0,
+                              })}
+                            >
+                              <DataViewTable
+                                aria-label="Group roles table"
+                                columns={roleColumns}
+                                rows={roleRows}
+                                bodyStates={dataViewBodyStates({
+                                  empty: "No roles assigned to this group.",
+                                })}
+                              />
+                            </DataView>
                           </StackItem>
                         </Stack>
                       </TabContentBody>

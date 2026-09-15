@@ -5,39 +5,56 @@ import {
   Button,
   Content,
   ContentVariants,
+  EmptyState,
   Label,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
 import { ActionsColumn, TableText } from "@patternfly/react-table";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  useDataViewSort,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  buildThSort,
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { useUsersListQuery } from "@app/queries/users";
+import { useAllUsersListQuery } from "@app/queries/users";
 import { isForbiddenError } from "@app/utils/isHttpError";
-import { formatDateTime } from "@app/utils/utils";
+import { formatDateTime, universalComparator } from "@app/utils/utils";
 
 import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
 import { UserCreateModal, UserEditModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
 
+const COLUMN_KEYS = [
+  "username",
+  "email",
+  "is_active",
+  "groups",
+  "date_joined",
+  "roles",
+  "actions",
+];
+
+interface IUserFilters {
+  username: string;
+}
+
 export const UserList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [usernameFilter, setUsernameFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserResponse | null>(null);
   const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
@@ -45,90 +62,125 @@ export const UserList: React.FC = () => {
 
   const { deleteUser, isDeleting } = useUserActions();
 
-  const { data, isLoading, error } = useUsersListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    username__icontains: usernameFilter || undefined,
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
   });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "username", direction: "asc" },
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
 
-  const users = data?.results ?? [];
-  const totalCount = data?.count ?? 0;
+  const { data, isLoading, error } = useAllUsersListQuery();
 
-  const columns = useMemo<AppColumnDef<UserResponse>[]>(
-    () => [
-      {
-        id: "username",
-        header: "Username",
-        cell: ({ row }) => row.original.username,
+  const filtered = useMemo(() => {
+    const allUsers = data ?? [];
+    return filters.username
+      ? allUsers.filter((u) =>
+          u.username.toLowerCase().includes(filters.username.toLowerCase()),
+        )
+      : allUsers;
+  }, [data, filters.username]);
+
+  const sorted = useMemo(() => {
+    if (!sortBy) return filtered;
+    const key = sortBy as keyof UserResponse;
+    return [...filtered].sort((a, b) => {
+      const cmp = universalComparator(
+        a[key] as string | null,
+        b[key] as string | null,
+        "en",
+      );
+      return direction === "desc" ? -cmp : cmp;
+    });
+  }, [filtered, sortBy, direction]);
+
+  const totalCount = filtered.length;
+  const users = sorted.slice((page - 1) * perPage, page * perPage);
+
+  const sortProps = (columnIndex: number) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnIndex,
+      sortBy,
+      direction,
+      onSort: (event, columnKey, newDirection) => {
+        onSort(event, columnKey, newDirection);
+        onSetPage(undefined, 1);
       },
+    });
+
+  const columns = [
+    { cell: "Username", props: { sort: sortProps(0) } },
+    "Email",
+    "Active",
+    "Groups",
+    { cell: "Date Joined", props: { sort: sortProps(4) } },
+    { cell: "", props: { screenReaderText: "Manage roles" } },
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = users.map((user) => ({
+    id: user.pulp_href,
+    row: [
+      { cell: user.username, props: { dataLabel: "Username" } },
+      { cell: user.email || "—", props: { dataLabel: "Email" } },
       {
-        id: "email",
-        header: "Email",
-        cell: ({ row }) => row.original.email || "—",
-      },
-      {
-        id: "is_active",
-        header: "Active",
-        cell: ({ row }) => (
-          <Label color={row.original.is_active ? "green" : "grey"} isCompact>
-            {row.original.is_active ? "Active" : "Inactive"}
+        cell: (
+          <Label color={user.is_active ? "green" : "grey"} isCompact>
+            {user.is_active ? "Active" : "Inactive"}
           </Label>
         ),
+        props: { dataLabel: "Active" },
+      },
+      { cell: user.groups?.length ?? 0, props: { dataLabel: "Groups" } },
+      {
+        cell: formatDateTime(user.date_joined) ?? "—",
+        props: { dataLabel: "Date Joined" },
       },
       {
-        id: "groups",
-        header: "Groups",
-        cell: ({ row }) => row.original.groups?.length ?? 0,
-      },
-      {
-        id: "date_joined",
-        header: "Date Joined",
-        cell: ({ row }) => formatDateTime(row.original.date_joined) ?? "—",
-      },
-      {
-        id: "roles",
-        header: "",
-        meta: {
-          screenReaderHeader: "Manage roles",
-          hasAction: true,
-          fitContent: true,
-        },
-        cell: ({ row }) => (
+        cell: (
           <TableText>
-            <Button
-              variant="secondary"
-              onClick={() => setRolesUser(row.original)}
-            >
+            <Button variant="secondary" onClick={() => setRolesUser(user)}>
               Roles
             </Button>
           </TableText>
         ),
+        props: { dataLabel: "Roles", modifier: "fitContent", hasAction: true },
       },
       {
-        id: "actions",
-        header: "",
-        meta: { screenReaderHeader: "Actions", isActionCell: true },
-        cell: ({ row }) => (
+        cell: (
           <ActionsColumn
             items={[
-              {
-                title: "Edit",
-                onClick: () => setEditUser(row.original),
-              },
+              { title: "Edit", onClick: () => setEditUser(user) },
               {
                 title: "Delete",
                 isDanger: true,
-                onClick: () => setDeleteTarget(row.original),
+                onClick: () => setDeleteTarget(user),
               },
             ]}
           />
         ),
+        props: { dataLabel: "Actions", isActionCell: true },
       },
     ],
-    [],
-  );
+  }));
 
-  const table = useDataTable({ data: users, columns });
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: users.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
@@ -151,66 +203,41 @@ export const UserList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Users</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by username..."
-                  value={usernameFilter}
-                  onChange={(_e, value) => {
-                    setUsernameFilter(value);
-                    setPage(1);
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => {
+                    onSetFilters(newFilters);
+                    onSetPage(undefined, 1);
                   }}
-                  onClear={() => {
-                    setUsernameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="username" title="Username" />
+                </DataViewFilters>
+              }
+              actions={
                 <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
                   Create user
                 </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading users" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Users table"
-              isEmpty={users.length === 0}
-              emptyStateContent="No users found."
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Users table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({
+                empty: (
+                  <EmptyState titleText="No users found" headingLevel="h4" />
+                ),
+              })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <UserCreateModal
             isOpen={isCreateOpen}

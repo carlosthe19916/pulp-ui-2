@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -12,20 +12,24 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
 import type { GroupResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -38,62 +42,83 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { CreateGroupModal } from "./components/CreateGroupModal";
 
+interface IGroupFilters {
+  name: string;
+}
+
 export const GroupList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GroupResponse | null>(null);
 
   const { addNotification } = useNotifications();
   const deleteMutation = useGroupDeleteMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IGroupFilters>({ initialFilters: { name: "" } });
+
   const { data, isLoading, error } = useGroupsListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering: "name",
-    name__icontains: nameFilter || undefined,
+    name__icontains: filters.name || undefined,
   });
 
   const groups = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<AppColumnDef<GroupResponse>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const groupId = extractIdFromHref(row.original.pulp_href ?? "");
-          return (
-            <Link to="/admin/groups/$groupId" params={{ groupId }}>
-              {row.original.name}
-            </Link>
-          );
-        },
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <Button
-            variant="link"
-            isDanger
-            isInline
-            onClick={() => setDeleteTarget(row.original)}
-          >
-            Delete
-          </Button>
-        ),
-      },
-    ],
-    [],
-  );
+  const columns = [
+    "Name",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
 
-  const table = useDataTable({
-    data: groups,
-    columns,
+  const rows: DataViewTr[] = groups.map((group) => {
+    const groupId = extractIdFromHref(group.pulp_href ?? "");
+    return {
+      id: group.pulp_href,
+      row: [
+        {
+          cell: (
+            <Link to="/admin/groups/$groupId" params={{ groupId }}>
+              {group.name}
+            </Link>
+          ),
+          props: { dataLabel: "Name" },
+        },
+        {
+          cell: (
+            <Button
+              variant="link"
+              isDanger
+              isInline
+              onClick={() => setDeleteTarget(group)}
+            >
+              Delete
+            </Button>
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
   });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: groups.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
@@ -123,66 +148,34 @@ export const GroupList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Groups</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                </DataViewFilters>
+              }
+              actions={
                 <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
                   Create Group
                 </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading groups" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Groups table"
-              isEmpty={groups.length === 0}
-              emptyStateContent="No groups found."
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Groups table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({ empty: "No groups found." })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreateGroupModal
             isOpen={isCreateOpen}

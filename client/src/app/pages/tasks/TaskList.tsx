@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -13,25 +13,29 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
   Select,
   SelectList,
   SelectOption,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
   ToolbarItem,
   MenuToggle,
   type MenuToggleElement,
 } from "@patternfly/react-core";
-import type { TaskResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
+import {
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -78,10 +82,11 @@ function isCancelable(state?: string | null) {
   return state === "running" || state === "waiting";
 }
 
+interface ITaskFilters {
+  name: string;
+}
+
 export const TaskList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
   const [stateFilter, setStateFilter] = useState<TaskState | "">("");
   const [isStateOpen, setIsStateOpen] = useState(false);
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
@@ -91,74 +96,124 @@ export const TaskList: React.FC = () => {
   const cancelMutation = useTaskCancelMutation();
   const purgeMutation = useTaskPurgeMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<ITaskFilters>({ initialFilters: { name: "" } });
+
   const { data, isLoading, error } = useTasksListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering: "-pulp_created",
-    name__contains: nameFilter || undefined,
+    name__contains: filters.name || undefined,
     state: stateFilter || undefined,
   });
 
   const tasks = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = useMemo<AppColumnDef<TaskResponse>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const taskId = extractTaskId(row.original.pulp_href ?? "");
-          return (
+  const columns = [
+    "Name",
+    "State",
+    "Started",
+    "Finished",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = tasks.map((task) => {
+    const taskId = extractTaskId(task.pulp_href ?? "");
+    return {
+      id: task.pulp_href,
+      row: [
+        {
+          cell: (
             <Link to="/tasks/$taskId" params={{ taskId }}>
-              {getTaskName(row.original.name)}
+              {getTaskName(task.name)}
             </Link>
-          );
+          ),
+          props: { dataLabel: "Name" },
         },
-      },
-      {
-        id: "state",
-        header: "State",
-        cell: ({ row }) => (
-          <Label
-            color={stateColors[row.original.state ?? ""] ?? "grey"}
-            isCompact
-          >
-            {row.original.state}
-          </Label>
-        ),
-      },
-      {
-        id: "started",
-        header: "Started",
-        cell: ({ row }) => formatDateTime(row.original.started_at) ?? "—",
-      },
-      {
-        id: "finished",
-        header: "Finished",
-        cell: ({ row }) => formatDateTime(row.original.finished_at) ?? "—",
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) =>
-          isCancelable(row.original.state) ? (
+        {
+          cell: (
+            <Label color={stateColors[task.state ?? ""] ?? "grey"} isCompact>
+              {task.state}
+            </Label>
+          ),
+          props: { dataLabel: "State" },
+        },
+        {
+          cell: formatDateTime(task.started_at) ?? "—",
+          props: { dataLabel: "Started" },
+        },
+        {
+          cell: formatDateTime(task.finished_at) ?? "—",
+          props: { dataLabel: "Finished" },
+        },
+        {
+          cell: isCancelable(task.state) ? (
             <Button
               variant="link"
               isInline
-              onClick={() => setCancelHref(row.original.pulp_href ?? null)}
+              onClick={() => setCancelHref(task.pulp_href ?? null)}
             >
               Cancel
             </Button>
           ) : (
             "—"
           ),
-      },
-    ],
-    [],
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
+  });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: tasks.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
   );
 
-  const table = useDataTable({ data: tasks, columns });
+  const stateSelect = (
+    <ToolbarItem>
+      <Select
+        isOpen={isStateOpen}
+        selected={stateFilter}
+        onSelect={(_e, value) => {
+          setStateFilter((value as TaskState | "") ?? "");
+          setIsStateOpen(false);
+        }}
+        onOpenChange={setIsStateOpen}
+        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => setIsStateOpen(!isStateOpen)}
+            isExpanded={isStateOpen}
+          >
+            {stateFilter || "All states"}
+          </MenuToggle>
+        )}
+      >
+        <SelectList>
+          {TASK_STATES.map((state) => (
+            <SelectOption key={state || "all"} value={state}>
+              {state || "All states"}
+            </SelectOption>
+          ))}
+        </SelectList>
+      </Select>
+    </ToolbarItem>
+  );
 
   const handleCancel = async () => {
     if (!cancelHref) return;
@@ -211,98 +266,40 @@ export const TaskList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Tasks</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <Select
-                  isOpen={isStateOpen}
-                  selected={stateFilter}
-                  onSelect={(_e, value) => {
-                    setStateFilter((value as TaskState | "") ?? "");
-                    setPage(1);
-                    setIsStateOpen(false);
-                  }}
-                  onOpenChange={setIsStateOpen}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      onClick={() => setIsStateOpen(!isStateOpen)}
-                      isExpanded={isStateOpen}
-                    >
-                      {stateFilter || "All states"}
-                    </MenuToggle>
-                  )}
-                >
-                  <SelectList>
-                    {TASK_STATES.map((state) => (
-                      <SelectOption key={state || "all"} value={state}>
-                        {state || "All states"}
-                      </SelectOption>
-                    ))}
-                  </SelectList>
-                </Select>
-              </ToolbarItem>
-              <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <>
+                  <DataViewFilters
+                    onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                    values={filters}
+                  >
+                    <DataViewTextFilter filterId="name" title="Name" />
+                  </DataViewFilters>
+                  {stateSelect}
+                </>
+              }
+              actions={
                 <Button
                   variant="secondary"
                   onClick={() => setIsPurgeOpen(true)}
                 >
                   Purge tasks
                 </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading tasks" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Tasks table"
-              isEmpty={tasks.length === 0}
-              emptyStateContent="No tasks found."
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Tasks table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({ empty: "No tasks found." })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <Modal
             isOpen={!!cancelHref}

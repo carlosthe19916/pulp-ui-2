@@ -12,22 +12,24 @@ import {
   ModalHeader,
   PageSection,
   Pagination,
-  SearchInput,
-  Spinner,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
 
 import type { DistributionResponse } from "@app/client";
 import {
-  DataTable,
-  useDataTable,
-  type AppColumnDef,
-} from "@app/components/DataTable";
+  computeActiveState,
+  dataViewBodyStates,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -57,11 +59,12 @@ import { CreateDistributionModal } from "./components/CreateDistributionModal";
  */
 type DistributionRow = DistributionResponse & { pulp_type?: string };
 
+interface IDistributionFilters {
+  name: string;
+  pulp_type: string;
+}
+
 export const DistributionList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [nameFilter, setNameFilter] = useState("");
-  const [pulpTypeFilter, setPulpTypeFilter] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DistributionRow | null>(
     null,
   );
@@ -71,12 +74,20 @@ export const DistributionList: React.FC = () => {
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const deleteMutation = useFileDistributionDeleteMutation();
 
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 20,
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IDistributionFilters>({
+      initialFilters: { name: "", pulp_type: "" },
+    });
+
   const { data, isLoading, error } = useDistributionsListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
-    name__icontains: nameFilter || undefined,
-    pulp_type: pulpTypeFilter
-      ? (pulpTypeFilter as NonNullable<
+    name__icontains: filters.name || undefined,
+    pulp_type: filters.pulp_type
+      ? (filters.pulp_type as NonNullable<
           Parameters<typeof useDistributionsListQuery>[0]
         >["pulp_type"])
       : undefined,
@@ -98,6 +109,113 @@ export const DistributionList: React.FC = () => {
 
   const canCreate = getDescriptorsForKind("distribution").some((d) =>
     d.isAvailable(plugins),
+  );
+
+  const columns = [
+    "Name",
+    "Base Path",
+    "Type",
+    "Repository",
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+
+  const rows: DataViewTr[] = distributions.map((distribution) => {
+    const distId = extractIdFromHref(distribution.pulp_href ?? "");
+    const pulpType = resolvePulpType(
+      distribution.pulp_type,
+      distribution.pulp_href,
+    );
+    const descriptor = pulpType
+      ? getDescriptor("distribution", pulpType)
+      : undefined;
+
+    return {
+      id: distribution.pulp_href,
+      row: [
+        {
+          cell: distId ? (
+            <Link
+              to="/content-management/distributions/$distId"
+              params={{ distId }}
+            >
+              {distribution.name}
+            </Link>
+          ) : (
+            distribution.name
+          ),
+          props: { dataLabel: "Name" },
+        },
+        {
+          cell: distribution.base_path || "—",
+          props: { dataLabel: "Base Path" },
+        },
+        {
+          cell: pulpType ? (
+            <PulpTypeLabel kind="distribution" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
+          props: { dataLabel: "Type" },
+        },
+        {
+          cell: (
+            <ResourceHrefLink
+              kind="repository"
+              href={distribution.repository}
+              label={
+                distribution.repository
+                  ? repositoryNameByHref[distribution.repository]
+                  : undefined
+              }
+            />
+          ),
+          props: { dataLabel: "Repository" },
+        },
+        {
+          cell: !descriptor ? (
+            <ReadOnlyBadge pulpType={pulpType} />
+          ) : (
+            <>
+              {distId ? (
+                <>
+                  <Link
+                    to="/browse/$distributionId"
+                    params={{ distributionId: distId }}
+                  >
+                    Browse
+                  </Link>{" "}
+                </>
+              ) : null}
+              <Button
+                variant="link"
+                isInline
+                isDanger
+                onClick={() => setDeleteTarget(distribution)}
+              >
+                Delete
+              </Button>
+            </>
+          ),
+          props: { dataLabel: "Actions", isActionCell: true },
+        },
+      ],
+    };
+  });
+
+  const activeState = computeActiveState({
+    isLoading,
+    isError: !!error,
+    isEmpty: distributions.length === 0,
+  });
+
+  const pagination = (
+    <Pagination
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
   );
 
   const handleDelete = async () => {
@@ -126,112 +244,6 @@ export const DistributionList: React.FC = () => {
     setDeleteTarget(null);
   };
 
-  const columns = useMemo<AppColumnDef<DistributionRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          const distId = extractIdFromHref(row.original.pulp_href ?? "");
-          if (!distId) {
-            return row.original.name;
-          }
-          return (
-            <Link
-              to="/content-management/distributions/$distId"
-              params={{ distId }}
-            >
-              {row.original.name}
-            </Link>
-          );
-        },
-      },
-      {
-        id: "base_path",
-        header: "Base Path",
-        cell: ({ row }) => row.original.base_path || "—",
-      },
-      {
-        id: "pulp_type",
-        header: "Type",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          return pulpType ? (
-            <PulpTypeLabel kind="distribution" pulpType={pulpType} />
-          ) : (
-            "—"
-          );
-        },
-      },
-      {
-        id: "repository",
-        header: "Repository",
-        cell: ({ row }) => (
-          <ResourceHrefLink
-            kind="repository"
-            href={row.original.repository}
-            label={
-              row.original.repository
-                ? repositoryNameByHref[row.original.repository]
-                : undefined
-            }
-          />
-        ),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const pulpType = resolvePulpType(
-            row.original.pulp_type,
-            row.original.pulp_href,
-          );
-          const descriptor = pulpType
-            ? getDescriptor("distribution", pulpType)
-            : undefined;
-
-          if (!descriptor) {
-            return <ReadOnlyBadge pulpType={pulpType} />;
-          }
-
-          const distId = extractIdFromHref(row.original.pulp_href ?? "");
-
-          return (
-            <>
-              {distId ? (
-                <>
-                  <Link
-                    to="/browse/$distributionId"
-                    params={{ distributionId: distId }}
-                  >
-                    Browse
-                  </Link>{" "}
-                </>
-              ) : null}
-              <Button
-                variant="link"
-                isInline
-                isDanger
-                onClick={() => setDeleteTarget(row.original)}
-              >
-                Delete
-              </Button>
-            </>
-          );
-        },
-      },
-    ],
-    [repositoryNameByHref],
-  );
-
-  const table = useDataTable({
-    data: distributions,
-    columns,
-  });
-
   return (
     <>
       <DocumentTitle title="Distributions" />
@@ -243,83 +255,46 @@ export const DistributionList: React.FC = () => {
         <PageSection>
           <Content component={ContentVariants.h1}>Distributions</Content>
 
-          <Toolbar>
-            <ToolbarContent>
-              <ToolbarItem>
-                <SearchInput
-                  placeholder="Filter by name..."
-                  value={nameFilter}
-                  onChange={(_e, value) => {
-                    setNameFilter(value);
-                    setPage(1);
-                  }}
-                  onClear={() => {
-                    setNameFilter("");
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <TextInput
-                  id="dist-pulp-type-filter"
-                  aria-label="Filter by pulp type"
-                  placeholder="pulp_type (e.g. file.file)"
-                  value={pulpTypeFilter}
-                  onChange={(_e, value) => {
-                    setPulpTypeFilter(value);
-                    setPage(1);
-                  }}
-                />
-              </ToolbarItem>
-              {canCreate && (
-                <ToolbarItem>
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                  <DataViewTextFilter
+                    filterId="pulp_type"
+                    title="Type"
+                    placeholder="pulp_type (e.g. file.file)"
+                  />
+                </DataViewFilters>
+              }
+              actions={
+                canCreate ? (
                   <Button
                     variant="primary"
                     onClick={() => setIsCreateOpen(true)}
                   >
                     Create distribution
                   </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="pagination">
-                <Pagination
-                  itemCount={totalCount}
-                  perPage={perPage}
-                  page={page}
-                  onSetPage={(_e, p) => setPage(p)}
-                  onPerPageSelect={(_e, pp) => {
-                    setPerPage(pp);
-                    setPage(1);
-                  }}
-                  isCompact
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          </Toolbar>
-
-          <LoadingWrapper
-            isFetching={isLoading}
-            isFetchingState={<Spinner aria-label="Loading distributions" />}
-          >
-            <DataTable
-              table={table}
-              ariaLabel="Distributions table"
-              isEmpty={distributions.length === 0}
-              emptyStateContent="No distributions found."
+                ) : undefined
+              }
+              pagination={pagination}
             />
-          </LoadingWrapper>
 
-          <Pagination
-            itemCount={totalCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={(_e, p) => setPage(p)}
-            onPerPageSelect={(_e, pp) => {
-              setPerPage(pp);
-              setPage(1);
-            }}
-            variant="bottom"
-          />
+            <DataViewTable
+              aria-label="Distributions table"
+              columns={columns}
+              rows={rows}
+              bodyStates={dataViewBodyStates({
+                empty: "No distributions found.",
+              })}
+            />
+
+            <DataViewToolbar pagination={pagination} />
+          </DataView>
 
           <CreateDistributionModal
             isOpen={isCreateOpen}
