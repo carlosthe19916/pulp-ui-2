@@ -25,8 +25,8 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useRoleDetailQuery } from "@app/queries/roles";
 
-import { RoleEditModal } from "./components/RoleModal";
-import { useRoleActions } from "./hooks/useRoleActions";
+import { RoleEditModal } from "../components/RoleModal";
+import { useRoleActions } from "../hooks/useRoleActions";
 
 interface IRoleDetailProps {
   roleId: string;

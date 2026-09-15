@@ -35,8 +35,8 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { RoleCreateModal } from "./components/RoleModal";
-import { useRoleActions } from "./hooks/useRoleActions";
+import { RoleCreateModal } from "../components/RoleModal";
+import { useRoleActions } from "../hooks/useRoleActions";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
 const getRolePlugin = (name: string): string => {

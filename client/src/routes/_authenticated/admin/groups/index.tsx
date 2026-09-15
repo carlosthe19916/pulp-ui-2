@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { GroupList } from "@app/pages/admin/groups/GroupList";
+import { GroupList } from "@app/pages/admin/groups/group-list/GroupList";
 
 export const Route = createFileRoute("/_authenticated/admin/groups/")({
   component: GroupList,
