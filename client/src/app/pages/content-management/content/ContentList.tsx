@@ -18,10 +18,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { MultipleArtifactContentResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
@@ -112,10 +109,11 @@ export const ContentList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: content.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: content.length === 0,
+    emptyState: "No content found.",
   });
 
   const pagination = (
@@ -158,7 +156,7 @@ export const ContentList: React.FC = () => {
               aria-label="Content table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({ empty: "No content found." })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

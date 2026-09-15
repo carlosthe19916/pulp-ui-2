@@ -22,10 +22,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { PublicationResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -164,10 +161,11 @@ export const PublicationList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: publications.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: publications.length === 0,
+    emptyState: "No publications found.",
   });
 
   const pagination = (
@@ -210,9 +208,7 @@ export const PublicationList: React.FC = () => {
               aria-label="Publications table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({
-                empty: "No publications found.",
-              })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

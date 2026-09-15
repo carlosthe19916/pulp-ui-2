@@ -25,10 +25,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GroupResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
@@ -104,10 +101,11 @@ export const GroupList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: groups.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: groups.length === 0,
+    emptyState: "No groups found.",
   });
 
   const pagination = (
@@ -171,7 +169,7 @@ export const GroupList: React.FC = () => {
               aria-label="Groups table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({ empty: "No groups found." })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

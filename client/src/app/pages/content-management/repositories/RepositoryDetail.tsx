@@ -40,10 +40,7 @@ type DistributionRow = DistributionResponse & {
   publication?: string | null;
   repository?: string | null;
 };
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -231,6 +228,22 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     setIsDeleteOpen(false);
   };
 
+  const versionsStates = dataViewBodyStates({
+    loading: isVersionsLoading,
+    empty: versions.length === 0,
+    emptyState: "No versions found.",
+  });
+  const repoDistributionsStates = dataViewBodyStates({
+    loading: isDistributionsLoading,
+    empty: distributions.length === 0,
+    emptyState: "No distributions point at this repository.",
+  });
+  const repoContentStates = dataViewBodyStates({
+    loading: isContentLoading,
+    empty: contentUnits.length === 0,
+    emptyState: "No content in the latest version.",
+  });
+
   return (
     <>
       <DocumentTitle title={repoDisplayName} />
@@ -361,19 +374,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                       }
                     >
                       <TabContentBody hasPadding>
-                        <DataView
-                          activeState={computeActiveState({
-                            isLoading: isVersionsLoading,
-                            isEmpty: versions.length === 0,
-                          })}
-                        >
+                        <DataView activeState={versionsStates.activeState}>
                           <DataViewTable
                             aria-label="Repository versions table"
                             columns={versionColumns}
                             rows={versionRows}
-                            bodyStates={dataViewBodyStates({
-                              empty: "No versions found.",
-                            })}
+                            bodyStates={versionsStates.bodyStates}
                           />
                         </DataView>
                       </TabContentBody>
@@ -389,19 +395,13 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                     >
                       <TabContentBody hasPadding>
                         <DataView
-                          activeState={computeActiveState({
-                            isLoading: isDistributionsLoading,
-                            isEmpty: distributions.length === 0,
-                          })}
+                          activeState={repoDistributionsStates.activeState}
                         >
                           <DataViewTable
                             aria-label="Repository distributions table"
                             columns={distributionColumns}
                             rows={distributionRows}
-                            bodyStates={dataViewBodyStates({
-                              empty:
-                                "No distributions point at this repository.",
-                            })}
+                            bodyStates={repoDistributionsStates.bodyStates}
                           />
                         </DataView>
                       </TabContentBody>
@@ -435,18 +435,13 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                               </Content>
                             ) : (
                               <DataView
-                                activeState={computeActiveState({
-                                  isLoading: isContentLoading,
-                                  isEmpty: contentUnits.length === 0,
-                                })}
+                                activeState={repoContentStates.activeState}
                               >
                                 <DataViewTable
                                   aria-label="Repository content table"
                                   columns={contentColumns}
                                   rows={contentRows}
-                                  bodyStates={dataViewBodyStates({
-                                    empty: "No content in the latest version.",
-                                  })}
+                                  bodyStates={repoContentStates.bodyStates}
                                 />
                               </DataView>
                             )}

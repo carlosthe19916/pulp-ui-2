@@ -23,10 +23,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { FileFileContentResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
@@ -148,6 +145,14 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     />
   );
 
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isResolvingVersion || isContentLoading,
+    empty: contentUnits.length === 0,
+    emptyState: filters.relative_path
+      ? "No content matches the current filter."
+      : "No content in this distribution version.",
+  });
+
   return (
     <DetailQueryGate
       isLoading={isDistLoading}
@@ -179,12 +184,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
                 </EmptyStateBody>
               </EmptyState>
             ) : (
-              <DataView
-                activeState={computeActiveState({
-                  isLoading: isResolvingVersion || isContentLoading,
-                  isEmpty: contentUnits.length === 0,
-                })}
-              >
+              <DataView activeState={activeState}>
                 <DataViewToolbar
                   clearAllFilters={clearAllFilters}
                   filters={
@@ -205,11 +205,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
                   aria-label="Content table"
                   columns={columns}
                   rows={rows}
-                  bodyStates={dataViewBodyStates({
-                    empty: filters.relative_path
-                      ? "No content matches the current filter."
-                      : "No content in this distribution version.",
-                  })}
+                  bodyStates={bodyStates}
                 />
 
                 <DataViewToolbar pagination={pagination} />

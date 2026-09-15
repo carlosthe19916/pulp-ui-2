@@ -9,64 +9,67 @@ import {
 import { ExclamationCircleIcon } from "@patternfly/react-icons";
 import { DataViewState } from "@patternfly/react-data-view";
 
-interface IDataViewStateNodes {
-  /** Overrides the default centered spinner. */
-  loading?: React.ReactNode;
-  /** Overrides the default "no results" empty state. */
-  empty?: React.ReactNode;
-  /** Overrides the default error empty state. */
-  error?: React.ReactNode;
+import { UnauthorizedState } from "@app/components/UnauthorizedState";
+import { isForbiddenError } from "@app/utils/isHttpError";
+
+// Condition + `*State` override pairs per DataViewState, mirroring LoadingWrapper.
+interface IDataViewStatesArgs<TError = unknown> {
+  loading?: boolean;
+  loadingState?: React.ReactNode;
+  error?: TError | null;
+  errorState?: (error: TError) => React.ReactNode;
+  empty?: boolean;
+  emptyState?: React.ReactNode;
 }
 
-/**
- * Builds the `bodyStates` map for `DataViewTable`, one node per PatternFly
- * `DataViewState`. Defaults mirror the loading / error / empty visuals the app
- * used before adopting react-data-view; any slot can be overridden per page.
- */
-export const dataViewBodyStates = (
-  overrides: IDataViewStateNodes = {},
-): Partial<Record<DataViewState, React.ReactNode>> => {
-  return {
-    [DataViewState.loading]: overrides.loading ?? (
+// Resolves `activeState` (for DataView) and `bodyStates` (for DataViewTable)
+// from the loading/error/empty conditions and optional overrides.
+export const dataViewBodyStates = <TError = unknown,>({
+  loading,
+  loadingState,
+  error,
+  errorState,
+  empty,
+  emptyState,
+}: IDataViewStatesArgs<TError> = {}): {
+  activeState: DataViewState | undefined;
+  bodyStates: Partial<Record<DataViewState, React.ReactNode>>;
+} => {
+  const activeState = loading
+    ? DataViewState.loading
+    : error != null
+      ? DataViewState.error
+      : empty
+        ? DataViewState.empty
+        : undefined;
+
+  const bodyStates: Partial<Record<DataViewState, React.ReactNode>> = {
+    [DataViewState.loading]: loadingState ?? (
       <Bullseye>
         <Spinner aria-label="Loading" />
       </Bullseye>
     ),
-    [DataViewState.error]: overrides.error ?? (
-      <EmptyState
-        status="danger"
-        icon={ExclamationCircleIcon}
-        titleText="Unable to load data"
-        headingLevel="h4"
-      >
-        <EmptyStateBody>
-          Something went wrong while loading this table.
-        </EmptyStateBody>
-      </EmptyState>
-    ),
-    [DataViewState.empty]: overrides.empty ?? (
+    [DataViewState.error]:
+      errorState && error != null ? (
+        errorState(error)
+      ) : isForbiddenError(error) ? (
+        <UnauthorizedState />
+      ) : (
+        <EmptyState
+          status="danger"
+          icon={ExclamationCircleIcon}
+          titleText="Unable to load data"
+          headingLevel="h4"
+        >
+          <EmptyStateBody>
+            Something went wrong while loading this table.
+          </EmptyStateBody>
+        </EmptyState>
+      ),
+    [DataViewState.empty]: emptyState ?? (
       <EmptyState titleText="No results found" headingLevel="h4" />
     ),
   };
-};
 
-interface IComputeActiveStateArgs {
-  isLoading?: boolean;
-  isError?: boolean;
-  isEmpty?: boolean;
-}
-
-/**
- * Resolve the single active `DataViewState` for `DataView.activeState`.
- * Precedence: loading → error → empty; otherwise `undefined` (render rows).
- */
-export const computeActiveState = ({
-  isLoading,
-  isError,
-  isEmpty,
-}: IComputeActiveStateArgs): DataViewState | undefined => {
-  if (isLoading) return DataViewState.loading;
-  if (isError) return DataViewState.error;
-  if (isEmpty) return DataViewState.empty;
-  return undefined;
+  return { activeState, bodyStates };
 };

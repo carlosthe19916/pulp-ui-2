@@ -3,5 +3,5 @@
 // these helpers for the repetitive bits: bridging the string-keyed sort hook to
 // PatternFly's index-based `Th` sort props, and rendering consistent
 // loading/empty/error states.
-export { computeActiveState, dataViewBodyStates } from "./dataViewStates";
+export { dataViewBodyStates } from "./dataViewStates";
 export { buildThSort } from "./sortHelpers";

@@ -25,15 +25,9 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
-import {
-  buildThSort,
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useAllUsersListQuery } from "@app/queries/users";
-import { isForbiddenError } from "@app/utils/isHttpError";
 import { formatDateTime, universalComparator } from "@app/utils/utils";
 
 import { ConfirmDeleteModal } from "./components/ConfirmDeleteModal";
@@ -168,10 +162,11 @@ export const UserList: React.FC = () => {
     ],
   }));
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: users.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: users.length === 0,
+    emptyState: <EmptyState titleText="No users found" headingLevel="h4" />,
   });
 
   const pagination = (variant: PaginationVariant) => (
@@ -198,83 +193,71 @@ export const UserList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Users" />
-      {isForbiddenError(error) ? (
-        <PageSection>
-          <UnauthorizedState />
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Users</Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>Users</Content>
 
-          <DataView activeState={activeState}>
-            <DataViewToolbar
-              clearAllFilters={clearAllFilters}
-              filters={
-                <DataViewFilters
-                  onChange={(_key, newFilters) => {
-                    onSetFilters(newFilters);
-                    onSetPage(undefined, 1);
-                  }}
-                  values={filters}
-                >
-                  <DataViewTextFilter filterId="username" title="Username" />
-                </DataViewFilters>
-              }
-              actions={
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                  Create user
-                </Button>
-              }
-              pagination={pagination(PaginationVariant.top)}
-            />
-
-            <DataViewTable
-              aria-label="Users table"
-              columns={columns}
-              rows={rows}
-              bodyStates={dataViewBodyStates({
-                empty: (
-                  <EmptyState titleText="No users found" headingLevel="h4" />
-                ),
-              })}
-            />
-
-            <DataViewToolbar
-              pagination={pagination(PaginationVariant.bottom)}
-            />
-          </DataView>
-
-          <UserCreateModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="username" title="Username" />
+              </DataViewFilters>
+            }
+            actions={
+              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                Create user
+              </Button>
+            }
+            pagination={pagination(PaginationVariant.top)}
           />
 
-          {editUser && (
-            <UserEditModal
-              isOpen
-              user={editUser}
-              onClose={() => setEditUser(null)}
-            />
-          )}
-
-          {rolesUser && (
-            <UserRolesModal
-              isOpen
-              user={rolesUser}
-              onClose={() => setRolesUser(null)}
-            />
-          )}
-
-          <ConfirmDeleteModal
-            isOpen={!!deleteTarget}
-            title="Delete User"
-            body={`Are you sure you want to delete "${deleteTarget?.username}"? This action cannot be undone.`}
-            isDeleting={isDeleting}
-            onConfirm={() => void handleDelete()}
-            onCancel={() => setDeleteTarget(null)}
+          <DataViewTable
+            aria-label="Users table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
           />
-        </PageSection>
-      )}
+
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+        </DataView>
+
+        <UserCreateModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+        />
+
+        {editUser && (
+          <UserEditModal
+            isOpen
+            user={editUser}
+            onClose={() => setEditUser(null)}
+          />
+        )}
+
+        {rolesUser && (
+          <UserRolesModal
+            isOpen
+            user={rolesUser}
+            onClose={() => setRolesUser(null)}
+          />
+        )}
+
+        <ConfirmDeleteModal
+          isOpen={!!deleteTarget}
+          title="Delete User"
+          body={`Are you sure you want to delete "${deleteTarget?.username}"? This action cannot be undone.`}
+          isDeleting={isDeleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      </PageSection>
     </>
   );
 };

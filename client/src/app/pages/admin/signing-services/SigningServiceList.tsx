@@ -19,10 +19,7 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
@@ -67,10 +64,19 @@ export const SigningServiceList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: services.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: services.length === 0,
+    emptyState: (
+      <EmptyState titleText="No signing services found" headingLevel="h4">
+        <EmptyStateBody>
+          {filters.name
+            ? "No signing services match the current filter. Try a different search term."
+            : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
+        </EmptyStateBody>
+      </EmptyState>
+    ),
   });
 
   const pagination = (
@@ -117,20 +123,7 @@ export const SigningServiceList: React.FC = () => {
               aria-label="Signing services table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({
-                empty: (
-                  <EmptyState
-                    titleText="No signing services found"
-                    headingLevel="h4"
-                  >
-                    <EmptyStateBody>
-                      {filters.name
-                        ? "No signing services match the current filter. Try a different search term."
-                        : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
-                    </EmptyStateBody>
-                  </EmptyState>
-                ),
-              })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

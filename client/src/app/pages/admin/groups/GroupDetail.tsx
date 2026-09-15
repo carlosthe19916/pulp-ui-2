@@ -40,10 +40,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GroupRoleResponse, GroupUserResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
@@ -344,6 +341,15 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     setRemoveRoleTarget(null);
   };
 
+  const groupUsersStates = dataViewBodyStates({
+    empty: users.length === 0,
+    emptyState: "No users in this group.",
+  });
+  const groupRolesStates = dataViewBodyStates({
+    empty: roles.length === 0,
+    emptyState: "No roles assigned to this group.",
+  });
+
   return (
     <>
       <DocumentTitle title={group?.name ? `Group · ${group.name}` : "Group"} />
@@ -422,17 +428,13 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                           </StackItem>
                           <StackItem>
                             <DataView
-                              activeState={computeActiveState({
-                                isEmpty: users.length === 0,
-                              })}
+                              activeState={groupUsersStates.activeState}
                             >
                               <DataViewTable
                                 aria-label="Group users table"
                                 columns={userColumns}
                                 rows={userRows}
-                                bodyStates={dataViewBodyStates({
-                                  empty: "No users in this group.",
-                                })}
+                                bodyStates={groupUsersStates.bodyStates}
                               />
                             </DataView>
                           </StackItem>
@@ -457,17 +459,13 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                           </StackItem>
                           <StackItem>
                             <DataView
-                              activeState={computeActiveState({
-                                isEmpty: roles.length === 0,
-                              })}
+                              activeState={groupRolesStates.activeState}
                             >
                               <DataViewTable
                                 aria-label="Group roles table"
                                 columns={roleColumns}
                                 rows={roleRows}
-                                bodyStates={dataViewBodyStates({
-                                  empty: "No roles assigned to this group.",
-                                })}
+                                bodyStates={groupRolesStates.bodyStates}
                               />
                             </DataView>
                           </StackItem>

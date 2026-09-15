@@ -25,10 +25,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { RepositoryResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -196,10 +193,11 @@ export const RepositoryList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: repositories.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: repositories.length === 0,
+    emptyState: "No repositories found.",
   });
 
   const pagination = (
@@ -277,9 +275,7 @@ export const RepositoryList: React.FC = () => {
               aria-label="Repositories table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({
-                empty: "No repositories found.",
-              })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

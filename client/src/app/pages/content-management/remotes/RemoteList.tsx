@@ -25,10 +25,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GenericRemoteResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -160,10 +157,11 @@ export const RemoteList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: remotes.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: remotes.length === 0,
+    emptyState: "No remotes found.",
   });
 
   const pagination = (
@@ -241,7 +239,7 @@ export const RemoteList: React.FC = () => {
               aria-label="Remotes table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({ empty: "No remotes found." })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

@@ -25,10 +25,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { DistributionResponse } from "@app/client";
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -202,10 +199,11 @@ export const DistributionList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: distributions.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: distributions.length === 0,
+    emptyState: "No distributions found.",
   });
 
   const pagination = (
@@ -288,9 +286,7 @@ export const DistributionList: React.FC = () => {
               aria-label="Distributions table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({
-                empty: "No distributions found.",
-              })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />

@@ -31,10 +31,7 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  computeActiveState,
-  dataViewBodyStates,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { useNotifications } from "@app/context/useNotifications";
@@ -168,10 +165,11 @@ export const TaskList: React.FC = () => {
     };
   });
 
-  const activeState = computeActiveState({
-    isLoading,
-    isError: !!error,
-    isEmpty: tasks.length === 0,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: tasks.length === 0,
+    emptyState: "No tasks found.",
   });
 
   const pagination = (
@@ -295,7 +293,7 @@ export const TaskList: React.FC = () => {
               aria-label="Tasks table"
               columns={columns}
               rows={rows}
-              bodyStates={dataViewBodyStates({ empty: "No tasks found." })}
+              bodyStates={bodyStates}
             />
 
             <DataViewToolbar pagination={pagination} />
