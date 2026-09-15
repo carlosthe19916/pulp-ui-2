@@ -27,12 +27,10 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFileDistributionDeleteMutation,
   useFileDistributionDetailQuery,
 } from "@app/queries/file-distributions";
-import { buildDistributionHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
@@ -46,13 +44,11 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   distId,
 }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const distHref = buildDistributionHref(distId, domain);
   const {
     data: distribution,
     isLoading,
     error,
-  } = useFileDistributionDetailQuery(distHref);
+  } = useFileDistributionDetailQuery(distId);
   const deleteMutation = useFileDistributionDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -61,8 +57,9 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   const descriptor = getDescriptor("distribution", "file.file");
 
   const handleDelete = async () => {
+    if (!distribution?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(distHref);
+      const result = await deleteMutation.mutateAsync(distribution.pulp_href);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,

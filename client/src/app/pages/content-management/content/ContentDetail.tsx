@@ -18,9 +18,7 @@ import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useFileContentDetailQuery } from "@app/queries/file-content";
-import { buildContentHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IContentDetailProps {
@@ -28,13 +26,11 @@ interface IContentDetailProps {
 }
 
 export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
-  const domain = useApiDomain();
-  const contentHref = buildContentHref(contentId, domain);
   const {
     data: content,
     isLoading,
     error,
-  } = useFileContentDetailQuery(contentHref);
+  } = useFileContentDetailQuery(contentId);
   const descriptor = getDescriptor("content", "file.file");
 
   return (

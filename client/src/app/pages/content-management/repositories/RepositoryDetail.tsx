@@ -48,7 +48,6 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import {
@@ -56,10 +55,7 @@ import {
   useFileRepositoryDetailQuery,
   useFileRepositoryVersionsListQuery,
 } from "@app/queries/file-repositories";
-import {
-  buildRepositoryHref,
-  extractIdFromHref,
-} from "@app/queries/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
@@ -81,21 +77,18 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   repoId,
 }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const repoHref = buildRepositoryHref(repoId, domain);
-  const {
-    data: repo,
-    isLoading,
-    error,
-  } = useFileRepositoryDetailQuery(repoHref);
+  const { data: repo, isLoading, error } = useFileRepositoryDetailQuery(repoId);
   const repoDisplayName = repo?.name ?? "Repository";
   const { data: versionsData, isLoading: isVersionsLoading } =
-    useFileRepositoryVersionsListQuery(repoHref);
+    useFileRepositoryVersionsListQuery(repoId);
   const { data: distributionsData, isLoading: isDistributionsLoading } =
-    useDistributionsListQuery({
-      repository: repoHref,
-      limit: 50,
-    });
+    useDistributionsListQuery(
+      {
+        repository: repo?.pulp_href,
+        limit: 50,
+      },
+      { enabled: !!repo?.pulp_href },
+    );
   const deleteMutation = useFileRepositoryDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -205,8 +198,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   });
 
   const handleDelete = async () => {
+    if (!repo?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(repoHref);
+      const result = await deleteMutation.mutateAsync(repo.pulp_href);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,
@@ -462,20 +456,20 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
             <SyncModal
               isOpen={isSyncOpen}
               onClose={() => setIsSyncOpen(false)}
-              repoHref={repoHref}
+              repoHref={repo.pulp_href ?? ""}
               remoteSuggestion={repo.remote ?? undefined}
             />
 
             <PublishModal
               isOpen={isPublishOpen}
               onClose={() => setIsPublishOpen(false)}
-              repoHref={repoHref}
+              repoHref={repo.pulp_href ?? ""}
             />
 
             <UploadModal
               isOpen={isUploadOpen}
               onClose={() => setIsUploadOpen(false)}
-              repositoryHref={repoHref}
+              repositoryHref={repo.pulp_href ?? ""}
             />
 
             <Modal

@@ -17,7 +17,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildRepositoryHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { repositoriesRootQueryOptions } from "./repositories";
 
@@ -81,15 +81,24 @@ export const fileRepositoryVersionsListQueryOptions = (
     enabled: !!repoHref,
   });
 
-export const useFileRepositoryDetailQuery = (href: string) => {
-  return useQuery(fileRepositoryDetailQueryOptions(href));
+export const useFileRepositoryDetailQuery = (repoId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    fileRepositoryDetailQueryOptions(buildRepositoryHref(repoId, domain)),
+  );
 };
 
 export const useFileRepositoryVersionsListQuery = (
-  repoHref: string,
+  repoId: string,
   params?: IFileRepositoryVersionsListParams,
 ) => {
-  return useQuery(fileRepositoryVersionsListQueryOptions(repoHref, params));
+  const domain = useApiDomain();
+  return useQuery(
+    fileRepositoryVersionsListQueryOptions(
+      buildRepositoryHref(repoId, domain),
+      params,
+    ),
+  );
 };
 
 export const useFileRepositoryCreateMutation = () => {

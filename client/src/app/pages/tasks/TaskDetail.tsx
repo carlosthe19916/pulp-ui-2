@@ -30,7 +30,7 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
 import { useTaskCancelMutation, useTaskDetailQuery } from "@app/queries/tasks";
-import { buildTaskHref, extractTaskId } from "@app/utils/taskHref";
+import { extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const stateColors: Record<
@@ -51,8 +51,7 @@ interface ITaskDetailProps {
 }
 
 export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
-  const taskHref = buildTaskHref(taskId);
-  const { data: task, isLoading, error } = useTaskDetailQuery(taskHref);
+  const { data: task, isLoading, error } = useTaskDetailQuery(taskId);
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -60,8 +59,9 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
   const isRunning = task?.state === "running" || task?.state === "waiting";
 
   const handleCancel = async () => {
+    if (!task?.pulp_href) return;
     try {
-      await cancelMutation.mutateAsync(taskHref);
+      await cancelMutation.mutateAsync(task.pulp_href);
       addNotification({
         title: "Task cancel requested",
         variant: "info",

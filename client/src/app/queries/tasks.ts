@@ -14,6 +14,7 @@ import type {
 } from "@app/client";
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import { buildTaskHref } from "@app/utils/taskHref";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
@@ -100,8 +101,8 @@ export const useTasksListQuery = (params: ITaskListParams = {}) => {
   return useQuery(tasksListQueryOptions(domain, params));
 };
 
-export const useTaskDetailQuery = (taskHref: string) => {
-  return useQuery(taskDetailQueryOptions(taskHref));
+export const useTaskDetailQuery = (taskId: string) => {
+  return useQuery(taskDetailQueryOptions(buildTaskHref(taskId)));
 };
 
 export const useTaskCancelMutation = () => {

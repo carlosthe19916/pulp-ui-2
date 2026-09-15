@@ -15,7 +15,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildContentHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { contentRootQueryOptions } from "./content";
 
@@ -80,8 +80,11 @@ export const fileContentDetailQueryOptions = (href: string) =>
     enabled: !!href,
   });
 
-export const useFileContentDetailQuery = (href: string) => {
-  return useQuery(fileContentDetailQueryOptions(href));
+export const useFileContentDetailQuery = (contentId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+  );
 };
 
 export const useFileContentCreateMutation = () => {

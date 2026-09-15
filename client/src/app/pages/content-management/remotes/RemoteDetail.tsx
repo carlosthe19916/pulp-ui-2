@@ -26,12 +26,10 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFileRemoteDeleteMutation,
   useFileRemoteDetailQuery,
 } from "@app/queries/file-remotes";
-import { buildRemoteHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
@@ -43,13 +41,7 @@ interface IRemoteDetailProps {
 
 export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const remoteHref = buildRemoteHref(remoteId, domain);
-  const {
-    data: remote,
-    isLoading,
-    error,
-  } = useFileRemoteDetailQuery(remoteHref);
+  const { data: remote, isLoading, error } = useFileRemoteDetailQuery(remoteId);
   const deleteMutation = useFileRemoteDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -58,9 +50,9 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
   const descriptor = getDescriptor("remote", "file.file");
 
   const handleDelete = async () => {
-    if (!remote) return;
+    if (!remote?.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(remoteHref);
+      const result = await deleteMutation.mutateAsync(remote.pulp_href);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,

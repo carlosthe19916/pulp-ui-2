@@ -13,7 +13,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildPublicationHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { publicationsRootQueryOptions } from "./publications";
 
@@ -37,8 +37,11 @@ export const filePublicationDetailQueryOptions = (href: string) =>
     enabled: !!href,
   });
 
-export const useFilePublicationDetailQuery = (href: string) => {
-  return useQuery(filePublicationDetailQueryOptions(href));
+export const useFilePublicationDetailQuery = (pubId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    filePublicationDetailQueryOptions(buildPublicationHref(pubId, domain)),
+  );
 };
 
 export const useFilePublicationCreateMutation = () => {

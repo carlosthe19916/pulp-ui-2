@@ -14,7 +14,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildRemoteHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { remotesRootQueryOptions } from "./remotes";
 
@@ -33,8 +33,11 @@ export const fileRemoteDetailQueryOptions = (href: string) =>
     enabled: !!href,
   });
 
-export const useFileRemoteDetailQuery = (href: string) => {
-  return useQuery(fileRemoteDetailQueryOptions(href));
+export const useFileRemoteDetailQuery = (remoteId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    fileRemoteDetailQueryOptions(buildRemoteHref(remoteId, domain)),
+  );
 };
 
 export const useFileRemoteCreateMutation = () => {

@@ -22,7 +22,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildGroupHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const GroupsQueryKey = "groups";
 
@@ -106,16 +106,19 @@ export const useGroupsListQuery = (params: IGroupListParams = {}) => {
   return useQuery(groupsListQueryOptions(domain, params));
 };
 
-export const useGroupDetailQuery = (groupHref: string) => {
-  return useQuery(groupDetailQueryOptions(groupHref));
+export const useGroupDetailQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useQuery(groupDetailQueryOptions(buildGroupHref(groupId, domain)));
 };
 
-export const useGroupUsersListQuery = (groupHref: string) => {
-  return useQuery(groupUsersListQueryOptions(groupHref));
+export const useGroupUsersListQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useQuery(groupUsersListQueryOptions(buildGroupHref(groupId, domain)));
 };
 
-export const useGroupRolesListQuery = (groupHref: string) => {
-  return useQuery(groupRolesListQueryOptions(groupHref));
+export const useGroupRolesListQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useQuery(groupRolesListQueryOptions(buildGroupHref(groupId, domain)));
 };
 
 export const useGroupCreateMutation = () => {

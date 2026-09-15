@@ -45,7 +45,6 @@ import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useGroupDeleteMutation,
   useGroupDetailQuery,
@@ -59,7 +58,7 @@ import {
 } from "@app/queries/groups";
 import { useRolesListQuery } from "@app/queries/roles";
 import { useUsersListQuery } from "@app/queries/users";
-import { buildGroupHref, extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const editNameSchema = yup.object({
@@ -85,13 +84,11 @@ interface IGroupDetailProps {
 
 export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const groupHref = buildGroupHref(groupId, domain);
   const { addNotification } = useNotifications();
 
-  const { data: group, isLoading, error } = useGroupDetailQuery(groupHref);
-  const { data: usersData } = useGroupUsersListQuery(groupHref);
-  const { data: rolesData } = useGroupRolesListQuery(groupHref);
+  const { data: group, isLoading, error } = useGroupDetailQuery(groupId);
+  const { data: usersData } = useGroupUsersListQuery(groupId);
+  const { data: rolesData } = useGroupRolesListQuery(groupId);
   const { data: allUsersData } = useUsersListQuery({ limit: 200 });
   const { data: allRolesData } = useRolesListQuery({ limit: 200 });
 
@@ -231,8 +228,9 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   });
 
   const handleDelete = async () => {
+    if (!group?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(groupHref);
+      await deleteMutation.mutateAsync(group.pulp_href);
       addNotification({
         title: `Group "${group?.name}" deleted`,
         variant: "success",
@@ -248,9 +246,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   };
 
   const onEditName = editNameForm.handleSubmit(async (values) => {
+    if (!group?.pulp_href) return;
     try {
       const result = await updateMutation.mutateAsync({
-        href: groupHref,
+        href: group.pulp_href,
         body: { name: values.name },
       });
       addNotification({
@@ -267,9 +266,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   });
 
   const onAddUser = addUserForm.handleSubmit(async (values) => {
+    if (!group?.pulp_href) return;
     try {
       await userCreateMutation.mutateAsync({
-        groupHref,
+        groupHref: group.pulp_href,
         body: { username: values.username },
       });
       addNotification({
@@ -304,9 +304,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   };
 
   const onAddRole = addRoleForm.handleSubmit(async (values) => {
+    if (!group?.pulp_href) return;
     try {
       await roleCreateMutation.mutateAsync({
-        groupHref,
+        groupHref: group.pulp_href,
         body: {
           role: values.role,
           content_object: values.content_object || null,

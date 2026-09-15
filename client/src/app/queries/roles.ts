@@ -16,7 +16,7 @@ import type {
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildRoleHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
@@ -76,8 +76,9 @@ export const useRolesListQuery = (params: IRoleListParams = {}) => {
   return useQuery(rolesListQueryOptions(domain, params));
 };
 
-export const useRoleDetailQuery = (roleHref: string) => {
-  return useQuery(roleDetailQueryOptions(roleHref));
+export const useRoleDetailQuery = (roleId: string) => {
+  const domain = useApiDomain();
+  return useQuery(roleDetailQueryOptions(buildRoleHref(roleId, domain)));
 };
 
 export const useRoleCreateMutation = () => {

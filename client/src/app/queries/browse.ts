@@ -13,6 +13,7 @@ import {
 import { fileDistributionDetailQueryOptions } from "./file-distributions";
 import { filePublicationDetailQueryOptions } from "./file-publications";
 import { fileRepositoryDetailQueryOptions } from "./file-repositories";
+import { buildContentHref, buildDistributionHref } from "./utils/pulpHref";
 
 /**
  * Browse-specific query wrappers.
@@ -32,9 +33,12 @@ export const useBrowseDistributionsQuery = (
   });
 };
 
-export const useBrowseDistributionDetailQuery = (href: string) => {
+export const useBrowseDistributionDetailQuery = (distId: string) => {
+  const domain = useApiDomain();
   return useQuery({
-    ...fileDistributionDetailQueryOptions(href),
+    ...fileDistributionDetailQueryOptions(
+      buildDistributionHref(distId, domain),
+    ),
     staleTime: BROWSE_STALE_TIME,
   });
 };
@@ -66,9 +70,10 @@ export const useBrowseFileContentListQuery = (
   });
 };
 
-export const useBrowseContentDetailQuery = (href: string) => {
+export const useBrowseContentDetailQuery = (contentId: string) => {
+  const domain = useApiDomain();
   return useQuery({
-    ...fileContentDetailQueryOptions(href),
+    ...fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
     staleTime: BROWSE_STALE_TIME,
   });
 };

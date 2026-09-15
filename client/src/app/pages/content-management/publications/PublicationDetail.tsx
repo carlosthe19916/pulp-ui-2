@@ -26,15 +26,11 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useFilePublicationDeleteMutation,
   useFilePublicationDetailQuery,
 } from "@app/queries/file-publications";
-import {
-  buildPublicationHref,
-  extractIdFromHref,
-} from "@app/queries/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 interface IPublicationDetailProps {
@@ -45,13 +41,11 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   pubId,
 }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const pubHref = buildPublicationHref(pubId, domain);
   const {
     data: publication,
     isLoading,
     error,
-  } = useFilePublicationDetailQuery(pubHref);
+  } = useFilePublicationDetailQuery(pubId);
   const deleteMutation = useFilePublicationDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -59,8 +53,9 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   const descriptor = getDescriptor("publication", "file.file");
 
   const handleDelete = async () => {
+    if (!publication?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(pubHref);
+      await deleteMutation.mutateAsync(publication.pulp_href);
       addNotification({
         title: `Publication "${publicationLabel}" deleted`,
         variant: "success",

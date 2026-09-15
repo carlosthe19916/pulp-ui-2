@@ -23,9 +23,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import { useRoleDetailQuery } from "@app/queries/roles";
-import { buildRoleHref } from "@app/queries/utils/pulpHref";
 
 import { RoleEditModal } from "./components/RoleModal";
 import { useRoleActions } from "./hooks/useRoleActions";
@@ -36,16 +34,15 @@ interface IRoleDetailProps {
 
 export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
   const navigate = useNavigate();
-  const domain = useApiDomain();
-  const roleHref = buildRoleHref(roleId, domain);
-  const { data: role, isLoading, error } = useRoleDetailQuery(roleHref);
+  const { data: role, isLoading, error } = useRoleDetailQuery(roleId);
   const { deleteRole, isDeleting } = useRoleActions();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const handleDelete = async () => {
+    if (!role?.pulp_href) return;
     try {
-      await deleteRole(roleHref, role?.name ?? "");
+      await deleteRole(role.pulp_href, role.name ?? "");
       void navigate({ to: "/admin/roles" });
     } catch {
       // Notifications are handled in useRoleActions.

@@ -31,6 +31,7 @@ export const distributionsRootQueryOptions = queryOptions({
 export const distributionsListQueryOptions = (
   domain: IPulpDomain,
   params: IDistributionListParams = {},
+  options?: { enabled?: boolean },
 ) =>
   queryOptions({
     queryKey: [
@@ -39,6 +40,7 @@ export const distributionsListQueryOptions = (
       domain,
       params,
     ],
+    enabled: options?.enabled ?? true,
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedDistributionResponseList>(
@@ -61,7 +63,8 @@ export const distributionsListQueryOptions = (
 
 export const useDistributionsListQuery = (
   params: IDistributionListParams = {},
+  options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();
-  return useQuery(distributionsListQueryOptions(domain, params));
+  return useQuery(distributionsListQueryOptions(domain, params, options));
 };

@@ -26,17 +26,13 @@ import {
 import type { FileFileContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useBrowseDistributionDetailQuery,
   useBrowseFileContentListQuery,
   useBrowsePublicationDetailQuery,
   useBrowseRepositoryDetailQuery,
 } from "@app/queries/browse";
-import {
-  buildDistributionHref,
-  extractIdFromHref,
-} from "@app/queries/utils/pulpHref";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 type ContentRow = FileFileContentResponse & {
   size?: number;
@@ -68,13 +64,11 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
       initialFilters: { relative_path: "" },
     });
 
-  const domain = useApiDomain();
-  const distHref = buildDistributionHref(distributionId, domain);
   const {
     data: distribution,
     isLoading: isDistLoading,
     error: distError,
-  } = useBrowseDistributionDetailQuery(distHref);
+  } = useBrowseDistributionDetailQuery(distributionId);
 
   const repoHref = distribution?.repository ?? "";
   const publicationHref = distribution?.publication ?? "";

@@ -18,17 +18,12 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { getDescriptor } from "@app/descriptors/registry";
-import { useApiDomain } from "@app/hooks/useApiDomain";
 import {
   useBrowseArtifactDetailQuery,
   useBrowseContentDetailQuery,
   useBrowseDistributionDetailQuery,
 } from "@app/queries/browse";
-import {
-  buildContentHref,
-  buildDistributionContentUrl,
-  buildDistributionHref,
-} from "@app/queries/utils/pulpHref";
+import { buildDistributionContentUrl } from "@app/queries/utils/pulpHref";
 
 interface IBrowseContentDetailProps {
   distributionId: string;
@@ -46,18 +41,16 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
   distributionId,
   contentId,
 }) => {
-  const domain = useApiDomain();
-  const contentHref = buildContentHref(contentId, domain);
-  const distHref = buildDistributionHref(distributionId, domain);
   const descriptor = getDescriptor("content", "file.file");
 
   const {
     data: content,
     isLoading: isContentLoading,
     error: contentError,
-  } = useBrowseContentDetailQuery(contentHref);
+  } = useBrowseContentDetailQuery(contentId);
 
-  const { data: distribution } = useBrowseDistributionDetailQuery(distHref);
+  const { data: distribution } =
+    useBrowseDistributionDetailQuery(distributionId);
   const { data: artifact } = useBrowseArtifactDetailQuery(
     content?.artifact ?? "",
   );

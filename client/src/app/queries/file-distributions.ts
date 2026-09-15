@@ -14,7 +14,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildDistributionHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { distributionsRootQueryOptions } from "./distributions";
 
@@ -38,8 +38,11 @@ export const fileDistributionDetailQueryOptions = (href: string) =>
     enabled: !!href,
   });
 
-export const useFileDistributionDetailQuery = (href: string) => {
-  return useQuery(fileDistributionDetailQueryOptions(href));
+export const useFileDistributionDetailQuery = (distId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    fileDistributionDetailQueryOptions(buildDistributionHref(distId, domain)),
+  );
 };
 
 export const useFileDistributionCreateMutation = () => {
