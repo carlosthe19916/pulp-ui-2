@@ -9,6 +9,7 @@ import {
   Label,
   PageSection,
   Pagination,
+  PaginationVariant,
   Select,
   SelectList,
   SelectOption,
@@ -16,6 +17,7 @@ import {
   MenuToggle,
   type MenuToggleElement,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -170,13 +172,14 @@ export const TaskList: React.FC = () => {
         },
         {
           cell: isCancelable(task.state) ? (
-            <Button
-              variant="link"
-              isInline
-              onClick={() => setCancelHref(task.pulp_href ?? null)}
-            >
-              Cancel
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Cancel",
+                  onClick: () => setCancelHref(task.pulp_href ?? null),
+                },
+              ]}
+            />
           ) : (
             "—"
           ),
@@ -193,8 +196,9 @@ export const TaskList: React.FC = () => {
     emptyState: "No tasks found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -281,7 +285,7 @@ export const TaskList: React.FC = () => {
                 Purge tasks
               </Button>
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -291,7 +295,7 @@ export const TaskList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <ConfirmActionModal

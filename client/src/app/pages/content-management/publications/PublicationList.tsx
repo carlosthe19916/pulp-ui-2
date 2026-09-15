@@ -8,7 +8,9 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
@@ -163,14 +165,15 @@ export const PublicationList: React.FC = () => {
         },
         {
           cell: descriptor ? (
-            <Button
-              variant="link"
-              isInline
-              isDanger
-              onClick={() => setDeleteTarget(pub)}
-            >
-              Delete
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Delete",
+                  isDanger: true,
+                  onClick: () => setDeleteTarget(pub),
+                },
+              ]}
+            />
           ) : (
             <ReadOnlyBadge pulpType={pulpType} />
           ),
@@ -187,8 +190,9 @@ export const PublicationList: React.FC = () => {
     emptyState: "No publications found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -212,7 +216,7 @@ export const PublicationList: React.FC = () => {
                 </Button>
               ) : undefined
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -222,7 +226,7 @@ export const PublicationList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <CreatePublicationModal

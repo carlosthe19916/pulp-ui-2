@@ -8,6 +8,7 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -114,8 +115,9 @@ export const ContentList: React.FC = () => {
     emptyState: "No content found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -139,7 +141,7 @@ export const ContentList: React.FC = () => {
                 </Button>
               ) : undefined
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -149,7 +151,7 @@ export const ContentList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <UploadModal

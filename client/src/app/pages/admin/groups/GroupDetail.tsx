@@ -33,6 +33,7 @@ import {
   Tabs,
   TextInput,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
@@ -167,14 +168,15 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
       { cell: user.username, props: { dataLabel: "Username" } },
       {
         cell: (
-          <Button
-            variant="link"
-            isDanger
-            isInline
-            onClick={() => setRemoveUserTarget(user)}
-          >
-            Remove
-          </Button>
+          <ActionsColumn
+            items={[
+              {
+                title: "Remove",
+                isDanger: true,
+                onClick: () => setRemoveUserTarget(user),
+              },
+            ]}
+          />
         ),
         props: { dataLabel: "Actions", isActionCell: true },
       },
@@ -213,14 +215,15 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         },
         {
           cell: (
-            <Button
-              variant="link"
-              isDanger
-              isInline
-              onClick={() => setRemoveRoleTarget(role)}
-            >
-              Remove
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Remove",
+                  isDanger: true,
+                  onClick: () => setRemoveRoleTarget(role),
+                },
+              ]}
+            />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },

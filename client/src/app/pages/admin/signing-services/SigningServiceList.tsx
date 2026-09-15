@@ -7,6 +7,7 @@ import {
   EmptyStateBody,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -107,8 +108,9 @@ export const SigningServiceList: React.FC = () => {
     ),
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -141,7 +143,7 @@ export const SigningServiceList: React.FC = () => {
                 <DataViewTextFilter filterId="name" title="Name" />
               </DataViewFilters>
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -151,7 +153,7 @@ export const SigningServiceList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
       </PageSection>
     </>

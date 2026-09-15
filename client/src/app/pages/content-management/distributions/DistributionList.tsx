@@ -1,6 +1,6 @@
 import type React from "react";
 import { use, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import {
   Button,
@@ -8,7 +8,9 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn, type IAction } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -73,6 +75,7 @@ export const DistributionList: React.FC = () => {
   );
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  const navigate = useNavigate();
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const { deleteDistribution, isDeleting } = useDistributionActions();
 
@@ -149,6 +152,23 @@ export const DistributionList: React.FC = () => {
       ? getDescriptor("distribution", pulpType)
       : undefined;
 
+    const actionItems: IAction[] = [];
+    if (distId) {
+      actionItems.push({
+        title: "Browse",
+        onClick: () =>
+          void navigate({
+            to: "/browse/$distributionId",
+            params: { distributionId: distId },
+          }),
+      });
+    }
+    actionItems.push({
+      title: "Delete",
+      isDanger: true,
+      onClick: () => setDeleteTarget(distribution),
+    });
+
     return {
       id: distribution.pulp_href,
       row: [
@@ -195,26 +215,7 @@ export const DistributionList: React.FC = () => {
           cell: !descriptor ? (
             <ReadOnlyBadge pulpType={pulpType} />
           ) : (
-            <>
-              {distId ? (
-                <>
-                  <Link
-                    to="/browse/$distributionId"
-                    params={{ distributionId: distId }}
-                  >
-                    Browse
-                  </Link>{" "}
-                </>
-              ) : null}
-              <Button
-                variant="link"
-                isInline
-                isDanger
-                onClick={() => setDeleteTarget(distribution)}
-              >
-                Delete
-              </Button>
-            </>
+            <ActionsColumn items={actionItems} />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -229,8 +230,9 @@ export const DistributionList: React.FC = () => {
     emptyState: "No distributions found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -281,7 +283,7 @@ export const DistributionList: React.FC = () => {
                 </Button>
               ) : undefined
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -291,7 +293,7 @@ export const DistributionList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <CreateDistributionModal

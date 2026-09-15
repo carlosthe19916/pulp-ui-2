@@ -8,7 +8,9 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -160,14 +162,15 @@ export const RemoteList: React.FC = () => {
           cell: !descriptor ? (
             <ReadOnlyBadge pulpType={pulpType} />
           ) : (
-            <Button
-              variant="link"
-              isInline
-              isDanger
-              onClick={() => setDeleteTarget(remote)}
-            >
-              Delete
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Delete",
+                  isDanger: true,
+                  onClick: () => setDeleteTarget(remote),
+                },
+              ]}
+            />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -182,8 +185,9 @@ export const RemoteList: React.FC = () => {
     emptyState: "No remotes found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -234,7 +238,7 @@ export const RemoteList: React.FC = () => {
                 </Button>
               ) : undefined
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -244,7 +248,7 @@ export const RemoteList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <CreateRemoteModal

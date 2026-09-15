@@ -8,7 +8,9 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -101,14 +103,15 @@ export const GroupList: React.FC = () => {
         },
         {
           cell: (
-            <Button
-              variant="link"
-              isDanger
-              isInline
-              onClick={() => setDeleteTarget(group)}
-            >
-              Delete
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Delete",
+                  isDanger: true,
+                  onClick: () => setDeleteTarget(group),
+                },
+              ]}
+            />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -123,8 +126,9 @@ export const GroupList: React.FC = () => {
     emptyState: "No groups found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -168,7 +172,7 @@ export const GroupList: React.FC = () => {
                 Create Group
               </Button>
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -178,7 +182,7 @@ export const GroupList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <CreateGroupModal

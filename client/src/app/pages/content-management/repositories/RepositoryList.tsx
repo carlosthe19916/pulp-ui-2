@@ -8,7 +8,9 @@ import {
   ContentVariants,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn, type IAction } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -144,6 +146,25 @@ export const RepositoryList: React.FC = () => {
       ? getDescriptor("repository", pulpType)
       : undefined;
 
+    const actionItems: IAction[] = [];
+    if (descriptor?.supportsSync) {
+      actionItems.push({
+        title: "Sync",
+        onClick: () => setSyncTarget(repository),
+      });
+    }
+    if (descriptor?.supportsPublish) {
+      actionItems.push({
+        title: "Publish",
+        onClick: () => setPublishRepoHref(repository.pulp_href ?? null),
+      });
+    }
+    actionItems.push({
+      title: "Delete",
+      isDanger: true,
+      onClick: () => setDeleteTarget(repository),
+    });
+
     return {
       id: repository.pulp_href,
       row: [
@@ -180,36 +201,7 @@ export const RepositoryList: React.FC = () => {
           cell: !descriptor ? (
             <ReadOnlyBadge pulpType={pulpType} />
           ) : (
-            <>
-              {descriptor.supportsSync && (
-                <Button
-                  variant="link"
-                  isInline
-                  onClick={() => setSyncTarget(repository)}
-                >
-                  Sync
-                </Button>
-              )}
-              {descriptor.supportsPublish && (
-                <Button
-                  variant="link"
-                  isInline
-                  onClick={() =>
-                    setPublishRepoHref(repository.pulp_href ?? null)
-                  }
-                >
-                  Publish
-                </Button>
-              )}
-              <Button
-                variant="link"
-                isInline
-                isDanger
-                onClick={() => setDeleteTarget(repository)}
-              >
-                Delete
-              </Button>
-            </>
+            <ActionsColumn items={actionItems} />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -224,8 +216,9 @@ export const RepositoryList: React.FC = () => {
     emptyState: "No repositories found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -276,7 +269,7 @@ export const RepositoryList: React.FC = () => {
                 </Button>
               ) : undefined
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -286,7 +279,7 @@ export const RepositoryList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <CreateRepositoryModal

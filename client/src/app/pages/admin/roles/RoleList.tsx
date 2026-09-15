@@ -9,7 +9,9 @@ import {
   Label,
   PageSection,
   Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -166,14 +168,15 @@ export const RoleList: React.FC = () => {
           cell: role.locked ? (
             "—"
           ) : (
-            <Button
-              variant="link"
-              isInline
-              isDanger
-              onClick={() => setDeleteTarget(role)}
-            >
-              Delete
-            </Button>
+            <ActionsColumn
+              items={[
+                {
+                  title: "Delete",
+                  isDanger: true,
+                  onClick: () => setDeleteTarget(role),
+                },
+              ]}
+            />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -188,8 +191,9 @@ export const RoleList: React.FC = () => {
     emptyState: "No roles found.",
   });
 
-  const pagination = (
+  const pagination = (variant: PaginationVariant) => (
     <Pagination
+      variant={variant}
       itemCount={totalCount}
       page={page}
       perPage={perPage}
@@ -234,7 +238,7 @@ export const RoleList: React.FC = () => {
                 Create Role
               </Button>
             }
-            pagination={pagination}
+            pagination={pagination(PaginationVariant.top)}
           />
 
           <DataViewTable
@@ -244,7 +248,7 @@ export const RoleList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination} />
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
         <RoleCreateModal
