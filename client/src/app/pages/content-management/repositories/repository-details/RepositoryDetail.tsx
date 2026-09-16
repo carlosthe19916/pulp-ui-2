@@ -159,6 +159,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
             <Tabs
               activeKey={activeTab}
               onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+              mountOnEnter
             >
               <Tab
                 eventKey="details"

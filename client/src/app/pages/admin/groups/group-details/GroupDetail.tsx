@@ -110,6 +110,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
         <Tabs
           activeKey={activeTab}
           onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          mountOnEnter
         >
           <Tab
             eventKey="users"
