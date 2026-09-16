@@ -50,13 +50,11 @@ type AddRoleFormValues = yup.InferType<typeof addRoleSchema>;
 
 interface IGroupRolesTabProps {
   groupId: string;
-  groupHref: string;
   groupName: string;
 }
 
 export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
   groupId,
-  groupHref,
   groupName,
 }) => {
   const { addNotification } = useNotifications();
@@ -167,7 +165,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
   const onAddRole = addRoleForm.handleSubmit(async (values) => {
     try {
       await roleCreateMutation.mutateAsync({
-        groupHref,
+        groupId,
         body: {
           role: values.role,
           content_object: values.content_object || null,
@@ -190,7 +188,10 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
   const handleRemoveRole = async () => {
     if (!removeRoleTarget?.pulp_href) return;
     try {
-      await roleDeleteMutation.mutateAsync(removeRoleTarget.pulp_href);
+      await roleDeleteMutation.mutateAsync({
+        groupId,
+        assignmentId: extractIdFromHref(removeRoleTarget.pulp_href),
+      });
       addNotification({
         title: `Role "${removeRoleTarget.role}" removed from group "${groupName}"`,
         variant: "success",

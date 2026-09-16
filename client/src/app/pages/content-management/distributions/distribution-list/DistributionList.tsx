@@ -227,7 +227,10 @@ export const DistributionList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteDistribution(deleteTarget.pulp_href, deleteTarget.name);
+      await deleteDistribution(
+        extractIdFromHref(deleteTarget.pulp_href),
+        deleteTarget.name,
+      );
     } catch {
       // Notifications are handled in useDistributionActions.
     }

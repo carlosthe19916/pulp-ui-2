@@ -6,8 +6,8 @@ export const usePublicationActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFilePublicationDeleteMutation();
 
-  const deletePublication = async (href: string, identifier: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deletePublication = async (pubId: string, identifier: string) =>
+    runAction(() => deleteMutation.mutateAsync(pubId), {
       successTitle: `Publication "${identifier}" deleted`,
       errorTitle: "Failed to delete publication",
     });

@@ -35,14 +35,14 @@ type SyncFormValues = yup.InferType<typeof syncSchema>;
 interface ISyncModalProps {
   isOpen: boolean;
   onClose: () => void;
-  repoHref: string;
+  repoId: string;
   remoteSuggestion?: string;
 }
 
 export const SyncModal: React.FC<ISyncModalProps> = ({
   isOpen,
   onClose,
-  repoHref,
+  repoId,
   remoteSuggestion,
 }) => {
   const { addNotification } = useNotifications();
@@ -88,7 +88,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const result = await syncMutation.mutateAsync({
-        repoHref,
+        repoId,
         body: {
           remote: values.remote || undefined,
           mirror: values.mirror,

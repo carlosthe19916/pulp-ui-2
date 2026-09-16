@@ -231,16 +231,17 @@ export const useGroupCreateMutation = () => {
 
 export const useGroupUpdateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      href,
+      groupId,
       body,
     }: {
-      href: string;
+      groupId: string;
       body: PatchedGroup;
     }) => {
       const response = await axiosInstance.patch<GroupResponse>(
-        toProxyHref(href),
+        toProxyHref(buildGroupHref(groupId, domain)),
         body,
       );
       return response.data;
@@ -255,9 +256,12 @@ export const useGroupUpdateMutation = () => {
 
 export const useGroupDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (groupHref: string) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(groupHref));
+    mutationFn: async (groupId: string) => {
+      const response = await axiosInstance.delete<void>(
+        toProxyHref(buildGroupHref(groupId, domain)),
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -270,16 +274,17 @@ export const useGroupDeleteMutation = () => {
 
 export const useGroupUserCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      groupHref,
+      groupId,
       body,
     }: {
-      groupHref: string;
+      groupId: string;
       body: GroupUser;
     }) => {
       const response = await axiosInstance.post<GroupUserResponse>(
-        `${toProxyHref(groupHref)}users/`,
+        `${toProxyHref(buildGroupHref(groupId, domain))}users/`,
         body,
       );
       return response.data;
@@ -301,20 +306,21 @@ export interface IGroupUsersBatchResult {
 /** Adds multiple users to a group via parallel POSTs and invalidates once. */
 export const useGroupUsersBatchCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      groupHref,
+      groupId,
       usernames,
     }: {
-      groupHref: string;
+      groupId: string;
       usernames: string[];
     }): Promise<IGroupUsersBatchResult> => {
+      const usersUrl = `${toProxyHref(buildGroupHref(groupId, domain))}users/`;
       const results = await Promise.allSettled(
         usernames.map((username) =>
-          axiosInstance.post<GroupUserResponse>(
-            `${toProxyHref(groupHref)}users/`,
-            { username } satisfies GroupUser,
-          ),
+          axiosInstance.post<GroupUserResponse>(usersUrl, {
+            username,
+          } satisfies GroupUser),
         ),
       );
       const succeeded: string[] = [];
@@ -336,11 +342,26 @@ export const useGroupUsersBatchCreateMutation = () => {
   });
 };
 
+/**
+ * Removes a user from a group. The group-users list returns each user's own
+ * detail href (`/users/{pk}/`) — deleting that would delete the user from the
+ * system. To only detach the membership we DELETE the nested
+ * `groups/{groupId}/users/{userId}/` path instead.
+ */
 export const useGroupUserDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (userHref: string) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(userHref));
+    mutationFn: async ({
+      groupId,
+      userId,
+    }: {
+      groupId: string;
+      userId: string;
+    }) => {
+      const response = await axiosInstance.delete<void>(
+        pulpApiPath(`groups/${groupId}/users/${userId}/`, domain),
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -353,16 +374,17 @@ export const useGroupUserDeleteMutation = () => {
 
 export const useGroupRoleCreateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      groupHref,
+      groupId,
       body,
     }: {
-      groupHref: string;
+      groupId: string;
       body: GroupRole;
     }) => {
       const response = await axiosInstance.post<GroupRoleResponse>(
-        `${toProxyHref(groupHref)}roles/`,
+        `${toProxyHref(buildGroupHref(groupId, domain))}roles/`,
         body,
       );
       return response.data;
@@ -377,9 +399,18 @@ export const useGroupRoleCreateMutation = () => {
 
 export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (roleHref: string) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(roleHref));
+    mutationFn: async ({
+      groupId,
+      assignmentId,
+    }: {
+      groupId: string;
+      assignmentId: string;
+    }) => {
+      const response = await axiosInstance.delete<void>(
+        pulpApiPath(`groups/${groupId}/roles/${assignmentId}/`, domain),
+      );
       return response.data;
     },
     onSuccess: () => {

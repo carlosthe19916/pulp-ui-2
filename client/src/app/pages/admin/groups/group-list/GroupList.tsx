@@ -151,7 +151,10 @@ export const GroupList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteGroup(deleteTarget.pulp_href, deleteTarget.name);
+      await deleteGroup(
+        extractIdFromHref(deleteTarget.pulp_href),
+        deleteTarget.name,
+      );
     } catch {
       // Notifications are handled in useGroupActions.
     }

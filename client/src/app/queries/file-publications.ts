@@ -73,10 +73,11 @@ export const useFilePublicationCreateMutation = () => {
 
 export const useFilePublicationDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async (pubId: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(buildPublicationHref(pubId, domain)),
       );
       return response.data;
     },

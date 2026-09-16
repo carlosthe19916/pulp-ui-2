@@ -78,9 +78,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const contentCount = contentData?.count ?? 0;
 
   const handleDelete = async () => {
-    if (!repo.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(repo.pulp_href);
+      const result = await deleteMutation.mutateAsync(repoId);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,
@@ -218,7 +217,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       <SyncModal
         isOpen={isSyncOpen}
         onClose={() => setIsSyncOpen(false)}
-        repoHref={repo.pulp_href ?? ""}
+        repoId={repoId}
         remoteSuggestion={repo.remote ?? undefined}
       />
 

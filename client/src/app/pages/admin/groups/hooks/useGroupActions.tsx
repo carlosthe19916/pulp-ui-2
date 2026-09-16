@@ -19,14 +19,14 @@ export const useGroupActions = () => {
       errorTitle: "Failed to create group",
     });
 
-  const updateGroup = async (href: string, body: PatchedGroup) =>
-    runAction(() => updateMutation.mutateAsync({ href, body }), {
+  const updateGroup = async (groupId: string, body: PatchedGroup) =>
+    runAction(() => updateMutation.mutateAsync({ groupId, body }), {
       successTitle: (result) => `Group "${result.name}" updated`,
       errorTitle: "Failed to update group",
     });
 
-  const deleteGroup = async (href: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteGroup = async (groupId: string, name: string) =>
+    runAction(() => deleteMutation.mutateAsync(groupId), {
       successTitle: `Group "${name}" deleted`,
       errorTitle: "Failed to delete group",
     });

@@ -69,17 +69,18 @@ export const useFileRemoteCreateMutation = () => {
 
 export const useFileRemoteUpdateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      href,
+      remoteId,
       body,
     }: {
-      href: string;
+      remoteId: string;
       body: PatchedfileFileRemoteWritable;
     }) => {
       const response = await axiosInstance.patch<
         FileFileRemoteResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
+      >(toProxyHref(buildRemoteHref(remoteId, domain)), body);
       return response.data;
     },
     onSuccess: () => {
@@ -92,10 +93,11 @@ export const useFileRemoteUpdateMutation = () => {
 
 export const useFileRemoteDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async (remoteId: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(buildRemoteHref(remoteId, domain)),
       );
       return response.data;
     },

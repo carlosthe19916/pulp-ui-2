@@ -3,6 +3,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { PatchedUser, UserResponse, UserWritable } from "@app/client";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { useUserActions } from "./useUserActions";
 
@@ -96,7 +97,10 @@ export const useUserForm = ({
       if (isCreate) {
         await createUser(valuesToNewUser(values));
       } else if (user?.pulp_href) {
-        await updateUser(user.pulp_href, valuesToPatchedUser(values));
+        await updateUser(
+          extractIdFromHref(user.pulp_href),
+          valuesToPatchedUser(values),
+        );
       } else {
         return;
       }

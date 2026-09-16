@@ -19,14 +19,14 @@ export const useRoleActions = () => {
       errorTitle: "Failed to create role",
     });
 
-  const updateRole = async (href: string, body: PatchedRole) =>
-    runAction(() => updateMutation.mutateAsync({ href, body }), {
+  const updateRole = async (roleId: string, body: PatchedRole) =>
+    runAction(() => updateMutation.mutateAsync({ roleId, body }), {
       successTitle: (result) => `Role "${result.name}" updated`,
       errorTitle: "Failed to update role",
     });
 
-  const deleteRole = async (href: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteRole = async (roleId: string, name: string) =>
+    runAction(() => deleteMutation.mutateAsync(roleId), {
       successTitle: `Role "${name}" deleted`,
       errorTitle: "Failed to delete role",
     });

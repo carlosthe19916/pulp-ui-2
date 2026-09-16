@@ -53,9 +53,8 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const roleCount = rolesData?.count ?? 0;
 
   const handleDelete = async () => {
-    if (!group.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(group.pulp_href);
+      await deleteMutation.mutateAsync(groupId);
       addNotification({
         title: `Group "${group.name}" deleted`,
         variant: "success",
@@ -117,11 +116,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             title={<TabTitleText>Users ({userCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupUsersTab
-                groupId={groupId}
-                groupHref={group.pulp_href ?? ""}
-                groupName={group.name}
-              />
+              <GroupUsersTab groupId={groupId} groupName={group.name} />
             </TabContentBody>
           </Tab>
           <Tab
@@ -129,11 +124,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupRolesTab
-                groupId={groupId}
-                groupHref={group.pulp_href ?? ""}
-                groupName={group.name}
-              />
+              <GroupRolesTab groupId={groupId} groupName={group.name} />
             </TabContentBody>
           </Tab>
         </Tabs>

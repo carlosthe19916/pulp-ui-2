@@ -207,8 +207,9 @@ export const RoleList: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
+    const roleId = extractIdFromHref(deleteTarget.pulp_href);
     try {
-      await deleteRole(deleteTarget.pulp_href, deleteTarget.name);
+      await deleteRole(roleId, deleteTarget.name);
     } catch {
       // Notifications are handled in useRoleActions.
     }

@@ -58,9 +58,8 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
   const isRunning = task.state === "running" || task.state === "waiting";
 
   const handleCancel = async () => {
-    if (!task.pulp_href) return;
     try {
-      await cancelMutation.mutateAsync(task.pulp_href);
+      await cancelMutation.mutateAsync(taskId);
       addNotification({
         title: "Task cancel requested",
         variant: "info",

@@ -199,7 +199,10 @@ export const RemoteList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteRemote(deleteTarget.pulp_href, deleteTarget.name);
+      await deleteRemote(
+        extractIdFromHref(deleteTarget.pulp_href),
+        deleteTarget.name,
+      );
     } catch {
       // Notifications are handled in useRemoteActions.
     }

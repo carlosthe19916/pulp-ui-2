@@ -101,9 +101,9 @@ export const useSuspenseTaskDetailQuery = (taskId: string) => {
 export const useTaskCancelMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (taskHref: string) => {
+    mutationFn: async (taskId: string) => {
       const response = await axiosInstance.patch<TaskResponse>(
-        toProxyHref(taskHref),
+        toProxyHref(buildTaskHref(taskId)),
         { state: "canceled" },
       );
       return response.data;

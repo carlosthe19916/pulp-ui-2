@@ -42,7 +42,7 @@ interface IUserFilters {
 }
 
 interface IAddGroupUserModalInnerProps {
-  groupHref: string;
+  groupId: string;
   groupName: string;
   existingUsernames: string[];
   onClose: () => void;
@@ -50,7 +50,7 @@ interface IAddGroupUserModalInnerProps {
 
 /** Mounted only while open so the form resets and the user list is fetched only then. */
 const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
-  groupHref,
+  groupId,
   groupName,
   existingUsernames,
   onClose,
@@ -156,7 +156,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
     try {
       const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupHref,
+        groupId,
         usernames,
       });
       if (succeeded.length > 0) {
@@ -236,7 +236,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
 interface IAddGroupUserModalProps {
   isOpen: boolean;
-  groupHref: string;
+  groupId: string;
   groupName: string;
   existingUsernames: string[];
   onClose: () => void;
@@ -245,14 +245,14 @@ interface IAddGroupUserModalProps {
 /** Mounted only while open so its table state and user query reset on every open. */
 export const AddGroupUserModal: React.FC<IAddGroupUserModalProps> = ({
   isOpen,
-  groupHref,
+  groupId,
   groupName,
   existingUsernames,
   onClose,
 }) =>
   isOpen ? (
     <AddGroupUserModalInner
-      groupHref={groupHref}
+      groupId={groupId}
       groupName={groupName}
       existingUsernames={existingUsernames}
       onClose={onClose}

@@ -1,13 +1,14 @@
 import type { UserResponse } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
 import { useUserRolesSyncMutation } from "@app/queries/users";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface ISyncRolesArgs {
   user: UserResponse;
   /** Role names to assign. */
   toAdd: string[];
-  /** Assignment hrefs (UserRoleResponse.pulp_href) to unassign. */
+  /** Assignment IDs to unassign. */
   toRemove: string[];
 }
 
@@ -25,7 +26,7 @@ export const useUserRoleActions = () => {
     }
     try {
       await rolesSyncMutation.mutateAsync({
-        userHref: user.pulp_href ?? "",
+        userId: extractIdFromHref(user.pulp_href ?? ""),
         toAdd,
         toRemove,
       });

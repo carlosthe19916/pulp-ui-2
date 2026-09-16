@@ -19,14 +19,14 @@ export const useUserActions = () => {
       errorTitle: "Failed to create user",
     });
 
-  const updateUser = async (href: string, body: PatchedUser) =>
-    runAction(() => updateMutation.mutateAsync({ href, body }), {
+  const updateUser = async (userId: string, body: PatchedUser) =>
+    runAction(() => updateMutation.mutateAsync({ userId, body }), {
       successTitle: (result) => `User "${result.username}" updated`,
       errorTitle: "Failed to update user",
     });
 
-  const deleteUser = async (href: string, username: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteUser = async (userId: string, username: string) =>
+    runAction(() => deleteMutation.mutateAsync(userId), {
       successTitle: `User "${username}" deleted`,
       errorTitle: "Failed to delete user",
     });

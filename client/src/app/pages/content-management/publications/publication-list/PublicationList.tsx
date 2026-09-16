@@ -93,7 +93,7 @@ export const PublicationList: React.FC = () => {
     if (!deleteTarget?.pulp_href) return;
     const identifier = extractIdFromHref(deleteTarget.pulp_href);
     try {
-      await deletePublication(deleteTarget.pulp_href, identifier);
+      await deletePublication(identifier, identifier);
     } catch {
       // Notifications are handled in usePublicationActions.
     }

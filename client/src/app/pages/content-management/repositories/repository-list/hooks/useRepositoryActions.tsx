@@ -6,8 +6,8 @@ export const useRepositoryActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFileRepositoryDeleteMutation();
 
-  const deleteRepository = async (href: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteRepository = async (repoId: string, name: string) =>
+    runAction(() => deleteMutation.mutateAsync(repoId), {
       taskAware: true,
       taskTitle: `Repository "${name}" delete started`,
       successTitle: `Repository "${name}" deleted`,

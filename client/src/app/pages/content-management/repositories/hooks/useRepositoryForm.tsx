@@ -18,6 +18,7 @@ import {
   useFileRepositoryCreateMutation,
   useFileRepositoryUpdateMutation,
 } from "@app/queries/file-repositories";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = fileRepositoryDescriptor.createFields ?? [];
@@ -69,7 +70,7 @@ export const useRepositoryForm = ({
         });
       } else if (repository?.pulp_href) {
         await updateMutation.mutateAsync({
-          href: repository.pulp_href,
+          repoId: extractIdFromHref(repository.pulp_href),
           body: values as PatchedfileFileRepository,
         });
         addNotification({

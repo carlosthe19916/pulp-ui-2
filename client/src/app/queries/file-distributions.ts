@@ -74,16 +74,17 @@ export const useFileDistributionCreateMutation = () => {
 
 export const useFileDistributionUpdateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      href,
+      distId,
       body,
     }: {
-      href: string;
+      distId: string;
       body: PatchedfileFileDistribution;
     }) => {
       const response = await axiosInstance.patch<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(buildDistributionHref(distId, domain)),
         body,
       );
       return response.data;
@@ -98,10 +99,11 @@ export const useFileDistributionUpdateMutation = () => {
 
 export const useFileDistributionDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async (distId: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(buildDistributionHref(distId, domain)),
       );
       return response.data;
     },

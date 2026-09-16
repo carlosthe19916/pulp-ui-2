@@ -45,9 +45,8 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
   const descriptor = getDescriptor("remote", "file.file");
 
   const handleDelete = async () => {
-    if (!remote.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(remote.pulp_href);
+      const result = await deleteMutation.mutateAsync(remoteId);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,

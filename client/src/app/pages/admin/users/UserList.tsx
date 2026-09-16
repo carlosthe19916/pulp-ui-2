@@ -34,6 +34,7 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useUsersListQuery } from "@app/queries/users";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
 import { UserModal } from "./components/UserModal";
@@ -178,7 +179,10 @@ export const UserList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteUser(deleteTarget.pulp_href, deleteTarget.username);
+      await deleteUser(
+        extractIdFromHref(deleteTarget.pulp_href),
+        deleteTarget.username,
+      );
     } catch {
       // Notifications are handled in useUserActions.
     }

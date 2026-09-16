@@ -18,6 +18,7 @@ import {
   useFileDistributionCreateMutation,
   useFileDistributionUpdateMutation,
 } from "@app/queries/file-distributions";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -78,7 +79,7 @@ export const useDistributionForm = ({
         }
       } else if (distribution?.pulp_href) {
         const result = await updateMutation.mutateAsync({
-          href: distribution.pulp_href,
+          distId: extractIdFromHref(distribution.pulp_href),
           body: values as PatchedfileFileDistribution,
         });
         const taskHref = result && "task" in result ? result.task : undefined;

@@ -48,9 +48,8 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   const descriptor = getDescriptor("distribution", "file.file");
 
   const handleDelete = async () => {
-    if (!distribution.pulp_href) return;
     try {
-      const result = await deleteMutation.mutateAsync(distribution.pulp_href);
+      const result = await deleteMutation.mutateAsync(distId);
       if (result?.task) {
         notifyTaskStarted(
           addNotification,

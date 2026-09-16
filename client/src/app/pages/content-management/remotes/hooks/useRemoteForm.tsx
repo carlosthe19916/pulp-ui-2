@@ -18,6 +18,7 @@ import {
   useFileRemoteCreateMutation,
   useFileRemoteUpdateMutation,
 } from "@app/queries/file-remotes";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const createFields = fileRemoteDescriptor.createFields ?? [];
@@ -67,7 +68,7 @@ export const useRemoteForm = ({
         });
       } else if (remote?.pulp_href) {
         await updateMutation.mutateAsync({
-          href: remote.pulp_href,
+          remoteId: extractIdFromHref(remote.pulp_href),
           body: values as PatchedfileFileRemoteWritable,
         });
         addNotification({

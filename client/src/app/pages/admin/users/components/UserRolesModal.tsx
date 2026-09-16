@@ -27,6 +27,7 @@ import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { DefaultErrorState } from "@app/components/LoadingWrapper/DefaultErrorState";
 import { useAllRolesListQuery } from "@app/queries/roles";
 import { useAllUserRolesListQuery } from "@app/queries/users";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { useUserRoleActions } from "../hooks/useUserRoleActions";
 
@@ -38,8 +39,8 @@ interface IRoleOption {
 
 interface IAssignedRole {
   name: string;
-  /** Assignment href (UserRoleResponse.pulp_href), used to unassign. */
-  href: string;
+  /** Assignment ID, used to unassign. */
+  id: string;
 }
 
 interface IUserRolesFormProps {
@@ -157,7 +158,7 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
     const toAdd = [...chosenNames].filter((name) => !assignedSet.has(name));
     const toRemove = assignedRoles
       .filter((role) => !chosenNames.has(role.name))
-      .map((role) => role.href);
+      .map((role) => role.id);
     try {
       await syncRoles({ user, toAdd, toRemove });
       onClose();
@@ -263,12 +264,12 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
   user,
   onClose,
 }) => {
-  const userHref = user.pulp_href ?? "";
+  const userId = extractIdFromHref(user.pulp_href ?? "");
   const {
     data: assignedData,
     isLoading: assignedLoading,
     error: assignedError,
-  } = useAllUserRolesListQuery(userHref);
+  } = useAllUserRolesListQuery(userId);
   const {
     data: allRolesData,
     isLoading: allRolesLoading,
@@ -303,7 +304,7 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
             .filter((userRole) => userRole.pulp_href)
             .map((userRole) => ({
               name: userRole.role,
-              href: userRole.pulp_href as string,
+              id: extractIdFromHref(userRole.pulp_href ?? ""),
             }))}
           allRoleNames={(allRolesData?.results ?? []).map((role) => role.name)}
           onClose={onClose}

@@ -6,8 +6,8 @@ export const useDistributionActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFileDistributionDeleteMutation();
 
-  const deleteDistribution = async (href: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteDistribution = async (distId: string, name: string) =>
+    runAction(() => deleteMutation.mutateAsync(distId), {
       taskAware: true,
       taskTitle: `Distribution "${name}" delete started`,
       successTitle: `Distribution "${name}" deleted`,

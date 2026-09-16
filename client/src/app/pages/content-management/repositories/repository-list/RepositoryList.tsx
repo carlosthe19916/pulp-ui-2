@@ -230,7 +230,10 @@ export const RepositoryList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteRepository(deleteTarget.pulp_href, deleteTarget.name);
+      await deleteRepository(
+        extractIdFromHref(deleteTarget.pulp_href),
+        deleteTarget.name,
+      );
     } catch {
       // Notifications are handled in useRepositoryActions.
     }
@@ -291,7 +294,7 @@ export const RepositoryList: React.FC = () => {
           <SyncModal
             isOpen
             onClose={() => setSyncTarget(null)}
-            repoHref={syncTarget.pulp_href ?? ""}
+            repoId={extractIdFromHref(syncTarget.pulp_href ?? "")}
             remoteSuggestion={syncTarget.remote ?? undefined}
           />
         )}

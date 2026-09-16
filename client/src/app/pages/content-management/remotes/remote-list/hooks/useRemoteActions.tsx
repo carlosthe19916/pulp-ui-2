@@ -6,8 +6,8 @@ export const useRemoteActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFileRemoteDeleteMutation();
 
-  const deleteRemote = async (href: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(href), {
+  const deleteRemote = async (remoteId: string, name: string) =>
+    runAction(() => deleteMutation.mutateAsync(remoteId), {
       taskAware: true,
       taskTitle: `Remote "${name}" delete started`,
       successTitle: `Remote "${name}" deleted`,

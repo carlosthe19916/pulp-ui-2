@@ -157,17 +157,18 @@ export const useFileRepositoryCreateMutation = () => {
 
 export const useFileRepositoryUpdateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      href,
+      repoId,
       body,
     }: {
-      href: string;
+      repoId: string;
       body: PatchedfileFileRepository;
     }) => {
       const response = await axiosInstance.patch<
         FileFileRepositoryResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
+      >(toProxyHref(buildRepositoryHref(repoId, domain)), body);
       return response.data;
     },
     onSuccess: () => {
@@ -180,10 +181,11 @@ export const useFileRepositoryUpdateMutation = () => {
 
 export const useFileRepositoryDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async (repoId: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(buildRepositoryHref(repoId, domain)),
       );
       return response.data;
     },
@@ -197,16 +199,17 @@ export const useFileRepositoryDeleteMutation = () => {
 
 export const useFileRepositorySyncMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
     mutationFn: async ({
-      repoHref,
+      repoId,
       body,
     }: {
-      repoHref: string;
+      repoId: string;
       body: RepositorySyncUrl;
     }) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        `${toProxyHref(repoHref)}sync/`,
+        `${toProxyHref(buildRepositoryHref(repoId, domain))}sync/`,
         body,
       );
       return response.data;

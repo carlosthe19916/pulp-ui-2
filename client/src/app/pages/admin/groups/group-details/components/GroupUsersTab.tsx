@@ -28,6 +28,7 @@ import {
   useAllGroupUsersListQuery,
   useGroupUserDeleteMutation,
 } from "@app/queries/groups";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { AddGroupUserModal } from "./AddGroupUserModal";
 
@@ -43,13 +44,11 @@ interface IGroupUsersFilters {
 
 interface IGroupUsersTabProps {
   groupId: string;
-  groupHref: string;
   groupName: string;
 }
 
 export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
   groupId,
-  groupHref,
   groupName,
 }) => {
   const { addNotification } = useNotifications();
@@ -144,7 +143,10 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
   const handleRemoveUser = async () => {
     if (!removeUserTarget?.pulp_href) return;
     try {
-      await userDeleteMutation.mutateAsync(removeUserTarget.pulp_href);
+      await userDeleteMutation.mutateAsync({
+        groupId,
+        userId: extractIdFromHref(removeUserTarget.pulp_href),
+      });
       addNotification({
         title: `User "${removeUserTarget.username}" removed from group "${groupName}"`,
         variant: "success",
@@ -214,7 +216,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
 
       <AddGroupUserModal
         isOpen={isAddUserOpen}
-        groupHref={groupHref}
+        groupId={groupId}
         groupName={groupName}
         existingUsernames={allUsers.map((u) => u.username)}
         onClose={() => setIsAddUserOpen(false)}

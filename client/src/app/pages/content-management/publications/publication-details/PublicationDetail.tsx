@@ -45,9 +45,8 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   const descriptor = getDescriptor("publication", "file.file");
 
   const handleDelete = async () => {
-    if (!publication?.pulp_href) return;
     try {
-      await deleteMutation.mutateAsync(publication.pulp_href);
+      await deleteMutation.mutateAsync(pubId);
       addNotification({
         title: `Publication "${publicationLabel}" deleted`,
         variant: "success",

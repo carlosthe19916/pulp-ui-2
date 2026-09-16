@@ -39,9 +39,8 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (!role.pulp_href) return;
     try {
-      await deleteRole(role.pulp_href, role.name ?? "");
+      await deleteRole(roleId, role.name ?? "");
       void navigate({ to: "/admin/roles" });
     } catch {
       // Notifications are handled in useRoleActions.

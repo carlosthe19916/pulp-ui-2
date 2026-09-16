@@ -144,10 +144,17 @@ export const useRoleCreateMutation = () => {
 
 export const useRoleUpdateMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async ({ href, body }: { href: string; body: PatchedRole }) => {
+    mutationFn: async ({
+      roleId,
+      body,
+    }: {
+      roleId: string;
+      body: PatchedRole;
+    }) => {
       const response = await axiosInstance.patch<RoleResponse>(
-        toProxyHref(href),
+        toProxyHref(buildRoleHref(roleId, domain)),
         body,
       );
       return response.data;
@@ -162,9 +169,12 @@ export const useRoleUpdateMutation = () => {
 
 export const useRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
+  const domain = useApiDomain();
   return useMutation({
-    mutationFn: async (roleHref: string) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(roleHref));
+    mutationFn: async (roleId: string) => {
+      const response = await axiosInstance.delete<void>(
+        toProxyHref(buildRoleHref(roleId, domain)),
+      );
       return response.data;
     },
     onSuccess: () => {
