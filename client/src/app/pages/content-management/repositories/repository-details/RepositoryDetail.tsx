@@ -5,7 +5,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   PageSection,
   Stack,
   StackItem,
@@ -15,10 +14,10 @@ import {
   Tabs,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
-import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
@@ -128,39 +127,39 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 </Breadcrumb>
               }
               actionMenu={
-                <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setIsEditOpen(true)}
-                    className={spacing.mrSm}
-                  >
-                    Edit
-                  </Button>
-                  {descriptor?.supportsSync && (
-                    <Button
-                      variant="primary"
-                      onClick={() => setIsSyncOpen(true)}
-                      className={spacing.mrSm}
-                    >
-                      Sync
-                    </Button>
-                  )}
-                  {descriptor?.supportsPublish && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => setIsPublishOpen(true)}
-                      className={spacing.mrSm}
-                    >
-                      Publish
-                    </Button>
-                  )}
-                  <Button
-                    variant="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                  >
-                    Delete
-                  </Button>
-                </>
+                <PageHeaderActionsMenu
+                  actions={[
+                    {
+                      key: "edit",
+                      dropdownItemProps: {
+                        children: "Edit",
+                        onClick: () => setIsEditOpen(true),
+                      },
+                    },
+                    descriptor?.supportsSync && {
+                      key: "sync",
+                      dropdownItemProps: {
+                        children: "Sync",
+                        onClick: () => setIsSyncOpen(true),
+                      },
+                    },
+                    descriptor?.supportsPublish && {
+                      key: "publish",
+                      dropdownItemProps: {
+                        children: "Publish",
+                        onClick: () => setIsPublishOpen(true),
+                      },
+                    },
+                    {
+                      key: "delete",
+                      dropdownItemProps: {
+                        children: "Delete",
+                        isDanger: true,
+                        onClick: () => setIsDeleteOpen(true),
+                      },
+                    },
+                  ]}
+                />
               }
             />
 

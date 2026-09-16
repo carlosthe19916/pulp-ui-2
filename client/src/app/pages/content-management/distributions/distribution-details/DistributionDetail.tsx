@@ -5,7 +5,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -15,11 +14,11 @@ import {
   StackItem,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
-import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/context/useNotifications";
@@ -103,34 +102,38 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
                 </Breadcrumb>
               }
               actionMenu={
-                <>
-                  <Button
-                    variant="secondary"
-                    component={(props) => (
-                      <Link
-                        {...props}
-                        to="/browse/$distributionId"
-                        params={{ distributionId: distId }}
-                      />
-                    )}
-                    className={spacing.mrSm}
-                  >
-                    Browse
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setIsEditOpen(true)}
-                    className={spacing.mrSm}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                  >
-                    Delete
-                  </Button>
-                </>
+                <PageHeaderActionsMenu
+                  actions={[
+                    {
+                      key: "browse",
+                      dropdownItemProps: {
+                        children: "Browse",
+                        component: (props) => (
+                          <Link
+                            {...props}
+                            to="/browse/$distributionId"
+                            params={{ distributionId: distId }}
+                          />
+                        ),
+                      },
+                    },
+                    {
+                      key: "edit",
+                      dropdownItemProps: {
+                        children: "Edit",
+                        onClick: () => setIsEditOpen(true),
+                      },
+                    },
+                    {
+                      key: "delete",
+                      dropdownItemProps: {
+                        children: "Delete",
+                        isDanger: true,
+                        onClick: () => setIsDeleteOpen(true),
+                      },
+                    },
+                  ]}
+                />
               }
             />
 

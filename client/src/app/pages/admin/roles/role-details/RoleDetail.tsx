@@ -5,7 +5,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   Content,
   ContentVariants,
   DescriptionList,
@@ -22,6 +21,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useRoleDetailQuery } from "@app/queries/roles";
 
@@ -72,22 +72,27 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
                 </Breadcrumb>
               }
               actionMenu={
-                <>
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsEditOpen(true)}
-                    isDisabled={role.locked}
-                  >
-                    Edit
-                  </Button>{" "}
-                  <Button
-                    variant="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                    isDisabled={role.locked}
-                  >
-                    Delete
-                  </Button>
-                </>
+                <PageHeaderActionsMenu
+                  actions={[
+                    {
+                      key: "edit",
+                      dropdownItemProps: {
+                        children: "Edit",
+                        isDisabled: role.locked,
+                        onClick: () => setIsEditOpen(true),
+                      },
+                    },
+                    {
+                      key: "delete",
+                      dropdownItemProps: {
+                        children: "Delete",
+                        isDanger: true,
+                        isDisabled: role.locked,
+                        onClick: () => setIsDeleteOpen(true),
+                      },
+                    },
+                  ]}
+                />
               }
             />
 

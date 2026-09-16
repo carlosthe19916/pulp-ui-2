@@ -5,7 +5,6 @@ import { Link } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   CodeBlock,
   CodeBlockCode,
   Content,
@@ -24,6 +23,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
 import { useTaskCancelMutation, useTaskDetailQuery } from "@app/queries/tasks";
@@ -123,14 +123,18 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
             </Breadcrumb>
           }
           actionMenu={
-            isRunning ? (
-              <Button
-                variant="danger"
-                onClick={() => setIsCancelModalOpen(true)}
-              >
-                Cancel Task
-              </Button>
-            ) : undefined
+            <PageHeaderActionsMenu
+              actions={[
+                isRunning && {
+                  key: "cancel",
+                  dropdownItemProps: {
+                    children: "Cancel Task",
+                    isDanger: true,
+                    onClick: () => setIsCancelModalOpen(true),
+                  },
+                },
+              ]}
+            />
           }
         />
 

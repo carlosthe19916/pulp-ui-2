@@ -5,7 +5,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -19,6 +18,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/context/useNotifications";
@@ -96,9 +96,18 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
                 </Breadcrumb>
               }
               actionMenu={
-                <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
-                  Delete
-                </Button>
+                <PageHeaderActionsMenu
+                  actions={[
+                    {
+                      key: "delete",
+                      dropdownItemProps: {
+                        children: "Delete",
+                        isDanger: true,
+                        onClick: () => setIsDeleteOpen(true),
+                      },
+                    },
+                  ]}
+                />
               }
             />
 

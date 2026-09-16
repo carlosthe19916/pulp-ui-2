@@ -35,6 +35,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
 import {
@@ -142,23 +143,28 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                 </Breadcrumb>
               }
               actionMenu={
-                <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      editNameForm.reset({ name: group.name });
-                      setIsEditNameOpen(true);
-                    }}
-                  >
-                    Edit Name
-                  </Button>{" "}
-                  <Button
-                    variant="danger"
-                    onClick={() => setIsDeleteOpen(true)}
-                  >
-                    Delete Group
-                  </Button>
-                </>
+                <PageHeaderActionsMenu
+                  actions={[
+                    {
+                      key: "edit",
+                      dropdownItemProps: {
+                        children: "Edit Name",
+                        onClick: () => {
+                          editNameForm.reset({ name: group.name });
+                          setIsEditNameOpen(true);
+                        },
+                      },
+                    },
+                    {
+                      key: "delete",
+                      dropdownItemProps: {
+                        children: "Delete Group",
+                        isDanger: true,
+                        onClick: () => setIsDeleteOpen(true),
+                      },
+                    },
+                  ]}
+                />
               }
             />
 

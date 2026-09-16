@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -17,6 +16,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
 import { DetailQueryGate } from "@app/components/DetailQueryGate";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { getDescriptor } from "@app/descriptors/registry";
 import {
   useBrowseArtifactDetailQuery,
@@ -94,17 +94,19 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
               </Breadcrumb>
             }
             actionMenu={
-              downloadUrl ? (
-                <Button
-                  variant="primary"
-                  component="a"
-                  href={downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Download
-                </Button>
-              ) : undefined
+              <PageHeaderActionsMenu
+                actions={[
+                  !!downloadUrl && {
+                    key: "download",
+                    dropdownItemProps: {
+                      children: "Download",
+                      to: downloadUrl,
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
+                  },
+                ]}
+              />
             }
           />
 
