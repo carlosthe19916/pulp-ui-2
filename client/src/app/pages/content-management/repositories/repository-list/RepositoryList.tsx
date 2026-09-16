@@ -38,6 +38,7 @@ import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
   extractIdFromHref,
@@ -93,6 +94,8 @@ export const RepositoryList: React.FC = () => {
     useDataViewFilters<IRepositoryFilters>({
       initialFilters: { name: "", pulp_type: "" },
     });
+  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
 
   const ordering = toOrderingParam(sortBy, direction) as
     "name" | "-name" | "description" | "-description";
@@ -101,9 +104,9 @@ export const RepositoryList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__icontains: filters.name || undefined,
-    pulp_type: filters.pulp_type
-      ? (filters.pulp_type as NonNullable<
+    name__icontains: debouncedName || undefined,
+    pulp_type: debouncedPulpType
+      ? (debouncedPulpType as NonNullable<
           Parameters<typeof useRepositoriesListQuery>[0]
         >["pulp_type"])
       : undefined,

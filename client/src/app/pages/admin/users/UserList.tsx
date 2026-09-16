@@ -32,6 +32,7 @@ import {
   toOrderingParam,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useUsersListQuery } from "@app/queries/users";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -73,6 +74,7 @@ export const UserList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
+  const debouncedUsername = useDebouncedValue(filters.username);
 
   const ordering = toOrderingParam(sortBy, direction) as
     "username" | "-username" | "date_joined" | "-date_joined" | undefined;
@@ -81,7 +83,7 @@ export const UserList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    username__icontains: filters.username || undefined,
+    username__icontains: debouncedUsername || undefined,
   });
 
   const users = data?.results ?? [];

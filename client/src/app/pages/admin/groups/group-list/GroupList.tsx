@@ -31,6 +31,7 @@ import {
   toOrderingParam,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -63,6 +64,7 @@ export const GroupList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IGroupFilters>({ initialFilters: { name: "" } });
+  const debouncedName = useDebouncedValue(filters.name);
 
   const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
@@ -70,7 +72,7 @@ export const GroupList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__icontains: filters.name || undefined,
+    name__icontains: debouncedName || undefined,
   });
 
   const groups = data?.results ?? [];

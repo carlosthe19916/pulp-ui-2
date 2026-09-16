@@ -27,6 +27,7 @@ import {
   toOrderingParam,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 
 const COLUMN_KEYS = ["name", "pubkey_fingerprint", "script"] as const;
@@ -47,6 +48,7 @@ export const SigningServiceList: React.FC = () => {
     useDataViewFilters<ISigningServiceFilters>({
       initialFilters: { name: "" },
     });
+  const debouncedName = useDebouncedValue(filters.name);
 
   const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
@@ -54,7 +56,7 @@ export const SigningServiceList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name: filters.name || undefined,
+    name: debouncedName || undefined,
   });
 
   const services = data?.results ?? [];
@@ -100,7 +102,7 @@ export const SigningServiceList: React.FC = () => {
     emptyState: (
       <EmptyState titleText="No signing services found" headingLevel="h4">
         <EmptyStateBody>
-          {filters.name
+          {debouncedName
             ? "No signing services match the current filter. Try a different search term."
             : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
         </EmptyStateBody>

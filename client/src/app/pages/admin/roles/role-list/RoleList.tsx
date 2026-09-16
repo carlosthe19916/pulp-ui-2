@@ -32,6 +32,7 @@ import {
   toOrderingParam,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -74,6 +75,8 @@ export const RoleList: React.FC = () => {
     useDataViewFilters<IRoleFilters>({
       initialFilters: { name: "", plugin: "" },
     });
+  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedPlugin = useDebouncedValue(filters.plugin);
 
   const ordering = toOrderingParam(sortBy, direction) as
     "name" | "-name" | "locked" | "-locked";
@@ -82,7 +85,7 @@ export const RoleList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__icontains: filters.name || undefined,
+    name__icontains: debouncedName || undefined,
   });
 
   // The `plugin` filter is derived client-side from the role name, so it filters
@@ -90,16 +93,16 @@ export const RoleList: React.FC = () => {
   const allRoles = useMemo(() => data?.results ?? [], [data?.results]);
   const roles = useMemo(
     () =>
-      filters.plugin
+      debouncedPlugin
         ? allRoles.filter((role) =>
             getRolePlugin(role.name)
               .toLowerCase()
-              .includes(filters.plugin.toLowerCase()),
+              .includes(debouncedPlugin.toLowerCase()),
           )
         : allRoles,
-    [allRoles, filters.plugin],
+    [allRoles, debouncedPlugin],
   );
-  const totalCount = filters.plugin ? roles.length : (data?.count ?? 0);
+  const totalCount = debouncedPlugin ? roles.length : (data?.count ?? 0);
 
   const sortProps = (columnKey: RoleColumnKey) =>
     buildThSort({

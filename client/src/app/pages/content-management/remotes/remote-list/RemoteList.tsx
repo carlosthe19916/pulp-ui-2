@@ -38,6 +38,7 @@ import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import {
   extractIdFromHref,
@@ -78,6 +79,8 @@ export const RemoteList: React.FC = () => {
     useDataViewFilters<IRemoteFilters>({
       initialFilters: { name: "", pulp_type: "" },
     });
+  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
 
   const ordering = toOrderingParam(sortBy, direction) as
     "name" | "-name" | "url" | "-url" | "policy" | "-policy";
@@ -86,9 +89,9 @@ export const RemoteList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__icontains: filters.name || undefined,
-    pulp_type: filters.pulp_type
-      ? (filters.pulp_type as NonNullable<
+    name__icontains: debouncedName || undefined,
+    pulp_type: debouncedPulpType
+      ? (debouncedPulpType as NonNullable<
           Parameters<typeof useRemotesListQuery>[0]
         >["pulp_type"])
       : undefined,

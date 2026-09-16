@@ -39,6 +39,7 @@ import {
   getDescriptor,
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
@@ -89,6 +90,8 @@ export const DistributionList: React.FC = () => {
     useDataViewFilters<IDistributionFilters>({
       initialFilters: { name: "", pulp_type: "" },
     });
+  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
 
   const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
@@ -96,9 +99,9 @@ export const DistributionList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__icontains: filters.name || undefined,
-    pulp_type: filters.pulp_type
-      ? (filters.pulp_type as NonNullable<
+    name__icontains: debouncedName || undefined,
+    pulp_type: debouncedPulpType
+      ? (debouncedPulpType as NonNullable<
           Parameters<typeof useDistributionsListQuery>[0]
         >["pulp_type"])
       : undefined,

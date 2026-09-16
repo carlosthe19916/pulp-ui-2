@@ -25,6 +25,7 @@ import {
 
 import type { FileFileContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   useBrowseFileContentListQuery,
   useBrowsePublicationDetailQuery,
@@ -62,6 +63,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     useDataViewFilters<IContentBrowserFilters>({
       initialFilters: { relative_path: "" },
     });
+  const debouncedRelativePath = useDebouncedValue(filters.relative_path);
 
   const { data: distribution } =
     useSuspenseBrowseDistributionDetailQuery(distributionId);
@@ -82,7 +84,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
     useBrowseFileContentListQuery(
       {
         repository_version: repositoryVersionHref,
-        relative_path__icontains: filters.relative_path || undefined,
+        relative_path__icontains: debouncedRelativePath || undefined,
         limit: perPage,
         offset: (page - 1) * perPage,
       },
@@ -140,7 +142,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   const { activeState, bodyStates } = dataViewBodyStates({
     loading: isResolvingVersion || isContentLoading,
     empty: contentUnits.length === 0,
-    emptyState: filters.relative_path
+    emptyState: debouncedRelativePath
       ? "No content matches the current filter."
       : "No content in this distribution version.",
   });

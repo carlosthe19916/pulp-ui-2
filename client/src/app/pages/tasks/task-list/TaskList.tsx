@@ -37,6 +37,7 @@ import {
   toOrderingParam,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { type TaskState, useTasksListQuery } from "@app/queries/tasks";
 import { extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
@@ -105,6 +106,7 @@ export const TaskList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ITaskFilters>({ initialFilters: { name: "" } });
+  const debouncedName = useDebouncedValue(filters.name);
 
   const ordering = toOrderingParam(sortBy, direction) as NonNullable<
     Parameters<typeof useTasksListQuery>[0]
@@ -114,7 +116,7 @@ export const TaskList: React.FC = () => {
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
-    name__contains: filters.name || undefined,
+    name__contains: debouncedName || undefined,
     state: stateFilter || undefined,
   });
 
