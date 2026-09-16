@@ -292,6 +292,50 @@ export const useGroupUserCreateMutation = () => {
   });
 };
 
+/** Result of a batch add: usernames grouped by outcome. */
+export interface IGroupUsersBatchResult {
+  succeeded: string[];
+  failed: string[];
+}
+
+/** Adds multiple users to a group via parallel POSTs and invalidates once. */
+export const useGroupUsersBatchCreateMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      groupHref,
+      usernames,
+    }: {
+      groupHref: string;
+      usernames: string[];
+    }): Promise<IGroupUsersBatchResult> => {
+      const results = await Promise.allSettled(
+        usernames.map((username) =>
+          axiosInstance.post<GroupUserResponse>(
+            `${toProxyHref(groupHref)}users/`,
+            { username } satisfies GroupUser,
+          ),
+        ),
+      );
+      const succeeded: string[] = [];
+      const failed: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          succeeded.push(usernames[index]);
+        } else {
+          failed.push(usernames[index]);
+        }
+      });
+      return { succeeded, failed };
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: groupsRootQueryOptions.queryKey,
+      });
+    },
+  });
+};
+
 export const useGroupUserDeleteMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

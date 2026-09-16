@@ -1,37 +1,50 @@
 import type React from "react";
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { useMemo } from "react";
 
 import {
   Button,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
+  EmptyState,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  useDataViewSelection,
+  useDataViewSort,
+  type DataViewTrObject,
+} from "@patternfly/react-data-view";
 
-import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useGroupUserCreateMutation } from "@app/queries/groups";
+import { useGroupUsersBatchCreateMutation } from "@app/queries/groups";
 import { useUsersListQuery } from "@app/queries/users";
 
-const addUserSchema = yup.object({
-  username: yup.string().required("User is required"),
-});
+const COLUMN_KEYS = ["username", "email", "name"] as const;
+type UserColumnKey = (typeof COLUMN_KEYS)[number];
 
-type AddUserFormValues = yup.InferType<typeof addUserSchema>;
+interface IUserFilters {
+  username: string;
+}
 
 interface IAddGroupUserModalInnerProps {
   groupHref: string;
   groupName: string;
+  existingUsernames: string[];
   onClose: () => void;
 }
 
@@ -39,99 +52,179 @@ interface IAddGroupUserModalInnerProps {
 const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   groupHref,
   groupName,
+  existingUsernames,
   onClose,
 }) => {
   const { addNotification } = useNotifications();
 
-  const [userSearch, setUserSearch] = useState("");
-  const debouncedUserSearch = useDebouncedValue(userSearch);
-  const { data: allUsersData, isLoading: isUsersLoading } = useUsersListQuery({
-    limit: 20,
-    username__icontains: debouncedUserSearch || undefined,
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
   });
-  const userCreateMutation = useGroupUserCreateMutation();
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "username", direction: "asc" },
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
+  const debouncedUsername = useDebouncedValue(filters.username);
 
-  const form = useForm<AddUserFormValues>({
-    resolver: yupResolver(addUserSchema),
-    defaultValues: { username: "" },
+  const ordering = toOrderingParam(sortBy, direction) as
+    "username" | "-username" | "email" | "-email" | undefined;
+
+  const { data, isLoading, error } = useUsersListQuery({
+    limit: perPage,
+    offset: (page - 1) * perPage,
+    ordering,
+    username__icontains: debouncedUsername || undefined,
   });
 
-  const userOptions = useMemo(
-    () =>
-      (allUsersData?.results ?? []).map((user) => ({
-        value: user.username,
-        label: user.username,
-      })),
-    [allUsersData?.results],
+  const users = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
+
+  const batchCreateMutation = useGroupUsersBatchCreateMutation();
+
+  const existingSet = useMemo(
+    () => new Set(existingUsernames),
+    [existingUsernames],
   );
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const selection = useDataViewSelection<DataViewTrObject>({
+    matchOption: (a, b) => a.id === b.id,
+  });
+  const tableSelection = useMemo(
+    () => ({
+      ...selection,
+      isSelectDisabled: (row: DataViewTrObject) =>
+        existingSet.has(row.id ?? ""),
+    }),
+    [selection, existingSet],
+  );
+  const selectedCount = selection.selected.length;
+
+  const sortProps = (columnKey: UserColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
+  const columns = [
+    { cell: "Username", props: { sort: sortProps("username") } },
+    { cell: "Email", props: { sort: sortProps("email") } },
+    "Name",
+  ];
+
+  const rows: DataViewTrObject[] = users.map((user) => ({
+    id: user.username,
+    row: [
+      { cell: user.username, props: { dataLabel: "Username" } },
+      { cell: user.email || "—", props: { dataLabel: "Email" } },
+      {
+        cell: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "—",
+        props: { dataLabel: "Name" },
+      },
+    ],
+  }));
+
+  const { activeState, bodyStates } = dataViewBodyStates({
+    loading: isLoading,
+    error,
+    empty: users.length === 0,
+    emptyState: <EmptyState titleText="No users found" headingLevel="h4" />,
+  });
+
+  const pagination = (variant: PaginationVariant) => (
+    <Pagination
+      variant={variant}
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
+
+  const onSubmit = async () => {
+    const usernames = selection.selected
+      .map((row) => row.id)
+      .filter((id): id is string => !!id);
+    if (usernames.length === 0) return;
+
     try {
-      await userCreateMutation.mutateAsync({
+      const { succeeded, failed } = await batchCreateMutation.mutateAsync({
         groupHref,
-        body: { username: values.username },
+        usernames,
       });
-      addNotification({
-        title: `User "${values.username}" added to group "${groupName}"`,
-        variant: "success",
-      });
+      if (succeeded.length > 0) {
+        addNotification({
+          title: `${succeeded.length} user${
+            succeeded.length === 1 ? "" : "s"
+          } added to group "${groupName}"`,
+          variant: "success",
+        });
+      }
+      if (failed.length > 0) {
+        addNotification({
+          title: `Failed to add ${failed.length} user${
+            failed.length === 1 ? "" : "s"
+          } to group "${groupName}": ${failed.join(", ")}`,
+          variant: "danger",
+        });
+      }
       onClose();
     } catch {
       addNotification({
-        title: "Failed to add user to group",
+        title: "Failed to add users to group",
         variant: "danger",
       });
     }
-  });
+  };
 
-  const isSubmitting =
-    form.formState.isSubmitting || userCreateMutation.isPending;
+  const isSubmitting = batchCreateMutation.isPending;
 
   return (
-    <Modal isOpen onClose={onClose} variant="small">
+    <Modal isOpen onClose={onClose} variant="large">
       <ModalHeader title="Add User to Group" />
       <ModalBody>
-        <Form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void onSubmit();
-          }}
-        >
-          <FormGroup label="User" isRequired fieldId="add-user-username">
-            <TypeaheadSelect
-              id="add-user-username"
-              ariaLabel="User"
-              placeholder="Select a user"
-              options={userOptions}
-              value={form.watch("username")}
-              isLoading={isUsersLoading}
-              onFilterChange={setUserSearch}
-              onChange={(value) =>
-                form.setValue("username", value, {
-                  shouldValidate: true,
-                })
-              }
-            />
-            {form.formState.errors.username && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant="error">
-                    {form.formState.errors.username.message}
-                  </HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
-        </Form>
+        <DataView activeState={activeState} selection={tableSelection}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <DataViewFilters
+                onChange={(_key, newFilters) => {
+                  onSetFilters(newFilters);
+                  onSetPage(undefined, 1);
+                }}
+                values={filters}
+              >
+                <DataViewTextFilter filterId="username" title="Username" />
+              </DataViewFilters>
+            }
+            pagination={pagination(PaginationVariant.top)}
+          />
+
+          <DataViewTable
+            aria-label="Select users"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+
+          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+        </DataView>
       </ModalBody>
       <ModalFooter>
         <Button
           variant="primary"
           onClick={() => void onSubmit()}
-          isDisabled={isSubmitting}
+          isDisabled={selectedCount === 0 || isSubmitting}
           isLoading={isSubmitting}
         >
-          Add
+          {selectedCount > 0 ? `Add (${selectedCount})` : "Add"}
         </Button>
         <Button variant="link" onClick={onClose}>
           Cancel
@@ -145,20 +238,23 @@ interface IAddGroupUserModalProps {
   isOpen: boolean;
   groupHref: string;
   groupName: string;
+  existingUsernames: string[];
   onClose: () => void;
 }
 
-/** Mounted only while open so its form and user query reset on every open. */
+/** Mounted only while open so its table state and user query reset on every open. */
 export const AddGroupUserModal: React.FC<IAddGroupUserModalProps> = ({
   isOpen,
   groupHref,
   groupName,
+  existingUsernames,
   onClose,
 }) =>
   isOpen ? (
     <AddGroupUserModalInner
       groupHref={groupHref}
       groupName={groupName}
+      existingUsernames={existingUsernames}
       onClose={onClose}
     />
   ) : null;

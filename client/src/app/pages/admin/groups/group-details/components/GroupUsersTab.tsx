@@ -216,6 +216,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
         isOpen={isAddUserOpen}
         groupHref={groupHref}
         groupName={groupName}
+        existingUsernames={allUsers.map((u) => u.username)}
         onClose={() => setIsAddUserOpen(false)}
       />
 
