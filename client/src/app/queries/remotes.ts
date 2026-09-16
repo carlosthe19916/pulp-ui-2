@@ -21,7 +21,7 @@ export const remotesRootQueryOptions = queryOptions({
 
 export const remotesListQueryOptions = (
   domain: IPulpDomain,
-  params: IRemoteListParams = {},
+  params: IRemoteListParams,
 ) =>
   queryOptions({
     queryKey: [...remotesRootQueryOptions.queryKey, "list", domain, params],
@@ -32,7 +32,6 @@ export const remotesListQueryOptions = (
           {
             params: {
               ...params,
-              limit: params.limit ?? 20,
               ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
@@ -41,7 +40,7 @@ export const remotesListQueryOptions = (
     },
   });
 
-export const useRemotesListQuery = (params: IRemoteListParams = {}) => {
+export const useRemotesListQuery = (params: IRemoteListParams) => {
   const domain = useApiDomain();
   return useQuery(remotesListQueryOptions(domain, params));
 };

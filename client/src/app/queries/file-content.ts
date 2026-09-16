@@ -26,7 +26,7 @@ export type IFileContentListParams = ListParams<ContentFileFilesListData>;
 
 export const fileContentListQueryOptions = (
   domain: IPulpDomain,
-  params: IFileContentListParams = {},
+  params: IFileContentListParams,
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
@@ -44,7 +44,6 @@ export const fileContentListQueryOptions = (
           {
             params: {
               ...params,
-              limit: params.limit ?? 20,
               ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
@@ -55,7 +54,7 @@ export const fileContentListQueryOptions = (
   });
 
 export const useFileContentListQuery = (
-  params: IFileContentListParams = {},
+  params: IFileContentListParams,
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

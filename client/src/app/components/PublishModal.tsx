@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -20,6 +20,7 @@ import {
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
@@ -47,7 +48,15 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
 }) => {
   const { addNotification } = useNotifications();
   const createMutation = useFilePublicationCreateMutation();
-  const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
+
+  const [repoSearch, setRepoSearch] = useState("");
+  const debouncedRepoSearch = useDebouncedValue(repoSearch);
+  const [selectedRepoLabel, setSelectedRepoLabel] = useState<string>();
+  const { data: repositoriesData, isLoading: isReposLoading } =
+    useRepositoriesListQuery({
+      limit: 20,
+      name__icontains: debouncedRepoSearch || undefined,
+    });
 
   const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
@@ -92,9 +101,10 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       });
       const taskHref = result?.task;
       if (taskHref) {
-        const repositoryName = repositoryOptions.find(
-          (option) => option.value === values.repository,
-        )?.label;
+        const repositoryName =
+          selectedRepoLabel ??
+          repositoryOptions.find((option) => option.value === values.repository)
+            ?.label;
         notifyTaskStarted(
           addNotification,
           taskHref,
@@ -133,7 +143,16 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
               placeholder="Select a repository"
               options={repositoryOptions}
               value={repository ?? ""}
-              onChange={(value) => setValue("repository", value)}
+              selectedLabel={selectedRepoLabel}
+              isLoading={isReposLoading}
+              onFilterChange={setRepoSearch}
+              onChange={(value) => {
+                setValue("repository", value);
+                setSelectedRepoLabel(
+                  repositoryOptions.find((option) => option.value === value)
+                    ?.label,
+                );
+              }}
             />
           </FormGroup>
           <FormGroup label="Repository Version" fieldId="publish-version">

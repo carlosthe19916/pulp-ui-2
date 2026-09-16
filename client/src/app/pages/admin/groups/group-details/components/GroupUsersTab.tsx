@@ -25,17 +25,15 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
 import {
+  useAllGroupUsersListQuery,
   useGroupUserDeleteMutation,
-  useGroupUsersListQuery,
 } from "@app/queries/groups";
 
 import { AddGroupUserModal } from "./AddGroupUserModal";
 
 // The group-users API only supports limit/offset — no server-side ordering or
-// filtering — so all members are fetched once and paginated/sorted/filtered
-// in memory.
-const GROUP_USERS_FETCH_LIMIT = 1000;
-
+// filtering — so all members are fetched (paging through every page) and then
+// paginated/sorted/filtered in memory.
 const COLUMN_KEYS = ["username", "actions"] as const;
 type UserColumnKey = (typeof COLUMN_KEYS)[number];
 
@@ -60,7 +58,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
     data: usersData,
     isLoading,
     error,
-  } = useGroupUsersListQuery(groupId, { limit: GROUP_USERS_FETCH_LIMIT });
+  } = useAllGroupUsersListQuery(groupId);
 
   const userDeleteMutation = useGroupUserDeleteMutation();
 

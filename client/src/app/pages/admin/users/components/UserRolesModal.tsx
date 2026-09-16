@@ -25,8 +25,8 @@ import AngleRightIcon from "@patternfly/react-icons/dist/esm/icons/angle-right-i
 import type { UserResponse } from "@app/client";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { DefaultErrorState } from "@app/components/LoadingWrapper/DefaultErrorState";
-import { useRolesListQuery } from "@app/queries/roles";
-import { useUserRolesListQuery } from "@app/queries/users";
+import { useAllRolesListQuery } from "@app/queries/roles";
+import { useAllUserRolesListQuery } from "@app/queries/users";
 
 import { useUserRoleActions } from "../hooks/useUserRoleActions";
 
@@ -271,14 +271,12 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
     data: assignedData,
     isLoading: assignedLoading,
     error: assignedError,
-  } = useUserRolesListQuery(userHref);
+  } = useAllUserRolesListQuery(userHref);
   const {
     data: allRolesData,
     isLoading: allRolesLoading,
     error: allRolesError,
-  } = useRolesListQuery({
-    limit: 1000,
-  });
+  } = useAllRolesListQuery();
 
   const isLoading = assignedLoading || allRolesLoading;
   const error = assignedError ?? allRolesError;

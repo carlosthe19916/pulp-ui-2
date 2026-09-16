@@ -38,8 +38,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const { addNotification } = useNotifications();
 
   const { data: group } = useSuspenseGroupDetailQuery(groupId);
-  const { data: usersData } = useGroupUsersListQuery(groupId);
-  const { data: rolesData } = useGroupRolesListQuery(groupId);
+  // These fetches feed only the tab-title counts, so request a single row and
+  // read the paginated `count` rather than pulling a page of results.
+  const { data: usersData } = useGroupUsersListQuery(groupId, { limit: 1 });
+  const { data: rolesData } = useGroupRolesListQuery(groupId, { limit: 1 });
 
   const deleteMutation = useGroupDeleteMutation();
 
@@ -47,8 +49,8 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditNameOpen, setIsEditNameOpen] = useState(false);
 
-  const userCount = usersData?.results?.length ?? 0;
-  const roleCount = rolesData?.results?.length ?? 0;
+  const userCount = usersData?.count ?? 0;
+  const roleCount = rolesData?.count ?? 0;
 
   const handleDelete = async () => {
     if (!group.pulp_href) return;

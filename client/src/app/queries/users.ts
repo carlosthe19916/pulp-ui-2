@@ -18,7 +18,8 @@ import type {
   UserWritable,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
-import type { ListParams } from "./utils/listParams";
+import { fetchAllPages } from "./utils/fetchAllPages";
+import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
@@ -29,6 +30,8 @@ export type IUserListParams = ListParams<UsersListData>;
 
 export type IUserRoleListParams = ListParams<UsersRolesListData>;
 
+export type IAllUserRoleListParams = AllListParams<UsersRolesListData>;
+
 export const usersRootQueryOptions = queryOptions({
   queryKey: [UsersQueryKey],
   queryFn: async (): Promise<null> => null,
@@ -36,7 +39,7 @@ export const usersRootQueryOptions = queryOptions({
 
 export const usersListQueryOptions = (
   domain: IPulpDomain,
-  params: IUserListParams = {},
+  params: IUserListParams,
 ) =>
   queryOptions({
     queryKey: [...usersRootQueryOptions.queryKey, "list", domain, params],
@@ -46,7 +49,6 @@ export const usersListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -72,7 +74,7 @@ export const userDetailQueryOptions = (userHref: string) =>
 
 export const userRolesListQueryOptions = (
   userHref: string,
-  params: IUserRoleListParams = {},
+  params: IUserRoleListParams,
 ) =>
   queryOptions({
     queryKey: [...usersRootQueryOptions.queryKey, "roles", userHref, params],
@@ -82,7 +84,6 @@ export const userRolesListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -92,7 +93,46 @@ export const userRolesListQueryOptions = (
     enabled: !!userHref,
   });
 
-export const useUsersListQuery = (params: IUserListParams = {}) => {
+/**
+ * Fetch-all fallback for a user's assigned roles: the dual-list role editor
+ * needs every assignment at once, so page through the whole nested list.
+ */
+export const allUserRolesListQueryOptions = (
+  userHref: string,
+  params: IAllUserRoleListParams = {},
+) =>
+  queryOptions({
+    queryKey: [
+      ...usersRootQueryOptions.queryKey,
+      "roles",
+      "all",
+      userHref,
+      params,
+    ],
+    queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
+      const { results, count } = await fetchAllPages<UserRoleResponse>(
+        async (offset, limit) => {
+          const response =
+            await axiosInstance.get<PaginatedUserRoleResponseList>(
+              `${toProxyHref(userHref)}roles/`,
+              {
+                params: {
+                  ...params,
+                  offset,
+                  limit,
+                  ordering: params.ordering ? [params.ordering] : undefined,
+                },
+              },
+            );
+          return response.data;
+        },
+      );
+      return { count, next: null, previous: null, results };
+    },
+    enabled: !!userHref,
+  });
+
+export const useUsersListQuery = (params: IUserListParams) => {
   const domain = useApiDomain();
   return useQuery(usersListQueryOptions(domain, params));
 };
@@ -103,9 +143,16 @@ export const useUserDetailQuery = (userHref: string) => {
 
 export const useUserRolesListQuery = (
   userHref: string,
-  params: IUserRoleListParams = {},
+  params: IUserRoleListParams,
 ) => {
   return useQuery(userRolesListQueryOptions(userHref, params));
+};
+
+export const useAllUserRolesListQuery = (
+  userHref: string,
+  params: IAllUserRoleListParams = {},
+) => {
+  return useQuery(allUserRolesListQueryOptions(userHref, params));
 };
 
 export const useUserCreateMutation = () => {

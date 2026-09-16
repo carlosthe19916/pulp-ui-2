@@ -24,7 +24,7 @@ import { buildContentHref, buildDistributionHref } from "./utils/pulpHref";
 const BROWSE_STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 export const useBrowseDistributionsQuery = (
-  params: IDistributionListParams = {},
+  params: IDistributionListParams,
 ) => {
   const domain = useApiDomain();
   return useQuery({
@@ -70,7 +70,7 @@ export const useBrowsePublicationDetailQuery = (href: string) => {
 };
 
 export const useBrowseFileContentListQuery = (
-  params: IFileContentListParams = {},
+  params: IFileContentListParams,
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

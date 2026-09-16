@@ -6,13 +6,17 @@ import {
   Button,
   Content,
   ContentVariants,
+  Pagination,
+  PaginationVariant,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
 import {
   DataView,
   DataViewTable,
+  DataViewToolbar,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import type { MultipleArtifactContentResponse } from "@app/client";
@@ -41,19 +45,27 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
 }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId);
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
+  });
+
+  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId, {
+    limit: 1,
+  });
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
 
   const { data: contentData, isLoading: isContentLoading } =
     useContentListQuery(
       {
         repository_version: latestVersionHref,
-        limit: 50,
+        limit: perPage,
+        offset: (page - 1) * perPage,
       },
       { enabled: !!latestVersionHref },
     );
 
   const contentUnits = (contentData?.results ?? []) as ContentRow[];
+  const totalCount = contentData?.count ?? 0;
 
   const contentColumns = ["Path", "SHA256"];
 
@@ -91,6 +103,17 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
     emptyState: "No content in the latest version.",
   });
 
+  const pagination = (variant: PaginationVariant) => (
+    <Pagination
+      variant={variant}
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
+
   return (
     <>
       <Stack hasGutter>
@@ -108,11 +131,15 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
             </Content>
           ) : (
             <DataView activeState={repoContentStates.activeState}>
+              <DataViewToolbar pagination={pagination(PaginationVariant.top)} />
               <DataViewTable
                 aria-label="Repository content table"
                 columns={contentColumns}
                 rows={contentRows}
                 bodyStates={repoContentStates.bodyStates}
+              />
+              <DataViewToolbar
+                pagination={pagination(PaginationVariant.bottom)}
               />
             </DataView>
           )}

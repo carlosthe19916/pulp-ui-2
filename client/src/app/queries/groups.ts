@@ -23,6 +23,7 @@ import type {
   PatchedGroup,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -43,7 +44,7 @@ export const groupsRootQueryOptions = queryOptions({
 
 export const groupsListQueryOptions = (
   domain: IPulpDomain,
-  params: IGroupListParams = {},
+  params: IGroupListParams,
 ) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "list", domain, params],
@@ -53,7 +54,6 @@ export const groupsListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -79,7 +79,7 @@ export const groupDetailQueryOptions = (groupHref: string) =>
 
 export const groupUsersListQueryOptions = (
   groupHref: string,
-  params: IGroupUserListParams = {},
+  params: IGroupUserListParams,
 ) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "users", groupHref, params],
@@ -89,7 +89,6 @@ export const groupUsersListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -99,9 +98,56 @@ export const groupUsersListQueryOptions = (
     enabled: !!groupHref,
   });
 
+/**
+ * Fetch-all fallback for group members: the `groups_users_list` endpoint
+ * supports only `limit`/`offset` (no ordering, no filtering), so the UI pages,
+ * sorts, and filters in memory over the full member list.
+ */
+export const allGroupUsersListQueryOptions = (groupHref: string) =>
+  queryOptions({
+    queryKey: [...groupsRootQueryOptions.queryKey, "users", "all", groupHref],
+    queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
+      const { results, count } = await fetchAllPages<GroupUserResponse>(
+        async (offset, limit) => {
+          const response =
+            await axiosInstance.get<PaginatedGroupUserResponseList>(
+              `${toProxyHref(groupHref)}users/`,
+              { params: { offset, limit } },
+            );
+          return response.data;
+        },
+      );
+      return { count, next: null, previous: null, results };
+    },
+    enabled: !!groupHref,
+  });
+
+/**
+ * Fetch-all fallback for a group's assigned roles: the roles tab renders the
+ * full list in one table (no pagination UI), so page through everything.
+ */
+export const allGroupRolesListQueryOptions = (groupHref: string) =>
+  queryOptions({
+    queryKey: [...groupsRootQueryOptions.queryKey, "roles", "all", groupHref],
+    queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
+      const { results, count } = await fetchAllPages<GroupRoleResponse>(
+        async (offset, limit) => {
+          const response =
+            await axiosInstance.get<PaginatedGroupRoleResponseList>(
+              `${toProxyHref(groupHref)}roles/`,
+              { params: { offset, limit } },
+            );
+          return response.data;
+        },
+      );
+      return { count, next: null, previous: null, results };
+    },
+    enabled: !!groupHref,
+  });
+
 export const groupRolesListQueryOptions = (
   groupHref: string,
-  params: IGroupRoleListParams = {},
+  params: IGroupRoleListParams,
 ) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "roles", groupHref, params],
@@ -111,7 +157,6 @@ export const groupRolesListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -121,7 +166,7 @@ export const groupRolesListQueryOptions = (
     enabled: !!groupHref,
   });
 
-export const useGroupsListQuery = (params: IGroupListParams = {}) => {
+export const useGroupsListQuery = (params: IGroupListParams) => {
   const domain = useApiDomain();
   return useQuery(groupsListQueryOptions(domain, params));
 };
@@ -140,7 +185,7 @@ export const useSuspenseGroupDetailQuery = (groupId: string) => {
 
 export const useGroupUsersListQuery = (
   groupId: string,
-  params: IGroupUserListParams = {},
+  params: IGroupUserListParams,
 ) => {
   const domain = useApiDomain();
   return useQuery(
@@ -148,13 +193,27 @@ export const useGroupUsersListQuery = (
   );
 };
 
+export const useAllGroupUsersListQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    allGroupUsersListQueryOptions(buildGroupHref(groupId, domain)),
+  );
+};
+
 export const useGroupRolesListQuery = (
   groupId: string,
-  params: IGroupRoleListParams = {},
+  params: IGroupRoleListParams,
 ) => {
   const domain = useApiDomain();
   return useQuery(
     groupRolesListQueryOptions(buildGroupHref(groupId, domain), params),
+  );
+};
+
+export const useAllGroupRolesListQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    allGroupRolesListQueryOptions(buildGroupHref(groupId, domain)),
   );
 };
 

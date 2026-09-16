@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
@@ -16,6 +16,7 @@ import type { FileFilePublication } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { filePublicationDescriptor } from "@app/descriptors/file/file-publication";
 import {
   buildDefaultValues,
@@ -44,7 +45,13 @@ export const CreatePublicationModal: React.FC<ICreatePublicationModalProps> = ({
 }) => {
   const { addNotification } = useNotifications();
   const createMutation = useFilePublicationCreateMutation();
-  const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
+  const [repoSearch, setRepoSearch] = useState("");
+  const debouncedRepoSearch = useDebouncedValue(repoSearch);
+  const { data: repositoriesData, isLoading: isReposLoading } =
+    useRepositoriesListQuery({
+      limit: 20,
+      name__icontains: debouncedRepoSearch || undefined,
+    });
 
   const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
@@ -132,6 +139,12 @@ export const CreatePublicationModal: React.FC<ICreatePublicationModalProps> = ({
             control={control}
             idPrefix="create-publication"
             resourceOptions={{ repository: repositoryOptions }}
+            resourceSearch={{
+              repository: {
+                onFilterChange: setRepoSearch,
+                isLoading: isReposLoading,
+              },
+            }}
           />
         </Form>
       </ModalBody>

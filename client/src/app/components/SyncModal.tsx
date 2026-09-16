@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -20,6 +20,7 @@ import {
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useFileRepositorySyncMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
@@ -46,7 +47,15 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
 }) => {
   const { addNotification } = useNotifications();
   const syncMutation = useFileRepositorySyncMutation();
-  const { data: remotesData } = useRemotesListQuery({ limit: 100 });
+
+  const [remoteSearch, setRemoteSearch] = useState("");
+  const debouncedRemoteSearch = useDebouncedValue(remoteSearch);
+  const [selectedRemoteLabel, setSelectedRemoteLabel] = useState<string>();
+  const { data: remotesData, isLoading: isRemotesLoading } =
+    useRemotesListQuery({
+      limit: 20,
+      name__icontains: debouncedRemoteSearch || undefined,
+    });
 
   const remoteOptions = useMemo<ITypeaheadOption[]>(
     () =>
@@ -87,9 +96,9 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
       });
       const taskHref = result?.task;
       if (taskHref) {
-        const remoteName = remoteOptions.find(
-          (option) => option.value === values.remote,
-        )?.label;
+        const remoteName =
+          selectedRemoteLabel ??
+          remoteOptions.find((option) => option.value === values.remote)?.label;
         notifyTaskStarted(
           addNotification,
           taskHref,
@@ -130,7 +139,15 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
               placeholder="Select a remote (leave empty for default)"
               options={remoteOptions}
               value={remote ?? ""}
-              onChange={(value) => setValue("remote", value)}
+              selectedLabel={selectedRemoteLabel}
+              isLoading={isRemotesLoading}
+              onFilterChange={setRemoteSearch}
+              onChange={(value) => {
+                setValue("remote", value);
+                setSelectedRemoteLabel(
+                  remoteOptions.find((option) => option.value === value)?.label,
+                );
+              }}
             />
           </FormGroup>
           <FormGroup fieldId="sync-mirror">

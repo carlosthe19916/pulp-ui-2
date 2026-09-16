@@ -31,6 +31,17 @@ interface IDescriptorFormFieldsProps<
   idPrefix: string;
   /** Options for `type: "resource"` fields, keyed by the field's resourceKind. */
   resourceOptions?: Partial<Record<ResourceKind, ITypeaheadOption[]>>;
+  /**
+   * Server-side search wiring for `type: "resource"` fields, keyed by
+   * resourceKind. When provided for a kind, its `options` are treated as
+   * already server-filtered and the typed text is forwarded to `onFilterChange`.
+   */
+  resourceSearch?: Partial<
+    Record<
+      ResourceKind,
+      { onFilterChange: (value: string) => void; isLoading?: boolean }
+    >
+  >;
 }
 
 /**
@@ -45,6 +56,7 @@ export const DescriptorFormFields = <
   control,
   idPrefix,
   resourceOptions,
+  resourceSearch,
 }: IDescriptorFormFieldsProps<TFieldValues>) => {
   return (
     <>
@@ -160,6 +172,8 @@ export const DescriptorFormFields = <
                   (field.resourceKind &&
                     resourceOptions?.[field.resourceKind]) ??
                   [];
+                const search =
+                  field.resourceKind && resourceSearch?.[field.resourceKind];
                 return (
                   <FormGroup
                     label={field.label}
@@ -173,6 +187,10 @@ export const DescriptorFormFields = <
                       options={options}
                       value={(rhfField.value as string) ?? ""}
                       onChange={(value) => rhfField.onChange(value)}
+                      onFilterChange={
+                        search ? search.onFilterChange : undefined
+                      }
+                      isLoading={search?.isLoading}
                     />
                     {helper}
                   </FormGroup>

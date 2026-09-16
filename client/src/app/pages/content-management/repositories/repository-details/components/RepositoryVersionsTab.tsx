@@ -7,7 +7,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/DataView";
-import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
+import { useAllFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryVersionsTabProps {
@@ -18,7 +18,7 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   repoId,
 }) => {
   const { data: versionsData, isLoading: isVersionsLoading } =
-    useFileRepositoryVersionsListQuery(repoId);
+    useAllFileRepositoryVersionsListQuery(repoId);
 
   const versions = versionsData?.results ?? [];
 

@@ -17,9 +17,26 @@ type SingleOrdering<TQuery> = TQuery extends { ordering?: infer O }
     : never
   : never;
 
+/**
+ * Params for a paged list query. `limit` is **required**: every list query must
+ * declare how many rows it wants (a page size, or `1` when only `count` is
+ * needed). Leaving it implicit lets a silent default (client- or server-side)
+ * cap the results and truncate counts — the bug this type prevents.
+ */
 export type ListParams<TData extends { query?: unknown }> = Omit<
   QueryOf<TData>,
-  "ordering"
+  "ordering" | "limit"
 > & {
   ordering?: SingleOrdering<QueryOf<TData>>;
+  limit: number;
 };
+
+/**
+ * Params for a fetch-all query. These walk every page internally, so `limit`
+ * and `offset` are managed by the loop, not the caller — only the filtering /
+ * ordering params remain.
+ */
+export type AllListParams<TData extends { query?: unknown }> = Omit<
+  ListParams<TData>,
+  "limit" | "offset"
+>;

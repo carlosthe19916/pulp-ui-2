@@ -15,8 +15,10 @@ import type {
   PatchedfileFileRepository,
   RepositoriesFileFileVersionsListData,
   RepositorySyncUrl,
+  RepositoryVersionResponse,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import { buildRepositoryHref, isEmptyDetailPayload } from "./utils/pulpHref";
@@ -48,7 +50,7 @@ export type IFileRepositoryVersionsListParams =
 
 export const fileRepositoryVersionsListQueryOptions = (
   repoHref: string,
-  params: IFileRepositoryVersionsListParams = {},
+  params: IFileRepositoryVersionsListParams,
 ) =>
   queryOptions({
     queryKey: [
@@ -64,12 +66,39 @@ export const fileRepositoryVersionsListQueryOptions = (
           {
             params: {
               ...params,
-              limit: params.limit ?? 20,
               ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
         );
       return response.data;
+    },
+    enabled: !!repoHref,
+  });
+
+/**
+ * Fetch-all fallback for the versions tab: it renders every version in one
+ * table (no pagination UI), so page through the whole list.
+ */
+export const allFileRepositoryVersionsListQueryOptions = (repoHref: string) =>
+  queryOptions({
+    queryKey: [
+      ...repositoriesRootQueryOptions.queryKey,
+      "versions",
+      "all",
+      repoHref,
+    ],
+    queryFn: async (): Promise<PaginatedRepositoryVersionResponseList> => {
+      const { results, count } = await fetchAllPages<RepositoryVersionResponse>(
+        async (offset, limit) => {
+          const response =
+            await axiosInstance.get<PaginatedRepositoryVersionResponseList>(
+              `${toProxyHref(repoHref)}versions/`,
+              { params: { offset, limit } },
+            );
+          return response.data;
+        },
+      );
+      return { count, next: null, previous: null, results };
     },
     enabled: !!repoHref,
   });
@@ -90,13 +119,22 @@ export const useSuspenseFileRepositoryDetailQuery = (repoId: string) => {
 
 export const useFileRepositoryVersionsListQuery = (
   repoId: string,
-  params: IFileRepositoryVersionsListParams = {},
+  params: IFileRepositoryVersionsListParams,
 ) => {
   const domain = useApiDomain();
   return useQuery(
     fileRepositoryVersionsListQueryOptions(
       buildRepositoryHref(repoId, domain),
       params,
+    ),
+  );
+};
+
+export const useAllFileRepositoryVersionsListQuery = (repoId: string) => {
+  const domain = useApiDomain();
+  return useQuery(
+    allFileRepositoryVersionsListQueryOptions(
+      buildRepositoryHref(repoId, domain),
     ),
   );
 };

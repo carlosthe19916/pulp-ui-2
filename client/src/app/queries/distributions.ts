@@ -21,7 +21,7 @@ export const distributionsRootQueryOptions = queryOptions({
 
 export const distributionsListQueryOptions = (
   domain: IPulpDomain,
-  params: IDistributionListParams = {},
+  params: IDistributionListParams,
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
@@ -39,7 +39,6 @@ export const distributionsListQueryOptions = (
           {
             params: {
               ...params,
-              limit: params.limit ?? 20,
               ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
@@ -49,7 +48,7 @@ export const distributionsListQueryOptions = (
   });
 
 export const useDistributionsListQuery = (
-  params: IDistributionListParams = {},
+  params: IDistributionListParams,
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

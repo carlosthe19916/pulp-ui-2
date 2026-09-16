@@ -44,7 +44,7 @@ export const tasksRootQueryOptions = queryOptions({
 
 export const tasksListQueryOptions = (
   domain: IPulpDomain,
-  params: ITaskListParams = {},
+  params: ITaskListParams,
 ) =>
   queryOptions({
     queryKey: [...tasksRootQueryOptions.queryKey, "list", domain, params],
@@ -54,7 +54,6 @@ export const tasksListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -86,7 +85,7 @@ export const taskDetailQueryOptions = (taskHref: string) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
 
-export const useTasksListQuery = (params: ITaskListParams = {}) => {
+export const useTasksListQuery = (params: ITaskListParams) => {
   const domain = useApiDomain();
   return useQuery(tasksListQueryOptions(domain, params));
 };

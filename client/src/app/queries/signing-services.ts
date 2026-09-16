@@ -23,7 +23,7 @@ export const signingServicesRootQueryOptions = queryOptions({
 
 export const signingServicesListQueryOptions = (
   domain: IPulpDomain,
-  params: ISigningServiceListParams = {},
+  params: ISigningServiceListParams,
 ) =>
   queryOptions({
     queryKey: [
@@ -39,7 +39,6 @@ export const signingServicesListQueryOptions = (
           {
             params: {
               ...params,
-              limit: params.limit ?? 20,
               ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
@@ -64,7 +63,7 @@ export const signingServiceDetailQueryOptions = (href: string) =>
   });
 
 export const useSigningServicesListQuery = (
-  params: ISigningServiceListParams = {},
+  params: ISigningServiceListParams,
 ) => {
   const domain = useApiDomain();
   return useQuery(signingServicesListQueryOptions(domain, params));

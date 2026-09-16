@@ -15,7 +15,8 @@ import type {
   RolesListData,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
-import type { ListParams } from "./utils/listParams";
+import { fetchAllPages } from "./utils/fetchAllPages";
+import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildRoleHref, isEmptyDetailPayload } from "./utils/pulpHref";
@@ -24,6 +25,8 @@ export const RolesQueryKey = "roles";
 
 export type IRoleListParams = ListParams<RolesListData>;
 
+export type IAllRoleListParams = AllListParams<RolesListData>;
+
 export const rolesRootQueryOptions = queryOptions({
   queryKey: [RolesQueryKey],
   queryFn: async (): Promise<null> => null,
@@ -31,7 +34,7 @@ export const rolesRootQueryOptions = queryOptions({
 
 export const rolesListQueryOptions = (
   domain: IPulpDomain,
-  params: IRoleListParams = {},
+  params: IRoleListParams,
 ) =>
   queryOptions({
     queryKey: [...rolesRootQueryOptions.queryKey, "list", domain, params],
@@ -41,12 +44,50 @@ export const rolesListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
       );
       return response.data;
+    },
+  });
+
+/**
+ * Fetch-all fallback for callers that need every role at once (e.g. a
+ * client-side dual-list role picker, or harvesting the union of all permission
+ * strings). Prefer server-side pagination/filtering for anything that renders a
+ * single page.
+ */
+export const allRolesListQueryOptions = (
+  domain: IPulpDomain,
+  params: IAllRoleListParams = {},
+) =>
+  queryOptions({
+    queryKey: [
+      ...rolesRootQueryOptions.queryKey,
+      "list",
+      "all",
+      domain,
+      params,
+    ],
+    queryFn: async (): Promise<PaginatedRoleResponseList> => {
+      const { results, count } = await fetchAllPages<RoleResponse>(
+        async (offset, limit) => {
+          const response = await axiosInstance.get<PaginatedRoleResponseList>(
+            pulpApiPath("roles/", domain),
+            {
+              params: {
+                ...params,
+                offset,
+                limit,
+                ordering: params.ordering ? [params.ordering] : undefined,
+              },
+            },
+          );
+          return response.data;
+        },
+      );
+      return { count, next: null, previous: null, results };
     },
   });
 
@@ -65,9 +106,14 @@ export const roleDetailQueryOptions = (roleHref: string) =>
     enabled: !!roleHref,
   });
 
-export const useRolesListQuery = (params: IRoleListParams = {}) => {
+export const useRolesListQuery = (params: IRoleListParams) => {
   const domain = useApiDomain();
   return useQuery(rolesListQueryOptions(domain, params));
+};
+
+export const useAllRolesListQuery = (params: IAllRoleListParams = {}) => {
+  const domain = useApiDomain();
+  return useQuery(allRolesListQueryOptions(domain, params));
 };
 
 export const useRoleDetailQuery = (roleId: string) => {

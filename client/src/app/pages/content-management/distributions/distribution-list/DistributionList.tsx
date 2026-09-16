@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import {
@@ -41,7 +41,6 @@ import {
 } from "@app/descriptors/registry";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDistributionsListQuery } from "@app/queries/distributions";
-import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
   extractIdFromHref,
   resolvePulpType,
@@ -109,17 +108,6 @@ export const DistributionList: React.FC = () => {
 
   const distributions = (data?.results ?? []) as DistributionRow[];
   const totalCount = data?.count ?? 0;
-
-  const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
-  const repositoryNameByHref = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const repo of repositoriesData?.results ?? []) {
-      if (repo.pulp_href && repo.name) {
-        map[repo.pulp_href] = repo.name;
-      }
-    }
-    return map;
-  }, [repositoriesData?.results]);
 
   const canCreate = getDescriptorsForKind("distribution").some((d) =>
     d.isAvailable(plugins),
@@ -205,11 +193,6 @@ export const DistributionList: React.FC = () => {
             <ResourceHrefLink
               kind="repository"
               href={distribution.repository}
-              label={
-                distribution.repository
-                  ? repositoryNameByHref[distribution.repository]
-                  : undefined
-              }
             />
           ),
           props: { dataLabel: "Repository" },

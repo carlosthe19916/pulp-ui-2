@@ -32,10 +32,11 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
+  useAllGroupRolesListQuery,
   useGroupRoleCreateMutation,
   useGroupRoleDeleteMutation,
-  useGroupRolesListQuery,
 } from "@app/queries/groups";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
@@ -60,8 +61,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
 }) => {
   const { addNotification } = useNotifications();
 
-  const { data: rolesData } = useGroupRolesListQuery(groupId);
-  const { data: allRolesData } = useRolesListQuery({ limit: 200 });
+  const { data: rolesData } = useAllGroupRolesListQuery(groupId);
 
   const roleCreateMutation = useGroupRoleCreateMutation();
   const roleDeleteMutation = useGroupRoleDeleteMutation();
@@ -77,24 +77,45 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
 
   const roles = rolesData?.results ?? [];
 
+  // Server-side typeahead for the role picker.
+  const [roleSearch, setRoleSearch] = useState("");
+  const debouncedRoleSearch = useDebouncedValue(roleSearch);
+  const { data: pickerRolesData, isLoading: isPickerRolesLoading } =
+    useRolesListQuery({
+      limit: 20,
+      name__icontains: debouncedRoleSearch || undefined,
+    });
+
   const roleOptions = useMemo(
     () =>
-      (allRolesData?.results ?? []).map((role) => ({
+      (pickerRolesData?.results ?? []).map((role) => ({
         value: role.name,
         label: role.name,
       })),
-    [allRolesData?.results],
+    [pickerRolesData?.results],
+  );
+
+  // Resolve role name → id only for the assigned roles shown in the table, so
+  // the links don't require fetching every role in the system.
+  const assignedRoleNames = useMemo(
+    () => (rolesData?.results ?? []).map((role) => role.role),
+    [rolesData?.results],
+  );
+  const { data: linkRolesData } = useRolesListQuery(
+    assignedRoleNames.length
+      ? { name__in: assignedRoleNames, limit: assignedRoleNames.length }
+      : { limit: 1 },
   );
 
   const roleNameToId = useMemo(() => {
     const map = new Map<string, string>();
-    for (const role of allRolesData?.results ?? []) {
+    for (const role of linkRolesData?.results ?? []) {
       if (role.pulp_href) {
         map.set(role.name, extractIdFromHref(role.pulp_href));
       }
     }
     return map;
-  }, [allRolesData?.results]);
+  }, [linkRolesData?.results]);
 
   const roleColumns = [
     "Role",
@@ -232,6 +253,8 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
                 placeholder="Select a role"
                 options={roleOptions}
                 value={addRoleForm.watch("role")}
+                isLoading={isPickerRolesLoading}
+                onFilterChange={setRoleSearch}
                 onChange={(value) =>
                   addRoleForm.setValue("role", value, {
                     shouldValidate: true,

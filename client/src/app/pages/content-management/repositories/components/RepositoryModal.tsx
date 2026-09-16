@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   Button,
@@ -13,6 +13,7 @@ import {
 import type { FileFileRepositoryResponse } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRemotesListQuery } from "@app/queries/remotes";
 
 import { useRepositoryForm } from "../hooks/useRepositoryForm";
@@ -34,7 +35,13 @@ const RepositoryModalInner: React.FC<IRepositoryModalInnerProps> = ({
     repository,
     onClose,
   });
-  const { data: remotesData } = useRemotesListQuery({ limit: 100 });
+  const [remoteSearch, setRemoteSearch] = useState("");
+  const debouncedRemoteSearch = useDebouncedValue(remoteSearch);
+  const { data: remotesData, isLoading: isRemotesLoading } =
+    useRemotesListQuery({
+      limit: 20,
+      name__icontains: debouncedRemoteSearch || undefined,
+    });
 
   const remoteOptions = useMemo<ITypeaheadOption[]>(
     () =>
@@ -68,6 +75,12 @@ const RepositoryModalInner: React.FC<IRepositoryModalInnerProps> = ({
             control={form.control}
             idPrefix="repository-form"
             resourceOptions={{ remote: remoteOptions }}
+            resourceSearch={{
+              remote: {
+                onFilterChange: setRemoteSearch,
+                isLoading: isRemotesLoading,
+              },
+            }}
           />
         </Form>
       </ModalBody>

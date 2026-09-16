@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -19,6 +19,7 @@ import {
 
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useGroupUserCreateMutation } from "@app/queries/groups";
 import { useUsersListQuery } from "@app/queries/users";
 
@@ -46,7 +47,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 }) => {
   const { addNotification } = useNotifications();
 
-  const { data: allUsersData } = useUsersListQuery({ limit: 200 });
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebouncedValue(userSearch);
+  const { data: allUsersData, isLoading: isUsersLoading } = useUsersListQuery({
+    limit: 20,
+    username__icontains: debouncedUserSearch || undefined,
+  });
   const userCreateMutation = useGroupUserCreateMutation();
 
   const form = useForm<AddUserFormValues>({
@@ -102,6 +108,8 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
               placeholder="Select a user"
               options={userOptions}
               value={form.watch("username")}
+              isLoading={isUsersLoading}
+              onFilterChange={setUserSearch}
               onChange={(value) =>
                 form.setValue("username", value, {
                   shouldValidate: true,

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   Button,
@@ -13,7 +13,8 @@ import {
 import type { FileFileDistributionResponse } from "@app/client";
 import { DescriptorFormFields } from "@app/components/DescriptorFormFields";
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
-import { usePublicationsListQuery } from "@app/queries/publications";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useAllPublicationsListQuery } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -34,8 +35,16 @@ const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
 }) => {
   const { form, isCreate, fields, onSubmit, isSubmitting } =
     useDistributionForm({ distribution, onClose });
-  const { data: repositoriesData } = useRepositoriesListQuery({ limit: 100 });
-  const { data: publicationsData } = usePublicationsListQuery({ limit: 100 });
+  const [repoSearch, setRepoSearch] = useState("");
+  const debouncedRepoSearch = useDebouncedValue(repoSearch);
+  const { data: repositoriesData, isLoading: isReposLoading } =
+    useRepositoriesListQuery({
+      limit: 20,
+      name__icontains: debouncedRepoSearch || undefined,
+    });
+  // Publications have no server-side name filter, so fetch them all for the
+  // static picker.
+  const { data: publicationsData } = useAllPublicationsListQuery();
 
   const repositoryOptions = useMemo<ITypeaheadOption[]>(
     () =>
@@ -78,6 +87,12 @@ const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
             resourceOptions={{
               repository: repositoryOptions,
               publication: publicationOptions,
+            }}
+            resourceSearch={{
+              repository: {
+                onFilterChange: setRepoSearch,
+                isLoading: isReposLoading,
+              },
             }}
           />
         </Form>

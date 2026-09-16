@@ -59,22 +59,24 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const descriptor = getDescriptor("repository", "file.file");
 
-  // Queries kept here only to render the dynamic tab-title counts. React Query
-  // dedupes these against the same hooks called inside the tab components, so
-  // no extra requests are made.
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId);
+  // Queries kept here only to render the dynamic tab-title counts. They fetch a
+  // single row and read the paginated `count`, so the badge reflects the true
+  // total without pulling every record.
+  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId, {
+    limit: 1,
+  });
   const { data: distributionsData } = useDistributionsListQuery(
-    { repository: repo.pulp_href, limit: 50 },
+    { repository: repo.pulp_href, limit: 1 },
     { enabled: !!repo.pulp_href },
   );
-  const versionCount = versionsData?.results?.length ?? 0;
-  const distributionCount = distributionsData?.results?.length ?? 0;
+  const versionCount = versionsData?.count ?? 0;
+  const distributionCount = distributionsData?.count ?? 0;
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
   const { data: contentData } = useContentListQuery(
-    { repository_version: latestVersionHref, limit: 50 },
+    { repository_version: latestVersionHref, limit: 1 },
     { enabled: !!latestVersionHref },
   );
-  const contentCount = contentData?.results?.length ?? 0;
+  const contentCount = contentData?.count ?? 0;
 
   const handleDelete = async () => {
     if (!repo.pulp_href) return;

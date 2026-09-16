@@ -21,7 +21,7 @@ export const contentRootQueryOptions = queryOptions({
 
 export const contentListQueryOptions = (
   domain: IPulpDomain,
-  params: IContentListParams = {},
+  params: IContentListParams,
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
@@ -34,7 +34,6 @@ export const contentListQueryOptions = (
             {
               params: {
                 ...params,
-                limit: params.limit ?? 20,
                 ordering: params.ordering ? [params.ordering] : undefined,
               },
             },
@@ -45,7 +44,7 @@ export const contentListQueryOptions = (
   });
 
 export const useContentListQuery = (
-  params: IContentListParams = {},
+  params: IContentListParams,
   options?: { enabled?: boolean },
 ) => {
   const domain = useApiDomain();

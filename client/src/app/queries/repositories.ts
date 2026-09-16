@@ -21,7 +21,7 @@ export const repositoriesRootQueryOptions = queryOptions({
 
 export const repositoriesListQueryOptions = (
   domain: IPulpDomain,
-  params: IRepositoryListParams = {},
+  params: IRepositoryListParams,
 ) =>
   queryOptions({
     queryKey: [
@@ -36,7 +36,6 @@ export const repositoriesListQueryOptions = (
         {
           params: {
             ...params,
-            limit: params.limit ?? 20,
             ordering: params.ordering ? [params.ordering] : undefined,
           },
         },
@@ -45,9 +44,7 @@ export const repositoriesListQueryOptions = (
     },
   });
 
-export const useRepositoriesListQuery = (
-  params: IRepositoryListParams = {},
-) => {
+export const useRepositoriesListQuery = (params: IRepositoryListParams) => {
   const domain = useApiDomain();
   return useQuery(repositoriesListQueryOptions(domain, params));
 };

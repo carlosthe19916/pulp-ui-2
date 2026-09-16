@@ -1,15 +1,27 @@
 import type React from "react";
 import { Link } from "@tanstack/react-router";
 
+import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
+  DataViewFilters,
   DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
   type DataViewTr,
+  useDataViewFilters,
+  useDataViewPagination,
+  useDataViewSort,
 } from "@patternfly/react-data-view";
 
 import type { DistributionResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/DataView";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -18,6 +30,13 @@ type DistributionRow = DistributionResponse & {
   repository?: string | null;
 };
 
+const COLUMN_KEYS = ["name", "base_path", "publication"] as const;
+type DistributionColumnKey = (typeof COLUMN_KEYS)[number];
+
+interface IDistributionFilters {
+  name: string;
+}
+
 interface IRepositoryDistributionsTabProps {
   repoHref: string;
 }
@@ -25,18 +44,50 @@ interface IRepositoryDistributionsTabProps {
 export const RepositoryDistributionsTab: React.FC<
   IRepositoryDistributionsTabProps
 > = ({ repoHref }) => {
-  const { data: distributionsData, isLoading: isDistributionsLoading } =
-    useDistributionsListQuery(
-      {
-        repository: repoHref,
-        limit: 50,
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
+  });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "name", direction: "asc" },
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IDistributionFilters>({ initialFilters: { name: "" } });
+  const debouncedName = useDebouncedValue(filters.name);
+
+  const ordering = toOrderingParam(sortBy, direction) as
+    "name" | "-name" | undefined;
+
+  const { data, isLoading, error } = useDistributionsListQuery(
+    {
+      repository: repoHref,
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+    },
+    { enabled: !!repoHref },
+  );
+
+  const distributions = (data?.results ?? []) as DistributionRow[];
+  const totalCount = data?.count ?? 0;
+
+  const sortProps = (columnKey: DistributionColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
       },
-      { enabled: !!repoHref },
-    );
+    });
 
-  const distributions = (distributionsData?.results ?? []) as DistributionRow[];
-
-  const distributionColumns = ["Name", "Base path", "Publication"];
+  const distributionColumns = [
+    { cell: "Name", props: { sort: sortProps("name") } },
+    "Base path",
+    "Publication",
+  ];
 
   const distributionRows: DataViewTr[] = distributions.map((dist) => {
     const href = dist.pulp_href;
@@ -67,19 +118,47 @@ export const RepositoryDistributionsTab: React.FC<
   });
 
   const repoDistributionsStates = dataViewBodyStates({
-    loading: isDistributionsLoading,
+    loading: isLoading,
+    error,
     empty: distributions.length === 0,
     emptyState: "No distributions point at this repository.",
   });
 
+  const pagination = (variant: PaginationVariant) => (
+    <Pagination
+      variant={variant}
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
+
   return (
     <DataView activeState={repoDistributionsStates.activeState}>
+      <DataViewToolbar
+        clearAllFilters={clearAllFilters}
+        filters={
+          <DataViewFilters
+            onChange={(_key, newFilters) => {
+              onSetFilters(newFilters);
+              onSetPage(undefined, 1);
+            }}
+            values={filters}
+          >
+            <DataViewTextFilter filterId="name" title="Name" />
+          </DataViewFilters>
+        }
+        pagination={pagination(PaginationVariant.top)}
+      />
       <DataViewTable
         aria-label="Repository distributions table"
         columns={distributionColumns}
         rows={distributionRows}
         bodyStates={repoDistributionsStates.bodyStates}
       />
+      <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
     </DataView>
   );
 };

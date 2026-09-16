@@ -5,7 +5,7 @@ import { Controller, type UseFormReturn } from "react-hook-form";
 import { Form, FormGroup } from "@patternfly/react-core";
 
 import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
-import { useRolesListQuery } from "@app/queries/roles";
+import { useAllRolesListQuery } from "@app/queries/roles";
 
 import type { RoleFormValues } from "../hooks/useRoleForm";
 import { collectPermissionOptions } from "../utils/permissionOptions";
@@ -23,7 +23,7 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
   onSubmit,
 }) => {
   const { control, watch } = form;
-  const { data: rolesData } = useRolesListQuery({ limit: 200 });
+  const { data: rolesData } = useAllRolesListQuery();
 
   const permissions = watch("permissions");
   const permissionOptions = useMemo(
