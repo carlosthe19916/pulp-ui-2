@@ -1,27 +1,14 @@
 import type React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Button,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   PageSection,
   Stack,
   StackItem,
@@ -29,7 +16,6 @@ import {
   TabContentBody,
   TabTitleText,
   Tabs,
-  TextInput,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
@@ -42,19 +28,13 @@ import {
   useGroupDeleteMutation,
   useGroupDetailQuery,
   useGroupRolesListQuery,
-  useGroupUpdateMutation,
   useGroupUsersListQuery,
 } from "@app/queries/groups";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
+import { EditGroupModal } from "../components/CreateGroupModal";
 import { GroupRolesTab } from "./components/GroupRolesTab";
 import { GroupUsersTab } from "./components/GroupUsersTab";
-
-const editNameSchema = yup.object({
-  name: yup.string().required("Name is required"),
-});
-
-type EditNameFormValues = yup.InferType<typeof editNameSchema>;
 
 interface IGroupDetailProps {
   groupId: string;
@@ -68,17 +48,11 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const { data: usersData } = useGroupUsersListQuery(groupId);
   const { data: rolesData } = useGroupRolesListQuery(groupId);
 
-  const updateMutation = useGroupUpdateMutation();
   const deleteMutation = useGroupDeleteMutation();
 
   const [activeTab, setActiveTab] = useState<string | number>("users");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditNameOpen, setIsEditNameOpen] = useState(false);
-
-  const editNameForm = useForm<EditNameFormValues>({
-    resolver: yupResolver(editNameSchema),
-    defaultValues: { name: "" },
-  });
 
   const userCount = usersData?.results?.length ?? 0;
   const roleCount = rolesData?.results?.length ?? 0;
@@ -100,26 +74,6 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
     }
     setIsDeleteOpen(false);
   };
-
-  const onEditName = editNameForm.handleSubmit(async (values) => {
-    if (!group?.pulp_href) return;
-    try {
-      const result = await updateMutation.mutateAsync({
-        href: group.pulp_href,
-        body: { name: values.name },
-      });
-      addNotification({
-        title: `Group name updated for "${result.name}"`,
-        variant: "success",
-      });
-      setIsEditNameOpen(false);
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update group name"),
-        variant: "danger",
-      });
-    }
-  });
 
   return (
     <>
@@ -149,10 +103,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                       key: "edit",
                       dropdownItemProps: {
                         children: "Edit Name",
-                        onClick: () => {
-                          editNameForm.reset({ name: group.name });
-                          setIsEditNameOpen(true);
-                        },
+                        onClick: () => setIsEditNameOpen(true),
                       },
                     },
                     {
@@ -215,65 +166,11 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
               </Stack>
             </PageSection>
 
-            <Modal
+            <EditGroupModal
               isOpen={isEditNameOpen}
+              group={group}
               onClose={() => setIsEditNameOpen(false)}
-              variant="small"
-            >
-              <ModalHeader title="Edit Group Name" />
-              <ModalBody>
-                <Form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void onEditName();
-                  }}
-                >
-                  <FormGroup label="Name" isRequired fieldId="edit-group-name">
-                    <TextInput
-                      id="edit-group-name"
-                      value={editNameForm.watch("name")}
-                      onChange={(_e, value) =>
-                        editNameForm.setValue("name", value, {
-                          shouldValidate: true,
-                        })
-                      }
-                      isRequired
-                      validated={
-                        editNameForm.formState.errors.name ? "error" : "default"
-                      }
-                    />
-                    {editNameForm.formState.errors.name && (
-                      <FormHelperText>
-                        <HelperText>
-                          <HelperTextItem variant="error">
-                            {editNameForm.formState.errors.name.message}
-                          </HelperTextItem>
-                        </HelperText>
-                      </FormHelperText>
-                    )}
-                  </FormGroup>
-                </Form>
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  variant="primary"
-                  onClick={() => void onEditName()}
-                  isDisabled={
-                    editNameForm.formState.isSubmitting ||
-                    updateMutation.isPending
-                  }
-                  isLoading={
-                    editNameForm.formState.isSubmitting ||
-                    updateMutation.isPending
-                  }
-                >
-                  Save
-                </Button>
-                <Button variant="link" onClick={() => setIsEditNameOpen(false)}>
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </Modal>
+            />
 
             <ConfirmActionModal
               isOpen={isDeleteOpen}

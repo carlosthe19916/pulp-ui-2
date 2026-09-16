@@ -2,7 +2,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import type { Group } from "@app/client";
+import type { Group, GroupResponse, PatchedGroup } from "@app/client";
 
 import { useGroupActions } from "./useGroupActions";
 
@@ -14,35 +14,56 @@ const groupSchema = yup.object({
   name: yup.string().default("").required("Name is required"),
 });
 
+const toDefaults = (group?: GroupResponse): GroupFormValues => ({
+  name: group?.name ?? "",
+});
+
 /** Maps form values to the create (POST) payload. */
 export const valuesToNewGroup = (values: GroupFormValues): Group => ({
   name: values.name,
 });
 
+/** Maps form values to the edit (PATCH) payload. */
+export const valuesToPatchedGroup = (
+  values: GroupFormValues,
+): PatchedGroup => ({
+  name: values.name,
+});
+
 interface IUseGroupFormArgs {
+  group?: GroupResponse;
   onClose: () => void;
 }
 
 interface IUseGroupFormResult {
   form: UseFormReturn<GroupFormValues>;
+  isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
 }
 
 export const useGroupForm = ({
+  group,
   onClose,
 }: IUseGroupFormArgs): IUseGroupFormResult => {
-  const { createGroup } = useGroupActions();
+  const isCreate = !group;
+  const { createGroup, updateGroup } = useGroupActions();
 
   const form = useForm<GroupFormValues>({
     resolver: yupResolver(groupSchema),
-    defaultValues: { name: "" },
+    defaultValues: toDefaults(group),
     mode: "onChange",
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await createGroup(valuesToNewGroup(values));
+      if (isCreate) {
+        await createGroup(valuesToNewGroup(values));
+      } else if (group?.pulp_href) {
+        await updateGroup(group.pulp_href, valuesToPatchedGroup(values));
+      } else {
+        return;
+      }
       onClose();
     } catch {
       // Notifications are handled in useGroupActions; keep the modal open.
@@ -51,6 +72,7 @@ export const useGroupForm = ({
 
   return {
     form,
+    isCreate,
     onSubmit,
     isSubmitting: form.formState.isSubmitting,
   };

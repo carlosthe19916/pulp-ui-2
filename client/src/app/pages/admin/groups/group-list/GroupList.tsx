@@ -34,8 +34,11 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { CreateGroupModal } from "./components/CreateGroupModal";
-import { useGroupActions } from "./hooks/useGroupActions";
+import {
+  CreateGroupModal,
+  EditGroupModal,
+} from "../components/CreateGroupModal";
+import { useGroupActions } from "../hooks/useGroupActions";
 
 const COLUMN_KEYS = ["name", "actions"] as const;
 type GroupColumnKey = (typeof COLUMN_KEYS)[number];
@@ -46,6 +49,7 @@ interface IGroupFilters {
 
 export const GroupList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<GroupResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<GroupResponse | null>(null);
 
   const { deleteGroup, isDeleting } = useGroupActions();
@@ -105,6 +109,10 @@ export const GroupList: React.FC = () => {
           cell: (
             <ActionsColumn
               items={[
+                {
+                  title: "Edit",
+                  onClick: () => setEditTarget(group),
+                },
                 {
                   title: "Delete",
                   isDanger: true,
@@ -189,6 +197,14 @@ export const GroupList: React.FC = () => {
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />
+
+        {editTarget && (
+          <EditGroupModal
+            isOpen
+            group={editTarget}
+            onClose={() => setEditTarget(null)}
+          />
+        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}
