@@ -33,7 +33,7 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRepositoryModal } from "./components/EditRepositoryModal";
+import { RepositoryModal } from "../components/RepositoryModal";
 import { RepositoryContentTab } from "./components/RepositoryContentTab";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
@@ -227,7 +227,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               </Stack>
             </PageSection>
 
-            <EditRepositoryModal
+            <RepositoryModal
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               repository={repo}

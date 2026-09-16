@@ -44,7 +44,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-import { CreateRepositoryModal } from "./components/CreateRepositoryModal";
+import { RepositoryModal } from "../components/RepositoryModal";
 import { useRepositoryActions } from "./hooks/useRepositoryActions";
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
@@ -282,7 +282,7 @@ export const RepositoryList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <CreateRepositoryModal
+        <RepositoryModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />

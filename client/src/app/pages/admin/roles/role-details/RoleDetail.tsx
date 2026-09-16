@@ -25,7 +25,7 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useRoleDetailQuery } from "@app/queries/roles";
 
-import { RoleEditModal } from "../components/RoleModal";
+import { RoleModal } from "../components/RoleModal";
 import { useRoleActions } from "../hooks/useRoleActions";
 
 interface IRoleDetailProps {
@@ -148,7 +148,7 @@ export const RoleDetail: React.FC<IRoleDetailProps> = ({ roleId }) => {
               </Stack>
             </PageSection>
 
-            <RoleEditModal
+            <RoleModal
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               role={role}

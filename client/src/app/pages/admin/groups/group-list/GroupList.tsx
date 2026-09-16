@@ -34,10 +34,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import {
-  CreateGroupModal,
-  EditGroupModal,
-} from "../components/CreateGroupModal";
+import { GroupModal } from "../components/GroupModal";
 import { useGroupActions } from "../hooks/useGroupActions";
 
 const COLUMN_KEYS = ["name", "actions"] as const;
@@ -48,9 +45,13 @@ interface IGroupFilters {
 }
 
 export const GroupList: React.FC = () => {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<GroupResponse | null>(null);
+  const [modalState, setModalState] = useState<"create" | GroupResponse | null>(
+    null,
+  );
   const [deleteTarget, setDeleteTarget] = useState<GroupResponse | null>(null);
+
+  const groupToEdit =
+    modalState === "create" ? undefined : (modalState ?? undefined);
 
   const { deleteGroup, isDeleting } = useGroupActions();
 
@@ -111,7 +112,7 @@ export const GroupList: React.FC = () => {
               items={[
                 {
                   title: "Edit",
-                  onClick: () => setEditTarget(group),
+                  onClick: () => setModalState(group),
                 },
                 {
                   title: "Delete",
@@ -176,7 +177,7 @@ export const GroupList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+              <Button variant="primary" onClick={() => setModalState("create")}>
                 Create Group
               </Button>
             }
@@ -193,18 +194,11 @@ export const GroupList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <CreateGroupModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        <GroupModal
+          isOpen={modalState !== null}
+          group={groupToEdit}
+          onClose={() => setModalState(null)}
         />
-
-        {editTarget && (
-          <EditGroupModal
-            isOpen
-            group={editTarget}
-            onClose={() => setEditTarget(null)}
-          />
-        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

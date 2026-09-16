@@ -30,7 +30,7 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditDistributionModal } from "./components/EditDistributionModal";
+import { DistributionModal } from "../components/DistributionModal";
 
 interface IDistributionDetailProps {
   distId: string;
@@ -181,7 +181,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
               </Stack>
             </PageSection>
 
-            <EditDistributionModal
+            <DistributionModal
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               distribution={distribution}

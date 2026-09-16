@@ -46,7 +46,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-import { CreateDistributionModal } from "./components/CreateDistributionModal";
+import { DistributionModal } from "../components/DistributionModal";
 import { useDistributionActions } from "./hooks/useDistributionActions";
 
 /**
@@ -296,7 +296,7 @@ export const DistributionList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <CreateDistributionModal
+        <DistributionModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />

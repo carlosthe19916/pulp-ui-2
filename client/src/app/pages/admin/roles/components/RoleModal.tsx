@@ -13,16 +13,16 @@ import type { RoleResponse } from "@app/client";
 import { useRoleForm } from "../hooks/useRoleForm";
 import { RoleForm } from "./RoleForm";
 
-interface IRoleModalProps {
+interface IRoleModalInnerProps {
   role?: RoleResponse;
   onClose: () => void;
 }
 
 /**
  * Inner modal that owns the form state. Only mounted while open (see the
- * wrappers below) so react-hook-form re-initializes on every open.
+ * wrapper below) so react-hook-form re-initializes on every open.
  */
-const RoleModal: React.FC<IRoleModalProps> = ({ role, onClose }) => {
+const RoleModalInner: React.FC<IRoleModalInnerProps> = ({ role, onClose }) => {
   const { form, isCreate, onSubmit, isSubmitting } = useRoleForm({
     role,
     onClose,
@@ -53,24 +53,18 @@ const RoleModal: React.FC<IRoleModalProps> = ({ role, onClose }) => {
   );
 };
 
-interface IRoleCreateModalProps {
+interface IRoleModalProps {
   isOpen: boolean;
+  role?: RoleResponse;
   onClose: () => void;
 }
 
-export const RoleCreateModal: React.FC<IRoleCreateModalProps> = ({
-  isOpen,
-  onClose,
-}) => (isOpen ? <RoleModal onClose={onClose} /> : null);
-
-interface IRoleEditModalProps {
-  isOpen: boolean;
-  role: RoleResponse;
-  onClose: () => void;
-}
-
-export const RoleEditModal: React.FC<IRoleEditModalProps> = ({
+/**
+ * Single modal for both create and edit. Passing a `role` selects edit mode;
+ * omitting it selects create mode.
+ */
+export const RoleModal: React.FC<IRoleModalProps> = ({
   isOpen,
   role,
   onClose,
-}) => (isOpen ? <RoleModal role={role} onClose={onClose} /> : null);
+}) => (isOpen ? <RoleModalInner role={role} onClose={onClose} /> : null);

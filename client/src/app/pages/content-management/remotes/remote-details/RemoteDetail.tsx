@@ -29,7 +29,7 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditRemoteModal } from "./components/EditRemoteModal";
+import { RemoteModal } from "../components/RemoteModal";
 
 interface IRemoteDetailProps {
   remoteId: string;
@@ -140,7 +140,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
               </Stack>
             </PageSection>
 
-            <EditRemoteModal
+            <RemoteModal
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               remote={remote}

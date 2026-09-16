@@ -32,7 +32,7 @@ import {
 } from "@app/queries/groups";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EditGroupModal } from "../components/CreateGroupModal";
+import { GroupModal } from "../components/GroupModal";
 import { GroupRolesTab } from "./components/GroupRolesTab";
 import { GroupUsersTab } from "./components/GroupUsersTab";
 
@@ -166,7 +166,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
               </Stack>
             </PageSection>
 
-            <EditGroupModal
+            <GroupModal
               isOpen={isEditNameOpen}
               group={group}
               onClose={() => setIsEditNameOpen(false)}

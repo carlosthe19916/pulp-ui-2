@@ -13,16 +13,16 @@ import type { UserResponse } from "@app/client";
 import { useUserForm } from "../hooks/useUserForm";
 import { UserForm } from "./UserForm";
 
-interface IUserModalProps {
+interface IUserModalInnerProps {
   user?: UserResponse;
   onClose: () => void;
 }
 
 /**
- * Inner modal that owns the form state. It is only mounted while open (see the
- * wrappers below) so react-hook-form re-initializes on every open.
+ * Inner modal that owns the form state. Only mounted while open (see the
+ * wrapper below) so react-hook-form re-initializes on every open.
  */
-const UserModal: React.FC<IUserModalProps> = ({ user, onClose }) => {
+const UserModalInner: React.FC<IUserModalInnerProps> = ({ user, onClose }) => {
   const { form, isCreate, onSubmit, isSubmitting } = useUserForm({
     user,
     onClose,
@@ -53,24 +53,18 @@ const UserModal: React.FC<IUserModalProps> = ({ user, onClose }) => {
   );
 };
 
-interface IUserCreateModalProps {
+interface IUserModalProps {
   isOpen: boolean;
+  user?: UserResponse;
   onClose: () => void;
 }
 
-export const UserCreateModal: React.FC<IUserCreateModalProps> = ({
-  isOpen,
-  onClose,
-}) => (isOpen ? <UserModal onClose={onClose} /> : null);
-
-interface IUserEditModalProps {
-  isOpen: boolean;
-  user: UserResponse;
-  onClose: () => void;
-}
-
-export const UserEditModal: React.FC<IUserEditModalProps> = ({
+/**
+ * Single modal for both create and edit. Passing a `user` selects edit mode;
+ * omitting it selects create mode.
+ */
+export const UserModal: React.FC<IUserModalProps> = ({
   isOpen,
   user,
   onClose,
-}) => (isOpen ? <UserModal user={user} onClose={onClose} /> : null);
+}) => (isOpen ? <UserModalInner user={user} onClose={onClose} /> : null);

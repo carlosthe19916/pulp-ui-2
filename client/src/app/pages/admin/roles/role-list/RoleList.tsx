@@ -35,7 +35,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { RoleCreateModal } from "../components/RoleModal";
+import { RoleModal } from "../components/RoleModal";
 import { useRoleActions } from "../hooks/useRoleActions";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
@@ -251,7 +251,7 @@ export const RoleList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <RoleCreateModal
+        <RoleModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />

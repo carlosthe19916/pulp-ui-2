@@ -31,7 +31,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useAllUsersListQuery } from "@app/queries/users";
 import { formatDateTime, universalComparator } from "@app/utils/utils";
 
-import { UserCreateModal, UserEditModal } from "./components/UserModal";
+import { UserModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
 
@@ -51,8 +51,11 @@ interface IUserFilters {
 }
 
 export const UserList: React.FC = () => {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editUser, setEditUser] = useState<UserResponse | null>(null);
+  const [modalState, setModalState] = useState<"create" | UserResponse | null>(
+    null,
+  );
+  const userToEdit =
+    modalState === "create" ? undefined : (modalState ?? undefined);
   const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null);
 
@@ -148,7 +151,7 @@ export const UserList: React.FC = () => {
         cell: (
           <ActionsColumn
             items={[
-              { title: "Edit", onClick: () => setEditUser(user) },
+              { title: "Edit", onClick: () => setModalState(user) },
               {
                 title: "Delete",
                 isDanger: true,
@@ -211,7 +214,7 @@ export const UserList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+              <Button variant="primary" onClick={() => setModalState("create")}>
                 Create user
               </Button>
             }
@@ -228,18 +231,11 @@ export const UserList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <UserCreateModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        <UserModal
+          isOpen={modalState !== null}
+          user={userToEdit}
+          onClose={() => setModalState(null)}
         />
-
-        {editUser && (
-          <UserEditModal
-            isOpen
-            user={editUser}
-            onClose={() => setEditUser(null)}
-          />
-        )}
 
         {rolesUser && (
           <UserRolesModal

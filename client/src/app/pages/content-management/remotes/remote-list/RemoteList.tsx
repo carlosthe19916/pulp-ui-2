@@ -44,7 +44,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-import { CreateRemoteModal } from "./components/CreateRemoteModal";
+import { RemoteModal } from "../components/RemoteModal";
 import { useRemoteActions } from "./hooks/useRemoteActions";
 
 /**
@@ -251,7 +251,7 @@ export const RemoteList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <CreateRemoteModal
+        <RemoteModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />
