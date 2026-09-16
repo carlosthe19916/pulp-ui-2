@@ -1,47 +1,47 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
 import {
   Button,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Stack,
-  StackItem,
+  EmptyState,
+  Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
+  DataViewFilters,
   DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
   type DataViewTr,
+  useDataViewFilters,
+  useDataViewPagination,
+  useDataViewSort,
 } from "@patternfly/react-data-view";
 
 import type { GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates } from "@app/components/DataView";
-import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
 import {
-  useGroupUserCreateMutation,
   useGroupUserDeleteMutation,
   useGroupUsersListQuery,
 } from "@app/queries/groups";
-import { useUsersListQuery } from "@app/queries/users";
 
-const addUserSchema = yup.object({
-  username: yup.string().required("User is required"),
-});
+import { AddGroupUserModal } from "./AddGroupUserModal";
 
-type AddUserFormValues = yup.InferType<typeof addUserSchema>;
+// The group-users API only supports limit/offset — no server-side ordering or
+// filtering — so all members are fetched once and paginated/sorted/filtered
+// in memory.
+const GROUP_USERS_FETCH_LIMIT = 1000;
+
+const COLUMN_KEYS = ["username", "actions"] as const;
+type UserColumnKey = (typeof COLUMN_KEYS)[number];
+
+interface IGroupUsersFilters {
+  username: string;
+}
 
 interface IGroupUsersTabProps {
   groupId: string;
@@ -56,38 +56,74 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
 }) => {
   const { addNotification } = useNotifications();
 
-  const { data: usersData } = useGroupUsersListQuery(groupId);
-  const { data: allUsersData } = useUsersListQuery({ limit: 200 });
+  const {
+    data: usersData,
+    isLoading,
+    error,
+  } = useGroupUsersListQuery(groupId, { limit: GROUP_USERS_FETCH_LIMIT });
 
-  const userCreateMutation = useGroupUserCreateMutation();
   const userDeleteMutation = useGroupUserDeleteMutation();
 
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [removeUserTarget, setRemoveUserTarget] =
     useState<GroupUserResponse | null>(null);
 
-  const addUserForm = useForm<AddUserFormValues>({
-    resolver: yupResolver(addUserSchema),
-    defaultValues: { username: "" },
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
   });
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "username", direction: "asc" },
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IGroupUsersFilters>({
+      initialFilters: { username: "" },
+    });
 
-  const users = usersData?.results ?? [];
-
-  const userOptions = useMemo(
-    () =>
-      (allUsersData?.results ?? []).map((user) => ({
-        value: user.username,
-        label: user.username,
-      })),
-    [allUsersData?.results],
+  const allUsers = useMemo(
+    () => usersData?.results ?? [],
+    [usersData?.results],
   );
 
+  // Client-side filter + sort over the full member list.
+  const filteredSortedUsers = useMemo(() => {
+    const query = filters.username.trim().toLowerCase();
+    const filtered = query
+      ? allUsers.filter((user) => user.username.toLowerCase().includes(query))
+      : allUsers;
+
+    if (sortBy !== "username") return filtered;
+
+    const dir = direction === "desc" ? -1 : 1;
+    return [...filtered].sort(
+      (a, b) => a.username.localeCompare(b.username) * dir,
+    );
+  }, [allUsers, filters.username, sortBy, direction]);
+
+  const totalCount = filteredSortedUsers.length;
+
+  const pagedUsers = useMemo(() => {
+    const start = (page - 1) * perPage;
+    return filteredSortedUsers.slice(start, start + perPage);
+  }, [filteredSortedUsers, page, perPage]);
+
+  const sortProps = (columnKey: UserColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const userColumns = [
-    "Username",
+    { cell: "Username", props: { sort: sortProps("username") } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const userRows: DataViewTr[] = users.map((user) => ({
+  const userRows: DataViewTr[] = pagedUsers.map((user) => ({
     id: user.pulp_href,
     row: [
       { cell: user.username, props: { dataLabel: "Username" } },
@@ -108,26 +144,6 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
     ],
   }));
 
-  const onAddUser = addUserForm.handleSubmit(async (values) => {
-    try {
-      await userCreateMutation.mutateAsync({
-        groupHref,
-        body: { username: values.username },
-      });
-      addNotification({
-        title: `User "${values.username}" added to group "${groupName}"`,
-        variant: "success",
-      });
-      addUserForm.reset();
-      setIsAddUserOpen(false);
-    } catch {
-      addNotification({
-        title: "Failed to add user to group",
-        variant: "danger",
-      });
-    }
-  });
-
   const handleRemoveUser = async () => {
     if (!removeUserTarget?.pulp_href) return;
     try {
@@ -146,95 +162,65 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
   };
 
   const groupUsersStates = dataViewBodyStates({
-    empty: users.length === 0,
-    emptyState: "No users in this group.",
+    loading: isLoading,
+    error,
+    empty: totalCount === 0,
+    emptyState: filters.username.trim() ? (
+      <EmptyState titleText="No users match the filter" headingLevel="h4" />
+    ) : (
+      <EmptyState titleText="No users in this group" headingLevel="h4" />
+    ),
   });
+
+  const pagination = (variant: PaginationVariant) => (
+    <Pagination
+      variant={variant}
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <>
-      <Stack hasGutter>
-        <StackItem>
-          <Button variant="primary" onClick={() => setIsAddUserOpen(true)}>
-            Add User
-          </Button>
-        </StackItem>
-        <StackItem>
-          <DataView activeState={groupUsersStates.activeState}>
-            <DataViewTable
-              aria-label="Group users table"
-              columns={userColumns}
-              rows={userRows}
-              bodyStates={groupUsersStates.bodyStates}
-            />
-          </DataView>
-        </StackItem>
-      </Stack>
+      <DataView activeState={groupUsersStates.activeState}>
+        <DataViewToolbar
+          clearAllFilters={clearAllFilters}
+          filters={
+            <DataViewFilters
+              onChange={(_key, newFilters) => {
+                onSetFilters(newFilters);
+                onSetPage(undefined, 1);
+              }}
+              values={filters}
+            >
+              <DataViewTextFilter filterId="username" title="Username" />
+            </DataViewFilters>
+          }
+          actions={
+            <Button variant="primary" onClick={() => setIsAddUserOpen(true)}>
+              Add User
+            </Button>
+          }
+          pagination={pagination(PaginationVariant.top)}
+        />
+        <DataViewTable
+          aria-label="Group users table"
+          columns={userColumns}
+          rows={userRows}
+          bodyStates={groupUsersStates.bodyStates}
+        />
+        <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+      </DataView>
 
-      <Modal
+      <AddGroupUserModal
         isOpen={isAddUserOpen}
-        onClose={() => {
-          addUserForm.reset();
-          setIsAddUserOpen(false);
-        }}
-        variant="small"
-      >
-        <ModalHeader title="Add User to Group" />
-        <ModalBody>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void onAddUser();
-            }}
-          >
-            <FormGroup label="User" isRequired fieldId="add-user-username">
-              <TypeaheadSelect
-                id="add-user-username"
-                ariaLabel="User"
-                placeholder="Select a user"
-                options={userOptions}
-                value={addUserForm.watch("username")}
-                onChange={(value) =>
-                  addUserForm.setValue("username", value, {
-                    shouldValidate: true,
-                  })
-                }
-              />
-              {addUserForm.formState.errors.username && (
-                <FormHelperText>
-                  <HelperText>
-                    <HelperTextItem variant="error">
-                      {addUserForm.formState.errors.username.message}
-                    </HelperTextItem>
-                  </HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="primary"
-            onClick={() => void onAddUser()}
-            isDisabled={
-              addUserForm.formState.isSubmitting || userCreateMutation.isPending
-            }
-            isLoading={
-              addUserForm.formState.isSubmitting || userCreateMutation.isPending
-            }
-          >
-            Add
-          </Button>
-          <Button
-            variant="link"
-            onClick={() => {
-              addUserForm.reset();
-              setIsAddUserOpen(false);
-            }}
-          >
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
+        groupHref={groupHref}
+        groupName={groupName}
+        onClose={() => setIsAddUserOpen(false)}
+      />
 
       <ConfirmActionModal
         isOpen={!!removeUserTarget}

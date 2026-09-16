@@ -5,13 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
   PageSection,
-  Stack,
-  StackItem,
   Tab,
   TabContentBody,
   TabTitleText,
@@ -111,50 +105,35 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
       />
 
       <PageSection>
-        <Stack hasGutter>
-          <StackItem>
-            <DescriptionList isHorizontal>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Name</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {group.name}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-            </DescriptionList>
-          </StackItem>
-
-          <StackItem>
-            <Tabs
-              activeKey={activeTab}
-              onSelect={(_e, tabKey) => setActiveTab(tabKey)}
-            >
-              <Tab
-                eventKey="users"
-                title={<TabTitleText>Users ({userCount})</TabTitleText>}
-              >
-                <TabContentBody hasPadding>
-                  <GroupUsersTab
-                    groupId={groupId}
-                    groupHref={group.pulp_href ?? ""}
-                    groupName={group.name}
-                  />
-                </TabContentBody>
-              </Tab>
-              <Tab
-                eventKey="roles"
-                title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
-              >
-                <TabContentBody hasPadding>
-                  <GroupRolesTab
-                    groupId={groupId}
-                    groupHref={group.pulp_href ?? ""}
-                    groupName={group.name}
-                  />
-                </TabContentBody>
-              </Tab>
-            </Tabs>
-          </StackItem>
-        </Stack>
+        <Tabs
+          activeKey={activeTab}
+          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+        >
+          <Tab
+            eventKey="users"
+            title={<TabTitleText>Users ({userCount})</TabTitleText>}
+          >
+            <TabContentBody hasPadding>
+              <GroupUsersTab
+                groupId={groupId}
+                groupHref={group.pulp_href ?? ""}
+                groupName={group.name}
+              />
+            </TabContentBody>
+          </Tab>
+          <Tab
+            eventKey="roles"
+            title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
+          >
+            <TabContentBody hasPadding>
+              <GroupRolesTab
+                groupId={groupId}
+                groupHref={group.pulp_href ?? ""}
+                groupName={group.name}
+              />
+            </TabContentBody>
+          </Tab>
+        </Tabs>
       </PageSection>
 
       <GroupModal
