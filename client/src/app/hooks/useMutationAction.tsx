@@ -7,30 +7,18 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 type TaskProducing = { task?: string | null };
 
 interface IRunActionOptions<TResult> {
-  /**
-   * Toast title on success (non-task path). May be a function of the result to
-   * interpolate server-returned fields (e.g. the created record's name).
-   */
+  /** Success toast title; a function form can interpolate result fields. */
   successTitle: string | ((result: TResult) => string);
-  /** Fallback title for the error toast. */
   errorTitle: string;
-  /** Variant for the plain success toast (default `"success"`). */
   successVariant?: NotificationVariant;
-  /**
-   * When true, if the result carries a `task` href a task-started toast is
-   * shown instead of the plain success toast.
-   */
+  /** When set, show a task-started toast if the result carries a `task` href. */
   taskAware?: boolean;
-  /** Title for the task-started toast (defaults to `successTitle`). */
   taskTitle?: string;
 }
 
 /**
- * Binds an async mutation call to success/error toast notifications with a
- * consistent contract: toast on success (optionally task-aware for 202
- * responses), toast on failure, and **rethrow** so callers can keep a modal
- * open. Per-page `useXActions` hooks build on this to avoid repeating the
- * try/toast/rethrow wiring. Mirrors the shape of `useUserActions`.
+ * Binds an async mutation to success/error toasts and **rethrows** so callers
+ * can keep a modal open. Success is task-aware for 202 responses.
  */
 export const useMutationAction = () => {
   const { addNotification } = useNotifications();

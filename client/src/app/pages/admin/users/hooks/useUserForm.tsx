@@ -16,10 +16,7 @@ export type UserFormValues = {
   is_staff: boolean;
 };
 
-/**
- * Validation is conditional on create vs edit: username and password are only
- * required (and only shown) when creating a user.
- */
+/** Username and password are required (and shown) only when creating a user. */
 const buildUserSchema = (isCreate: boolean) =>
   yup.object({
     username: isCreate
@@ -51,7 +48,6 @@ const toDefaults = (user?: UserResponse): UserFormValues => ({
 
 const emptyToUndefined = (value: string) => value || undefined;
 
-/** Maps form values to the create (POST) payload. */
 export const valuesToNewUser = (values: UserFormValues): UserWritable => ({
   username: values.username,
   password: values.password,
@@ -62,7 +58,6 @@ export const valuesToNewUser = (values: UserFormValues): UserWritable => ({
   is_staff: values.is_staff,
 });
 
-/** Maps form values to the edit (PATCH) payload (no username/password). */
 export const valuesToPatchedUser = (values: UserFormValues): PatchedUser => ({
   email: emptyToUndefined(values.email),
   first_name: emptyToUndefined(values.first_name),

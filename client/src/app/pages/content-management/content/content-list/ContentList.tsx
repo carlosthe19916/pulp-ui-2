@@ -32,10 +32,7 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { UploadModal } from "@app/components/UploadModal";
 
-/**
- * The aggregation endpoint returns extra fields at runtime that the generated
- * type does not include. Extend the base type for list usage.
- */
+/** The aggregation endpoint returns extra fields at runtime that the generated type omits. */
 type ContentRow = MultipleArtifactContentResponse & {
   pulp_type?: string;
   relative_path?: string;

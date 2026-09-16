@@ -6,11 +6,7 @@ import {
   useGroupUpdateMutation,
 } from "@app/queries/groups";
 
-/**
- * Binds the group create/update/delete mutations to success/failure toast
- * notifications. Each action rethrows on failure so callers can keep a modal
- * open on error. Mirrors `useUserActions`.
- */
+/** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useGroupActions = () => {
   const { runAction } = useMutationAction();
   const createMutation = useGroupCreateMutation();

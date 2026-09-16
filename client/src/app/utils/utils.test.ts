@@ -3,8 +3,6 @@ import { AxiosError, AxiosHeaders } from "axios";
 import { getMutationErrorMessage, getToolbarChipKey } from "./utils";
 
 describe("utils", () => {
-  // getToolbarChipKey
-
   it("getToolbarChipKey: test 'string'", () => {
     const result = getToolbarChipKey("myValue");
     expect(result).toBe("myValue");
@@ -14,8 +12,6 @@ describe("utils", () => {
     const result = getToolbarChipKey({ key: "myKey", node: "myNode" });
     expect(result).toBe("myKey");
   });
-
-  // getMutationErrorMessage
 
   const makeAxiosError = (status: number, data?: unknown): AxiosError => {
     return new AxiosError(

@@ -12,27 +12,16 @@ type DataViewOnSort = (
 interface IBuildThSortArgs<K extends string> {
   /** All column keys in render order (key ↔ index bridge). */
   columnKeys: readonly K[];
-  /** Key of the column these `Th` sort props are for. */
   columnKey: K;
-  /** Currently sorted column key (from `useDataViewSort`). */
   sortBy: string | undefined;
-  /** Current sort direction (from `useDataViewSort`). */
   direction: ISortBy["direction"];
-  /** `useDataViewSort`'s string-keyed `onSort`. */
   onSort: DataViewOnSort;
 }
 
 /**
- * Build PatternFly `Th` sort props for one column, bridging react-data-view's
- * **string-keyed** sort state to PatternFly's **index-based** `ThSortType`.
- * Callers pass a column key; the index PatternFly needs is derived from
- * `columnKeys`, and the clicked column is reported back to `onSort` by key.
- */
-/**
- * Turn react-data-view's string-keyed sort state into a Pulp `ordering` query
- * param (`"name"` / `"-name"`). Returns `undefined` when nothing is sorted, so
- * server-paginated lists can pass it straight to their list query. Callers cast
- * the result to their domain's `ordering` enum type.
+ * Turn react-data-view's string-keyed sort state into a Pulp `ordering` param
+ * (`"name"` / `"-name"`), or `undefined` when nothing is sorted. Callers cast to
+ * their domain's `ordering` enum type.
  */
 export const toOrderingParam = (
   sortBy: string | undefined,
@@ -40,6 +29,10 @@ export const toOrderingParam = (
 ): string | undefined =>
   sortBy ? (direction === "desc" ? `-${sortBy}` : sortBy) : undefined;
 
+/**
+ * Build PatternFly `Th` sort props for one column, bridging react-data-view's
+ * string-keyed sort state to PatternFly's index-based `ThSortType`.
+ */
 export const buildThSort = <K extends string>({
   columnKeys,
   columnKey,

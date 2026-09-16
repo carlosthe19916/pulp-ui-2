@@ -25,10 +25,7 @@ interface IDistributionModalInnerProps {
   onClose: () => void;
 }
 
-/**
- * Inner modal that owns the form state. Only mounted while open (see the
- * wrapper below) so react-hook-form re-initializes on every open.
- */
+/** Only mounted while open so react-hook-form re-initializes on every open. */
 const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
   distribution,
   onClose,

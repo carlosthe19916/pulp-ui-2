@@ -27,16 +27,15 @@ interface ITypeaheadSelectProps {
   onChange: (value: string) => void;
   isDisabled?: boolean;
   /**
-   * When provided, the caller drives filtering server-side: the typed search
-   * text is forwarded here (debounce on the caller side) and `options` are
-   * rendered as-is instead of being filtered locally.
+   * When set, the caller drives filtering server-side: typed text is forwarded
+   * here (debounce caller-side) and `options` are rendered as-is.
    */
   onFilterChange?: (value: string) => void;
   /** Show a loading indicator in the menu (server-side options in flight). */
   isLoading?: boolean;
   /**
-   * Label to show for the current `value` when it is not present in `options`
-   * (e.g. the selected item is outside the current server-filtered page).
+   * Label for the current `value` when it is not present in `options` (e.g. the
+   * selection is outside the current server-filtered page).
    */
   selectedLabel?: string;
 }
@@ -56,9 +55,8 @@ export const TypeaheadSelect = ({
 }: ITypeaheadSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
-  // Remember the last option picked from the menu so the toggle keeps showing
-  // its label even after a new search filters it out of `options` (relevant
-  // when options are server-filtered).
+  // Keep the last picked option so the toggle still shows its label after a new
+  // search filters it out of `options` (server-filtered case).
   const [lastSelected, setLastSelected] = useState<ITypeaheadOption>();
 
   const isServerFiltered = !!onFilterChange;

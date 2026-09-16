@@ -1,9 +1,7 @@
 export * from "./environment.js";
 export * from "./branding.js";
 
-/**
- * Return a base64 encoded JSON string containing the given `env` object.
- */
+/** Return a base64-encoded JSON string of the given `env` object. */
 export const encodeEnv = (env: object, exclude?: string[]): string => {
   const filtered = exclude
     ? Object.fromEntries(
@@ -14,8 +12,6 @@ export const encodeEnv = (env: object, exclude?: string[]): string => {
   return btoa(JSON.stringify(filtered));
 };
 
-/**
- * Return an objects from a base64 encoded JSON string.
- */
+/** Return an object from a base64-encoded JSON string. */
 export const decodeEnv = (env: string): object =>
   !env ? {} : JSON.parse(atob(env));

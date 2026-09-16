@@ -31,10 +31,8 @@ export interface IBrandingStrings {
   };
 }
 
-// Note: Typescript will look at the `paths` definition to resolve this import
-//       to a stub JSON file.  In the next rollup build step, that import will
-//       be replaced by the rollup virtual plugin with a dynamically generated
-//       JSON import with the actual branding information.
+// TS resolves this import to a stub JSON file (via `paths`); the rollup build
+// replaces it with the real branding JSON via a virtual plugin.
 import stringsStub from "@branding/strings.json";
 
 export const brandingStrings: IBrandingStrings = stringsStub;

@@ -62,7 +62,6 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
     setIsDeleteOpen(false);
   };
 
-  /** Derive a short label from the publication href. */
   const publicationLabel = publication?.pulp_href
     ? extractIdFromHref(publication.pulp_href)
     : pubId;

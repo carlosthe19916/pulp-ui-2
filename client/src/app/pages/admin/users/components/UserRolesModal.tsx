@@ -44,9 +44,7 @@ interface IAssignedRole {
 
 interface IUserRolesFormProps {
   user: UserResponse;
-  /** Roles currently assigned to the user, with their assignment hrefs. */
   assignedRoles: IAssignedRole[];
-  /** All role names available in the system. */
   allRoleNames: string[];
   onClose: () => void;
 }
@@ -55,9 +53,8 @@ const toOptions = (names: string[]): IRoleOption[] =>
   names.map((name) => ({ name, selected: false, isVisible: true }));
 
 /**
- * Dual-list role editor. Seeds its list state once from the loaded data (it is
- * only mounted after both queries resolve), diffs against the original
- * assignment on save, and applies the additions/removals in one batch.
+ * Only mounted after both queries resolve, so it seeds list state once and
+ * diffs against the original assignment on save (one batch of adds/removes).
  */
 const UserRolesForm: React.FC<IUserRolesFormProps> = ({
   user,

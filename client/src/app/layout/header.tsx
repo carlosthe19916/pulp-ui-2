@@ -105,14 +105,12 @@ export const HeaderApp: React.FC = () => {
         <MastheadContent>
           <Toolbar id="toolbar" isFullHeight isStatic>
             <ToolbarContent>
-              {/* toolbar items to always show */}
               <ToolbarGroup
                 id="header-toolbar-tasks"
                 variant="action-group-plain"
                 align={{ default: "alignEnd" }}
               />
 
-              {/* toolbar items to show at desktop sizes */}
               <ToolbarGroup
                 id="header-toolbar-desktop"
                 variant="action-group-plain"
@@ -205,7 +203,6 @@ export const HeaderApp: React.FC = () => {
                 </ToolbarGroup>
               )}
 
-              {/* toolbar items to show at mobile sizes */}
               <ToolbarGroup
                 id="header-toolbar-mobile"
                 variant="action-group-plain"

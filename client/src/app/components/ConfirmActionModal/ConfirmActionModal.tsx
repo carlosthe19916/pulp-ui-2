@@ -24,9 +24,8 @@ interface IConfirmActionModalProps {
 }
 
 /**
- * Generic confirmation dialog for destructive or otherwise consequential
- * actions (delete, cancel, purge, …). Purely presentational — the caller owns
- * the mutation and its toasts.
+ * Confirmation dialog for consequential actions. Purely presentational — the
+ * caller owns the mutation and its toasts.
  */
 export const ConfirmActionModal: React.FC<IConfirmActionModalProps> = ({
   isOpen,

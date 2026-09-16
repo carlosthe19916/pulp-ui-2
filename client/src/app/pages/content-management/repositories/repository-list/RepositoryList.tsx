@@ -50,10 +50,7 @@ import { useRepositoryActions } from "./hooks/useRepositoryActions";
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
 
-/**
- * The aggregation endpoint returns pulp_type at runtime but the generated
- * type does not include it. Extend the base type for list usage.
- */
+/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type RepositoryRow = RepositoryResponse & { pulp_type?: string };
 
 const COLUMN_KEYS = [

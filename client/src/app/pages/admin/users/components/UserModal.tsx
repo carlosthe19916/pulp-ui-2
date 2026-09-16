@@ -18,10 +18,7 @@ interface IUserModalInnerProps {
   onClose: () => void;
 }
 
-/**
- * Inner modal that owns the form state. Only mounted while open (see the
- * wrapper below) so react-hook-form re-initializes on every open.
- */
+/** Only mounted while open so react-hook-form re-initializes on every open. */
 const UserModalInner: React.FC<IUserModalInnerProps> = ({ user, onClose }) => {
   const { form, isCreate, onSubmit, isSubmitting } = useUserForm({
     user,
@@ -59,10 +56,7 @@ interface IUserModalProps {
   onClose: () => void;
 }
 
-/**
- * Single modal for both create and edit. Passing a `user` selects edit mode;
- * omitting it selects create mode.
- */
+/** Passing a `user` selects edit mode; omitting it selects create mode. */
 export const UserModal: React.FC<IUserModalProps> = ({
   isOpen,
   user,

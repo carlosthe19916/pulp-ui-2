@@ -29,7 +29,6 @@ const port = PULP_ENV.PORT ? parseInt(PULP_ENV.PORT, 10) : 8080;
 const app = express();
 app.set("x-powered-by", false);
 
-// Setup proxy handling
 app.use(createProxyMiddleware(proxies.api));
 
 app.engine("ejs", ejs.renderFile);
@@ -54,7 +53,6 @@ app.get("*splat", (_, res) => {
   }
 });
 
-// Start the server
 const server = app.listen(port, (error) => {
   if (error) {
     throw error; // e.g. EADDRINUSE

@@ -27,8 +27,7 @@ export const axiosInstance = axios.create({
   adapter: "fetch",
   withCredentials: false,
   // Match the OpenAPI spec's array serialization (`style: form, explode: false`):
-  // arrays become comma-joined (`ordering=a,b`) and undefined/null values are
-  // dropped from the query string.
+  // comma-join arrays and drop undefined/null values.
   paramsSerializer: {
     serialize: (params) => {
       const sp = new URLSearchParams();

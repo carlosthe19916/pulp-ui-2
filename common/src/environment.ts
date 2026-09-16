@@ -7,9 +7,7 @@ declare global {
   }
 }
 
-/**
- * The set of environment variables used by `@pulp-ui` packages.
- */
+/** The set of environment variables used by `@pulp-ui` packages. */
 export type PulpEnvType = {
   NODE_ENV: "development" | "production" | "test";
   VERSION: string;
@@ -35,19 +33,14 @@ export type PulpEnvType = {
   /** Target URL for the UI server's `/api` proxy */
   PULP_API_URL?: string;
 
-  /**
-   * Pulp `API_ROOT` the `/api` proxy rewrites to
-   */
+  /** Pulp `API_ROOT` the `/api` proxy rewrites to */
   PULP_API_ROOT?: string;
 
   /** Location of branding files (relative paths computed from the project source root) */
   BRANDING?: string;
 };
 
-/**
- * Keys in `PulpEnv` that are only used on the server and therefore do not
- * need to be sent to the client.
- */
+/** Keys in `PulpEnv` that are server-only and not sent to the client. */
 export const SERVER_ENV_KEYS = ["PORT", "PULP_API_URL", "BRANDING"];
 
 /**
@@ -58,16 +51,12 @@ export const normalizePulpApiRoot = (apiRoot: string): string => {
   return apiRoot.replace(/\/+$/, "").replace(/^(?!\/)/, "/");
 };
 
-/**
- * Rewrite a client path (`/api/pulp/...`) to Pulp's `API_ROOT`.
- */
+/** Rewrite a client path (`/api/pulp/...`) to Pulp's `API_ROOT`. */
 export const rewritePulpApiPath = (path: string, apiRoot: string): string => {
   return path.replace(/^\/api\/pulp/, normalizePulpApiRoot(apiRoot));
 };
 
-/**
- * Create a `PulpEnv` from a partial `PulpEnv` with a set of default values.
- */
+/** Create a `PulpEnv` from a partial one, filling in defaults. */
 export const buildPulpEnv = ({
   NODE_ENV = "production",
   PORT,
@@ -102,12 +91,7 @@ export const buildPulpEnv = ({
   BRANDING,
 });
 
-/**
- * Default values for `PulpEnvType`.
- */
 export const PULP_ENV_DEFAULTS = buildPulpEnv();
 
-/**
- * Current `@pulp-ui` environment configurations from `process.env`.
- */
+/** Current `@pulp-ui` environment config from `process.env`. */
 export const PULP_ENV = buildPulpEnv(process.env);

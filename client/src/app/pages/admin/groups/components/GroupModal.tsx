@@ -18,10 +18,7 @@ interface IGroupModalInnerProps {
   onClose: () => void;
 }
 
-/**
- * Inner modal that owns the form state. Only mounted while open (see the
- * wrapper below) so react-hook-form re-initializes on every open.
- */
+/** Mounted only while open so react-hook-form re-initializes on every open. */
 const GroupModalInner: React.FC<IGroupModalInnerProps> = ({
   group,
   onClose,
@@ -60,10 +57,7 @@ interface IGroupModalProps {
   onClose: () => void;
 }
 
-/**
- * Single modal for both create and edit. Passing a `group` selects edit mode;
- * omitting it selects create mode.
- */
+/** Pass a `group` for edit mode; omit for create. */
 export const GroupModal: React.FC<IGroupModalProps> = ({
   isOpen,
   group,

@@ -82,7 +82,6 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
     [usersData?.results],
   );
 
-  // Client-side filter + sort over the full member list.
   const filteredSortedUsers = useMemo(() => {
     const query = filters.username.trim().toLowerCase();
     const filtered = query

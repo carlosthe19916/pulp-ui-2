@@ -49,11 +49,7 @@ export const publicationsListQueryOptions = (
     },
   });
 
-/**
- * Fetch-all fallback for the publication picker: publications have no
- * server-side name filter, so a typeahead can't filter server-side — fetch
- * every publication (optionally scoped by `repository`) for the static select.
- */
+/** Publications have no server-side name filter, so fetch all for the static picker select. */
 export const allPublicationsListQueryOptions = (
   domain: IPulpDomain,
   params: IAllPublicationListParams = {},

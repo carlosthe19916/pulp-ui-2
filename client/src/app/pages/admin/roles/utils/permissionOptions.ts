@@ -1,4 +1,3 @@
-/** Collect a sorted unique list of permission strings from role permission arrays. */
 export const collectPermissionOptions = (
   rolePermissionLists: Array<string[] | undefined | null>,
   selected: string[] = [],

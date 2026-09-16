@@ -37,10 +37,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-/**
- * The aggregation endpoint returns pulp_type at runtime but the generated
- * type does not include it.
- */
+/** The aggregation endpoint returns pulp_type at runtime, but the generated type omits it. */
 type DistributionRow = DistributionResponse & {
   pulp_type?: string;
   base_url?: string;

@@ -6,11 +6,7 @@ import {
   useRoleUpdateMutation,
 } from "@app/queries/roles";
 
-/**
- * Binds the role create/update/delete mutations to success/failure toast
- * notifications. Each action rethrows on failure so callers can keep a modal
- * open on error. Mirrors `useUserActions`.
- */
+/** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useRoleActions = () => {
   const { runAction } = useMutationAction();
   const createMutation = useRoleCreateMutation();

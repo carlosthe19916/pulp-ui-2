@@ -42,10 +42,7 @@ import { formatDateTime } from "@app/utils/utils";
 import { CreatePublicationModal } from "./components/CreatePublicationModal";
 import { usePublicationActions } from "./hooks/usePublicationActions";
 
-/**
- * The aggregation endpoint returns pulp_type at runtime but the generated
- * type does not include it. Extend the base type for list usage.
- */
+/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type PublicationRow = PublicationResponse & { pulp_type?: string };
 
 const truncate = (value: string | null | undefined, max = 40): string => {

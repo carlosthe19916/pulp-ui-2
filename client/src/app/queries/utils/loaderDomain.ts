@@ -5,12 +5,9 @@ import { apiDomainFromStatus } from "@app/queries/utils/pulpApi";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 
 /**
- * Resolve the API domain config inside a router loader.
- *
- * Loaders run outside React and cannot call `useApiDomain`, but the domain
- * derives from the `/status` query — the same cache entry `ApiStatusProvider`
- * fills — so we prime/read it via `ensureQueryData` and reuse the pure
- * `apiDomainFromStatus` helper.
+ * Resolve the API domain inside a router loader. Loaders run outside React so
+ * can't use `useApiDomain`; the domain derives from the cached `/status` query,
+ * which we prime/read via `ensureQueryData`.
  */
 export const ensureApiDomain = async (
   queryClient: QueryClient,

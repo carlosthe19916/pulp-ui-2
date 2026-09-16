@@ -48,7 +48,6 @@ const formatValue = (
   return String(value);
 };
 
-/** Render descriptor `detailFields` as DescriptionList groups. */
 export const DescriptorDetailFields: React.FC<IDescriptorDetailFieldsProps> = ({
   fields,
   entity,

@@ -98,11 +98,7 @@ export const groupUsersListQueryOptions = (
     enabled: !!groupHref,
   });
 
-/**
- * Fetch-all fallback for group members: the `groups_users_list` endpoint
- * supports only `limit`/`offset` (no ordering, no filtering), so the UI pages,
- * sorts, and filters in memory over the full member list.
- */
+/** `groups_users_list` supports only limit/offset, so fetch all and sort/filter in memory. */
 export const allGroupUsersListQueryOptions = (groupHref: string) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "users", "all", groupHref],
@@ -122,10 +118,7 @@ export const allGroupUsersListQueryOptions = (groupHref: string) =>
     enabled: !!groupHref,
   });
 
-/**
- * Fetch-all fallback for a group's assigned roles: the roles tab renders the
- * full list in one table (no pagination UI), so page through everything.
- */
+/** Roles tab renders the full list in one table (no pagination UI), so page through all. */
 export const allGroupRolesListQueryOptions = (groupHref: string) =>
   queryOptions({
     queryKey: [...groupsRootQueryOptions.queryKey, "roles", "all", groupHref],

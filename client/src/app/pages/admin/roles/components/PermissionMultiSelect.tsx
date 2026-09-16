@@ -28,7 +28,6 @@ interface IPermissionMultiSelectProps {
   isDisabled?: boolean;
 }
 
-/** Searchable multi-select for role permissions, with custom add escape hatch. */
 export const PermissionMultiSelect = ({
   id,
   options,

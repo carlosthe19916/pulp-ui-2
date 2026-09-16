@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
-// Returns a copy of `value` that only updates after `value` has stopped
-// changing for `delayMs`. Used to debounce filter input before it hits a
-// server query, so typing doesn't fire a request per keystroke.
+// Copy of `value` that updates only after it stops changing for `delayMs`, so
+// filter typing doesn't fire a server request per keystroke.
 export function useDebouncedValue<T>(value: T, delayMs = 300): T {
   const [debounced, setDebounced] = useState(value);
 

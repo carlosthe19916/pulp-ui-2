@@ -1,11 +1,7 @@
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import { useFileRepositoryDeleteMutation } from "@app/queries/file-repositories";
 
-/**
- * Binds the repository delete mutation to task/success/failure toasts.
- * Deletion is asynchronous, so a task-started toast is shown when the API
- * returns a task href. Rethrows on failure so callers can keep a modal open.
- */
+/** Delete a repository with task/success/failure toasts; rethrows so callers can keep a modal open. */
 export const useRepositoryActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFileRepositoryDeleteMutation();

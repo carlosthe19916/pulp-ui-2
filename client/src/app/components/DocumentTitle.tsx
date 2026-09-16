@@ -7,10 +7,7 @@ interface IDocumentTitleProps {
   title?: string | null;
 }
 
-/**
- * Sets `document.title` to `"Page · Brand"` while mounted.
- * Restores the previous title on unmount.
- */
+/** Sets `document.title` to `"Page · Brand"` while mounted; restores it on unmount. */
 export const DocumentTitle: React.FC<IDocumentTitleProps> = ({ title }) => {
   const branding = useBranding();
   const brandTitle = branding?.application?.title || "Pulp";

@@ -11,11 +11,7 @@ import { NotFoundEmptyState } from "@app/components/NotFoundEmptyState";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError, isNotFoundError } from "@app/utils/isHttpError";
 
-/**
- * Shared route `errorComponent` for detail pages. Classifies loader/query
- * failures into 403 / 404 / generic states — the same branches the former
- * `DetailQueryGate` rendered in-component.
- */
+/** Shared route `errorComponent` for detail pages: 403 / 404 / generic states. */
 export const DetailRouteError = ({ error }: ErrorComponentProps) => {
   if (isForbiddenError(error)) {
     return (

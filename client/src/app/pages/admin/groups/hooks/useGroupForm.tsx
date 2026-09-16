@@ -18,12 +18,10 @@ const toDefaults = (group?: GroupResponse): GroupFormValues => ({
   name: group?.name ?? "",
 });
 
-/** Maps form values to the create (POST) payload. */
 export const valuesToNewGroup = (values: GroupFormValues): Group => ({
   name: values.name,
 });
 
-/** Maps form values to the edit (PATCH) payload. */
 export const valuesToPatchedGroup = (
   values: GroupFormValues,
 ): PatchedGroup => ({

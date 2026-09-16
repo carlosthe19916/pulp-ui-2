@@ -32,9 +32,9 @@ interface IDescriptorFormFieldsProps<
   /** Options for `type: "resource"` fields, keyed by the field's resourceKind. */
   resourceOptions?: Partial<Record<ResourceKind, ITypeaheadOption[]>>;
   /**
-   * Server-side search wiring for `type: "resource"` fields, keyed by
-   * resourceKind. When provided for a kind, its `options` are treated as
-   * already server-filtered and the typed text is forwarded to `onFilterChange`.
+   * Server-side search for `type: "resource"` fields, keyed by resourceKind.
+   * When set, `options` are treated as already server-filtered and typed text is
+   * forwarded to `onFilterChange`.
    */
   resourceSearch?: Partial<
     Record<
@@ -44,11 +44,7 @@ interface IDescriptorFormFieldsProps<
   >;
 }
 
-/**
- * Renders a list of FieldDescriptors bound to a react-hook-form `control`,
- * following the same PatternFly Form/FormGroup structure used by the admin
- * user modals (CreateUserModal / EditUserModal).
- */
+/** Renders FieldDescriptors bound to a react-hook-form `control`. */
 export const DescriptorFormFields = <
   TFieldValues extends FieldValues = Record<string, unknown>,
 >({

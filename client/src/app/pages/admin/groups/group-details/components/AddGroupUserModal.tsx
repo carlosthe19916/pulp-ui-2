@@ -35,11 +35,7 @@ interface IAddGroupUserModalInnerProps {
   onClose: () => void;
 }
 
-/**
- * Inner modal that owns the form state and the user-options query. Only mounted
- * while open (see the wrapper below) so react-hook-form re-initializes and the
- * user list is only fetched when the modal is actually opened.
- */
+/** Mounted only while open so the form resets and the user list is fetched only then. */
 const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   groupHref,
   groupName,
@@ -152,10 +148,7 @@ interface IAddGroupUserModalProps {
   onClose: () => void;
 }
 
-/**
- * Modal for adding a user to a group. Mounted only while open so its form and
- * user-options query reset on every open.
- */
+/** Mounted only while open so its form and user query reset on every open. */
 export const AddGroupUserModal: React.FC<IAddGroupUserModalProps> = ({
   isOpen,
   groupHref,

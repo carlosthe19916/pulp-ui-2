@@ -59,9 +59,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const descriptor = getDescriptor("repository", "file.file");
 
-  // Queries kept here only to render the dynamic tab-title counts. They fetch a
-  // single row and read the paginated `count`, so the badge reflects the true
-  // total without pulling every record.
+  // Tab-title count badges: fetch one row and read the paginated `count` so the
+  // badge reflects the true total without pulling every record.
   const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId, {
     limit: 1,
   });

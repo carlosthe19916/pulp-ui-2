@@ -52,12 +52,7 @@ export const rolesListQueryOptions = (
     },
   });
 
-/**
- * Fetch-all fallback for callers that need every role at once (e.g. a
- * client-side dual-list role picker, or harvesting the union of all permission
- * strings). Prefer server-side pagination/filtering for anything that renders a
- * single page.
- */
+/** Fetch every role at once (e.g. dual-list picker). Prefer server-side paging for single pages. */
 export const allRolesListQueryOptions = (
   domain: IPulpDomain,
   params: IAllRoleListParams = {},

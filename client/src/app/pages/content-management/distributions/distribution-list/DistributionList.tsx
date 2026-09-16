@@ -49,10 +49,7 @@ import {
 import { DistributionModal } from "../components/DistributionModal";
 import { useDistributionActions } from "./hooks/useDistributionActions";
 
-/**
- * The aggregation endpoint returns pulp_type at runtime but the generated
- * type does not include it. Extend the base type for list usage.
- */
+/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type DistributionRow = DistributionResponse & { pulp_type?: string };
 
 const COLUMN_KEYS = [

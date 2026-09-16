@@ -4,7 +4,6 @@ import { useUserRolesSyncMutation } from "@app/queries/users";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface ISyncRolesArgs {
-  /** User whose roles are being changed. */
   user: UserResponse;
   /** Role names to assign. */
   toAdd: string[];
@@ -13,9 +12,8 @@ interface ISyncRolesArgs {
 }
 
 /**
- * Binds the batch user-role sync mutation to a single toast notification.
- * Applies all additions and removals in one batch (invalidating once) and
- * rethrows on failure so callers can keep the modal open.
+ * Applies additions and removals in one batch (invalidating once) and rethrows
+ * on failure so callers can keep the modal open.
  */
 export const useUserRoleActions = () => {
   const { addNotification } = useNotifications();

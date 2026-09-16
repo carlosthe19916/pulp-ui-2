@@ -15,13 +15,8 @@ import { filePublicationDetailQueryOptions } from "./file-publications";
 import { fileRepositoryDetailQueryOptions } from "./file-repositories";
 import { buildContentHref, buildDistributionHref } from "./utils/pulpHref";
 
-/**
- * Browse-specific query wrappers.
- *
- * Browse pages are read-only and public, so we use a longer staleTime
- * to reduce unnecessary refetches while the consumer is browsing.
- */
-const BROWSE_STALE_TIME = 5 * 60 * 1000; // 5 minutes
+/** Browse pages are read-only and public, so use a longer staleTime to cut refetches. */
+const BROWSE_STALE_TIME = 5 * 60 * 1000;
 
 export const useBrowseDistributionsQuery = (
   params: IDistributionListParams,

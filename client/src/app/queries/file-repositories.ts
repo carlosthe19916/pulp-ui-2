@@ -75,10 +75,7 @@ export const fileRepositoryVersionsListQueryOptions = (
     enabled: !!repoHref,
   });
 
-/**
- * Fetch-all fallback for the versions tab: it renders every version in one
- * table (no pagination UI), so page through the whole list.
- */
+/** Versions tab renders every version in one table (no pagination UI), so page through all. */
 export const allFileRepositoryVersionsListQueryOptions = (repoHref: string) =>
   queryOptions({
     queryKey: [

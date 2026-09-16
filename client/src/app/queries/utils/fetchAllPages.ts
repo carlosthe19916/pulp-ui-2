@@ -6,14 +6,8 @@ interface IPaginatedLike<T> {
 }
 
 /**
- * Fetch every page of a Pulp paginated endpoint by walking `offset` until the
- * response is exhausted. Use this only as a fallback for the cases where the
- * endpoint cannot do the pagination/sorting/filtering the UI needs (e.g. a
- * client-side dual-list, or a `limit`/`offset`-only nested endpoint) — never
- * fetch a hardcoded guessed limit.
- *
- * The paginated response tells us when to stop: `next` is null on the last
- * page, and `count` bounds the total.
+ * Fetch every page of a Pulp paginated endpoint by walking `offset`. Use only when
+ * the endpoint can't do the paging/sorting/filtering the UI needs — never guess a limit.
  */
 export async function fetchAllPages<T>(
   fetchPage: (offset: number, limit: number) => Promise<IPaginatedLike<T>>,

@@ -1,11 +1,7 @@
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import { useFileDistributionDeleteMutation } from "@app/queries/file-distributions";
 
-/**
- * Binds the distribution delete mutation to task/success/failure toasts.
- * Deletion is asynchronous, so a task-started toast is shown when the API
- * returns a task href. Rethrows on failure so callers can keep a modal open.
- */
+/** Delete a distribution with task/success/failure toasts; rethrows so callers can keep a modal open. */
 export const useDistributionActions = () => {
   const { runAction } = useMutationAction();
   const deleteMutation = useFileDistributionDeleteMutation();

@@ -12,7 +12,6 @@ import { DataViewState } from "@patternfly/react-data-view";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
-// Condition + `*State` override pairs per DataViewState, mirroring LoadingWrapper.
 interface IDataViewStatesArgs<TError = unknown> {
   loading?: boolean;
   loadingState?: React.ReactNode;
@@ -22,8 +21,6 @@ interface IDataViewStatesArgs<TError = unknown> {
   emptyState?: React.ReactNode;
 }
 
-// Resolves `activeState` (for DataView) and `bodyStates` (for DataViewTable)
-// from the loading/error/empty conditions and optional overrides.
 export const dataViewBodyStates = <TError = unknown,>({
   loading,
   loadingState,

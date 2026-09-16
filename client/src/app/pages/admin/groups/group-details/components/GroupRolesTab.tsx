@@ -77,7 +77,6 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
 
   const roles = rolesData?.results ?? [];
 
-  // Server-side typeahead for the role picker.
   const [roleSearch, setRoleSearch] = useState("");
   const debouncedRoleSearch = useDebouncedValue(roleSearch);
   const { data: pickerRolesData, isLoading: isPickerRolesLoading } =

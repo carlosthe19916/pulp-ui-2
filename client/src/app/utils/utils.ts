@@ -4,8 +4,6 @@ import dayjs from "dayjs";
 import { RENDER_DATETIME_FORMAT, RENDER_DATE_FORMAT } from "@app/Constants";
 import type { ToolbarLabel } from "@patternfly/react-core";
 
-// Axios / Pulp API errors
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
   if (axiosError.response?.data?.errorMessage) {
@@ -20,10 +18,7 @@ export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
   return axiosError.message;
 };
 
-/**
- * Build a user-facing mutation failure message from an unknown thrown value.
- * Surfaces Pulp permission (403) and validation detail when available.
- */
+/** Build a user-facing mutation failure message, surfacing Pulp 403/validation detail when available. */
 export const getMutationErrorMessage = (
   error: unknown,
   fallback: string,
@@ -69,13 +64,9 @@ export const getMutationErrorMessage = (
     : { title: fallback };
 };
 
-// ToolbarChip
-
 export const getToolbarChipKey = (value: string | ToolbarLabel) => {
   return typeof value === "string" ? value : value.key;
 };
-
-// Dates
 
 export const formatDate = (value?: string | null) => {
   return value ? dayjs.utc(value).local().format(RENDER_DATE_FORMAT) : null;
@@ -135,11 +126,6 @@ export const getValidatedFromError = (error: unknown | undefined) => {
   return error ? "error" : "default";
 };
 
-/**
- * Uses native string localCompare method with numeric option enabled.
- *
- * @param locale to be used by string compareFn
- */
 export const localeNumericCompare = (
   a: string,
   b: string,
@@ -157,10 +143,8 @@ export const getFilenameFromContentDisposition = (
 };
 
 /**
- * Compares all types by converting them to string.
- * Nullish entities are converted to empty string.
+ * Compare any values by converting to string (nullish → empty string).
  * @see localeNumericCompare
- * @param locale to be used by string compareFn
  */
 export const universalComparator = (
   a: string | number | null | undefined,

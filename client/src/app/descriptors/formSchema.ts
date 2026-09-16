@@ -2,19 +2,16 @@ import * as yup from "yup";
 
 import type { IFieldDescriptor } from "./types";
 
-/** Dynamic property access for descriptor-driven UI over OpenAPI objects. */
 export const getFieldValue = (entity: object, key: string): unknown => {
   return Object.hasOwn(entity, key)
     ? Object.getOwnPropertyDescriptor(entity, key)?.value
     : undefined;
 };
 
-/** Convert a typed API entity into a field record for descriptor forms. */
 export const toFieldRecord = (entity: object): Record<string, unknown> => {
   return Object.fromEntries(Object.entries(entity));
 };
 
-/** Build a yup validator for a single field descriptor. */
 const buildFieldValidator = (field: IFieldDescriptor): yup.AnySchema => {
   switch (field.type) {
     case "number": {
@@ -49,7 +46,6 @@ const buildFieldValidator = (field: IFieldDescriptor): yup.AnySchema => {
   }
 };
 
-/** Build a yup object schema mirroring the shape of the given field descriptors. */
 export const buildFieldSchema = (
   fields: IFieldDescriptor[],
 ): yup.AnyObjectSchema => {
@@ -60,7 +56,7 @@ export const buildFieldSchema = (
   return yup.object(shape);
 };
 
-/** Build default form values for the given field descriptors, optionally seeded from an existing record (for edit forms). */
+/** Optionally seeded from an existing record (edit forms). */
 export const buildDefaultValues = (
   fields: IFieldDescriptor[],
   source?: object | null,

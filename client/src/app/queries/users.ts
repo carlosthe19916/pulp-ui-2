@@ -93,10 +93,7 @@ export const userRolesListQueryOptions = (
     enabled: !!userHref,
   });
 
-/**
- * Fetch-all fallback for a user's assigned roles: the dual-list role editor
- * needs every assignment at once, so page through the whole nested list.
- */
+/** The dual-list role editor needs every assignment at once, so page through the whole list. */
 export const allUserRolesListQueryOptions = (
   userHref: string,
   params: IAllUserRoleListParams = {},

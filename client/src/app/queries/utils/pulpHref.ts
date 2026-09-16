@@ -1,10 +1,7 @@
 import { pulpApiPath } from "./pulpApi";
 import type { IPulpDomain } from "./pulpApi";
 
-/**
- * Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the
- * aggregation API omits `pulp_type`.
- */
+/** Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the API omits `pulp_type`. */
 export const inferPulpTypeFromHref = (
   href: string | null | undefined,
 ): string | undefined => {
@@ -46,12 +43,10 @@ export const isEmptyDetailPayload = (
   return Object.keys(data as object).length === 0;
 };
 
-/** Build a Pulp user pulp_href from a user ID. */
 export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`users/${userId}/`, domain);
 };
 
-/** Build a Pulp group pulp_href from a group ID. */
 export const buildGroupHref = (
   groupId: string,
   domain: IPulpDomain,
@@ -59,12 +54,10 @@ export const buildGroupHref = (
   return pulpApiPath(`groups/${groupId}/`, domain);
 };
 
-/** Build a Pulp role pulp_href from a role ID. */
 export const buildRoleHref = (roleId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`roles/${roleId}/`, domain);
 };
 
-/** Build a file repository pulp_href from a repository ID. */
 export const buildRepositoryHref = (
   repoId: string,
   domain: IPulpDomain,
@@ -72,7 +65,6 @@ export const buildRepositoryHref = (
   return pulpApiPath(`repositories/file/file/${repoId}/`, domain);
 };
 
-/** Build a file remote pulp_href from a remote ID. */
 export const buildRemoteHref = (
   remoteId: string,
   domain: IPulpDomain,
@@ -80,7 +72,6 @@ export const buildRemoteHref = (
   return pulpApiPath(`remotes/file/file/${remoteId}/`, domain);
 };
 
-/** Build a file distribution pulp_href from a distribution ID. */
 export const buildDistributionHref = (
   distId: string,
   domain: IPulpDomain,
@@ -88,7 +79,6 @@ export const buildDistributionHref = (
   return pulpApiPath(`distributions/file/file/${distId}/`, domain);
 };
 
-/** Build a file publication pulp_href from a publication ID. */
 export const buildPublicationHref = (
   pubId: string,
   domain: IPulpDomain,
@@ -96,7 +86,6 @@ export const buildPublicationHref = (
   return pulpApiPath(`publications/file/file/${pubId}/`, domain);
 };
 
-/** Build a file content pulp_href from a content ID. */
 export const buildContentHref = (
   contentId: string,
   domain: IPulpDomain,
@@ -104,16 +93,12 @@ export const buildContentHref = (
   return pulpApiPath(`content/file/files/${contentId}/`, domain);
 };
 
-/** Extract the trailing ID (last path segment) from any pulp_href. */
 export const extractIdFromHref = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;
 };
 
-/**
- * Build a consumer download URL for a unit served by a distribution.
- * Joins `base_url` and `relative_path` with normalized slashes.
- */
+/** Join a distribution `base_url` and `relative_path` into a download URL. */
 export const buildDistributionContentUrl = (
   baseUrl: string,
   relativePath: string,

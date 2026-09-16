@@ -6,12 +6,7 @@ import {
   useUserUpdateMutation,
 } from "@app/queries/users";
 
-/**
- * Binds the user create/update/delete mutations to success/failure toast
- * notifications so pages and modals don't have to repeat the wiring.
- *
- * Each action rethrows on failure so callers can keep a modal open on error.
- */
+/** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useUserActions = () => {
   const { runAction } = useMutationAction();
   const createMutation = useUserCreateMutation();

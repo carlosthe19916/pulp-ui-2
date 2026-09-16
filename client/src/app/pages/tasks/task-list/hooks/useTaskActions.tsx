@@ -4,12 +4,7 @@ import {
   useTaskPurgeMutation,
 } from "@app/queries/tasks";
 
-/**
- * Binds the task cancel/purge mutations to toast notifications. Cancel and
- * purge are asynchronous requests, so they surface an info toast (or a
- * task-started toast for the purge task). Each action rethrows on failure so
- * callers can keep a modal open on error.
- */
+/** Cancel/purge tasks with toasts; each action rethrows so callers can keep a modal open. */
 export const useTaskActions = () => {
   const { runAction } = useMutationAction();
   const cancelMutation = useTaskCancelMutation();

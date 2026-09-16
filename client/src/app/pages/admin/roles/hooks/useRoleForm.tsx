@@ -28,14 +28,12 @@ const toDefaults = (role?: RoleResponse): RoleFormValues => ({
   permissions: role?.permissions ?? [],
 });
 
-/** Maps form values to the create (POST) payload. */
 export const valuesToNewRole = (values: RoleFormValues): Role => ({
   name: values.name,
   description: values.description || undefined,
   permissions: values.permissions ?? [],
 });
 
-/** Maps form values to the edit (PATCH) payload (no name). */
 export const valuesToPatchedRole = (values: RoleFormValues): PatchedRole => ({
   description: values.description || undefined,
   permissions: values.permissions ?? [],

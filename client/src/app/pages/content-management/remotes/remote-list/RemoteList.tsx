@@ -48,10 +48,7 @@ import {
 import { RemoteModal } from "../components/RemoteModal";
 import { useRemoteActions } from "./hooks/useRemoteActions";
 
-/**
- * The aggregation endpoint returns pulp_type at runtime but the generated
- * type does not include it. Extend the base type for list usage.
- */
+/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type RemoteRow = GenericRemoteResponse & { pulp_type?: string };
 
 const COLUMN_KEYS = ["name", "url", "policy", "type", "actions"] as const;

@@ -21,7 +21,6 @@ export interface IResourceDescriptor {
   /** Pulp type identifier, e.g. "file.file" */
   pulpType: string;
 
-  /** Which resource concept this descriptor belongs to */
   kind: ResourceKind;
 
   /** Human-readable label, e.g. "File" */
@@ -30,7 +29,6 @@ export interface IResourceDescriptor {
   /** Fields shown in create modal (beyond common fields the shell handles) */
   createFields?: IFieldDescriptor[];
 
-  /** Fields shown in edit modal */
   editFields?: IFieldDescriptor[];
 
   /** Extra fields shown in detail DescriptionList */
@@ -48,7 +46,6 @@ export interface IResourceDescriptor {
   /** Whether this resource type supports publish (repositories only) */
   supportsPublish?: boolean;
 
-  /** Whether content can be uploaded for this type */
   supportsUpload?: boolean;
 
   /** Check whether the plugin providing this type is installed */

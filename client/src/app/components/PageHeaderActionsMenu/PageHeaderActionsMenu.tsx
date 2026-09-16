@@ -25,9 +25,8 @@ interface IPageHeaderActionsMenuProps {
 }
 
 /**
- * Kebab (overflow) menu for page-header actions, matching the PatternFly
- * "page header with actions menu" pattern. Pass to a `PageHeader`'s `actionMenu`
- * prop. Renders nothing when no actions are provided.
+ * Kebab (overflow) menu for a `PageHeader`'s `actionMenu` prop. Renders nothing
+ * when no actions are provided.
  */
 export const PageHeaderActionsMenu: React.FC<IPageHeaderActionsMenuProps> = ({
   actions,

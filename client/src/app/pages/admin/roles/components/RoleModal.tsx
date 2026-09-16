@@ -18,10 +18,7 @@ interface IRoleModalInnerProps {
   onClose: () => void;
 }
 
-/**
- * Inner modal that owns the form state. Only mounted while open (see the
- * wrapper below) so react-hook-form re-initializes on every open.
- */
+/** Only mounted while open so react-hook-form re-initializes on every open. */
 const RoleModalInner: React.FC<IRoleModalInnerProps> = ({ role, onClose }) => {
   const { form, isCreate, onSubmit, isSubmitting } = useRoleForm({
     role,
@@ -59,10 +56,7 @@ interface IRoleModalProps {
   onClose: () => void;
 }
 
-/**
- * Single modal for both create and edit. Passing a `role` selects edit mode;
- * omitting it selects create mode.
- */
+/** Passing a `role` selects edit mode; omitting it selects create mode. */
 export const RoleModal: React.FC<IRoleModalProps> = ({
   isOpen,
   role,
