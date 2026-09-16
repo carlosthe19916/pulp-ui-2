@@ -2,6 +2,8 @@
 
 Repository-specific guidance for AI coding agents working in the **Pulp UI** repository (`@pulp-ui`).
 
+> **Git workflow (for now):** commit directly to `main`. Do not create new branches.
+
 ## Repository Architecture
 
 Four npm workspaces (`@app` alias maps to `client/src/app/`):
