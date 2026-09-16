@@ -7,20 +7,14 @@ import type {
   SigningServicesListData,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const SigningServicesQueryKey = "signing-services";
 
-type SigningServiceQuery = NonNullable<SigningServicesListData["query"]>;
-
-interface ISigningServiceListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<SigningServiceQuery["ordering"]>[number];
-  name?: string;
-}
+export type ISigningServiceListParams = ListParams<SigningServicesListData>;
 
 export const signingServicesRootQueryOptions = queryOptions({
   queryKey: [SigningServicesQueryKey],
@@ -44,10 +38,9 @@ export const signingServicesListQueryOptions = (
           pulpApiPath("signing-services/", domain),
           {
             params: {
+              ...params,
               limit: params.limit ?? 20,
-              offset: params.offset,
               ordering: params.ordering ? [params.ordering] : undefined,
-              name: params.name,
             },
           },
         );

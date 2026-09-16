@@ -6,19 +6,13 @@ import type {
   PublicationsListData,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
 
-type PublicationQuery = NonNullable<PublicationsListData["query"]>;
-
-interface IPublicationListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<PublicationQuery["ordering"]>[number];
-  pulp_type?: PublicationQuery["pulp_type"];
-}
+export type IPublicationListParams = ListParams<PublicationsListData>;
 
 export const publicationsRootQueryOptions = queryOptions({
   queryKey: [PublicationsQueryKey],
@@ -42,10 +36,9 @@ export const publicationsListQueryOptions = (
           pulpApiPath("publications/", domain),
           {
             params: {
+              ...params,
               limit: params.limit ?? 20,
-              offset: params.offset,
               ordering: params.ordering ? [params.ordering] : undefined,
-              pulp_type: params.pulp_type,
             },
           },
         );

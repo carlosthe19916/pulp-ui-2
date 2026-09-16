@@ -16,6 +16,7 @@ import type {
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
@@ -31,16 +32,7 @@ export type TaskState =
   | "skipped"
   | "waiting";
 
-type TaskOrdering = NonNullable<TasksListData["query"]>["ordering"];
-
-interface ITaskListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<TaskOrdering>[number];
-  state?: TaskState;
-  state__in?: string[];
-  name__contains?: string;
-}
+export type ITaskListParams = ListParams<TasksListData>;
 
 const isActiveTask = (state?: string | null) =>
   state === "running" || state === "waiting" || state === "canceling";
@@ -61,12 +53,9 @@ export const tasksListQueryOptions = (
         pulpApiPath("tasks/", domain),
         {
           params: {
+            ...params,
             limit: params.limit ?? 20,
-            offset: params.offset,
             ordering: params.ordering ? [params.ordering] : undefined,
-            state: params.state,
-            state__in: params.state__in,
-            name__contains: params.name__contains,
           },
         },
       );

@@ -6,22 +6,13 @@ import type {
   PaginatedDistributionResponseList,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const DistributionsQueryKey = "distributions";
 
-type DistributionQuery = NonNullable<DistributionsListData["query"]>;
-
-export interface IDistributionListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<DistributionQuery["ordering"]>[number];
-  pulp_type?: DistributionQuery["pulp_type"];
-  name__icontains?: string;
-  base_path__icontains?: string;
-  repository?: string;
-}
+export type IDistributionListParams = ListParams<DistributionsListData>;
 
 export const distributionsRootQueryOptions = queryOptions({
   queryKey: [DistributionsQueryKey],
@@ -47,13 +38,9 @@ export const distributionsListQueryOptions = (
           pulpApiPath("distributions/", domain),
           {
             params: {
+              ...params,
               limit: params.limit ?? 20,
-              offset: params.offset,
               ordering: params.ordering ? [params.ordering] : undefined,
-              pulp_type: params.pulp_type,
-              name__icontains: params.name__icontains,
-              base_path__icontains: params.base_path__icontains,
-              repository: params.repository,
             },
           },
         );

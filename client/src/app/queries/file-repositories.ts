@@ -17,6 +17,7 @@ import type {
   RepositorySyncUrl,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import { buildRepositoryHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
@@ -42,20 +43,12 @@ export const fileRepositoryDetailQueryOptions = (href: string) =>
     enabled: !!href,
   });
 
-type RepositoryVersionOrdering = NonNullable<
-  RepositoriesFileFileVersionsListData["query"]
->["ordering"];
-
-interface IFileRepositoryVersionsListParams {
-  limit?: number;
-  offset?: number;
-  number?: number;
-  ordering?: NonNullable<RepositoryVersionOrdering>;
-}
+export type IFileRepositoryVersionsListParams =
+  ListParams<RepositoriesFileFileVersionsListData>;
 
 export const fileRepositoryVersionsListQueryOptions = (
   repoHref: string,
-  params?: IFileRepositoryVersionsListParams,
+  params: IFileRepositoryVersionsListParams = {},
 ) =>
   queryOptions({
     queryKey: [
@@ -70,10 +63,9 @@ export const fileRepositoryVersionsListQueryOptions = (
           `${toProxyHref(repoHref)}versions/`,
           {
             params: {
-              limit: params?.limit ?? 20,
-              offset: params?.offset,
-              number: params?.number,
-              ordering: params?.ordering,
+              ...params,
+              limit: params.limit ?? 20,
+              ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
         );
@@ -98,7 +90,7 @@ export const useSuspenseFileRepositoryDetailQuery = (repoId: string) => {
 
 export const useFileRepositoryVersionsListQuery = (
   repoId: string,
-  params?: IFileRepositoryVersionsListParams,
+  params: IFileRepositoryVersionsListParams = {},
 ) => {
   const domain = useApiDomain();
   return useQuery(

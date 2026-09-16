@@ -9,23 +9,20 @@ import {
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
+  ContentFileFilesListData,
   FileFileContentResponse,
   FileFileContentWritable,
   PaginatedfileFileContentResponseList,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildContentHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 import { contentRootQueryOptions } from "./content";
 
-export interface IFileContentListParams {
-  limit?: number;
-  offset?: number;
-  repository_version?: string;
-  relative_path__icontains?: string;
-}
+export type IFileContentListParams = ListParams<ContentFileFilesListData>;
 
 export const fileContentListQueryOptions = (
   domain: IPulpDomain,
@@ -46,10 +43,9 @@ export const fileContentListQueryOptions = (
           pulpApiPath("content/file/files/", domain),
           {
             params: {
+              ...params,
               limit: params.limit ?? 20,
-              offset: params.offset,
-              repository_version: params.repository_version,
-              relative_path__icontains: params.relative_path__icontains,
+              ordering: params.ordering ? [params.ordering] : undefined,
             },
           },
         );

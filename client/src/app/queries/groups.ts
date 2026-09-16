@@ -13,6 +13,8 @@ import type {
   GroupRole,
   GroupRoleResponse,
   GroupsListData,
+  GroupsRolesListData,
+  GroupsUsersListData,
   GroupUser,
   GroupUserResponse,
   PaginatedGroupResponseList,
@@ -21,20 +23,18 @@ import type {
   PatchedGroup,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildGroupHref, isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const GroupsQueryKey = "groups";
 
-type GroupOrdering = NonNullable<GroupsListData["query"]>["ordering"];
+export type IGroupListParams = ListParams<GroupsListData>;
 
-interface IGroupListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<GroupOrdering>[number];
-  name__icontains?: string;
-}
+export type IGroupUserListParams = ListParams<GroupsUsersListData>;
+
+export type IGroupRoleListParams = ListParams<GroupsRolesListData>;
 
 export const groupsRootQueryOptions = queryOptions({
   queryKey: [GroupsQueryKey],
@@ -52,10 +52,9 @@ export const groupsListQueryOptions = (
         pulpApiPath("groups/", domain),
         {
           params: {
+            ...params,
             limit: params.limit ?? 20,
-            offset: params.offset,
             ordering: params.ordering ? [params.ordering] : undefined,
-            name__icontains: params.name__icontains,
           },
         },
       );
@@ -78,24 +77,44 @@ export const groupDetailQueryOptions = (groupHref: string) =>
     enabled: !!groupHref,
   });
 
-export const groupUsersListQueryOptions = (groupHref: string) =>
+export const groupUsersListQueryOptions = (
+  groupHref: string,
+  params: IGroupUserListParams = {},
+) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "users", groupHref],
+    queryKey: [...groupsRootQueryOptions.queryKey, "users", groupHref, params],
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
         `${toProxyHref(groupHref)}users/`,
+        {
+          params: {
+            ...params,
+            limit: params.limit ?? 20,
+            ordering: params.ordering ? [params.ordering] : undefined,
+          },
+        },
       );
       return response.data;
     },
     enabled: !!groupHref,
   });
 
-export const groupRolesListQueryOptions = (groupHref: string) =>
+export const groupRolesListQueryOptions = (
+  groupHref: string,
+  params: IGroupRoleListParams = {},
+) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "roles", groupHref],
+    queryKey: [...groupsRootQueryOptions.queryKey, "roles", groupHref, params],
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
         `${toProxyHref(groupHref)}roles/`,
+        {
+          params: {
+            ...params,
+            limit: params.limit ?? 20,
+            ordering: params.ordering ? [params.ordering] : undefined,
+          },
+        },
       );
       return response.data;
     },
@@ -119,14 +138,24 @@ export const useSuspenseGroupDetailQuery = (groupId: string) => {
   );
 };
 
-export const useGroupUsersListQuery = (groupId: string) => {
+export const useGroupUsersListQuery = (
+  groupId: string,
+  params: IGroupUserListParams = {},
+) => {
   const domain = useApiDomain();
-  return useQuery(groupUsersListQueryOptions(buildGroupHref(groupId, domain)));
+  return useQuery(
+    groupUsersListQueryOptions(buildGroupHref(groupId, domain), params),
+  );
 };
 
-export const useGroupRolesListQuery = (groupId: string) => {
+export const useGroupRolesListQuery = (
+  groupId: string,
+  params: IGroupRoleListParams = {},
+) => {
   const domain = useApiDomain();
-  return useQuery(groupRolesListQueryOptions(buildGroupHref(groupId, domain)));
+  return useQuery(
+    groupRolesListQueryOptions(buildGroupHref(groupId, domain), params),
+  );
 };
 
 export const useGroupCreateMutation = () => {

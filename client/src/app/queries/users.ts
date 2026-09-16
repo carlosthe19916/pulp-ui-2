@@ -14,23 +14,20 @@ import type {
   UserRole,
   UserRoleResponse,
   UsersListData,
+  UsersRolesListData,
   UserWritable,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const UsersQueryKey = "users";
 
-type UserOrdering = NonNullable<UsersListData["query"]>["ordering"];
+export type IUserListParams = ListParams<UsersListData>;
 
-export interface IUserListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<UserOrdering>[number];
-  username__icontains?: string;
-}
+export type IUserRoleListParams = ListParams<UsersRolesListData>;
 
 export const usersRootQueryOptions = queryOptions({
   queryKey: [UsersQueryKey],
@@ -48,34 +45,13 @@ export const usersListQueryOptions = (
         pulpApiPath("users/", domain),
         {
           params: {
+            ...params,
             limit: params.limit ?? 20,
-            offset: params.offset,
             ordering: params.ordering ? [params.ordering] : undefined,
-            username__icontains: params.username__icontains,
           },
         },
       );
       return response.data;
-    },
-  });
-
-export const usersAllListQueryOptions = (domain: IPulpDomain) =>
-  queryOptions({
-    queryKey: [...usersRootQueryOptions.queryKey, "list-all", domain],
-    queryFn: async (): Promise<UserResponse[]> => {
-      const pageSize = 100;
-      const all: UserResponse[] = [];
-      let offset = 0;
-      for (;;) {
-        const { data } = await axiosInstance.get<PaginatedUserResponseList>(
-          pulpApiPath("users/", domain),
-          { params: { limit: pageSize, offset } },
-        );
-        all.push(...(data.results ?? []));
-        if (!data.next || all.length >= (data.count ?? all.length)) break;
-        offset += pageSize;
-      }
-      return all;
     },
   });
 
@@ -94,12 +70,22 @@ export const userDetailQueryOptions = (userHref: string) =>
     enabled: !!userHref,
   });
 
-export const userRolesListQueryOptions = (userHref: string) =>
+export const userRolesListQueryOptions = (
+  userHref: string,
+  params: IUserRoleListParams = {},
+) =>
   queryOptions({
-    queryKey: [...usersRootQueryOptions.queryKey, "roles", userHref],
+    queryKey: [...usersRootQueryOptions.queryKey, "roles", userHref, params],
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedUserRoleResponseList>(
         `${toProxyHref(userHref)}roles/`,
+        {
+          params: {
+            ...params,
+            limit: params.limit ?? 20,
+            ordering: params.ordering ? [params.ordering] : undefined,
+          },
+        },
       );
       return response.data;
     },
@@ -111,17 +97,15 @@ export const useUsersListQuery = (params: IUserListParams = {}) => {
   return useQuery(usersListQueryOptions(domain, params));
 };
 
-export const useAllUsersListQuery = () => {
-  const domain = useApiDomain();
-  return useQuery(usersAllListQueryOptions(domain));
-};
-
 export const useUserDetailQuery = (userHref: string) => {
   return useQuery(userDetailQueryOptions(userHref));
 };
 
-export const useUserRolesListQuery = (userHref: string) => {
-  return useQuery(userRolesListQueryOptions(userHref));
+export const useUserRolesListQuery = (
+  userHref: string,
+  params: IUserRoleListParams = {},
+) => {
+  return useQuery(userRolesListQueryOptions(userHref, params));
 };
 
 export const useUserCreateMutation = () => {

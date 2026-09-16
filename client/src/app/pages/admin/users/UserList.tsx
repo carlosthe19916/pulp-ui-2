@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   Button,
@@ -26,10 +26,14 @@ import {
 
 import type { UserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  toOrderingParam,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { useAllUsersListQuery } from "@app/queries/users";
-import { formatDateTime, universalComparator } from "@app/utils/utils";
+import { useUsersListQuery } from "@app/queries/users";
+import { formatDateTime } from "@app/utils/utils";
 
 import { UserModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
@@ -70,32 +74,18 @@ export const UserList: React.FC = () => {
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
 
-  const { data, isLoading, error } = useAllUsersListQuery();
+  const ordering = toOrderingParam(sortBy, direction) as
+    "username" | "-username" | "date_joined" | "-date_joined" | undefined;
 
-  const filtered = useMemo(() => {
-    const allUsers = data ?? [];
-    return filters.username
-      ? allUsers.filter((u) =>
-          u.username.toLowerCase().includes(filters.username.toLowerCase()),
-        )
-      : allUsers;
-  }, [data, filters.username]);
+  const { data, isLoading, error } = useUsersListQuery({
+    limit: perPage,
+    offset: (page - 1) * perPage,
+    ordering,
+    username__icontains: filters.username || undefined,
+  });
 
-  const sorted = useMemo(() => {
-    if (!sortBy) return filtered;
-    const key = sortBy as keyof UserResponse;
-    return [...filtered].sort((a, b) => {
-      const cmp = universalComparator(
-        a[key] as string | null,
-        b[key] as string | null,
-        "en",
-      );
-      return direction === "desc" ? -cmp : cmp;
-    });
-  }, [filtered, sortBy, direction]);
-
-  const totalCount = filtered.length;
-  const users = sorted.slice((page - 1) * perPage, page * perPage);
+  const users = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
 
   const sortProps = (columnKey: UserColumnKey) =>
     buildThSort({

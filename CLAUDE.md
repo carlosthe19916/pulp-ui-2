@@ -119,6 +119,17 @@ Keep the `createContext` call and the provider in separate files so provider-onl
 
 ### Client structure patterns (`client/src/app/`)
 
+### API endpoints
+
+Before wiring any REST call, check the OpenAPI spec at `client/openapi/pulp.json`
+(the source of truth) for the endpoint's query params, request body, and response
+shape. It's ~4 MB — grep it by path/`operationId`. The generated
+`client/src/app/client/` mirrors it and is often faster: `sdk.gen.ts` for the
+endpoint function itself (URL, method, params) and `types.gen.ts` for its
+param/response types (e.g. `UsersListData["query"]` lists every supported query
+param). Prefer server-side
+`limit`/`offset`/`ordering`/filters over fetching everything and processing in memory.
+
 ## Development
 
 ### `npm run start:dev` (development mode)

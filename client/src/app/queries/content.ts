@@ -6,20 +6,13 @@ import type {
   PaginatedMultipleArtifactContentResponseList,
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import type { ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
 
-type ContentQuery = NonNullable<ContentListData["query"]>;
-
-export interface IContentListParams {
-  limit?: number;
-  offset?: number;
-  ordering?: NonNullable<ContentQuery["ordering"]>[number];
-  pulp_type?: ContentQuery["pulp_type"];
-  repository_version?: string;
-}
+export type IContentListParams = ListParams<ContentListData>;
 
 export const contentRootQueryOptions = queryOptions({
   queryKey: [ContentQueryKey],
@@ -40,11 +33,9 @@ export const contentListQueryOptions = (
             pulpApiPath("content/", domain),
             {
               params: {
+                ...params,
                 limit: params.limit ?? 20,
-                offset: params.offset,
                 ordering: params.ordering ? [params.ordering] : undefined,
-                pulp_type: params.pulp_type,
-                repository_version: params.repository_version,
               },
             },
           );
