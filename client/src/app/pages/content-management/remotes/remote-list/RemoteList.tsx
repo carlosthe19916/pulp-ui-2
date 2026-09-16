@@ -69,7 +69,7 @@ export const RemoteList: React.FC = () => {
   const { deleteRemote, isDeleting } = useRemoteActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },

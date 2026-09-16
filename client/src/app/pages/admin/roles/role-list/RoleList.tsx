@@ -65,7 +65,7 @@ export const RoleList: React.FC = () => {
   const { deleteRole, isDeleting } = useRoleActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },

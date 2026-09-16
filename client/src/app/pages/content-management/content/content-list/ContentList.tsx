@@ -54,7 +54,7 @@ export const ContentList: React.FC = () => {
   const plugins = use(ApiStatusContext)?.plugins ?? [];
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
 
   const { data, isLoading, error } = useContentListQuery({

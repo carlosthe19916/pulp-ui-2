@@ -84,7 +84,7 @@ export const RepositoryList: React.FC = () => {
   const { deleteRepository, isDeleting } = useRepositoryActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },

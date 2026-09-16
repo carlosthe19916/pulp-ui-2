@@ -80,7 +80,7 @@ export const DistributionList: React.FC = () => {
   const { deleteDistribution, isDeleting } = useDistributionActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },

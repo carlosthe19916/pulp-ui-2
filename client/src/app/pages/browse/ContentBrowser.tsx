@@ -56,7 +56,7 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   distributionId,
 }) => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IContentBrowserFilters>({

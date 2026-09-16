@@ -38,7 +38,7 @@ interface ISigningServiceFilters {
 
 export const SigningServiceList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },

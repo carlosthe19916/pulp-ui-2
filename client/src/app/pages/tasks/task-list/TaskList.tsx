@@ -98,7 +98,7 @@ export const TaskList: React.FC = () => {
   const { cancelTask, purgeTasks, isCanceling, isPurging } = useTaskActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 20,
+    perPage: 10,
   });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "pulp_created", direction: "desc" },
