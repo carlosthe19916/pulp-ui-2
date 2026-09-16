@@ -16,7 +16,6 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PublishModal } from "@app/components/PublishModal";
@@ -27,8 +26,8 @@ import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import {
   useFileRepositoryDeleteMutation,
-  useFileRepositoryDetailQuery,
   useFileRepositoryVersionsListQuery,
+  useSuspenseFileRepositoryDetailQuery,
 } from "@app/queries/file-repositories";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -47,8 +46,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   repoId,
 }) => {
   const navigate = useNavigate();
-  const { data: repo, isLoading, error } = useFileRepositoryDetailQuery(repoId);
-  const repoDisplayName = repo?.name ?? "Repository";
+  const { data: repo } = useSuspenseFileRepositoryDetailQuery(repoId);
+  const repoDisplayName = repo.name ?? "Repository";
   const deleteMutation = useFileRepositoryDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -65,8 +64,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   // no extra requests are made.
   const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId);
   const { data: distributionsData } = useDistributionsListQuery(
-    { repository: repo?.pulp_href, limit: 50 },
-    { enabled: !!repo?.pulp_href },
+    { repository: repo.pulp_href, limit: 50 },
+    { enabled: !!repo.pulp_href },
   );
   const versionCount = versionsData?.results?.length ?? 0;
   const distributionCount = distributionsData?.results?.length ?? 0;
@@ -78,7 +77,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const contentCount = contentData?.results?.length ?? 0;
 
   const handleDelete = async () => {
-    if (!repo?.pulp_href) return;
+    if (!repo.pulp_href) return;
     try {
       const result = await deleteMutation.mutateAsync(repo.pulp_href);
       if (result?.task) {
@@ -106,157 +105,135 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   return (
     <>
       <DocumentTitle title={repoDisplayName} />
-      <DetailQueryGate
-        isLoading={isLoading}
-        error={error}
-        hasData={!!repo}
-        loadingLabel="Loading repository"
-      >
-        {repo ? (
-          <>
-            <PageHeader
-              title={repoDisplayName}
-              breadcrumbs={
-                <Breadcrumb>
-                  <BreadcrumbItem>
-                    <Link to="/content-management/repositories">
-                      Repositories
-                    </Link>
-                  </BreadcrumbItem>
-                  <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
-                </Breadcrumb>
-              }
-              actionMenu={
-                <PageHeaderActionsMenu
-                  actions={[
-                    {
-                      key: "edit",
-                      dropdownItemProps: {
-                        children: "Edit",
-                        onClick: () => setIsEditOpen(true),
-                      },
-                    },
-                    descriptor?.supportsSync && {
-                      key: "sync",
-                      dropdownItemProps: {
-                        children: "Sync",
-                        onClick: () => setIsSyncOpen(true),
-                      },
-                    },
-                    descriptor?.supportsPublish && {
-                      key: "publish",
-                      dropdownItemProps: {
-                        children: "Publish",
-                        onClick: () => setIsPublishOpen(true),
-                      },
-                    },
-                    {
-                      key: "delete",
-                      dropdownItemProps: {
-                        children: "Delete",
-                        isDanger: true,
-                        onClick: () => setIsDeleteOpen(true),
-                      },
-                    },
-                  ]}
-                />
-              }
-            />
+      <PageHeader
+        title={repoDisplayName}
+        breadcrumbs={
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <Link to="/content-management/repositories">Repositories</Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
+          </Breadcrumb>
+        }
+        actionMenu={
+          <PageHeaderActionsMenu
+            actions={[
+              {
+                key: "edit",
+                dropdownItemProps: {
+                  children: "Edit",
+                  onClick: () => setIsEditOpen(true),
+                },
+              },
+              descriptor?.supportsSync && {
+                key: "sync",
+                dropdownItemProps: {
+                  children: "Sync",
+                  onClick: () => setIsSyncOpen(true),
+                },
+              },
+              descriptor?.supportsPublish && {
+                key: "publish",
+                dropdownItemProps: {
+                  children: "Publish",
+                  onClick: () => setIsPublishOpen(true),
+                },
+              },
+              {
+                key: "delete",
+                dropdownItemProps: {
+                  children: "Delete",
+                  isDanger: true,
+                  onClick: () => setIsDeleteOpen(true),
+                },
+              },
+            ]}
+          />
+        }
+      />
 
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <Tabs
-                    activeKey={activeTab}
-                    onSelect={(_e, tabKey) => setActiveTab(tabKey)}
-                  >
-                    <Tab
-                      eventKey="details"
-                      title={<TabTitleText>Details</TabTitleText>}
-                    >
-                      <TabContentBody hasPadding>
-                        <RepositoryDetailsTab
-                          repo={repo}
-                          descriptor={descriptor}
-                        />
-                      </TabContentBody>
-                    </Tab>
+      <PageSection>
+        <Stack hasGutter>
+          <StackItem>
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+            >
+              <Tab
+                eventKey="details"
+                title={<TabTitleText>Details</TabTitleText>}
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryDetailsTab repo={repo} descriptor={descriptor} />
+                </TabContentBody>
+              </Tab>
 
-                    <Tab
-                      eventKey="versions"
-                      title={
-                        <TabTitleText>Versions ({versionCount})</TabTitleText>
-                      }
-                    >
-                      <TabContentBody hasPadding>
-                        <RepositoryVersionsTab repoId={repoId} />
-                      </TabContentBody>
-                    </Tab>
+              <Tab
+                eventKey="versions"
+                title={<TabTitleText>Versions ({versionCount})</TabTitleText>}
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryVersionsTab repoId={repoId} />
+                </TabContentBody>
+              </Tab>
 
-                    <Tab
-                      eventKey="distributions"
-                      title={
-                        <TabTitleText>
-                          Distributions ({distributionCount})
-                        </TabTitleText>
-                      }
-                    >
-                      <TabContentBody hasPadding>
-                        <RepositoryDistributionsTab
-                          repoHref={repo.pulp_href ?? ""}
-                        />
-                      </TabContentBody>
-                    </Tab>
+              <Tab
+                eventKey="distributions"
+                title={
+                  <TabTitleText>
+                    Distributions ({distributionCount})
+                  </TabTitleText>
+                }
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryDistributionsTab repoHref={repo.pulp_href ?? ""} />
+                </TabContentBody>
+              </Tab>
 
-                    <Tab
-                      eventKey="content"
-                      title={
-                        <TabTitleText>Content ({contentCount})</TabTitleText>
-                      }
-                    >
-                      <TabContentBody hasPadding>
-                        <RepositoryContentTab
-                          repoId={repoId}
-                          repoHref={repo.pulp_href ?? ""}
-                          descriptor={descriptor}
-                        />
-                      </TabContentBody>
-                    </Tab>
-                  </Tabs>
-                </StackItem>
-              </Stack>
-            </PageSection>
+              <Tab
+                eventKey="content"
+                title={<TabTitleText>Content ({contentCount})</TabTitleText>}
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryContentTab
+                    repoId={repoId}
+                    repoHref={repo.pulp_href ?? ""}
+                    descriptor={descriptor}
+                  />
+                </TabContentBody>
+              </Tab>
+            </Tabs>
+          </StackItem>
+        </Stack>
+      </PageSection>
 
-            <RepositoryModal
-              isOpen={isEditOpen}
-              onClose={() => setIsEditOpen(false)}
-              repository={repo}
-            />
+      <RepositoryModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        repository={repo}
+      />
 
-            <SyncModal
-              isOpen={isSyncOpen}
-              onClose={() => setIsSyncOpen(false)}
-              repoHref={repo.pulp_href ?? ""}
-              remoteSuggestion={repo.remote ?? undefined}
-            />
+      <SyncModal
+        isOpen={isSyncOpen}
+        onClose={() => setIsSyncOpen(false)}
+        repoHref={repo.pulp_href ?? ""}
+        remoteSuggestion={repo.remote ?? undefined}
+      />
 
-            <PublishModal
-              isOpen={isPublishOpen}
-              onClose={() => setIsPublishOpen(false)}
-              repoHref={repo.pulp_href ?? ""}
-            />
+      <PublishModal
+        isOpen={isPublishOpen}
+        onClose={() => setIsPublishOpen(false)}
+        repoHref={repo.pulp_href ?? ""}
+      />
 
-            <ConfirmActionModal
-              isOpen={isDeleteOpen}
-              title="Delete Repository"
-              body={`Are you sure you want to delete repository "${repoDisplayName}"? This action cannot be undone.`}
-              isConfirming={deleteMutation.isPending}
-              onConfirm={() => void handleDelete()}
-              onCancel={() => setIsDeleteOpen(false)}
-            />
-          </>
-        ) : null}
-      </DetailQueryGate>
+      <ConfirmActionModal
+        isOpen={isDeleteOpen}
+        title="Delete Repository"
+        body={`Are you sure you want to delete repository "${repoDisplayName}"? This action cannot be undone.`}
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
     </>
   );
 };

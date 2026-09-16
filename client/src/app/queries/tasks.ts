@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -103,6 +104,10 @@ export const useTasksListQuery = (params: ITaskListParams = {}) => {
 
 export const useTaskDetailQuery = (taskId: string) => {
   return useQuery(taskDetailQueryOptions(buildTaskHref(taskId)));
+};
+
+export const useSuspenseTaskDetailQuery = (taskId: string) => {
+  return useSuspenseQuery(taskDetailQueryOptions(buildTaskHref(taskId)));
 };
 
 export const useTaskCancelMutation = () => {

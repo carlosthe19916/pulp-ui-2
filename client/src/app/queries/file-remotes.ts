@@ -3,6 +3,7 @@ import {
   useQuery,
   useQueryClient,
   queryOptions,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -36,6 +37,13 @@ export const fileRemoteDetailQueryOptions = (href: string) =>
 export const useFileRemoteDetailQuery = (remoteId: string) => {
   const domain = useApiDomain();
   return useQuery(
+    fileRemoteDetailQueryOptions(buildRemoteHref(remoteId, domain)),
+  );
+};
+
+export const useSuspenseFileRemoteDetailQuery = (remoteId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
     fileRemoteDetailQueryOptions(buildRemoteHref(remoteId, domain)),
   );
 };

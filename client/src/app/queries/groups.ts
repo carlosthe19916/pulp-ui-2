@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -109,6 +110,13 @@ export const useGroupsListQuery = (params: IGroupListParams = {}) => {
 export const useGroupDetailQuery = (groupId: string) => {
   const domain = useApiDomain();
   return useQuery(groupDetailQueryOptions(buildGroupHref(groupId, domain)));
+};
+
+export const useSuspenseGroupDetailQuery = (groupId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
+    groupDetailQueryOptions(buildGroupHref(groupId, domain)),
+  );
 };
 
 export const useGroupUsersListQuery = (groupId: string) => {

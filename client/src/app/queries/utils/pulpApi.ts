@@ -1,5 +1,7 @@
 import { normalizePulpApiRoot } from "@pulp-ui/common";
 
+import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
+import type { StatusResponse } from "@app/client";
 import ENV from "@app/env";
 
 /** Live API domain: whether pulpcore has DOMAIN_ENABLED, and the active slug. */
@@ -7,6 +9,17 @@ export interface IPulpDomain {
   enabled: boolean;
   name: string; // e.g. "default"
 }
+
+/**
+ * Derive the API domain config from a `/status` payload. Pure (no hooks), so it
+ * is safe to call from a router loader as well as from `useApiDomain`.
+ */
+export const apiDomainFromStatus = (
+  status: StatusResponse | undefined,
+): IPulpDomain => ({
+  enabled: status?.domain_enabled ?? false,
+  name: DEFAULT_PULP_DOMAIN,
+});
 
 /** Domain path segment: "/default" when enabled, "" when disabled. */
 const domainSegment = (domain: IPulpDomain): string =>

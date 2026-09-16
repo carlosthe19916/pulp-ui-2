@@ -17,7 +17,6 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
-import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -25,7 +24,7 @@ import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
 import {
   useFilePublicationDeleteMutation,
-  useFilePublicationDetailQuery,
+  useSuspenseFilePublicationDetailQuery,
 } from "@app/queries/file-publications";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
@@ -38,11 +37,7 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   pubId,
 }) => {
   const navigate = useNavigate();
-  const {
-    data: publication,
-    isLoading,
-    error,
-  } = useFilePublicationDetailQuery(pubId);
+  const { data: publication } = useSuspenseFilePublicationDetailQuery(pubId);
   const deleteMutation = useFilePublicationDeleteMutation();
   const { addNotification } = useNotifications();
 
@@ -75,90 +70,75 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
   return (
     <>
       <DocumentTitle title={`Publication · ${publicationLabel}`} />
-      <DetailQueryGate
-        isLoading={isLoading}
-        error={error}
-        hasData={!!publication}
-        loadingLabel="Loading publication"
-      >
-        {publication ? (
-          <>
-            <PageHeader
-              title={`Publication ${publicationLabel}`}
-              breadcrumbs={
-                <Breadcrumb>
-                  <BreadcrumbItem>
-                    <Link to="/content-management/publications">
-                      Publications
-                    </Link>
-                  </BreadcrumbItem>
-                  <BreadcrumbItem isActive>{publicationLabel}</BreadcrumbItem>
-                </Breadcrumb>
-              }
-              actionMenu={
-                <PageHeaderActionsMenu
-                  actions={[
-                    {
-                      key: "delete",
-                      dropdownItemProps: {
-                        children: "Delete",
-                        isDanger: true,
-                        onClick: () => setIsDeleteOpen(true),
-                      },
-                    },
-                  ]}
-                />
-              }
-            />
+      <PageHeader
+        title={`Publication ${publicationLabel}`}
+        breadcrumbs={
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <Link to="/content-management/publications">Publications</Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem isActive>{publicationLabel}</BreadcrumbItem>
+          </Breadcrumb>
+        }
+        actionMenu={
+          <PageHeaderActionsMenu
+            actions={[
+              {
+                key: "delete",
+                dropdownItemProps: {
+                  children: "Delete",
+                  isDanger: true,
+                  onClick: () => setIsDeleteOpen(true),
+                },
+              },
+            ]}
+          />
+        }
+      />
 
-            <PageSection>
-              <Stack hasGutter>
-                <StackItem>
-                  <DescriptionList isHorizontal>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Repository</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        <ResourceHrefLink
-                          kind="repository"
-                          href={publication.repository}
-                        />
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>
-                        Repository version
-                      </DescriptionListTerm>
-                      <DescriptionListDescription>
-                        {publication.repository_version || "—"}
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Created</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        {formatDateTime(publication.pulp_created) ?? "—"}
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                    <DescriptorDetailFields
-                      fields={descriptor?.detailFields}
-                      entity={publication}
-                      skipKeys={["repository", "repository_version"]}
-                    />
-                  </DescriptionList>
-                </StackItem>
-              </Stack>
-            </PageSection>
+      <PageSection>
+        <Stack hasGutter>
+          <StackItem>
+            <DescriptionList isHorizontal>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Repository</DescriptionListTerm>
+                <DescriptionListDescription>
+                  <ResourceHrefLink
+                    kind="repository"
+                    href={publication.repository}
+                  />
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Repository version</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {publication.repository_version || "—"}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Created</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {formatDateTime(publication.pulp_created) ?? "—"}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptorDetailFields
+                fields={descriptor?.detailFields}
+                entity={publication}
+                skipKeys={["repository", "repository_version"]}
+              />
+            </DescriptionList>
+          </StackItem>
+        </Stack>
+      </PageSection>
 
-            <ConfirmActionModal
-              isOpen={isDeleteOpen}
-              title="Delete Publication"
-              body="Are you sure you want to delete this publication? This action cannot be undone."
-              isConfirming={deleteMutation.isPending}
-              onConfirm={() => void handleDelete()}
-              onCancel={() => setIsDeleteOpen(false)}
-            />
-          </>
-        ) : null}
-      </DetailQueryGate>
+      <ConfirmActionModal
+        isOpen={isDeleteOpen}
+        title="Delete Publication"
+        body="Are you sure you want to delete this publication? This action cannot be undone."
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
     </>
   );
 };

@@ -25,12 +25,11 @@ import {
 
 import type { FileFileContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
-import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import {
-  useBrowseDistributionDetailQuery,
   useBrowseFileContentListQuery,
   useBrowsePublicationDetailQuery,
   useBrowseRepositoryDetailQuery,
+  useSuspenseBrowseDistributionDetailQuery,
 } from "@app/queries/browse";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -64,14 +63,11 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
       initialFilters: { relative_path: "" },
     });
 
-  const {
-    data: distribution,
-    isLoading: isDistLoading,
-    error: distError,
-  } = useBrowseDistributionDetailQuery(distributionId);
+  const { data: distribution } =
+    useSuspenseBrowseDistributionDetailQuery(distributionId);
 
-  const repoHref = distribution?.repository ?? "";
-  const publicationHref = distribution?.publication ?? "";
+  const repoHref = distribution.repository ?? "";
+  const publicationHref = distribution.publication ?? "";
 
   const { data: repository, isLoading: isRepoLoading } =
     useBrowseRepositoryDetailQuery(repoHref);
@@ -150,68 +146,54 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   });
 
   return (
-    <DetailQueryGate
-      isLoading={isDistLoading}
-      error={distError}
-      hasData={!!distribution}
-      loadingLabel="Loading distribution"
-    >
-      {distribution ? (
-        <>
-          <PageSection>
-            <Breadcrumb>
-              <BreadcrumbItem>
-                <Link to="/browse">Browse</Link>
-              </BreadcrumbItem>
-              <BreadcrumbItem isActive>{distribution.name}</BreadcrumbItem>
-            </Breadcrumb>
-          </PageSection>
+    <>
+      <PageSection>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <Link to="/browse">Browse</Link>
+          </BreadcrumbItem>
+          <BreadcrumbItem isActive>{distribution.name}</BreadcrumbItem>
+        </Breadcrumb>
+      </PageSection>
 
-          <PageSection>
-            <Content component={ContentVariants.h1}>
-              {distribution.name}
-            </Content>
+      <PageSection>
+        <Content component={ContentVariants.h1}>{distribution.name}</Content>
 
-            {!repositoryVersionHref && !isResolvingVersion ? (
-              <EmptyState titleText="No content available" headingLevel="h4">
-                <EmptyStateBody>
-                  This distribution is not linked to a repository version or
-                  publication with content yet.
-                </EmptyStateBody>
-              </EmptyState>
-            ) : (
-              <DataView activeState={activeState}>
-                <DataViewToolbar
-                  clearAllFilters={clearAllFilters}
-                  filters={
-                    <DataViewFilters
-                      onChange={(_key, newFilters) => onSetFilters(newFilters)}
-                      values={filters}
-                    >
-                      <DataViewTextFilter
-                        filterId="relative_path"
-                        title="Path"
-                      />
-                    </DataViewFilters>
-                  }
-                  pagination={pagination(PaginationVariant.top)}
-                />
+        {!repositoryVersionHref && !isResolvingVersion ? (
+          <EmptyState titleText="No content available" headingLevel="h4">
+            <EmptyStateBody>
+              This distribution is not linked to a repository version or
+              publication with content yet.
+            </EmptyStateBody>
+          </EmptyState>
+        ) : (
+          <DataView activeState={activeState}>
+            <DataViewToolbar
+              clearAllFilters={clearAllFilters}
+              filters={
+                <DataViewFilters
+                  onChange={(_key, newFilters) => onSetFilters(newFilters)}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="relative_path" title="Path" />
+                </DataViewFilters>
+              }
+              pagination={pagination(PaginationVariant.top)}
+            />
 
-                <DataViewTable
-                  aria-label="Content table"
-                  columns={columns}
-                  rows={rows}
-                  bodyStates={bodyStates}
-                />
+            <DataViewTable
+              aria-label="Content table"
+              columns={columns}
+              rows={rows}
+              bodyStates={bodyStates}
+            />
 
-                <DataViewToolbar
-                  pagination={pagination(PaginationVariant.bottom)}
-                />
-              </DataView>
-            )}
-          </PageSection>
-        </>
-      ) : null}
-    </DetailQueryGate>
+            <DataViewToolbar
+              pagination={pagination(PaginationVariant.bottom)}
+            />
+          </DataView>
+        )}
+      </PageSection>
+    </>
   );
 };

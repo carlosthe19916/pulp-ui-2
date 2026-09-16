@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
 import { useApiDomain } from "@app/hooks/useApiDomain";
 
@@ -43,6 +43,16 @@ export const useBrowseDistributionDetailQuery = (distId: string) => {
   });
 };
 
+export const useSuspenseBrowseDistributionDetailQuery = (distId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery({
+    ...fileDistributionDetailQueryOptions(
+      buildDistributionHref(distId, domain),
+    ),
+    staleTime: BROWSE_STALE_TIME,
+  });
+};
+
 export const useBrowseRepositoryDetailQuery = (href: string) => {
   return useQuery({
     ...fileRepositoryDetailQueryOptions(href),
@@ -73,6 +83,14 @@ export const useBrowseFileContentListQuery = (
 export const useBrowseContentDetailQuery = (contentId: string) => {
   const domain = useApiDomain();
   return useQuery({
+    ...fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+    staleTime: BROWSE_STALE_TIME,
+  });
+};
+
+export const useSuspenseBrowseContentDetailQuery = (contentId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery({
     ...fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
     staleTime: BROWSE_STALE_TIME,
   });

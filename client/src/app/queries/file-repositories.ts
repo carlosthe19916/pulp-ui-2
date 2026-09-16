@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -84,6 +85,13 @@ export const fileRepositoryVersionsListQueryOptions = (
 export const useFileRepositoryDetailQuery = (repoId: string) => {
   const domain = useApiDomain();
   return useQuery(
+    fileRepositoryDetailQueryOptions(buildRepositoryHref(repoId, domain)),
+  );
+};
+
+export const useSuspenseFileRepositoryDetailQuery = (repoId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
     fileRepositoryDetailQueryOptions(buildRepositoryHref(repoId, domain)),
   );
 };

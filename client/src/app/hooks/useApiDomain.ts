@@ -1,7 +1,7 @@
 import { use } from "react";
 
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { apiDomainFromStatus } from "@app/queries/utils/pulpApi";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 
 /**
@@ -14,10 +14,7 @@ import type { IPulpDomain } from "@app/queries/utils/pulpApi";
  */
 export const useApiDomain = (): IPulpDomain => {
   const apiStatus = use(ApiStatusContext);
-  return {
-    enabled: apiStatus?.status?.domain_enabled ?? false,
-    name: DEFAULT_PULP_DOMAIN,
-  };
+  return apiDomainFromStatus(apiStatus?.status);
 };
 
 export default useApiDomain;

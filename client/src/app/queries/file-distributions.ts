@@ -3,6 +3,7 @@ import {
   useQuery,
   useQueryClient,
   queryOptions,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -41,6 +42,13 @@ export const fileDistributionDetailQueryOptions = (href: string) =>
 export const useFileDistributionDetailQuery = (distId: string) => {
   const domain = useApiDomain();
   return useQuery(
+    fileDistributionDetailQueryOptions(buildDistributionHref(distId, domain)),
+  );
+};
+
+export const useSuspenseFileDistributionDetailQuery = (distId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
     fileDistributionDetailQueryOptions(buildDistributionHref(distId, domain)),
   );
 };

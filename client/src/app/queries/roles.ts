@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -79,6 +80,13 @@ export const useRolesListQuery = (params: IRoleListParams = {}) => {
 export const useRoleDetailQuery = (roleId: string) => {
   const domain = useApiDomain();
   return useQuery(roleDetailQueryOptions(buildRoleHref(roleId, domain)));
+};
+
+export const useSuspenseRoleDetailQuery = (roleId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
+    roleDetailQueryOptions(buildRoleHref(roleId, domain)),
+  );
 };
 
 export const useRoleCreateMutation = () => {

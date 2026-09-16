@@ -2,6 +2,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
   queryOptions,
 } from "@tanstack/react-query";
 
@@ -40,6 +41,13 @@ export const filePublicationDetailQueryOptions = (href: string) =>
 export const useFilePublicationDetailQuery = (pubId: string) => {
   const domain = useApiDomain();
   return useQuery(
+    filePublicationDetailQueryOptions(buildPublicationHref(pubId, domain)),
+  );
+};
+
+export const useSuspenseFilePublicationDetailQuery = (pubId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
     filePublicationDetailQueryOptions(buildPublicationHref(pubId, domain)),
   );
 };

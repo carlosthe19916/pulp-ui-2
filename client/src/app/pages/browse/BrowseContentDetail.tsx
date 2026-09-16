@@ -15,13 +15,12 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
-import { DetailQueryGate } from "@app/components/DetailQueryGate";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { getDescriptor } from "@app/descriptors/registry";
 import {
   useBrowseArtifactDetailQuery,
-  useBrowseContentDetailQuery,
   useBrowseDistributionDetailQuery,
+  useSuspenseBrowseContentDetailQuery,
 } from "@app/queries/browse";
 import { buildDistributionContentUrl } from "@app/queries/utils/pulpHref";
 
@@ -43,93 +42,75 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
 }) => {
   const descriptor = getDescriptor("content", "file.file");
 
-  const {
-    data: content,
-    isLoading: isContentLoading,
-    error: contentError,
-  } = useBrowseContentDetailQuery(contentId);
+  const { data: content } = useSuspenseBrowseContentDetailQuery(contentId);
 
   const { data: distribution } =
     useBrowseDistributionDetailQuery(distributionId);
   const { data: artifact } = useBrowseArtifactDetailQuery(
-    content?.artifact ?? "",
+    content.artifact ?? "",
   );
 
   const distributionName = distribution?.name ?? "Distribution";
   const downloadUrl =
-    distribution?.base_url && content?.relative_path
+    distribution?.base_url && content.relative_path
       ? buildDistributionContentUrl(
           distribution.base_url,
           content.relative_path,
         )
-      : (content?.artifact ?? undefined);
+      : (content.artifact ?? undefined);
 
   return (
-    <DetailQueryGate
-      isLoading={isContentLoading}
-      error={contentError}
-      hasData={!!content}
-      loadingLabel="Loading content"
-    >
-      {content ? (
-        <>
-          <PageHeader
-            title={content.relative_path}
-            breadcrumbs={
-              <Breadcrumb>
-                <BreadcrumbItem>
-                  <Link to="/browse">Browse</Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem>
-                  <Link
-                    to="/browse/$distributionId"
-                    params={{ distributionId }}
-                  >
-                    {distributionName}
-                  </Link>
-                </BreadcrumbItem>
-                <BreadcrumbItem isActive>
-                  {content.relative_path}
-                </BreadcrumbItem>
-              </Breadcrumb>
-            }
-            actionMenu={
-              <PageHeaderActionsMenu
-                actions={[
-                  !!downloadUrl && {
-                    key: "download",
-                    dropdownItemProps: {
-                      children: "Download",
-                      to: downloadUrl,
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    },
-                  },
-                ]}
-              />
-            }
+    <>
+      <PageHeader
+        title={content.relative_path}
+        breadcrumbs={
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <Link to="/browse">Browse</Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <Link to="/browse/$distributionId" params={{ distributionId }}>
+                {distributionName}
+              </Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem isActive>{content.relative_path}</BreadcrumbItem>
+          </Breadcrumb>
+        }
+        actionMenu={
+          <PageHeaderActionsMenu
+            actions={[
+              !!downloadUrl && {
+                key: "download",
+                dropdownItemProps: {
+                  children: "Download",
+                  to: downloadUrl,
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                },
+              },
+            ]}
           />
+        }
+      />
 
-          <PageSection>
-            <Stack hasGutter>
-              <StackItem>
-                <DescriptionList isHorizontal>
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Size</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {formatBytes(artifact?.size)}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                  <DescriptorDetailFields
-                    fields={descriptor?.browseDetailFields}
-                    entity={content}
-                  />
-                </DescriptionList>
-              </StackItem>
-            </Stack>
-          </PageSection>
-        </>
-      ) : null}
-    </DetailQueryGate>
+      <PageSection>
+        <Stack hasGutter>
+          <StackItem>
+            <DescriptionList isHorizontal>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Size</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {formatBytes(artifact?.size)}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptorDetailFields
+                fields={descriptor?.browseDetailFields}
+                entity={content}
+              />
+            </DescriptionList>
+          </StackItem>
+        </Stack>
+      </PageSection>
+    </>
   );
 };

@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -83,6 +84,13 @@ export const fileContentDetailQueryOptions = (href: string) =>
 export const useFileContentDetailQuery = (contentId: string) => {
   const domain = useApiDomain();
   return useQuery(
+    fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+  );
+};
+
+export const useSuspenseFileContentDetailQuery = (contentId: string) => {
+  const domain = useApiDomain();
+  return useSuspenseQuery(
     fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
   );
 };
