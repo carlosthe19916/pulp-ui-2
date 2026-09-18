@@ -25,6 +25,7 @@ import {
 
 import type { FileFileContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   useBrowseFileContentListQuery,
@@ -80,16 +81,19 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   const repositoryVersionHref =
     repository?.latest_version_href || publication?.repository_version || "";
 
-  const { data: contentData, isLoading: isContentLoading } =
-    useBrowseFileContentListQuery(
-      {
-        repository_version: repositoryVersionHref,
-        relative_path__icontains: debouncedRelativePath || undefined,
-        limit: perPage,
-        offset: (page - 1) * perPage,
-      },
-      { enabled: !!repositoryVersionHref },
-    );
+  const {
+    data: contentData,
+    isLoading: isContentLoading,
+    error: contentError,
+  } = useBrowseFileContentListQuery(
+    {
+      repository_version: repositoryVersionHref,
+      relative_path__icontains: debouncedRelativePath || undefined,
+      limit: perPage,
+      offset: (page - 1) * perPage,
+    },
+    { enabled: !!repositoryVersionHref },
+  );
 
   const contentUnits = (contentData?.results ?? []) as ContentRow[];
   const totalCount = contentData?.count ?? 0;
@@ -140,11 +144,18 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
   );
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isResolvingVersion || isContentLoading,
+    error: contentError,
     empty: contentUnits.length === 0,
-    emptyState: debouncedRelativePath
-      ? "No content matches the current filter."
-      : "No content in this distribution version.",
+    emptyState: (
+      <TableEmptyState
+        title="No content found"
+        body="There is no content in this distribution version."
+        isFiltered={Boolean(debouncedRelativePath)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   return (

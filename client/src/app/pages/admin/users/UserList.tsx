@@ -5,7 +5,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  EmptyState,
   Label,
   PageSection,
   Pagination,
@@ -31,6 +30,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useUsersListQuery } from "@app/queries/users";
@@ -108,8 +108,18 @@ export const UserList: React.FC = () => {
     "Active",
     "Groups",
     { cell: "Date Joined", props: { sort: sortProps("date_joined") } },
-    { cell: "", props: { screenReaderText: "Manage roles" } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Manage roles",
+      },
+    },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = users.map((user) => ({
@@ -159,10 +169,17 @@ export const UserList: React.FC = () => {
   }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: users.length === 0,
-    emptyState: <EmptyState titleText="No users found" headingLevel="h4" />,
+    emptyState: (
+      <TableEmptyState
+        title="No users found"
+        isFiltered={Boolean(debouncedUsername)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

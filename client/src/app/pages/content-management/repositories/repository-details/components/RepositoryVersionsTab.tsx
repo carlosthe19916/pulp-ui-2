@@ -7,6 +7,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useAllFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -17,8 +18,11 @@ interface IRepositoryVersionsTabProps {
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   repoId,
 }) => {
-  const { data: versionsData, isLoading: isVersionsLoading } =
-    useAllFileRepositoryVersionsListQuery(repoId);
+  const {
+    data: versionsData,
+    isLoading: isVersionsLoading,
+    error: versionsError,
+  } = useAllFileRepositoryVersionsListQuery(repoId);
 
   const versions = versionsData?.results ?? [];
 
@@ -46,9 +50,11 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   });
 
   const versionsStates = dataViewBodyStates({
+    columnCount: versionColumns.length,
     loading: isVersionsLoading,
+    error: versionsError,
     empty: versions.length === 0,
-    emptyState: "No versions found.",
+    emptyState: <TableEmptyState title="No versions found" />,
   });
 
   return (

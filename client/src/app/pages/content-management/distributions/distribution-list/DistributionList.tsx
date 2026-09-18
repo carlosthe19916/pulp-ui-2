@@ -30,6 +30,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -127,7 +128,12 @@ export const DistributionList: React.FC = () => {
     "Base Path",
     "Type",
     "Repository",
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
@@ -207,10 +213,17 @@ export const DistributionList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: distributions.length === 0,
-    emptyState: "No distributions found.",
+    emptyState: (
+      <TableEmptyState
+        title="No distributions found"
+        isFiltered={Boolean(debouncedName || debouncedPulpType)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

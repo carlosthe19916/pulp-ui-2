@@ -3,7 +3,6 @@ import { useMemo } from "react";
 
 import {
   Button,
-  EmptyState,
   Modal,
   ModalBody,
   ModalFooter,
@@ -30,6 +29,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
@@ -131,10 +131,18 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
   }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
+    hasSelectionColumn: true,
     loading: isLoading,
     error,
     empty: roles.length === 0,
-    emptyState: <EmptyState titleText="No roles found" headingLevel="h4" />,
+    emptyState: (
+      <TableEmptyState
+        title="No roles found"
+        isFiltered={Boolean(debouncedName)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

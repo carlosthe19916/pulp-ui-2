@@ -30,6 +30,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useGroupsListQuery } from "@app/queries/groups";
@@ -92,7 +93,12 @@ export const GroupList: React.FC = () => {
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = groups.map((group) => {
@@ -131,10 +137,17 @@ export const GroupList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: groups.length === 0,
-    emptyState: "No groups found.",
+    emptyState: (
+      <TableEmptyState
+        title="No groups found"
+        isFiltered={Boolean(debouncedName)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

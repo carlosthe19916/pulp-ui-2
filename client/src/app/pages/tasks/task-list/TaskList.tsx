@@ -36,6 +36,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { type TaskState, useTasksListQuery } from "@app/queries/tasks";
@@ -140,7 +141,12 @@ export const TaskList: React.FC = () => {
     { cell: "State", props: { sort: sortProps("state") } },
     { cell: "Started", props: { sort: sortProps("started_at") } },
     { cell: "Finished", props: { sort: sortProps("finished_at") } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = tasks.map((task) => {
@@ -193,10 +199,17 @@ export const TaskList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: tasks.length === 0,
-    emptyState: "No tasks found.",
+    emptyState: (
+      <TableEmptyState
+        title="No tasks found"
+        isFiltered={Boolean(debouncedName)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

@@ -1,12 +1,7 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 
-import {
-  Button,
-  EmptyState,
-  Pagination,
-  PaginationVariant,
-} from "@patternfly/react-core";
+import { Button, Pagination, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
@@ -23,6 +18,7 @@ import {
 import type { GroupResponse, GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import type { WithId } from "@app/models/models";
 import {
@@ -113,7 +109,12 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
 
   const userColumns = [
     { cell: "Username", props: { sort: sortProps("username") } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const userRows: DataViewTr[] = pagedUsers.map((user) => ({
@@ -158,13 +159,17 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
   };
 
   const groupUsersStates = dataViewBodyStates({
+    columnCount: userColumns.length,
     loading: isLoading,
     error,
     empty: totalCount === 0,
-    emptyState: filters.username.trim() ? (
-      <EmptyState titleText="No users match the filter" headingLevel="h4" />
-    ) : (
-      <EmptyState titleText="No users in this group" headingLevel="h4" />
+    emptyState: (
+      <TableEmptyState
+        title="No users in this group"
+        filteredTitle="No users match the filter"
+        isFiltered={Boolean(filters.username.trim())}
+        onClearFilters={clearAllFilters}
+      />
     ),
   });
 

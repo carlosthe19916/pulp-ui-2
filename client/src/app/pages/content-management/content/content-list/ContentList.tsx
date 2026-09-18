@@ -20,6 +20,7 @@ import {
 
 import type { MultipleArtifactContentResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
@@ -106,10 +107,11 @@ export const ContentList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: content.length === 0,
-    emptyState: "No content found.",
+    emptyState: <TableEmptyState title="No content found" />,
   });
 
   const pagination = (variant: PaginationVariant) => (

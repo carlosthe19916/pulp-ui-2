@@ -132,6 +132,23 @@ param/response types (e.g. `UsersListData["query"]` lists every supported query
 param). Prefer server-side
 `limit`/`offset`/`ordering`/filters over fetching everything and processing in memory.
 
+### PatternFly CSS class names
+
+Never hardcode PatternFly class strings (`pf-v6-c-*`, `pf-m-*`, `pf-u-*`,
+`pf-l-*`). Import the typed constants from `@patternfly/react-styles` (a direct
+dependency) so a typo fails `tsc` instead of silently breaking layout. Combine
+several with the `css()` helper.
+
+```tsx
+import { css } from "@patternfly/react-styles";
+import checkStyles from "@patternfly/react-styles/css/components/Check/check";
+import tableStyles from "@patternfly/react-styles/css/components/Table/table";
+
+<Td className={tableStyles.tableCheck}>
+  <div className={css(checkStyles.check, checkStyles.modifiers.standalone)} />
+</Td>;
+```
+
 ## Development
 
 ### `npm run start:dev` (development mode)

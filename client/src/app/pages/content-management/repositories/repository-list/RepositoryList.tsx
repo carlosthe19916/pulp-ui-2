@@ -30,6 +30,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -134,7 +135,12 @@ export const RepositoryList: React.FC = () => {
     { cell: "Description", props: { sort: sortProps("description") } },
     "Type",
     "Remote",
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = repositories.map((repository) => {
@@ -211,10 +217,17 @@ export const RepositoryList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: repositories.length === 0,
-    emptyState: "No repositories found.",
+    emptyState: (
+      <TableEmptyState
+        title="No repositories found"
+        isFiltered={Boolean(debouncedName || debouncedPulpType)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

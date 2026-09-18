@@ -20,6 +20,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDistributionsListQuery } from "@app/queries/distributions";
@@ -118,10 +119,18 @@ export const RepositoryDistributionsTab: React.FC<
   });
 
   const repoDistributionsStates = dataViewBodyStates({
+    columnCount: distributionColumns.length,
     loading: isLoading,
     error,
     empty: distributions.length === 0,
-    emptyState: "No distributions point at this repository.",
+    emptyState: (
+      <TableEmptyState
+        title="No distributions found"
+        body="No distributions point at this repository."
+        isFiltered={Boolean(debouncedName)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

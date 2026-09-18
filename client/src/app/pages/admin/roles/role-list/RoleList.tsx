@@ -31,6 +31,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRolesListQuery } from "@app/queries/roles";
@@ -122,7 +123,12 @@ export const RoleList: React.FC = () => {
     "Description",
     "Permissions",
     { cell: "Locked", props: { sort: sortProps("locked") } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = roles.map((role) => {
@@ -188,10 +194,17 @@ export const RoleList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: roles.length === 0,
-    emptyState: "No roles found.",
+    emptyState: (
+      <TableEmptyState
+        title="No roles found"
+        isFiltered={Boolean(debouncedName || debouncedPlugin)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

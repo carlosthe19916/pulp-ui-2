@@ -3,7 +3,6 @@ import { useMemo } from "react";
 
 import {
   Button,
-  EmptyState,
   Modal,
   ModalBody,
   ModalFooter,
@@ -30,6 +29,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
@@ -131,10 +131,18 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
+    hasSelectionColumn: true,
     loading: isLoading,
     error,
     empty: users.length === 0,
-    emptyState: <EmptyState titleText="No users found" headingLevel="h4" />,
+    emptyState: (
+      <TableEmptyState
+        title="No users found"
+        isFiltered={Boolean(debouncedUsername)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

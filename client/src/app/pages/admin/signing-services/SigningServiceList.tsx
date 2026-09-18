@@ -3,8 +3,6 @@ import type React from "react";
 import {
   Content,
   ContentVariants,
-  EmptyState,
-  EmptyStateBody,
   PageSection,
   Pagination,
   PaginationVariant,
@@ -26,6 +24,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
@@ -96,17 +95,19 @@ export const SigningServiceList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: services.length === 0,
     emptyState: (
-      <EmptyState titleText="No signing services found" headingLevel="h4">
-        <EmptyStateBody>
-          {debouncedName
-            ? "No signing services match the current filter. Try a different search term."
-            : "Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."}
-        </EmptyStateBody>
-      </EmptyState>
+      <TableEmptyState
+        title="No signing services found"
+        body="Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."
+        filteredTitle="No signing services found"
+        filteredBody="No signing services match the current filter. Try a different search term."
+        isFiltered={Boolean(debouncedName)}
+        onClearFilters={clearAllFilters}
+      />
     ),
   });
 

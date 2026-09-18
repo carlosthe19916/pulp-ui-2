@@ -30,6 +30,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -118,7 +119,12 @@ export const RemoteList: React.FC = () => {
     { cell: "URL", props: { sort: sortProps("url") } },
     { cell: "Policy", props: { sort: sortProps("policy") } },
     "Type",
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = remotes.map((remote) => {
@@ -179,10 +185,17 @@ export const RemoteList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: remotes.length === 0,
-    emptyState: "No remotes found.",
+    emptyState: (
+      <TableEmptyState
+        title="No remotes found"
+        isFiltered={Boolean(debouncedName || debouncedPulpType)}
+        onClearFilters={clearAllFilters}
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

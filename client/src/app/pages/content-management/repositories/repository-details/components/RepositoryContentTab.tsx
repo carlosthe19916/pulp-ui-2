@@ -24,6 +24,7 @@ import type {
   MultipleArtifactContentResponse,
 } from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadModal } from "@app/components/UploadModal";
 import type { getDescriptor } from "@app/descriptors/registry";
 import type { WithId } from "@app/models/models";
@@ -56,15 +57,18 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
   });
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
 
-  const { data: contentData, isLoading: isContentLoading } =
-    useContentListQuery(
-      {
-        repository_version: latestVersionHref,
-        limit: perPage,
-        offset: (page - 1) * perPage,
-      },
-      { enabled: !!latestVersionHref },
-    );
+  const {
+    data: contentData,
+    isLoading: isContentLoading,
+    error: contentError,
+  } = useContentListQuery(
+    {
+      repository_version: latestVersionHref,
+      limit: perPage,
+      offset: (page - 1) * perPage,
+    },
+    { enabled: !!latestVersionHref },
+  );
 
   const contentUnits = (contentData?.results ?? []) as ContentRow[];
   const totalCount = contentData?.count ?? 0;
@@ -100,9 +104,16 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
   });
 
   const repoContentStates = dataViewBodyStates({
+    columnCount: contentColumns.length,
     loading: isContentLoading,
+    error: contentError,
     empty: contentUnits.length === 0,
-    emptyState: "No content in the latest version.",
+    emptyState: (
+      <TableEmptyState
+        title="No content found"
+        body="There is no content in the latest version."
+      />
+    ),
   });
 
   const pagination = (variant: PaginationVariant) => (

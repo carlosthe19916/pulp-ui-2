@@ -2,12 +2,7 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 
-import {
-  Button,
-  EmptyState,
-  Pagination,
-  PaginationVariant,
-} from "@patternfly/react-core";
+import { Button, Pagination, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
@@ -24,6 +19,7 @@ import {
 import type { GroupResponse, GroupRoleResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import type { WithId } from "@app/models/models";
 import {
@@ -137,7 +133,12 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     { cell: "Role", props: { sort: sortProps("role") } },
     "Description",
     "Permissions",
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const roleRows: DataViewTr[] = pagedRoles.map((role) => {
@@ -202,15 +203,16 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   };
 
   const groupRolesStates = dataViewBodyStates({
+    columnCount: roleColumns.length,
     loading: isLoading,
     error,
     empty: totalCount === 0,
-    emptyState: filters.role.trim() ? (
-      <EmptyState titleText="No roles match the filter" headingLevel="h4" />
-    ) : (
-      <EmptyState
-        titleText="No roles assigned to this group"
-        headingLevel="h4"
+    emptyState: (
+      <TableEmptyState
+        title="No roles assigned to this group"
+        filteredTitle="No roles match the filter"
+        isFiltered={Boolean(filters.role.trim())}
+        onClearFilters={clearAllFilters}
       />
     ),
   });

@@ -27,6 +27,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
@@ -117,7 +118,12 @@ export const PublicationList: React.FC = () => {
     "Type",
     "Repository Version",
     { cell: "Created", props: { sort: sortProps("pulp_created") } },
-    { cell: "", props: { screenReaderText: "Actions" } },
+    {
+      cell: "",
+      props: {
+        screenReaderText: "Actions",
+      },
+    },
   ];
 
   const rows: DataViewTr[] = publications.map((pub) => {
@@ -181,10 +187,11 @@ export const PublicationList: React.FC = () => {
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
     loading: isLoading,
     error,
     empty: publications.length === 0,
-    emptyState: "No publications found.",
+    emptyState: <TableEmptyState title="No publications found" />,
   });
 
   const pagination = (variant: PaginationVariant) => (
