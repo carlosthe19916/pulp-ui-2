@@ -72,6 +72,7 @@ const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
       />
       <ModalBody>
         <Form
+          id="distribution-form"
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
@@ -97,7 +98,8 @@ const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={onSubmit}
+          type="submit"
+          form="distribution-form"
           isLoading={isSubmitting}
           isDisabled={isSubmitting}
         >

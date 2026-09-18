@@ -15,12 +15,14 @@ interface IRoleFormProps {
   form: UseFormReturn<RoleFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
+  formId: string;
 }
 
 export const RoleForm: React.FC<IRoleFormProps> = ({
   form,
   isCreate,
   onSubmit,
+  formId,
 }) => {
   const { control, watch } = form;
   const { data: rolesData } = useAllRolesListQuery();
@@ -37,6 +39,7 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
 
   return (
     <Form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();

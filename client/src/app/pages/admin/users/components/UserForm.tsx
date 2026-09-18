@@ -14,17 +14,20 @@ interface IUserFormProps {
   form: UseFormReturn<UserFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
+  formId: string;
 }
 
 export const UserForm: React.FC<IUserFormProps> = ({
   form,
   isCreate,
   onSubmit,
+  formId,
 }) => {
   const { control } = form;
 
   return (
     <Form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();

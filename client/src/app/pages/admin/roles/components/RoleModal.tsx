@@ -31,12 +31,18 @@ const RoleModalInner: React.FC<IRoleModalInnerProps> = ({ role, onClose }) => {
         title={isCreate ? "Create Role" : `Edit Role: ${role?.name}`}
       />
       <ModalBody>
-        <RoleForm form={form} isCreate={isCreate} onSubmit={onSubmit} />
+        <RoleForm
+          form={form}
+          isCreate={isCreate}
+          onSubmit={onSubmit}
+          formId="role-form"
+        />
       </ModalBody>
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={onSubmit}
+          type="submit"
+          form="role-form"
           isLoading={isSubmitting}
           isDisabled={isSubmitting}
         >

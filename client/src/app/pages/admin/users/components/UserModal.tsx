@@ -31,12 +31,18 @@ const UserModalInner: React.FC<IUserModalInnerProps> = ({ user, onClose }) => {
         title={isCreate ? "Create User" : `Edit ${user?.username}`}
       />
       <ModalBody>
-        <UserForm form={form} isCreate={isCreate} onSubmit={onSubmit} />
+        <UserForm
+          form={form}
+          isCreate={isCreate}
+          onSubmit={onSubmit}
+          formId="user-form"
+        />
       </ModalBody>
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={onSubmit}
+          type="submit"
+          form="user-form"
           isLoading={isSubmitting}
           isDisabled={isSubmitting}
         >

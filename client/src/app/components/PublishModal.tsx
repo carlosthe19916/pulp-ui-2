@@ -131,6 +131,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       <ModalHeader title="Create Publication" />
       <ModalBody>
         <Form
+          id="publish-form"
           onSubmit={(e) => {
             e.preventDefault();
             void onSubmit();
@@ -168,7 +169,8 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={() => void onSubmit()}
+          type="submit"
+          form="publish-form"
           isLoading={isSubmitting || createMutation.isPending}
           isDisabled={!repository && !repositoryVersion}
         >

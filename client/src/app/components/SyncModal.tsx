@@ -127,6 +127,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
       <ModalHeader title="Sync Repository" />
       <ModalBody>
         <Form
+          id="sync-form"
           onSubmit={(e) => {
             e.preventDefault();
             void onSubmit();
@@ -163,7 +164,8 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={() => void onSubmit()}
+          type="submit"
+          form="sync-form"
           isLoading={isSubmitting || syncMutation.isPending}
           isDisabled={isSubmitting || syncMutation.isPending}
         >

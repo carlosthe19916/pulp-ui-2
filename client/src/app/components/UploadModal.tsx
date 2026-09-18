@@ -158,6 +158,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
       <ModalHeader title="Upload Content" />
       <ModalBody>
         <Form
+          id="upload-form"
           onSubmit={(e) => {
             e.preventDefault();
             void onSubmit();
@@ -219,7 +220,8 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={() => void onSubmit()}
+          type="submit"
+          form="upload-form"
           isLoading={isSubmitting || createMutation.isPending}
           isDisabled={!file || !relativePath}
         >

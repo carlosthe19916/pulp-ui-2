@@ -36,6 +36,7 @@ const RemoteModalInner: React.FC<IRemoteModalInnerProps> = ({
       />
       <ModalBody>
         <Form
+          id="remote-form"
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
@@ -51,7 +52,8 @@ const RemoteModalInner: React.FC<IRemoteModalInnerProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={onSubmit}
+          type="submit"
+          form="remote-form"
           isLoading={isSubmitting}
           isDisabled={isSubmitting}
         >

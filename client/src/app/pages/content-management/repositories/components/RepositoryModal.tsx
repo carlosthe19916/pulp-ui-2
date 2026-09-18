@@ -62,6 +62,7 @@ const RepositoryModalInner: React.FC<IRepositoryModalInnerProps> = ({
       />
       <ModalBody>
         <Form
+          id="repository-form"
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
@@ -84,7 +85,8 @@ const RepositoryModalInner: React.FC<IRepositoryModalInnerProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={onSubmit}
+          type="submit"
+          form="repository-form"
           isLoading={isSubmitting}
           isDisabled={isSubmitting}
         >

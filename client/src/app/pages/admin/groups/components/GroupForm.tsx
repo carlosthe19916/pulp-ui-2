@@ -10,13 +10,19 @@ import type { GroupFormValues } from "../hooks/useGroupForm";
 interface IGroupFormProps {
   form: UseFormReturn<GroupFormValues>;
   onSubmit: () => void;
+  formId: string;
 }
 
-export const GroupForm: React.FC<IGroupFormProps> = ({ form, onSubmit }) => {
+export const GroupForm: React.FC<IGroupFormProps> = ({
+  form,
+  onSubmit,
+  formId,
+}) => {
   const { control } = form;
 
   return (
     <Form
+      id={formId}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit();
