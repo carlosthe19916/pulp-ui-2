@@ -26,7 +26,7 @@ interface IDataViewStatesArgs<TError = unknown> {
   emptyState?: React.ReactNode;
 }
 
-export const dataViewBodyStates = <TError = unknown,>({
+export function dataViewBodyStates<TError = unknown>({
   columnCount,
   hasSelectionColumn,
   hasExpansionColumn,
@@ -40,7 +40,7 @@ export const dataViewBodyStates = <TError = unknown,>({
 }: IDataViewStatesArgs<TError>): {
   activeState: DataViewState | undefined;
   bodyStates: Partial<Record<DataViewState, React.ReactNode>>;
-} => {
+} {
   const activeState = isLoading
     ? DataViewState.loading
     : error != null
@@ -99,4 +99,4 @@ export const dataViewBodyStates = <TError = unknown,>({
   };
 
   return { activeState, bodyStates };
-};
+}
