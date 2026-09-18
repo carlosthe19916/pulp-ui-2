@@ -439,6 +439,52 @@ export const useGroupRoleCreateMutation = () => {
   });
 };
 
+/** Result of a batch role add: role names grouped by outcome. */
+export interface IGroupRolesBatchResult {
+  succeeded: string[];
+  failed: string[];
+}
+
+/** Adds multiple roles to a group via parallel POSTs and invalidates once. */
+export const useGroupRolesBatchCreateMutation = () => {
+  const queryClient = useQueryClient();
+  const domain = useApiDomain();
+  return useMutation({
+    mutationFn: async ({
+      groupId,
+      roleNames,
+    }: {
+      groupId: string;
+      roleNames: string[];
+    }): Promise<IGroupRolesBatchResult> => {
+      const rolesUrl = `${toProxyHref(buildGroupHref(groupId, domain))}roles/`;
+      const results = await Promise.allSettled(
+        roleNames.map((role) =>
+          axiosInstance.post<GroupRoleResponse>(rolesUrl, {
+            role,
+            content_object: null,
+          } satisfies GroupRole),
+        ),
+      );
+      const succeeded: string[] = [];
+      const failed: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          succeeded.push(roleNames[index]);
+        } else {
+          failed.push(roleNames[index]);
+        }
+      });
+      return { succeeded, failed };
+    },
+    onSuccess: (_data, { groupId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: groupKeys.roles(buildGroupHref(groupId, domain)),
+      });
+    },
+  });
+};
+
 export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
   const domain = useApiDomain();

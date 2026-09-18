@@ -1,53 +1,49 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 
 import {
   Button,
-  Form,
-  FormGroup,
-  FormHelperText,
-  HelperText,
-  HelperTextItem,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Stack,
-  StackItem,
-  TextInput,
+  EmptyState,
+  Pagination,
+  PaginationVariant,
 } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
+  DataViewFilters,
   DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
   type DataViewTr,
+  useDataViewFilters,
+  useDataViewPagination,
+  useDataViewSort,
 } from "@patternfly/react-data-view";
 
 import type { GroupResponse, GroupRoleResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates } from "@app/components/DataView";
-import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
 import type { WithId } from "@app/models/models";
-import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   useAllGroupRolesListQuery,
-  useGroupRoleCreateMutation,
   useGroupRoleDeleteMutation,
 } from "@app/queries/groups";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-const addRoleSchema = yup.object({
-  role: yup.string().required("Role is required"),
-  content_object: yup.string(),
-});
+import { AddGroupRoleModal } from "./AddGroupRoleModal";
 
-type AddRoleFormValues = yup.InferType<typeof addRoleSchema>;
+// The group-roles API only supports limit/offset — no server-side ordering or
+// filtering — so all assignments are fetched and then paginated/sorted/filtered
+// in memory.
+const COLUMN_KEYS = ["role", "actions"] as const;
+type RoleColumnKey = (typeof COLUMN_KEYS)[number];
+
+interface IGroupRolesFilters {
+  role: string;
+}
 
 interface IGroupRolesTabProps {
   group: WithId<GroupResponse>;
@@ -56,44 +52,39 @@ interface IGroupRolesTabProps {
 export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   const { addNotification } = useNotifications();
 
-  const { data: rolesData } = useAllGroupRolesListQuery(group.id);
+  const {
+    data: rolesData,
+    isLoading,
+    error,
+  } = useAllGroupRolesListQuery(group.id);
 
-  const roleCreateMutation = useGroupRoleCreateMutation();
   const roleDeleteMutation = useGroupRoleDeleteMutation();
 
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [removeRoleTarget, setRemoveRoleTarget] =
     useState<GroupRoleResponse | null>(null);
 
-  const addRoleForm = useForm<AddRoleFormValues>({
-    resolver: yupResolver(addRoleSchema),
-    defaultValues: { role: "", content_object: "" },
+  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
+    perPage: 10,
   });
-
-  const roles = rolesData?.results ?? [];
-
-  const [roleSearch, setRoleSearch] = useState("");
-  const debouncedRoleSearch = useDebouncedValue(roleSearch);
-  const { data: pickerRolesData, isLoading: isPickerRolesLoading } =
-    useRolesListQuery({
-      limit: 20,
-      name__icontains: debouncedRoleSearch || undefined,
+  const { sortBy, direction, onSort } = useDataViewSort({
+    initialSort: { sortBy: "role", direction: "asc" },
+  });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IGroupRolesFilters>({
+      initialFilters: { role: "" },
     });
 
-  const roleOptions = useMemo(
-    () =>
-      (pickerRolesData?.results ?? []).map((role) => ({
-        value: role.name,
-        label: role.name,
-      })),
-    [pickerRolesData?.results],
+  const allRoles = useMemo(
+    () => rolesData?.results ?? [],
+    [rolesData?.results],
   );
 
   // Resolve role name → id only for the assigned roles shown in the table, so
   // the links don't require fetching every role in the system.
   const assignedRoleNames = useMemo(
-    () => (rolesData?.results ?? []).map((role) => role.role),
-    [rolesData?.results],
+    () => allRoles.map((role) => role.role),
+    [allRoles],
   );
   const { data: linkRolesData } = useRolesListQuery(
     assignedRoleNames.length
@@ -111,14 +102,45 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     return map;
   }, [linkRolesData?.results]);
 
+  const filteredSortedRoles = useMemo(() => {
+    const query = filters.role.trim().toLowerCase();
+    const filtered = query
+      ? allRoles.filter((role) => role.role.toLowerCase().includes(query))
+      : allRoles;
+
+    if (sortBy !== "role") return filtered;
+
+    const dir = direction === "desc" ? -1 : 1;
+    return [...filtered].sort((a, b) => a.role.localeCompare(b.role) * dir);
+  }, [allRoles, filters.role, sortBy, direction]);
+
+  const totalCount = filteredSortedRoles.length;
+
+  const pagedRoles = useMemo(() => {
+    const start = (page - 1) * perPage;
+    return filteredSortedRoles.slice(start, start + perPage);
+  }, [filteredSortedRoles, page, perPage]);
+
+  const sortProps = (columnKey: RoleColumnKey) =>
+    buildThSort({
+      columnKeys: COLUMN_KEYS,
+      columnKey,
+      sortBy,
+      direction,
+      onSort: (event, sortedKey, newDirection) => {
+        onSort(event, sortedKey, newDirection);
+        onSetPage(undefined, 1);
+      },
+    });
+
   const roleColumns = [
-    "Role",
+    { cell: "Role", props: { sort: sortProps("role") } },
     "Description",
     "Permissions",
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const roleRows: DataViewTr[] = roles.map((role) => {
+  const roleRows: DataViewTr[] = pagedRoles.map((role) => {
     const roleId = roleNameToId.get(role.role);
     return {
       id: role.pulp_href,
@@ -159,29 +181,6 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     };
   });
 
-  const onAddRole = addRoleForm.handleSubmit(async (values) => {
-    try {
-      await roleCreateMutation.mutateAsync({
-        groupId: group.id,
-        body: {
-          role: values.role,
-          content_object: values.content_object || null,
-        },
-      });
-      addNotification({
-        title: `Role "${values.role}" assigned to group "${group.object.name}"`,
-        variant: "success",
-      });
-      addRoleForm.reset();
-      setIsAddRoleOpen(false);
-    } catch {
-      addNotification({
-        title: "Failed to assign role to group",
-        variant: "danger",
-      });
-    }
-  });
-
   const handleRemoveRole = async () => {
     if (!removeRoleTarget?.pulp_href) return;
     try {
@@ -203,107 +202,68 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   };
 
   const groupRolesStates = dataViewBodyStates({
-    empty: roles.length === 0,
-    emptyState: "No roles assigned to this group.",
+    loading: isLoading,
+    error,
+    empty: totalCount === 0,
+    emptyState: filters.role.trim() ? (
+      <EmptyState titleText="No roles match the filter" headingLevel="h4" />
+    ) : (
+      <EmptyState
+        titleText="No roles assigned to this group"
+        headingLevel="h4"
+      />
+    ),
   });
+
+  const pagination = (variant: PaginationVariant) => (
+    <Pagination
+      variant={variant}
+      itemCount={totalCount}
+      page={page}
+      perPage={perPage}
+      onSetPage={onSetPage}
+      onPerPageSelect={onPerPageSelect}
+    />
+  );
 
   return (
     <>
-      <Stack hasGutter>
-        <StackItem>
-          <Button variant="primary" onClick={() => setIsAddRoleOpen(true)}>
-            Add Role
-          </Button>
-        </StackItem>
-        <StackItem>
-          <DataView activeState={groupRolesStates.activeState}>
-            <DataViewTable
-              aria-label="Group roles table"
-              columns={roleColumns}
-              rows={roleRows}
-              bodyStates={groupRolesStates.bodyStates}
-            />
-          </DataView>
-        </StackItem>
-      </Stack>
+      <DataView activeState={groupRolesStates.activeState}>
+        <DataViewToolbar
+          clearAllFilters={clearAllFilters}
+          filters={
+            <DataViewFilters
+              onChange={(_key, newFilters) => {
+                onSetFilters(newFilters);
+                onSetPage(undefined, 1);
+              }}
+              values={filters}
+            >
+              <DataViewTextFilter filterId="role" title="Role" />
+            </DataViewFilters>
+          }
+          actions={
+            <Button variant="primary" onClick={() => setIsAddRoleOpen(true)}>
+              Add Role
+            </Button>
+          }
+          pagination={pagination(PaginationVariant.top)}
+        />
+        <DataViewTable
+          aria-label="Group roles table"
+          columns={roleColumns}
+          rows={roleRows}
+          bodyStates={groupRolesStates.bodyStates}
+        />
+        <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+      </DataView>
 
-      <Modal
+      <AddGroupRoleModal
         isOpen={isAddRoleOpen}
-        onClose={() => {
-          addRoleForm.reset();
-          setIsAddRoleOpen(false);
-        }}
-        variant="small"
-      >
-        <ModalHeader title="Assign Role to Group" />
-        <ModalBody>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void onAddRole();
-            }}
-          >
-            <FormGroup label="Role" isRequired fieldId="add-role-name">
-              <TypeaheadSelect
-                id="add-role-name"
-                ariaLabel="Role"
-                placeholder="Select a role"
-                options={roleOptions}
-                value={addRoleForm.watch("role")}
-                isLoading={isPickerRolesLoading}
-                onFilterChange={setRoleSearch}
-                onChange={(value) =>
-                  addRoleForm.setValue("role", value, {
-                    shouldValidate: true,
-                  })
-                }
-              />
-              {addRoleForm.formState.errors.role && (
-                <FormHelperText>
-                  <HelperText>
-                    <HelperTextItem variant="error">
-                      {addRoleForm.formState.errors.role.message}
-                    </HelperTextItem>
-                  </HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-            <FormGroup label="Content Object" fieldId="add-role-content-object">
-              <TextInput
-                id="add-role-content-object"
-                value={addRoleForm.watch("content_object")}
-                onChange={(_e, value) =>
-                  addRoleForm.setValue("content_object", value)
-                }
-                placeholder="Optional pulp_href"
-              />
-            </FormGroup>
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            variant="primary"
-            onClick={() => void onAddRole()}
-            isDisabled={
-              addRoleForm.formState.isSubmitting || roleCreateMutation.isPending
-            }
-            isLoading={
-              addRoleForm.formState.isSubmitting || roleCreateMutation.isPending
-            }
-          >
-            Assign
-          </Button>
-          <Button
-            variant="link"
-            onClick={() => {
-              addRoleForm.reset();
-              setIsAddRoleOpen(false);
-            }}
-          >
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
+        group={group}
+        existingRoleNames={allRoles.map((r) => r.role)}
+        onClose={() => setIsAddRoleOpen(false)}
+      />
 
       <ConfirmActionModal
         isOpen={!!removeRoleTarget}
