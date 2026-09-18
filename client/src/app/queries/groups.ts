@@ -42,12 +42,54 @@ export const groupsRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. Every identifying segment
+ * (root → list/detail → href → sub-collection) precedes the fetch variant
+ * (`"all"`) and params, so a prefix invalidates all variants of a collection.
+ * Shared by the query options and the mutations below to prevent key drift.
+ */
+export const groupKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["groups"]
+  all: () => [GroupsQueryKey] as const,
+  // ["groups", "list"] — every list query, any domain/params
+  list: () => [...groupKeys.all(), "list"] as const,
+  // ["groups", "detail", groupHref] — one group and its whole subtree
+  detail: (groupHref: string) =>
+    [...groupKeys.all(), "detail", groupHref] as const,
+  // ["groups", "detail", groupHref, "users"] — a group's user queries
+  users: (groupHref: string) =>
+    [...groupKeys.detail(groupHref), "users"] as const,
+  // ["groups", "detail", groupHref, "roles"] — a group's role queries
+  roles: (groupHref: string) =>
+    [...groupKeys.detail(groupHref), "roles"] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["groups", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IGroupListParams) =>
+    [...groupKeys.list(), domain, params] as const,
+  // ["groups", "detail", groupHref] — same value as detail() (no params)
+  detailQuery: (groupHref: string) => groupKeys.detail(groupHref),
+  // ["groups", "detail", groupHref, "users", params]
+  usersQuery: (groupHref: string, params: IGroupUserListParams) =>
+    [...groupKeys.users(groupHref), params] as const,
+  // ["groups", "detail", groupHref, "users", "all"]
+  usersAllQuery: (groupHref: string) =>
+    [...groupKeys.users(groupHref), "all"] as const,
+  // ["groups", "detail", groupHref, "roles", params]
+  rolesQuery: (groupHref: string, params: IGroupRoleListParams) =>
+    [...groupKeys.roles(groupHref), params] as const,
+  // ["groups", "detail", groupHref, "roles", "all"]
+  rolesAllQuery: (groupHref: string) =>
+    [...groupKeys.roles(groupHref), "all"] as const,
+};
+
 export const groupsListQueryOptions = (
   domain: IPulpDomain,
   params: IGroupListParams,
 ) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "list", domain, params],
+    queryKey: groupKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupResponseList>(
         pulpApiPath("groups/", domain),
@@ -64,7 +106,7 @@ export const groupsListQueryOptions = (
 
 export const groupDetailQueryOptions = (groupHref: string) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "detail", groupHref],
+    queryKey: groupKeys.detailQuery(groupHref),
     queryFn: async (): Promise<GroupResponse> => {
       const response = await axiosInstance.get<GroupResponse>(
         toProxyHref(groupHref),
@@ -82,7 +124,7 @@ export const groupUsersListQueryOptions = (
   params: IGroupUserListParams,
 ) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "users", groupHref, params],
+    queryKey: groupKeys.usersQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
         `${toProxyHref(groupHref)}users/`,
@@ -101,7 +143,7 @@ export const groupUsersListQueryOptions = (
 /** `groups_users_list` supports only limit/offset, so fetch all and sort/filter in memory. */
 export const allGroupUsersListQueryOptions = (groupHref: string) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "users", "all", groupHref],
+    queryKey: groupKeys.usersAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const { results, count } = await fetchAllPages<GroupUserResponse>(
         async (offset, limit) => {
@@ -121,7 +163,7 @@ export const allGroupUsersListQueryOptions = (groupHref: string) =>
 /** Roles tab renders the full list in one table (no pagination UI), so page through all. */
 export const allGroupRolesListQueryOptions = (groupHref: string) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "roles", "all", groupHref],
+    queryKey: groupKeys.rolesAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
       const { results, count } = await fetchAllPages<GroupRoleResponse>(
         async (offset, limit) => {
@@ -143,7 +185,7 @@ export const groupRolesListQueryOptions = (
   params: IGroupRoleListParams,
 ) =>
   queryOptions({
-    queryKey: [...groupsRootQueryOptions.queryKey, "roles", groupHref, params],
+    queryKey: groupKeys.rolesQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
         `${toProxyHref(groupHref)}roles/`,
@@ -222,9 +264,7 @@ export const useGroupCreateMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
     },
   });
 };
@@ -246,9 +286,10 @@ export const useGroupUpdateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.detail(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -264,9 +305,10 @@ export const useGroupDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, groupId) => {
+      void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.detail(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -289,9 +331,9 @@ export const useGroupUserCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.users(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -334,9 +376,9 @@ export const useGroupUsersBatchCreateMutation = () => {
       });
       return { succeeded, failed };
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.users(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -364,9 +406,9 @@ export const useGroupUserDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.users(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -389,9 +431,9 @@ export const useGroupRoleCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.roles(buildGroupHref(groupId, domain)),
       });
     },
   });
@@ -413,9 +455,9 @@ export const useGroupRoleDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { groupId }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupsRootQueryOptions.queryKey,
+        queryKey: groupKeys.roles(buildGroupHref(groupId, domain)),
       });
     },
   });

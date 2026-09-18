@@ -37,12 +37,44 @@ export const usersRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. The `roles` sub-collection nests
+ * under the user's detail, and identifying segments precede the `"all"` fetch
+ * variant and params, so a prefix invalidates all variants of a collection.
+ * Shared by the query options and mutations to prevent key drift.
+ */
+export const userKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["users"]
+  all: () => [UsersQueryKey] as const,
+  // ["users", "list"] — every list query, any domain/params
+  list: () => [...userKeys.all(), "list"] as const,
+  // ["users", "detail", userHref] — one user and its whole subtree
+  detail: (userHref: string) =>
+    [...userKeys.all(), "detail", userHref] as const,
+  // ["users", "detail", userHref, "roles"] — a user's role queries
+  roles: (userHref: string) => [...userKeys.detail(userHref), "roles"] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["users", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IUserListParams) =>
+    [...userKeys.list(), domain, params] as const,
+  // ["users", "detail", userHref] — same value as detail() (no params)
+  detailQuery: (userHref: string) => userKeys.detail(userHref),
+  // ["users", "detail", userHref, "roles", params]
+  rolesQuery: (userHref: string, params: IUserRoleListParams) =>
+    [...userKeys.roles(userHref), params] as const,
+  // ["users", "detail", userHref, "roles", "all", params]
+  rolesAllQuery: (userHref: string, params: IAllUserRoleListParams) =>
+    [...userKeys.roles(userHref), "all", params] as const,
+};
+
 export const usersListQueryOptions = (
   domain: IPulpDomain,
   params: IUserListParams,
 ) =>
   queryOptions({
-    queryKey: [...usersRootQueryOptions.queryKey, "list", domain, params],
+    queryKey: userKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedUserResponseList> => {
       const response = await axiosInstance.get<PaginatedUserResponseList>(
         pulpApiPath("users/", domain),
@@ -59,7 +91,7 @@ export const usersListQueryOptions = (
 
 export const userDetailQueryOptions = (userHref: string) =>
   queryOptions({
-    queryKey: [...usersRootQueryOptions.queryKey, "detail", userHref],
+    queryKey: userKeys.detailQuery(userHref),
     queryFn: async (): Promise<UserResponse> => {
       const response = await axiosInstance.get<UserResponse>(
         toProxyHref(userHref),
@@ -77,7 +109,7 @@ export const userRolesListQueryOptions = (
   params: IUserRoleListParams,
 ) =>
   queryOptions({
-    queryKey: [...usersRootQueryOptions.queryKey, "roles", userHref, params],
+    queryKey: userKeys.rolesQuery(userHref, params),
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedUserRoleResponseList>(
         `${toProxyHref(userHref)}roles/`,
@@ -99,13 +131,7 @@ export const allUserRolesListQueryOptions = (
   params: IAllUserRoleListParams = {},
 ) =>
   queryOptions({
-    queryKey: [
-      ...usersRootQueryOptions.queryKey,
-      "roles",
-      "all",
-      userHref,
-      params,
-    ],
+    queryKey: userKeys.rolesAllQuery(userHref, params),
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
       const { results, count } = await fetchAllPages<UserRoleResponse>(
         async (offset, limit) => {
@@ -171,9 +197,7 @@ export const useUserCreateMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: userKeys.list() });
     },
   });
 };
@@ -195,9 +219,10 @@ export const useUserUpdateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { userId }) => {
+      void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
+        queryKey: userKeys.detail(buildUserHref(userId, domain)),
       });
     },
   });
@@ -213,9 +238,10 @@ export const useUserDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, userId) => {
+      void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
+        queryKey: userKeys.detail(buildUserHref(userId, domain)),
       });
     },
   });
@@ -238,9 +264,9 @@ export const useUserRoleCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
+        queryKey: userKeys.roles(buildUserHref(userId, domain)),
       });
     },
   });
@@ -262,9 +288,9 @@ export const useUserRoleDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
+        queryKey: userKeys.roles(buildUserHref(userId, domain)),
       });
     },
   });
@@ -301,9 +327,9 @@ export const useUserRolesSyncMutation = () => {
         ),
       ]);
     },
-    onSuccess: () => {
+    onSuccess: (_data, { userId }) => {
       void queryClient.invalidateQueries({
-        queryKey: usersRootQueryOptions.queryKey,
+        queryKey: userKeys.roles(buildUserHref(userId, domain)),
       });
     },
   });

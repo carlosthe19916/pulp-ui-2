@@ -32,12 +32,38 @@ export const rolesRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. Identifying segments precede the
+ * `"all"` fetch variant and params, so a prefix invalidates all variants of a
+ * collection. Shared by the query options and mutations to prevent key drift.
+ */
+export const roleKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["roles"]
+  all: () => [RolesQueryKey] as const,
+  // ["roles", "list"] — every list query (paginated + all), any domain/params
+  list: () => [...roleKeys.all(), "list"] as const,
+  // ["roles", "detail", roleHref] — one role
+  detail: (roleHref: string) =>
+    [...roleKeys.all(), "detail", roleHref] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["roles", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IRoleListParams) =>
+    [...roleKeys.list(), domain, params] as const,
+  // ["roles", "list", domain, "all", params]
+  listAllQuery: (domain: IPulpDomain, params: IAllRoleListParams) =>
+    [...roleKeys.list(), domain, "all", params] as const,
+  // ["roles", "detail", roleHref] — same value as detail() (no params)
+  detailQuery: (roleHref: string) => roleKeys.detail(roleHref),
+};
+
 export const rolesListQueryOptions = (
   domain: IPulpDomain,
   params: IRoleListParams,
 ) =>
   queryOptions({
-    queryKey: [...rolesRootQueryOptions.queryKey, "list", domain, params],
+    queryKey: roleKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedRoleResponseList>(
         pulpApiPath("roles/", domain),
@@ -58,13 +84,7 @@ export const allRolesListQueryOptions = (
   params: IAllRoleListParams = {},
 ) =>
   queryOptions({
-    queryKey: [
-      ...rolesRootQueryOptions.queryKey,
-      "list",
-      "all",
-      domain,
-      params,
-    ],
+    queryKey: roleKeys.listAllQuery(domain, params),
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
       const { results, count } = await fetchAllPages<RoleResponse>(
         async (offset, limit) => {
@@ -88,7 +108,7 @@ export const allRolesListQueryOptions = (
 
 export const roleDetailQueryOptions = (roleHref: string) =>
   queryOptions({
-    queryKey: [...rolesRootQueryOptions.queryKey, "detail", roleHref],
+    queryKey: roleKeys.detailQuery(roleHref),
     queryFn: async (): Promise<RoleResponse> => {
       const response = await axiosInstance.get<RoleResponse>(
         toProxyHref(roleHref),
@@ -135,9 +155,7 @@ export const useRoleCreateMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: rolesRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
     },
   });
 };
@@ -159,9 +177,10 @@ export const useRoleUpdateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { roleId }) => {
+      void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: rolesRootQueryOptions.queryKey,
+        queryKey: roleKeys.detail(buildRoleHref(roleId, domain)),
       });
     },
   });
@@ -177,9 +196,10 @@ export const useRoleDeleteMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, roleId) => {
+      void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: rolesRootQueryOptions.queryKey,
+        queryKey: roleKeys.detail(buildRoleHref(roleId, domain)),
       });
     },
   });
