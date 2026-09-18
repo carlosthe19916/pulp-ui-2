@@ -105,9 +105,9 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
 
   const repoContentStates = dataViewBodyStates({
     columnCount: contentColumns.length,
-    loading: isContentLoading,
+    isLoading: isContentLoading,
     error: contentError,
-    empty: contentUnits.length === 0,
+    isEmpty: contentUnits.length === 0,
     emptyState: (
       <TableEmptyState
         title="No content found"

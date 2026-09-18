@@ -214,9 +214,9 @@ export const DistributionList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: distributions.length === 0,
+    isEmpty: distributions.length === 0,
     emptyState: (
       <TableEmptyState
         title="No distributions found"

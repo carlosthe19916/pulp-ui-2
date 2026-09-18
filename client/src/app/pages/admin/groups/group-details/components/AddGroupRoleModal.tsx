@@ -133,9 +133,9 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     hasSelectionColumn: true,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: roles.length === 0,
+    isEmpty: roles.length === 0,
     emptyState: (
       <TableEmptyState
         title="No roles found"

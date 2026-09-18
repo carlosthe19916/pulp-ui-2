@@ -138,9 +138,9 @@ export const GroupList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: groups.length === 0,
+    isEmpty: groups.length === 0,
     emptyState: (
       <TableEmptyState
         title="No groups found"

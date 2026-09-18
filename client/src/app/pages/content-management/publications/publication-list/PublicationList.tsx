@@ -188,9 +188,9 @@ export const PublicationList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: publications.length === 0,
+    isEmpty: publications.length === 0,
     emptyState: <TableEmptyState title="No publications found" />,
   });
 

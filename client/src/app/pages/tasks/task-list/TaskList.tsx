@@ -200,9 +200,9 @@ export const TaskList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: tasks.length === 0,
+    isEmpty: tasks.length === 0,
     emptyState: (
       <TableEmptyState
         title="No tasks found"

@@ -160,9 +160,9 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
 
   const groupUsersStates = dataViewBodyStates({
     columnCount: userColumns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: totalCount === 0,
+    isEmpty: totalCount === 0,
     emptyState: (
       <TableEmptyState
         title="No users in this group"

@@ -133,9 +133,9 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     hasSelectionColumn: true,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: users.length === 0,
+    isEmpty: users.length === 0,
     emptyState: (
       <TableEmptyState
         title="No users found"

@@ -204,9 +204,9 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
 
   const groupRolesStates = dataViewBodyStates({
     columnCount: roleColumns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: totalCount === 0,
+    isEmpty: totalCount === 0,
     emptyState: (
       <TableEmptyState
         title="No roles assigned to this group"

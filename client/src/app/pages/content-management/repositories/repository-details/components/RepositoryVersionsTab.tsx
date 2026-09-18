@@ -51,9 +51,9 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
 
   const versionsStates = dataViewBodyStates({
     columnCount: versionColumns.length,
-    loading: isVersionsLoading,
+    isLoading: isVersionsLoading,
     error: versionsError,
-    empty: versions.length === 0,
+    isEmpty: versions.length === 0,
     emptyState: <TableEmptyState title="No versions found" />,
   });
 

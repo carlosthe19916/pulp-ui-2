@@ -218,9 +218,9 @@ export const RepositoryList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: repositories.length === 0,
+    isEmpty: repositories.length === 0,
     emptyState: (
       <TableEmptyState
         title="No repositories found"

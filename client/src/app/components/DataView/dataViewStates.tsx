@@ -18,11 +18,11 @@ interface IDataViewStatesArgs<TError = unknown> {
   hasSelectionColumn?: boolean;
   hasExpansionColumn?: boolean;
   loadingRows?: number;
-  loading?: boolean;
+  isLoading?: boolean;
   loadingState?: React.ReactNode;
   error?: TError | null;
   errorState?: (error: TError) => React.ReactNode;
-  empty?: boolean;
+  isEmpty?: boolean;
   emptyState?: React.ReactNode;
 }
 
@@ -31,21 +31,21 @@ export const dataViewBodyStates = <TError = unknown,>({
   hasSelectionColumn,
   hasExpansionColumn,
   loadingRows = 10,
-  loading,
+  isLoading,
   loadingState,
   error,
   errorState,
-  empty,
+  isEmpty,
   emptyState,
 }: IDataViewStatesArgs<TError>): {
   activeState: DataViewState | undefined;
   bodyStates: Partial<Record<DataViewState, React.ReactNode>>;
 } => {
-  const activeState = loading
+  const activeState = isLoading
     ? DataViewState.loading
     : error != null
       ? DataViewState.error
-      : empty
+      : isEmpty
         ? DataViewState.empty
         : undefined;
 

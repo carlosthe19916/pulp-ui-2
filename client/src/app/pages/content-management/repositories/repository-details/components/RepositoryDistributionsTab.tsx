@@ -120,9 +120,9 @@ export const RepositoryDistributionsTab: React.FC<
 
   const repoDistributionsStates = dataViewBodyStates({
     columnCount: distributionColumns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: distributions.length === 0,
+    isEmpty: distributions.length === 0,
     emptyState: (
       <TableEmptyState
         title="No distributions found"

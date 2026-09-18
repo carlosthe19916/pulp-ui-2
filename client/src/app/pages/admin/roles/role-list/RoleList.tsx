@@ -195,9 +195,9 @@ export const RoleList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: roles.length === 0,
+    isEmpty: roles.length === 0,
     emptyState: (
       <TableEmptyState
         title="No roles found"

@@ -108,9 +108,9 @@ export const ContentList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: content.length === 0,
+    isEmpty: content.length === 0,
     emptyState: <TableEmptyState title="No content found" />,
   });
 

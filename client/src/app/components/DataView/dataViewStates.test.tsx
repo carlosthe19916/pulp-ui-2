@@ -18,7 +18,7 @@ const emptyMarkup = (
 describe("dataViewBodyStates empty state", () => {
   const base = {
     columnCount: 3,
-    empty: true,
+    isEmpty: true,
     emptyState: <span>No results found</span>,
   };
 

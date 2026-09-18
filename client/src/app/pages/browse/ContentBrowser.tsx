@@ -145,9 +145,9 @@ export const ContentBrowser: React.FC<IContentBrowserProps> = ({
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isResolvingVersion || isContentLoading,
+    isLoading: isResolvingVersion || isContentLoading,
     error: contentError,
-    empty: contentUnits.length === 0,
+    isEmpty: contentUnits.length === 0,
     emptyState: (
       <TableEmptyState
         title="No content found"

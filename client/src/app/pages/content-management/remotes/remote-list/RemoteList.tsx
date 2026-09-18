@@ -186,9 +186,9 @@ export const RemoteList: React.FC = () => {
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
-    loading: isLoading,
+    isLoading: isLoading,
     error,
-    empty: remotes.length === 0,
+    isEmpty: remotes.length === 0,
     emptyState: (
       <TableEmptyState
         title="No remotes found"
