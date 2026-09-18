@@ -27,11 +27,12 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import type { GroupRoleResponse } from "@app/client";
+import type { GroupResponse, GroupRoleResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
+import type { WithId } from "@app/models/models";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   useAllGroupRolesListQuery,
@@ -49,17 +50,13 @@ const addRoleSchema = yup.object({
 type AddRoleFormValues = yup.InferType<typeof addRoleSchema>;
 
 interface IGroupRolesTabProps {
-  groupId: string;
-  groupName: string;
+  group: WithId<GroupResponse>;
 }
 
-export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
-  groupId,
-  groupName,
-}) => {
+export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   const { addNotification } = useNotifications();
 
-  const { data: rolesData } = useAllGroupRolesListQuery(groupId);
+  const { data: rolesData } = useAllGroupRolesListQuery(group.id);
 
   const roleCreateMutation = useGroupRoleCreateMutation();
   const roleDeleteMutation = useGroupRoleDeleteMutation();
@@ -165,14 +162,14 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
   const onAddRole = addRoleForm.handleSubmit(async (values) => {
     try {
       await roleCreateMutation.mutateAsync({
-        groupId,
+        groupId: group.id,
         body: {
           role: values.role,
           content_object: values.content_object || null,
         },
       });
       addNotification({
-        title: `Role "${values.role}" assigned to group "${groupName}"`,
+        title: `Role "${values.role}" assigned to group "${group.object.name}"`,
         variant: "success",
       });
       addRoleForm.reset();
@@ -189,11 +186,11 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({
     if (!removeRoleTarget?.pulp_href) return;
     try {
       await roleDeleteMutation.mutateAsync({
-        groupId,
+        groupId: group.id,
         assignmentId: extractIdFromHref(removeRoleTarget.pulp_href),
       });
       addNotification({
-        title: `Role "${removeRoleTarget.role}" removed from group "${groupName}"`,
+        title: `Role "${removeRoleTarget.role}" removed from group "${group.object.name}"`,
         variant: "success",
       });
     } catch {

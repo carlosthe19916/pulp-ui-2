@@ -15,12 +15,14 @@ import {
   ModalHeader,
 } from "@patternfly/react-core";
 
+import type { RepositoryResponse } from "@app/client";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { WithId } from "@app/models/models";
 import { useFileRepositorySyncMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
@@ -35,15 +37,13 @@ type SyncFormValues = yup.InferType<typeof syncSchema>;
 interface ISyncModalProps {
   isOpen: boolean;
   onClose: () => void;
-  repoId: string;
-  remoteSuggestion?: string;
+  repo: WithId<RepositoryResponse>;
 }
 
 export const SyncModal: React.FC<ISyncModalProps> = ({
   isOpen,
   onClose,
-  repoId,
-  remoteSuggestion,
+  repo,
 }) => {
   const { addNotification } = useNotifications();
   const syncMutation = useFileRepositorySyncMutation();
@@ -77,7 +77,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   } = useForm<SyncFormValues>({
     resolver: yupResolver(syncSchema),
     defaultValues: {
-      remote: remoteSuggestion ?? "",
+      remote: repo.object.remote ?? "",
       mirror: false,
     },
   });
@@ -88,7 +88,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const result = await syncMutation.mutateAsync({
-        repoId,
+        repoId: repo.id,
         body: {
           remote: values.remote || undefined,
           mirror: values.mirror,

@@ -19,10 +19,14 @@ import {
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 
-import type { MultipleArtifactContentResponse } from "@app/client";
+import type {
+  FileFileRepositoryResponse,
+  MultipleArtifactContentResponse,
+} from "@app/client";
 import { dataViewBodyStates } from "@app/components/DataView";
 import { UploadModal } from "@app/components/UploadModal";
 import type { getDescriptor } from "@app/descriptors/registry";
+import type { WithId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
@@ -33,14 +37,12 @@ type ContentRow = MultipleArtifactContentResponse & {
 };
 
 interface IRepositoryContentTabProps {
-  repoId: string;
-  repoHref: string;
+  repo: WithId<FileFileRepositoryResponse>;
   descriptor: ReturnType<typeof getDescriptor>;
 }
 
 export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
-  repoId,
-  repoHref,
+  repo,
   descriptor,
 }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -49,7 +51,7 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
     perPage: 10,
   });
 
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId, {
+  const { data: versionsData } = useFileRepositoryVersionsListQuery(repo.id, {
     limit: 1,
   });
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
@@ -149,7 +151,7 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
       <UploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
-        repositoryHref={repoHref}
+        repositoryHref={repo.object.pulp_href ?? ""}
       />
     </>
   );

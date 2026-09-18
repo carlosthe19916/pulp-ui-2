@@ -20,10 +20,11 @@ import {
   useDataViewSort,
 } from "@patternfly/react-data-view";
 
-import type { GroupUserResponse } from "@app/client";
+import type { GroupResponse, GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
+import type { WithId } from "@app/models/models";
 import {
   useAllGroupUsersListQuery,
   useGroupUserDeleteMutation,
@@ -43,21 +44,17 @@ interface IGroupUsersFilters {
 }
 
 interface IGroupUsersTabProps {
-  groupId: string;
-  groupName: string;
+  group: WithId<GroupResponse>;
 }
 
-export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
-  groupId,
-  groupName,
-}) => {
+export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
   const { addNotification } = useNotifications();
 
   const {
     data: usersData,
     isLoading,
     error,
-  } = useAllGroupUsersListQuery(groupId);
+  } = useAllGroupUsersListQuery(group.id);
 
   const userDeleteMutation = useGroupUserDeleteMutation();
 
@@ -144,11 +141,11 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
     if (!removeUserTarget?.pulp_href) return;
     try {
       await userDeleteMutation.mutateAsync({
-        groupId,
+        groupId: group.id,
         userId: extractIdFromHref(removeUserTarget.pulp_href),
       });
       addNotification({
-        title: `User "${removeUserTarget.username}" removed from group "${groupName}"`,
+        title: `User "${removeUserTarget.username}" removed from group "${group.object.name}"`,
         variant: "success",
       });
     } catch {
@@ -216,8 +213,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({
 
       <AddGroupUserModal
         isOpen={isAddUserOpen}
-        groupId={groupId}
-        groupName={groupName}
+        group={group}
         existingUsernames={allUsers.map((u) => u.username)}
         onClose={() => setIsAddUserOpen(false)}
       />

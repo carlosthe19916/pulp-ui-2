@@ -22,6 +22,7 @@ import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
 import { useNotifications } from "@app/context/useNotifications";
 import { getDescriptor } from "@app/descriptors/registry";
+import { withId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import {
@@ -197,8 +198,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               >
                 <TabContentBody hasPadding>
                   <RepositoryContentTab
-                    repoId={repoId}
-                    repoHref={repo.pulp_href ?? ""}
+                    repo={withId(repoId, repo)}
                     descriptor={descriptor}
                   />
                 </TabContentBody>
@@ -217,8 +217,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       <SyncModal
         isOpen={isSyncOpen}
         onClose={() => setIsSyncOpen(false)}
-        repoId={repoId}
-        remoteSuggestion={repo.remote ?? undefined}
+        repo={withId(repoId, repo)}
       />
 
       <PublishModal

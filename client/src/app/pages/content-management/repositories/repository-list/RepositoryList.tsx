@@ -39,6 +39,7 @@ import {
   getDescriptorsForKind,
 } from "@app/descriptors/registry";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { withId } from "@app/models/models";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
   extractIdFromHref,
@@ -294,8 +295,10 @@ export const RepositoryList: React.FC = () => {
           <SyncModal
             isOpen
             onClose={() => setSyncTarget(null)}
-            repoId={extractIdFromHref(syncTarget.pulp_href ?? "")}
-            remoteSuggestion={syncTarget.remote ?? undefined}
+            repo={withId(
+              extractIdFromHref(syncTarget.pulp_href ?? ""),
+              syncTarget,
+            )}
           />
         )}
 

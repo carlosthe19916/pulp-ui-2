@@ -24,6 +24,7 @@ import {
   type DataViewTrObject,
 } from "@patternfly/react-data-view";
 
+import type { GroupResponse } from "@app/client";
 import {
   buildThSort,
   dataViewBodyStates,
@@ -31,6 +32,7 @@ import {
 } from "@app/components/DataView";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { WithId } from "@app/models/models";
 import { useGroupUsersBatchCreateMutation } from "@app/queries/groups";
 import { useUsersListQuery } from "@app/queries/users";
 
@@ -42,16 +44,14 @@ interface IUserFilters {
 }
 
 interface IAddGroupUserModalInnerProps {
-  groupId: string;
-  groupName: string;
+  group: WithId<GroupResponse>;
   existingUsernames: string[];
   onClose: () => void;
 }
 
 /** Mounted only while open so the form resets and the user list is fetched only then. */
 const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
-  groupId,
-  groupName,
+  group,
   existingUsernames,
   onClose,
 }) => {
@@ -156,14 +156,14 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
     try {
       const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupId,
+        groupId: group.id,
         usernames,
       });
       if (succeeded.length > 0) {
         addNotification({
           title: `${succeeded.length} user${
             succeeded.length === 1 ? "" : "s"
-          } added to group "${groupName}"`,
+          } added to group "${group.object.name}"`,
           variant: "success",
         });
       }
@@ -171,7 +171,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
         addNotification({
           title: `Failed to add ${failed.length} user${
             failed.length === 1 ? "" : "s"
-          } to group "${groupName}": ${failed.join(", ")}`,
+          } to group "${group.object.name}": ${failed.join(", ")}`,
           variant: "danger",
         });
       }
@@ -236,8 +236,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
 interface IAddGroupUserModalProps {
   isOpen: boolean;
-  groupId: string;
-  groupName: string;
+  group: WithId<GroupResponse>;
   existingUsernames: string[];
   onClose: () => void;
 }
@@ -245,15 +244,13 @@ interface IAddGroupUserModalProps {
 /** Mounted only while open so its table state and user query reset on every open. */
 export const AddGroupUserModal: React.FC<IAddGroupUserModalProps> = ({
   isOpen,
-  groupId,
-  groupName,
+  group,
   existingUsernames,
   onClose,
 }) =>
   isOpen ? (
     <AddGroupUserModalInner
-      groupId={groupId}
-      groupName={groupName}
+      group={group}
       existingUsernames={existingUsernames}
       onClose={onClose}
     />

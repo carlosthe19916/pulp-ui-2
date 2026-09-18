@@ -17,6 +17,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useNotifications } from "@app/context/useNotifications";
+import { withId } from "@app/models/models";
 import {
   useGroupDeleteMutation,
   useGroupRolesListQuery,
@@ -116,7 +117,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             title={<TabTitleText>Users ({userCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupUsersTab groupId={groupId} groupName={group.name} />
+              <GroupUsersTab group={withId(groupId, group)} />
             </TabContentBody>
           </Tab>
           <Tab
@@ -124,7 +125,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupRolesTab groupId={groupId} groupName={group.name} />
+              <GroupRolesTab group={withId(groupId, group)} />
             </TabContentBody>
           </Tab>
         </Tabs>
