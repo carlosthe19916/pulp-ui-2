@@ -38,14 +38,14 @@ export const UserForm: React.FC<IUserFormProps> = ({
           <HookFormPFTextInput
             control={control}
             name="username"
-            fieldId="username"
+            fieldId="user-username"
             label="Username"
             isRequired
           />
           <HookFormPFTextInput
             control={control}
             name="password"
-            fieldId="password"
+            fieldId="user-password"
             label="Password"
             type="password"
             isRequired
@@ -56,30 +56,30 @@ export const UserForm: React.FC<IUserFormProps> = ({
       <HookFormPFTextInput
         control={control}
         name="email"
-        fieldId="email"
+        fieldId="user-email"
         label="Email"
         type="email"
       />
       <HookFormPFTextInput
         control={control}
         name="first_name"
-        fieldId="first_name"
+        fieldId="user-first_name"
         label="First name"
       />
       <HookFormPFTextInput
         control={control}
         name="last_name"
-        fieldId="last_name"
+        fieldId="user-last_name"
         label="Last name"
       />
 
       <HookFormPFGroupController
         control={control}
         name="is_active"
-        fieldId="is_active"
+        fieldId="user-is_active"
         renderInput={({ field: { value, onChange } }) => (
           <Checkbox
-            id="is_active"
+            id="user-is_active"
             label="Active"
             isChecked={value}
             onChange={(_e, checked) => onChange(checked)}
@@ -89,10 +89,10 @@ export const UserForm: React.FC<IUserFormProps> = ({
       <HookFormPFGroupController
         control={control}
         name="is_staff"
-        fieldId="is_staff"
+        fieldId="user-is_staff"
         renderInput={({ field: { value, onChange } }) => (
           <Checkbox
-            id="is_staff"
+            id="user-is_staff"
             label="Staff status"
             isChecked={value}
             onChange={(_e, checked) => onChange(checked)}
