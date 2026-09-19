@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -61,7 +61,11 @@ interface IRoleFilters {
 }
 
 export const RoleList: React.FC = () => {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [modalState, setModalState] = useState<"create" | RoleResponse | null>(
+    null,
+  );
+  const roleToEdit =
+    modalState === "create" ? undefined : (modalState ?? undefined);
   const [deleteTarget, setDeleteTarget] = useState<RoleResponse | null>(null);
 
   const { deleteRole, isDeleting } = useRoleActions();
@@ -87,23 +91,13 @@ export const RoleList: React.FC = () => {
     offset: (page - 1) * perPage,
     ordering,
     name__icontains: debouncedName || undefined,
+    // Roles are namespaced `<plugin>.<role_name>`, so filtering by plugin is a
+    // case-insensitive name prefix match on the server.
+    name__istartswith: debouncedPlugin || undefined,
   });
 
-  // The `plugin` filter is derived client-side from the role name, so it filters
-  // the current page in-memory and adjusts the reported total accordingly.
-  const allRoles = useMemo(() => data?.results ?? [], [data?.results]);
-  const roles = useMemo(
-    () =>
-      debouncedPlugin
-        ? allRoles.filter((role) =>
-            getRolePlugin(role.name)
-              .toLowerCase()
-              .includes(debouncedPlugin.toLowerCase()),
-          )
-        : allRoles,
-    [allRoles, debouncedPlugin],
-  );
-  const totalCount = debouncedPlugin ? roles.length : (data?.count ?? 0);
+  const roles = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
 
   const sortProps = (columnKey: RoleColumnKey) =>
     buildThSort({
@@ -174,14 +168,24 @@ export const RoleList: React.FC = () => {
           props: { dataLabel: "Locked" },
         },
         {
-          cell: role.locked ? (
-            "—"
-          ) : (
+          cell: (
             <ActionsColumn
               items={[
                 {
+                  title: "Edit",
+                  isAriaDisabled: role.locked,
+                  tooltipProps: role.locked
+                    ? { content: "Locked roles cannot be edited" }
+                    : undefined,
+                  onClick: () => setModalState(role),
+                },
+                {
                   title: "Delete",
                   isDanger: true,
+                  isAriaDisabled: role.locked,
+                  tooltipProps: role.locked
+                    ? { content: "Locked roles cannot be deleted" }
+                    : undefined,
                   onClick: () => setDeleteTarget(role),
                 },
               ]}
@@ -251,7 +255,7 @@ export const RoleList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+              <Button variant="primary" onClick={() => setModalState("create")}>
                 Create Role
               </Button>
             }
@@ -269,8 +273,9 @@ export const RoleList: React.FC = () => {
         </DataView>
 
         <RoleModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+          isOpen={modalState !== null}
+          role={roleToEdit}
+          onClose={() => setModalState(null)}
         />
 
         <ConfirmActionModal
