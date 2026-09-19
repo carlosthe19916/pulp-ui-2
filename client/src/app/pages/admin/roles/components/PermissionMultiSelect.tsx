@@ -3,6 +3,8 @@ import { useMemo, useState, type Ref } from "react";
 import {
   Button,
   Divider,
+  InputGroup,
+  InputGroupItem,
   Label,
   LabelGroup,
   MenuSearch,
@@ -14,9 +16,6 @@ import {
   SelectList,
   SelectOption,
   TextInput,
-  TextInputGroup,
-  TextInputGroupMain,
-  TextInputGroupUtilities,
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
@@ -91,6 +90,8 @@ export const PermissionMultiSelect = ({
       <Select
         id={id}
         isOpen={isOpen}
+        isScrollable
+        maxMenuHeight="300px"
         selected={value}
         onOpenChange={(next) => {
           setIsOpen(next);
@@ -147,8 +148,8 @@ export const PermissionMultiSelect = ({
         </SelectList>
       </Select>
 
-      <TextInputGroup className={spacing.mtSm}>
-        <TextInputGroupMain>
+      <InputGroup className={spacing.mtSm}>
+        <InputGroupItem isFill>
           <TextInput
             id={`${id}-custom`}
             aria-label="Add custom permission"
@@ -163,8 +164,8 @@ export const PermissionMultiSelect = ({
               }
             }}
           />
-        </TextInputGroupMain>
-        <TextInputGroupUtilities>
+        </InputGroupItem>
+        <InputGroupItem>
           <Button
             variant="control"
             onClick={addCustom}
@@ -172,8 +173,8 @@ export const PermissionMultiSelect = ({
           >
             Add
           </Button>
-        </TextInputGroupUtilities>
-      </TextInputGroup>
+        </InputGroupItem>
+      </InputGroup>
     </>
   );
 };
