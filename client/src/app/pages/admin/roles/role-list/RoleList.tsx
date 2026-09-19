@@ -7,9 +7,15 @@ import {
   Content,
   ContentVariants,
   Label,
+  MenuToggle,
+  type MenuToggleElement,
   PageSection,
   Pagination,
   PaginationVariant,
+  Select,
+  SelectList,
+  SelectOption,
+  ToolbarItem,
 } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
@@ -60,6 +66,13 @@ interface IRoleFilters {
   plugin: string;
 }
 
+const LOCKED_OPTIONS = [
+  { value: "", label: "All roles" },
+  { value: "true", label: "Locked" },
+  { value: "false", label: "Unlocked" },
+] as const;
+type LockedFilter = (typeof LOCKED_OPTIONS)[number]["value"];
+
 export const RoleList: React.FC = () => {
   const [modalState, setModalState] = useState<"create" | RoleResponse | null>(
     null,
@@ -67,6 +80,8 @@ export const RoleList: React.FC = () => {
   const roleToEdit =
     modalState === "create" ? undefined : (modalState ?? undefined);
   const [deleteTarget, setDeleteTarget] = useState<RoleResponse | null>(null);
+  const [lockedFilter, setLockedFilter] = useState<LockedFilter>("");
+  const [isLockedOpen, setIsLockedOpen] = useState(false);
 
   const { deleteRole, isDeleting } = useRoleActions();
 
@@ -83,6 +98,12 @@ export const RoleList: React.FC = () => {
   const debouncedName = useDebouncedValue(filters.name);
   const debouncedPlugin = useDebouncedValue(filters.plugin);
 
+  const clearFilters = () => {
+    clearAllFilters();
+    setLockedFilter("");
+    onSetPage(undefined, 1);
+  };
+
   const ordering = toOrderingParam(sortBy, direction) as
     "name" | "-name" | "locked" | "-locked";
 
@@ -94,6 +115,7 @@ export const RoleList: React.FC = () => {
     // Roles are namespaced `<plugin>.<role_name>`, so filtering by plugin is a
     // case-insensitive name prefix match on the server.
     name__istartswith: debouncedPlugin || undefined,
+    locked: lockedFilter === "" ? undefined : lockedFilter === "true",
   });
 
   const roles = data?.results ?? [];
@@ -205,11 +227,43 @@ export const RoleList: React.FC = () => {
     emptyState: (
       <TableEmptyState
         title="No roles found"
-        isFiltered={Boolean(debouncedName || debouncedPlugin)}
-        onClearFilters={clearAllFilters}
+        isFiltered={Boolean(debouncedName || debouncedPlugin || lockedFilter)}
+        onClearFilters={clearFilters}
       />
     ),
   });
+
+  const lockedSelect = (
+    <ToolbarItem>
+      <Select
+        isOpen={isLockedOpen}
+        selected={lockedFilter}
+        onSelect={(_e, value) => {
+          setLockedFilter((value as LockedFilter) ?? "");
+          setIsLockedOpen(false);
+          onSetPage(undefined, 1);
+        }}
+        onOpenChange={setIsLockedOpen}
+        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => setIsLockedOpen(!isLockedOpen)}
+            isExpanded={isLockedOpen}
+          >
+            {LOCKED_OPTIONS.find((o) => o.value === lockedFilter)?.label}
+          </MenuToggle>
+        )}
+      >
+        <SelectList>
+          {LOCKED_OPTIONS.map((o) => (
+            <SelectOption key={o.value || "all"} value={o.value}>
+              {o.label}
+            </SelectOption>
+          ))}
+        </SelectList>
+      </Select>
+    </ToolbarItem>
+  );
 
   const pagination = (variant: PaginationVariant) => (
     <Pagination
@@ -241,18 +295,21 @@ export const RoleList: React.FC = () => {
 
         <DataView activeState={activeState}>
           <DataViewToolbar
-            clearAllFilters={clearAllFilters}
+            clearAllFilters={clearFilters}
             filters={
-              <DataViewFilters
-                onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  onSetPage(undefined, 1);
-                }}
-                values={filters}
-              >
-                <DataViewTextFilter filterId="name" title="Name" />
-                <DataViewTextFilter filterId="plugin" title="Plugin" />
-              </DataViewFilters>
+              <>
+                <DataViewFilters
+                  onChange={(_key, newFilters) => {
+                    onSetFilters(newFilters);
+                    onSetPage(undefined, 1);
+                  }}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                  <DataViewTextFilter filterId="plugin" title="Plugin" />
+                </DataViewFilters>
+                {lockedSelect}
+              </>
             }
             actions={
               <Button variant="primary" onClick={() => setModalState("create")}>
