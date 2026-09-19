@@ -62,7 +62,6 @@ type RoleColumnKey = (typeof COLUMN_KEYS)[number];
 
 interface IRoleFilters {
   name: string;
-  plugin: string;
 }
 
 const LOCKED_OPTIONS = [
@@ -92,10 +91,9 @@ export const RoleList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({
-      initialFilters: { name: "", plugin: "" },
+      initialFilters: { name: "" },
     });
   const debouncedName = useDebouncedValue(filters.name);
-  const debouncedPlugin = useDebouncedValue(filters.plugin);
 
   const clearFilters = () => {
     clearAllFilters();
@@ -111,9 +109,6 @@ export const RoleList: React.FC = () => {
     offset: (page - 1) * perPage,
     ordering,
     name__icontains: debouncedName || undefined,
-    // Roles are namespaced `<plugin>.<role_name>`, so filtering by plugin is a
-    // case-insensitive name prefix match on the server.
-    name__istartswith: debouncedPlugin || undefined,
     locked: lockedFilter === "" ? undefined : lockedFilter === "true",
   });
 
@@ -221,7 +216,7 @@ export const RoleList: React.FC = () => {
     emptyState: (
       <TableEmptyState
         title="No roles found"
-        isFiltered={Boolean(debouncedName || debouncedPlugin || lockedFilter)}
+        isFiltered={Boolean(debouncedName || lockedFilter)}
         onClearFilters={clearFilters}
       />
     ),
@@ -300,7 +295,6 @@ export const RoleList: React.FC = () => {
                   values={filters}
                 >
                   <DataViewTextFilter filterId="name" title="Name" />
-                  <DataViewTextFilter filterId="plugin" title="Plugin" />
                 </DataViewFilters>
                 {lockedSelect}
               </>
