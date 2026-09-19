@@ -1,6 +1,5 @@
 import type React from "react";
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 
 import { Button, Pagination, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -26,7 +25,6 @@ import {
   useAllGroupRolesListQuery,
   useGroupRoleDeleteMutation,
 } from "@app/queries/groups";
-import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { AddGroupRoleModal } from "./AddGroupRoleModal";
@@ -76,28 +74,6 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     [rolesData?.results],
   );
 
-  // Resolve role name → id only for the assigned roles shown in the table, so
-  // the links don't require fetching every role in the system.
-  const assignedRoleNames = useMemo(
-    () => allRoles.map((role) => role.role),
-    [allRoles],
-  );
-  const { data: linkRolesData } = useRolesListQuery(
-    assignedRoleNames.length
-      ? { name__in: assignedRoleNames, limit: assignedRoleNames.length }
-      : { limit: 1 },
-  );
-
-  const roleNameToId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const role of linkRolesData?.results ?? []) {
-      if (role.pulp_href) {
-        map.set(role.name, extractIdFromHref(role.pulp_href));
-      }
-    }
-    return map;
-  }, [linkRolesData?.results]);
-
   const filteredSortedRoles = useMemo(() => {
     const query = filters.role.trim().toLowerCase();
     const filtered = query
@@ -142,18 +118,11 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   ];
 
   const roleRows: DataViewTr[] = pagedRoles.map((role) => {
-    const roleId = roleNameToId.get(role.role);
     return {
       id: role.pulp_href,
       row: [
         {
-          cell: roleId ? (
-            <Link to="/admin/roles/$roleId" params={{ roleId }}>
-              {role.role}
-            </Link>
-          ) : (
-            role.role
-          ),
+          cell: role.role,
           props: { dataLabel: "Role" },
         },
         {

@@ -8,7 +8,7 @@ import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
 import { useAllRolesListQuery } from "@app/queries/roles";
 
 import type { RoleFormValues } from "../hooks/useRoleForm";
-import { collectPermissionOptions } from "../utils/permissionOptions";
+import { collectPermissionOptions } from "../../utils/permissionOptions";
 import { PermissionMultiSelect } from "./PermissionMultiSelect";
 
 interface IRoleFormProps {

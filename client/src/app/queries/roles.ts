@@ -3,7 +3,6 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -19,7 +18,7 @@ import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildRoleHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildRoleHref } from "./utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
@@ -54,8 +53,6 @@ export const roleKeys = {
   // ["roles", "list", domain, "all", params]
   listAllQuery: (domain: IPulpDomain, params: IAllRoleListParams) =>
     [...roleKeys.list(), domain, "all", params] as const,
-  // ["roles", "detail", roleHref] — same value as detail() (no params)
-  detailQuery: (roleHref: string) => roleKeys.detail(roleHref),
 };
 
 export const rolesListQueryOptions = (
@@ -106,21 +103,6 @@ export const allRolesListQueryOptions = (
     },
   });
 
-export const roleDetailQueryOptions = (roleHref: string) =>
-  queryOptions({
-    queryKey: roleKeys.detailQuery(roleHref),
-    queryFn: async (): Promise<RoleResponse> => {
-      const response = await axiosInstance.get<RoleResponse>(
-        toProxyHref(roleHref),
-      );
-      if (isEmptyDetailPayload(response.data) || !response.data.name) {
-        throw new Error("Empty role detail response");
-      }
-      return response.data;
-    },
-    enabled: !!roleHref,
-  });
-
 export const useRolesListQuery = (params: IRoleListParams) => {
   const domain = useApiDomain();
   return useQuery(rolesListQueryOptions(domain, params));
@@ -129,18 +111,6 @@ export const useRolesListQuery = (params: IRoleListParams) => {
 export const useAllRolesListQuery = (params: IAllRoleListParams = {}) => {
   const domain = useApiDomain();
   return useQuery(allRolesListQueryOptions(domain, params));
-};
-
-export const useRoleDetailQuery = (roleId: string) => {
-  const domain = useApiDomain();
-  return useQuery(roleDetailQueryOptions(buildRoleHref(roleId, domain)));
-};
-
-export const useSuspenseRoleDetailQuery = (roleId: string) => {
-  const domain = useApiDomain();
-  return useSuspenseQuery(
-    roleDetailQueryOptions(buildRoleHref(roleId, domain)),
-  );
 };
 
 export const useRoleCreateMutation = () => {

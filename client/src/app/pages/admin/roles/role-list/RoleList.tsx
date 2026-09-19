@@ -1,6 +1,5 @@
 import type React from "react";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -43,8 +42,8 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRolesListQuery } from "@app/queries/roles";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { RoleModal } from "../components/RoleModal";
-import { useRoleActions } from "../hooks/useRoleActions";
+import { RoleModal } from "./components/RoleModal";
+import { useRoleActions } from "./hooks/useRoleActions";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
 const getRolePlugin = (name: string): string => {
@@ -148,17 +147,12 @@ export const RoleList: React.FC = () => {
   ];
 
   const rows: DataViewTr[] = roles.map((role) => {
-    const roleId = extractIdFromHref(role.pulp_href ?? "");
     const desc = role.description ?? "";
     return {
       id: role.pulp_href,
       row: [
         {
-          cell: (
-            <Link to="/admin/roles/$roleId" params={{ roleId }}>
-              {role.name}
-            </Link>
-          ),
+          cell: role.name,
           props: { dataLabel: "Name" },
         },
         {
