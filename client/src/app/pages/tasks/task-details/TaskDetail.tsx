@@ -102,7 +102,6 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
                 key: "cancel",
                 dropdownItemProps: {
                   children: "Cancel Task",
-                  isDanger: true,
                   onClick: () => setIsCancelModalOpen(true),
                 },
               },

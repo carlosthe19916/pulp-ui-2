@@ -139,7 +139,6 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
               items={[
                 {
                   title: "Remove",
-                  isDanger: true,
                   onClick: () => setRemoveRoleTarget(role),
                 },
               ]}

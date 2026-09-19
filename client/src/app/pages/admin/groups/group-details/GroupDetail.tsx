@@ -97,7 +97,6 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
                 key: "delete",
                 dropdownItemProps: {
                   children: "Delete Group",
-                  isDanger: true,
                   onClick: () => setIsDeleteOpen(true),
                 },
               },

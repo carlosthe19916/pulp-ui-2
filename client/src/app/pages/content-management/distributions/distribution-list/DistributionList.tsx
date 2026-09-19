@@ -159,7 +159,6 @@ export const DistributionList: React.FC = () => {
     }
     actionItems.push({
       title: "Delete",
-      isDanger: true,
       onClick: () => setDeleteTarget(distribution),
     });
 

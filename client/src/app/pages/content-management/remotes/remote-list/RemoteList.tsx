@@ -172,7 +172,6 @@ export const RemoteList: React.FC = () => {
               items={[
                 {
                   title: "Delete",
-                  isDanger: true,
                   onClick: () => setDeleteTarget(remote),
                 },
               ]}

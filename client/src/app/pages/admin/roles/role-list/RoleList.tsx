@@ -192,7 +192,6 @@ export const RoleList: React.FC = () => {
                 },
                 {
                   title: "Delete",
-                  isDanger: true,
                   isAriaDisabled: role.locked,
                   tooltipProps: role.locked
                     ? { content: "Locked roles cannot be deleted" }

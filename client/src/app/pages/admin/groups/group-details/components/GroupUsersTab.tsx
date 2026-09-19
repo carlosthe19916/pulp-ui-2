@@ -127,7 +127,6 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
             items={[
               {
                 title: "Remove",
-                isDanger: true,
                 onClick: () => setRemoveUserTarget(user),
               },
             ]}

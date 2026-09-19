@@ -112,7 +112,6 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
                 key: "delete",
                 dropdownItemProps: {
                   children: "Delete",
-                  isDanger: true,
                   onClick: () => setIsDeleteOpen(true),
                 },
               },

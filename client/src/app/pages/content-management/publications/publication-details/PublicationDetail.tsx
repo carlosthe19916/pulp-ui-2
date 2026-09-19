@@ -85,7 +85,6 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
                 key: "delete",
                 dropdownItemProps: {
                   children: "Delete",
-                  isDanger: true,
                   onClick: () => setIsDeleteOpen(true),
                 },
               },

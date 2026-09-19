@@ -157,7 +157,6 @@ export const UserList: React.FC = () => {
               { title: "Edit", onClick: () => setModalState(user) },
               {
                 title: "Delete",
-                isDanger: true,
                 onClick: () => setDeleteTarget(user),
               },
             ]}

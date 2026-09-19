@@ -124,7 +124,6 @@ export const GroupList: React.FC = () => {
                 },
                 {
                   title: "Delete",
-                  isDanger: true,
                   onClick: () => setDeleteTarget(group),
                 },
               ]}

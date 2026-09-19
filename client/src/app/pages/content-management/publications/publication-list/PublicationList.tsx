@@ -172,7 +172,6 @@ export const PublicationList: React.FC = () => {
               items={[
                 {
                   title: "Delete",
-                  isDanger: true,
                   onClick: () => setDeleteTarget(pub),
                 },
               ]}

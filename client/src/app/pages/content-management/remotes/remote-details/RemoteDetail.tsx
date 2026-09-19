@@ -96,7 +96,6 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({ remoteId }) => {
                 key: "delete",
                 dropdownItemProps: {
                   children: "Delete",
-                  isDanger: true,
                   onClick: () => setIsDeleteOpen(true),
                 },
               },

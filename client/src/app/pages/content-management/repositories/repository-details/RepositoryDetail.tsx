@@ -144,7 +144,6 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 key: "delete",
                 dropdownItemProps: {
                   children: "Delete",
-                  isDanger: true,
                   onClick: () => setIsDeleteOpen(true),
                 },
               },

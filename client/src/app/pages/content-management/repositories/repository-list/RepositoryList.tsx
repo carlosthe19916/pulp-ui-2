@@ -168,7 +168,6 @@ export const RepositoryList: React.FC = () => {
     }
     actionItems.push({
       title: "Delete",
-      isDanger: true,
       onClick: () => setDeleteTarget(repository),
     });
 
