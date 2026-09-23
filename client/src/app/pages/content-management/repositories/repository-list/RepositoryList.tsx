@@ -243,10 +243,7 @@ export const RepositoryList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteRepository(
-        extractIdFromHref(deleteTarget.pulp_href),
-        deleteTarget.name,
-      );
+      await deleteRepository(deleteTarget);
     } catch {
       // Notifications are handled in useRepositoryActions.
     }

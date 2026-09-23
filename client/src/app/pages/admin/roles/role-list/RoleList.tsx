@@ -40,7 +40,6 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRolesListQuery } from "@app/queries/roles";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { RoleModal } from "./components/RoleModal";
 import { useRoleActions } from "./hooks/useRoleActions";
@@ -266,9 +265,8 @@ export const RoleList: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
-    const roleId = extractIdFromHref(deleteTarget.pulp_href);
     try {
-      await deleteRole(roleId, deleteTarget.name);
+      await deleteRole(deleteTarget);
     } catch {
       // Notifications are handled in useRoleActions.
     }

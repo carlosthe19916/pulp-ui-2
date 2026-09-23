@@ -59,10 +59,8 @@ export const useGroupForm = ({
       if (isCreate) {
         await createGroup(valuesToNewGroup(values));
       } else if (group?.pulp_href) {
-        await updateGroup(
-          extractIdFromHref(group.pulp_href),
-          valuesToPatchedGroup(values),
-        );
+        const groupId = extractIdFromHref(group.pulp_href);
+        await updateGroup(groupId, valuesToPatchedGroup(values));
       } else {
         return;
       }

@@ -1,10 +1,11 @@
-import type { PatchedRole, Role } from "@app/client";
+import type { PatchedRole, Role, RoleResponse } from "@app/client";
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import {
   useRoleCreateMutation,
   useRoleDeleteMutation,
   useRoleUpdateMutation,
 } from "@app/queries/roles";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useRoleActions = () => {
@@ -25,11 +26,14 @@ export const useRoleActions = () => {
       errorTitle: "Failed to update role",
     });
 
-  const deleteRole = async (roleId: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(roleId), {
-      successTitle: `Role "${name}" deleted`,
-      errorTitle: "Failed to delete role",
-    });
+  const deleteRole = async (role: RoleResponse) =>
+    runAction(
+      () => deleteMutation.mutateAsync(extractIdFromHref(role.pulp_href ?? "")),
+      {
+        successTitle: `Role "${role.name}" deleted`,
+        errorTitle: "Failed to delete role",
+      },
+    );
 
   return {
     createRole,

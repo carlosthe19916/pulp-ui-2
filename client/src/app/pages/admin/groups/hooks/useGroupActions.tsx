@@ -1,10 +1,11 @@
-import type { Group, PatchedGroup } from "@app/client";
+import type { Group, GroupResponse, PatchedGroup } from "@app/client";
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import {
   useGroupCreateMutation,
   useGroupDeleteMutation,
   useGroupUpdateMutation,
 } from "@app/queries/groups";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useGroupActions = () => {
@@ -25,11 +26,15 @@ export const useGroupActions = () => {
       errorTitle: "Failed to update group",
     });
 
-  const deleteGroup = async (groupId: string, name: string) =>
-    runAction(() => deleteMutation.mutateAsync(groupId), {
-      successTitle: `Group "${name}" deleted`,
-      errorTitle: "Failed to delete group",
-    });
+  const deleteGroup = async (group: GroupResponse) =>
+    runAction(
+      () =>
+        deleteMutation.mutateAsync(extractIdFromHref(group.pulp_href ?? "")),
+      {
+        successTitle: `Group "${group.name}" deleted`,
+        errorTitle: "Failed to delete group",
+      },
+    );
 
   return {
     createGroup,

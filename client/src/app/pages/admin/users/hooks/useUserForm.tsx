@@ -97,10 +97,8 @@ export const useUserForm = ({
       if (isCreate) {
         await createUser(valuesToNewUser(values));
       } else if (user?.pulp_href) {
-        await updateUser(
-          extractIdFromHref(user.pulp_href),
-          valuesToPatchedUser(values),
-        );
+        const userId = extractIdFromHref(user.pulp_href);
+        await updateUser(userId, valuesToPatchedUser(values));
       } else {
         return;
       }
