@@ -30,27 +30,29 @@ export class PulpApi {
   private constructor(
     private readonly ctx: APIRequestContext,
     private readonly domainSegment: string,
+    /** Whether the backend reports the domains feature as enabled (from `/status`). */
+    readonly domainEnabled: boolean,
   ) {}
 
-  /** Create a client, discovering the domain segment from `/status`. */
+  /** Create a client, discovering domain enablement from `/status`. */
   static async create(): Promise<PulpApi> {
     const ctx = await request.newContext({
       baseURL: PULP_API_URL,
       extraHTTPHeaders: { Authorization: authHeader },
     });
 
-    let domainSegment = "";
+    let domainEnabled = false;
     try {
       const res = await ctx.get("/api/pulp/api/v3/status/");
       if (res.ok()) {
         const status = (await res.json()) as { domain_enabled?: boolean };
-        if (status.domain_enabled) domainSegment = "/default";
+        domainEnabled = status.domain_enabled ?? false;
       }
     } catch {
       // Fall back to a domain-less path; cleanup is best-effort.
     }
 
-    return new PulpApi(ctx, domainSegment);
+    return new PulpApi(ctx, domainEnabled ? "/default" : "", domainEnabled);
   }
 
   private collectionUrl(collection: string): string {

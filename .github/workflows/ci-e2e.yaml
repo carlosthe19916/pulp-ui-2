@@ -9,10 +9,16 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        domains: [enabled, disabled]
     env:
       PULP_API_URL: http://localhost:8080
       E2E_USERNAME: admin
       E2E_PASSWORD: password
+      # Consumed by docker-compose.yml to toggle the Pulp domains feature.
+      PULP_DOMAIN_ENABLED: ${{ matrix.domains == 'enabled' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -54,7 +60,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.domains }}
           path: e2e/playwright-report/
 
       - name: Stop Pulp

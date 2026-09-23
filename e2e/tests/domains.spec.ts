@@ -1,8 +1,9 @@
 import { expect, test } from "./fixtures";
 import { uniqueName } from "./helpers/unique";
 
-test.describe("Domains", () => {
-  test.beforeEach(async ({ domainsPage }) => {
+test.describe("Domains (enabled)", () => {
+  test.beforeEach(async ({ domainsPage, api }) => {
+    test.skip(!api.domainEnabled, "domains feature disabled on this backend");
     await domainsPage.goto();
   });
 
@@ -163,5 +164,26 @@ test.describe("Domains", () => {
     await expect(dialog.getByText("Secret key is required")).toBeVisible();
 
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  });
+});
+
+test.describe("Domains (disabled)", () => {
+  test.beforeEach(async ({ api }) => {
+    test.skip(api.domainEnabled, "domains feature enabled on this backend");
+  });
+
+  test("hides Domains from the sidebar", async ({ page }) => {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Nav" });
+    await expect(nav).toBeVisible();
+    await expect(
+      nav.getByRole("link", { name: "Domains", exact: true }),
+    ).toBeHidden();
+  });
+
+  test("shows the disabled empty state on the domains route", async ({
+    domainsPage,
+  }) => {
+    await domainsPage.expectDisabledState();
   });
 });

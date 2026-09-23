@@ -29,6 +29,14 @@ export class DomainsPage extends DataViewList {
     await expect(this.heading).toBeVisible();
   }
 
+  /** When domains are disabled, the route renders a "not enabled" empty state. */
+  async expectDisabledState(): Promise<void> {
+    await this.page.goto("/system-management/domains");
+    await expect(
+      this.page.getByRole("heading", { name: "Domains are not enabled" }),
+    ).toBeVisible();
+  }
+
   async openCreate(): Promise<Locator> {
     await this.page
       .getByRole("button", { name: "Create domain", exact: true })

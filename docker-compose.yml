@@ -6,6 +6,9 @@ services:
     container_name: pulp-ui-e2e
     ports:
       - "8080:80"
+    environment:
+      # Toggle the domains feature; on for local dev, overridden by the CI matrix.
+      PULP_DOMAIN_ENABLED: "${PULP_DOMAIN_ENABLED:-true}"
     volumes:
       - ./e2e/pulp/settings:/etc/pulp:Z
       - pulp_e2e_storage:/var/lib/pulp
