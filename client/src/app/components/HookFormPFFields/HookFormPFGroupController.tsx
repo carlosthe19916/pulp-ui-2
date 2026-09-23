@@ -62,8 +62,12 @@ export const HookFormPFGroupController = <
     name={name}
     render={({ field, fieldState, formState }) => {
       const { isDirty, isTouched, error } = fieldState;
+      // Also reveal errors once submit was attempted, so untouched required
+      // fields (e.g. those shown after switching a select) don't fail silently.
       const shouldDisplayError =
-        error?.message && (isDirty || isTouched) && !errorsSuppressed;
+        error?.message &&
+        (isDirty || isTouched || formState.isSubmitted) &&
+        !errorsSuppressed;
       return (
         <FormGroup
           labelHelp={labelIcon}

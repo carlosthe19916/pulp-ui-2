@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { domainKeys } from "./domains";
 import { groupKeys } from "./groups";
 import { roleKeys } from "./roles";
+import { taskKeys } from "./tasks";
 import { userKeys } from "./users";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -67,6 +69,43 @@ describe("query-key factories", () => {
       expect(startsWith(userKeys.roles(href), userKeys.detail(href))).toBe(
         true,
       );
+    });
+  });
+
+  describe("domainKeys", () => {
+    it("keeps the list query under the list folder", () => {
+      expect(
+        startsWith(
+          domainKeys.listQuery(domain, { limit: 10 }),
+          domainKeys.list(),
+        ),
+      ).toBe(true);
+    });
+
+    it("keeps the detail query under the detail folder", () => {
+      expect(
+        startsWith(domainKeys.detailQuery(href), domainKeys.detail(href)),
+      ).toBe(true);
+    });
+  });
+
+  describe("taskKeys", () => {
+    it("keeps the list query under the list folder", () => {
+      expect(
+        startsWith(taskKeys.listQuery(domain, { limit: 10 }), taskKeys.list()),
+      ).toBe(true);
+    });
+
+    it("keeps the detail query under the detail folder", () => {
+      expect(
+        startsWith(taskKeys.detailQuery(href), taskKeys.detail(href)),
+      ).toBe(true);
+    });
+
+    it("keeps the watch-by-ids query under the byIds folder", () => {
+      expect(
+        startsWith(taskKeys.byIdsQuery(domain, ["1", "2"]), taskKeys.byIds()),
+      ).toBe(true);
     });
   });
 

@@ -12,7 +12,6 @@ import {
   buildUserHref,
   extractIdFromHref,
   inferPulpTypeFromHref,
-  isEmptyDetailPayload,
   resolvePulpType,
 } from "./pulpHref";
 
@@ -76,12 +75,6 @@ describe("pulpHref helpers", () => {
     expect(resolvePulpType(undefined, "/remotes/file/file/x/")).toBe(
       "file.file",
     );
-  });
-
-  it("detects empty detail payloads", () => {
-    expect(isEmptyDetailPayload(undefined)).toBe(true);
-    expect(isEmptyDetailPayload({})).toBe(true);
-    expect(isEmptyDetailPayload({ name: "x" })).toBe(false);
   });
 
   it("joins distribution base_url and relative_path for downloads", () => {

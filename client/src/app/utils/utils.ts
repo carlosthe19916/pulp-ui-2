@@ -118,8 +118,9 @@ export const getValidatedFromErrors = (
   error: unknown | undefined,
   dirty: boolean | undefined,
   isTouched: boolean | undefined,
+  isSubmitted?: boolean,
 ) => {
-  return error && (dirty || isTouched) ? "error" : "default";
+  return error && (dirty || isTouched || isSubmitted) ? "error" : "default";
 };
 
 export const getValidatedFromError = (error: unknown | undefined) => {

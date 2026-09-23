@@ -34,17 +34,15 @@ export const resolvePulpType = (
   return pulpType || inferPulpTypeFromHref(href);
 };
 
-/** True when a detail payload is missing or an empty object (`data ?? {}`). */
-export const isEmptyDetailPayload = (
-  data: unknown,
-): data is null | undefined | Record<string, never> => {
-  if (data == null) return true;
-  if (typeof data !== "object") return false;
-  return Object.keys(data as object).length === 0;
-};
-
 export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`users/${userId}/`, domain);
+};
+
+export const buildDomainHref = (
+  domainId: string,
+  domain: IPulpDomain,
+): string => {
+  return pulpApiPath(`domains/${domainId}/`, domain);
 };
 
 export const buildGroupHref = (

@@ -2,6 +2,7 @@ import { test as base } from "@playwright/test";
 
 import { Cleanup } from "./helpers/cleanup";
 import { PulpApi } from "./helpers/pulp-api";
+import { DomainsPage } from "./pom/DomainsPage";
 import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
 import { UsersPage } from "./pom/UsersPage";
@@ -10,6 +11,7 @@ interface ITestFixtures {
   usersPage: UsersPage;
   rolesPage: RolesPage;
   groupsPage: GroupsPage;
+  domainsPage: DomainsPage;
   /** Register test-created names here; leftovers are removed in teardown. */
   cleanup: Cleanup;
 }
@@ -50,6 +52,9 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   },
   groupsPage: async ({ page }, provide) => {
     await provide(new GroupsPage(page));
+  },
+  domainsPage: async ({ page }, provide) => {
+    await provide(new DomainsPage(page));
   },
 });
 

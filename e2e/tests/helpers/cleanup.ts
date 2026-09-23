@@ -1,6 +1,6 @@
 import type { PulpApi } from "./pulp-api";
 
-type Kind = "user" | "role" | "group";
+type Kind = "user" | "role" | "group" | "domain";
 
 /**
  * Per-test tracker of records to remove after the test. Tests register a name as
@@ -11,21 +11,23 @@ type Kind = "user" | "role" | "group";
 export class Cleanup {
   private readonly items: { kind: Kind; name: string }[] = [];
 
-  /** Track (and return) a username to delete after the test. */
   user(name: string): string {
     this.items.push({ kind: "user", name });
     return name;
   }
 
-  /** Track (and return) a role name to delete after the test. */
   role(name: string): string {
     this.items.push({ kind: "role", name });
     return name;
   }
 
-  /** Track (and return) a group name to delete after the test. */
   group(name: string): string {
     this.items.push({ kind: "group", name });
+    return name;
+  }
+
+  domain(name: string): string {
+    this.items.push({ kind: "domain", name });
     return name;
   }
 
@@ -34,7 +36,8 @@ export class Cleanup {
     for (const { kind, name } of [...this.items].reverse()) {
       if (kind === "user") await api.deleteUser(name);
       else if (kind === "role") await api.deleteRole(name);
-      else await api.deleteGroup(name);
+      else if (kind === "group") await api.deleteGroup(name);
+      else await api.deleteDomain(name);
     }
   }
 }

@@ -36,17 +36,80 @@ export type ITaskListParams = ListParams<TasksListData>;
 const isActiveTask = (state?: string | null) =>
   state === "running" || state === "waiting" || state === "canceling";
 
+/** A task in a terminal state has finished (successfully or not) and won't change. */
+export const isTerminalTaskState = (state?: string | null): boolean =>
+  state === "completed" ||
+  state === "failed" ||
+  state === "canceled" ||
+  state === "skipped";
+
 export const tasksRootQueryOptions = queryOptions({
   queryKey: [TasksQueryKey],
   queryFn: async (): Promise<null> => null,
 });
+
+/**
+ * Query-key factory mirroring the REST paths. `domain` below is the pulp
+ * *deployment* domain (`IPulpDomain`, the slug that scopes every API path).
+ * Identifying segments precede params so a prefix invalidates all variants of a
+ * collection. Shared by the query options and mutations to prevent key drift.
+ */
+export const taskKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["tasks"]
+  all: () => [TasksQueryKey] as const,
+  // ["tasks", "list"] — every list query, any domain/params
+  list: () => [...taskKeys.all(), "list"] as const,
+  // ["tasks", "detail", taskHref]
+  detail: (taskHref: string) =>
+    [...taskKeys.all(), "detail", taskHref] as const,
+  // ["tasks", "byIds"] — every watch-by-ids query
+  byIds: () => [...taskKeys.all(), "byIds"] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["tasks", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: ITaskListParams) =>
+    [...taskKeys.list(), domain, params] as const,
+  // ["tasks", "detail", taskHref] — same value as detail() (no params)
+  detailQuery: (taskHref: string) => taskKeys.detail(taskHref),
+  // ["tasks", "byIds", domain, taskIds]
+  byIdsQuery: (domain: IPulpDomain, taskIds: string[]) =>
+    [...taskKeys.byIds(), domain, taskIds] as const,
+};
+
+/** Poll a specific set of tasks (by id) until none are active — for watching in-flight operations. */
+export const tasksByIdsQueryOptions = (
+  domain: IPulpDomain,
+  taskIds: string[],
+) =>
+  queryOptions({
+    queryKey: taskKeys.byIdsQuery(domain, taskIds),
+    queryFn: async (): Promise<TaskResponse[]> => {
+      const response = await axiosInstance.get<PaginatedTaskResponseList>(
+        pulpApiPath("tasks/", domain),
+        {
+          params: {
+            pulp_id__in: taskIds.join(","),
+            fields: "pulp_href,state",
+            limit: 100,
+          },
+        },
+      );
+      return response.data.results ?? [];
+    },
+    enabled: taskIds.length > 0,
+    refetchInterval: (query) =>
+      query.state.data?.some((task) => isActiveTask(task.state))
+        ? DEFAULT_REFETCH_INTERVAL
+        : false,
+  });
 
 export const tasksListQueryOptions = (
   domain: IPulpDomain,
   params: ITaskListParams,
 ) =>
   queryOptions({
-    queryKey: [...tasksRootQueryOptions.queryKey, "list", domain, params],
+    queryKey: taskKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedTaskResponseList> => {
       const response = await axiosInstance.get<PaginatedTaskResponseList>(
         pulpApiPath("tasks/", domain),
@@ -69,7 +132,7 @@ export const tasksListQueryOptions = (
 
 export const taskDetailQueryOptions = (taskHref: string) =>
   queryOptions({
-    queryKey: [...tasksRootQueryOptions.queryKey, "detail", taskHref],
+    queryKey: taskKeys.detailQuery(taskHref),
     queryFn: async (): Promise<TaskResponse> => {
       const response = await axiosInstance.get<TaskResponse>(
         toProxyHref(taskHref),
@@ -105,9 +168,7 @@ export const useTaskCancelMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: tasksRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
     },
   });
 };
@@ -130,9 +191,7 @@ export const useTaskPurgeMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: tasksRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
     },
   });
 };

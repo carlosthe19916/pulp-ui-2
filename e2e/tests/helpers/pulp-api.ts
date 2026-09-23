@@ -85,6 +85,10 @@ export class PulpApi {
     return this.deleteByExactName("groups", "name", name);
   }
 
+  deleteDomain(name: string): Promise<void> {
+    return this.deleteByExactName("domains", "name", name);
+  }
+
   private async findOne<T>(
     collection: string,
     param: string,
@@ -130,6 +134,26 @@ export class PulpApi {
       username,
     );
     return user?.first_name;
+  }
+
+  /** A domain's stored description (by exact name), or undefined if not found. */
+  async domainDescription(name: string): Promise<string | null | undefined> {
+    const domain = await this.findOne<{ description?: string | null }>(
+      "domains",
+      "name",
+      name,
+    );
+    return domain?.description;
+  }
+
+  /** A domain's stored `storage_settings` (by exact name), or undefined if not found. */
+  async domainStorageSettings(
+    name: string,
+  ): Promise<Record<string, unknown> | undefined> {
+    const domain = await this.findOne<{
+      storage_settings?: Record<string, unknown>;
+    }>("domains", "name", name);
+    return domain?.storage_settings;
   }
 
   async dispose(): Promise<void> {

@@ -9,9 +9,12 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 
+import { useApiDomain } from "@app/hooks/useApiDomain";
+
 export const SidebarApp: React.FC = () => {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const { enabled: domainsEnabled } = useApiDomain();
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/";
@@ -30,6 +33,14 @@ export const SidebarApp: React.FC = () => {
               <Link to="/tasks">Tasks</Link>
             </NavItem>
           </NavGroup>
+
+          {domainsEnabled && (
+            <NavGroup title="System Management">
+              <NavItem isActive={isActive("/system-management/domains")}>
+                <Link to="/system-management/domains">Domains</Link>
+              </NavItem>
+            </NavGroup>
+          )}
 
           <NavGroup title="Content Management">
             <NavItem isActive={isActive("/content-management/repositories")}>
