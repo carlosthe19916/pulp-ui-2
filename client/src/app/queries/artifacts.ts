@@ -3,7 +3,6 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { ArtifactResponse } from "@app/client";
 import { toProxyHref } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const ArtifactsQueryKey = "artifacts";
 
@@ -14,9 +13,6 @@ export const artifactDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<ArtifactResponse>(
         toProxyHref(href),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.pulp_href) {
-        throw new Error("Empty artifact detail response");
-      }
       return response.data;
     },
     enabled: !!href,

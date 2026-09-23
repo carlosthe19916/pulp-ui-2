@@ -22,7 +22,7 @@ import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildUserHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildUserHref } from "./utils/pulpHref";
 
 export const UsersQueryKey = "users";
 
@@ -96,9 +96,6 @@ export const userDetailQueryOptions = (userHref: string) =>
       const response = await axiosInstance.get<UserResponse>(
         toProxyHref(userHref),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.username) {
-        throw new Error("Empty user detail response");
-      }
       return response.data;
     },
     enabled: !!userHref,

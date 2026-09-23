@@ -19,7 +19,6 @@ import { buildTaskHref } from "@app/utils/taskHref";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { isEmptyDetailPayload } from "./utils/pulpHref";
 
 export const TasksQueryKey = "tasks";
 
@@ -75,9 +74,6 @@ export const taskDetailQueryOptions = (taskHref: string) =>
       const response = await axiosInstance.get<TaskResponse>(
         toProxyHref(taskHref),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.name) {
-        throw new Error("Empty task detail response");
-      }
       return response.data;
     },
     enabled: !!taskHref,

@@ -21,7 +21,7 @@ import { useApiDomain } from "@app/hooks/useApiDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { buildRepositoryHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildRepositoryHref } from "./utils/pulpHref";
 
 import { repositoriesRootQueryOptions } from "./repositories";
 
@@ -37,9 +37,6 @@ export const fileRepositoryDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<FileFileRepositoryResponse>(
         toProxyHref(href),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.name) {
-        throw new Error("Empty file repository detail response");
-      }
       return response.data;
     },
     enabled: !!href,

@@ -15,7 +15,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { buildDistributionHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildDistributionHref } from "./utils/pulpHref";
 
 import { distributionsRootQueryOptions } from "./distributions";
 
@@ -31,9 +31,6 @@ export const fileDistributionDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<FileFileDistributionResponse>(
         toProxyHref(href),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.name) {
-        throw new Error("Empty file distribution detail response");
-      }
       return response.data;
     },
     enabled: !!href,

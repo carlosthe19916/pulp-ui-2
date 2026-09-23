@@ -14,7 +14,7 @@ import type {
 } from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
-import { buildPublicationHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildPublicationHref } from "./utils/pulpHref";
 
 import { publicationsRootQueryOptions } from "./publications";
 
@@ -30,9 +30,6 @@ export const filePublicationDetailQueryOptions = (href: string) =>
       const response = await axiosInstance.get<FileFilePublicationResponse>(
         toProxyHref(href),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.pulp_href) {
-        throw new Error("Empty file publication detail response");
-      }
       return response.data;
     },
     enabled: !!href,

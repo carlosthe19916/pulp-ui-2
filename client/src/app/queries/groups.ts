@@ -27,7 +27,7 @@ import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildGroupHref, isEmptyDetailPayload } from "./utils/pulpHref";
+import { buildGroupHref } from "./utils/pulpHref";
 
 export const GroupsQueryKey = "groups";
 
@@ -111,9 +111,6 @@ export const groupDetailQueryOptions = (groupHref: string) =>
       const response = await axiosInstance.get<GroupResponse>(
         toProxyHref(groupHref),
       );
-      if (isEmptyDetailPayload(response.data) || !response.data.name) {
-        throw new Error("Empty group detail response");
-      }
       return response.data;
     },
     enabled: !!groupHref,
