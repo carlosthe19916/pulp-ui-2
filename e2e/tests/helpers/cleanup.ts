@@ -1,6 +1,13 @@
 import type { PulpApi } from "./pulp-api";
 
-type Kind = "user" | "role" | "group" | "domain";
+type Kind =
+  | "user"
+  | "role"
+  | "group"
+  | "domain"
+  | "remote"
+  | "repository"
+  | "distribution";
 
 /**
  * Per-test tracker of records to remove after the test. Tests register a name as
@@ -31,13 +38,31 @@ export class Cleanup {
     return name;
   }
 
+  remote(name: string): string {
+    this.items.push({ kind: "remote", name });
+    return name;
+  }
+
+  repository(name: string): string {
+    this.items.push({ kind: "repository", name });
+    return name;
+  }
+
+  distribution(name: string): string {
+    this.items.push({ kind: "distribution", name });
+    return name;
+  }
+
   async run(api: PulpApi): Promise<void> {
-    // Newest first, so a group is gone before the user/role it referenced.
+    // Newest first, so a distribution is gone before the repo/remote it referenced.
     for (const { kind, name } of [...this.items].reverse()) {
       if (kind === "user") await api.deleteUser(name);
       else if (kind === "role") await api.deleteRole(name);
       else if (kind === "group") await api.deleteGroup(name);
-      else await api.deleteDomain(name);
+      else if (kind === "domain") await api.deleteDomain(name);
+      else if (kind === "remote") await api.deleteRemote(name);
+      else if (kind === "repository") await api.deleteRepository(name);
+      else if (kind === "distribution") await api.deleteDistribution(name);
     }
   }
 }

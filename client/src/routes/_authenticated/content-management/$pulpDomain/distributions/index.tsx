@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DistributionList } from "@app/pages/content-management/distributions/distribution-list/DistributionList";
 
 export const Route = createFileRoute(
-  "/_authenticated/content-management/distributions/",
+  "/_authenticated/content-management/$pulpDomain/distributions/",
 )({
   component: DistributionList,
 });

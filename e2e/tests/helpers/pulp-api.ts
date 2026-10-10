@@ -91,6 +91,18 @@ export class PulpApi {
     return this.deleteByExactName("domains", "name", name);
   }
 
+  deleteRemote(name: string): Promise<void> {
+    return this.deleteByExactName("remotes", "name", name);
+  }
+
+  deleteRepository(name: string): Promise<void> {
+    return this.deleteByExactName("repositories", "name", name);
+  }
+
+  deleteDistribution(name: string): Promise<void> {
+    return this.deleteByExactName("distributions", "name", name);
+  }
+
   private async findOne<T>(
     collection: string,
     param: string,

@@ -2,6 +2,7 @@ import { test as base } from "@playwright/test";
 
 import { Cleanup } from "./helpers/cleanup";
 import { PulpApi } from "./helpers/pulp-api";
+import { ContentPage } from "./pom/ContentPage";
 import { DomainsPage } from "./pom/DomainsPage";
 import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
@@ -12,6 +13,10 @@ interface ITestFixtures {
   rolesPage: RolesPage;
   groupsPage: GroupsPage;
   domainsPage: DomainsPage;
+  remotesPage: ContentPage;
+  repositoriesPage: ContentPage;
+  distributionsPage: ContentPage;
+  publicationsPage: ContentPage;
   /** Register test-created names here; leftovers are removed in teardown. */
   cleanup: Cleanup;
 }
@@ -55,6 +60,50 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   },
   domainsPage: async ({ page }, provide) => {
     await provide(new DomainsPage(page));
+  },
+  remotesPage: async ({ page }, provide) => {
+    await provide(
+      new ContentPage(page, {
+        path: "/content-management/default/remotes",
+        heading: "Remotes",
+        tableName: "Remotes table",
+        singular: "Remote",
+        createButton: "Create remote",
+      }),
+    );
+  },
+  repositoriesPage: async ({ page }, provide) => {
+    await provide(
+      new ContentPage(page, {
+        path: "/content-management/default/repositories",
+        heading: "Repositories",
+        tableName: "Repositories table",
+        singular: "Repository",
+        createButton: "Create repository",
+      }),
+    );
+  },
+  distributionsPage: async ({ page }, provide) => {
+    await provide(
+      new ContentPage(page, {
+        path: "/content-management/default/distributions",
+        heading: "Distributions",
+        tableName: "Distributions table",
+        singular: "Distribution",
+        createButton: "Create distribution",
+      }),
+    );
+  },
+  publicationsPage: async ({ page }, provide) => {
+    await provide(
+      new ContentPage(page, {
+        path: "/content-management/default/publications",
+        heading: "Publications",
+        tableName: "Publications table",
+        singular: "Publication",
+        createButton: "Create publication",
+      }),
+    );
   },
 });
 

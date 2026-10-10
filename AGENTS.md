@@ -150,6 +150,34 @@ client/src/app/
 `UploadModal` is used by both `repositories` and `content` → shared, so it
 lives in `@app/components/`, not `pages/content-management/components/`.
 
+### API endpoints
+
+Before wiring any REST call, check the OpenAPI spec at `client/openapi/pulp.json`
+(the source of truth) for the endpoint's query params, request body, and response
+shape. It's ~4 MB — grep it by path/`operationId`. The generated
+`client/src/app/client/` mirrors it and is often faster: `sdk.gen.ts` for the
+endpoint function itself (URL, method, params) and `types.gen.ts` for its
+param/response types (e.g. `UsersListData["query"]` lists every supported query
+param). Prefer server-side
+`limit`/`offset`/`ordering`/filters over fetching everything and processing in memory.
+
+### PatternFly CSS class names
+
+Never hardcode PatternFly class strings (`pf-v6-c-*`, `pf-m-*`, `pf-u-*`,
+`pf-l-*`). Import the typed constants from `@patternfly/react-styles` (a direct
+dependency) so a typo fails `tsc` instead of silently breaking layout. Combine
+several with the `css()` helper.
+
+```tsx
+import { css } from "@patternfly/react-styles";
+import checkStyles from "@patternfly/react-styles/css/components/Check/check";
+import tableStyles from "@patternfly/react-styles/css/components/Table/table";
+
+<Td className={tableStyles.tableCheck}>
+  <div className={css(checkStyles.check, checkStyles.modifiers.standalone)} />
+</Td>;
+```
+
 ### Import rules
 
 - **Import Order**: Group imports alphabetically and follow the order below,
@@ -160,6 +188,45 @@ lives in `@app/components/`, not `pages/content-management/components/`.
   3. **PatternFly block**: Any `@patternfly/*` dependency
   4. **App imports block**: Any `@app/*` dependency
   5. **Relative imports block**: Local relative imports (`./`, `../`, etc.)
+
+### TanStack Query
+
+- **Never `throw` inside a `queryFn`.** A `queryFn` returns data; error states
+  must originate from the HTTP layer — a rejected Axios request propagates
+  naturally and carries the status/shape the app's error handling expects. A
+  manual `throw new Error(...)` instead triggers React Query's retry/backoff on a
+  condition that will never recover, and yields a non-`AxiosError` the error
+  boundaries and notifications can't interpret.
+- For a non-HTTP "not found" / empty-result case (e.g. an aggregate endpoint that
+  answers `200` with an empty list), **return a falsy sentinel** (`""` / `null` —
+  match the field's `enabled: !!value` convention) and handle it where the throw
+  belongs: the route **`loader`** (throw there → `errorComponent` renders) or the
+  consuming component. See `entityHrefByIdQueryOptions` in
+  `client/src/app/queries/utils/entityCrud.ts`.
+
+### Content query file layout
+
+Content families split their query modules along a **plugin axis**. Keep the two
+sides distinct — don't let plugin specifics leak into the neutral base, and don't
+duplicate generic reads in the plugin file.
+
+- **`queries/<family>.ts`** (e.g. `distributions.ts`) is **plugin-neutral**. It
+  owns the cross-type list over the un-typed aggregate collection
+  (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant, the
+  `*RootQueryOptions` anchor, and the `*Keys` factory. No create/update/delete,
+  no plugin sub-resources.
+- **`queries/<plugin>-<family>.ts`** (e.g. `file-repositories.ts`) holds **only
+  plugin-specific** queries: typed create/mutations against
+  `<family>/<plugin>/<type>/`, and plugin sub-resources (e.g. repository
+  `versions`/`sync`, content upload, or a typed list when the aggregate returns a
+  union type). Reuse the base's `*RootQueryOptions.queryKey` for invalidation so
+  cache slots stay unified.
+- **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
+  `toProxyHref(href)`. Use `entityDetailQueryOptions` /
+  `useSuspenseEntityDetailQuery` from `queries/utils/entityCrud.ts`, keyed on
+  `<family>RootQueryOptions.queryKey` (which makes the key identical to
+  `<name>Keys.detail(href)`). Do **not** add a `<plugin><Family>DetailQueryOptions`
+  to the plugin file.
 
 ## Development
 

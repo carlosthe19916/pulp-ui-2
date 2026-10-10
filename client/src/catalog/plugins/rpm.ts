@@ -1,0 +1,266 @@
+import {
+  distributionBase,
+  publicationBase,
+  remoteBase,
+  repositoryBase,
+} from "../base-fields";
+import { definePlugin, whenInstalled } from "../compose";
+import type { IEntityField, IFieldOption } from "../field-types";
+
+const CHECKSUM_TYPE_OPTIONS: IFieldOption[] = [
+  { value: "unknown", label: "unknown" },
+  { value: "md5", label: "md5" },
+  { value: "sha1", label: "sha1" },
+  { value: "sha224", label: "sha224" },
+  { value: "sha256", label: "sha256" },
+  { value: "sha384", label: "sha384" },
+  { value: "sha512", label: "sha512" },
+];
+
+const COMPRESSION_TYPE_OPTIONS: IFieldOption[] = [
+  { value: "zstd", label: "zstd" },
+  { value: "gz", label: "gz" },
+  { value: "none", label: "none" },
+];
+
+const LAYOUT_OPTIONS: IFieldOption[] = [
+  { value: "nested_alphabetically", label: "Nested alphabetically" },
+  { value: "flat", label: "Flat" },
+  { value: "nested_by_digest", label: "Nested by digest" },
+];
+
+const rpmRepositoryExtras: IEntityField[] = [
+  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  { key: "autopublish", label: "Auto-publish", type: "boolean" },
+  {
+    key: "retain_package_versions",
+    label: "Retain Package Versions",
+    type: "number",
+  },
+  { key: "retain_checkpoints", label: "Retain Checkpoints", type: "number" },
+  {
+    key: "metadata_signing_service",
+    label: "Metadata Signing Service",
+    type: "text",
+  },
+  {
+    key: "package_signing_service",
+    label: "Package Signing Service",
+    type: "text",
+  },
+  {
+    key: "package_signing_fingerprint",
+    label: "Package Signing Fingerprint",
+    type: "text",
+  },
+  {
+    key: "checksum_type",
+    label: "Checksum Type",
+    type: "select",
+    options: CHECKSUM_TYPE_OPTIONS,
+  },
+  {
+    key: "compression_type",
+    label: "Compression Type",
+    type: "select",
+    options: COMPRESSION_TYPE_OPTIONS,
+  },
+  { key: "layout", label: "Layout", type: "select", options: LAYOUT_OPTIONS },
+];
+
+const rpmRemoteExtras: IEntityField[] = [
+  {
+    key: "sles_auth_token",
+    label: "SLES Auth Token",
+    type: "text",
+    group: "Authentication",
+  },
+];
+
+const rpmDistributionExtras: IEntityField[] = [
+  {
+    key: "repository",
+    label: "Repository",
+    type: "resource",
+    resourceKind: "repository",
+  },
+  {
+    key: "publication",
+    label: "Publication",
+    type: "resource",
+    resourceKind: "publication",
+  },
+  { key: "content_guard", label: "Content Guard", type: "text" },
+  {
+    key: "generate_repo_config",
+    label: "Generate Repo Config",
+    type: "boolean",
+  },
+  { key: "checkpoint", label: "Checkpoint", type: "boolean" },
+];
+
+export const rpm = definePlugin({
+  app: { isAvailable: whenInstalled("rpm", "pulp-rpm") },
+  ui: { label: "RPM" },
+  rest: { pulpType: "rpm.rpm", apiPath: "rpm/rpm" },
+  entities: {
+    // RPM repository: remotes, signing services and metadata layout options.
+    repository: {
+      capabilities: { sync: true, publish: true },
+      form: {
+        createFields: [...repositoryBase.create, ...rpmRepositoryExtras],
+        editFields: [...repositoryBase.edit, ...rpmRepositoryExtras],
+      },
+      page: {
+        detailFields: [
+          ...repositoryBase.detail,
+          { key: "autopublish", label: "Auto-publish", type: "boolean" },
+          {
+            key: "retain_package_versions",
+            label: "Retain Package Versions",
+            type: "number",
+          },
+          {
+            key: "retain_checkpoints",
+            label: "Retain Checkpoints",
+            type: "number",
+          },
+          {
+            key: "metadata_signing_service",
+            label: "Metadata Signing Service",
+            type: "text",
+          },
+          {
+            key: "package_signing_service",
+            label: "Package Signing Service",
+            type: "text",
+          },
+          {
+            key: "package_signing_fingerprint",
+            label: "Package Signing Fingerprint",
+            type: "text",
+          },
+          { key: "checksum_type", label: "Checksum Type", type: "text" },
+          { key: "compression_type", label: "Compression Type", type: "text" },
+          { key: "layout", label: "Layout", type: "text" },
+        ],
+      },
+    },
+
+    // RPM remote (rpm.rpm) + ULN remote (rpm.uln) — two variants of the one slot.
+    remote: [
+      {
+        isWizard: true,
+        form: {
+          createFields: [...remoteBase.create, ...rpmRemoteExtras],
+          editFields: [...remoteBase.edit, ...rpmRemoteExtras],
+        },
+        page: { detailFields: remoteBase.detail },
+      },
+      {
+        ui: { label: "ULN" },
+        rest: { pulpType: "rpm.uln", apiPath: "rpm/uln" },
+        isWizard: true,
+        form: {
+          createFields: [
+            ...remoteBase.create,
+            {
+              key: "uln_server_base_url",
+              label: "ULN Server Base URL",
+              type: "text",
+              required: true,
+              group: "General",
+            },
+          ],
+          editFields: [
+            ...remoteBase.edit,
+            {
+              key: "uln_server_base_url",
+              label: "ULN Server Base URL",
+              type: "text",
+              group: "General",
+            },
+          ],
+        },
+        page: {
+          detailFields: [
+            ...remoteBase.detail,
+            {
+              key: "uln_server_base_url",
+              label: "ULN Server Base URL",
+              type: "text",
+            },
+          ],
+        },
+      },
+    ],
+
+    // RPM distribution: repo/publication plus content-guard and repo-config options.
+    distribution: {
+      form: {
+        createFields: [...distributionBase.create, ...rpmDistributionExtras],
+        editFields: [...distributionBase.edit, ...rpmDistributionExtras],
+      },
+      page: {
+        detailFields: [
+          ...distributionBase.detail,
+          { key: "repository", label: "Repository", type: "text" },
+          { key: "publication", label: "Publication", type: "text" },
+          { key: "content_guard", label: "Content Guard", type: "text" },
+          {
+            key: "generate_repo_config",
+            label: "Generate Repo Config",
+            type: "boolean",
+          },
+          { key: "checkpoint", label: "Checkpoint", type: "boolean" },
+        ],
+        browseCardFields: [
+          { key: "base_path", label: "Base path", type: "text" },
+          { key: "base_url", label: "Base URL", type: "text" },
+        ],
+      },
+    },
+
+    // RPM publication: base supplies the repository; adds publish-time options.
+    publication: {
+      form: {
+        createFields: [
+          ...publicationBase.create,
+          {
+            key: "repository_version",
+            label: "Repository Version",
+            type: "text",
+          },
+          { key: "checkpoint", label: "Checkpoint", type: "boolean" },
+          {
+            key: "checksum_type",
+            label: "Checksum Type",
+            type: "select",
+            options: CHECKSUM_TYPE_OPTIONS,
+          },
+          {
+            key: "compression_type",
+            label: "Compression Type",
+            type: "select",
+            options: COMPRESSION_TYPE_OPTIONS,
+          },
+          {
+            key: "layout",
+            label: "Layout",
+            type: "select",
+            options: LAYOUT_OPTIONS,
+          },
+        ],
+      },
+      page: {
+        detailFields: [
+          ...publicationBase.detail,
+          { key: "checksum_type", label: "Checksum Type", type: "text" },
+          { key: "compression_type", label: "Compression Type", type: "text" },
+          { key: "layout", label: "Layout", type: "text" },
+          { key: "checkpoint", label: "Checkpoint", type: "boolean" },
+        ],
+      },
+    },
+  },
+});
