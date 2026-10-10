@@ -48,8 +48,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
-type DistributionRow = DistributionResponse & { pulp_type?: string };
+type DistributionRow = DistributionResponse;
 
 const COLUMN_KEYS = [
   "name",
@@ -138,10 +137,7 @@ export const DistributionList: React.FC = () => {
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const distId = extractIdFromHref(distribution.pulp_href ?? "");
-    const pulpType = resolvePulpType(
-      distribution.pulp_type,
-      distribution.pulp_href,
-    );
+    const pulpType = resolvePulpType(distribution.pulp_href);
 
     return {
       id: distribution.pulp_href,

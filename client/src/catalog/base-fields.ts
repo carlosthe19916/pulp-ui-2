@@ -3,12 +3,11 @@ import type { IEntityField } from "./field-types";
 /**
  * Common field groups shared by an entity type's plugins (pulpcore serializer
  * fields). Plugins spread these and add extras. `create` has the required fields,
- * `edit` mirrors them all-optional, `detail` is the read-only view.
+ * `edit` mirrors them all-optional.
  */
 interface IBaseFields {
   create: IEntityField[];
   edit: IEntityField[];
-  detail: IEntityField[];
 }
 
 // Remote field groups double as wizard steps (the remote form is large).
@@ -102,19 +101,6 @@ export const remoteBase: IBaseFields = {
     { key: "url", label: "URL", type: "text", group: GENERAL },
     ...remoteCommon,
   ],
-  detail: [
-    { key: "url", label: "URL", type: "text" },
-    { key: "policy", label: "Policy", type: "text" },
-    { key: "tls_validation", label: "TLS Validation", type: "boolean" },
-    { key: "proxy_url", label: "Proxy URL", type: "text" },
-    {
-      key: "download_concurrency",
-      label: "Download Concurrency",
-      type: "number",
-    },
-    { key: "max_retries", label: "Max Retries", type: "number" },
-    { key: "total_timeout", label: "Total Timeout", type: "number" },
-  ],
 };
 
 /** Repositories: the pulpcore RepositorySerializer common field set. */
@@ -129,10 +115,6 @@ export const repositoryBase: IBaseFields = {
     { key: "description", label: "Description", type: "textarea" },
     { key: "retain_repo_versions", label: "Retained Versions", type: "number" },
   ],
-  detail: [
-    { key: "description", label: "Description", type: "text" },
-    { key: "retain_repo_versions", label: "Retained Versions", type: "number" },
-  ],
 };
 
 /** Distributions: the pulpcore DistributionSerializer common field set. */
@@ -145,11 +127,6 @@ export const distributionBase: IBaseFields = {
   edit: [
     { key: "name", label: "Name", type: "text" },
     { key: "base_path", label: "Base Path", type: "text" },
-    { key: "hidden", label: "Hidden", type: "boolean" },
-  ],
-  detail: [
-    { key: "base_path", label: "Base Path", type: "text" },
-    { key: "base_url", label: "Base URL", type: "text" },
     { key: "hidden", label: "Hidden", type: "boolean" },
   ],
 };
@@ -169,13 +146,4 @@ export const publicationBase: IBaseFields = {
     },
   ],
   edit: [],
-  detail: [
-    {
-      key: "repository",
-      label: "Repository",
-      type: "resource",
-      resourceKind: "repository",
-    },
-    { key: "repository_version", label: "Repository Version", type: "text" },
-  ],
 };

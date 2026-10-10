@@ -44,11 +44,8 @@ export const file = definePlugin({
   entities: {
     // File repository: a remote to sync from plus auto-publish.
     repository: {
-      capabilities: {
-        sync: { remoteTypes: ["file.file", "file.git"] },
-        publish: true,
-      },
       form: {
+        isWizard: false,
         createFields: [
           ...repositoryBase.create,
           {
@@ -75,13 +72,8 @@ export const file = definePlugin({
           { key: "autopublish", label: "Auto-publish", type: "boolean" },
         ],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          { key: "autopublish", label: "Auto-publish", type: "boolean" },
-          { key: "manifest", label: "Manifest", type: "text" },
-        ],
-      },
+      compatibleRemoteTypes: ["file.file", "file.git"],
+      compatiblePublicationTypes: ["file.file"],
     },
 
     // File remote (file.file) + Git remote (file.git) — two variants of the slot.
@@ -90,15 +82,17 @@ export const file = definePlugin({
     // offer it and lets users create one.
     remote: [
       {
-        isWizard: true,
-        form: { createFields: remoteBase.create, editFields: remoteBase.edit },
-        page: { detailFields: remoteBase.detail },
+        form: {
+          isWizard: true,
+          createFields: remoteBase.create,
+          editFields: remoteBase.edit,
+        },
       },
       {
         ui: { label: "File (Git)" },
         rest: { pulpType: "file.git", apiPath: "file/git" },
-        isWizard: true,
         form: {
+          isWizard: true,
           createFields: [
             ...withoutPolicy(remoteBase.create),
             ...fileGitRemoteExtras,
@@ -108,37 +102,22 @@ export const file = definePlugin({
             ...fileGitRemoteExtras,
           ],
         },
-        page: {
-          detailFields: [
-            ...remoteBase.detail,
-            { key: "git_ref", label: "Git Ref", type: "text" },
-          ],
-        },
       },
     ],
 
     // File distribution: serves a repository or a specific publication.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...fileDistributionExtras],
         editFields: [...distributionBase.edit, ...fileDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "publication", label: "Publication", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
 
     // File publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
+        isWizard: false,
         createFields: [
           ...publicationBase.create,
           {
@@ -147,20 +126,16 @@ export const file = definePlugin({
             type: "text",
           },
         ],
-      },
-      page: {
-        detailFields: [
-          ...publicationBase.detail,
-          { key: "manifest", label: "Manifest", type: "text" },
-        ],
+        editFields: [],
       },
     },
 
     // File content: an uploadable file unit; the collection path is file/files.
     content: {
+      ui: {},
       rest: { apiPath: "file/files" },
-      capabilities: { upload: true },
       form: {
+        isWizard: false,
         createFields: [
           {
             key: "relative_path",
@@ -176,22 +151,7 @@ export const file = definePlugin({
             resourceKind: "repository",
           },
         ],
-      },
-      page: {
-        detailFields: [
-          { key: "relative_path", label: "Relative Path", type: "text" },
-          { key: "sha256", label: "SHA-256", type: "text" },
-          { key: "md5", label: "MD5", type: "text" },
-          { key: "sha1", label: "SHA-1", type: "text" },
-          { key: "sha512", label: "SHA-512", type: "text" },
-        ],
-        browseDetailFields: [
-          { key: "relative_path", label: "Relative Path", type: "text" },
-          { key: "sha256", label: "SHA-256", type: "text" },
-          { key: "sha1", label: "SHA-1", type: "text" },
-          { key: "md5", label: "MD5", type: "text" },
-          { key: "sha512", label: "SHA-512", type: "text" },
-        ],
+        editFields: [],
       },
     },
   },

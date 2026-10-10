@@ -16,7 +16,6 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { getEntityLabel } from "@catalog";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { EntityModal } from "@app/components/Entity/EntityModal";
 import {
   PageHeaderActionsMenu,
@@ -113,10 +112,6 @@ export const EntityDetail = ({
                   {formatDateTime(entity.pulp_created) ?? "—"}
                 </DescriptionListDescription>
               </DescriptionListGroup>
-              <EntityDetailFields
-                fields={plugin?.page.detailFields}
-                entity={entity}
-              />
             </DescriptionList>
           </StackItem>
         </Stack>

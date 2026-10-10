@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildContentHref,
-  buildDistributionContentUrl,
   buildDistributionHref,
   buildGroupHref,
   buildPublicationHref,
@@ -11,7 +10,6 @@ import {
   buildRoleHref,
   buildUserHref,
   extractIdFromHref,
-  inferPulpTypeFromHref,
   resolvePulpType,
 } from "./pulpHref";
 
@@ -60,35 +58,31 @@ describe("pulpHref helpers", () => {
     expect(extractIdFromHref("/api/pulp/default/api/v3/users/42/")).toBe("42");
   });
 
-  it("infers pulp_type from typed resource hrefs", () => {
+  it("resolves pulp_type from a resource href via the catalog", () => {
+    // Typed families: <app>/<slug> maps to the catalog pulp_type.
     expect(
-      inferPulpTypeFromHref(
-        "/api/pulp/default/api/v3/repositories/file/file/abc/",
-      ),
+      resolvePulpType("/api/pulp/default/api/v3/repositories/file/file/abc/"),
     ).toBe("file.file");
+    expect(resolvePulpType("/remotes/python/python/x/")).toBe("python.python");
+    // Non-"doubled" slug — proves it reads the catalog, not a string transform.
+    expect(resolvePulpType("/distributions/python/pypi/x/")).toBe(
+      "python.pypi",
+    );
+    // Content: apiPath "file/files" maps to "file.file" (no de-pluralize hack).
     expect(
-      inferPulpTypeFromHref("/api/pulp/default/api/v3/content/file/files/abc/"),
+      resolvePulpType("/api/pulp/default/api/v3/content/file/files/abc/"),
     ).toBe("file.file");
-    expect(resolvePulpType("rpm.rpm", "/repositories/file/file/x/")).toBe(
-      "rpm.rpm",
-    );
-    expect(resolvePulpType(undefined, "/remotes/file/file/x/")).toBe(
-      "file.file",
-    );
   });
 
-  it("joins distribution base_url and relative_path for downloads", () => {
+  it("returns undefined for falsy, untyped, or unmodelled hrefs", () => {
+    expect(resolvePulpType(undefined)).toBeUndefined();
+    expect(resolvePulpType("")).toBeUndefined();
+    // Untyped/aggregate and non-content families.
     expect(
-      buildDistributionContentUrl(
-        "http://pulp.example/pulp/content/files/",
-        "docs/readme.txt",
-      ),
-    ).toBe("http://pulp.example/pulp/content/files/docs/readme.txt");
-    expect(
-      buildDistributionContentUrl(
-        "http://pulp.example/pulp/content/files",
-        "/docs/readme.txt",
-      ),
-    ).toBe("http://pulp.example/pulp/content/files/docs/readme.txt");
+      resolvePulpType("/api/pulp/default/api/v3/users/42/"),
+    ).toBeUndefined();
+    expect(resolvePulpType("/repositories/")).toBeUndefined();
+    // Family matches but the plugin is not in the catalog.
+    expect(resolvePulpType("/repositories/bogus/bogus/x/")).toBeUndefined();
   });
 });

@@ -2,7 +2,7 @@ import type React from "react";
 
 import { Label } from "@patternfly/react-core";
 
-import { type EntityType, getPlugin } from "@catalog";
+import { type EntityType, getEntityPlugin } from "@catalog";
 
 interface IPulpTypeLabelProps {
   kind: EntityType;
@@ -14,7 +14,7 @@ export const PulpTypeLabel: React.FC<IPulpTypeLabelProps> = ({
   kind,
   pulpType,
 }) => {
-  const plugin = getPlugin(kind, pulpType);
+  const plugin = getEntityPlugin(kind, pulpType);
 
   return (
     <Label color={plugin ? "blue" : "grey"} isCompact>

@@ -46,66 +46,37 @@ export const gem = definePlugin({
   entities: {
     // Gem repository: a remote to sync from.
     repository: {
-      capabilities: {
-        sync: { remoteTypes: ["gem.gem"] },
-        publish: true,
-      },
       form: {
+        isWizard: false,
         createFields: [...repositoryBase.create, ...gemRepositoryExtras],
         editFields: [...repositoryBase.edit, ...gemRepositoryExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          {
-            key: "retain_checkpoints",
-            label: "Retained Checkpoints",
-            type: "number",
-          },
-        ],
-      },
+      compatibleRemoteTypes: ["gem.gem"],
+      compatiblePublicationTypes: ["gem.gem"],
     },
 
     // Gem remote: prerelease handling plus include/exclude filters.
     remote: {
-      isWizard: true,
       form: {
+        isWizard: true,
         createFields: [...remoteBase.create, ...gemRemoteExtras],
         editFields: [...remoteBase.edit, ...gemRemoteExtras],
-      },
-      page: {
-        detailFields: [
-          ...remoteBase.detail,
-          { key: "prereleases", label: "Prereleases", type: "boolean" },
-          { key: "includes", label: "Includes", type: "text" },
-          { key: "excludes", label: "Excludes", type: "text" },
-        ],
       },
     },
 
     // Gem distribution: serves a repository/publication, optionally pull-through.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...gemDistributionExtras],
         editFields: [...distributionBase.edit, ...gemDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "publication", label: "Publication", type: "text" },
-          { key: "remote", label: "Remote", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
 
     // Gem publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
+        isWizard: false,
         createFields: [
           ...publicationBase.create,
           {
@@ -114,8 +85,8 @@ export const gem = definePlugin({
             type: "text",
           },
         ],
+        editFields: [],
       },
-      page: { detailFields: publicationBase.detail },
     },
   },
 });

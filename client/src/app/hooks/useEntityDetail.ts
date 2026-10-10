@@ -1,10 +1,10 @@
-import { getPlugin } from "@catalog";
+import { getEntityPlugin } from "@catalog";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
 import {
   useSuspenseEntityDetailQuery,
   useSuspenseEntityHrefById,
 } from "@app/queries/utils/entityCrud";
-import { inferPulpTypeFromHref } from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IEntityForEdit } from "@app/hooks/useEntityForm";
 
@@ -28,7 +28,7 @@ export const useEntityDetail = <T = IEntityDetailEntity>(
     id,
     domain,
   );
-  const plugin = getPlugin(config.kind, inferPulpTypeFromHref(href) ?? "");
+  const plugin = getEntityPlugin(config.kind, resolvePulpType(href) ?? "");
   const { data: entity } = useSuspenseEntityDetailQuery<T>(
     config.rootQueryKey,
     href,

@@ -1,37 +1,41 @@
+import { resolvePulpTypeByApiPath } from "@catalog";
+import type { EntityType } from "@catalog";
+
 import { pulpApiPath } from "./pulpApi";
 import type { IPulpDomain } from "./pulpApi";
 
-/** Infer a pulp_type (e.g. `file.file`) from a typed resource pulp_href when the API omits `pulp_type`. */
-export const inferPulpTypeFromHref = (
+/** URL collection family (first href segment) → catalog entity type. */
+const FAMILY_TO_ENTITY: Record<string, EntityType> = {
+  repositories: "repository",
+  remotes: "remote",
+  distributions: "distribution",
+  publications: "publication",
+  content: "content",
+};
+
+/**
+ * Resolve a resource's catalog pulp_type from its `pulp_href` alone. A typed href
+ * is `.../<family>/<app>/<slug>/<pk>/`; `<app>/<slug>` is the catalog `apiPath`,
+ * reverse-mapped per family to the pulp_type the app keys on (`getEntityPlugin`).
+ *
+ * @example
+ * resolvePulpType("/api/pulp/default/api/v3/repositories/rpm/rpm/0190.../") // "rpm.rpm"
+ * resolvePulpType("/distributions/python/pypi/0190.../") // "python.pypi"
+ * resolvePulpType("/content/file/files/0190.../") // "file.file" (not "file.files")
+ * resolvePulpType("/repositories/") // undefined — aggregate, no <app>/<slug>
+ * resolvePulpType("/repositories/mystery/x/") // undefined — plugin not in catalog
+ * resolvePulpType(undefined) // undefined
+ */
+export const resolvePulpType = (
   href: string | null | undefined,
 ): string | undefined => {
   if (!href) return undefined;
-
-  const typed = href.match(
-    /\/(?:repositories|remotes|distributions|publications)\/([^/]+)\/([^/]+)\//,
+  const match = href.match(
+    /\/(repositories|remotes|distributions|publications|content)\/([^/]+)\/([^/]+)\//,
   );
-  if (typed) {
-    return `${typed[1]}.${typed[2]}`;
-  }
-
-  const content = href.match(/\/content\/([^/]+)\/([^/]+)\//);
-  if (content) {
-    const plugin = content[1];
-    const type = content[2].endsWith("s")
-      ? content[2].slice(0, -1)
-      : content[2];
-    return `${plugin}.${type}`;
-  }
-
-  return undefined;
-};
-
-/** Prefer an explicit pulp_type, otherwise infer from the resource href. */
-export const resolvePulpType = (
-  pulpType: string | null | undefined,
-  href: string | null | undefined,
-): string | undefined => {
-  return pulpType || inferPulpTypeFromHref(href);
+  if (!match) return undefined;
+  const entity = FAMILY_TO_ENTITY[match[1]];
+  return resolvePulpTypeByApiPath(entity, `${match[2]}/${match[3]}`);
 };
 
 export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
@@ -94,14 +98,4 @@ export const buildContentHref = (
 export const extractIdFromHref = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;
-};
-
-/** Join a distribution `base_url` and `relative_path` into a download URL. */
-export const buildDistributionContentUrl = (
-  baseUrl: string,
-  relativePath: string,
-): string => {
-  const base = baseUrl.replace(/\/+$/, "");
-  const path = relativePath.replace(/^\/+/, "");
-  return `${base}/${path}`;
 };

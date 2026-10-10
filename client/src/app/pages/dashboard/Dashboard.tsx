@@ -151,9 +151,6 @@ export const Dashboard: React.FC = () => {
                         Repositories
                       </Link>
                     </Content>
-                    <Content component="li">
-                      <Link to="/browse">Browse Content</Link>
-                    </Content>
                   </Content>
                 </CardBody>
               </Card>

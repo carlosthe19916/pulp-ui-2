@@ -1,7 +1,3 @@
-- make sure the context pulp domain selector saves the domain in the url and not in storage
-
-- going to the details page route is overcomplicated. in code.
-  - also the url uses query parameters which is not needed. e.g. http://localhost:3000/content-management/distributions/01a0cfe0-7b37-7e85-a5a6-d3d89685e330?type=python.pypi
 - Why do we have EntityDetail.tsx EntityModal.tsx EntityWizardBody.tsx, the modal and form should be per entity, do not over generalize
 - use /home/cferiavi/git/github/konveyor/tackle2-ui as an example for the wizard
 
@@ -11,3 +7,10 @@
 - use null instead of undefined
 - move descriptors to components or hooks or somewhere
 - families.ts contains forms info, wrong, should be split
+
+- verify href are never used in the queries and we always create the axios path on the client side
+- reevaluate getEntityPlugin and the fact that it requires 2 params
+
+- useEntityDelete should be replaced for a normal Mutation (evaluate it at least)
+
+- ise href in rest paths in axios because it will simplify a lot of logic, just make sure there are comments with examples of the paths

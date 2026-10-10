@@ -44,8 +44,7 @@ import {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { formatDateTime } from "@app/utils/utils";
 
-/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
-type PublicationRow = PublicationResponse & { pulp_type?: string };
+type PublicationRow = PublicationResponse;
 
 const truncate = (value: string | null | undefined, max = 40): string => {
   if (!value) return "—";
@@ -128,7 +127,7 @@ export const PublicationList: React.FC = () => {
   const rows: DataViewTr[] = publications.map((pub) => {
     const href = pub.pulp_href;
     const pubId = href ? extractIdFromHref(href) : "";
-    const pulpType = resolvePulpType(pub.pulp_type, pub.pulp_href);
+    const pulpType = resolvePulpType(pub.pulp_href);
     const label = href ? `Publication ${pubId}` : "—";
     return {
       id: href,

@@ -47,8 +47,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
-type RemoteRow = GenericRemoteResponse & { pulp_type?: string };
+type RemoteRow = GenericRemoteResponse;
 
 const COLUMN_KEYS = ["name", "url", "policy", "type", "actions"] as const;
 type RemoteColumnKey = (typeof COLUMN_KEYS)[number];
@@ -130,7 +129,7 @@ export const RemoteList: React.FC = () => {
 
   const rows: DataViewTr[] = remotes.map((remote) => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
-    const pulpType = resolvePulpType(remote.pulp_type, remote.pulp_href);
+    const pulpType = resolvePulpType(remote.pulp_href);
 
     return {
       id: remote.pulp_href,

@@ -20,12 +20,15 @@ import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
-import { getPlugin } from "@catalog";
+import { getEntityPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
-import { useFileRepositorySyncMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
+import {
+  useRepositorySyncMutation,
+  type RepositorySyncBody,
+} from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
@@ -48,18 +51,19 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   repo,
 }) => {
   const { addNotification } = useNotifications();
-  const syncMutation = useFileRepositorySyncMutation();
+  const syncMutation = useRepositorySyncMutation();
 
-  // Scope the remote picker to the remote types this repository can sync from
-  // (backend REMOTE_TYPES): a mismatched remote is rejected server-side.
-  const repoPulpType = resolvePulpType(
-    (repo.object as { pulp_type?: string }).pulp_type,
-    repo.object.pulp_href,
-  );
-  const sync = repoPulpType
-    ? getPlugin("repository", repoPulpType)?.capabilities.sync
-    : false;
-  const remoteTypes = sync ? sync.remoteTypes : [];
+  const repoPulpType = resolvePulpType(repo.object.pulp_href);
+
+  const plugin = repoPulpType
+    ? getEntityPlugin("repository", repoPulpType)
+    : undefined;
+
+  // Collection sub-path used to rebuild the sync endpoint client-side (e.g.
+  // "python/python") — no reliance on the server-provided pulp_href.
+  const apiPath = plugin?.rest.apiPath;
+  // Remote types this repository can sync from (scopes the remote picker).
+  const compatibleRemoteTypes = plugin?.compatibleRemoteTypes ?? [];
 
   const [remoteSearch, setRemoteSearch] = useState("");
   const debouncedRemoteSearch = useDebouncedValue(remoteSearch);
@@ -68,8 +72,8 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
     useRemotesListQuery({
       limit: 20,
       name__icontains: debouncedRemoteSearch || undefined,
-      pulp_type__in: remoteTypes.length
-        ? (remoteTypes as NonNullable<
+      pulp_type__in: compatibleRemoteTypes.length
+        ? (compatibleRemoteTypes as NonNullable<
             Parameters<typeof useRemotesListQuery>[0]
           >["pulp_type__in"])
         : undefined,
@@ -104,13 +108,23 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const mirror = watch("mirror");
 
   const onSubmit = handleSubmit(async (values) => {
+    if (!apiPath) {
+      addNotification({
+        title: "Failed to start sync",
+        description: "This repository type does not support syncing.",
+        variant: "danger",
+      });
+      return;
+    }
+    const body: RepositorySyncBody = {
+      remote: values.remote || undefined,
+      mirror: values.mirror,
+    };
     try {
       const result = await syncMutation.mutateAsync({
-        repoHref: repo.object.pulp_href ?? "",
-        body: {
-          remote: values.remote || undefined,
-          mirror: values.mirror,
-        },
+        apiPath,
+        id: repo.id,
+        body,
       });
       const taskHref = result?.task;
       if (taskHref) {

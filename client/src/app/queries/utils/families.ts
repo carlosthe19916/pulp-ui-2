@@ -8,7 +8,7 @@ import type { ContentFamily } from "@app/queries/utils/entityCrud";
 /**
  * Binds a content family's entity-type `kind` to its aggregate REST collection
  * and query-key root, so the generic list/modal/CRUD shell can serve all four
- * families uniformly. Plugin-type specifics (fields, wizard, capabilities) live
+ * families uniformly. Plugin-type specifics (fields, wizard, remote types) live
  * in the catalog, keyed by `kind` + pulp_type.
  */
 export interface IContentFamilyConfig {

@@ -25,44 +25,29 @@ export const maven = definePlugin({
     // Maven repository: a pull-through cache — no sync or publish (both stay off).
     repository: {
       form: {
+        isWizard: false,
         createFields: [...repositoryBase.create, ...mavenRepositoryExtras],
         editFields: [...repositoryBase.edit, ...mavenRepositoryExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          {
-            key: "retain_checkpoints",
-            label: "Retained Checkpoints",
-            type: "number",
-          },
-        ],
-      },
+      compatibleRemoteTypes: [],
+      compatiblePublicationTypes: [],
     },
 
     // Maven remote: no fields beyond the pulpcore remote base.
     remote: {
-      isWizard: true,
-      form: { createFields: remoteBase.create, editFields: remoteBase.edit },
-      page: { detailFields: remoteBase.detail },
+      form: {
+        isWizard: true,
+        createFields: remoteBase.create,
+        editFields: remoteBase.edit,
+      },
     },
 
     // Maven distribution: serves a repository, or pull-through via a remote.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...mavenDistributionExtras],
         editFields: [...distributionBase.edit, ...mavenDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "remote", label: "Remote", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
   },

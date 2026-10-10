@@ -106,65 +106,29 @@ export const rpm = definePlugin({
   entities: {
     // RPM repository: remotes, signing services and metadata layout options.
     repository: {
-      capabilities: {
-        sync: { remoteTypes: ["rpm.rpm", "rpm.uln"] },
-        publish: true,
-      },
       form: {
+        isWizard: false,
         createFields: [...repositoryBase.create, ...rpmRepositoryExtras],
         editFields: [...repositoryBase.edit, ...rpmRepositoryExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          { key: "autopublish", label: "Auto-publish", type: "boolean" },
-          {
-            key: "retain_package_versions",
-            label: "Retain Package Versions",
-            type: "number",
-          },
-          {
-            key: "retain_checkpoints",
-            label: "Retain Checkpoints",
-            type: "number",
-          },
-          {
-            key: "metadata_signing_service",
-            label: "Metadata Signing Service",
-            type: "text",
-          },
-          {
-            key: "package_signing_service",
-            label: "Package Signing Service",
-            type: "text",
-          },
-          {
-            key: "package_signing_fingerprint",
-            label: "Package Signing Fingerprint",
-            type: "text",
-          },
-          { key: "checksum_type", label: "Checksum Type", type: "text" },
-          { key: "compression_type", label: "Compression Type", type: "text" },
-          { key: "layout", label: "Layout", type: "text" },
-        ],
-      },
+      compatibleRemoteTypes: ["rpm.rpm", "rpm.uln"],
+      compatiblePublicationTypes: ["rpm.rpm"],
     },
 
     // RPM remote (rpm.rpm) + ULN remote (rpm.uln) — two variants of the one slot.
     remote: [
       {
-        isWizard: true,
         form: {
+          isWizard: true,
           createFields: [...remoteBase.create, ...rpmRemoteExtras],
           editFields: [...remoteBase.edit, ...rpmRemoteExtras],
         },
-        page: { detailFields: remoteBase.detail },
       },
       {
         ui: { label: "ULN" },
         rest: { pulpType: "rpm.uln", apiPath: "rpm/uln" },
-        isWizard: true,
         form: {
+          isWizard: true,
           createFields: [
             ...remoteBase.create,
             {
@@ -185,48 +149,22 @@ export const rpm = definePlugin({
             },
           ],
         },
-        page: {
-          detailFields: [
-            ...remoteBase.detail,
-            {
-              key: "uln_server_base_url",
-              label: "ULN Server Base URL",
-              type: "text",
-            },
-          ],
-        },
       },
     ],
 
     // RPM distribution: repo/publication plus content-guard and repo-config options.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...rpmDistributionExtras],
         editFields: [...distributionBase.edit, ...rpmDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "publication", label: "Publication", type: "text" },
-          { key: "content_guard", label: "Content Guard", type: "text" },
-          {
-            key: "generate_repo_config",
-            label: "Generate Repo Config",
-            type: "boolean",
-          },
-          { key: "checkpoint", label: "Checkpoint", type: "boolean" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
 
     // RPM publication: base supplies the repository; adds publish-time options.
     publication: {
       form: {
+        isWizard: false,
         createFields: [
           ...publicationBase.create,
           {
@@ -254,15 +192,7 @@ export const rpm = definePlugin({
             options: LAYOUT_OPTIONS,
           },
         ],
-      },
-      page: {
-        detailFields: [
-          ...publicationBase.detail,
-          { key: "checksum_type", label: "Checksum Type", type: "text" },
-          { key: "compression_type", label: "Compression Type", type: "text" },
-          { key: "layout", label: "Layout", type: "text" },
-          { key: "checkpoint", label: "Checkpoint", type: "boolean" },
-        ],
+        editFields: [],
       },
     },
   },

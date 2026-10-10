@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import type { VersionResponse } from "@app/client";
 
 import { buildCatalog } from "./compose";
-import { catalog, definePlugin, getPlugin } from "./index";
+import {
+  catalog,
+  definePlugin,
+  getEntityPlugin,
+  resolvePulpTypeByApiPath,
+} from "./index";
 
 /** Locks the resolved catalog so it can't silently drift. */
 describe("catalog composition", () => {
@@ -31,63 +36,52 @@ describe("catalog composition", () => {
     expect(rpm.form.isWizard).toBe(true);
   });
 
-  it("composes detail = entity base + plugin extras", () => {
-    const fileRepo = catalog.repository["file.file"];
-    expect(fileRepo.page.detailFields.map((f) => f.key)).toEqual([
-      "description",
-      "retain_repo_versions",
-      "autopublish",
-      "manifest",
-    ]);
-  });
-
-  it("inherits entity capability defaults and applies overrides", () => {
-    expect(catalog.repository["file.file"].capabilities).toEqual({
-      creatable: true,
-      sync: { remoteTypes: ["file.file", "file.git"] },
-      publish: true,
-      upload: false,
-    });
-    expect(catalog.repository["container.container"].capabilities.publish).toBe(
-      false,
-    );
-    expect(catalog.repository["container.container-push"].capabilities).toEqual(
-      {
-        creatable: false,
-        sync: false,
-        publish: false,
-        upload: false,
-      },
-    );
-    expect(catalog.repository["maven.maven"].capabilities).toEqual({
-      creatable: true,
-      sync: false,
-      publish: false,
-      upload: false,
-    });
-    expect(catalog.content["file.file"].capabilities.upload).toBe(true);
-  });
-
   it("carries each repository's valid sync remote types (backend REMOTE_TYPES)", () => {
     // rpm and file both accept a second remote variant (ULN, Git).
-    expect(catalog.repository["rpm.rpm"].capabilities.sync).toEqual({
-      remoteTypes: ["rpm.rpm", "rpm.uln"],
-    });
-    expect(catalog.repository["file.file"].capabilities.sync).toEqual({
-      remoteTypes: ["file.file", "file.git"],
-    });
-    expect(catalog.repository["python.python"].capabilities.sync).toEqual({
-      remoteTypes: ["python.python"],
-    });
+    expect(catalog.repository["rpm.rpm"].compatibleRemoteTypes).toEqual([
+      "rpm.rpm",
+      "rpm.uln",
+    ]);
+    expect(catalog.repository["file.file"].compatibleRemoteTypes).toEqual([
+      "file.file",
+      "file.git",
+    ]);
+    expect(catalog.repository["python.python"].compatibleRemoteTypes).toEqual([
+      "python.python",
+    ]);
     // A container repo syncs only from container.container — NOT its pull-through
     // remote variant, which the backend's REMOTE_TYPES excludes.
-    expect(catalog.repository["container.container"].capabilities.sync).toEqual(
-      {
-        remoteTypes: ["container.container"],
-      },
+    expect(
+      catalog.repository["container.container"].compatibleRemoteTypes,
+    ).toEqual(["container.container"]);
+    // Non-syncable types carry an empty list, so there are no orphan remote types.
+    expect(catalog.repository["maven.maven"].compatibleRemoteTypes).toEqual([]);
+    expect(
+      catalog.repository["container.container-push"].compatibleRemoteTypes,
+    ).toEqual([]);
+  });
+
+  it("carries each repository's publication type (plugins with a publication endpoint)", () => {
+    // 1:1 per plugin; note python repo publishes to the python.pypi type.
+    expect(catalog.repository["file.file"].compatiblePublicationTypes).toEqual([
+      "file.file",
+    ]);
+    expect(
+      catalog.repository["python.python"].compatiblePublicationTypes,
+    ).toEqual(["python.pypi"]);
+    expect(catalog.repository["rpm.rpm"].compatiblePublicationTypes).toEqual([
+      "rpm.rpm",
+    ]);
+    // Non-publishable types carry an empty list.
+    expect(catalog.repository["npm.npm"].compatiblePublicationTypes).toEqual(
+      [],
     );
-    // Non-syncable types carry `sync: false`, so there are no orphan remote types.
-    expect(catalog.repository["maven.maven"].capabilities.sync).toBe(false);
+    expect(
+      catalog.repository["maven.maven"].compatiblePublicationTypes,
+    ).toEqual([]);
+    expect(
+      catalog.repository["container.container"].compatiblePublicationTypes,
+    ).toEqual([]);
   });
 
   it("carries the ui + app concerns, with per-variant ui overrides", () => {
@@ -130,22 +124,28 @@ describe("catalog composition", () => {
   });
 });
 
-describe("definePlugin defaults", () => {
-  it("defaults isWizard to false and capabilities to creatable-only", () => {
+describe("definePlugin resolution", () => {
+  it("hoists plugin ui/rest into a slot whose overrides are empty", () => {
     const testPlugin = definePlugin({
       app: { isAvailable: () => true },
       ui: { label: "Test" },
       rest: { pulpType: "test.test", apiPath: "test/test" },
-      entities: { repository: {} },
+      entities: {
+        repository: {
+          form: {
+            isWizard: false,
+            createFields: [],
+            editFields: [],
+          },
+          compatibleRemoteTypes: [],
+          compatiblePublicationTypes: [],
+        },
+      },
     });
     const repo = testPlugin.repository?.[0];
     expect(repo?.form.isWizard).toBe(false);
-    expect(repo?.capabilities).toEqual({
-      creatable: true,
-      sync: false,
-      publish: false,
-      upload: false,
-    });
+    expect(repo?.compatibleRemoteTypes).toEqual([]);
+    expect(repo?.compatiblePublicationTypes).toEqual([]);
     // ui/rest fall back to the plugin-level defaults.
     expect(repo?.ui.label).toBe("Test");
     expect(repo?.rest.apiPath).toBe("test/test");
@@ -159,7 +159,15 @@ describe("buildCatalog", () => {
         app: { isAvailable: () => true },
         ui: { label: "Dup" },
         rest: { pulpType: "dup.dup", apiPath: "dup/dup" },
-        entities: { remote: {} },
+        entities: {
+          remote: {
+            form: {
+              isWizard: false,
+              createFields: [],
+              editFields: [],
+            },
+          },
+        },
       });
     expect(() => buildCatalog([makeRemote(), makeRemote()])).toThrow(
       /Duplicate catalog entry/,
@@ -179,12 +187,32 @@ describe("buildCatalog", () => {
   });
 });
 
-describe("getPlugin", () => {
+describe("getEntityPlugin", () => {
   it("returns the plugin for a known pulp_type", () => {
-    expect(getPlugin("remote", "file.file")?.ui.label).toBe("File");
+    expect(getEntityPlugin("remote", "file.file")?.ui.label).toBe("File");
   });
 
   it("returns undefined for an unknown pulp_type", () => {
-    expect(getPlugin("remote", "nope.nope")).toBeUndefined();
+    expect(getEntityPlugin("remote", "nope.nope")).toBeUndefined();
+  });
+});
+
+describe("resolvePulpTypeByApiPath", () => {
+  it("reverse-maps (entity, apiPath) to the catalog pulp_type", () => {
+    expect(resolvePulpTypeByApiPath("repository", "python/python")).toBe(
+      "python.python",
+    );
+    // apiPath ≠ pulp_type (content pluralizes the slug).
+    expect(resolvePulpTypeByApiPath("content", "file/files")).toBe("file.file");
+    // Non-"doubled" distribution slug.
+    expect(resolvePulpTypeByApiPath("distribution", "python/pypi")).toBe(
+      "python.pypi",
+    );
+  });
+
+  it("returns undefined for an unmodelled apiPath", () => {
+    expect(
+      resolvePulpTypeByApiPath("repository", "bogus/bogus"),
+    ).toBeUndefined();
   });
 });

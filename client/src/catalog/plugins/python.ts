@@ -102,62 +102,24 @@ export const python = definePlugin({
   entities: {
     // Python repository: remote, auto-publish and package-substitution controls.
     repository: {
-      capabilities: {
-        sync: { remoteTypes: ["python.python"] },
-        publish: true,
-      },
       form: {
+        isWizard: false,
         createFields: [
           ...repositoryBase.create,
           ...pythonRepositoryCreateExtras,
         ],
         editFields: [...repositoryBase.edit, ...pythonRepositoryEditExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          { key: "autopublish", label: "Auto-publish", type: "boolean" },
-          {
-            key: "retain_checkpoints",
-            label: "Retained Checkpoints",
-            type: "number",
-          },
-          {
-            key: "allow_package_substitution",
-            label: "Allow Package Substitution",
-            type: "boolean",
-          },
-          { key: "error_on_reject", label: "Error on Reject", type: "boolean" },
-        ],
-      },
+      compatibleRemoteTypes: ["python.python"],
+      compatiblePublicationTypes: ["python.pypi"],
     },
 
     // Python remote: PyPI sync filters.
     remote: {
-      isWizard: true,
       form: {
+        isWizard: true,
         createFields: [...remoteBase.create, ...pythonRemoteExtras],
         editFields: [...remoteBase.edit, ...pythonRemoteExtras],
-      },
-      page: {
-        detailFields: [
-          ...remoteBase.detail,
-          { key: "includes", label: "Includes", type: "text" },
-          { key: "excludes", label: "Excludes", type: "text" },
-          { key: "prereleases", label: "Prereleases", type: "boolean" },
-          { key: "package_types", label: "Package Types", type: "text" },
-          {
-            key: "keep_latest_packages",
-            label: "Keep Latest Packages",
-            type: "number",
-          },
-          {
-            key: "exclude_platforms",
-            label: "Exclude Platforms",
-            type: "text",
-          },
-          { key: "provenance", label: "Provenance", type: "boolean" },
-        ],
       },
     },
 
@@ -165,26 +127,9 @@ export const python = definePlugin({
     distribution: {
       ...pypi,
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...pythonDistributionExtras],
         editFields: [...distributionBase.edit, ...pythonDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "publication", label: "Publication", type: "text" },
-          {
-            key: "repository_version",
-            label: "Repository Version",
-            type: "text",
-          },
-          { key: "allow_uploads", label: "Allow Uploads", type: "boolean" },
-          { key: "remote", label: "Remote", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
 
@@ -192,6 +137,7 @@ export const python = definePlugin({
     publication: {
       ...pypi,
       form: {
+        isWizard: false,
         createFields: [
           ...publicationBase.create,
           {
@@ -200,8 +146,8 @@ export const python = definePlugin({
             type: "text",
           },
         ],
+        editFields: [],
       },
-      page: { detailFields: publicationBase.detail },
     },
   },
 });

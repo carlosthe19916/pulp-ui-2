@@ -54,70 +54,86 @@ export interface IPluginForm {
   editFields: IEntityField[];
 }
 
-/** Page concern (resolved): fields shown on detail and browse surfaces. */
-export interface IPluginPage {
-  detailFields: IEntityField[];
-  browseCardFields: IEntityField[];
-  browseDetailFields: IEntityField[];
-}
-
-/**
- * Sync capability payload: the remote pulp_types a repository can sync from,
- * mirroring the backend repository's `REMOTE_TYPES`. Present only when sync is on
- * — so the valid remotes exist exactly where (and when) they're meaningful.
- */
-export interface ISyncCapability {
-  remoteTypes: PulpType[];
-}
-
-/** Capabilities concern: which actions a plugin type supports. */
-export interface IPluginCapabilities {
-  creatable: boolean;
-  /** `false` when the type can't sync; otherwise carries its valid remote types. */
-  sync: false | ISyncCapability;
-  publish: boolean;
-  upload: boolean;
-}
-
 /** A plugin's resolved implementation of one entity type (e.g. the File remote). */
 export interface IEntityPlugin {
   rest: IPluginRest;
   ui: IPluginUi;
   app: IPluginApp;
   form: IPluginForm;
-  page: IPluginPage;
-  capabilities: IPluginCapabilities;
+  /**
+   * Remote pulp_types this repository can sync from (the backend's `REMOTE_TYPES`).
+   * Empty for non-repository entities and for repositories that can't sync.
+   */
+  compatibleRemoteTypes: PulpType[];
+  /**
+   * Publication pulp_types this repository can be published to (one per plugin
+   * that exposes a publication endpoint; e.g. a python repository → `python.pypi`).
+   * Empty for non-repository entities and for repositories that can't publish.
+   */
+  compatiblePublicationTypes: PulpType[];
 }
 
 /**
- * One plugin's input for one entity (one variant). `form`/`page` are the per-entity
- * fields; `isWizard`/`capabilities` fall back to defaults; `ui`/`rest` override the
- * plugin defaults only for variants (e.g. ULN's label, PyPI's pulp_type).
+ * What every entity slot provides. No identity (`ui`/`rest`) — that comes from the
+ * plugin defaults, overridden only by variants (see `IEntityVariant`). Every field
+ * is required and explicit.
  */
-export interface IEntityContribution {
-  ui?: Partial<IPluginUi>;
-  rest?: Partial<IPluginRest>;
-  isWizard?: boolean;
-  form?: {
-    createFields?: IEntityField[];
-    editFields?: IEntityField[];
+export interface IContributionBase {
+  form: {
+    isWizard: boolean;
+    createFields: IEntityField[];
+    editFields: IEntityField[];
   };
-  page?: Partial<IPluginPage>;
-  capabilities?: Partial<IPluginCapabilities>;
 }
 
 /**
- * A plugin: its `app`/`ui`/`rest` concerns once, then the entities it implements.
- * `app` never varies by entity; `ui`/`rest` are overridable defaults. A slot is an
- * array when a plugin has variant pulp_types (e.g. rpm's `rpm.rpm` + `rpm.uln`).
+ * A repository slot additionally declares the pulp_types it can be associated with:
+ * `compatibleRemoteTypes` (sync sources, the backend's `REMOTE_TYPES`) and
+ * `compatiblePublicationTypes` (publish targets). `[]` when it can't sync/publish.
+ * Only repositories carry these — other entities never need them.
+ */
+export interface IRepositoryContribution extends IContributionBase {
+  compatibleRemoteTypes: PulpType[];
+  compatiblePublicationTypes: PulpType[];
+}
+
+/**
+ * A variant slot — a second pulp_type for one entity (e.g. `file.git`, `rpm.uln`,
+ * `python.pypi`, container pull-through, file content's `file/files`). It overrides
+ * the plugin's identity; non-variant slots inherit the plugin defaults.
+ */
+export type IEntityVariant<T extends IContributionBase> = T & {
+  ui: Partial<IPluginUi>;
+  rest: Partial<IPluginRest>;
+};
+
+/** One entity slot: a primary contribution and/or variants (array for both). */
+export type IEntitySlot<T extends IContributionBase> =
+  T | IEntityVariant<T> | Array<T | IEntityVariant<T>>;
+
+/** Union of every contribution shape — the input `composeEntityPlugin` resolves. */
+export type IAnyContribution =
+  | IContributionBase
+  | IRepositoryContribution
+  | IEntityVariant<IContributionBase>
+  | IEntityVariant<IRepositoryContribution>;
+
+/**
+ * A plugin: its `app`/`ui`/`rest` identity once, then the entities it implements.
+ * `ui`/`rest` are the defaults for every slot; a variant slot overrides them. Only
+ * `repository` slots carry remote/publication type lists.
  */
 export interface IPluginDefinition {
   app: IPluginApp;
   ui: IPluginUi;
   rest: IPluginRest;
-  entities: Partial<
-    Record<EntityType, IEntityContribution | IEntityContribution[]>
-  >;
+  entities: {
+    repository?: IEntitySlot<IRepositoryContribution>;
+    remote?: IEntitySlot<IContributionBase>;
+    distribution?: IEntitySlot<IContributionBase>;
+    publication?: IEntitySlot<IContributionBase>;
+    content?: IEntitySlot<IContributionBase>;
+  };
 }
 
 /** Return of `definePlugin`: entity type → that plugin's resolved plugins. */

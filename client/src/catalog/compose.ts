@@ -4,9 +4,8 @@ import type { IEntityField } from "./field-types";
 import type {
   EntityCatalog,
   EntityType,
-  IEntityContribution,
+  IAnyContribution,
   IEntityPlugin,
-  IPluginCapabilities,
   IPluginDefinition,
   PluginEntityMap,
 } from "./types";
@@ -22,17 +21,8 @@ export const whenInstalled =
         ids.includes(plugin.package ?? ""),
     );
 
-/** Capability baseline: nothing but creation; plugins opt into the rest. */
-const DEFAULT_CAPABILITIES: IPluginCapabilities = {
-  creatable: true,
-  sync: false,
-  publish: false,
-  upload: false,
-};
-
 /** Copy a field list so the resolved catalog never aliases a shared base array. */
-const copyFields = (fields?: IEntityField[]): IEntityField[] =>
-  fields ? [...fields] : [];
+const copyFields = (fields: IEntityField[]): IEntityField[] => [...fields];
 
 /** Recursively freeze a value so the assembled catalog is read-only at runtime. */
 const deepFreeze = <T>(value: T): T => {
@@ -43,25 +33,34 @@ const deepFreeze = <T>(value: T): T => {
   return value;
 };
 
-/** Resolve one contribution into an `IEntityPlugin`: plugin defaults + overrides. */
+/**
+ * Resolve one contribution into an `IEntityPlugin`: plugin defaults, overridden by
+ * a variant's `ui`/`rest` when present. `compatible*Types` come from repository
+ * contributions; every other slot resolves to empty lists.
+ */
 const composeEntityPlugin = (
   defaults: Pick<IPluginDefinition, "app" | "ui" | "rest">,
-  contribution: IEntityContribution,
+  contribution: IAnyContribution,
 ): IEntityPlugin => ({
-  rest: { ...defaults.rest, ...contribution.rest },
-  ui: { ...defaults.ui, ...contribution.ui },
+  rest: {
+    ...defaults.rest,
+    ...("rest" in contribution ? contribution.rest : {}),
+  },
+  ui: { ...defaults.ui, ...("ui" in contribution ? contribution.ui : {}) },
   app: defaults.app,
   form: {
-    isWizard: contribution.isWizard ?? false,
-    createFields: copyFields(contribution.form?.createFields),
-    editFields: copyFields(contribution.form?.editFields),
+    isWizard: contribution.form.isWizard,
+    createFields: copyFields(contribution.form.createFields),
+    editFields: copyFields(contribution.form.editFields),
   },
-  page: {
-    detailFields: copyFields(contribution.page?.detailFields),
-    browseCardFields: copyFields(contribution.page?.browseCardFields),
-    browseDetailFields: copyFields(contribution.page?.browseDetailFields),
-  },
-  capabilities: { ...DEFAULT_CAPABILITIES, ...contribution.capabilities },
+  compatibleRemoteTypes:
+    "compatibleRemoteTypes" in contribution
+      ? [...contribution.compatibleRemoteTypes]
+      : [],
+  compatiblePublicationTypes:
+    "compatiblePublicationTypes" in contribution
+      ? [...contribution.compatiblePublicationTypes]
+      : [],
 });
 
 /** Define a plugin (the sole extension point): resolve each entity slot it fills. */

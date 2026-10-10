@@ -213,14 +213,24 @@ duplicate generic reads in the plugin file.
 - **`queries/<family>.ts`** (e.g. `distributions.ts`) is **plugin-neutral**. It
   owns the cross-type list over the un-typed aggregate collection
   (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant, the
-  `*RootQueryOptions` anchor, and the `*Keys` factory. No create/update/delete,
-  no plugin sub-resources.
-- **`queries/<plugin>-<family>.ts`** (e.g. `file-repositories.ts`) holds **only
+  `*RootQueryOptions` anchor, and the `*Keys` factory. It also owns per-item
+  actions **and sub-resources that are uniform across plugins** — e.g. repository
+  `sync` (`useRepositorySyncMutation`) and `versions`
+  (`useRepositoryVersionsListQuery`): one hook serves every plugin. Like
+  `useEntityCreateMutation`, these rebuild the endpoint client-side from parts
+  (`pulpApiPath(`repositories/${apiPath}/${id}/<action>/`, domain)`, with
+  `apiPath` from the catalog) rather than appending to the server `pulp_href`. A
+  sub-resource counts as uniform when its response type is generic and its query
+  params are identical across plugins (the per-plugin generated type differs only
+  in a `path` param, which `ListParams` drops). Per-plugin body/field shape is
+  modelled in the catalog (e.g. `ISyncCapability.fields`), not by separate hooks.
+  No plugin-typed create/update/delete here.
+- **`queries/<plugin>-<family>.ts`** (e.g. `file-content.ts`) holds **only
   plugin-specific** queries: typed create/mutations against
-  `<family>/<plugin>/<type>/`, and plugin sub-resources (e.g. repository
-  `versions`/`sync`, content upload, or a typed list when the aggregate returns a
-  union type). Reuse the base's `*RootQueryOptions.queryKey` for invalidation so
-  cache slots stay unified.
+  `<family>/<plugin>/<type>/`, and sub-resources that genuinely vary by plugin
+  (e.g. content upload, or a typed list when the aggregate returns a union type).
+  Reuse the base's `*RootQueryOptions.queryKey` for invalidation so cache slots
+  stay unified.
 - **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
   `toProxyHref(href)`. Use `entityDetailQueryOptions` /
   `useSuspenseEntityDetailQuery` from `queries/utils/entityCrud.ts`, keyed on

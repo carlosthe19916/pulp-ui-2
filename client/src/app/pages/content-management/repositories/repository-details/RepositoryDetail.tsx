@@ -33,7 +33,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
-import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
+import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 
 import { RepositoryContentTab } from "./components/RepositoryContentTab";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
@@ -55,6 +55,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     repoId,
   );
   const repoHref = repo.pulp_href ?? "";
+  // Collection sub-path (e.g. "file/file") used to rebuild per-item endpoints
+  // (versions) client-side instead of appending to the server pulp_href.
+  const apiPath = plugin?.rest.apiPath;
   const label = getEntityLabel(REPOSITORY_FAMILY.kind);
   const title = repo.name ?? label;
 
@@ -67,9 +70,11 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   // Tab-title count badges: fetch one row and read the paginated `count` so the
   // badge reflects the true total without pulling every record.
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoHref, {
-    limit: 1,
-  });
+  const { data: versionsData } = useRepositoryVersionsListQuery(
+    apiPath,
+    repoId,
+    { limit: 1 },
+  );
   const { data: distributionsData } = useDistributionsListQuery(
     { repository: repoHref, limit: 1 },
     { enabled: !!repoHref },
@@ -110,20 +115,22 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         onClick: () => setIsEditOpen(true),
       },
     },
-    plugin?.capabilities.sync && {
-      key: "sync",
-      dropdownItemProps: {
-        children: "Sync",
-        onClick: () => setIsSyncOpen(true),
+    plugin &&
+      plugin.compatibleRemoteTypes.length > 0 && {
+        key: "sync",
+        dropdownItemProps: {
+          children: "Sync",
+          onClick: () => setIsSyncOpen(true),
+        },
       },
-    },
-    plugin?.capabilities.publish && {
-      key: "publish",
-      dropdownItemProps: {
-        children: "Publish",
-        onClick: () => setIsPublishOpen(true),
+    plugin &&
+      plugin.compatiblePublicationTypes.length > 0 && {
+        key: "publish",
+        dropdownItemProps: {
+          children: "Publish",
+          onClick: () => setIsPublishOpen(true),
+        },
       },
-    },
     {
       key: "delete",
       dropdownItemProps: {
@@ -167,7 +174,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 title={<TabTitleText>Details</TabTitleText>}
               >
                 <TabContentBody hasPadding>
-                  <RepositoryDetailsTab repo={repo} plugin={plugin} />
+                  <RepositoryDetailsTab repo={repo} />
                 </TabContentBody>
               </Tab>
 
@@ -176,7 +183,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 title={<TabTitleText>Versions ({versionCount})</TabTitleText>}
               >
                 <TabContentBody hasPadding>
-                  <RepositoryVersionsTab repoHref={repoHref} />
+                  <RepositoryVersionsTab apiPath={apiPath} id={repoId} />
                 </TabContentBody>
               </Tab>
 

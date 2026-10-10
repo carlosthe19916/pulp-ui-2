@@ -59,47 +59,31 @@ export const huggingFace = definePlugin({
   entities: {
     // Hugging Face repository: a remote to sync from.
     repository: {
-      capabilities: {
-        sync: { remoteTypes: ["hugging_face.hugging-face"] },
-        publish: true,
-      },
       form: {
+        isWizard: false,
         createFields: [
           ...repositoryBase.create,
           ...huggingFaceRepositoryExtras,
         ],
         editFields: [...repositoryBase.edit, ...huggingFaceRepositoryExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          {
-            key: "retain_checkpoints",
-            label: "Retained Checkpoints",
-            type: "number",
-          },
-        ],
-      },
+      compatibleRemoteTypes: ["hugging_face.hugging-face"],
+      compatiblePublicationTypes: ["hugging_face.hugging-face"],
     },
 
     // Hugging Face remote: hub URL and token.
     remote: {
-      isWizard: true,
       form: {
+        isWizard: true,
         createFields: [...remoteBase.create, ...huggingFaceRemoteExtras],
         editFields: [...remoteBase.edit, ...huggingFaceRemoteExtras],
-      },
-      page: {
-        detailFields: [
-          ...remoteBase.detail,
-          { key: "hf_hub_url", label: "Hugging Face Hub URL", type: "text" },
-        ],
       },
     },
 
     // Hugging Face distribution: serves a repository/publication, or pull-through.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [
           ...distributionBase.create,
           ...huggingFaceDistributionExtras,
@@ -109,23 +93,12 @@ export const huggingFace = definePlugin({
           ...huggingFaceDistributionExtras,
         ],
       },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "publication", label: "Publication", type: "text" },
-          { key: "remote", label: "Remote", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
-      },
     },
 
     // Hugging Face publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
+        isWizard: false,
         createFields: [
           ...publicationBase.create,
           {
@@ -134,8 +107,8 @@ export const huggingFace = definePlugin({
             type: "text",
           },
         ],
+        editFields: [],
       },
-      page: { detailFields: publicationBase.detail },
     },
   },
 });

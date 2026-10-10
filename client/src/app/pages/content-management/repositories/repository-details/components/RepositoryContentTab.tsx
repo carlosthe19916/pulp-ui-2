@@ -1,6 +1,5 @@
 import type React from "react";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -29,9 +28,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadModal } from "@app/components/UploadModal";
 import type { WithId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
-import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 
 type ContentRow = MultipleArtifactContentResponse & {
   relative_path?: string;
@@ -48,14 +45,16 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
   plugin,
 }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const { name: pulpDomain } = useSelectedDomain();
+  // Only file repositories support content upload.
+  const canUpload = plugin?.rest.pulpType === "file.file";
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
 
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(
-    repo.object.pulp_href ?? "",
+  const { data: versionsData } = useRepositoryVersionsListQuery(
+    plugin?.rest.apiPath,
+    repo.id,
     { limit: 1 },
   );
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
@@ -86,16 +85,7 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
       id: href,
       row: [
         {
-          cell: href ? (
-            <Link
-              to="/content-management/$pulpDomain/content/$contentId"
-              params={{ pulpDomain, contentId: extractIdFromHref(href) }}
-            >
-              {label}
-            </Link>
-          ) : (
-            label
-          ),
+          cell: label,
           props: { dataLabel: "Path" },
         },
         {
@@ -134,7 +124,7 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
     <>
       <Stack hasGutter>
         <StackItem>
-          {plugin?.capabilities.upload !== false && (
+          {canUpload && (
             <Button variant="secondary" onClick={() => setIsUploadOpen(true)}>
               Upload content
             </Button>

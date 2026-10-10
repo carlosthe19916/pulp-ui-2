@@ -37,7 +37,7 @@ import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { getAvailablePlugins, getPlugin } from "@catalog";
+import { getAvailablePlugins, getEntityPlugin } from "@catalog";
 import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -50,8 +50,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-/** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
-type RepositoryRow = RepositoryResponse & { pulp_type?: string };
+type RepositoryRow = RepositoryResponse;
 
 const COLUMN_KEYS = [
   "name",
@@ -80,7 +79,9 @@ export const RepositoryList: React.FC = () => {
     null,
   );
   const [syncTarget, setSyncTarget] = useState<RepositoryRow | null>(null);
-  const [publishRepoHref, setPublishRepoHref] = useState<string | null>(null);
+  const [publishTarget, setPublishTarget] = useState<RepositoryRow | null>(
+    null,
+  );
 
   const plugins = use(ApiStatusContext)?.plugins ?? [];
   const { deleteEntity, isDeleting } = useEntityDelete(REPOSITORY_FAMILY);
@@ -146,11 +147,10 @@ export const RepositoryList: React.FC = () => {
 
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
-    const pulpType = resolvePulpType(
-      repository.pulp_type,
-      repository.pulp_href,
-    );
-    const plugin = pulpType ? getPlugin("repository", pulpType) : undefined;
+    const pulpType = resolvePulpType(repository.pulp_href);
+    const plugin = pulpType
+      ? getEntityPlugin("repository", pulpType)
+      : undefined;
 
     const actionItems: IAction[] = [
       {
@@ -158,16 +158,16 @@ export const RepositoryList: React.FC = () => {
         onClick: () => setModalState(repository),
       },
     ];
-    if (plugin?.capabilities.sync) {
+    if (plugin && plugin.compatibleRemoteTypes.length > 0) {
       actionItems.push({
         title: "Sync",
         onClick: () => setSyncTarget(repository),
       });
     }
-    if (plugin?.capabilities.publish) {
+    if (plugin && plugin.compatiblePublicationTypes.length > 0) {
       actionItems.push({
         title: "Publish",
-        onClick: () => setPublishRepoHref(repository.pulp_href ?? null),
+        onClick: () => setPublishTarget(repository),
       });
     }
     actionItems.push({
@@ -319,11 +319,11 @@ export const RepositoryList: React.FC = () => {
           />
         )}
 
-        {publishRepoHref && (
+        {publishTarget && (
           <PublishModal
             isOpen
-            onClose={() => setPublishRepoHref(null)}
-            repoHref={publishRepoHref}
+            onClose={() => setPublishTarget(null)}
+            repoHref={publishTarget.pulp_href ?? ""}
           />
         )}
 

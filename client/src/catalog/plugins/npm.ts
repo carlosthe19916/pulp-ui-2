@@ -24,46 +24,30 @@ export const npm = definePlugin({
   entities: {
     // npm repository: supports sync but has no publications (publish stays off).
     repository: {
-      capabilities: { sync: { remoteTypes: ["npm.npm"] } },
       form: {
+        isWizard: false,
         createFields: [...repositoryBase.create, ...npmRepositoryExtras],
         editFields: [...repositoryBase.edit, ...npmRepositoryExtras],
       },
-      page: {
-        detailFields: [
-          ...repositoryBase.detail,
-          {
-            key: "retain_checkpoints",
-            label: "Retained Checkpoints",
-            type: "number",
-          },
-        ],
-      },
+      compatibleRemoteTypes: ["npm.npm"],
+      compatiblePublicationTypes: [],
     },
 
     // npm remote: no fields beyond the pulpcore remote base.
     remote: {
-      isWizard: true,
-      form: { createFields: remoteBase.create, editFields: remoteBase.edit },
-      page: { detailFields: remoteBase.detail },
+      form: {
+        isWizard: true,
+        createFields: remoteBase.create,
+        editFields: remoteBase.edit,
+      },
     },
 
     // npm distribution: serves a repository, or pull-through via a remote.
     distribution: {
       form: {
+        isWizard: false,
         createFields: [...distributionBase.create, ...npmDistributionExtras],
         editFields: [...distributionBase.edit, ...npmDistributionExtras],
-      },
-      page: {
-        detailFields: [
-          ...distributionBase.detail,
-          { key: "repository", label: "Repository", type: "text" },
-          { key: "remote", label: "Remote", type: "text" },
-        ],
-        browseCardFields: [
-          { key: "base_path", label: "Base path", type: "text" },
-          { key: "base_url", label: "Base URL", type: "text" },
-        ],
       },
     },
   },

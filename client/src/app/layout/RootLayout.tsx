@@ -22,7 +22,6 @@ import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
 import { NotificationsProvider } from "@app/context/NotificationsContext";
 import { useLocalStorage } from "@app/hooks/useStorage";
 
-import { BrowseLayout } from "./browse-layout";
 import { DefaultLayout } from "./default-layout";
 
 export const RootComponent = () => {
@@ -89,18 +88,12 @@ export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
 const RootLayout = () => {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLoginRoute = pathname === "/login";
-  const isBrowseRoute =
-    pathname === "/browse" || pathname.startsWith("/browse/");
 
   if (isLoginRoute) {
     return <Outlet />;
   }
 
-  return isBrowseRoute ? (
-    <BrowseLayout>
-      <Outlet />
-    </BrowseLayout>
-  ) : (
+  return (
     <DefaultLayout>
       <Outlet />
     </DefaultLayout>

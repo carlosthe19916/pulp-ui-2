@@ -8,21 +8,23 @@ import {
 
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useAllFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
+import { useAllRepositoryVersionsListQuery } from "@app/queries/repositories";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryVersionsTabProps {
-  repoHref: string;
+  apiPath: string | undefined;
+  id: string;
 }
 
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
-  repoHref,
+  apiPath,
+  id,
 }) => {
   const {
     data: versionsData,
     isLoading: isVersionsLoading,
     error: versionsError,
-  } = useAllFileRepositoryVersionsListQuery(repoHref);
+  } = useAllRepositoryVersionsListQuery(apiPath, id);
 
   const versions = versionsData?.results ?? [];
 

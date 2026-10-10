@@ -16,9 +16,9 @@ import {
 
 import {
   type EntityType,
-  getCreatablePlugins,
+  getAvailablePlugins,
   getEntityLabel,
-  getPlugin,
+  getEntityPlugin,
   type IEntityPlugin,
 } from "@catalog";
 import { EntityFormFields } from "@app/components/EntityFormFields";
@@ -33,6 +33,9 @@ import { useEntityDetailQuery } from "@app/queries/utils/entityCrud";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 const FORM_ID = "entity-form";
+
+/** pulp_types that can't be created from the UI (e.g. push repos are populated by `podman push`). */
+const NON_CREATABLE_TYPES = new Set(["container.container-push"]);
 
 interface IEntityFormBodyProps {
   config: IContentFamilyConfig;
@@ -110,18 +113,18 @@ const EntityModalInner = ({
   const isCreate = !entity;
   const plugins = use(ApiStatusContext)?.plugins ?? [];
 
-  const available = getCreatablePlugins(config.kind, plugins);
+  const available = getAvailablePlugins(config.kind, plugins).filter(
+    (plugin) => !NON_CREATABLE_TYPES.has(plugin.rest.pulpType),
+  );
   const [selectedType, setSelectedType] = useState(
     available[0]?.rest.pulpType ?? "",
   );
 
-  const editType = entity
-    ? (resolvePulpType(
-        (entity as { pulp_type?: string }).pulp_type,
-        entity.pulp_href,
-      ) ?? "")
-    : "";
-  const plugin = getPlugin(config.kind, isCreate ? selectedType : editType);
+  const editType = entity ? (resolvePulpType(entity.pulp_href) ?? "") : "";
+  const plugin = getEntityPlugin(
+    config.kind,
+    isCreate ? selectedType : editType,
+  );
 
   // Edit: fetch the full typed entity so plugin-specific fields pre-fill.
   const { data: fullEntity, isLoading: isDetailLoading } =

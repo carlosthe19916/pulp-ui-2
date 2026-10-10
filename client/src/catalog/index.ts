@@ -15,7 +15,7 @@ import { maven } from "./plugins/maven";
 import { npm } from "./plugins/npm";
 import { python } from "./plugins/python";
 import { rpm } from "./plugins/rpm";
-import { ENTITY_TYPE_LABELS } from "./types";
+import { ENTITY_TYPE_LABELS, ENTITY_TYPES } from "./types";
 import type { EntityType, IEntityPlugin, PulpType } from "./types";
 
 /** All plugins, in display order. Add a new plugin here. */
@@ -24,11 +24,41 @@ const plugins = [file, rpm, python, container, gem, npm, maven, huggingFace];
 /** The assembled catalog: entity type → pulp_type → resolved plugin. */
 export const catalog = buildCatalog(plugins);
 
+/**
+ * Reverse index of the catalog: entity type → `rest.apiPath` → pulp_type. Built
+ * from the same resolved plugins, so it needs no separate maintenance. `apiPath`
+ * (the `<app>/<slug>` collection segment carried in every resource `pulp_href`)
+ * is unique within an entity, so this is a collision-free bijection.
+ */
+const apiPathIndex: Record<
+  EntityType,
+  Record<string, PulpType>
+> = Object.fromEntries(
+  ENTITY_TYPES.map((entity) => [
+    entity,
+    Object.fromEntries(
+      Object.values(catalog[entity]).map((plugin) => [
+        plugin.rest.apiPath,
+        plugin.rest.pulpType,
+      ]),
+    ),
+  ]),
+) as Record<EntityType, Record<string, PulpType>>;
+
 /** Safe lookup — returns `undefined` for an unknown/uninstalled pulp_type. */
-export const getPlugin = (
+export const getEntityPlugin = (
   entity: EntityType,
   pulpType: PulpType,
 ): IEntityPlugin | undefined => catalog[entity][pulpType];
+
+/**
+ * Resolve a pulp_type from an entity + its `rest.apiPath` (the `<app>/<slug>`
+ * segment of a resource href). Returns `undefined` for an unmodelled plugin.
+ */
+export const resolvePulpTypeByApiPath = (
+  entity: EntityType,
+  apiPath: string,
+): PulpType | undefined => apiPathIndex[entity][apiPath];
 
 /** All plugins for an entity type, keyed by pulp_type. */
 export const getPlugins = (
@@ -44,15 +74,6 @@ export const getAvailablePlugins = (
     plugin.app.isAvailable(installed),
   );
 
-/** Installed plugins for an entity type that can be created (for create menus). */
-export const getCreatablePlugins = (
-  entity: EntityType,
-  installed: VersionResponse[],
-): IEntityPlugin[] =>
-  getAvailablePlugins(entity, installed).filter(
-    (plugin) => plugin.capabilities.creatable,
-  );
-
 /** Human-readable singular label for an entity type (UI titles, toasts). */
 export const getEntityLabel = (entity: EntityType): string =>
   ENTITY_TYPE_LABELS[entity];
@@ -63,15 +84,15 @@ export { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "./types";
 export type {
   EntityCatalog,
   EntityType,
-  IEntityContribution,
+  IContributionBase,
   IEntityPlugin,
+  IEntityVariant,
   IPluginApp,
-  IPluginCapabilities,
   IPluginDefinition,
   IPluginForm,
-  IPluginPage,
   IPluginRest,
   IPluginUi,
+  IRepositoryContribution,
   PluginEntityMap,
   PulpType,
 } from "./types";

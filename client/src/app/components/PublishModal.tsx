@@ -15,14 +15,18 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
+import type { AsyncOperationResponse } from "@app/client";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
+import { getEntityPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useFilePublicationCreateMutation } from "@app/queries/file-publications";
+import { publicationsRootQueryOptions } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
+import { useEntityCreateMutation } from "@app/queries/utils/entityCrud";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -47,7 +51,10 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   repoVersionHref,
 }) => {
   const { addNotification } = useNotifications();
-  const createMutation = useFilePublicationCreateMutation();
+  const createMutation = useEntityCreateMutation<AsyncOperationResponse>(
+    "publications",
+    publicationsRootQueryOptions.queryKey,
+  );
 
   const [repoSearch, setRepoSearch] = useState("");
   const debouncedRepoSearch = useDebouncedValue(repoSearch);
@@ -93,11 +100,34 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   const repository = watch("repository");
   const repositoryVersion = watch("repository_version");
 
+  // Resolve the publication endpoint from the *selected* repository's type: its
+  // repo plugin names a publication pulp_type (e.g. python.python → python.pypi),
+  // whose catalog `apiPath` is the collection to POST to. Follows the selection so
+  // changing the repo targets the right endpoint.
+  const repoPlugin = repository
+    ? getEntityPlugin("repository", resolvePulpType(repository) ?? "")
+    : undefined;
+  const publicationType = repoPlugin?.compatiblePublicationTypes[0];
+  const publicationApiPath = publicationType
+    ? getEntityPlugin("publication", publicationType)?.rest.apiPath
+    : undefined;
+
   const onSubmit = handleSubmit(async (values) => {
+    if (!publicationApiPath) {
+      addNotification({
+        title: "Failed to create publication",
+        description: "This repository type does not support publishing.",
+        variant: "danger",
+      });
+      return;
+    }
     try {
       const result = await createMutation.mutateAsync({
-        repository: values.repository || undefined,
-        repository_version: values.repository_version || undefined,
+        apiPath: publicationApiPath,
+        body: {
+          repository: values.repository || undefined,
+          repository_version: values.repository_version || undefined,
+        },
       });
       const taskHref = result?.task;
       if (taskHref) {
@@ -172,7 +202,9 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
           type="submit"
           form="publish-form"
           isLoading={isSubmitting || createMutation.isPending}
-          isDisabled={!repository && !repositoryVersion}
+          isDisabled={
+            !publicationApiPath || (!repository && !repositoryVersion)
+          }
         >
           Publish
         </Button>

@@ -1,7 +1,7 @@
 import type React from "react";
 import { Link, useParams } from "@tanstack/react-router";
 
-import { type EntityType, getPlugin } from "@catalog";
+import { type EntityType, getEntityPlugin } from "@catalog";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import {
   extractIdFromHref,
@@ -37,8 +37,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     return "—";
   }
 
-  const resolvedType = resolvePulpType(pulpType, href) ?? pulpType;
-  const plugin = getPlugin(kind, resolvedType);
+  const resolvedType = resolvePulpType(href) ?? pulpType;
+  const plugin = getEntityPlugin(kind, resolvedType);
   const id = extractIdFromHref(href);
   const displayLabel =
     label?.trim() ||
@@ -86,16 +86,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
           {displayLabel}
         </Link>
       );
-    case "content":
-      return (
-        <Link
-          to="/content-management/$pulpDomain/content/$contentId"
-          params={{ pulpDomain, contentId: id }}
-        >
-          {displayLabel}
-        </Link>
-      );
     default:
+      // "content" has no detail page (removed) — render a plain label.
       return displayLabel;
   }
 };
