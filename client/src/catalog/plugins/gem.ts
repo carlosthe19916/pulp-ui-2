@@ -46,7 +46,10 @@ export const gem = definePlugin({
   entities: {
     // Gem repository: a remote to sync from.
     repository: {
-      capabilities: { sync: true, publish: true },
+      capabilities: {
+        sync: { remoteTypes: ["gem.gem"] },
+        publish: true,
+      },
       form: {
         createFields: [...repositoryBase.create, ...gemRepositoryExtras],
         editFields: [...repositoryBase.edit, ...gemRepositoryExtras],

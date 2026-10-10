@@ -153,7 +153,10 @@ export const RepositoryList: React.FC = () => {
     const plugin = pulpType ? getPlugin("repository", pulpType) : undefined;
 
     const actionItems: IAction[] = [
-      { title: "Edit", onClick: () => setModalState(repository) },
+      {
+        title: "Edit",
+        onClick: () => setModalState(repository),
+      },
     ];
     if (plugin?.capabilities.sync) {
       actionItems.push({

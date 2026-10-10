@@ -44,7 +44,7 @@ describe("catalog composition", () => {
   it("inherits entity capability defaults and applies overrides", () => {
     expect(catalog.repository["file.file"].capabilities).toEqual({
       creatable: true,
-      sync: true,
+      sync: { remoteTypes: ["file.file", "file.git"] },
       publish: true,
       upload: false,
     });
@@ -66,6 +66,28 @@ describe("catalog composition", () => {
       upload: false,
     });
     expect(catalog.content["file.file"].capabilities.upload).toBe(true);
+  });
+
+  it("carries each repository's valid sync remote types (backend REMOTE_TYPES)", () => {
+    // rpm and file both accept a second remote variant (ULN, Git).
+    expect(catalog.repository["rpm.rpm"].capabilities.sync).toEqual({
+      remoteTypes: ["rpm.rpm", "rpm.uln"],
+    });
+    expect(catalog.repository["file.file"].capabilities.sync).toEqual({
+      remoteTypes: ["file.file", "file.git"],
+    });
+    expect(catalog.repository["python.python"].capabilities.sync).toEqual({
+      remoteTypes: ["python.python"],
+    });
+    // A container repo syncs only from container.container — NOT its pull-through
+    // remote variant, which the backend's REMOTE_TYPES excludes.
+    expect(catalog.repository["container.container"].capabilities.sync).toEqual(
+      {
+        remoteTypes: ["container.container"],
+      },
+    );
+    // Non-syncable types carry `sync: false`, so there are no orphan remote types.
+    expect(catalog.repository["maven.maven"].capabilities.sync).toBe(false);
   });
 
   it("carries the ui + app concerns, with per-variant ui overrides", () => {
@@ -100,7 +122,7 @@ describe("catalog composition", () => {
     );
     expect(counts).toEqual({
       repository: 9,
-      remote: 10,
+      remote: 11,
       distribution: 9,
       publication: 5,
       content: 1,

@@ -61,10 +61,20 @@ export interface IPluginPage {
   browseDetailFields: IEntityField[];
 }
 
+/**
+ * Sync capability payload: the remote pulp_types a repository can sync from,
+ * mirroring the backend repository's `REMOTE_TYPES`. Present only when sync is on
+ * — so the valid remotes exist exactly where (and when) they're meaningful.
+ */
+export interface ISyncCapability {
+  remoteTypes: PulpType[];
+}
+
 /** Capabilities concern: which actions a plugin type supports. */
 export interface IPluginCapabilities {
   creatable: boolean;
-  sync: boolean;
+  /** `false` when the type can't sync; otherwise carries its valid remote types. */
+  sync: false | ISyncCapability;
   publish: boolean;
   upload: boolean;
 }

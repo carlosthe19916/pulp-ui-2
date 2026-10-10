@@ -106,7 +106,10 @@ export const rpm = definePlugin({
   entities: {
     // RPM repository: remotes, signing services and metadata layout options.
     repository: {
-      capabilities: { sync: true, publish: true },
+      capabilities: {
+        sync: { remoteTypes: ["rpm.rpm", "rpm.uln"] },
+        publish: true,
+      },
       form: {
         createFields: [...repositoryBase.create, ...rpmRepositoryExtras],
         editFields: [...repositoryBase.edit, ...rpmRepositoryExtras],

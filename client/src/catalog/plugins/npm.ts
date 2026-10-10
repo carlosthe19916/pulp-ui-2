@@ -24,7 +24,7 @@ export const npm = definePlugin({
   entities: {
     // npm repository: supports sync but has no publications (publish stays off).
     repository: {
-      capabilities: { sync: true },
+      capabilities: { sync: { remoteTypes: ["npm.npm"] } },
       form: {
         createFields: [...repositoryBase.create, ...npmRepositoryExtras],
         editFields: [...repositoryBase.edit, ...npmRepositoryExtras],

@@ -80,7 +80,7 @@ export const container = definePlugin({
     // container.container (sync, no publish) + container.container-push (implicit).
     repository: [
       {
-        capabilities: { sync: true },
+        capabilities: { sync: { remoteTypes: ["container.container"] } },
         form: {
           createFields: [
             ...repositoryBase.create,

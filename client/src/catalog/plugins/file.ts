@@ -22,6 +22,20 @@ const fileDistributionExtras: IEntityField[] = [
   },
 ];
 
+/** FileGitRemote forces policy=immediate server-side (HiddenField), so drop it. */
+const withoutPolicy = (fields: IEntityField[]): IEntityField[] =>
+  fields.filter((field) => field.key !== "policy");
+
+const fileGitRemoteExtras: IEntityField[] = [
+  {
+    key: "git_ref",
+    label: "Git Ref",
+    type: "text",
+    defaultValue: "HEAD",
+    group: "General",
+  },
+];
+
 /** File: the pulpcore reference plugin — implements all five entity types. */
 export const file = definePlugin({
   app: { isAvailable: whenInstalled("file", "pulp-file") },
@@ -30,7 +44,10 @@ export const file = definePlugin({
   entities: {
     // File repository: a remote to sync from plus auto-publish.
     repository: {
-      capabilities: { sync: true, publish: true },
+      capabilities: {
+        sync: { remoteTypes: ["file.file", "file.git"] },
+        publish: true,
+      },
       form: {
         createFields: [
           ...repositoryBase.create,
@@ -67,12 +84,38 @@ export const file = definePlugin({
       },
     },
 
-    // File remote: no fields beyond the pulpcore remote base.
-    remote: {
-      isWizard: true,
-      form: { createFields: remoteBase.create, editFields: remoteBase.edit },
-      page: { detailFields: remoteBase.detail },
-    },
+    // File remote (file.file) + Git remote (file.git) — two variants of the slot.
+    // A FileRepository's backend REMOTE_TYPES is [FileRemote, FileGitRemote], so
+    // both can be synced from; declaring the git variant here lets the sync UI
+    // offer it and lets users create one.
+    remote: [
+      {
+        isWizard: true,
+        form: { createFields: remoteBase.create, editFields: remoteBase.edit },
+        page: { detailFields: remoteBase.detail },
+      },
+      {
+        ui: { label: "File (Git)" },
+        rest: { pulpType: "file.git", apiPath: "file/git" },
+        isWizard: true,
+        form: {
+          createFields: [
+            ...withoutPolicy(remoteBase.create),
+            ...fileGitRemoteExtras,
+          ],
+          editFields: [
+            ...withoutPolicy(remoteBase.edit),
+            ...fileGitRemoteExtras,
+          ],
+        },
+        page: {
+          detailFields: [
+            ...remoteBase.detail,
+            { key: "git_ref", label: "Git Ref", type: "text" },
+          ],
+        },
+      },
+    ],
 
     // File distribution: serves a repository or a specific publication.
     distribution: {

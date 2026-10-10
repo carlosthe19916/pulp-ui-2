@@ -59,7 +59,10 @@ export const huggingFace = definePlugin({
   entities: {
     // Hugging Face repository: a remote to sync from.
     repository: {
-      capabilities: { sync: true, publish: true },
+      capabilities: {
+        sync: { remoteTypes: ["hugging_face.hugging-face"] },
+        publish: true,
+      },
       form: {
         createFields: [
           ...repositoryBase.create,

@@ -20,11 +20,13 @@ import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
+import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
 import { useFileRepositorySyncMutation } from "@app/queries/file-repositories";
 import { useRemotesListQuery } from "@app/queries/remotes";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
 const syncSchema = yup.object({
@@ -48,6 +50,17 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const { addNotification } = useNotifications();
   const syncMutation = useFileRepositorySyncMutation();
 
+  // Scope the remote picker to the remote types this repository can sync from
+  // (backend REMOTE_TYPES): a mismatched remote is rejected server-side.
+  const repoPulpType = resolvePulpType(
+    (repo.object as { pulp_type?: string }).pulp_type,
+    repo.object.pulp_href,
+  );
+  const sync = repoPulpType
+    ? getPlugin("repository", repoPulpType)?.capabilities.sync
+    : false;
+  const remoteTypes = sync ? sync.remoteTypes : [];
+
   const [remoteSearch, setRemoteSearch] = useState("");
   const debouncedRemoteSearch = useDebouncedValue(remoteSearch);
   const [selectedRemoteLabel, setSelectedRemoteLabel] = useState<string>();
@@ -55,6 +68,11 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
     useRemotesListQuery({
       limit: 20,
       name__icontains: debouncedRemoteSearch || undefined,
+      pulp_type__in: remoteTypes.length
+        ? (remoteTypes as NonNullable<
+            Parameters<typeof useRemotesListQuery>[0]
+          >["pulp_type__in"])
+        : undefined,
     });
 
   const remoteOptions = useMemo<ITypeaheadOption[]>(
@@ -124,7 +142,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} variant="small">
-      <ModalHeader title="Sync Repository" />
+      <ModalHeader title={`Sync repository "${repo.object.name}"`} />
       <ModalBody>
         <Form
           id="sync-form"

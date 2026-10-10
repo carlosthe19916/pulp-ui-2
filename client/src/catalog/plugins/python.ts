@@ -102,7 +102,10 @@ export const python = definePlugin({
   entities: {
     // Python repository: remote, auto-publish and package-substitution controls.
     repository: {
-      capabilities: { sync: true, publish: true },
+      capabilities: {
+        sync: { remoteTypes: ["python.python"] },
+        publish: true,
+      },
       form: {
         createFields: [
           ...repositoryBase.create,
