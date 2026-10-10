@@ -1,7 +1,6 @@
 import {
   queryOptions,
   useMutation,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -14,9 +13,10 @@ import type {
   FileFileContentWritable,
   PaginatedfileFileContentResponseList,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { entityDetailQueryOptions } from "./utils/entityCrud";
+import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildContentHref } from "./utils/pulpHref";
 
@@ -53,43 +53,19 @@ export const fileContentListQueryOptions = (
     enabled: options?.enabled ?? true,
   });
 
-export const useFileContentListQuery = (
-  params: IFileContentListParams,
-  options?: { enabled?: boolean },
-) => {
-  const domain = useApiDomain();
-  return useQuery(fileContentListQueryOptions(domain, params, options));
-};
-
-export const fileContentDetailQueryOptions = (href: string) =>
-  queryOptions({
-    queryKey: [...contentRootQueryOptions.queryKey, "file", "detail", href],
-    queryFn: async (): Promise<FileFileContentResponse> => {
-      const response = await axiosInstance.get<FileFileContentResponse>(
-        toProxyHref(href),
-      );
-      return response.data;
-    },
-    enabled: !!href,
-  });
-
-export const useFileContentDetailQuery = (contentId: string) => {
-  const domain = useApiDomain();
-  return useQuery(
-    fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
-  );
-};
-
 export const useSuspenseFileContentDetailQuery = (contentId: string) => {
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useSuspenseQuery(
-    fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+    entityDetailQueryOptions<FileFileContentResponse>(
+      contentRootQueryOptions.queryKey,
+      buildContentHref(contentId, domain),
+    ),
   );
 };
 
 export const useFileContentCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useMutation({
     mutationFn: async (body: FileFileContentWritable) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(

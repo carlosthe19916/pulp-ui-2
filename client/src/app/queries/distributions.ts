@@ -5,7 +5,7 @@ import type {
   DistributionsListData,
   PaginatedDistributionResponseList,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -19,18 +19,37 @@ export const distributionsRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. Identifying segments precede
+ * params so a prefix invalidates all variants of a collection. Shared by the
+ * query options and the generic CRUD mutations (via
+ * `distributionsRootQueryOptions`) to prevent key drift.
+ */
+export const distributionKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["distributions"]
+  all: () => [DistributionsQueryKey] as const,
+  // ["distributions", "list"] — every list query, any domain/params
+  list: () => [...distributionKeys.all(), "list"] as const,
+  // ["distributions", "detail", distHref]
+  detail: (distHref: string) =>
+    [...distributionKeys.all(), "detail", distHref] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["distributions", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IDistributionListParams) =>
+    [...distributionKeys.list(), domain, params] as const,
+  // ["distributions", "detail", distHref] — same value as detail() (no params)
+  detailQuery: (distHref: string) => distributionKeys.detail(distHref),
+};
+
 export const distributionsListQueryOptions = (
   domain: IPulpDomain,
   params: IDistributionListParams,
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
-    queryKey: [
-      ...distributionsRootQueryOptions.queryKey,
-      "list",
-      domain,
-      params,
-    ],
+    queryKey: distributionKeys.listQuery(domain, params),
     enabled: options?.enabled ?? true,
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
       const response =
@@ -51,6 +70,6 @@ export const useDistributionsListQuery = (
   params: IDistributionListParams,
   options?: { enabled?: boolean },
 ) => {
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useQuery(distributionsListQueryOptions(domain, params, options));
 };

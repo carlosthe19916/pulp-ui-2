@@ -6,7 +6,7 @@ import type {
   PublicationResponse,
   PublicationsListData,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
@@ -23,17 +23,40 @@ export const publicationsRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. The `"all"` fetch variant nests
+ * under `list` (identifying segments precede params) so a `list` prefix
+ * invalidates both the paginated and fetch-all list queries. Shared by the
+ * query options and the generic CRUD mutations (via
+ * `publicationsRootQueryOptions`) to prevent key drift.
+ */
+export const publicationKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["publications"]
+  all: () => [PublicationsQueryKey] as const,
+  // ["publications", "list"] — every list query (paginated + fetch-all)
+  list: () => [...publicationKeys.all(), "list"] as const,
+  // ["publications", "detail", pubHref]
+  detail: (pubHref: string) =>
+    [...publicationKeys.all(), "detail", pubHref] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["publications", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IPublicationListParams) =>
+    [...publicationKeys.list(), domain, params] as const,
+  // ["publications", "list", "all", domain, params] — fetch-all variant
+  allListQuery: (domain: IPulpDomain, params: IAllPublicationListParams) =>
+    [...publicationKeys.list(), "all", domain, params] as const,
+  // ["publications", "detail", pubHref] — same value as detail() (no params)
+  detailQuery: (pubHref: string) => publicationKeys.detail(pubHref),
+};
+
 export const publicationsListQueryOptions = (
   domain: IPulpDomain,
   params: IPublicationListParams,
 ) =>
   queryOptions({
-    queryKey: [
-      ...publicationsRootQueryOptions.queryKey,
-      "list",
-      domain,
-      params,
-    ],
+    queryKey: publicationKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
         await axiosInstance.get<PaginatedPublicationResponseList>(
@@ -55,13 +78,7 @@ export const allPublicationsListQueryOptions = (
   params: IAllPublicationListParams = {},
 ) =>
   queryOptions({
-    queryKey: [
-      ...publicationsRootQueryOptions.queryKey,
-      "list",
-      "all",
-      domain,
-      params,
-    ],
+    queryKey: publicationKeys.allListQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const { results, count } = await fetchAllPages<PublicationResponse>(
         async (offset, limit) => {
@@ -85,13 +102,13 @@ export const allPublicationsListQueryOptions = (
   });
 
 export const usePublicationsListQuery = (params: IPublicationListParams) => {
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useQuery(publicationsListQueryOptions(domain, params));
 };
 
 export const useAllPublicationsListQuery = (
   params: IAllPublicationListParams = {},
 ) => {
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useQuery(allPublicationsListQueryOptions(domain, params));
 };

@@ -1,18 +1,25 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
+import type {
+  FileFileContentResponse,
+  FileFileDistributionResponse,
+  FileFilePublicationResponse,
+  FileFileRepositoryResponse,
+} from "@app/client";
 import { useApiDomain } from "@app/hooks/useApiDomain";
 
 import type { IDistributionListParams } from "./distributions";
 import type { IFileContentListParams } from "./file-content";
 import { artifactDetailQueryOptions } from "./artifacts";
-import { distributionsListQueryOptions } from "./distributions";
+import { contentRootQueryOptions } from "./content";
 import {
-  fileContentDetailQueryOptions,
-  fileContentListQueryOptions,
-} from "./file-content";
-import { fileDistributionDetailQueryOptions } from "./file-distributions";
-import { filePublicationDetailQueryOptions } from "./file-publications";
-import { fileRepositoryDetailQueryOptions } from "./file-repositories";
+  distributionsListQueryOptions,
+  distributionsRootQueryOptions,
+} from "./distributions";
+import { fileContentListQueryOptions } from "./file-content";
+import { publicationsRootQueryOptions } from "./publications";
+import { repositoriesRootQueryOptions } from "./repositories";
+import { entityDetailQueryOptions } from "./utils/entityCrud";
 import { buildContentHref, buildDistributionHref } from "./utils/pulpHref";
 
 /** Browse pages are read-only and public, so use a longer staleTime to cut refetches. */
@@ -31,7 +38,8 @@ export const useBrowseDistributionsQuery = (
 export const useBrowseDistributionDetailQuery = (distId: string) => {
   const domain = useApiDomain();
   return useQuery({
-    ...fileDistributionDetailQueryOptions(
+    ...entityDetailQueryOptions<FileFileDistributionResponse>(
+      distributionsRootQueryOptions.queryKey,
       buildDistributionHref(distId, domain),
     ),
     staleTime: BROWSE_STALE_TIME,
@@ -41,7 +49,8 @@ export const useBrowseDistributionDetailQuery = (distId: string) => {
 export const useSuspenseBrowseDistributionDetailQuery = (distId: string) => {
   const domain = useApiDomain();
   return useSuspenseQuery({
-    ...fileDistributionDetailQueryOptions(
+    ...entityDetailQueryOptions<FileFileDistributionResponse>(
+      distributionsRootQueryOptions.queryKey,
       buildDistributionHref(distId, domain),
     ),
     staleTime: BROWSE_STALE_TIME,
@@ -50,7 +59,10 @@ export const useSuspenseBrowseDistributionDetailQuery = (distId: string) => {
 
 export const useBrowseRepositoryDetailQuery = (href: string) => {
   return useQuery({
-    ...fileRepositoryDetailQueryOptions(href),
+    ...entityDetailQueryOptions<FileFileRepositoryResponse>(
+      repositoriesRootQueryOptions.queryKey,
+      href,
+    ),
     staleTime: BROWSE_STALE_TIME,
     enabled: !!href,
   });
@@ -58,7 +70,10 @@ export const useBrowseRepositoryDetailQuery = (href: string) => {
 
 export const useBrowsePublicationDetailQuery = (href: string) => {
   return useQuery({
-    ...filePublicationDetailQueryOptions(href),
+    ...entityDetailQueryOptions<FileFilePublicationResponse>(
+      publicationsRootQueryOptions.queryKey,
+      href,
+    ),
     staleTime: BROWSE_STALE_TIME,
     enabled: !!href,
   });
@@ -78,7 +93,10 @@ export const useBrowseFileContentListQuery = (
 export const useBrowseContentDetailQuery = (contentId: string) => {
   const domain = useApiDomain();
   return useQuery({
-    ...fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+    ...entityDetailQueryOptions<FileFileContentResponse>(
+      contentRootQueryOptions.queryKey,
+      buildContentHref(contentId, domain),
+    ),
     staleTime: BROWSE_STALE_TIME,
   });
 };
@@ -86,7 +104,10 @@ export const useBrowseContentDetailQuery = (contentId: string) => {
 export const useSuspenseBrowseContentDetailQuery = (contentId: string) => {
   const domain = useApiDomain();
   return useSuspenseQuery({
-    ...fileContentDetailQueryOptions(buildContentHref(contentId, domain)),
+    ...entityDetailQueryOptions<FileFileContentResponse>(
+      contentRootQueryOptions.queryKey,
+      buildContentHref(contentId, domain),
+    ),
     staleTime: BROWSE_STALE_TIME,
   });
 };

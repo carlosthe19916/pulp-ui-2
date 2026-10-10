@@ -5,7 +5,7 @@ import type {
   ContentListData,
   PaginatedMultipleArtifactContentResponseList,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -19,13 +19,37 @@ export const contentRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
+/**
+ * Query-key factory mirroring the REST paths. Identifying segments precede
+ * params so a prefix invalidates all variants of a collection. Shared by the
+ * query options and the generic CRUD mutations (via `contentRootQueryOptions`)
+ * to prevent key drift.
+ */
+export const contentKeys = {
+  // --- invalidation folders (prefixes for invalidateQueries) ---
+  // ["content"]
+  all: () => [ContentQueryKey] as const,
+  // ["content", "list"] — every list query, any domain/params
+  list: () => [...contentKeys.all(), "list"] as const,
+  // ["content", "detail", contentHref]
+  detail: (contentHref: string) =>
+    [...contentKeys.all(), "detail", contentHref] as const,
+
+  // --- real query keys (for useQuery / queryOptions) ---
+  // ["content", "list", domain, params]
+  listQuery: (domain: IPulpDomain, params: IContentListParams) =>
+    [...contentKeys.list(), domain, params] as const,
+  // ["content", "detail", contentHref] — same value as detail() (no params)
+  detailQuery: (contentHref: string) => contentKeys.detail(contentHref),
+};
+
 export const contentListQueryOptions = (
   domain: IPulpDomain,
   params: IContentListParams,
   options?: { enabled?: boolean },
 ) =>
   queryOptions({
-    queryKey: [...contentRootQueryOptions.queryKey, "list", domain, params],
+    queryKey: contentKeys.listQuery(domain, params),
     queryFn:
       async (): Promise<PaginatedMultipleArtifactContentResponseList> => {
         const response =
@@ -47,6 +71,6 @@ export const useContentListQuery = (
   params: IContentListParams,
   options?: { enabled?: boolean },
 ) => {
-  const domain = useApiDomain();
+  const domain = useSelectedDomain();
   return useQuery(contentListQueryOptions(domain, params, options));
 };
