@@ -23,9 +23,11 @@ import {
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 export const Dashboard: React.FC = () => {
   const { status, isLoading, error } = use(ApiStatusContext) ?? {};
+  const { name: pulpDomain } = useSelectedDomain();
 
   return (
     <>
@@ -142,7 +144,10 @@ export const Dashboard: React.FC = () => {
                       <Link to="/tasks">Tasks</Link>
                     </Content>
                     <Content component="li">
-                      <Link to="/content-management/repositories">
+                      <Link
+                        to="/content-management/$pulpDomain/repositories"
+                        params={{ pulpDomain }}
+                      >
                         Repositories
                       </Link>
                     </Content>
