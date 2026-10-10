@@ -30,24 +30,22 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
-import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { getAvailablePlugins } from "@catalog";
+import { REMOTE_FAMILY } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import {
-  getDescriptor,
-  getDescriptorsForKind,
-} from "@app/descriptors/registry";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { RemoteModal } from "../components/RemoteModal";
-import { useRemoteActions } from "./hooks/useRemoteActions";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 /** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type RemoteRow = GenericRemoteResponse & { pulp_type?: string };
@@ -62,10 +60,15 @@ interface IRemoteFilters {
 
 export const RemoteList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<RemoteRow | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Single source of truth for the create/edit modal: "create", a row to edit,
+  // or null (closed) — so create and edit can never be open at once.
+  const [modalState, setModalState] = useState<"create" | RemoteRow | null>(
+    null,
+  );
 
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const { deleteRemote, isDeleting } = useRemoteActions();
+  const { deleteEntity, isDeleting } = useEntityDelete(REMOTE_FAMILY);
+  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -98,9 +101,7 @@ export const RemoteList: React.FC = () => {
   const remotes = (data?.results ?? []) as RemoteRow[];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getDescriptorsForKind("remote").some((d) =>
-    d.isAvailable(plugins),
-  );
+  const canCreate = getAvailablePlugins("remote", plugins).length > 0;
 
   const sortProps = (columnKey: RemoteColumnKey) =>
     buildThSort({
@@ -130,7 +131,6 @@ export const RemoteList: React.FC = () => {
   const rows: DataViewTr[] = remotes.map((remote) => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_type, remote.pulp_href);
-    const descriptor = pulpType ? getDescriptor("remote", pulpType) : undefined;
 
     return {
       id: remote.pulp_href,
@@ -138,8 +138,8 @@ export const RemoteList: React.FC = () => {
         {
           cell: remoteId ? (
             <Link
-              to="/content-management/remotes/$remoteId"
-              params={{ remoteId }}
+              to="/content-management/$pulpDomain/remotes/$remoteId"
+              params={{ pulpDomain, remoteId }}
             >
               {remote.name}
             </Link>
@@ -165,11 +165,13 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: !descriptor ? (
-            <ReadOnlyBadge pulpType={pulpType} />
-          ) : (
+          cell: (
             <ActionsColumn
               items={[
+                {
+                  title: "Edit",
+                  onClick: () => setModalState(remote),
+                },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(remote),
@@ -211,9 +213,9 @@ export const RemoteList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteRemote(deleteTarget);
+      await deleteEntity(deleteTarget);
     } catch {
-      // Notifications are handled in useRemoteActions.
+      // Notifications are handled in useEntityDelete.
     }
     setDeleteTarget(null);
   };
@@ -221,6 +223,7 @@ export const RemoteList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Remotes" />
+      <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Remotes</Content>
 
@@ -245,7 +248,10 @@ export const RemoteList: React.FC = () => {
             }
             actions={
               canCreate ? (
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
                   Create remote
                 </Button>
               ) : undefined
@@ -263,9 +269,13 @@ export const RemoteList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <RemoteModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        <EntityModal
+          config={REMOTE_FAMILY}
+          isOpen={modalState !== null}
+          entity={
+            modalState === "create" ? undefined : (modalState ?? undefined)
+          }
+          onClose={() => setModalState(null)}
         />
 
         <ConfirmActionModal

@@ -2,6 +2,15 @@ import * as yup from "yup";
 
 import type { StorageClassEnum } from "@app/client";
 
+/**
+ * Storage backends are plugin-dependent, so the spec's `StorageClassEnum` shrinks
+ * or grows with what's installed. OCI ships with `pulp_service`, which isn't on
+ * every backend (and isn't in the dev spec), so keep it selectable without
+ * coupling to the generated enum.
+ */
+export type StorageClass =
+  StorageClassEnum | "pulp_service.app.storage.OCIStorage";
+
 export interface IStorageSettingField {
   /** The literal key sent inside `storage_settings`. */
   key: string;
@@ -12,7 +21,7 @@ export interface IStorageSettingField {
 }
 
 export interface IStorageBackend {
-  value: StorageClassEnum;
+  value: StorageClass;
   label: string;
   deprecated?: boolean;
   // Fields and their `required` flags mirror pulpcore's storage_settings serializer
@@ -92,18 +101,16 @@ export const STORAGE_BACKENDS: IStorageBackend[] = [
   },
 ];
 
-export const STORAGE_BACKEND_BY_CLASS: Record<
-  StorageClassEnum,
-  IStorageBackend
-> = Object.fromEntries(
-  STORAGE_BACKENDS.map((backend) => [backend.value, backend]),
-) as Record<StorageClassEnum, IStorageBackend>;
+export const STORAGE_BACKEND_BY_CLASS: Record<StorageClass, IStorageBackend> =
+  Object.fromEntries(
+    STORAGE_BACKENDS.map((backend) => [backend.value, backend]),
+  ) as Record<StorageClass, IStorageBackend>;
 
-export const storageClassLabel = (value: StorageClassEnum): string =>
+export const storageClassLabel = (value: StorageClass): string =>
   STORAGE_BACKEND_BY_CLASS[value]?.label ?? value;
 
 /** yup schema for the selected backend's `storage_settings`. */
-export const buildStorageSettingsSchema = (storageClass: StorageClassEnum) => {
+export const buildStorageSettingsSchema = (storageClass: StorageClass) => {
   const backend = STORAGE_BACKEND_BY_CLASS[storageClass];
   return yup.object(
     Object.fromEntries(

@@ -6,7 +6,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import "@app/dayjs";
-import "@app/descriptors";
 import { App } from "@app/App";
 import { initInterceptors } from "@app/axios-config/apiInit";
 import { queryClient } from "@app/queries/config";

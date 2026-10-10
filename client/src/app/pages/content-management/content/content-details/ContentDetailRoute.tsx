@@ -3,7 +3,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import { ContentDetail } from "./ContentDetail";
 
 const contentDetailRouteApi = getRouteApi(
-  "/_authenticated/content-management/content/$contentId",
+  "/_authenticated/content-management/$pulpDomain/content/$contentId",
 );
 
 export const ContentDetailRoute = () => {

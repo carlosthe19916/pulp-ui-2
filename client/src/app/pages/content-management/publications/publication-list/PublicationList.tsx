@@ -27,21 +27,22 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
-import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { getAvailablePlugins } from "@catalog";
+import { PUBLICATION_FAMILY } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import {
-  getDescriptor,
-  getDescriptorsForKind,
-} from "@app/descriptors/registry";
+import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { usePublicationsListQuery } from "@app/queries/publications";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { formatDateTime } from "@app/utils/utils";
-
-import { CreatePublicationModal } from "./components/CreatePublicationModal";
-import { usePublicationActions } from "./hooks/usePublicationActions";
 
 /** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type PublicationRow = PublicationResponse & { pulp_type?: string };
@@ -65,7 +66,8 @@ export const PublicationList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const { deletePublication, isDeleting } = usePublicationActions();
+  const { deleteEntity, isDeleting } = useEntityDelete(PUBLICATION_FAMILY);
+  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -86,16 +88,14 @@ export const PublicationList: React.FC = () => {
   const publications = (data?.results ?? []) as PublicationRow[];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getDescriptorsForKind("publication").some((d) =>
-    d.isAvailable(plugins),
-  );
+  const canCreate = getAvailablePlugins("publication", plugins).length > 0;
 
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deletePublication(deleteTarget);
+      await deleteEntity(deleteTarget);
     } catch {
-      // Notifications are handled in usePublicationActions.
+      // Notifications are handled in useEntityDelete.
     }
     setDeleteTarget(null);
   };
@@ -126,27 +126,24 @@ export const PublicationList: React.FC = () => {
   ];
 
   const rows: DataViewTr[] = publications.map((pub) => {
-    const pulpType = pub.pulp_type;
-    const descriptor = pulpType
-      ? getDescriptor("publication", pulpType)
-      : undefined;
     const href = pub.pulp_href;
-    const label = href ? `Publication ${extractIdFromHref(href)}` : "—";
+    const pubId = href ? extractIdFromHref(href) : "";
+    const pulpType = resolvePulpType(pub.pulp_type, pub.pulp_href);
+    const label = href ? `Publication ${pubId}` : "—";
     return {
       id: href,
       row: [
         {
-          cell:
-            descriptor && href ? (
-              <Link
-                to="/content-management/publications/$pubId"
-                params={{ pubId: extractIdFromHref(href) }}
-              >
-                {label}
-              </Link>
-            ) : (
-              label
-            ),
+          cell: pubId ? (
+            <Link
+              to="/content-management/$pulpDomain/publications/$pubId"
+              params={{ pulpDomain, pubId }}
+            >
+              {label}
+            </Link>
+          ) : (
+            label
+          ),
           props: { dataLabel: "Publication" },
         },
         {
@@ -166,7 +163,7 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Created" },
         },
         {
-          cell: descriptor ? (
+          cell: (
             <ActionsColumn
               items={[
                 {
@@ -175,8 +172,6 @@ export const PublicationList: React.FC = () => {
                 },
               ]}
             />
-          ) : (
-            <ReadOnlyBadge pulpType={pulpType} />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -206,6 +201,7 @@ export const PublicationList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Publications" />
+      <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Publications</Content>
 
@@ -231,7 +227,8 @@ export const PublicationList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <CreatePublicationModal
+        <EntityModal
+          config={PUBLICATION_FAMILY}
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />

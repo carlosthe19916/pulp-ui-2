@@ -1,15 +1,15 @@
 import type React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 
-import type { ResourceKind } from "@app/descriptors/types";
-import { getDescriptor } from "@app/descriptors/registry";
+import { type EntityType, getPlugin } from "@catalog";
+import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
 interface IResourceHrefLinkProps {
-  kind: ResourceKind;
+  kind: EntityType;
   href: string | null | undefined;
   /** Assumed pulp_type when linking into typed detail routes (v1: file.file). */
   pulpType?: string;
@@ -22,7 +22,7 @@ const truncate = (value: string, max: number): string => {
   return value.length > max ? `${value.slice(0, max)}...` : value;
 };
 
-/** Link a pulp_href to the matching resource detail when a descriptor exists. */
+/** Link a pulp_href to the matching resource detail when a plugin exists. */
 export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   kind,
   href,
@@ -30,19 +30,22 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   label,
   truncateAt = 48,
 }) => {
+  // Content detail routes are domain-scoped; carry the current domain (or default).
+  const { pulpDomain = DEFAULT_PULP_DOMAIN } = useParams({ strict: false });
+
   if (!href) {
     return "—";
   }
 
   const resolvedType = resolvePulpType(pulpType, href) ?? pulpType;
-  const descriptor = getDescriptor(kind, resolvedType);
+  const plugin = getPlugin(kind, resolvedType);
   const id = extractIdFromHref(href);
   const displayLabel =
     label?.trim() ||
     (id && id.length <= truncateAt ? id : undefined) ||
     truncate(href, truncateAt);
 
-  if (!descriptor || !id) {
+  if (!plugin || !id) {
     return displayLabel;
   }
 
@@ -50,8 +53,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     case "repository":
       return (
         <Link
-          to="/content-management/repositories/$repoId"
-          params={{ repoId: id }}
+          to="/content-management/$pulpDomain/repositories/$repoId"
+          params={{ pulpDomain, repoId: id }}
         >
           {displayLabel}
         </Link>
@@ -59,8 +62,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     case "remote":
       return (
         <Link
-          to="/content-management/remotes/$remoteId"
-          params={{ remoteId: id }}
+          to="/content-management/$pulpDomain/remotes/$remoteId"
+          params={{ pulpDomain, remoteId: id }}
         >
           {displayLabel}
         </Link>
@@ -68,8 +71,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     case "distribution":
       return (
         <Link
-          to="/content-management/distributions/$distId"
-          params={{ distId: id }}
+          to="/content-management/$pulpDomain/distributions/$distId"
+          params={{ pulpDomain, distId: id }}
         >
           {displayLabel}
         </Link>
@@ -77,8 +80,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     case "publication":
       return (
         <Link
-          to="/content-management/publications/$pubId"
-          params={{ pubId: id }}
+          to="/content-management/$pulpDomain/publications/$pubId"
+          params={{ pulpDomain, pubId: id }}
         >
           {displayLabel}
         </Link>
@@ -86,8 +89,8 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     case "content":
       return (
         <Link
-          to="/content-management/content/$contentId"
-          params={{ contentId: id }}
+          to="/content-management/$pulpDomain/content/$contentId"
+          params={{ pulpDomain, contentId: id }}
         >
           {displayLabel}
         </Link>

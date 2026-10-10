@@ -1,5 +1,5 @@
 import type React from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 
 import {
   Nav,
@@ -10,73 +10,158 @@ import {
 } from "@patternfly/react-core";
 
 import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 export const SidebarApp: React.FC = () => {
-  const routerState = useRouterState();
-  const currentPath = routerState.location.pathname;
+  // `matchRoute` matches against the route tree (param segments included) with
+  // proper segment-boundary matching — no manual pathname string/regex work.
+  const matchRoute = useMatchRoute();
   const { enabled: domainsEnabled } = useApiDomain();
-
-  const isActive = (path: string) => {
-    if (path === "/") return currentPath === "/";
-    return currentPath.startsWith(path);
-  };
+  // Content routes are scoped by the `$pulpDomain` path param; carry the current
+  // (or default) domain into the nav links.
+  const { name: pulpDomain } = useSelectedDomain();
 
   return (
     <PageSidebar>
       <PageSidebarBody>
         <Nav id="nav-sidebar" aria-label="Nav">
           <NavGroup title="Main">
-            <NavItem isActive={isActive("/")}>
+            <NavItem isActive={!!matchRoute({ to: "/" })}>
               <Link to="/">Dashboard</Link>
             </NavItem>
-            <NavItem isActive={isActive("/tasks")}>
+            <NavItem isActive={!!matchRoute({ to: "/tasks", fuzzy: true })}>
               <Link to="/tasks">Tasks</Link>
             </NavItem>
           </NavGroup>
 
           {domainsEnabled && (
             <NavGroup title="System Management">
-              <NavItem isActive={isActive("/system-management/domains")}>
+              <NavItem
+                isActive={
+                  !!matchRoute({
+                    to: "/system-management/domains",
+                    fuzzy: true,
+                  })
+                }
+              >
                 <Link to="/system-management/domains">Domains</Link>
               </NavItem>
             </NavGroup>
           )}
 
+          {/* Ordered to follow the Pulp content pipeline: a Remote feeds a
+              Repository, which is snapshotted as a Publication and served by a
+              Distribution; Content lists the individual units. */}
           <NavGroup title="Content Management">
-            <NavItem isActive={isActive("/content-management/repositories")}>
-              <Link to="/content-management/repositories">Repositories</Link>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/remotes",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/remotes"
+                params={{ pulpDomain }}
+              >
+                Remotes
+              </Link>
             </NavItem>
-            <NavItem isActive={isActive("/content-management/remotes")}>
-              <Link to="/content-management/remotes">Remotes</Link>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/repositories",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/repositories"
+                params={{ pulpDomain }}
+              >
+                Repositories
+              </Link>
             </NavItem>
-            <NavItem isActive={isActive("/content-management/distributions")}>
-              <Link to="/content-management/distributions">Distributions</Link>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/publications",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/publications"
+                params={{ pulpDomain }}
+              >
+                Publications
+              </Link>
             </NavItem>
-            <NavItem isActive={isActive("/content-management/publications")}>
-              <Link to="/content-management/publications">Publications</Link>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/distributions",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/distributions"
+                params={{ pulpDomain }}
+              >
+                Distributions
+              </Link>
             </NavItem>
-            <NavItem isActive={isActive("/content-management/content")}>
-              <Link to="/content-management/content">Content</Link>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/content",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/content"
+                params={{ pulpDomain }}
+              >
+                Content
+              </Link>
             </NavItem>
           </NavGroup>
 
           <NavGroup title="Browse">
-            <NavItem isActive={isActive("/browse")}>
+            <NavItem isActive={!!matchRoute({ to: "/browse", fuzzy: true })}>
               <Link to="/browse">Content Browser</Link>
             </NavItem>
           </NavGroup>
 
           <NavGroup title="Administration">
-            <NavItem isActive={isActive("/admin/users")}>
+            <NavItem
+              isActive={!!matchRoute({ to: "/admin/users", fuzzy: true })}
+            >
               <Link to="/admin/users">Users</Link>
             </NavItem>
-            <NavItem isActive={isActive("/admin/groups")}>
+            <NavItem
+              isActive={!!matchRoute({ to: "/admin/groups", fuzzy: true })}
+            >
               <Link to="/admin/groups">Groups</Link>
             </NavItem>
-            <NavItem isActive={isActive("/admin/roles")}>
+            <NavItem
+              isActive={!!matchRoute({ to: "/admin/roles", fuzzy: true })}
+            >
               <Link to="/admin/roles">Roles</Link>
             </NavItem>
-            <NavItem isActive={isActive("/admin/signing-services")}>
+            <NavItem
+              isActive={
+                !!matchRoute({ to: "/admin/signing-services", fuzzy: true })
+              }
+            >
               <Link to="/admin/signing-services">Signing Services</Link>
             </NavItem>
           </NavGroup>

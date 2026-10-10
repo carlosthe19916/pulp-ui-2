@@ -30,27 +30,25 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
-import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { EntityModal } from "@app/components/Entity/EntityModal";
+import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
+import { SyncModal } from "@app/components/SyncModal";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { getAvailablePlugins, getPlugin } from "@catalog";
+import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import {
-  getDescriptor,
-  getDescriptorsForKind,
-} from "@app/descriptors/registry";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { withId } from "@app/models/models";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { RepositoryModal } from "../components/RepositoryModal";
-import { useRepositoryActions } from "./hooks/useRepositoryActions";
-import { PublishModal } from "@app/components/PublishModal";
-import { SyncModal } from "@app/components/SyncModal";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 /** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type RepositoryRow = RepositoryResponse & { pulp_type?: string };
@@ -76,12 +74,17 @@ const truncate = (value: string | null | undefined, max = 40): string => {
 
 export const RepositoryList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<RepositoryRow | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Single source of truth for the create/edit modal: "create", a row to edit,
+  // or null (closed) — so create and edit can never be open at once.
+  const [modalState, setModalState] = useState<"create" | RepositoryRow | null>(
+    null,
+  );
   const [syncTarget, setSyncTarget] = useState<RepositoryRow | null>(null);
   const [publishRepoHref, setPublishRepoHref] = useState<string | null>(null);
 
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const { deleteRepository, isDeleting } = useRepositoryActions();
+  const { deleteEntity, isDeleting } = useEntityDelete(REPOSITORY_FAMILY);
+  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -114,9 +117,7 @@ export const RepositoryList: React.FC = () => {
   const repositories = (data?.results ?? []) as RepositoryRow[];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getDescriptorsForKind("repository").some((d) =>
-    d.isAvailable(plugins),
-  );
+  const canCreate = getAvailablePlugins("repository", plugins).length > 0;
 
   const sortProps = (columnKey: RepositoryColumnKey) =>
     buildThSort({
@@ -149,18 +150,18 @@ export const RepositoryList: React.FC = () => {
       repository.pulp_type,
       repository.pulp_href,
     );
-    const descriptor = pulpType
-      ? getDescriptor("repository", pulpType)
-      : undefined;
+    const plugin = pulpType ? getPlugin("repository", pulpType) : undefined;
 
-    const actionItems: IAction[] = [];
-    if (descriptor?.supportsSync) {
+    const actionItems: IAction[] = [
+      { title: "Edit", onClick: () => setModalState(repository) },
+    ];
+    if (plugin?.capabilities.sync) {
       actionItems.push({
         title: "Sync",
         onClick: () => setSyncTarget(repository),
       });
     }
-    if (descriptor?.supportsPublish) {
+    if (plugin?.capabilities.publish) {
       actionItems.push({
         title: "Publish",
         onClick: () => setPublishRepoHref(repository.pulp_href ?? null),
@@ -177,8 +178,8 @@ export const RepositoryList: React.FC = () => {
         {
           cell: repoId ? (
             <Link
-              to="/content-management/repositories/$repoId"
-              params={{ repoId }}
+              to="/content-management/$pulpDomain/repositories/$repoId"
+              params={{ pulpDomain, repoId }}
             >
               {repository.name}
             </Link>
@@ -204,11 +205,7 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Remote" },
         },
         {
-          cell: !descriptor ? (
-            <ReadOnlyBadge pulpType={pulpType} />
-          ) : (
-            <ActionsColumn items={actionItems} />
-          ),
+          cell: <ActionsColumn items={actionItems} />,
           props: { dataLabel: "Actions", isActionCell: true },
         },
       ],
@@ -243,9 +240,9 @@ export const RepositoryList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteRepository(deleteTarget);
+      await deleteEntity(deleteTarget);
     } catch {
-      // Notifications are handled in useRepositoryActions.
+      // Notifications are handled in useEntityDelete.
     }
     setDeleteTarget(null);
   };
@@ -253,6 +250,7 @@ export const RepositoryList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Repositories" />
+      <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Repositories</Content>
 
@@ -277,7 +275,10 @@ export const RepositoryList: React.FC = () => {
             }
             actions={
               canCreate ? (
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
                   Create repository
                 </Button>
               ) : undefined
@@ -295,9 +296,13 @@ export const RepositoryList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <RepositoryModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        <EntityModal
+          config={REPOSITORY_FAMILY}
+          isOpen={modalState !== null}
+          entity={
+            modalState === "create" ? undefined : (modalState ?? undefined)
+          }
+          onClose={() => setModalState(null)}
         />
 
         {syncTarget && (

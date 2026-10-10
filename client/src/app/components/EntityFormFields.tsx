@@ -15,7 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { IFieldDescriptor, ResourceKind } from "@app/descriptors/types";
+import type { EntityType, IEntityField } from "@catalog";
 
 import { TypeaheadSelect, type ITypeaheadOption } from "./TypeaheadSelect";
 
@@ -23,14 +23,14 @@ const isFile = (value: unknown): value is File => {
   return typeof File !== "undefined" && value instanceof File;
 };
 
-interface IDescriptorFormFieldsProps<
+interface IEntityFormFieldsProps<
   TFieldValues extends FieldValues = Record<string, unknown>,
 > {
-  fields: IFieldDescriptor[];
+  fields: IEntityField[];
   control: Control<TFieldValues>;
   idPrefix: string;
   /** Options for `type: "resource"` fields, keyed by the field's resourceKind. */
-  resourceOptions?: Partial<Record<ResourceKind, ITypeaheadOption[]>>;
+  resourceOptions?: Partial<Record<EntityType, ITypeaheadOption[]>>;
   /**
    * Server-side search for `type: "resource"` fields, keyed by resourceKind.
    * When set, `options` are treated as already server-filtered and typed text is
@@ -38,14 +38,14 @@ interface IDescriptorFormFieldsProps<
    */
   resourceSearch?: Partial<
     Record<
-      ResourceKind,
+      EntityType,
       { onFilterChange: (value: string) => void; isLoading?: boolean }
     >
   >;
 }
 
-/** Renders FieldDescriptors bound to a react-hook-form `control`. */
-export const DescriptorFormFields = <
+/** Renders entity fields bound to a react-hook-form `control`. */
+export const EntityFormFields = <
   TFieldValues extends FieldValues = Record<string, unknown>,
 >({
   fields,
@@ -53,7 +53,7 @@ export const DescriptorFormFields = <
   idPrefix,
   resourceOptions,
   resourceSearch,
-}: IDescriptorFormFieldsProps<TFieldValues>) => {
+}: IEntityFormFieldsProps<TFieldValues>) => {
   return (
     <>
       {fields.map((field) => {
@@ -164,12 +164,8 @@ export const DescriptorFormFields = <
               }
 
               if (field.type === "resource") {
-                const options =
-                  (field.resourceKind &&
-                    resourceOptions?.[field.resourceKind]) ??
-                  [];
-                const search =
-                  field.resourceKind && resourceSearch?.[field.resourceKind];
+                const options = resourceOptions?.[field.resourceKind] ?? [];
+                const search = resourceSearch?.[field.resourceKind];
                 return (
                   <FormGroup
                     label={field.label}

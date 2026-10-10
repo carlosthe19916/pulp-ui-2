@@ -7,23 +7,19 @@ import {
   Label,
 } from "@patternfly/react-core";
 
-import { getFieldValue } from "@app/descriptors/formSchema";
-import type { IFieldDescriptor } from "@app/descriptors/types";
-import type { ResourceKind } from "@app/descriptors/types";
+import type { IEntityField } from "@catalog";
+import { getFieldValue } from "@app/components/Entity/formSchema";
 
 import { ResourceHrefLink } from "./ResourceHrefLink";
 
-interface IDescriptorDetailFieldsProps {
-  fields: IFieldDescriptor[] | undefined;
+interface IEntityDetailFieldsProps {
+  fields: IEntityField[] | undefined;
   entity: object;
   /** Keys already rendered by the shell; skip to avoid duplicates. */
   skipKeys?: string[];
 }
 
-const formatValue = (
-  field: IFieldDescriptor,
-  value: unknown,
-): React.ReactNode => {
+const formatValue = (field: IEntityField, value: unknown): React.ReactNode => {
   if (value === null || value === undefined || value === "") {
     return "—";
   }
@@ -36,10 +32,10 @@ const formatValue = (
     );
   }
 
-  if (field.type === "resource" && field.resourceKind) {
+  if (field.type === "resource") {
     return (
       <ResourceHrefLink
-        kind={field.resourceKind as ResourceKind}
+        kind={field.resourceKind}
         href={typeof value === "string" ? value : undefined}
       />
     );
@@ -48,7 +44,7 @@ const formatValue = (
   return String(value);
 };
 
-export const DescriptorDetailFields: React.FC<IDescriptorDetailFieldsProps> = ({
+export const EntityDetailFields: React.FC<IEntityDetailFieldsProps> = ({
   fields,
   entity,
   skipKeys = [],

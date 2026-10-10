@@ -14,9 +14,10 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
+import { getPlugin } from "@catalog";
+import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { getDescriptor } from "@app/descriptors/registry";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSuspenseFileContentDetailQuery } from "@app/queries/file-content";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -26,7 +27,8 @@ interface IContentDetailProps {
 
 export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
   const { data: content } = useSuspenseFileContentDetailQuery(contentId);
-  const descriptor = getDescriptor("content", "file.file");
+  const plugin = getPlugin("content", "file.file");
+  const { name: pulpDomain } = useSelectedDomain();
 
   return (
     <>
@@ -36,7 +38,12 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
-              <Link to="/content-management/content">Content</Link>
+              <Link
+                to="/content-management/$pulpDomain/content"
+                params={{ pulpDomain }}
+              >
+                Content
+              </Link>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>{content.relative_path}</BreadcrumbItem>
           </Breadcrumb>
@@ -59,8 +66,8 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({ contentId }) => {
                   {formatDateTime(content.pulp_created) ?? "—"}
                 </DescriptionListDescription>
               </DescriptionListGroup>
-              <DescriptorDetailFields
-                fields={descriptor?.detailFields}
+              <EntityDetailFields
+                fields={plugin?.page.detailFields}
                 entity={content}
                 skipKeys={["relative_path"]}
               />

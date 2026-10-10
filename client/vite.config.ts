@@ -102,6 +102,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@app": path.resolve(__dirname, "./src/app"),
+      "@catalog": path.resolve(__dirname, "./src/catalog"),
     },
   },
   build: {

@@ -14,9 +14,9 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { DescriptorDetailFields } from "@app/components/DescriptorDetailFields";
+import { getPlugin } from "@catalog";
+import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
-import { getDescriptor } from "@app/descriptors/registry";
 import {
   useBrowseArtifactDetailQuery,
   useBrowseDistributionDetailQuery,
@@ -40,7 +40,7 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
   distributionId,
   contentId,
 }) => {
-  const descriptor = getDescriptor("content", "file.file");
+  const plugin = getPlugin("content", "file.file");
 
   const { data: content } = useSuspenseBrowseContentDetailQuery(contentId);
 
@@ -103,8 +103,8 @@ export const BrowseContentDetail: React.FC<IBrowseContentDetailProps> = ({
                   {formatBytes(artifact?.size)}
                 </DescriptionListDescription>
               </DescriptionListGroup>
-              <DescriptorDetailFields
-                fields={descriptor?.browseDetailFields}
+              <EntityDetailFields
+                fields={plugin?.page.browseDetailFields}
                 entity={content}
               />
             </DescriptionList>

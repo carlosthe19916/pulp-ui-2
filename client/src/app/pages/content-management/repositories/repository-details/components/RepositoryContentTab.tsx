@@ -19,6 +19,7 @@ import {
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 
+import type { IEntityPlugin } from "@catalog";
 import type {
   FileFileRepositoryResponse,
   MultipleArtifactContentResponse,
@@ -26,11 +27,11 @@ import type {
 import { dataViewBodyStates } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadModal } from "@app/components/UploadModal";
-import type { getDescriptor } from "@app/descriptors/registry";
 import type { WithId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 type ContentRow = MultipleArtifactContentResponse & {
   relative_path?: string;
@@ -39,22 +40,24 @@ type ContentRow = MultipleArtifactContentResponse & {
 
 interface IRepositoryContentTabProps {
   repo: WithId<FileFileRepositoryResponse>;
-  descriptor: ReturnType<typeof getDescriptor>;
+  plugin: IEntityPlugin | undefined;
 }
 
 export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
   repo,
-  descriptor,
+  plugin,
 }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
 
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repo.id, {
-    limit: 1,
-  });
+  const { data: versionsData } = useFileRepositoryVersionsListQuery(
+    repo.object.pulp_href ?? "",
+    { limit: 1 },
+  );
   const latestVersionHref = versionsData?.results?.[0]?.pulp_href ?? undefined;
 
   const {
@@ -85,8 +88,8 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
         {
           cell: href ? (
             <Link
-              to="/content-management/content/$contentId"
-              params={{ contentId: extractIdFromHref(href) }}
+              to="/content-management/$pulpDomain/content/$contentId"
+              params={{ pulpDomain, contentId: extractIdFromHref(href) }}
             >
               {label}
             </Link>
@@ -131,7 +134,7 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
     <>
       <Stack hasGutter>
         <StackItem>
-          {descriptor?.supportsUpload !== false && (
+          {plugin?.capabilities.upload !== false && (
             <Button variant="secondary" onClick={() => setIsUploadOpen(true)}>
               Upload content
             </Button>

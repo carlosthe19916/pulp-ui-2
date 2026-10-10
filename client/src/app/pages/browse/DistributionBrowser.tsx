@@ -27,8 +27,8 @@ import type { DistributionResponse } from "@app/client";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { getFieldValue } from "@app/descriptors/formSchema";
-import { getDescriptor } from "@app/descriptors/registry";
+import { getPlugin } from "@catalog";
+import { getFieldValue } from "@app/components/Entity/formSchema";
 import { useBrowseDistributionsQuery } from "@app/queries/browse";
 import { isForbiddenError } from "@app/utils/isHttpError";
 import {
@@ -129,14 +129,14 @@ export const DistributionBrowser: React.FC = () => {
                   dist.pulp_type,
                   dist.pulp_href,
                 );
-                const descriptor = pulpType
-                  ? getDescriptor("distribution", pulpType)
+                const plugin = pulpType
+                  ? getPlugin("distribution", pulpType)
                   : undefined;
                 const labels = dist.pulp_labels ?? {};
                 const labelEntries = Object.entries(labels);
                 const canBrowse =
                   !!distId &&
-                  (!!descriptor ||
+                  (!!plugin ||
                     (pulpType?.startsWith("file.") ?? false) ||
                     !!inferPulpTypeFromHref(dist.pulp_href)?.startsWith(
                       "file.",
@@ -159,7 +159,7 @@ export const DistributionBrowser: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardBody>
-                      {(descriptor?.browseCardFields ?? []).map((field) => {
+                      {(plugin?.page.browseCardFields ?? []).map((field) => {
                         const value = getFieldValue(dist, field.key);
                         if (
                           value === null ||
@@ -177,17 +177,17 @@ export const DistributionBrowser: React.FC = () => {
                           </Content>
                         );
                       })}
-                      {!descriptor?.browseCardFields?.length && (
+                      {!plugin?.page.browseCardFields?.length && (
                         <Content component={ContentVariants.p}>
                           <strong>Base path:</strong> {dist.base_path || "—"}
                         </Content>
                       )}
                       {pulpType && (
                         <Content component={ContentVariants.p}>
-                          <Label color={descriptor ? "blue" : "grey"} isCompact>
-                            {descriptor?.label ?? pulpType}
+                          <Label color={plugin ? "blue" : "grey"} isCompact>
+                            {plugin?.ui.label ?? pulpType}
                           </Label>
-                          {!descriptor && (
+                          {!plugin && (
                             <>
                               {" "}
                               <ReadOnlyBadge pulpType={pulpType} />

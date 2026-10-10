@@ -12,17 +12,17 @@ import { useAllFileRepositoryVersionsListQuery } from "@app/queries/file-reposit
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryVersionsTabProps {
-  repoId: string;
+  repoHref: string;
 }
 
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
-  repoId,
+  repoHref,
 }) => {
   const {
     data: versionsData,
     isLoading: isVersionsLoading,
     error: versionsError,
-  } = useAllFileRepositoryVersionsListQuery(repoId);
+  } = useAllFileRepositoryVersionsListQuery(repoHref);
 
   const versions = versionsData?.results ?? [];
 

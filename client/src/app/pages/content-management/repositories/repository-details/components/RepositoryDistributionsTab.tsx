@@ -25,6 +25,7 @@ import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 type DistributionRow = DistributionResponse & {
   publication?: string | null;
@@ -45,6 +46,7 @@ interface IRepositoryDistributionsTabProps {
 export const RepositoryDistributionsTab: React.FC<
   IRepositoryDistributionsTabProps
 > = ({ repoHref }) => {
+  const { name: pulpDomain } = useSelectedDomain();
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
@@ -99,8 +101,8 @@ export const RepositoryDistributionsTab: React.FC<
           cell:
             href != null ? (
               <Link
-                to="/content-management/distributions/$distId"
-                params={{ distId: extractIdFromHref(href) }}
+                to="/content-management/$pulpDomain/distributions/$distId"
+                params={{ pulpDomain, distId: extractIdFromHref(href) }}
               >
                 {dist.name}
               </Link>

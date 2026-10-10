@@ -88,7 +88,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const onSubmit = handleSubmit(async (values) => {
     try {
       const result = await syncMutation.mutateAsync({
-        repoId: repo.id,
+        repoHref: repo.object.pulp_href ?? "",
         body: {
           remote: values.remote || undefined,
           mirror: values.mirror,

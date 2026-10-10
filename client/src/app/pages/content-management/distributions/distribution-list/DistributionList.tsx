@@ -1,6 +1,6 @@
 import type React from "react";
 import { use, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -10,7 +10,7 @@ import {
   Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn, type IAction } from "@patternfly/react-table";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -30,25 +30,23 @@ import {
   dataViewBodyStates,
   toOrderingParam,
 } from "@app/components/DataView";
-import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ReadOnlyBadge } from "@app/components/ReadOnlyBadge";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { getAvailablePlugins } from "@catalog";
+import { DISTRIBUTION_FAMILY } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import {
-  getDescriptor,
-  getDescriptorsForKind,
-} from "@app/descriptors/registry";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { DistributionModal } from "../components/DistributionModal";
-import { useDistributionActions } from "./hooks/useDistributionActions";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 /** The aggregation endpoint returns pulp_type at runtime but the generated type omits it. */
 type DistributionRow = DistributionResponse & { pulp_type?: string };
@@ -71,11 +69,15 @@ export const DistributionList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<DistributionRow | null>(
     null,
   );
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  // Single source of truth for the create/edit modal: "create", a row to edit,
+  // or null (closed) — so create and edit can never be open at once.
+  const [modalState, setModalState] = useState<
+    "create" | DistributionRow | null
+  >(null);
 
-  const navigate = useNavigate();
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const { deleteDistribution, isDeleting } = useDistributionActions();
+  const { deleteEntity, isDeleting } = useEntityDelete(DISTRIBUTION_FAMILY);
+  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -107,9 +109,7 @@ export const DistributionList: React.FC = () => {
   const distributions = (data?.results ?? []) as DistributionRow[];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getDescriptorsForKind("distribution").some((d) =>
-    d.isAvailable(plugins),
-  );
+  const canCreate = getAvailablePlugins("distribution", plugins).length > 0;
 
   const sortProps = (columnKey: DistributionColumnKey) =>
     buildThSort({
@@ -142,25 +142,6 @@ export const DistributionList: React.FC = () => {
       distribution.pulp_type,
       distribution.pulp_href,
     );
-    const descriptor = pulpType
-      ? getDescriptor("distribution", pulpType)
-      : undefined;
-
-    const actionItems: IAction[] = [];
-    if (distId) {
-      actionItems.push({
-        title: "Browse",
-        onClick: () =>
-          void navigate({
-            to: "/browse/$distributionId",
-            params: { distributionId: distId },
-          }),
-      });
-    }
-    actionItems.push({
-      title: "Delete",
-      onClick: () => setDeleteTarget(distribution),
-    });
 
     return {
       id: distribution.pulp_href,
@@ -168,8 +149,8 @@ export const DistributionList: React.FC = () => {
         {
           cell: distId ? (
             <Link
-              to="/content-management/distributions/$distId"
-              params={{ distId }}
+              to="/content-management/$pulpDomain/distributions/$distId"
+              params={{ pulpDomain, distId }}
             >
               {distribution.name}
             </Link>
@@ -200,10 +181,19 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Repository" },
         },
         {
-          cell: !descriptor ? (
-            <ReadOnlyBadge pulpType={pulpType} />
-          ) : (
-            <ActionsColumn items={actionItems} />
+          cell: (
+            <ActionsColumn
+              items={[
+                {
+                  title: "Edit",
+                  onClick: () => setModalState(distribution),
+                },
+                {
+                  title: "Delete",
+                  onClick: () => setDeleteTarget(distribution),
+                },
+              ]}
+            />
           ),
           props: { dataLabel: "Actions", isActionCell: true },
         },
@@ -239,9 +229,9 @@ export const DistributionList: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget?.pulp_href) return;
     try {
-      await deleteDistribution(deleteTarget);
+      await deleteEntity(deleteTarget);
     } catch {
-      // Notifications are handled in useDistributionActions.
+      // Notifications are handled in useEntityDelete.
     }
     setDeleteTarget(null);
   };
@@ -249,6 +239,7 @@ export const DistributionList: React.FC = () => {
   return (
     <>
       <DocumentTitle title="Distributions" />
+      <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Distributions</Content>
 
@@ -273,7 +264,10 @@ export const DistributionList: React.FC = () => {
             }
             actions={
               canCreate ? (
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
                   Create distribution
                 </Button>
               ) : undefined
@@ -291,9 +285,13 @@ export const DistributionList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <DistributionModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+        <EntityModal
+          config={DISTRIBUTION_FAMILY}
+          isOpen={modalState !== null}
+          entity={
+            modalState === "create" ? undefined : (modalState ?? undefined)
+          }
+          onClose={() => setModalState(null)}
         />
 
         <ConfirmActionModal

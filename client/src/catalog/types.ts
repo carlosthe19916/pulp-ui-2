@@ -19,6 +19,15 @@ export const ENTITY_TYPES = [
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
+/** Human-readable singular label for each entity type (UI titles, toasts). */
+export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
+  repository: "Repository",
+  remote: "Remote",
+  distribution: "Distribution",
+  publication: "Publication",
+  content: "Content",
+};
+
 /** A Pulp type identifier, e.g. "file.file" or "rpm.uln". */
 export type PulpType = string;
 

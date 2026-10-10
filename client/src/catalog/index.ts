@@ -15,6 +15,7 @@ import { maven } from "./plugins/maven";
 import { npm } from "./plugins/npm";
 import { python } from "./plugins/python";
 import { rpm } from "./plugins/rpm";
+import { ENTITY_TYPE_LABELS } from "./types";
 import type { EntityType, IEntityPlugin, PulpType } from "./types";
 
 /** All plugins, in display order. Add a new plugin here. */
@@ -52,9 +53,13 @@ export const getCreatablePlugins = (
     (plugin) => plugin.capabilities.creatable,
   );
 
+/** Human-readable singular label for an entity type (UI titles, toasts). */
+export const getEntityLabel = (entity: EntityType): string =>
+  ENTITY_TYPE_LABELS[entity];
+
 export { definePlugin, whenInstalled } from "./compose";
 
-export { ENTITY_TYPES } from "./types";
+export { ENTITY_TYPES, ENTITY_TYPE_LABELS } from "./types";
 export type {
   EntityCatalog,
   EntityType,

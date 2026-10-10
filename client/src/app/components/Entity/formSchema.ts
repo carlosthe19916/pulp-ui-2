@@ -1,0 +1,94 @@
+import * as yup from "yup";
+
+import type { IEntityField } from "@catalog";
+
+export const getFieldValue = (entity: object, key: string): unknown => {
+  return Object.hasOwn(entity, key)
+    ? Object.getOwnPropertyDescriptor(entity, key)?.value
+    : undefined;
+};
+
+export const toFieldRecord = (entity: object): Record<string, unknown> => {
+  return Object.fromEntries(Object.entries(entity));
+};
+
+const buildFieldValidator = (field: IEntityField): yup.AnySchema => {
+  switch (field.type) {
+    case "number": {
+      const schema = yup
+        .number()
+        .transform((value: unknown, original: unknown) =>
+          original === "" || original === undefined ? undefined : value,
+        )
+        .nullable();
+      return field.required
+        ? schema.required(`${field.label} is required`)
+        : schema;
+    }
+    case "boolean":
+      return yup.boolean().nullable();
+    case "file": {
+      const schema = yup.mixed<File>().nullable();
+      return field.required
+        ? schema.required(`${field.label} is required`)
+        : schema;
+    }
+    case "select":
+    case "resource":
+    case "textarea":
+    case "text":
+    default: {
+      const schema = yup.string().nullable();
+      return field.required
+        ? schema.required(`${field.label} is required`)
+        : schema;
+    }
+  }
+};
+
+export const buildFieldSchema = (
+  fields: IEntityField[],
+): yup.AnyObjectSchema => {
+  const shape: Record<string, yup.AnySchema> = {};
+  for (const field of fields) {
+    shape[field.key] = buildFieldValidator(field);
+  }
+  return yup.object(shape);
+};
+
+/** Optionally seeded from an existing record (edit forms). */
+export const buildDefaultValues = (
+  fields: IEntityField[],
+  source?: object | null,
+): Record<string, unknown> => {
+  const values: Record<string, unknown> = {};
+  for (const field of fields) {
+    const sourceValue =
+      source != null ? getFieldValue(source, field.key) : undefined;
+    if (sourceValue !== undefined) {
+      values[field.key] =
+        sourceValue ?? (field.type === "boolean" ? false : "");
+      continue;
+    }
+    if (field.defaultValue !== undefined) {
+      values[field.key] = field.defaultValue;
+      continue;
+    }
+    values[field.key] = field.type === "boolean" ? false : "";
+  }
+  return values;
+};
+
+/** Strip empty-string/undefined/null values from a submitted form payload, leaving booleans and numbers intact. */
+export const cleanFormValues = <T extends Record<string, unknown>>(
+  values: Record<string, unknown>,
+): T => {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(values)) {
+    if (value === "" || value === undefined || value === null) {
+      continue;
+    }
+    cleaned[key] = value;
+  }
+  return cleaned as T;
+};

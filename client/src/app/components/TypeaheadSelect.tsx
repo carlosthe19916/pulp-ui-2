@@ -38,6 +38,8 @@ interface ITypeaheadSelectProps {
    * selection is outside the current server-filtered page).
    */
   selectedLabel?: string;
+  /** Whether the toggle stretches to its container (default true, for forms). */
+  isToggleFullWidth?: boolean;
 }
 
 /** Single-select typeahead built on PatternFly Select. */
@@ -52,6 +54,7 @@ export const TypeaheadSelect = ({
   onFilterChange,
   isLoading,
   selectedLabel: selectedLabelProp,
+  isToggleFullWidth = true,
 }: ITypeaheadSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -113,7 +116,7 @@ export const TypeaheadSelect = ({
           onClick={() => setIsOpen((open) => !open)}
           isExpanded={isOpen}
           isDisabled={isDisabled}
-          isFullWidth
+          isFullWidth={isToggleFullWidth}
         >
           {value ? selectedLabel : placeholder}
         </MenuToggle>

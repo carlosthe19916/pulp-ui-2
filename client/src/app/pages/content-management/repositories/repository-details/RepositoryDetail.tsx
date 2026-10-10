@@ -15,25 +15,26 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { getEntityLabel } from "@catalog";
+import type { FileFileRepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { EntityModal } from "@app/components/Entity/EntityModal";
+import {
+  PageHeaderActionsMenu,
+  type PageHeaderAction,
+} from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
-import { useNotifications } from "@app/context/useNotifications";
-import { getDescriptor } from "@app/descriptors/registry";
+import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
+import { useEntityDelete } from "@app/hooks/useEntityDelete";
+import { useEntityDetail } from "@app/hooks/useEntityDetail";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
-import {
-  useFileRepositoryDeleteMutation,
-  useFileRepositoryVersionsListQuery,
-  useSuspenseFileRepositoryDetailQuery,
-} from "@app/queries/file-repositories";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { useFileRepositoryVersionsListQuery } from "@app/queries/file-repositories";
 
-import { RepositoryModal } from "../components/RepositoryModal";
 import { RepositoryContentTab } from "./components/RepositoryContentTab";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
@@ -47,27 +48,31 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   repoId,
 }) => {
   const navigate = useNavigate();
-  const { data: repo } = useSuspenseFileRepositoryDetailQuery(repoId);
-  const repoDisplayName = repo.name ?? "Repository";
-  const deleteMutation = useFileRepositoryDeleteMutation();
-  const { addNotification } = useNotifications();
+  const domain = useSelectedDomain();
+
+  const { entity: repo, plugin } = useEntityDetail<FileFileRepositoryResponse>(
+    REPOSITORY_FAMILY,
+    repoId,
+  );
+  const repoHref = repo.pulp_href ?? "";
+  const label = getEntityLabel(REPOSITORY_FAMILY.kind);
+  const title = repo.name ?? label;
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
-
-  const descriptor = getDescriptor("repository", "file.file");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { deleteEntity, isDeleting } = useEntityDelete(REPOSITORY_FAMILY);
 
   // Tab-title count badges: fetch one row and read the paginated `count` so the
   // badge reflects the true total without pulling every record.
-  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoId, {
+  const { data: versionsData } = useFileRepositoryVersionsListQuery(repoHref, {
     limit: 1,
   });
   const { data: distributionsData } = useDistributionsListQuery(
-    { repository: repo.pulp_href, limit: 1 },
-    { enabled: !!repo.pulp_href },
+    { repository: repoHref, limit: 1 },
+    { enabled: !!repoHref },
   );
   const versionCount = versionsData?.count ?? 0;
   const distributionCount = distributionsData?.count ?? 0;
@@ -78,78 +83,75 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   );
   const contentCount = contentData?.count ?? 0;
 
+  const backToList = () =>
+    navigate({
+      to: "/content-management/$pulpDomain/repositories",
+      params: { pulpDomain: domain.name },
+    });
+
   const handleDelete = async () => {
     try {
-      const result = await deleteMutation.mutateAsync(repoId);
-      if (result?.task) {
-        notifyTaskStarted(
-          addNotification,
-          result.task,
-          `Repository "${repoDisplayName}" deletion started`,
-        );
-      } else {
-        addNotification({
-          title: `Repository "${repoDisplayName}" deleted`,
-          variant: "success",
-        });
-      }
-      void navigate({ to: "/content-management/repositories" });
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete repository"),
-        variant: "danger",
-      });
+      await deleteEntity(repo);
+      void backToList();
+    } catch {
+      // Notifications are handled in useEntityDelete.
     }
     setIsDeleteOpen(false);
   };
 
+  // A plugin is editable iff it exposes edit fields.
+  const canEdit = (plugin?.form.editFields.length ?? 0) > 0;
+
+  const actions: (PageHeaderAction | false | null | undefined)[] = [
+    canEdit && {
+      key: "edit",
+      dropdownItemProps: {
+        children: "Edit",
+        onClick: () => setIsEditOpen(true),
+      },
+    },
+    plugin?.capabilities.sync && {
+      key: "sync",
+      dropdownItemProps: {
+        children: "Sync",
+        onClick: () => setIsSyncOpen(true),
+      },
+    },
+    plugin?.capabilities.publish && {
+      key: "publish",
+      dropdownItemProps: {
+        children: "Publish",
+        onClick: () => setIsPublishOpen(true),
+      },
+    },
+    {
+      key: "delete",
+      dropdownItemProps: {
+        children: "Delete",
+        onClick: () => setIsDeleteOpen(true),
+      },
+    },
+  ];
+
   return (
     <>
-      <DocumentTitle title={repoDisplayName} />
+      <DocumentTitle title={title} />
       <PageHeader
-        title={repoDisplayName}
+        title={title}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
-              <Link to="/content-management/repositories">Repositories</Link>
+              <Link
+                to="/content-management/$pulpDomain/repositories"
+                params={{ pulpDomain: domain.name }}
+              >
+                Repositories
+              </Link>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>{repoDisplayName}</BreadcrumbItem>
+            <BreadcrumbItem isActive>{title}</BreadcrumbItem>
           </Breadcrumb>
         }
-        actionMenu={
-          <PageHeaderActionsMenu
-            actions={[
-              {
-                key: "edit",
-                dropdownItemProps: {
-                  children: "Edit",
-                  onClick: () => setIsEditOpen(true),
-                },
-              },
-              descriptor?.supportsSync && {
-                key: "sync",
-                dropdownItemProps: {
-                  children: "Sync",
-                  onClick: () => setIsSyncOpen(true),
-                },
-              },
-              descriptor?.supportsPublish && {
-                key: "publish",
-                dropdownItemProps: {
-                  children: "Publish",
-                  onClick: () => setIsPublishOpen(true),
-                },
-              },
-              {
-                key: "delete",
-                dropdownItemProps: {
-                  children: "Delete",
-                  onClick: () => setIsDeleteOpen(true),
-                },
-              },
-            ]}
-          />
-        }
+        actionMenu={<PageHeaderActionsMenu actions={actions} />}
       />
 
       <PageSection>
@@ -165,7 +167,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 title={<TabTitleText>Details</TabTitleText>}
               >
                 <TabContentBody hasPadding>
-                  <RepositoryDetailsTab repo={repo} descriptor={descriptor} />
+                  <RepositoryDetailsTab repo={repo} plugin={plugin} />
                 </TabContentBody>
               </Tab>
 
@@ -174,7 +176,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 title={<TabTitleText>Versions ({versionCount})</TabTitleText>}
               >
                 <TabContentBody hasPadding>
-                  <RepositoryVersionsTab repoId={repoId} />
+                  <RepositoryVersionsTab repoHref={repoHref} />
                 </TabContentBody>
               </Tab>
 
@@ -187,7 +189,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 }
               >
                 <TabContentBody hasPadding>
-                  <RepositoryDistributionsTab repoHref={repo.pulp_href ?? ""} />
+                  <RepositoryDistributionsTab repoHref={repoHref} />
                 </TabContentBody>
               </Tab>
 
@@ -198,7 +200,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 <TabContentBody hasPadding>
                   <RepositoryContentTab
                     repo={withId(repoId, repo)}
-                    descriptor={descriptor}
+                    plugin={plugin}
                   />
                 </TabContentBody>
               </Tab>
@@ -207,10 +209,22 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         </Stack>
       </PageSection>
 
-      <RepositoryModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        repository={repo}
+      {canEdit && (
+        <EntityModal
+          config={REPOSITORY_FAMILY}
+          isOpen={isEditOpen}
+          entity={repo}
+          onClose={() => setIsEditOpen(false)}
+        />
+      )}
+
+      <ConfirmActionModal
+        isOpen={isDeleteOpen}
+        title={`Delete ${label}`}
+        body={`Are you sure you want to delete ${label.toLowerCase()} "${title}"? This action cannot be undone.`}
+        isConfirming={isDeleting}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setIsDeleteOpen(false)}
       />
 
       <SyncModal
@@ -222,16 +236,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       <PublishModal
         isOpen={isPublishOpen}
         onClose={() => setIsPublishOpen(false)}
-        repoHref={repo.pulp_href ?? ""}
-      />
-
-      <ConfirmActionModal
-        isOpen={isDeleteOpen}
-        title="Delete Repository"
-        body={`Are you sure you want to delete repository "${repoDisplayName}"? This action cannot be undone.`}
-        isConfirming={deleteMutation.isPending}
-        onConfirm={() => void handleDelete()}
-        onCancel={() => setIsDeleteOpen(false)}
+        repoHref={repoHref}
       />
     </>
   );
