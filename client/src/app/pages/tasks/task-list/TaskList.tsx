@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -26,20 +27,17 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { ITaskListParams } from "@app/queries/tasks";
 import { type TaskState, useTasksListQuery } from "@app/queries/tasks";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -78,17 +76,16 @@ const isCancelable = (state?: string | null) => {
   return state === "running" || state === "waiting";
 };
 
-const COLUMN_KEYS = [
+const SORTABLE_COLUMN_KEYS = [
   "name",
   "state",
   "started_at",
   "finished_at",
-  "actions",
-] as const;
-type TaskColumnKey = (typeof COLUMN_KEYS)[number];
+  "pulp_created",
+] as const satisfies readonly OrderingField<ITaskListParams>[];
 
 interface ITaskFilters {
-  name: string;
+  name: ITaskListParams["name"];
 }
 
 export const TaskList: React.FC = () => {
@@ -102,16 +99,14 @@ export const TaskList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "pulp_created", direction: "desc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<ITaskFilters>({ initialFilters: { name: "" } });
+    useDataViewFilters<ITaskFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
-
-  const ordering = toOrderingParam(sortBy, direction) as NonNullable<
-    Parameters<typeof useTasksListQuery>[0]
-  >["ordering"];
 
   const { data, isLoading, error } = useTasksListQuery({
     limit: perPage,
@@ -123,18 +118,6 @@ export const TaskList: React.FC = () => {
 
   const tasks = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const sortProps = (columnKey: TaskColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },

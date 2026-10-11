@@ -4,8 +4,8 @@ import { useMutationAction } from "@app/hooks/useMutationAction";
 import { useEntityDeleteMutation } from "@app/queries/utils/entityCrud";
 
 interface IDeletableEntity {
-  pulp_href?: string;
-  name?: string;
+  name: string;
+  pulp_href: string;
 }
 
 /**

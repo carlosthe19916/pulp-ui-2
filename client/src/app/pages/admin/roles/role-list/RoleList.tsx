@@ -25,21 +25,18 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { RoleResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IRoleListParams } from "@app/queries/roles";
 import { useRolesListQuery } from "@app/queries/roles";
+import type { OrderingField } from "@app/queries/utils/listParams";
 
 import { RoleModal } from "./components/RoleModal";
 import { useRoleActions } from "./hooks/useRoleActions";
@@ -49,18 +46,13 @@ const getRolePlugin = (name: string): string => {
   return name.includes(".") ? name.split(".")[0] : "other";
 };
 
-const COLUMN_KEYS = [
+const SORTABLE_COLUMN_KEYS = [
   "name",
-  "plugin",
-  "description",
-  "permissions",
   "locked",
-  "actions",
-] as const;
-type RoleColumnKey = (typeof COLUMN_KEYS)[number];
+] as const satisfies readonly OrderingField<IRoleListParams>[];
 
 interface IRoleFilters {
-  name: string;
+  name: IRoleListParams["name"];
 }
 
 const LOCKED_OPTIONS = [
@@ -85,13 +77,13 @@ export const RoleList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRoleFilters>({
-      initialFilters: { name: "" },
-    });
+    useDataViewFilters<IRoleFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
 
   const clearFilters = () => {
@@ -99,9 +91,6 @@ export const RoleList: React.FC = () => {
     setLockedFilter("");
     onSetPage(undefined, 1);
   };
-
-  const ordering = toOrderingParam(sortBy, direction) as
-    "name" | "-name" | "locked" | "-locked";
 
   const { data, isLoading, error } = useRolesListQuery({
     limit: perPage,
@@ -113,18 +102,6 @@ export const RoleList: React.FC = () => {
 
   const roles = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const sortProps = (columnKey: RoleColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },

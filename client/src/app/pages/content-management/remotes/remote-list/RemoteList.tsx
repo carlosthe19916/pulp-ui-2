@@ -1,5 +1,6 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -10,7 +11,6 @@ import {
   Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -19,105 +19,100 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { GenericRemoteResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { getAvailablePlugins } from "@catalog";
-import { REMOTE_FAMILY } from "@app/queries/utils/families";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useEntityDelete } from "@app/hooks/useEntityDelete";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import type { IRemoteListParams } from "@app/queries/remotes";
 import { useRemotesListQuery } from "@app/queries/remotes";
+import { REMOTE_FAMILY } from "@app/queries/utils/families";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-type RemoteRow = GenericRemoteResponse;
-
-const COLUMN_KEYS = ["name", "url", "policy", "type", "actions"] as const;
-type RemoteColumnKey = (typeof COLUMN_KEYS)[number];
+const SORTABLE_COLUMN_KEYS = [
+  "name",
+  "url",
+  "policy",
+] as const satisfies readonly OrderingField<IRemoteListParams>[];
 
 interface IRemoteFilters {
-  name: string;
-  pulp_type: string;
+  name: IRemoteListParams["name"];
+  pulp_type: IRemoteListParams["pulp_type"];
 }
 
 export const RemoteList: React.FC = () => {
-  const [deleteTarget, setDeleteTarget] = useState<RemoteRow | null>(null);
-  // Single source of truth for the create/edit modal: "create", a row to edit,
-  // or null (closed) — so create and edit can never be open at once.
-  const [modalState, setModalState] = useState<"create" | RemoteRow | null>(
-    null,
-  );
-
-  const plugins = use(ApiStatusContext)?.plugins ?? [];
-  const { deleteEntity, isDeleting } = useEntityDelete(REMOTE_FAMILY);
   const { name: pulpDomain } = useSelectedDomain();
+
+  const [modalState, setModalState] = useState<
+    "create" | GenericRemoteResponse | null
+  >(null);
+  const remoteToEdit =
+    modalState === "create" ? undefined : (modalState ?? undefined);
+
+  const [deleteTarget, setDeleteTarget] =
+    useState<GenericRemoteResponse | null>(null);
+
+  const { deleteEntity, isDeleting } = useEntityDelete(REMOTE_FAMILY);
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
+
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRemoteFilters>({
-      initialFilters: { name: "", pulp_type: "" },
-    });
+    useDataViewFilters<IRemoteFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
   const debouncedPulpType = useDebouncedValue(filters.pulp_type);
-
-  const ordering = toOrderingParam(sortBy, direction) as
-    "name" | "-name" | "url" | "-url" | "policy" | "-policy";
 
   const { data, isLoading, error } = useRemotesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
     name__icontains: debouncedName || undefined,
-    pulp_type: debouncedPulpType
-      ? (debouncedPulpType as NonNullable<
-          Parameters<typeof useRemotesListQuery>[0]
-        >["pulp_type"])
-      : undefined,
+    pulp_type: debouncedPulpType || undefined,
   });
 
-  const remotes = (data?.results ?? []) as RemoteRow[];
+  const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getAvailablePlugins("remote", plugins).length > 0;
-
-  const sortProps = (columnKey: RemoteColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
-
   const columns = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "URL", props: { sort: sortProps("url") } },
-    { cell: "Policy", props: { sort: sortProps("policy") } },
+    {
+      cell: "Name",
+      props: {
+        sort: sortProps("name"),
+      },
+    },
+    {
+      cell: "URL",
+      props: {
+        sort: sortProps("url"),
+      },
+    },
+    {
+      cell: "Policy",
+      props: {
+        sort: sortProps("policy"),
+      },
+    },
     "Type",
     {
       cell: "",
@@ -210,9 +205,12 @@ export const RemoteList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget?.pulp_href) return;
+    if (!deleteTarget || !deleteTarget.pulp_href) return;
     try {
-      await deleteEntity(deleteTarget);
+      await deleteEntity({
+        name: deleteTarget.name,
+        pulp_href: deleteTarget.pulp_href,
+      });
     } catch {
       // Notifications are handled in useEntityDelete.
     }
@@ -246,14 +244,9 @@ export const RemoteList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              canCreate ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setModalState("create")}
-                >
-                  Create remote
-                </Button>
-              ) : undefined
+              <Button variant="primary" onClick={() => setModalState("create")}>
+                Create remote
+              </Button>
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -271,9 +264,7 @@ export const RemoteList: React.FC = () => {
         <EntityModal
           config={REMOTE_FAMILY}
           isOpen={modalState !== null}
-          entity={
-            modalState === "create" ? undefined : (modalState ?? undefined)
-          }
+          entity={remoteToEdit}
           onClose={() => setModalState(null)}
         />
 

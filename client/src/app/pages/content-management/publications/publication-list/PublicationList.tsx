@@ -1,5 +1,6 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -10,73 +11,64 @@ import {
   Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
   DataViewToolbar,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { getAvailablePlugins } from "@catalog";
-import { PUBLICATION_FAMILY } from "@app/queries/utils/families";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { useEntityDelete } from "@app/hooks/useEntityDelete";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import type { IPublicationListParams } from "@app/queries/publications";
 import { usePublicationsListQuery } from "@app/queries/publications";
+import { PUBLICATION_FAMILY } from "@app/queries/utils/families";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { formatDateTime } from "@app/utils/utils";
-
-type PublicationRow = PublicationResponse;
 
 const truncate = (value: string | null | undefined, max = 40): string => {
   if (!value) return "—";
   return value.length > max ? `${value.slice(0, max)}...` : value;
 };
 
-const COLUMN_KEYS = [
-  "publication",
-  "type",
-  "repository_version",
+const SORTABLE_COLUMN_KEYS = [
   "pulp_created",
-  "actions",
-] as const;
-type PublicationColumnKey = (typeof COLUMN_KEYS)[number];
+] as const satisfies readonly OrderingField<IPublicationListParams>[];
 
 export const PublicationList: React.FC = () => {
-  const [deleteTarget, setDeleteTarget] = useState<PublicationRow | null>(null);
+  const { name: pulpDomain } = useSelectedDomain();
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const plugins = use(ApiStatusContext)?.plugins ?? [];
+  const [deleteTarget, setDeleteTarget] = useState<PublicationResponse | null>(
+    null,
+  );
+
   const { deleteEntity, isDeleting } = useEntityDelete(PUBLICATION_FAMILY);
-  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
-    initialSort: { sortBy: "pulp_created", direction: "desc" },
-  });
 
-  const ordering = toOrderingParam(sortBy, direction) as
-    "pulp_created" | "-pulp_created";
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    initialSort: { sortBy: "pulp_created", direction: "desc" },
+    onSortChange: () => onSetPage(undefined, 1),
+  });
 
   const { data, isLoading, error } = usePublicationsListQuery({
     limit: perPage,
@@ -84,38 +76,19 @@ export const PublicationList: React.FC = () => {
     ordering,
   });
 
-  const publications = (data?.results ?? []) as PublicationRow[];
+  const publications = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const canCreate = getAvailablePlugins("publication", plugins).length > 0;
-
-  const handleDelete = async () => {
-    if (!deleteTarget?.pulp_href) return;
-    try {
-      await deleteEntity(deleteTarget);
-    } catch {
-      // Notifications are handled in useEntityDelete.
-    }
-    setDeleteTarget(null);
-  };
-
-  const sortProps = (columnKey: PublicationColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     "Publication",
     "Type",
     "Repository Version",
-    { cell: "Created", props: { sort: sortProps("pulp_created") } },
+    {
+      cell: "Created",
+      props: {
+        sort: sortProps("pulp_created"),
+      },
+    },
     {
       cell: "",
       props: {
@@ -197,6 +170,19 @@ export const PublicationList: React.FC = () => {
     />
   );
 
+  const handleDelete = async () => {
+    if (!deleteTarget || !deleteTarget.pulp_href) return;
+    try {
+      await deleteEntity({
+        name: extractIdFromHref(deleteTarget.pulp_href),
+        pulp_href: deleteTarget.pulp_href,
+      });
+    } catch {
+      // Notifications are handled in useEntityDelete.
+    }
+    setDeleteTarget(null);
+  };
+
   return (
     <>
       <DocumentTitle title="Publications" />
@@ -207,11 +193,9 @@ export const PublicationList: React.FC = () => {
         <DataView activeState={activeState}>
           <DataViewToolbar
             actions={
-              canCreate ? (
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                  Create publication
-                </Button>
-              ) : undefined
+              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                Create publication
+              </Button>
             }
             pagination={pagination(PaginationVariant.top)}
           />

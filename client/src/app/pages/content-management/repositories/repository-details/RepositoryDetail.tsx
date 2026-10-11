@@ -95,8 +95,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     });
 
   const handleDelete = async () => {
+    if (!repo.pulp_href) return;
     try {
-      await deleteEntity(repo);
+      await deleteEntity({
+        name: repo.name,
+        pulp_href: repo.pulp_href,
+      });
       void backToList();
     } catch {
       // Notifications are handled in useEntityDelete.

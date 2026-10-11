@@ -26,3 +26,11 @@ export type AllListParams<TData extends { query?: unknown }> = Omit<
   ListParams<TData>,
   "limit" | "offset"
 >;
+
+/** Distributes over an ordering union, dropping the "-" descending variants. */
+type AscendingOrdering<O extends string> = O extends `-${string}` ? never : O;
+
+/** Ascending ordering field names for a list-params type (e.g. "name" | "description" | …). */
+export type OrderingField<P extends { ordering?: string }> = AscendingOrdering<
+  NonNullable<P["ordering"]>
+>;

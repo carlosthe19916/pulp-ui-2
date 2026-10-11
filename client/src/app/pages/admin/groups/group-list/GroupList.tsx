@@ -1,5 +1,6 @@
 import type React from "react";
 import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -19,31 +20,29 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { GroupResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IGroupListParams } from "@app/queries/groups";
 import { useGroupsListQuery } from "@app/queries/groups";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { GroupModal } from "../components/GroupModal";
 import { useGroupActions } from "../hooks/useGroupActions";
 
-const COLUMN_KEYS = ["name", "actions"] as const;
-type GroupColumnKey = (typeof COLUMN_KEYS)[number];
+const SORTABLE_COLUMN_KEYS = [
+  "name",
+] as const satisfies readonly OrderingField<IGroupListParams>[];
 
 interface IGroupFilters {
-  name: string;
+  name: IGroupListParams["name"];
 }
 
 export const GroupList: React.FC = () => {
@@ -60,14 +59,14 @@ export const GroupList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IGroupFilters>({ initialFilters: { name: "" } });
+    useDataViewFilters<IGroupFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
-
-  const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
   const { data, isLoading, error } = useGroupsListQuery({
     limit: perPage,
@@ -78,18 +77,6 @@ export const GroupList: React.FC = () => {
 
   const groups = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const sortProps = (columnKey: GroupColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },

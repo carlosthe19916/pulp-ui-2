@@ -1,5 +1,6 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -10,7 +11,6 @@ import {
   Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn, type IAction } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -19,17 +19,13 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn, type IAction } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
@@ -37,104 +33,87 @@ import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { getAvailablePlugins, getEntityPlugin } from "@catalog";
-import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useEntityDelete } from "@app/hooks/useEntityDelete";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
+import type { IRepositoryListParams } from "@app/queries/repositories";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
+import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getEntityPlugin } from "@catalog";
 
-type RepositoryRow = RepositoryResponse;
-
-const COLUMN_KEYS = [
+const SORTABLE_COLUMN_KEYS = [
   "name",
   "description",
-  "type",
-  "remote",
-  "actions",
-] as const;
-type RepositoryColumnKey = (typeof COLUMN_KEYS)[number];
+] as const satisfies readonly OrderingField<IRepositoryListParams>[];
 
 interface IRepositoryFilters {
-  name: string;
-  pulp_type: string;
+  name: IRepositoryListParams["name"];
+  pulp_type: IRepositoryListParams["pulp_type"];
 }
 
-const truncate = (value: string | null | undefined, max = 40): string => {
-  if (!value) return "—";
-  return value.length > max ? `${value.slice(0, max)}...` : value;
-};
-
 export const RepositoryList: React.FC = () => {
-  const [deleteTarget, setDeleteTarget] = useState<RepositoryRow | null>(null);
-  // Single source of truth for the create/edit modal: "create", a row to edit,
-  // or null (closed) — so create and edit can never be open at once.
-  const [modalState, setModalState] = useState<"create" | RepositoryRow | null>(
+  const { name: pulpDomain } = useSelectedDomain();
+
+  const [modalState, setModalState] = useState<
+    "create" | RepositoryResponse | null
+  >(null);
+  const repositoryToEdit =
+    modalState === "create" ? undefined : (modalState ?? undefined);
+
+  const [deleteTarget, setDeleteTarget] = useState<RepositoryResponse | null>(
     null,
   );
-  const [syncTarget, setSyncTarget] = useState<RepositoryRow | null>(null);
-  const [publishTarget, setPublishTarget] = useState<RepositoryRow | null>(
+  const [syncTarget, setSyncTarget] = useState<RepositoryResponse | null>(null);
+  const [publishTarget, setPublishTarget] = useState<RepositoryResponse | null>(
     null,
   );
 
-  const plugins = use(ApiStatusContext)?.plugins ?? [];
   const { deleteEntity, isDeleting } = useEntityDelete(REPOSITORY_FAMILY);
-  const { name: pulpDomain } = useSelectedDomain();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
+
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRepositoryFilters>({
-      initialFilters: { name: "", pulp_type: "" },
-    });
+    useDataViewFilters<IRepositoryFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
   const debouncedPulpType = useDebouncedValue(filters.pulp_type);
-
-  const ordering = toOrderingParam(sortBy, direction) as
-    "name" | "-name" | "description" | "-description";
 
   const { data, isLoading, error } = useRepositoriesListQuery({
     limit: perPage,
     offset: (page - 1) * perPage,
     ordering,
     name__icontains: debouncedName || undefined,
-    pulp_type: debouncedPulpType
-      ? (debouncedPulpType as NonNullable<
-          Parameters<typeof useRepositoriesListQuery>[0]
-        >["pulp_type"])
-      : undefined,
+    pulp_type: debouncedPulpType || undefined,
   });
 
-  const repositories = (data?.results ?? []) as RepositoryRow[];
+  const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const canCreate = getAvailablePlugins("repository", plugins).length > 0;
-
-  const sortProps = (columnKey: RepositoryColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
-
   const columns = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "Description", props: { sort: sortProps("description") } },
+    {
+      cell: "Name",
+      props: {
+        sort: sortProps("name"),
+      },
+    },
+    {
+      cell: "Description",
+      props: {
+        sort: sortProps("description"),
+      },
+    },
     "Type",
     "Remote",
     {
@@ -148,6 +127,7 @@ export const RepositoryList: React.FC = () => {
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
     const pulpType = resolvePulpType(repository.pulp_href);
+    // TODO replace getEntityPlugin for something better, it does not reflect the plugin schema
     const plugin = pulpType
       ? getEntityPlugin("repository", pulpType)
       : undefined;
@@ -192,8 +172,8 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Name" },
         },
         {
-          cell: truncate(repository.description),
-          props: { dataLabel: "Description" },
+          cell: repository.description || "—",
+          props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
           cell: pulpType ? (
@@ -204,8 +184,8 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: truncate(repository.remote),
-          props: { dataLabel: "Remote" },
+          cell: repository.remote || "—",
+          props: { dataLabel: "Remote", modifier: "truncate" },
         },
         {
           cell: <ActionsColumn items={actionItems} />,
@@ -241,9 +221,12 @@ export const RepositoryList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget?.pulp_href) return;
+    if (!deleteTarget || !deleteTarget.pulp_href) return;
     try {
-      await deleteEntity(deleteTarget);
+      await deleteEntity({
+        name: deleteTarget.name,
+        pulp_href: deleteTarget.pulp_href,
+      });
     } catch {
       // Notifications are handled in useEntityDelete.
     }
@@ -277,14 +260,9 @@ export const RepositoryList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              canCreate ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setModalState("create")}
-                >
-                  Create repository
-                </Button>
-              ) : undefined
+              <Button variant="primary" onClick={() => setModalState("create")}>
+                Create repository
+              </Button>
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -302,9 +280,7 @@ export const RepositoryList: React.FC = () => {
         <EntityModal
           config={REPOSITORY_FAMILY}
           isOpen={modalState !== null}
-          entity={
-            modalState === "create" ? undefined : (modalState ?? undefined)
-          }
+          entity={repositoryToEdit}
           onClose={() => setModalState(null)}
         />
 

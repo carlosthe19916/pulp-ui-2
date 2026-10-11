@@ -154,9 +154,12 @@ export const useEntityUpdateMutation = (rootQueryKey: readonly unknown[]) => {
 export const useEntityDeleteMutation = (rootQueryKey: readonly unknown[]) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
-      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
-        .data,
+    mutationFn: async (href: string): Promise<AsyncOperationResponse> => {
+      const response = await axiosInstance.delete<AsyncOperationResponse>(
+        toProxyHref(href),
+      );
+      return response.data;
+    },
     onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({
         queryKey: entityListKey(rootQueryKey),

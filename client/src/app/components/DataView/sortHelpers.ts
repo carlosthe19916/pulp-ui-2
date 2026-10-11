@@ -10,7 +10,7 @@ type DataViewOnSort = (
 ) => void;
 
 interface IBuildThSortArgs<K extends string> {
-  /** All column keys in render order (key ↔ index bridge). */
+  /** Sortable column keys; each key's array index is its logical sort id. */
   columnKeys: readonly K[];
   columnKey: K;
   sortBy: string | undefined;
@@ -19,19 +19,32 @@ interface IBuildThSortArgs<K extends string> {
 }
 
 /**
- * Turn react-data-view's string-keyed sort state into a Pulp `ordering` param
- * (`"name"` / `"-name"`), or `undefined` when nothing is sorted. Callers cast to
- * their domain's `ordering` enum type.
+ * Convert react-data-view's string sort state into a Pulp `ordering` query param
+ * (`"name"` / `"-name"`). Generic over the key `K`, so the result type is the
+ * exact ascending/descending union — no cast needed when `sortBy` is typed.
+ *
+ * @param sortBy - Active sort key, or `undefined` when unsorted.
+ * @param direction - `"desc"` prefixes the key with `-`; otherwise ascending.
+ * @returns The `ordering` value, or `undefined` when `sortBy` is unset.
  */
-export const toOrderingParam = (
-  sortBy: string | undefined,
+export const toOrderingParam = <K extends string>(
+  sortBy: K | undefined,
   direction: ISortBy["direction"],
-): string | undefined =>
+): K | `-${K}` | undefined =>
   sortBy ? (direction === "desc" ? `-${sortBy}` : sortBy) : undefined;
 
 /**
- * Build PatternFly `Th` sort props for one column, bridging react-data-view's
- * string-keyed sort state to PatternFly's index-based `ThSortType`.
+ * Build PatternFly `Th` `sort` props for one column, bridging react-data-view's
+ * string-keyed sort state to PatternFly's index-based `ThSortType`. Both indices
+ * derive from `columnKeys`, so the active-sort state stays correct regardless of
+ * the column's visual position.
+ *
+ * @param args.columnKeys - All sortable keys; a key's index is its sort id.
+ * @param args.columnKey - Key of the column these props belong to.
+ * @param args.sortBy - Active sort key, or `undefined` when unsorted.
+ * @param args.direction - Active sort direction.
+ * @param args.onSort - Called with the column's key and the new direction.
+ * @returns The `sort` prop for this column's `<Th>`.
  */
 export const buildThSort = <K extends string>({
   columnKeys,

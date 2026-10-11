@@ -2,3 +2,4 @@
 // the string-key ↔ index sort bridge and consistent loading/empty/error states.
 export { dataViewBodyStates } from "./dataViewStates";
 export { buildThSort, toOrderingParam } from "./sortHelpers";
+export { useColumnSort } from "./useColumnSort";

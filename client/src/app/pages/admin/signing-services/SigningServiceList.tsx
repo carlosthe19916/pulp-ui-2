@@ -15,41 +15,37 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { ISigningServiceListParams } from "@app/queries/signing-services";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
+import type { OrderingField } from "@app/queries/utils/listParams";
 
-const COLUMN_KEYS = ["name", "pubkey_fingerprint", "script"] as const;
-type SigningServiceColumnKey = (typeof COLUMN_KEYS)[number];
+const SORTABLE_COLUMN_KEYS = [
+  "name",
+] as const satisfies readonly OrderingField<ISigningServiceListParams>[];
 
 interface ISigningServiceFilters {
-  name: string;
+  name: ISigningServiceListParams["name"];
 }
 
 export const SigningServiceList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<ISigningServiceFilters>({
-      initialFilters: { name: "" },
-    });
+    useDataViewFilters<ISigningServiceFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
-
-  const ordering = toOrderingParam(sortBy, direction) as "name" | "-name";
 
   const { data, isLoading, error } = useSigningServicesListQuery({
     limit: perPage,
@@ -60,18 +56,6 @@ export const SigningServiceList: React.FC = () => {
 
   const services = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const sortProps = (columnKey: SigningServiceColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },

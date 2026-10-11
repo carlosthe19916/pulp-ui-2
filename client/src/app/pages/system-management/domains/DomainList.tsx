@@ -19,22 +19,19 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { DomainResponse } from "@app/client";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IDomainListParams } from "@app/queries/domains";
 import { useDomainsListQuery } from "@app/queries/domains";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -45,30 +42,15 @@ import { useDomainActions } from "./hooks/useDomainActions";
 import { useDomainTaskWatcher } from "./hooks/useDomainTaskWatcher";
 import { storageClassLabel } from "./storageBackends";
 
-const COLUMN_KEYS = [
+const SORTABLE_COLUMN_KEYS = [
   "name",
   "description",
   "storage_class",
-  "redirect",
-  "hide_guarded",
   "pulp_created",
-  "actions",
-] as const;
-type DomainColumnKey = (typeof COLUMN_KEYS)[number];
-
-type DomainOrdering =
-  | "name"
-  | "-name"
-  | "description"
-  | "-description"
-  | "storage_class"
-  | "-storage_class"
-  | "pulp_created"
-  | "-pulp_created"
-  | undefined;
+] as const satisfies readonly OrderingField<IDomainListParams>[];
 
 interface IDomainFilters {
-  name: string;
+  name: IDomainListParams["name"];
 }
 
 const YesNoLabel: React.FC<{ value?: boolean }> = ({ value }) => (
@@ -90,14 +72,14 @@ export const DomainList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IDomainFilters>({ initialFilters: { name: "" } });
+    useDataViewFilters<IDomainFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
-
-  const ordering = toOrderingParam(sortBy, direction) as DomainOrdering;
 
   const { data, isLoading, error } = useDomainsListQuery({
     limit: perPage,
@@ -111,18 +93,6 @@ export const DomainList: React.FC = () => {
 
   const { tasksByDomainId } = use(DomainTaskTrackerContext);
   useDomainTaskWatcher(domains);
-
-  const sortProps = (columnKey: DomainColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Name", props: { sort: sortProps("name") } },

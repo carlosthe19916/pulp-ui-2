@@ -54,8 +54,12 @@ export const EntityDetail = ({
   const canEdit = (plugin?.form.editFields.length ?? 0) > 0;
 
   const handleDelete = async () => {
+    if (!entity.pulp_href) return;
     try {
-      await deleteEntity(entity);
+      await deleteEntity({
+        name: entity.name ?? "",
+        pulp_href: entity.pulp_href,
+      });
       onDeleted();
     } catch {
       // Notifications are handled in useEntityDelete.

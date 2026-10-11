@@ -19,40 +19,31 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  useDataViewSort,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  buildThSort,
-  dataViewBodyStates,
-  toOrderingParam,
-} from "@app/components/DataView";
+import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IUserListParams } from "@app/queries/users";
 import { useUsersListQuery } from "@app/queries/users";
+import type { OrderingField } from "@app/queries/utils/listParams";
 import { formatDateTime } from "@app/utils/utils";
 
 import { UserModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
 import { useUserActions } from "./hooks/useUserActions";
 
-const COLUMN_KEYS = [
+const SORTABLE_COLUMN_KEYS = [
   "username",
-  "email",
-  "is_active",
-  "groups",
   "date_joined",
-  "roles",
-  "actions",
-] as const;
-type UserColumnKey = (typeof COLUMN_KEYS)[number];
+] as const satisfies readonly OrderingField<IUserListParams>[];
 
 interface IUserFilters {
-  username: string;
+  username: IUserListParams["username"];
 }
 
 export const UserList: React.FC = () => {
@@ -69,15 +60,14 @@ export const UserList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "username", direction: "asc" },
+    onSortChange: () => onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
+    useDataViewFilters<IUserFilters>({});
   const debouncedUsername = useDebouncedValue(filters.username);
-
-  const ordering = toOrderingParam(sortBy, direction) as
-    "username" | "-username" | "date_joined" | "-date_joined" | undefined;
 
   const { data, isLoading, error } = useUsersListQuery({
     limit: perPage,
@@ -88,18 +78,6 @@ export const UserList: React.FC = () => {
 
   const users = data?.results ?? [];
   const totalCount = data?.count ?? 0;
-
-  const sortProps = (columnKey: UserColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
-      },
-    });
 
   const columns = [
     { cell: "Username", props: { sort: sortProps("username") } },
