@@ -103,6 +103,86 @@ export class PulpApi {
     return this.deleteByExactName("distributions", "name", name);
   }
 
+  /** Delete any resource by its `pulp_href` (used for records with no name filter). */
+  async deleteByHref(href: string): Promise<void> {
+    if (href) await this.ctx.delete(href);
+  }
+
+  /**
+   * POST to a typed collection (e.g. `remotes/file/file`) that creates synchronously
+   * and return the new record's `pulp_href`. Seeds fixtures without the create form.
+   */
+  private async postCreate(
+    typedCollection: string,
+    body: Record<string, unknown>,
+  ): Promise<string> {
+    const res = await this.ctx.post(this.collectionUrl(typedCollection), {
+      data: body,
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `create ${typedCollection} failed: ${res.status()} ${await res.text()}`,
+      );
+    }
+    const { pulp_href } = (await res.json()) as { pulp_href?: string };
+    return pulp_href ?? "";
+  }
+
+  /** Seed a remote of a given plugin type, e.g. `createRemote("file/file", {...})`. */
+  createRemote(
+    typeSlug: string,
+    body: Record<string, unknown>,
+  ): Promise<string> {
+    return this.postCreate(`remotes/${typeSlug}`, body);
+  }
+
+  /** Seed a repository of a given plugin type, e.g. `createRepository("rpm/rpm", {...})`. */
+  createRepository(
+    typeSlug: string,
+    body: Record<string, unknown>,
+  ): Promise<string> {
+    return this.postCreate(`repositories/${typeSlug}`, body);
+  }
+
+  /**
+   * POST a task-returning create (e.g. a publication), poll the task to completion,
+   * and return the first created resource's `pulp_href`.
+   */
+  async createViaTask(
+    typedCollection: string,
+    body: Record<string, unknown>,
+  ): Promise<string> {
+    const res = await this.ctx.post(this.collectionUrl(typedCollection), {
+      data: body,
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `create ${typedCollection} failed: ${res.status()} ${await res.text()}`,
+      );
+    }
+    const { task } = (await res.json()) as { task?: string };
+    if (!task) throw new Error(`create ${typedCollection} returned no task`);
+
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const taskRes = await this.ctx.get(task);
+      const taskData = (await taskRes.json()) as {
+        state?: string;
+        created_resources?: string[];
+        error?: unknown;
+      };
+      if (taskData.state === "completed") {
+        return taskData.created_resources?.[0] ?? "";
+      }
+      if (taskData.state === "failed" || taskData.state === "canceled") {
+        throw new Error(
+          `task ${taskData.state}: ${JSON.stringify(taskData.error)}`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    throw new Error(`task for ${typedCollection} did not complete in time`);
+  }
+
   private async findOne<T>(
     collection: string,
     param: string,

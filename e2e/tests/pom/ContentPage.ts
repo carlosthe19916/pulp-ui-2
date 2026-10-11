@@ -133,4 +133,38 @@ export class ContentPage extends DataViewList {
       "Delete",
     );
   }
+
+  /** Choose the plugin type in an open create dialog (no-op when only one type). */
+  async selectType(dialog: Locator, typeLabel: string): Promise<void> {
+    const typeSelect = dialog.getByRole("combobox", { name: "Type" });
+    if ((await typeSelect.count()) > 0) {
+      await typeSelect.selectOption({ label: typeLabel });
+    }
+  }
+
+  /**
+   * Open the resource picker for a field and return its option listbox. The menu is
+   * portalled, so the listbox is page-level, not inside the dialog.
+   */
+  async openResourcePicker(
+    dialog: Locator,
+    fieldLabel: string,
+  ): Promise<Locator> {
+    await dialog.getByRole("button", { name: fieldLabel, exact: true }).click();
+    const listbox = this.page.getByRole("listbox");
+    await listbox.waitFor({ state: "visible" });
+    return listbox;
+  }
+
+  /**
+   * Close a resource picker by toggling it again — not via Escape, which a
+   * PatternFly Modal treats as "close the modal" and would dismiss the form.
+   */
+  async closeResourcePicker(
+    dialog: Locator,
+    fieldLabel: string,
+  ): Promise<void> {
+    await dialog.getByRole("button", { name: fieldLabel, exact: true }).click();
+    await this.page.getByRole("listbox").waitFor({ state: "hidden" });
+  }
 }

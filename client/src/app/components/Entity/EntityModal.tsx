@@ -27,10 +27,14 @@ import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
 import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
 import { useEntityForm, type IEntityForEdit } from "@app/hooks/useEntityForm";
+import { usePublicationsListQuery } from "@app/queries/publications";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { useEntityDetailQuery } from "@app/queries/utils/entityCrud";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 
 const FORM_ID = "entity-form";
 
@@ -131,8 +135,7 @@ const EntityModalInner = ({
     );
   const effectiveEntity = fullEntity ?? entity;
 
-  // Options for `resource` fields (repository/remote pickers). Loaded for the
-  // selected domain; cheap and only while the modal is mounted.
+  // Options for `resource` fields (repository/remote/publication pickers).
   const { data: repoData } = useRepositoriesListQuery({
     limit: 100,
     offset: 0,
@@ -143,12 +146,51 @@ const EntityModalInner = ({
     offset: 0,
     ordering: "name",
   });
-  const repositoryOptions: ITypeaheadOption[] = (repoData?.results ?? []).map(
-    (repo) => ({ value: repo.pulp_href ?? "", label: repo.name ?? "" }),
-  );
-  const remoteOptions: ITypeaheadOption[] = (remoteData?.results ?? []).map(
-    (remote) => ({ value: remote.pulp_href ?? "", label: remote.name ?? "" }),
-  );
+  const { data: publicationData } = usePublicationsListQuery({
+    limit: 100,
+    offset: 0,
+  });
+
+  // Restrict reference pickers to compatible types (mirroring the backend): a
+  // Repository's Remote picker to its `compatibleRemoteTypes`, and a Publication's
+  // Repository picker to repos whose `compatiblePublicationTypes` include its type.
+  const compatibleRemoteTypes =
+    config.kind === "repository"
+      ? plugin?.entities.repository?.compatibleRemoteTypes
+      : undefined;
+  const publicationType =
+    config.kind === "publication" ? plugin?.pulpType : undefined;
+
+  const repositoryOptions: ITypeaheadOption[] = (repoData?.results ?? [])
+    .filter((repo) => {
+      if (!publicationType) return true;
+      const repoType = resolvePulpType(repo.pulp_href);
+      const repoPlugin = repoType ? getPlugin(repoType) : undefined;
+      return (
+        repoPlugin?.entities.repository?.compatiblePublicationTypes.includes(
+          publicationType,
+        ) ?? false
+      );
+    })
+    .map((repo) => ({ value: repo.pulp_href ?? "", label: repo.name ?? "" }));
+  const remoteOptions: ITypeaheadOption[] = (remoteData?.results ?? [])
+    .filter(
+      (remote) =>
+        !compatibleRemoteTypes ||
+        compatibleRemoteTypes.includes(resolvePulpType(remote.pulp_href) ?? ""),
+    )
+    .map((remote) => ({
+      value: remote.pulp_href ?? "",
+      label: remote.name ?? "",
+    }));
+  const publicationOptions: ITypeaheadOption[] = (
+    publicationData?.results ?? []
+  ).map((pub) => ({
+    value: pub.pulp_href ?? "",
+    label: pub.pulp_href
+      ? `Publication ${extractIdFromHref(pub.pulp_href)}`
+      : "",
+  }));
 
   const typeSelector =
     isCreate && available.length > 1 ? (
@@ -177,6 +219,7 @@ const EntityModalInner = ({
   const resourceOptions = {
     repository: repositoryOptions,
     remote: remoteOptions,
+    publication: publicationOptions,
   };
 
   // Wizard vs plain modal comes from the catalog plugin (`form.isWizard`); wizard
@@ -185,7 +228,12 @@ const EntityModalInner = ({
 
   if (!isCreate && isDetailLoading) {
     return (
-      <Modal isOpen onClose={onClose} variant="medium" aria-label={title}>
+      <Modal
+        isOpen
+        onClose={onClose}
+        variant={useWizard ? "large" : "medium"}
+        aria-label={title}
+      >
         <ModalHeader title={title} />
         <ModalBody>
           <Bullseye>
@@ -197,8 +245,10 @@ const EntityModalInner = ({
   }
 
   if (useWizard) {
+    // No Modal `onClose` here: it would render a second close button next to the
+    // WizardHeader's. Escape is wired via `onEscapePress` instead.
     return (
-      <Modal isOpen onClose={onClose} variant="medium" aria-label={title}>
+      <Modal isOpen onEscapePress={onClose} variant="large" aria-label={title}>
         <EntityWizardBody
           key={bodyKey}
           config={config}

@@ -10,3 +10,7 @@
 - ise href in rest paths in axios because it will simplify a lot of logic, just make sure there are comments with examples of the paths
 
 - entityCrud.ts should not have generic create/update mutations but rather dedicated ones just like we did with delete mutation
+
+## Forms
+
+Remote dropdown is fetching all or is async?

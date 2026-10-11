@@ -65,13 +65,21 @@ export const EntityFormFields = <
             key={field.key}
             name={name}
             control={control}
-            render={({ field: rhfField, fieldState: { error } }) => {
-              const validated = error ? "error" : "default";
-              const helper = error ? (
+            render={({
+              field: rhfField,
+              fieldState: { error, isDirty, isTouched },
+              formState: { isSubmitted },
+            }) => {
+              // Surface errors only after the field is engaged or a submit is
+              // attempted, so a freshly opened form isn't pre-filled with them.
+              const showError =
+                Boolean(error) && (isDirty || isTouched || isSubmitted);
+              const validated = showError ? "error" : "default";
+              const helper = showError ? (
                 <FormHelperText>
                   <HelperText>
                     <HelperTextItem variant="error">
-                      {error.message}
+                      {error?.message}
                     </HelperTextItem>
                   </HelperText>
                 </FormHelperText>

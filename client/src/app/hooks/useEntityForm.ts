@@ -1,20 +1,13 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
-import { getEntityLabel } from "@catalog";
 import type { IEntityField, IPlugin } from "@catalog";
 import {
   buildDefaultValues,
   buildFieldSchema,
-  cleanFormValues,
 } from "@app/components/Entity/formSchema";
-import { useNotifications } from "@app/context/useNotifications";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
-import {
-  useEntityCreateMutation,
-  useEntityUpdateMutation,
-} from "@app/queries/utils/entityCrud";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import { useEntitySubmit } from "@app/hooks/useEntitySubmit";
 
 type EntityFormValues = Record<string, unknown>;
 
@@ -53,13 +46,6 @@ export const useEntityForm = ({
   onClose,
 }: IUseEntityFormArgs): IUseEntityFormResult => {
   const isCreate = !entity;
-  const { addNotification } = useNotifications();
-  const createMutation = useEntityCreateMutation(
-    config.family,
-    config.rootQueryKey,
-  );
-  const updateMutation = useEntityUpdateMutation(config.rootQueryKey);
-  const label = getEntityLabel(config.kind);
 
   // The plugin's contribution for this family (form fields + create endpoint).
   const entityPlugin = plugin?.entities[config.kind];
@@ -77,58 +63,20 @@ export const useEntityForm = ({
     mode: "onChange",
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      if (isCreate) {
-        if (!entityPlugin) return;
-        const body = cleanFormValues(values);
-        const result = await createMutation.mutateAsync({
-          apiPath: entityPlugin.apiPath,
-          body,
-        });
-        const createdName =
-          (result as { name?: string } | undefined)?.name ??
-          (values.name as string | undefined);
-        addNotification({
-          title: createdName
-            ? `${label} "${createdName}" created`
-            : `${label} create started`,
-          variant: "success",
-        });
-      } else if (entity?.pulp_href) {
-        await updateMutation.mutateAsync({
-          href: entity.pulp_href,
-          body: cleanFormValues(values),
-        });
-        addNotification({
-          title: `${label} "${entity.name}" updated`,
-          variant: "success",
-        });
-      } else {
-        return;
-      }
-      onClose();
-    } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(
-          error,
-          isCreate
-            ? `Failed to create ${label.toLowerCase()}`
-            : `Failed to update ${label.toLowerCase()}`,
-        ),
-        variant: "danger",
-      });
-    }
+  const { submit, isSubmitting } = useEntitySubmit({
+    config,
+    plugin,
+    entity,
+    onClose,
   });
+
+  const onSubmit = form.handleSubmit(submit);
 
   return {
     form,
     isCreate,
     fields,
     onSubmit,
-    isSubmitting:
-      form.formState.isSubmitting ||
-      createMutation.isPending ||
-      updateMutation.isPending,
+    isSubmitting: form.formState.isSubmitting || isSubmitting,
   };
 };

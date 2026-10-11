@@ -14,7 +14,8 @@ interface IBaseFields {
 const GENERAL = "General";
 const AUTH = "Authentication";
 const TLS = "TLS";
-const ADVANCED = "Advanced";
+const TIMEOUTS = "Timeouts";
+const LIMITS = "Limits";
 
 /** Common remote fields (pulpcore RemoteSerializer base), grouped for the wizard. */
 const remoteCommon: IEntityField[] = [
@@ -50,37 +51,37 @@ const remoteCommon: IEntityField[] = [
   },
   { key: "client_key", label: "Client Key", type: "textarea", group: TLS },
   {
-    key: "download_concurrency",
-    label: "Download Concurrency",
-    type: "number",
-    group: ADVANCED,
-  },
-  { key: "max_retries", label: "Max Retries", type: "number", group: ADVANCED },
-  {
     key: "total_timeout",
     label: "Total Timeout",
     type: "number",
-    group: ADVANCED,
+    group: TIMEOUTS,
   },
   {
     key: "connect_timeout",
     label: "Connect Timeout",
     type: "number",
-    group: ADVANCED,
+    group: TIMEOUTS,
   },
   {
     key: "sock_connect_timeout",
     label: "Socket Connect Timeout",
     type: "number",
-    group: ADVANCED,
+    group: TIMEOUTS,
   },
   {
     key: "sock_read_timeout",
     label: "Socket Read Timeout",
     type: "number",
-    group: ADVANCED,
+    group: TIMEOUTS,
   },
-  { key: "rate_limit", label: "Rate Limit", type: "number", group: ADVANCED },
+  {
+    key: "download_concurrency",
+    label: "Download Concurrency",
+    type: "number",
+    group: LIMITS,
+  },
+  { key: "max_retries", label: "Max Retries", type: "number", group: LIMITS },
+  { key: "rate_limit", label: "Rate Limit", type: "number", group: LIMITS },
 ];
 
 /** Remotes: the pulpcore RemoteSerializer common field set (wizard-grouped). */
