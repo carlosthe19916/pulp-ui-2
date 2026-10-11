@@ -114,9 +114,12 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     });
 
   const columns: DataViewTh[] = [
-    { cell: "Role", props: { sort: sortProps("name") } },
-    { cell: "Description", props: { sort: sortProps("description") } },
-    "Permissions",
+    { cell: "Role", props: { sort: sortProps("name"), width: 25 } },
+    {
+      cell: "Description",
+      props: { sort: sortProps("description"), width: 45 },
+    },
+    { cell: "Permissions", props: { width: 30 } },
   ];
 
   const rows: DataViewTrObject[] = roles.map((role) => ({

@@ -124,10 +124,10 @@ export const TaskList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "State", props: { sort: sortProps("state") } },
-    { cell: "Started", props: { sort: sortProps("started_at") } },
-    { cell: "Finished", props: { sort: sortProps("finished_at") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 40 } },
+    { cell: "State", props: { sort: sortProps("state"), width: 20 } },
+    { cell: "Started", props: { sort: sortProps("started_at"), width: 20 } },
+    { cell: "Finished", props: { sort: sortProps("finished_at"), width: 20 } },
     {
       cell: "",
       props: {

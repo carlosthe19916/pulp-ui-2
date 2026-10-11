@@ -79,13 +79,29 @@ export const PublicationList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    "Publication",
-    "Type",
-    "Repository Version",
+    {
+      cell: "Publication",
+      props: {
+        width: 30,
+      },
+    },
+    {
+      cell: "Type",
+      props: {
+        width: 20,
+      },
+    },
+    {
+      cell: "Repository Version",
+      props: {
+        width: 35,
+      },
+    },
     {
       cell: "Created",
       props: {
         sort: sortProps("pulp_created"),
+        width: 15,
       },
     },
     {

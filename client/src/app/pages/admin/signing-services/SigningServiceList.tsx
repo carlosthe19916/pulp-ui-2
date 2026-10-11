@@ -62,9 +62,9 @@ export const SigningServiceList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    "Public Key Fingerprint",
-    "Script",
+    { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
+    { cell: "Public Key Fingerprint", props: { width: 45 } },
+    { cell: "Script", props: { width: 30 } },
   ];
 
   const rows: DataViewTr[] = services.map((service) => {

@@ -114,9 +114,9 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     });
 
   const columns: DataViewTh[] = [
-    { cell: "Username", props: { sort: sortProps("username") } },
-    { cell: "Email", props: { sort: sortProps("email") } },
-    "Name",
+    { cell: "Username", props: { sort: sortProps("username"), width: 30 } },
+    { cell: "Email", props: { sort: sortProps("email"), width: 40 } },
+    { cell: "Name", props: { width: 30 } },
   ];
 
   const rows: DataViewTrObject[] = users.map((user) => ({

@@ -110,16 +110,28 @@ export const RepositoryList: React.FC = () => {
       cell: "Name",
       props: {
         sort: sortProps("name"),
+        width: 25,
       },
     },
     {
       cell: "Description",
       props: {
         sort: sortProps("description"),
+        width: 35,
       },
     },
-    "Type",
-    "Remote",
+    {
+      cell: "Type",
+      props: {
+        width: 20,
+      },
+    },
+    {
+      cell: "Remote",
+      props: {
+        width: 20,
+      },
+    },
     {
       cell: "",
       props: {

@@ -103,11 +103,27 @@ export const DistributionList: React.FC = () => {
       cell: "Name",
       props: {
         sort: sortProps("name"),
+        width: 25,
       },
     },
-    "Base Path",
-    "Type",
-    "Repository",
+    {
+      cell: "Base Path",
+      props: {
+        width: 30,
+      },
+    },
+    {
+      cell: "Type",
+      props: {
+        width: 20,
+      },
+    },
+    {
+      cell: "Repository",
+      props: {
+        width: 25,
+      },
+    },
     {
       cell: "",
       props: {

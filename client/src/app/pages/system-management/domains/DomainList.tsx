@@ -102,12 +102,15 @@ export const DomainList: React.FC = () => {
   useDomainTaskWatcher(domains);
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "Description", props: { sort: sortProps("description") } },
-    { cell: "Storage", props: { sort: sortProps("storage_class") } },
-    "Redirect",
-    "Hide guarded",
-    { cell: "Created", props: { sort: sortProps("pulp_created") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 20 } },
+    {
+      cell: "Description",
+      props: { sort: sortProps("description"), width: 25 },
+    },
+    { cell: "Storage", props: { sort: sortProps("storage_class"), width: 15 } },
+    { cell: "Redirect", props: { width: 10 } },
+    { cell: "Hide guarded", props: { width: 15 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 

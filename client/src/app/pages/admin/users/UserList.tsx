@@ -84,11 +84,14 @@ export const UserList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Username", props: { sort: sortProps("username") } },
-    "Email",
-    "Active",
-    "Groups",
-    { cell: "Date Joined", props: { sort: sortProps("date_joined") } },
+    { cell: "Username", props: { sort: sortProps("username"), width: 25 } },
+    { cell: "Email", props: { width: 30 } },
+    { cell: "Active", props: { width: 10 } },
+    { cell: "Groups", props: { width: 20 } },
+    {
+      cell: "Date Joined",
+      props: { sort: sortProps("date_joined"), width: 15 },
+    },
     {
       cell: "",
       props: {

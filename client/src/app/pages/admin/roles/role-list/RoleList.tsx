@@ -108,11 +108,11 @@ export const RoleList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    "Plugin",
-    "Description",
-    "Permissions",
-    { cell: "Locked", props: { sort: sortProps("locked") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
+    { cell: "Plugin", props: { width: 15 } },
+    { cell: "Description", props: { width: 30 } },
+    { cell: "Permissions", props: { width: 20 } },
+    { cell: "Locked", props: { sort: sortProps("locked"), width: 10 } },
     {
       cell: "",
       props: {
