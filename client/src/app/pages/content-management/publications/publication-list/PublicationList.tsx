@@ -40,11 +40,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
-const truncate = (value: string | null | undefined, max = 40): string => {
-  if (!value) return "—";
-  return value.length > max ? `${value.slice(0, max)}...` : value;
-};
-
 const SORTABLE_COLUMN_KEYS = [
   "pulp_created",
 ] as const satisfies readonly OrderingField<IPublicationListParams>[];
@@ -123,8 +118,8 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: truncate(pub.repository_version ?? pub.repository),
-          props: { dataLabel: "Repository Version" },
+          cell: pub.repository_version ?? pub.repository ?? "—",
+          props: { dataLabel: "Repository Version", modifier: "truncate" },
         },
         {
           cell: formatDateTime(pub.pulp_created) ?? "—",

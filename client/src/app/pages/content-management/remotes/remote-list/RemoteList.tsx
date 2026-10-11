@@ -144,7 +144,7 @@ export const RemoteList: React.FC = () => {
         },
         {
           cell: remote.url || "—",
-          props: { dataLabel: "URL" },
+          props: { dataLabel: "URL", modifier: "truncate" },
         },
         {
           cell: remote.policy ?? "—",

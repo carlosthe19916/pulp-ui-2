@@ -86,11 +86,11 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
       row: [
         {
           cell: label,
-          props: { dataLabel: "Path" },
+          props: { dataLabel: "Path", modifier: "truncate" },
         },
         {
-          cell: !sha ? "—" : sha.length > 20 ? `${sha.slice(0, 20)}...` : sha,
-          props: { dataLabel: "SHA256" },
+          cell: sha || "—",
+          props: { dataLabel: "SHA256", modifier: "truncate" },
         },
       ],
     };

@@ -127,7 +127,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
         },
         {
           cell: role.description ?? "—",
-          props: { dataLabel: "Description" },
+          props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
           cell: role.permissions?.length ?? 0,

@@ -122,7 +122,10 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     id: role.name,
     row: [
       { cell: role.name, props: { dataLabel: "Role" } },
-      { cell: role.description || "—", props: { dataLabel: "Description" } },
+      {
+        cell: role.description || "—",
+        props: { dataLabel: "Description", modifier: "truncate" },
+      },
       {
         cell: role.permissions?.length ?? 0,
         props: { dataLabel: "Permissions" },

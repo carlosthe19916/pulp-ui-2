@@ -111,7 +111,10 @@ export const RepositoryDistributionsTab: React.FC<
             ),
           props: { dataLabel: "Name" },
         },
-        { cell: dist.base_path || "—", props: { dataLabel: "Base path" } },
+        {
+          cell: dist.base_path || "—",
+          props: { dataLabel: "Base path", modifier: "truncate" },
+        },
         {
           cell: <ResourceHrefLink kind="publication" href={dist.publication} />,
           props: { dataLabel: "Publication" },

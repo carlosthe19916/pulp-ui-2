@@ -119,7 +119,7 @@ export const DomainList: React.FC = () => {
         { cell: domain.name, props: { dataLabel: "Name" } },
         {
           cell: domain.description || "—",
-          props: { dataLabel: "Description" },
+          props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
           cell: storageClassLabel(domain.storage_class),

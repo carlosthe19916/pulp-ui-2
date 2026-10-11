@@ -134,7 +134,7 @@ export const DistributionList: React.FC = () => {
         },
         {
           cell: distribution.base_path || "—",
-          props: { dataLabel: "Base Path" },
+          props: { dataLabel: "Base Path", modifier: "truncate" },
         },
         {
           cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",

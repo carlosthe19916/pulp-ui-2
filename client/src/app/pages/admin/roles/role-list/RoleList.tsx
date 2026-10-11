@@ -135,8 +135,8 @@ export const RoleList: React.FC = () => {
           props: { dataLabel: "Plugin" },
         },
         {
-          cell: desc.length > 80 ? `${desc.slice(0, 80)}...` : desc || "—",
-          props: { dataLabel: "Description" },
+          cell: desc || "—",
+          props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
           cell: (role.permissions ?? []).length,

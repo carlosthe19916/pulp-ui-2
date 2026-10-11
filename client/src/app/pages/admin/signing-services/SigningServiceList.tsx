@@ -70,10 +70,13 @@ export const SigningServiceList: React.FC = () => {
       row: [
         { cell: service.name, props: { dataLabel: "Name" } },
         {
-          cell: fp.length > 24 ? `${fp.slice(0, 24)}...` : fp || "—",
-          props: { dataLabel: "Public Key Fingerprint" },
+          cell: fp || "—",
+          props: { dataLabel: "Public Key Fingerprint", modifier: "truncate" },
         },
-        { cell: service.script ?? "—", props: { dataLabel: "Script" } },
+        {
+          cell: service.script ?? "—",
+          props: { dataLabel: "Script", modifier: "truncate" },
+        },
       ],
     };
   });
