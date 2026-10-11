@@ -22,7 +22,11 @@ import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  useColumnSort,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
@@ -74,7 +78,7 @@ export const PublicationList: React.FC = () => {
   const publications = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = [
+  const columns: DataViewTh[] = [
     "Publication",
     "Type",
     "Repository Version",

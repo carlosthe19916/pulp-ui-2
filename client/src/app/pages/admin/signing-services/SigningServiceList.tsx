@@ -18,7 +18,11 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  useColumnSort,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -57,7 +61,7 @@ export const SigningServiceList: React.FC = () => {
   const services = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = [
+  const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name") } },
     "Public Key Fingerprint",
     "Script",

@@ -28,6 +28,7 @@ import {
   buildThSort,
   dataViewBodyStates,
   toOrderingParam,
+  type DataViewTh,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
@@ -112,7 +113,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       },
     });
 
-  const columns = [
+  const columns: DataViewTh[] = [
     { cell: "Username", props: { sort: sortProps("username") } },
     { cell: "Email", props: { sort: sortProps("email") } },
     "Name",

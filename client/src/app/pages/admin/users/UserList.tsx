@@ -24,7 +24,11 @@ import {
 
 import type { UserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  useColumnSort,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -79,7 +83,7 @@ export const UserList: React.FC = () => {
   const users = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = [
+  const columns: DataViewTh[] = [
     { cell: "Username", props: { sort: sortProps("username") } },
     "Email",
     "Active",

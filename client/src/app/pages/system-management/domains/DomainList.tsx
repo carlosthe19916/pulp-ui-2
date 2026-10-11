@@ -25,7 +25,11 @@ import {
 import type { DomainResponse } from "@app/client";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  useColumnSort,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -60,6 +64,8 @@ const YesNoLabel: React.FC<{ value?: boolean }> = ({ value }) => (
 );
 
 export const DomainList: React.FC = () => {
+  const { tasksByDomainId } = use(DomainTaskTrackerContext);
+
   const [modalState, setModalState] = useState<
     "create" | DomainResponse | null
   >(null);
@@ -72,11 +78,13 @@ export const DomainList: React.FC = () => {
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
+
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
     onSortChange: () => onSetPage(undefined, 1),
   });
+
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IDomainFilters>({});
   const debouncedName = useDebouncedValue(filters.name);
@@ -91,10 +99,9 @@ export const DomainList: React.FC = () => {
   const domains = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const { tasksByDomainId } = use(DomainTaskTrackerContext);
   useDomainTaskWatcher(domains);
 
-  const columns = [
+  const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name") } },
     { cell: "Description", props: { sort: sortProps("description") } },
     { cell: "Storage", props: { sort: sortProps("storage_class") } },

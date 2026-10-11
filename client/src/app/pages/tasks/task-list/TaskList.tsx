@@ -31,7 +31,11 @@ import {
 } from "@patternfly/react-data-view";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates, useColumnSort } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  useColumnSort,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -119,7 +123,7 @@ export const TaskList: React.FC = () => {
   const tasks = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const columns = [
+  const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name") } },
     { cell: "State", props: { sort: sortProps("state") } },
     { cell: "Started", props: { sort: sortProps("started_at") } },
