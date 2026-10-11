@@ -1,4 +1,9 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -9,7 +14,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
@@ -104,6 +109,22 @@ export const allPublicationsListQueryOptions = (
 export const usePublicationsListQuery = (params: IPublicationListParams) => {
   const domain = useSelectedDomain();
   return useQuery(publicationsListQueryOptions(domain, params));
+};
+
+/** Deletes a publication — synchronous (204, no task), unlike the other families. */
+export const usePublicationDeleteMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (href: string): Promise<void> => {
+      await axiosInstance.delete(toProxyHref(href));
+    },
+    onSuccess: (_data, href) => {
+      void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: publicationKeys.detail(href),
+      });
+    },
+  });
 };
 
 export const useAllPublicationsListQuery = (

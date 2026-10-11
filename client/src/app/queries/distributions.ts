@@ -1,13 +1,19 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   DistributionsListData,
   PaginatedDistributionResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const DistributionsQueryKey = "distributions";
@@ -72,4 +78,20 @@ export const useDistributionsListQuery = (
 ) => {
   const domain = useSelectedDomain();
   return useQuery(distributionsListQueryOptions(domain, params, options));
+};
+
+/** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
+export const useDistributionDeleteMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
+      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
+        .data,
+    onSuccess: (_data, href) => {
+      void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: distributionKeys.detail(href),
+      });
+    },
+  });
 };

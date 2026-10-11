@@ -5,12 +5,8 @@
 - Create publication form is either asyn or it does not work
 
 - use null instead of undefined
-- move descriptors to components or hooks or somewhere
 - families.ts contains forms info, wrong, should be split
 
-- verify href are never used in the queries and we always create the axios path on the client side
-- reevaluate getEntityPlugin and the fact that it requires 2 params
-
-- useEntityDelete should be replaced for a normal Mutation (evaluate it at least)
-
 - ise href in rest paths in axios because it will simplify a lot of logic, just make sure there are comments with examples of the paths
+
+- entityCrud.ts should not have generic create/update mutations but rather dedicated ones just like we did with delete mutation

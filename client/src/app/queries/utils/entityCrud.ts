@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
-import type { AsyncOperationResponse } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { pulpApiPath, toProxyHref } from "./pulpApi";
@@ -141,26 +140,6 @@ export const useEntityUpdateMutation = (rootQueryKey: readonly unknown[]) => {
     }): Promise<unknown> =>
       (await axiosInstance.patch(toProxyHref(href), body)).data,
     onSuccess: (_data, { href }) => {
-      void queryClient.invalidateQueries({
-        queryKey: entityListKey(rootQueryKey),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: entityDetailKey(rootQueryKey, href),
-      });
-    },
-  });
-};
-
-export const useEntityDeleteMutation = (rootQueryKey: readonly unknown[]) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (href: string): Promise<AsyncOperationResponse> => {
-      const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
-      );
-      return response.data;
-    },
-    onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({
         queryKey: entityListKey(rootQueryKey),
       });

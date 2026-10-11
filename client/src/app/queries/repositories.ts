@@ -21,7 +21,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RepositoriesQueryKey = "repositories";
@@ -80,6 +80,22 @@ export const repositoriesListQueryOptions = (
 export const useRepositoriesListQuery = (params: IRepositoryListParams) => {
   const domain = useSelectedDomain();
   return useQuery(repositoriesListQueryOptions(domain, params));
+};
+
+/** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
+export const useRepositoryDeleteMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
+      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
+        .data,
+    onSuccess: (_data, href) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(href),
+      });
+    },
+  });
 };
 
 /**

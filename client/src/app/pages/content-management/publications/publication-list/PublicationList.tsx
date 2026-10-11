@@ -32,10 +32,13 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useEntityDelete } from "@app/hooks/useEntityDelete";
+import { useMutationAction } from "@app/hooks/useMutationAction";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IPublicationListParams } from "@app/queries/publications";
-import { usePublicationsListQuery } from "@app/queries/publications";
+import {
+  usePublicationDeleteMutation,
+  usePublicationsListQuery,
+} from "@app/queries/publications";
 import { PUBLICATION_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
@@ -57,7 +60,9 @@ export const PublicationList: React.FC = () => {
     null,
   );
 
-  const { deleteEntity, isDeleting } = useEntityDelete(PUBLICATION_FAMILY);
+  const deleteMutation = usePublicationDeleteMutation();
+  const { runAction } = useMutationAction();
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -182,16 +187,22 @@ export const PublicationList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget || !deleteTarget.pulp_href) return;
+    const target = deleteTarget;
+    if (!target?.pulp_href) return;
+    const pubId = extractIdFromHref(target.pulp_href);
     try {
-      await deleteEntity({
-        name: extractIdFromHref(deleteTarget.pulp_href),
-        pulp_href: deleteTarget.pulp_href,
-      });
+      // Publication deletion is synchronous (204, no task) — no row tracking.
+      await runAction(
+        () => deleteMutation.mutateAsync(target.pulp_href ?? ""),
+        {
+          successTitle: `Publication "${pubId}" deleted`,
+          errorTitle: "Failed to delete publication",
+        },
+      );
+      setDeleteTarget(null);
     } catch {
-      // Notifications are handled in useEntityDelete.
+      // Error surfaced as a toast; keep the modal open.
     }
-    setDeleteTarget(null);
   };
 
   return (

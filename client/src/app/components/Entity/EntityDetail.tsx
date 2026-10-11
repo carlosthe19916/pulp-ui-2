@@ -14,6 +14,7 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { getEntityLabel } from "@catalog";
+import type { AsyncOperationResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { EntityModal } from "@app/components/Entity/EntityModal";
@@ -22,13 +23,20 @@ import {
   type PageHeaderAction,
 } from "@app/components/PageHeaderActionsMenu";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
-import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { useEntityDetail } from "@app/hooks/useEntityDetail";
+import { useMutationAction } from "@app/hooks/useMutationAction";
 import { formatDateTime } from "@app/utils/utils";
+
+/** The family's dedicated delete mutation, supplied by the route wrapper. */
+interface IEntityDeleteMutation {
+  mutateAsync: (href: string) => Promise<AsyncOperationResponse | void>;
+  isPending: boolean;
+}
 
 interface IEntityDetailProps {
   config: IContentFamilyConfig;
   id: string;
+  deleteMutation: IEntityDeleteMutation;
   /** Typed link back to the list (route wrapper owns the typed route). */
   listLink: ReactNode;
   /** Navigate back to the list after delete (typed in the route wrapper). */
@@ -39,16 +47,18 @@ interface IEntityDetailProps {
 export const EntityDetail = ({
   config,
   id,
+  deleteMutation,
   listLink,
   onDeleted,
 }: IEntityDetailProps) => {
   const { entity, plugin } = useEntityDetail(config, id);
+  const { runAction } = useMutationAction();
   const label = getEntityLabel(config.kind);
   const title = entity.name ?? label;
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const { deleteEntity, isDeleting } = useEntityDelete(config);
+  const isDeleting = deleteMutation.isPending;
 
   // A plugin is editable iff it exposes edit fields (publications are immutable).
   const canEdit =
@@ -56,16 +66,18 @@ export const EntityDetail = ({
 
   const handleDelete = async () => {
     if (!entity.pulp_href) return;
+    const href = entity.pulp_href;
     try {
-      await deleteEntity({
-        name: entity.name ?? "",
-        pulp_href: entity.pulp_href,
+      await runAction(() => deleteMutation.mutateAsync(href), {
+        taskAware: true,
+        taskTitle: `${label} "${title}" delete started`,
+        successTitle: `${label} "${title}" deleted`,
+        errorTitle: `Failed to delete ${label.toLowerCase()}`,
       });
       onDeleted();
     } catch {
-      // Notifications are handled in useEntityDelete.
+      // Error surfaced as a toast; keep the modal open.
     }
-    setIsDeleteOpen(false);
   };
 
   const actions: (PageHeaderAction | false | null | undefined)[] = [

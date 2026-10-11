@@ -27,13 +27,16 @@ import {
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
 import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
-import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { useEntityDetail } from "@app/hooks/useEntityDetail";
+import { useMutationAction } from "@app/hooks/useMutationAction";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import { useContentListQuery } from "@app/queries/content";
 import { useDistributionsListQuery } from "@app/queries/distributions";
-import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
+import {
+  useRepositoryDeleteMutation,
+  useRepositoryVersionsListQuery,
+} from "@app/queries/repositories";
 
 import { RepositoryContentTab } from "./components/RepositoryContentTab";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
@@ -67,7 +70,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const { deleteEntity, isDeleting } = useEntityDelete(REPOSITORY_FAMILY);
+  const deleteMutation = useRepositoryDeleteMutation();
+  const { runAction } = useMutationAction();
+  const isDeleting = deleteMutation.isPending;
 
   // Tab-title count badges: fetch one row and read the paginated `count` so the
   // badge reflects the true total without pulling every record.
@@ -97,16 +102,18 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const handleDelete = async () => {
     if (!repo.pulp_href) return;
+    const href = repo.pulp_href;
     try {
-      await deleteEntity({
-        name: repo.name,
-        pulp_href: repo.pulp_href,
+      await runAction(() => deleteMutation.mutateAsync(href), {
+        taskAware: true,
+        taskTitle: `Repository "${repo.name}" deletion started`,
+        successTitle: `Repository "${repo.name}" deleted`,
+        errorTitle: "Failed to delete repository",
       });
       void backToList();
     } catch {
-      // Notifications are handled in useEntityDelete.
+      // Error surfaced as a toast; keep the modal open.
     }
-    setIsDeleteOpen(false);
   };
 
   // A plugin is editable iff it exposes edit fields.

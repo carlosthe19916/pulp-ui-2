@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { use, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
@@ -36,7 +36,6 @@ import { EntityModal } from "@app/components/Entity/EntityModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityDelete } from "@app/hooks/useEntityDelete";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import { useRemotesListQuery } from "@app/queries/remotes";
@@ -46,6 +45,11 @@ import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
+
+import { RemoteTaskStatus } from "./components/RemoteTaskStatus";
+import { RemoteTaskTrackerContext } from "./context/RemoteTaskTrackerContext";
+import { useRemoteActions } from "./hooks/useRemoteActions";
+import { useRemoteTaskWatcher } from "./hooks/useRemoteTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -60,6 +64,7 @@ interface IRemoteFilters {
 
 export const RemoteList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
+  const { tasksByRemoteId } = use(RemoteTaskTrackerContext);
 
   const [modalState, setModalState] = useState<
     "create" | GenericRemoteResponse | null
@@ -70,7 +75,7 @@ export const RemoteList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] =
     useState<GenericRemoteResponse | null>(null);
 
-  const { deleteEntity, isDeleting } = useEntityDelete(REMOTE_FAMILY);
+  const { deleteRemote, isDeleting } = useRemoteActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -97,6 +102,8 @@ export const RemoteList: React.FC = () => {
 
   const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
+
+  useRemoteTaskWatcher(remotes);
 
   const columns: DataViewTh[] = [
     {
@@ -137,6 +144,7 @@ export const RemoteList: React.FC = () => {
   const rows: DataViewTr[] = remotes.map((remote) => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_href);
+    const task = remoteId ? tasksByRemoteId[remoteId] : undefined;
 
     return {
       id: remote.pulp_href,
@@ -167,7 +175,9 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: (
+          cell: task ? (
+            <RemoteTaskStatus kind={task.kind} />
+          ) : (
             <ActionsColumn
               items={[
                 {
@@ -213,16 +223,15 @@ export const RemoteList: React.FC = () => {
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget || !deleteTarget.pulp_href) return;
+    const target = deleteTarget;
+    if (!target?.pulp_href) return;
     try {
-      await deleteEntity({
-        name: deleteTarget.name,
-        pulp_href: deleteTarget.pulp_href,
-      });
+      // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
+      await deleteRemote(target);
+      setDeleteTarget(null);
     } catch {
-      // Notifications are handled in useEntityDelete.
+      // Error surfaced as a toast; keep the modal open.
     }
-    setDeleteTarget(null);
   };
 
   return (

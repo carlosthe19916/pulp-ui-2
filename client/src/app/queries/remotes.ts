@@ -1,13 +1,19 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   PaginatedGenericRemoteResponseList,
   RemotesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RemotesQueryKey = "remotes";
@@ -67,4 +73,18 @@ export const remotesListQueryOptions = (
 export const useRemotesListQuery = (params: IRemoteListParams) => {
   const domain = useSelectedDomain();
   return useQuery(remotesListQueryOptions(domain, params));
+};
+
+/** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
+export const useRemoteDeleteMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
+      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
+        .data,
+    onSuccess: (_data, href) => {
+      void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: remoteKeys.detail(href) });
+    },
+  });
 };
