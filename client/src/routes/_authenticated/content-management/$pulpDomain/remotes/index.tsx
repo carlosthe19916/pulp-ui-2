@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { RemoteListPage } from "@app/pages/content-management/remotes/remote-list/RemoteListPage";
+import { RemoteList } from "@app/pages/content-management/remotes/remote-list/RemoteList";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/remotes/",
 )({
-  component: RemoteListPage,
+  component: RemoteList,
 });

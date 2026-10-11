@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -39,10 +39,9 @@ import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
@@ -72,7 +71,6 @@ interface IRepositoryFilters {
 
 export const RepositoryList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -117,13 +115,13 @@ export const RepositoryList: React.FC = () => {
   const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: repositories,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} repository "${entity.name}"`,
+          title: `Failed to ${kind} repository "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -167,7 +165,7 @@ export const RepositoryList: React.FC = () => {
 
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
-    const task = repoId ? tasksById[repoId] : undefined;
+    const taskKind = getTaskKind(repository.prn);
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
       ? getPlugin(pulpType)?.entities.repository
@@ -227,8 +225,8 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Remote", modifier: "truncate" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn items={actionItems} />
           ),

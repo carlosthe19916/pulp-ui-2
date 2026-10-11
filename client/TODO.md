@@ -10,3 +10,4 @@
 - ise href in rest paths in axios because it will simplify a lot of logic, just make sure there are comments with examples of the paths
 
 - entityCrud.ts should not have generic create/update mutations but rather dedicated ones just like we did with delete mutation
+- review how addNotification is being used in hooks, we should promote compositions and having it inside some hooks is not composition

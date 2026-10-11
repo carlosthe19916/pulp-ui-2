@@ -7,7 +7,9 @@ type Kind =
   | "domain"
   | "remote"
   | "repository"
-  | "distribution";
+  | "distribution"
+  // A full pulp_href, for resources without a unique name (e.g. publications).
+  | "href";
 
 /**
  * Per-test tracker of records to remove after the test. Tests register a name as
@@ -53,6 +55,12 @@ export class Cleanup {
     return name;
   }
 
+  /** Track a resource by its full `pulp_href` (e.g. a publication). */
+  href(href: string): string {
+    this.items.push({ kind: "href", name: href });
+    return href;
+  }
+
   async run(api: PulpApi): Promise<void> {
     // Newest first, so a distribution is gone before the repo/remote it referenced.
     for (const { kind, name } of [...this.items].reverse()) {
@@ -63,6 +71,7 @@ export class Cleanup {
       else if (kind === "remote") await api.deleteRemote(name);
       else if (kind === "repository") await api.deleteRepository(name);
       else if (kind === "distribution") await api.deleteDistribution(name);
+      else if (kind === "href") await api.deleteHref(name);
     }
   }
 }

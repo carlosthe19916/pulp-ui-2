@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -38,10 +38,9 @@ import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
@@ -68,7 +67,6 @@ interface IDistributionFilters {
 
 export const DistributionList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -110,13 +108,13 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: distributions,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} distribution "${entity.name}"`,
+          title: `Failed to ${kind} distribution "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -159,7 +157,7 @@ export const DistributionList: React.FC = () => {
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const distId = extractIdFromHref(distribution.pulp_href ?? "");
-    const task = distId ? tasksById[distId] : undefined;
+    const taskKind = getTaskKind(distribution.prn);
     const pulpType = resolvePulpType(distribution.pulp_href);
 
     return {
@@ -196,8 +194,8 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Repository" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn
               items={[

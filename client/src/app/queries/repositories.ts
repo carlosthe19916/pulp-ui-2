@@ -19,6 +19,7 @@ import type {
   RpmRepositorySyncUrl,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { taskKeys } from "./tasks";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -94,6 +95,8 @@ export const useRepositoryDeleteMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: repositoryKeys.detail(href),
       });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.entityOps() });
     },
   });
 };
