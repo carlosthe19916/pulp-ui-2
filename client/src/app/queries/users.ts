@@ -17,7 +17,7 @@ import type {
   UsersRolesListData,
   UserWritable,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -153,12 +153,12 @@ export const allUserRolesListQueryOptions = (
   });
 
 export const useUsersListQuery = (params: IUserListParams) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(usersListQueryOptions(domain, params));
 };
 
 export const useUserDetailQuery = (userId: string) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(userDetailQueryOptions(buildUserHref(userId, domain)));
 };
 
@@ -166,7 +166,7 @@ export const useUserRolesListQuery = (
   userId: string,
   params: IUserRoleListParams,
 ) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     userRolesListQueryOptions(buildUserHref(userId, domain), params),
   );
@@ -176,7 +176,7 @@ export const useAllUserRolesListQuery = (
   userId: string,
   params: IAllUserRoleListParams = {},
 ) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     allUserRolesListQueryOptions(buildUserHref(userId, domain), params),
   );
@@ -184,7 +184,7 @@ export const useAllUserRolesListQuery = (
 
 export const useUserCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (body: UserWritable) => {
       const response = await axiosInstance.post<UserResponse>(
@@ -201,7 +201,7 @@ export const useUserCreateMutation = () => {
 
 export const useUserUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       userId,
@@ -227,7 +227,7 @@ export const useUserUpdateMutation = () => {
 
 export const useUserDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (userId: string) => {
       const response = await axiosInstance.delete<void>(
@@ -246,7 +246,7 @@ export const useUserDeleteMutation = () => {
 
 export const useUserRoleCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       userId,
@@ -271,7 +271,7 @@ export const useUserRoleCreateMutation = () => {
 
 export const useUserRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       userId,
@@ -304,7 +304,7 @@ interface IUserRolesSyncArgs {
 /** Batches role assigns/unassigns for one user and invalidates once. */
 export const useUserRolesSyncMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({ userId, toAdd, toRemove }: IUserRolesSyncArgs) => {
       await Promise.all([

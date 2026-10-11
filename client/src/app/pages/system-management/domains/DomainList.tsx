@@ -1,6 +1,8 @@
 import type React from "react";
 import { use, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import {
   Content,
   ContentVariants,
@@ -31,19 +33,20 @@ import {
   type DataViewTh,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
+import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
 import type { IDomainListParams } from "@app/queries/domains";
-import { useDomainsListQuery } from "@app/queries/domains";
+import { domainKeys, useDomainsListQuery } from "@app/queries/domains";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
 import { DomainModal } from "./components/DomainModal";
-import { DomainTaskStatus } from "./components/DomainTaskStatus";
-import { DomainTaskTrackerContext } from "./context/DomainTaskTrackerContext";
 import { useDomainActions } from "./hooks/useDomainActions";
-import { useDomainTaskWatcher } from "./hooks/useDomainTaskWatcher";
 import { storageClassLabel } from "./storageBackends";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -64,7 +67,9 @@ const YesNoLabel: React.FC<{ value?: boolean }> = ({ value }) => (
 );
 
 export const DomainList: React.FC = () => {
-  const { tasksByDomainId } = use(DomainTaskTrackerContext);
+  const { tasksById } = use(EntityTaskTrackerContext);
+  const { addNotification } = useNotifications();
+  const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
     "create" | DomainResponse | null
@@ -99,7 +104,18 @@ export const DomainList: React.FC = () => {
   const domains = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useDomainTaskWatcher(domains);
+  useEntityTaskWatcher({
+    entities: domains,
+    onFinishedState: ({ task, tracked, entity }) => {
+      void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
+      if (task.state === "failed" || task.state === "canceled") {
+        addNotification({
+          title: `Failed to ${tracked.kind} domain "${entity.name}"`,
+          variant: "danger",
+        });
+      }
+    },
+  });
 
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 20 } },
@@ -121,7 +137,7 @@ export const DomainList: React.FC = () => {
       content: "The default domain can't be edited or deleted.",
     };
     const task = domain.pulp_href
-      ? tasksByDomainId[extractIdFromHref(domain.pulp_href)]
+      ? tasksById[extractIdFromHref(domain.pulp_href)]
       : undefined;
     return {
       id: domain.pulp_href,
@@ -149,7 +165,7 @@ export const DomainList: React.FC = () => {
         },
         {
           cell: task ? (
-            <DomainTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn
               items={[

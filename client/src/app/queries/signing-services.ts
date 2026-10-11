@@ -6,7 +6,7 @@ import type {
   SigningServiceResponse,
   SigningServicesListData,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -61,7 +61,7 @@ export const signingServiceDetailQueryOptions = (href: string) =>
 export const useSigningServicesListQuery = (
   params: ISigningServiceListParams,
 ) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(signingServicesListQueryOptions(domain, params));
 };
 

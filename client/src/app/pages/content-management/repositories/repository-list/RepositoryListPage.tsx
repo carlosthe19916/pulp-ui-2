@@ -1,11 +1,12 @@
 import type React from "react";
 
-import { RepositoryTaskTrackerProvider } from "./context/RepositoryTaskTrackerProvider";
+import { EntityTaskTrackerProvider } from "@app/context/EntityTaskTracker/EntityTaskTrackerProvider";
+
 import { RepositoryList } from "./RepositoryList";
 
-/** Wraps the list in the task tracker so delete tasks can be tracked per row. */
+/** Mounts the shared task tracker around the list so delete tasks show per row. */
 export const RepositoryListPage: React.FC = () => (
-  <RepositoryTaskTrackerProvider>
+  <EntityTaskTrackerProvider>
     <RepositoryList />
-  </RepositoryTaskTrackerProvider>
+  </EntityTaskTrackerProvider>
 );

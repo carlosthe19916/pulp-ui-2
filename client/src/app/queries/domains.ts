@@ -14,7 +14,7 @@ import type {
   PaginatedDomainResponseList,
   PatchedDomain,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -86,12 +86,12 @@ export const domainDetailQueryOptions = (domainHref: string) =>
   });
 
 export const useDomainsListQuery = (params: IDomainListParams) => {
-  const apiDomain = useApiDomain();
+  const apiDomain = useDefaultDomain();
   return useQuery(domainsListQueryOptions(apiDomain, params));
 };
 
 export const useDomainDetailQuery = (domainId: string) => {
-  const apiDomain = useApiDomain();
+  const apiDomain = useDefaultDomain();
   return useQuery(
     domainDetailQueryOptions(buildDomainHref(domainId, apiDomain)),
   );
@@ -99,7 +99,7 @@ export const useDomainDetailQuery = (domainId: string) => {
 
 export const useDomainCreateMutation = () => {
   const queryClient = useQueryClient();
-  const apiDomain = useApiDomain();
+  const apiDomain = useDefaultDomain();
   return useMutation({
     mutationFn: async (body: Domain) => {
       const response = await axiosInstance.post<DomainResponse>(
@@ -116,7 +116,7 @@ export const useDomainCreateMutation = () => {
 
 export const useDomainUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const apiDomain = useApiDomain();
+  const apiDomain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       domainId,
@@ -141,7 +141,7 @@ export const useDomainUpdateMutation = () => {
 
 export const useDomainDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const apiDomain = useApiDomain();
+  const apiDomain = useDefaultDomain();
   return useMutation({
     mutationFn: async (domainId: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(

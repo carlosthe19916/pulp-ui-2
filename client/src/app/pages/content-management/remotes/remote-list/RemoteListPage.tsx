@@ -1,11 +1,12 @@
 import type React from "react";
 
-import { RemoteTaskTrackerProvider } from "./context/RemoteTaskTrackerProvider";
+import { EntityTaskTrackerProvider } from "@app/context/EntityTaskTracker/EntityTaskTrackerProvider";
+
 import { RemoteList } from "./RemoteList";
 
-/** Wraps the list in the task tracker so delete tasks can be tracked per row. */
+/** Mounts the shared task tracker around the list so delete tasks show per row. */
 export const RemoteListPage: React.FC = () => (
-  <RemoteTaskTrackerProvider>
+  <EntityTaskTrackerProvider>
     <RemoteList />
-  </RemoteTaskTrackerProvider>
+  </EntityTaskTrackerProvider>
 );

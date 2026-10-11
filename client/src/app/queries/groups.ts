@@ -22,7 +22,7 @@ import type {
   PaginatedGroupUserResponseList,
   PatchedGroup,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -199,17 +199,17 @@ export const groupRolesListQueryOptions = (
   });
 
 export const useGroupsListQuery = (params: IGroupListParams) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(groupsListQueryOptions(domain, params));
 };
 
 export const useGroupDetailQuery = (groupId: string) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(groupDetailQueryOptions(buildGroupHref(groupId, domain)));
 };
 
 export const useSuspenseGroupDetailQuery = (groupId: string) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useSuspenseQuery(
     groupDetailQueryOptions(buildGroupHref(groupId, domain)),
   );
@@ -219,14 +219,14 @@ export const useGroupUsersListQuery = (
   groupId: string,
   params: IGroupUserListParams,
 ) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     groupUsersListQueryOptions(buildGroupHref(groupId, domain), params),
   );
 };
 
 export const useAllGroupUsersListQuery = (groupId: string) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     allGroupUsersListQueryOptions(buildGroupHref(groupId, domain)),
   );
@@ -236,14 +236,14 @@ export const useGroupRolesListQuery = (
   groupId: string,
   params: IGroupRoleListParams,
 ) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     groupRolesListQueryOptions(buildGroupHref(groupId, domain), params),
   );
 };
 
 export const useAllGroupRolesListQuery = (groupId: string) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(
     allGroupRolesListQueryOptions(buildGroupHref(groupId, domain)),
   );
@@ -251,7 +251,7 @@ export const useAllGroupRolesListQuery = (groupId: string) => {
 
 export const useGroupCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (body: Group) => {
       const response = await axiosInstance.post<GroupResponse>(
@@ -268,7 +268,7 @@ export const useGroupCreateMutation = () => {
 
 export const useGroupUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -294,7 +294,7 @@ export const useGroupUpdateMutation = () => {
 
 export const useGroupDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (groupId: string) => {
       const response = await axiosInstance.delete<void>(
@@ -313,7 +313,7 @@ export const useGroupDeleteMutation = () => {
 
 export const useGroupUserCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -345,7 +345,7 @@ export interface IGroupUsersBatchResult {
 /** Adds multiple users to a group via parallel POSTs and invalidates once. */
 export const useGroupUsersBatchCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -389,7 +389,7 @@ export const useGroupUsersBatchCreateMutation = () => {
  */
 export const useGroupUserDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -413,7 +413,7 @@ export const useGroupUserDeleteMutation = () => {
 
 export const useGroupRoleCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -445,7 +445,7 @@ export interface IGroupRolesBatchResult {
 /** Adds multiple roles to a group via parallel POSTs and invalidates once. */
 export const useGroupRolesBatchCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,
@@ -484,7 +484,7 @@ export const useGroupRolesBatchCreateMutation = () => {
 
 export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       groupId,

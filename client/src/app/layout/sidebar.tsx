@@ -9,14 +9,14 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 export const SidebarApp: React.FC = () => {
   // `matchRoute` matches against the route tree (param segments included) with
   // proper segment-boundary matching — no manual pathname string/regex work.
   const matchRoute = useMatchRoute();
-  const { enabled: domainsEnabled } = useApiDomain();
+  const { enabled: domainsEnabled } = useDefaultDomain();
   // Content routes are scoped by the `$pulpDomain` path param; carry the current
   // (or default) domain into the nav links.
   const { name: pulpDomain } = useSelectedDomain();

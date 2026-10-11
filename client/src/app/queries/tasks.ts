@@ -14,7 +14,8 @@ import type {
   TasksListData,
 } from "@app/client";
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -144,8 +145,18 @@ export const taskDetailQueryOptions = (taskHref: string) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
 
+/**
+ * Watch a specific set of tasks (by id). Resolves the domain with
+ * `useSelectedDomain()` — the selected content domain, or the default off a
+ * content route — matching the pages that track in-flight operations.
+ */
+export const useTasksByIdsQuery = (taskIds: string[]) => {
+  const domain = useSelectedDomain();
+  return useQuery(tasksByIdsQueryOptions(domain, taskIds));
+};
+
 export const useTasksListQuery = (params: ITaskListParams) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(tasksListQueryOptions(domain, params));
 };
 
@@ -175,7 +186,7 @@ export const useTaskCancelMutation = () => {
 
 export const useTaskPurgeMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (body: {
       finished_before?: string;

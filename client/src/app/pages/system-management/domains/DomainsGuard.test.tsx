@@ -1,11 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { DomainsGuard } from "./DomainsGuard";
 
-vi.mock("@app/hooks/useApiDomain", () => ({ useApiDomain: vi.fn() }));
+vi.mock("@app/hooks/useDefaultDomain", () => ({ useDefaultDomain: vi.fn() }));
 vi.mock("./DomainList", () => ({
   DomainList: () => <div>DOMAIN_LIST</div>,
 }));
@@ -15,14 +15,17 @@ vi.mock("./DomainsDisabledEmptyState", () => ({
 
 describe("DomainsGuard", () => {
   it("renders the domain list when domains are enabled", () => {
-    vi.mocked(useApiDomain).mockReturnValue({ enabled: true, name: "default" });
+    vi.mocked(useDefaultDomain).mockReturnValue({
+      enabled: true,
+      name: "default",
+    });
     const html = renderToStaticMarkup(<DomainsGuard />);
     expect(html).toContain("DOMAIN_LIST");
     expect(html).not.toContain("DISABLED_STATE");
   });
 
   it("renders the disabled empty state when domains are not enabled", () => {
-    vi.mocked(useApiDomain).mockReturnValue({
+    vi.mocked(useDefaultDomain).mockReturnValue({
       enabled: false,
       name: "default",
     });

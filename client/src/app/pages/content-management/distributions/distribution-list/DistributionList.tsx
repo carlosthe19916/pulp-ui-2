@@ -1,6 +1,7 @@
 import type React from "react";
 import { use, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -33,13 +34,20 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
+import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IDistributionListParams } from "@app/queries/distributions";
-import { useDistributionsListQuery } from "@app/queries/distributions";
+import {
+  distributionKeys,
+  useDistributionsListQuery,
+} from "@app/queries/distributions";
 import { DISTRIBUTION_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
@@ -47,10 +55,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
-import { DistributionTaskStatus } from "./components/DistributionTaskStatus";
-import { DistributionTaskTrackerContext } from "./context/DistributionTaskTrackerContext";
 import { useDistributionActions } from "./hooks/useDistributionActions";
-import { useDistributionTaskWatcher } from "./hooks/useDistributionTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -63,7 +68,9 @@ interface IDistributionFilters {
 
 export const DistributionList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { tasksByDistributionId } = use(DistributionTaskTrackerContext);
+  const { tasksById } = use(EntityTaskTrackerContext);
+  const { addNotification } = useNotifications();
+  const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
     "create" | DistributionResponse | null
@@ -103,7 +110,18 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useDistributionTaskWatcher(distributions);
+  useEntityTaskWatcher({
+    entities: distributions,
+    onFinishedState: ({ task, tracked, entity }) => {
+      void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
+      if (task.state === "failed" || task.state === "canceled") {
+        addNotification({
+          title: `Failed to ${tracked.kind} distribution "${entity.name}"`,
+          variant: "danger",
+        });
+      }
+    },
+  });
 
   const columns: DataViewTh[] = [
     {
@@ -141,7 +159,7 @@ export const DistributionList: React.FC = () => {
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const distId = extractIdFromHref(distribution.pulp_href ?? "");
-    const task = distId ? tasksByDistributionId[distId] : undefined;
+    const task = distId ? tasksById[distId] : undefined;
     const pulpType = resolvePulpType(distribution.pulp_href);
 
     return {
@@ -179,7 +197,7 @@ export const DistributionList: React.FC = () => {
         },
         {
           cell: task ? (
-            <DistributionTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn
               items={[

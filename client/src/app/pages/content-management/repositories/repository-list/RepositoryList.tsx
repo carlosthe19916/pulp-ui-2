@@ -1,6 +1,7 @@
 import type React from "react";
 import { use, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -33,15 +34,22 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
+import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
-import { useRepositoriesListQuery } from "@app/queries/repositories";
+import {
+  repositoryKeys,
+  useRepositoriesListQuery,
+} from "@app/queries/repositories";
 import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
@@ -50,10 +58,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { getPlugin } from "@catalog";
 
-import { RepositoryTaskStatus } from "./components/RepositoryTaskStatus";
-import { RepositoryTaskTrackerContext } from "./context/RepositoryTaskTrackerContext";
 import { useRepositoryActions } from "./hooks/useRepositoryActions";
-import { useRepositoryTaskWatcher } from "./hooks/useRepositoryTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -67,7 +72,9 @@ interface IRepositoryFilters {
 
 export const RepositoryList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { tasksByRepositoryId } = use(RepositoryTaskTrackerContext);
+  const { tasksById } = use(EntityTaskTrackerContext);
+  const { addNotification } = useNotifications();
+  const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
     "create" | RepositoryResponse | null
@@ -110,7 +117,18 @@ export const RepositoryList: React.FC = () => {
   const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useRepositoryTaskWatcher(repositories);
+  useEntityTaskWatcher({
+    entities: repositories,
+    onFinishedState: ({ task, tracked, entity }) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      if (task.state === "failed" || task.state === "canceled") {
+        addNotification({
+          title: `Failed to ${tracked.kind} repository "${entity.name}"`,
+          variant: "danger",
+        });
+      }
+    },
+  });
 
   const columns: DataViewTh[] = [
     {
@@ -149,7 +167,7 @@ export const RepositoryList: React.FC = () => {
 
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
-    const task = repoId ? tasksByRepositoryId[repoId] : undefined;
+    const task = repoId ? tasksById[repoId] : undefined;
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
       ? getPlugin(pulpType)?.entities.repository
@@ -210,7 +228,7 @@ export const RepositoryList: React.FC = () => {
         },
         {
           cell: task ? (
-            <RepositoryTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn items={actionItems} />
           ),

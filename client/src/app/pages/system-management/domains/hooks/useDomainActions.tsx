@@ -1,6 +1,7 @@
 import { use } from "react";
 
 import type { Domain, DomainResponse, PatchedDomain } from "@app/client";
+import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import {
   useDomainCreateMutation,
@@ -9,12 +10,10 @@ import {
 } from "@app/queries/domains";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-import { DomainTaskTrackerContext } from "../context/DomainTaskTrackerContext";
-
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useDomainActions = () => {
   const { runAction } = useMutationAction();
-  const { track } = use(DomainTaskTrackerContext);
+  const { track } = use(EntityTaskTrackerContext);
   const createMutation = useDomainCreateMutation();
   const updateMutation = useDomainUpdateMutation();
   const deleteMutation = useDomainDeleteMutation();

@@ -13,7 +13,7 @@ import type {
   RoleResponse,
   RolesListData,
 } from "@app/client";
-import { useApiDomain } from "@app/hooks/useApiDomain";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -104,18 +104,18 @@ export const allRolesListQueryOptions = (
   });
 
 export const useRolesListQuery = (params: IRoleListParams) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(rolesListQueryOptions(domain, params));
 };
 
 export const useAllRolesListQuery = (params: IAllRoleListParams = {}) => {
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useQuery(allRolesListQueryOptions(domain, params));
 };
 
 export const useRoleCreateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (body: Role) => {
       const response = await axiosInstance.post<RoleResponse>(
@@ -132,7 +132,7 @@ export const useRoleCreateMutation = () => {
 
 export const useRoleUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
       roleId,
@@ -158,7 +158,7 @@ export const useRoleUpdateMutation = () => {
 
 export const useRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useApiDomain();
+  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async (roleId: string) => {
       const response = await axiosInstance.delete<void>(

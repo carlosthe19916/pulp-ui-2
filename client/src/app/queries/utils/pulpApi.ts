@@ -10,8 +10,8 @@ export interface IPulpDomain {
   name: string; // e.g. "default"
 }
 
-/** Derive the API domain from a `/status` payload. Pure (no hooks) so callable from a router loader or `useApiDomain`. */
-export const apiDomainFromStatus = (
+/** Derive the default domain from a `/status` payload. Pure (no hooks) so callable from a router loader or `useDefaultDomain`. */
+export const defaultDomainFromStatus = (
   status: StatusResponse | undefined,
 ): IPulpDomain => ({
   enabled: status?.domain_enabled ?? false,
