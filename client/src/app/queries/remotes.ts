@@ -12,6 +12,7 @@ import type {
   RemotesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -85,6 +86,8 @@ export const useRemoteDeleteMutation = () => {
     onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({ queryKey: remoteKeys.detail(href) });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.entityOps() });
     },
   });
 };

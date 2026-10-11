@@ -1,6 +1,7 @@
 import {
   queryOptions,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
@@ -34,6 +35,23 @@ export type TaskState =
 
 export type ITaskListParams = ListParams<TasksListData>;
 
+/** The async (202 + task) operations surfaced per list row. */
+export type EntityTaskKind = "delete" | "update";
+
+/**
+ * Maps a Pulp task name to the per-row operation it represents, or `null` when
+ * it isn't one we surface in the list (e.g. a sync). Pulp names the async generic
+ * operations `…ageneral_delete` / `…ageneral_update`.
+ */
+export const entityTaskKindFromName = (
+  name?: string | null,
+): EntityTaskKind | null => {
+  const taskName = name ?? "";
+  if (taskName.includes("general_delete")) return "delete";
+  if (taskName.includes("general_update")) return "update";
+  return null;
+};
+
 const isActiveTask = (state?: string | null) =>
   state === "running" || state === "waiting" || state === "canceling";
 
@@ -64,8 +82,8 @@ export const taskKeys = {
   // ["tasks", "detail", taskHref]
   detail: (taskHref: string) =>
     [...taskKeys.all(), "detail", taskHref] as const,
-  // ["tasks", "byIds"] — every watch-by-ids query
-  byIds: () => [...taskKeys.all(), "byIds"] as const,
+  // ["tasks", "entityOps"] — the per-row delete/update status query
+  entityOps: () => [...taskKeys.all(), "entityOps"] as const,
 
   // --- real query keys (for useQuery / queryOptions) ---
   // ["tasks", "list", domain, params]
@@ -73,37 +91,88 @@ export const taskKeys = {
     [...taskKeys.list(), domain, params] as const,
   // ["tasks", "detail", taskHref] — same value as detail() (no params)
   detailQuery: (taskHref: string) => taskKeys.detail(taskHref),
-  // ["tasks", "byIds", domain, taskIds]
-  byIdsQuery: (domain: IPulpDomain, taskIds: string[]) =>
-    [...taskKeys.byIds(), domain, taskIds] as const,
+  // ["tasks", "entityOps", domain, prn] — the per-row delete/update status query,
+  // one per on-screen resource (joined to its row by reserved-resource PRN).
+  entityOpsForResource: (domain: IPulpDomain, prn: string) =>
+    [...taskKeys.entityOps(), domain, prn] as const,
 };
 
-/** Poll a specific set of tasks (by id) until none are active — for watching in-flight operations. */
-export const tasksByIdsQueryOptions = (
+/**
+ * Task states worth surfacing per list row: still in-flight, plus the terminal
+ * failures (so a failed delete/update can be reported). `completed`/`skipped`
+ * are excluded — a successful delete just drops the row.
+ */
+const ENTITY_OP_TASK_STATES = [
+  "running",
+  "waiting",
+  "canceling",
+  "failed",
+  "canceled",
+] as const;
+
+/**
+ * Active (and recently-failed) tasks reserving a single resource, used to derive
+ * that row's delete/update status on the list pages. Server-derived — so the
+ * status survives browser reloads and navigation — and scoped to the row's PRN so
+ * the result can never be crowded out by unrelated tasks (the task API has no
+ * OR-across-resources filter, so each row polls its own). The row join and
+ * failure toasts live in `useResourceTasks`. Polls while this resource has an
+ * active task, then stops.
+ */
+export const entityOpsForResourceQueryOptions = (
   domain: IPulpDomain,
-  taskIds: string[],
+  prn: string,
 ) =>
   queryOptions({
-    queryKey: taskKeys.byIdsQuery(domain, taskIds),
+    queryKey: taskKeys.entityOpsForResource(domain, prn),
     queryFn: async (): Promise<TaskResponse[]> => {
       const response = await axiosInstance.get<PaginatedTaskResponseList>(
         pulpApiPath("tasks/", domain),
         {
           params: {
-            pulp_id__in: taskIds.join(","),
-            fields: "pulp_href,state",
-            limit: 100,
+            // `reserved_resources` matches by PRN (not href) and ANDs with the
+            // other filters; scoping to one resource keeps its task history short.
+            reserved_resources: prn,
+            state__in: ENTITY_OP_TASK_STATES,
+            fields:
+              "pulp_href,state,name,reserved_resources_record,finished_at",
+            ordering: ["-pulp_created"],
+            limit: 10,
           },
         },
       );
       return response.data.results ?? [];
     },
-    enabled: taskIds.length > 0,
+    enabled: !!prn,
     refetchInterval: (query) =>
       query.state.data?.some((task) => isActiveTask(task.state))
         ? DEFAULT_REFETCH_INTERVAL
         : false,
   });
+
+/**
+ * One scoped task query per resource PRN (there is no OR-across-resources filter),
+ * combined into a single flat, href-deduped `TaskResponse[]` so callers keep a
+ * simple list shape. Resolves the domain with `useSelectedDomain()` — the selected
+ * content domain, or the default off a content route (and off the domains route,
+ * where domain CRUD tasks live) — matching the list pages that show per-row status.
+ */
+// TODO instead of useQueries wrap each row of the Entity and fetch their resources independently
+export const useEntityOpsTasksQueries = (prns: string[]): TaskResponse[] => {
+  const domain = useSelectedDomain();
+  return useQueries({
+    queries: prns.map((prn) => entityOpsForResourceQueryOptions(domain, prn)),
+    combine: (results) => {
+      const byHref = new Map<string, TaskResponse>();
+      for (const result of results) {
+        for (const task of result.data ?? []) {
+          if (task.pulp_href) byHref.set(task.pulp_href, task);
+        }
+      }
+      return [...byHref.values()];
+    },
+  });
+};
 
 export const tasksListQueryOptions = (
   domain: IPulpDomain,
@@ -144,16 +213,6 @@ export const taskDetailQueryOptions = (taskHref: string) =>
     refetchInterval: (query) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
-
-/**
- * Watch a specific set of tasks (by id). Resolves the domain with
- * `useSelectedDomain()` — the selected content domain, or the default off a
- * content route — matching the pages that track in-flight operations.
- */
-export const useTasksByIdsQuery = (taskIds: string[]) => {
-  const domain = useSelectedDomain();
-  return useQuery(tasksByIdsQueryOptions(domain, taskIds));
-};
 
 export const useTasksListQuery = (params: ITaskListParams) => {
   const domain = useDefaultDomain();

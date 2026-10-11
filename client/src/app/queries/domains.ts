@@ -18,6 +18,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { taskKeys } from "./tasks";
 import { buildDomainHref } from "./utils/pulpHref";
 
 export const DomainsQueryKey = "domains";
@@ -135,6 +136,8 @@ export const useDomainUpdateMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
       });
+      // Surface the new update task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.entityOps() });
     },
   });
 };
@@ -154,6 +157,8 @@ export const useDomainDeleteMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
       });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.entityOps() });
     },
   });
 };

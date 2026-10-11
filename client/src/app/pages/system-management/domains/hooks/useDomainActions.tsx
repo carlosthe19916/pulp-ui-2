@@ -1,7 +1,4 @@
-import { use } from "react";
-
 import type { Domain, DomainResponse, PatchedDomain } from "@app/client";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useMutationAction } from "@app/hooks/useMutationAction";
 import {
   useDomainCreateMutation,
@@ -13,7 +10,6 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useDomainActions = () => {
   const { runAction } = useMutationAction();
-  const { track } = use(EntityTaskTrackerContext);
   const createMutation = useDomainCreateMutation();
   const updateMutation = useDomainUpdateMutation();
   const deleteMutation = useDomainDeleteMutation();
@@ -26,33 +22,22 @@ export const useDomainActions = () => {
 
   const updateDomain = async (domainId: string, body: PatchedDomain) => {
     const name = body.name ?? "";
-    const result = await runAction(
-      () => updateMutation.mutateAsync({ domainId, body }),
-      {
-        successTitle: `Domain "${name}" updated`,
-        errorTitle: "Failed to update domain",
-        taskAware: true,
-        taskTitle: `Domain "${name}" update started`,
-      },
-    );
-    if ("task" in result && result.task) {
-      track(domainId, { kind: "update", taskHref: result.task });
-    }
-    return result;
+    return runAction(() => updateMutation.mutateAsync({ domainId, body }), {
+      successTitle: `Domain "${name}" updated`,
+      errorTitle: "Failed to update domain",
+      taskAware: true,
+      taskTitle: `Domain "${name}" update started`,
+    });
   };
 
   const deleteDomain = async (domain: DomainResponse) => {
     const domainId = extractIdFromHref(domain.pulp_href ?? "");
-    const result = await runAction(() => deleteMutation.mutateAsync(domainId), {
+    return runAction(() => deleteMutation.mutateAsync(domainId), {
       successTitle: `Domain "${domain.name}" deleted`,
       errorTitle: "Failed to delete domain",
       taskAware: true,
       taskTitle: `Domain "${domain.name}" deletion started`,
     });
-    if (result.task) {
-      track(domainId, { kind: "delete", taskHref: result.task });
-    }
-    return result;
   };
 
   return {

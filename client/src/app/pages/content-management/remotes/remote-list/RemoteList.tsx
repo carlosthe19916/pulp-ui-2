@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -37,10 +37,9 @@ import { EntityModal } from "@app/components/Entity/EntityModal";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import { remoteKeys, useRemotesListQuery } from "@app/queries/remotes";
@@ -66,7 +65,6 @@ interface IRemoteFilters {
 
 export const RemoteList: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -107,13 +105,13 @@ export const RemoteList: React.FC = () => {
   const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: remotes,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} remote "${entity.name}"`,
+          title: `Failed to ${kind} remote "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -159,7 +157,7 @@ export const RemoteList: React.FC = () => {
   const rows: DataViewTr[] = remotes.map((remote) => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_href);
-    const task = remoteId ? tasksById[remoteId] : undefined;
+    const taskKind = getTaskKind(remote.prn);
 
     return {
       id: remote.pulp_href,
@@ -190,8 +188,8 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn
               items={[

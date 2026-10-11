@@ -102,9 +102,12 @@ describe("query-key factories", () => {
       ).toBe(true);
     });
 
-    it("keeps the watch-by-ids query under the byIds folder", () => {
+    it("keeps the per-resource entity-ops query under the entityOps folder", () => {
       expect(
-        startsWith(taskKeys.byIdsQuery(domain, ["1", "2"]), taskKeys.byIds()),
+        startsWith(
+          taskKeys.entityOpsForResource(domain, "prn:file.filerepository:abc"),
+          taskKeys.entityOps(),
+        ),
       ).toBe(true);
     });
   });
