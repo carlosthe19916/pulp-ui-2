@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
@@ -33,24 +33,25 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskTracker } from "@app/hooks/useEntityTaskTracker";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IDistributionListParams } from "@app/queries/distributions";
-import { useDistributionsListQuery } from "@app/queries/distributions";
+import {
+  distributionKeys,
+  useDistributionDeleteMutation,
+  useDistributionsListQuery,
+} from "@app/queries/distributions";
 import { DISTRIBUTION_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { DistributionTaskStatus } from "./components/DistributionTaskStatus";
-import { DistributionTaskTrackerContext } from "./context/DistributionTaskTrackerContext";
-import { useDistributionActions } from "./hooks/useDistributionActions";
-import { useDistributionTaskWatcher } from "./hooks/useDistributionTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -62,8 +63,8 @@ interface IDistributionFilters {
 }
 
 export const DistributionList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
-  const { tasksByDistributionId } = use(DistributionTaskTrackerContext);
+  const selectedDomain = useSelectedDomain();
+  const pulpDomain = selectedDomain.name;
 
   const [modalState, setModalState] = useState<
     "create" | DistributionResponse | null
@@ -74,8 +75,6 @@ export const DistributionList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<DistributionResponse | null>(
     null,
   );
-
-  const { deleteDistribution, isDeleting } = useDistributionActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -103,7 +102,13 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useDistributionTaskWatcher(distributions);
+  const { tasksById, deleteEntity, isDeleting } = useEntityTaskTracker({
+    entities: distributions,
+    domain: selectedDomain,
+    listQueryKey: distributionKeys.list(),
+    label: "Distribution",
+    deleteMutation: useDistributionDeleteMutation(),
+  });
 
   const columns: DataViewTh[] = [
     {
@@ -141,7 +146,7 @@ export const DistributionList: React.FC = () => {
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const distId = extractIdFromHref(distribution.pulp_href ?? "");
-    const task = distId ? tasksByDistributionId[distId] : undefined;
+    const task = distId ? tasksById[distId] : undefined;
     const pulpType = resolvePulpType(distribution.pulp_href);
 
     return {
@@ -179,7 +184,7 @@ export const DistributionList: React.FC = () => {
         },
         {
           cell: task ? (
-            <DistributionTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn
               items={[
@@ -230,7 +235,7 @@ export const DistributionList: React.FC = () => {
     if (!target?.pulp_href) return;
     try {
       // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteDistribution(target);
+      await deleteEntity(target);
       setDeleteTarget(null);
     } catch {
       // Error surfaced as a toast; keep the modal open.

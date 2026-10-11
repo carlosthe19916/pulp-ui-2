@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
@@ -33,15 +33,21 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskTracker } from "@app/hooks/useEntityTaskTracker";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
-import { useRepositoriesListQuery } from "@app/queries/repositories";
+import {
+  repositoryKeys,
+  useRepositoriesListQuery,
+  useRepositoryDeleteMutation,
+} from "@app/queries/repositories";
 import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
@@ -49,11 +55,6 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import { getPlugin } from "@catalog";
-
-import { RepositoryTaskStatus } from "./components/RepositoryTaskStatus";
-import { RepositoryTaskTrackerContext } from "./context/RepositoryTaskTrackerContext";
-import { useRepositoryActions } from "./hooks/useRepositoryActions";
-import { useRepositoryTaskWatcher } from "./hooks/useRepositoryTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -66,8 +67,8 @@ interface IRepositoryFilters {
 }
 
 export const RepositoryList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
-  const { tasksByRepositoryId } = use(RepositoryTaskTrackerContext);
+  const selectedDomain = useSelectedDomain();
+  const pulpDomain = selectedDomain.name;
 
   const [modalState, setModalState] = useState<
     "create" | RepositoryResponse | null
@@ -82,8 +83,6 @@ export const RepositoryList: React.FC = () => {
   const [publishTarget, setPublishTarget] = useState<RepositoryResponse | null>(
     null,
   );
-
-  const { deleteRepository, isDeleting } = useRepositoryActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -110,7 +109,13 @@ export const RepositoryList: React.FC = () => {
   const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useRepositoryTaskWatcher(repositories);
+  const { tasksById, deleteEntity, isDeleting } = useEntityTaskTracker({
+    entities: repositories,
+    domain: selectedDomain,
+    listQueryKey: repositoryKeys.list(),
+    label: "Repository",
+    deleteMutation: useRepositoryDeleteMutation(),
+  });
 
   const columns: DataViewTh[] = [
     {
@@ -149,7 +154,7 @@ export const RepositoryList: React.FC = () => {
 
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
-    const task = repoId ? tasksByRepositoryId[repoId] : undefined;
+    const task = repoId ? tasksById[repoId] : undefined;
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
       ? getPlugin(pulpType)?.entities.repository
@@ -210,7 +215,7 @@ export const RepositoryList: React.FC = () => {
         },
         {
           cell: task ? (
-            <RepositoryTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn items={actionItems} />
           ),
@@ -250,7 +255,7 @@ export const RepositoryList: React.FC = () => {
     if (!target?.pulp_href) return;
     try {
       // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteRepository(target);
+      await deleteEntity(target);
       setDeleteTarget(null);
     } catch {
       // Error surfaced as a toast; keep the modal open.

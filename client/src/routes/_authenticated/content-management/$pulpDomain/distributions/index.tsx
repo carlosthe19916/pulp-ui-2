@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { DistributionListPage } from "@app/pages/content-management/distributions/distribution-list/DistributionListPage";
+import { DistributionList } from "@app/pages/content-management/distributions/distribution-list/DistributionList";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/distributions/",
 )({
-  component: DistributionListPage,
+  component: DistributionList,
 });

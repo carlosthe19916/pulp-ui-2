@@ -31,6 +31,7 @@ import {
   type DataViewTh,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IDomainListParams } from "@app/queries/domains";
@@ -40,7 +41,6 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
 import { DomainModal } from "./components/DomainModal";
-import { DomainTaskStatus } from "./components/DomainTaskStatus";
 import { DomainTaskTrackerContext } from "./context/DomainTaskTrackerContext";
 import { useDomainActions } from "./hooks/useDomainActions";
 import { useDomainTaskWatcher } from "./hooks/useDomainTaskWatcher";
@@ -149,7 +149,7 @@ export const DomainList: React.FC = () => {
         },
         {
           cell: task ? (
-            <DomainTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn
               items={[

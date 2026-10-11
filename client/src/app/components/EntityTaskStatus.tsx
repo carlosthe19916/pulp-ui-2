@@ -8,17 +8,18 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-import type { DistributionTaskKind } from "../context/DistributionTaskTrackerContext";
+/** Delete and update are the async (202 + task) operations tracked per row. */
+export type EntityTaskKind = "delete" | "update";
 
-const TASK_LABEL: Record<DistributionTaskKind, string> = {
+const TASK_LABEL: Record<EntityTaskKind, string> = {
   delete: "Deleting",
   update: "Updating",
 };
 
-/** Inline spinner + label shown in a row while its distribution's task runs. */
-export const DistributionTaskStatus: React.FC<{
-  kind: DistributionTaskKind;
-}> = ({ kind }) => {
+/** Inline spinner + label shown in a row while its entity's task runs. */
+export const EntityTaskStatus: React.FC<{ kind: EntityTaskKind }> = ({
+  kind,
+}) => {
   const label = `${TASK_LABEL[kind]}…`;
   return (
     <Flex

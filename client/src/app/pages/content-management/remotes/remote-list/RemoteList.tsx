@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
@@ -33,23 +33,24 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { EntityModal } from "@app/components/Entity/EntityModal";
+import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useEntityTaskTracker } from "@app/hooks/useEntityTaskTracker";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRemoteListParams } from "@app/queries/remotes";
-import { useRemotesListQuery } from "@app/queries/remotes";
+import {
+  remoteKeys,
+  useRemoteDeleteMutation,
+  useRemotesListQuery,
+} from "@app/queries/remotes";
 import { REMOTE_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { RemoteTaskStatus } from "./components/RemoteTaskStatus";
-import { RemoteTaskTrackerContext } from "./context/RemoteTaskTrackerContext";
-import { useRemoteActions } from "./hooks/useRemoteActions";
-import { useRemoteTaskWatcher } from "./hooks/useRemoteTaskWatcher";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -63,8 +64,8 @@ interface IRemoteFilters {
 }
 
 export const RemoteList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
-  const { tasksByRemoteId } = use(RemoteTaskTrackerContext);
+  const selectedDomain = useSelectedDomain();
+  const pulpDomain = selectedDomain.name;
 
   const [modalState, setModalState] = useState<
     "create" | GenericRemoteResponse | null
@@ -74,8 +75,6 @@ export const RemoteList: React.FC = () => {
 
   const [deleteTarget, setDeleteTarget] =
     useState<GenericRemoteResponse | null>(null);
-
-  const { deleteRemote, isDeleting } = useRemoteActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -103,7 +102,13 @@ export const RemoteList: React.FC = () => {
   const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useRemoteTaskWatcher(remotes);
+  const { tasksById, deleteEntity, isDeleting } = useEntityTaskTracker({
+    entities: remotes,
+    domain: selectedDomain,
+    listQueryKey: remoteKeys.list(),
+    label: "Remote",
+    deleteMutation: useRemoteDeleteMutation(),
+  });
 
   const columns: DataViewTh[] = [
     {
@@ -144,7 +149,7 @@ export const RemoteList: React.FC = () => {
   const rows: DataViewTr[] = remotes.map((remote) => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_href);
-    const task = remoteId ? tasksByRemoteId[remoteId] : undefined;
+    const task = remoteId ? tasksById[remoteId] : undefined;
 
     return {
       id: remote.pulp_href,
@@ -176,7 +181,7 @@ export const RemoteList: React.FC = () => {
         },
         {
           cell: task ? (
-            <RemoteTaskStatus kind={task.kind} />
+            <EntityTaskStatus kind={task.kind} />
           ) : (
             <ActionsColumn
               items={[
@@ -227,7 +232,7 @@ export const RemoteList: React.FC = () => {
     if (!target?.pulp_href) return;
     try {
       // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteRemote(target);
+      await deleteEntity(target);
       setDeleteTarget(null);
     } catch {
       // Error surfaced as a toast; keep the modal open.

@@ -1,9 +1,9 @@
 import { createContext } from "react";
 
-export type DomainTaskKind = "delete" | "update";
+import type { EntityTaskKind } from "@app/components/EntityTaskStatus";
 
 export interface IDomainTask {
-  kind: DomainTaskKind;
+  kind: EntityTaskKind;
   taskHref: string;
 }
 
