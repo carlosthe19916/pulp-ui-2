@@ -151,11 +151,7 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Policy" },
         },
         {
-          cell: pulpType ? (
-            <PulpTypeLabel kind="remote" pulpType={pulpType} />
-          ) : (
-            "—"
-          ),
+          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
           props: { dataLabel: "Type" },
         },
         {

@@ -18,7 +18,7 @@ import {
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 
-import type { IEntityPlugin } from "@catalog";
+import type { IPlugin } from "@catalog";
 import type {
   FileFileRepositoryResponse,
   MultipleArtifactContentResponse,
@@ -37,7 +37,7 @@ type ContentRow = MultipleArtifactContentResponse & {
 
 interface IRepositoryContentTabProps {
   repo: WithId<FileFileRepositoryResponse>;
-  plugin: IEntityPlugin | undefined;
+  plugin: IPlugin | undefined;
 }
 
 export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
@@ -46,14 +46,14 @@ export const RepositoryContentTab: React.FC<IRepositoryContentTabProps> = ({
 }) => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   // Only file repositories support content upload.
-  const canUpload = plugin?.rest.pulpType === "file.file";
+  const canUpload = plugin?.pulpType === "file.file";
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
   });
 
   const { data: versionsData } = useRepositoryVersionsListQuery(
-    plugin?.rest.apiPath,
+    plugin?.entities.repository?.apiPath,
     repo.id,
     { limit: 1 },
   );

@@ -1,15 +1,24 @@
+/**
+ * The resolution engine: turns the authored `IPluginDefinition`s into the resolved,
+ * pulp_type-keyed catalog (`buildCatalog`). `whenInstalled` is the availability
+ * helper that `plugins/*.ts` use to declare `app.isAvailable`.
+ */
+
 import type { VersionResponse } from "@app/client";
 
-import type { IEntityField } from "./field-types";
 import type {
-  EntityCatalog,
   EntityType,
-  IAnyContribution,
-  IEntityPlugin,
+  IContributionBase,
+  IEntitySlot,
+  IEntityVariant,
+  IPlugin,
   IPluginDefinition,
-  PluginEntityMap,
+  IPluginEntity,
+  IPluginRepositoryEntity,
+  IRepositoryContribution,
+  PluginCatalog,
+  PulpType,
 } from "./types";
-import { ENTITY_TYPES } from "./types";
 
 /** Availability check: true when any of the given component/package ids is installed. */
 export const whenInstalled =
@@ -21,9 +30,6 @@ export const whenInstalled =
         ids.includes(plugin.package ?? ""),
     );
 
-/** Copy a field list so the resolved catalog never aliases a shared base array. */
-const copyFields = (fields: IEntityField[]): IEntityField[] => [...fields];
-
 /** Recursively freeze a value so the assembled catalog is read-only at runtime. */
 const deepFreeze = <T>(value: T): T => {
   if (value !== null && typeof value === "object") {
@@ -33,72 +39,76 @@ const deepFreeze = <T>(value: T): T => {
   return value;
 };
 
-/**
- * Resolve one contribution into an `IEntityPlugin`: plugin defaults, overridden by
- * a variant's `ui`/`rest` when present. `compatible*Types` come from repository
- * contributions; every other slot resolves to empty lists.
- */
-const composeEntityPlugin = (
-  defaults: Pick<IPluginDefinition, "app" | "ui" | "rest">,
-  contribution: IAnyContribution,
-): IEntityPlugin => ({
-  rest: {
-    ...defaults.rest,
-    ...("rest" in contribution ? contribution.rest : {}),
-  },
-  ui: { ...defaults.ui, ...("ui" in contribution ? contribution.ui : {}) },
-  app: defaults.app,
-  form: {
-    isWizard: contribution.form.isWizard,
-    createFields: copyFields(contribution.form.createFields),
-    editFields: copyFields(contribution.form.editFields),
-  },
-  compatibleRemoteTypes:
-    "compatibleRemoteTypes" in contribution
-      ? [...contribution.compatibleRemoteTypes]
-      : [],
-  compatiblePublicationTypes:
-    "compatiblePublicationTypes" in contribution
-      ? [...contribution.compatiblePublicationTypes]
-      : [],
-});
+/** Normalize an entity slot to its contribution array (single, variant, or array). */
+const slotContributions = <T extends IContributionBase>(
+  slot: IEntitySlot<T> | undefined,
+): Array<T | IEntityVariant<T>> =>
+  Array.isArray(slot) ? slot : slot ? [slot] : [];
 
-/** Define a plugin (the sole extension point): resolve each entity slot it fills. */
-export const definePlugin = (
-  definition: IPluginDefinition,
-): PluginEntityMap => {
-  const plugins: PluginEntityMap = {};
-  for (const entity of Object.keys(definition.entities) as EntityType[]) {
-    const slot = definition.entities[entity];
-    const contributions = Array.isArray(slot) ? slot : slot ? [slot] : [];
-    plugins[entity] = contributions.map((contribution) =>
-      composeEntityPlugin(definition, contribution),
-    );
-  }
-  return plugins;
+/** Mutable accumulator: repository entries narrow to `IPluginRepositoryEntity` at runtime. */
+type MutablePlugin = {
+  pulpType: PulpType;
+  label: string;
+  isAvailable: IPlugin["isAvailable"];
+  entities: Partial<Record<EntityType, IPluginEntity>>;
 };
 
 /**
- * Assemble plugins into the catalog tree. Returns a deeply-frozen (read-only)
- * catalog and throws on a duplicate (entity, pulp_type) — pulp_type keys are
- * runtime strings the type system can't dedupe.
+ * Assemble the authored definitions into the resolved catalog, keyed by pulp_type.
+ * Each contribution resolves its identity (plugin defaults overridden by a variant's
+ * `ui`/`rest`); contributions sharing a pulp_type (its default plus the entities it
+ * fills) merge into one `IPlugin`, so every `entities` slot is a single contribution.
+ * Returns a deeply-frozen catalog and throws on a duplicate `(pulp_type, entity)`.
  */
-export const buildCatalog = (plugins: PluginEntityMap[]): EntityCatalog => {
-  const catalog = Object.fromEntries(
-    ENTITY_TYPES.map((entity) => [entity, {}]),
-  ) as EntityCatalog;
-  for (const plugin of plugins) {
-    for (const entity of Object.keys(plugin) as EntityType[]) {
-      for (const entityPlugin of plugin[entity] ?? []) {
-        const { pulpType } = entityPlugin.rest;
-        if (catalog[entity][pulpType]) {
+export const buildCatalog = (
+  definitions: IPluginDefinition[],
+): PluginCatalog => {
+  const catalog: Record<PulpType, MutablePlugin> = {};
+  for (const def of definitions) {
+    for (const entity of Object.keys(def.entities) as EntityType[]) {
+      const slot = def.entities[entity] as
+        IEntitySlot<IContributionBase> | undefined;
+      for (const contribution of slotContributions(slot)) {
+        const variantRest = "rest" in contribution ? contribution.rest : {};
+        const variantUi = "ui" in contribution ? contribution.ui : {};
+        const pulpType = variantRest.pulpType ?? def.rest.pulpType;
+        const apiPath = variantRest.apiPath ?? def.rest.apiPath;
+        const label = variantUi.label ?? def.ui.label;
+
+        const plugin = (catalog[pulpType] ??= {
+          pulpType,
+          label,
+          isAvailable: def.app.isAvailable,
+          entities: {},
+        });
+        if (plugin.entities[entity]) {
           throw new Error(
             `Duplicate catalog entry for ${entity} "${pulpType}".`,
           );
         }
-        catalog[entity][pulpType] = entityPlugin;
+
+        const resolved: IPluginEntity = {
+          apiPath,
+          form: {
+            isWizard: contribution.form.isWizard,
+            createFields: [...contribution.form.createFields],
+            editFields: [...contribution.form.editFields],
+          },
+        };
+        if (entity === "repository") {
+          const repo = contribution as
+            IRepositoryContribution | IEntityVariant<IRepositoryContribution>;
+          const repoEntity: IPluginRepositoryEntity = {
+            ...resolved,
+            compatibleRemoteTypes: [...repo.compatibleRemoteTypes],
+            compatiblePublicationTypes: [...repo.compatiblePublicationTypes],
+          };
+          plugin.entities.repository = repoEntity;
+        } else {
+          plugin.entities[entity] = resolved;
+        }
       }
     }
   }
-  return deepFreeze(catalog);
+  return deepFreeze(catalog) as PluginCatalog;
 };

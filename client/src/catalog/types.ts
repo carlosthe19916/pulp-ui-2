@@ -5,7 +5,8 @@ import type { IEntityField } from "./field-types";
 /**
  * Data model for Pulp's content entity types and the plugins implementing them.
  * Two ingredients compose: `base-fields.ts` (shared field groups) and `plugins/*.ts`
- * (one per plugin); `index.ts` assembles them into the `catalog` tree. Data only.
+ * (one per plugin); `index.ts` assembles them into the catalog, keyed by pulp_type.
+ * Data only.
  */
 
 /** The five content entity types Pulp exposes — the static, closed backbone. */
@@ -47,31 +48,52 @@ export interface IPluginRest {
   apiPath: string;
 }
 
-/** Form concern (resolved): entity base fields + plugin extras, and wizard flag. */
+/** Create/edit field lists (base + plugin extras) plus the wizard flag. */
 export interface IPluginForm {
   isWizard: boolean;
   createFields: IEntityField[];
   editFields: IEntityField[];
 }
 
-/** A plugin's resolved implementation of one entity type (e.g. the File remote). */
-export interface IEntityPlugin {
-  rest: IPluginRest;
-  ui: IPluginUi;
-  app: IPluginApp;
+// --- Resolved shapes (what `index.ts` exposes; keyed by pulp_type) ---
+
+/** One entity's resolved contribution for a pulp_type: its endpoint and form. */
+export interface IPluginEntity {
+  /** The `<app>/<slug>` collection segment, per entity (content pluralizes). */
+  apiPath: string;
   form: IPluginForm;
-  /**
-   * Remote pulp_types this repository can sync from (the backend's `REMOTE_TYPES`).
-   * Empty for non-repository entities and for repositories that can't sync.
-   */
+}
+
+/**
+ * A repository's resolved contribution additionally carries the pulp_types it can
+ * sync from (`compatibleRemoteTypes`, the backend's `REMOTE_TYPES`) and publish to
+ * (`compatiblePublicationTypes`). `[]` when it can't sync/publish.
+ */
+export interface IPluginRepositoryEntity extends IPluginEntity {
   compatibleRemoteTypes: PulpType[];
-  /**
-   * Publication pulp_types this repository can be published to (one per plugin
-   * that exposes a publication endpoint; e.g. a python repository → `python.pypi`).
-   * Empty for non-repository entities and for repositories that can't publish.
-   */
   compatiblePublicationTypes: PulpType[];
 }
+
+/**
+ * A plugin resolved for a single pulp_type: its identity plus the entity types it
+ * implements. Variants (a second pulp_type for one entity, e.g. `file.git`) resolve
+ * to their own `IPlugin`, so every `entities` slot is a single contribution — which
+ * makes `plugin.entities.repository?.compatibleRemoteTypes` a direct read.
+ */
+export interface IPlugin {
+  pulpType: PulpType;
+  label: string;
+  isAvailable: (installedPlugins: VersionResponse[]) => boolean;
+  entities: {
+    repository?: IPluginRepositoryEntity;
+    remote?: IPluginEntity;
+    distribution?: IPluginEntity;
+    publication?: IPluginEntity;
+    content?: IPluginEntity;
+  };
+}
+
+// --- Authored shapes (what a `plugins/*.ts` file writes) ---
 
 /**
  * What every entity slot provides. No identity (`ui`/`rest`) — that comes from the
@@ -111,13 +133,6 @@ export type IEntityVariant<T extends IContributionBase> = T & {
 export type IEntitySlot<T extends IContributionBase> =
   T | IEntityVariant<T> | Array<T | IEntityVariant<T>>;
 
-/** Union of every contribution shape — the input `composeEntityPlugin` resolves. */
-export type IAnyContribution =
-  | IContributionBase
-  | IRepositoryContribution
-  | IEntityVariant<IContributionBase>
-  | IEntityVariant<IRepositoryContribution>;
-
 /**
  * A plugin: its `app`/`ui`/`rest` identity once, then the entities it implements.
  * `ui`/`rest` are the defaults for every slot; a variant slot overrides them. Only
@@ -136,8 +151,5 @@ export interface IPluginDefinition {
   };
 }
 
-/** Return of `definePlugin`: entity type → that plugin's resolved plugins. */
-export type PluginEntityMap = Partial<Record<EntityType, IEntityPlugin[]>>;
-
-/** The assembled tree: entity type → (pulp_type → resolved plugin). */
-export type EntityCatalog = Record<EntityType, Record<PulpType, IEntityPlugin>>;
+/** The assembled catalog: pulp_type → the plugin resolved for that pulp_type. */
+export type PluginCatalog = Record<PulpType, IPlugin>;

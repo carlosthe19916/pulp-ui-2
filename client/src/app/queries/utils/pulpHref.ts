@@ -16,7 +16,7 @@ const FAMILY_TO_ENTITY: Record<string, EntityType> = {
 /**
  * Resolve a resource's catalog pulp_type from its `pulp_href` alone. A typed href
  * is `.../<family>/<app>/<slug>/<pk>/`; `<app>/<slug>` is the catalog `apiPath`,
- * reverse-mapped per family to the pulp_type the app keys on (`getEntityPlugin`).
+ * reverse-mapped per family to the pulp_type the app keys on (`getPlugin`).
  *
  * @example
  * resolvePulpType("/api/pulp/default/api/v3/repositories/rpm/rpm/0190.../") // "rpm.rpm"

@@ -2,7 +2,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 import { getEntityLabel } from "@catalog";
-import type { IEntityField, IEntityPlugin } from "@catalog";
+import type { IEntityField, IPlugin } from "@catalog";
 import {
   buildDefaultValues,
   buildFieldSchema,
@@ -26,8 +26,8 @@ export interface IEntityForEdit {
 
 interface IUseEntityFormArgs {
   config: IContentFamilyConfig;
-  /** Resolved plugin for the selected/edited type (undefined ⇒ no fields). */
-  plugin: IEntityPlugin | undefined;
+  /** Resolved plugin for the selected/edited pulp_type (undefined ⇒ no fields). */
+  plugin: IPlugin | undefined;
   /** Present ⇒ edit mode. */
   entity?: IEntityForEdit;
   onClose: () => void;
@@ -61,10 +61,15 @@ export const useEntityForm = ({
   const updateMutation = useEntityUpdateMutation(config.rootQueryKey);
   const label = getEntityLabel(config.kind);
 
+  // The plugin's contribution for this family (form fields + create endpoint).
+  const entityPlugin = plugin?.entities[config.kind];
+
   // Fields are fixed for this mount: the modal remounts (via `key`) when the
   // create type changes, so no memo/reset dance is needed here.
   const fields =
-    (isCreate ? plugin?.form.createFields : plugin?.form.editFields) ?? [];
+    (isCreate
+      ? entityPlugin?.form.createFields
+      : entityPlugin?.form.editFields) ?? [];
 
   const form = useForm<EntityFormValues>({
     resolver: yupResolver(buildFieldSchema(fields)),
@@ -75,10 +80,10 @@ export const useEntityForm = ({
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       if (isCreate) {
-        if (!plugin) return;
+        if (!entityPlugin) return;
         const body = cleanFormValues(values);
         const result = await createMutation.mutateAsync({
-          apiPath: plugin.rest.apiPath,
+          apiPath: entityPlugin.apiPath,
           body,
         });
         const createdName =

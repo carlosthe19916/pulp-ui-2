@@ -119,11 +119,7 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Publication" },
         },
         {
-          cell: pulpType ? (
-            <PulpTypeLabel kind="publication" pulpType={pulpType} />
-          ) : (
-            "—"
-          ),
+          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
           props: { dataLabel: "Type" },
         },
         {

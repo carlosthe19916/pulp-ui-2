@@ -1,7 +1,7 @@
 import type React from "react";
 import { Link, useParams } from "@tanstack/react-router";
 
-import { type EntityType, getEntityPlugin } from "@catalog";
+import { type EntityType, getPlugin } from "@catalog";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import {
   extractIdFromHref,
@@ -38,14 +38,14 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   }
 
   const resolvedType = resolvePulpType(href) ?? pulpType;
-  const plugin = getEntityPlugin(kind, resolvedType);
+  const plugin = getPlugin(resolvedType);
   const id = extractIdFromHref(href);
   const displayLabel =
     label?.trim() ||
     (id && id.length <= truncateAt ? id : undefined) ||
     truncate(href, truncateAt);
 
-  if (!plugin || !id) {
+  if (!plugin?.entities[kind] || !id) {
     return displayLabel;
   }
 

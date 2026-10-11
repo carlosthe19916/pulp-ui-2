@@ -20,7 +20,7 @@ import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
-import { getEntityPlugin } from "@catalog";
+import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { publicationsRootQueryOptions } from "@app/queries/publications";
@@ -105,11 +105,11 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   // whose catalog `apiPath` is the collection to POST to. Follows the selection so
   // changing the repo targets the right endpoint.
   const repoPlugin = repository
-    ? getEntityPlugin("repository", resolvePulpType(repository) ?? "")
+    ? getPlugin(resolvePulpType(repository) ?? "")?.entities.repository
     : undefined;
   const publicationType = repoPlugin?.compatiblePublicationTypes[0];
   const publicationApiPath = publicationType
-    ? getEntityPlugin("publication", publicationType)?.rest.apiPath
+    ? getPlugin(publicationType)?.entities.publication?.apiPath
     : undefined;
 
   const onSubmit = handleSubmit(async (values) => {

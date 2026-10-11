@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 
 import { Form, Wizard, WizardHeader, WizardStep } from "@patternfly/react-core";
 
-import type { EntityType, IEntityField, IEntityPlugin } from "@catalog";
+import type { EntityType, IEntityField, IPlugin } from "@catalog";
 import { EntityFormFields } from "@app/components/EntityFormFields";
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
@@ -36,7 +36,7 @@ const slug = (value: string): string =>
 
 interface IEntityWizardBodyProps {
   config: IContentFamilyConfig;
-  plugin: IEntityPlugin | undefined;
+  plugin: IPlugin | undefined;
   entity?: IEntityForEdit;
   onClose: () => void;
   title: string;

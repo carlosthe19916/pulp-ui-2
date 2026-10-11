@@ -1,6 +1,7 @@
 import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const npmRepositoryExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
@@ -17,7 +18,7 @@ const npmDistributionExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
 ];
 
-export const npm = definePlugin({
+export const npm: IPluginDefinition = {
   app: { isAvailable: whenInstalled("npm", "pulp-npm") },
   ui: { label: "npm" },
   rest: { pulpType: "npm.npm", apiPath: "npm/npm" },
@@ -51,4 +52,4 @@ export const npm = definePlugin({
       },
     },
   },
-});
+};

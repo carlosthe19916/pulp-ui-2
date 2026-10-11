@@ -1,4 +1,4 @@
-import { getEntityPlugin } from "@catalog";
+import { getPlugin } from "@catalog";
 import type { IContentFamilyConfig } from "@app/queries/utils/families";
 import {
   useSuspenseEntityDetailQuery,
@@ -28,7 +28,7 @@ export const useEntityDetail = <T = IEntityDetailEntity>(
     id,
     domain,
   );
-  const plugin = getEntityPlugin(config.kind, resolvePulpType(href) ?? "");
+  const plugin = getPlugin(resolvePulpType(href) ?? "");
   const { data: entity } = useSuspenseEntityDetailQuery<T>(
     config.rootQueryKey,
     href,

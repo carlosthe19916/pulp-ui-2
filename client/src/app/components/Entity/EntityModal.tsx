@@ -18,8 +18,8 @@ import {
   type EntityType,
   getAvailablePlugins,
   getEntityLabel,
-  getEntityPlugin,
-  type IEntityPlugin,
+  getPlugin,
+  type IPlugin,
 } from "@catalog";
 import { EntityFormFields } from "@app/components/EntityFormFields";
 import { EntityWizardBody } from "@app/components/Entity/EntityWizardBody";
@@ -39,7 +39,7 @@ const NON_CREATABLE_TYPES = new Set(["container.container-push"]);
 
 interface IEntityFormBodyProps {
   config: IContentFamilyConfig;
-  plugin: IEntityPlugin | undefined;
+  plugin: IPlugin | undefined;
   entity?: IEntityForEdit;
   onClose: () => void;
   typeSelector?: ReactNode;
@@ -114,17 +114,14 @@ const EntityModalInner = ({
   const plugins = use(ApiStatusContext)?.plugins ?? [];
 
   const available = getAvailablePlugins(config.kind, plugins).filter(
-    (plugin) => !NON_CREATABLE_TYPES.has(plugin.rest.pulpType),
+    (plugin) => !NON_CREATABLE_TYPES.has(plugin.pulpType),
   );
   const [selectedType, setSelectedType] = useState(
-    available[0]?.rest.pulpType ?? "",
+    available[0]?.pulpType ?? "",
   );
 
   const editType = entity ? (resolvePulpType(entity.pulp_href) ?? "") : "";
-  const plugin = getEntityPlugin(
-    config.kind,
-    isCreate ? selectedType : editType,
-  );
+  const plugin = getPlugin(isCreate ? selectedType : editType);
 
   // Edit: fetch the full typed entity so plugin-specific fields pre-fill.
   const { data: fullEntity, isLoading: isDetailLoading } =
@@ -163,9 +160,9 @@ const EntityModalInner = ({
         >
           {available.map((p) => (
             <FormSelectOption
-              key={p.rest.pulpType}
-              value={p.rest.pulpType}
-              label={p.ui.label}
+              key={p.pulpType}
+              value={p.pulpType}
+              label={p.label}
             />
           ))}
         </FormSelect>
@@ -184,7 +181,7 @@ const EntityModalInner = ({
 
   // Wizard vs plain modal comes from the catalog plugin (`form.isWizard`); wizard
   // steps come from each field's `group`.
-  const useWizard = plugin?.form.isWizard ?? false;
+  const useWizard = plugin?.entities[config.kind]?.form.isWizard ?? false;
 
   if (!isCreate && isDetailLoading) {
     return (

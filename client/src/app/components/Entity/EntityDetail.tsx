@@ -51,7 +51,8 @@ export const EntityDetail = ({
   const { deleteEntity, isDeleting } = useEntityDelete(config);
 
   // A plugin is editable iff it exposes edit fields (publications are immutable).
-  const canEdit = (plugin?.form.editFields.length ?? 0) > 0;
+  const canEdit =
+    (plugin?.entities[config.kind]?.form.editFields.length ?? 0) > 0;
 
   const handleDelete = async () => {
     if (!entity.pulp_href) return;

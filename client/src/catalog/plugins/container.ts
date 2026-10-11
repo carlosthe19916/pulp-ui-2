@@ -1,6 +1,7 @@
 import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 /** Shared ui + rest override for the pull-through variant (remote + distribution). */
 const pullThrough = {
@@ -63,7 +64,7 @@ const containerDistributionExtras: IEntityField[] = [
   { key: "description", label: "Description", type: "textarea" },
 ];
 
-export const container = definePlugin({
+export const container: IPluginDefinition = {
   app: { isAvailable: whenInstalled("container", "pulp-container") },
   ui: { label: "Container" },
   rest: { pulpType: "container.container", apiPath: "container/container" },
@@ -191,4 +192,4 @@ export const container = definePlugin({
       },
     ],
   },
-});
+};

@@ -4,8 +4,9 @@ import {
   remoteBase,
   repositoryBase,
 } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField, IFieldOption } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const CHECKSUM_TYPE_OPTIONS: IFieldOption[] = [
   { value: "unknown", label: "unknown" },
@@ -99,7 +100,7 @@ const rpmDistributionExtras: IEntityField[] = [
   { key: "checkpoint", label: "Checkpoint", type: "boolean" },
 ];
 
-export const rpm = definePlugin({
+export const rpm: IPluginDefinition = {
   app: { isAvailable: whenInstalled("rpm", "pulp-rpm") },
   ui: { label: "RPM" },
   rest: { pulpType: "rpm.rpm", apiPath: "rpm/rpm" },
@@ -196,4 +197,4 @@ export const rpm = definePlugin({
       },
     },
   },
-});
+};

@@ -4,8 +4,9 @@ import {
   remoteBase,
   repositoryBase,
 } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const gemRepositoryExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
@@ -39,7 +40,7 @@ const gemDistributionExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
 ];
 
-export const gem = definePlugin({
+export const gem: IPluginDefinition = {
   app: { isAvailable: whenInstalled("gem", "pulp-gem") },
   ui: { label: "Gem" },
   rest: { pulpType: "gem.gem", apiPath: "gem/gem" },
@@ -89,4 +90,4 @@ export const gem = definePlugin({
       },
     },
   },
-});
+};

@@ -4,8 +4,9 @@ import {
   remoteBase,
   repositoryBase,
 } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const huggingFaceRepositoryExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
@@ -43,7 +44,7 @@ const huggingFaceDistributionExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
 ];
 
-export const huggingFace = definePlugin({
+export const huggingFace: IPluginDefinition = {
   app: {
     isAvailable: whenInstalled(
       "hugging_face",
@@ -111,4 +112,4 @@ export const huggingFace = definePlugin({
       },
     },
   },
-});
+};

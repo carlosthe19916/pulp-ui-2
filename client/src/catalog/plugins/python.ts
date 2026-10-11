@@ -4,8 +4,9 @@ import {
   remoteBase,
   repositoryBase,
 } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 /** Shared ui + rest override for the PyPI variant (distribution + publication). */
 const pypi = {
@@ -95,7 +96,7 @@ const pythonDistributionExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
 ];
 
-export const python = definePlugin({
+export const python: IPluginDefinition = {
   app: { isAvailable: whenInstalled("python", "pulp-python") },
   ui: { label: "Python" },
   rest: { pulpType: "python.python", apiPath: "python/python" },
@@ -150,4 +151,4 @@ export const python = definePlugin({
       },
     },
   },
-});
+};

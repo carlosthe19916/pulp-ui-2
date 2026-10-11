@@ -20,7 +20,7 @@ import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
-import { getEntityPlugin } from "@catalog";
+import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
@@ -55,15 +55,15 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
 
   const repoPulpType = resolvePulpType(repo.object.pulp_href);
 
-  const plugin = repoPulpType
-    ? getEntityPlugin("repository", repoPulpType)
+  const repoPlugin = repoPulpType
+    ? getPlugin(repoPulpType)?.entities.repository
     : undefined;
 
   // Collection sub-path used to rebuild the sync endpoint client-side (e.g.
   // "python/python") — no reliance on the server-provided pulp_href.
-  const apiPath = plugin?.rest.apiPath;
+  const apiPath = repoPlugin?.apiPath;
   // Remote types this repository can sync from (scopes the remote picker).
-  const compatibleRemoteTypes = plugin?.compatibleRemoteTypes ?? [];
+  const compatibleRemoteTypes = repoPlugin?.compatibleRemoteTypes ?? [];
 
   const [remoteSearch, setRemoteSearch] = useState("");
   const debouncedRemoteSearch = useDebouncedValue(remoteSearch);

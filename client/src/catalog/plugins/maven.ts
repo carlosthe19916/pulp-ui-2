@@ -1,6 +1,7 @@
 import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const mavenRepositoryExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
@@ -17,7 +18,7 @@ const mavenDistributionExtras: IEntityField[] = [
   { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
 ];
 
-export const maven = definePlugin({
+export const maven: IPluginDefinition = {
   app: { isAvailable: whenInstalled("maven", "pulp-maven") },
   ui: { label: "Maven" },
   rest: { pulpType: "maven.maven", apiPath: "maven/maven" },
@@ -51,4 +52,4 @@ export const maven = definePlugin({
       },
     },
   },
-});
+};

@@ -4,8 +4,9 @@ import {
   remoteBase,
   repositoryBase,
 } from "../base-fields";
-import { definePlugin, whenInstalled } from "../compose";
+import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
+import type { IPluginDefinition } from "../types";
 
 const fileDistributionExtras: IEntityField[] = [
   {
@@ -37,7 +38,7 @@ const fileGitRemoteExtras: IEntityField[] = [
 ];
 
 /** File: the pulpcore reference plugin — implements all five entity types. */
-export const file = definePlugin({
+export const file: IPluginDefinition = {
   app: { isAvailable: whenInstalled("file", "pulp-file") },
   ui: { label: "File" },
   rest: { pulpType: "file.file", apiPath: "file/file" },
@@ -155,4 +156,4 @@ export const file = definePlugin({
       },
     },
   },
-});
+};

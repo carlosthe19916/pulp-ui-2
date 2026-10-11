@@ -45,7 +45,7 @@ import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { getEntityPlugin } from "@catalog";
+import { getPlugin } from "@catalog";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -127,10 +127,11 @@ export const RepositoryList: React.FC = () => {
   const rows: DataViewTr[] = repositories.map((repository) => {
     const repoId = extractIdFromHref(repository.pulp_href ?? "");
     const pulpType = resolvePulpType(repository.pulp_href);
-    // TODO replace getEntityPlugin for something better, it does not reflect the plugin schema
-    const plugin = pulpType
-      ? getEntityPlugin("repository", pulpType)
+    const repo = pulpType
+      ? getPlugin(pulpType)?.entities.repository
       : undefined;
+    const canSync = (repo?.compatibleRemoteTypes.length ?? 0) > 0;
+    const canPublish = (repo?.compatiblePublicationTypes.length ?? 0) > 0;
 
     const actionItems: IAction[] = [
       {
@@ -138,13 +139,13 @@ export const RepositoryList: React.FC = () => {
         onClick: () => setModalState(repository),
       },
     ];
-    if (plugin && plugin.compatibleRemoteTypes.length > 0) {
+    if (canSync) {
       actionItems.push({
         title: "Sync",
         onClick: () => setSyncTarget(repository),
       });
     }
-    if (plugin && plugin.compatiblePublicationTypes.length > 0) {
+    if (canPublish) {
       actionItems.push({
         title: "Publish",
         onClick: () => setPublishTarget(repository),
@@ -176,11 +177,7 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
-          cell: pulpType ? (
-            <PulpTypeLabel kind="repository" pulpType={pulpType} />
-          ) : (
-            "—"
-          ),
+          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
           props: { dataLabel: "Type" },
         },
         {

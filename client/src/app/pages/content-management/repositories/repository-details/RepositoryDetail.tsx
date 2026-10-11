@@ -55,9 +55,10 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     repoId,
   );
   const repoHref = repo.pulp_href ?? "";
+  const repoPlugin = plugin?.entities.repository;
   // Collection sub-path (e.g. "file/file") used to rebuild per-item endpoints
   // (versions) client-side instead of appending to the server pulp_href.
-  const apiPath = plugin?.rest.apiPath;
+  const apiPath = repoPlugin?.apiPath;
   const label = getEntityLabel(REPOSITORY_FAMILY.kind);
   const title = repo.name ?? label;
 
@@ -109,7 +110,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   };
 
   // A plugin is editable iff it exposes edit fields.
-  const canEdit = (plugin?.form.editFields.length ?? 0) > 0;
+  const canEdit = (repoPlugin?.form.editFields.length ?? 0) > 0;
 
   const actions: (PageHeaderAction | false | null | undefined)[] = [
     canEdit && {
@@ -119,22 +120,20 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         onClick: () => setIsEditOpen(true),
       },
     },
-    plugin &&
-      plugin.compatibleRemoteTypes.length > 0 && {
-        key: "sync",
-        dropdownItemProps: {
-          children: "Sync",
-          onClick: () => setIsSyncOpen(true),
-        },
+    (repoPlugin?.compatibleRemoteTypes.length ?? 0) > 0 && {
+      key: "sync",
+      dropdownItemProps: {
+        children: "Sync",
+        onClick: () => setIsSyncOpen(true),
       },
-    plugin &&
-      plugin.compatiblePublicationTypes.length > 0 && {
-        key: "publish",
-        dropdownItemProps: {
-          children: "Publish",
-          onClick: () => setIsPublishOpen(true),
-        },
+    },
+    (repoPlugin?.compatiblePublicationTypes.length ?? 0) > 0 && {
+      key: "publish",
+      dropdownItemProps: {
+        children: "Publish",
+        onClick: () => setIsPublishOpen(true),
       },
+    },
     {
       key: "delete",
       dropdownItemProps: {
