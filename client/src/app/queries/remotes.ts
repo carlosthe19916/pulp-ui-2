@@ -8,6 +8,7 @@ import {
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
+  GenericRemoteResponse,
   PaginatedGenericRemoteResponseList,
   RemotesListData,
 } from "@app/client";
@@ -83,6 +84,69 @@ export const useRemoteDeleteMutation = () => {
       (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
         .data,
     onSuccess: (_data, href) => {
+      void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: remoteKeys.detail(href) });
+    },
+  });
+};
+
+/**
+ * Detail-by-href for a remote (non-suspense), used to pre-fill the edit wizard and
+ * to resolve a selected remote's label in resource pickers. Keyed the same as the
+ * list detail slot so the cache stays unified. Disabled until an href is present.
+ */
+export const remoteDetailQueryOptions = (href: string | null) =>
+  queryOptions({
+    queryKey: remoteKeys.detail(href ?? ""),
+    queryFn: async (): Promise<GenericRemoteResponse> =>
+      (await axiosInstance.get<GenericRemoteResponse>(toProxyHref(href ?? "")))
+        .data,
+    enabled: !!href,
+  });
+
+export const useRemoteDetailQuery = (href: string | null) =>
+  useQuery(remoteDetailQueryOptions(href));
+
+/**
+ * Creates a remote of the given plugin type: POSTs to the typed collection
+ * `remotes/<apiPath>/` (apiPath from the catalog), returning the created remote.
+ */
+export const useRemoteCreateMutation = () => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      apiPath,
+      body,
+    }: {
+      apiPath: string;
+      body: Record<string, unknown>;
+    }): Promise<GenericRemoteResponse> =>
+      (
+        await axiosInstance.post<GenericRemoteResponse>(
+          pulpApiPath(`remotes/${apiPath}/`, domain),
+          body,
+        )
+      ).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
+    },
+  });
+};
+
+/** PATCHes a remote by its own `pulp_href` (which embeds plugin + type). */
+export const useRemoteUpdateMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      href,
+      body,
+    }: {
+      href: string;
+      body: Record<string, unknown>;
+    }): Promise<unknown> =>
+      (await axiosInstance.patch(toProxyHref(href), body)).data,
+    onSuccess: (_data, { href }) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({ queryKey: remoteKeys.detail(href) });
     },

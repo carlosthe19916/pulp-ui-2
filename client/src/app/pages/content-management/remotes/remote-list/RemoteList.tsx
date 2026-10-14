@@ -2,7 +2,6 @@ import type React from "react";
 import { use, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -11,6 +10,7 @@ import {
   PageSection,
   Pagination,
   PaginationVariant,
+  Tooltip,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -24,6 +24,7 @@ import {
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
+import { getPlugin } from "@catalog";
 import type { GenericRemoteResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
@@ -33,25 +34,23 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { EntityModal } from "@app/components/Entity/EntityModal";
+import { RemoteModal } from "./components/RemoteModal";
+import { useRemoteActions } from "./hooks/useRemoteActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
+import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import { remoteKeys, useRemotesListQuery } from "@app/queries/remotes";
-import { REMOTE_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { useRemoteActions } from "./hooks/useRemoteActions";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -65,7 +64,6 @@ interface IRemoteFilters {
 }
 
 export const RemoteList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
   const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
@@ -79,6 +77,7 @@ export const RemoteList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] =
     useState<GenericRemoteResponse | null>(null);
 
+  const canCreate = useCreatablePlugins("remote").length > 0;
   const { deleteRemote, isDeleting } = useRemoteActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
@@ -160,21 +159,13 @@ export const RemoteList: React.FC = () => {
     const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_href);
     const task = remoteId ? tasksById[remoteId] : undefined;
+    const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.remote);
 
     return {
       id: remote.pulp_href,
       row: [
         {
-          cell: remoteId ? (
-            <Link
-              to="/content-management/$pulpDomain/remotes/$remoteId"
-              params={{ pulpDomain, remoteId }}
-            >
-              {remote.name}
-            </Link>
-          ) : (
-            remote.name
-          ),
+          cell: remote.name,
           props: { dataLabel: "Name" },
         },
         {
@@ -197,6 +188,13 @@ export const RemoteList: React.FC = () => {
               items={[
                 {
                   title: "Edit",
+                  isAriaDisabled: !canEdit,
+                  tooltipProps: canEdit
+                    ? undefined
+                    : {
+                        content:
+                          "This remote's plugin type isn't available in the UI.",
+                      },
                   onClick: () => setModalState(remote),
                 },
                 {
@@ -276,9 +274,20 @@ export const RemoteList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setModalState("create")}>
-                Create remote
-              </Button>
+              canCreate ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
+                  Create remote
+                </Button>
+              ) : (
+                <Tooltip content="No remote plugin is available. Install a content plugin (e.g. pulp_file) to create remotes.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create remote
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -293,8 +302,7 @@ export const RemoteList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <EntityModal
-          config={REMOTE_FAMILY}
+        <RemoteModal
           isOpen={modalState !== null}
           entity={remoteToEdit}
           onClose={() => setModalState(null)}

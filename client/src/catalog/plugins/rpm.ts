@@ -31,7 +31,12 @@ const LAYOUT_OPTIONS: IFieldOption[] = [
 ];
 
 const rpmRepositoryExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   { key: "autopublish", label: "Auto-publish", type: "boolean" },
   {
     key: "retain_package_versions",
@@ -82,13 +87,13 @@ const rpmDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
   {
     key: "publication",
     label: "Publication",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "publication",
   },
   { key: "content_guard", label: "Content Guard", type: "text" },

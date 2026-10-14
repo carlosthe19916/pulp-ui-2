@@ -2,7 +2,6 @@ import type React from "react";
 import { use, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -11,6 +10,7 @@ import {
   PageSection,
   Pagination,
   PaginationVariant,
+  Tooltip,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -24,6 +24,7 @@ import {
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
+import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
@@ -33,29 +34,27 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { EntityModal } from "@app/components/Entity/EntityModal";
+import { DistributionModal } from "./components/DistributionModal";
+import { useDistributionActions } from "./hooks/useDistributionActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
+import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
-import { DISTRIBUTION_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-
-import { useDistributionActions } from "./hooks/useDistributionActions";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -67,7 +66,6 @@ interface IDistributionFilters {
 }
 
 export const DistributionList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
   const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
@@ -82,6 +80,7 @@ export const DistributionList: React.FC = () => {
     null,
   );
 
+  const canCreate = useCreatablePlugins("distribution").length > 0;
   const { deleteDistribution, isDeleting } = useDistributionActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
@@ -161,21 +160,13 @@ export const DistributionList: React.FC = () => {
     const distId = extractIdFromHref(distribution.pulp_href ?? "");
     const task = distId ? tasksById[distId] : undefined;
     const pulpType = resolvePulpType(distribution.pulp_href);
+    const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
 
     return {
       id: distribution.pulp_href,
       row: [
         {
-          cell: distId ? (
-            <Link
-              to="/content-management/$pulpDomain/distributions/$distId"
-              params={{ pulpDomain, distId }}
-            >
-              {distribution.name}
-            </Link>
-          ) : (
-            distribution.name
-          ),
+          cell: distribution.name,
           props: { dataLabel: "Name" },
         },
         {
@@ -203,6 +194,13 @@ export const DistributionList: React.FC = () => {
               items={[
                 {
                   title: "Edit",
+                  isAriaDisabled: !canEdit,
+                  tooltipProps: canEdit
+                    ? undefined
+                    : {
+                        content:
+                          "This distribution's plugin type isn't available in the UI.",
+                      },
                   onClick: () => setModalState(distribution),
                 },
                 {
@@ -282,9 +280,20 @@ export const DistributionList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setModalState("create")}>
-                Create distribution
-              </Button>
+              canCreate ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
+                  Create distribution
+                </Button>
+              ) : (
+                <Tooltip content="No distribution plugin is available. Install a content plugin (e.g. pulp_file) to create distributions.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create distribution
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -299,8 +308,7 @@ export const DistributionList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <EntityModal
-          config={DISTRIBUTION_FAMILY}
+        <DistributionModal
           isOpen={modalState !== null}
           entity={distributionToEdit}
           onClose={() => setModalState(null)}

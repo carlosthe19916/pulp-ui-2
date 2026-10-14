@@ -2,7 +2,6 @@ import type React from "react";
 import { use, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 
 import {
   Button,
@@ -11,6 +10,7 @@ import {
   PageSection,
   Pagination,
   PaginationVariant,
+  Tooltip,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -33,7 +33,8 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { EntityModal } from "@app/components/Entity/EntityModal";
+import { RepositoryModal } from "./components/RepositoryModal";
+import { useRepositoryActions } from "./hooks/useRepositoryActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
@@ -41,24 +42,21 @@ import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
+import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
   repositoryKeys,
   useRepositoriesListQuery,
 } from "@app/queries/repositories";
-import { REPOSITORY_FAMILY } from "@app/queries/utils/families";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import { getPlugin } from "@catalog";
-
-import { useRepositoryActions } from "./hooks/useRepositoryActions";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -71,7 +69,6 @@ interface IRepositoryFilters {
 }
 
 export const RepositoryList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
   const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
@@ -90,6 +87,7 @@ export const RepositoryList: React.FC = () => {
     null,
   );
 
+  const canCreate = useCreatablePlugins("repository").length > 0;
   const { deleteRepository, isDeleting } = useRepositoryActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
@@ -172,12 +170,20 @@ export const RepositoryList: React.FC = () => {
     const repo = pulpType
       ? getPlugin(pulpType)?.entities.repository
       : undefined;
+    const canEdit = !!repo;
     const canSync = (repo?.compatibleRemoteTypes.length ?? 0) > 0;
     const canPublish = (repo?.compatiblePublicationTypes.length ?? 0) > 0;
 
     const actionItems: IAction[] = [
       {
         title: "Edit",
+        isAriaDisabled: !canEdit,
+        tooltipProps: canEdit
+          ? undefined
+          : {
+              content:
+                "This repository's plugin type isn't available in the UI.",
+            },
         onClick: () => setModalState(repository),
       },
     ];
@@ -202,16 +208,7 @@ export const RepositoryList: React.FC = () => {
       id: repository.pulp_href,
       row: [
         {
-          cell: repoId ? (
-            <Link
-              to="/content-management/$pulpDomain/repositories/$repoId"
-              params={{ pulpDomain, repoId }}
-            >
-              {repository.name}
-            </Link>
-          ) : (
-            repository.name
-          ),
+          cell: repository.name,
           props: { dataLabel: "Name" },
         },
         {
@@ -302,9 +299,20 @@ export const RepositoryList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Button variant="primary" onClick={() => setModalState("create")}>
-                Create repository
-              </Button>
+              canCreate ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setModalState("create")}
+                >
+                  Create repository
+                </Button>
+              ) : (
+                <Tooltip content="No repository plugin is available. Install a content plugin (e.g. pulp_file) to create repositories.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create repository
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -319,8 +327,7 @@ export const RepositoryList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <EntityModal
-          config={REPOSITORY_FAMILY}
+        <RepositoryModal
           isOpen={modalState !== null}
           entity={repositoryToEdit}
           onClose={() => setModalState(null)}

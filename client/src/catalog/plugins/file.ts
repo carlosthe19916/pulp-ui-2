@@ -12,13 +12,13 @@ const fileDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
   {
     key: "publication",
     label: "Publication",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "publication",
   },
 ];
@@ -52,7 +52,7 @@ export const file: IPluginDefinition = {
           {
             key: "remote",
             label: "Remote",
-            type: "resource",
+            type: "asyncResource",
             resourceKind: "remote",
           },
           {
@@ -67,7 +67,7 @@ export const file: IPluginDefinition = {
           {
             key: "remote",
             label: "Remote",
-            type: "resource",
+            type: "asyncResource",
             resourceKind: "remote",
           },
           { key: "autopublish", label: "Auto-publish", type: "boolean" },
@@ -148,7 +148,7 @@ export const file: IPluginDefinition = {
           {
             key: "repository",
             label: "Repository",
-            type: "resource",
+            type: "asyncResource",
             resourceKind: "repository",
           },
         ],

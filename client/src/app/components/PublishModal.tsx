@@ -15,7 +15,6 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { AsyncOperationResponse } from "@app/client";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
@@ -23,9 +22,8 @@ import {
 import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { publicationsRootQueryOptions } from "@app/queries/publications";
+import { usePublicationCreateMutation } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
-import { useEntityCreateMutation } from "@app/queries/utils/entityCrud";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -51,10 +49,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   repoVersionHref,
 }) => {
   const { addNotification } = useNotifications();
-  const createMutation = useEntityCreateMutation<AsyncOperationResponse>(
-    "publications",
-    publicationsRootQueryOptions.queryKey,
-  );
+  const createMutation = usePublicationCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
   const debouncedRepoSearch = useDebouncedValue(repoSearch);

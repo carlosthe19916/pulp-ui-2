@@ -15,7 +15,12 @@ const pypi = {
 };
 
 const pythonRepositoryCreateExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   {
     key: "autopublish",
     label: "Auto-publish",
@@ -32,7 +37,12 @@ const pythonRepositoryCreateExtras: IEntityField[] = [
 ];
 
 const pythonRepositoryEditExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   { key: "autopublish", label: "Auto-publish", type: "boolean" },
   { key: "retain_checkpoints", label: "Retained Checkpoints", type: "number" },
   {
@@ -82,18 +92,23 @@ const pythonDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
   {
     key: "publication",
     label: "Publication",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "publication",
   },
   { key: "repository_version", label: "Repository Version", type: "text" },
   { key: "allow_uploads", label: "Allow Uploads", type: "boolean" },
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
 ];
 
 export const python: IPluginDefinition = {

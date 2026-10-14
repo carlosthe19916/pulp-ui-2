@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import { Link } from "@tanstack/react-router";
-
 import {
   Button,
   Content,
@@ -10,6 +8,7 @@ import {
   PageSection,
   Pagination,
   PaginationVariant,
+  Tooltip,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -29,17 +28,13 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { EntityModal } from "@app/components/Entity/EntityModal";
+import { PublicationModal } from "./components/PublicationModal";
+import { usePublicationActions } from "./hooks/usePublicationActions";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useMutationAction } from "@app/hooks/useMutationAction";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import type { IPublicationListParams } from "@app/queries/publications";
-import {
-  usePublicationDeleteMutation,
-  usePublicationsListQuery,
-} from "@app/queries/publications";
-import { PUBLICATION_FAMILY } from "@app/queries/utils/families";
+import { usePublicationsListQuery } from "@app/queries/publications";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
@@ -52,17 +47,14 @@ const SORTABLE_COLUMN_KEYS = [
 ] as const satisfies readonly OrderingField<IPublicationListParams>[];
 
 export const PublicationList: React.FC = () => {
-  const { name: pulpDomain } = useSelectedDomain();
-
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<PublicationResponse | null>(
     null,
   );
 
-  const deleteMutation = usePublicationDeleteMutation();
-  const { runAction } = useMutationAction();
-  const isDeleting = deleteMutation.isPending;
+  const canCreate = useCreatablePlugins("publication").length > 0;
+  const { deletePublication, isDeleting } = usePublicationActions();
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -126,16 +118,7 @@ export const PublicationList: React.FC = () => {
       id: href,
       row: [
         {
-          cell: pubId ? (
-            <Link
-              to="/content-management/$pulpDomain/publications/$pubId"
-              params={{ pulpDomain, pubId }}
-            >
-              {label}
-            </Link>
-          ) : (
-            label
-          ),
+          cell: label,
           props: { dataLabel: "Publication" },
         },
         {
@@ -189,16 +172,9 @@ export const PublicationList: React.FC = () => {
   const handleDelete = async () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    const pubId = extractIdFromHref(target.pulp_href);
     try {
       // Publication deletion is synchronous (204, no task) — no row tracking.
-      await runAction(
-        () => deleteMutation.mutateAsync(target.pulp_href ?? ""),
-        {
-          successTitle: `Publication "${pubId}" deleted`,
-          errorTitle: "Failed to delete publication",
-        },
-      );
+      await deletePublication(target);
       setDeleteTarget(null);
     } catch {
       // Error surfaced as a toast; keep the modal open.
@@ -215,9 +191,17 @@ export const PublicationList: React.FC = () => {
         <DataView activeState={activeState}>
           <DataViewToolbar
             actions={
-              <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                Create publication
-              </Button>
+              canCreate ? (
+                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+                  Create publication
+                </Button>
+              ) : (
+                <Tooltip content="No publication plugin is available. Install a content plugin (e.g. pulp_file) to create publications.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create publication
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={pagination(PaginationVariant.top)}
           />
@@ -232,8 +216,7 @@ export const PublicationList: React.FC = () => {
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
         </DataView>
 
-        <EntityModal
-          config={PUBLICATION_FAMILY}
+        <PublicationModal
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />

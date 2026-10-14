@@ -2,11 +2,18 @@ import type { EntityType } from "./types";
 
 /**
  * The field model, shared by form and page. Discriminated on `type`: a `select`
- * requires `options`, a `resource` requires `resourceKind`, plain fields neither.
+ * requires `options`, an `asyncResource` requires `resourceKind`, plain fields
+ * neither.
  */
 
 export type FieldType =
-  "text" | "textarea" | "number" | "boolean" | "select" | "file" | "resource";
+  | "text"
+  | "textarea"
+  | "number"
+  | "boolean"
+  | "select"
+  | "file"
+  | "asyncResource";
 
 /** A single choice in a `select` field. */
 export interface IFieldOption {
@@ -26,7 +33,7 @@ interface IFieldBase {
 
 /** Plain input fields — no options, no resource picker. */
 interface IBasicField extends IFieldBase {
-  type: Exclude<FieldType, "select" | "resource">;
+  type: Exclude<FieldType, "select" | "asyncResource">;
 }
 
 /** A dropdown — `options` is required. */
@@ -35,11 +42,15 @@ interface ISelectField extends IFieldBase {
   options: IFieldOption[];
 }
 
-/** A resource picker — `resourceKind` is required. */
-interface IResourceField extends IFieldBase {
-  type: "resource";
+/**
+ * An async resource picker — `resourceKind` is required. Options are not
+ * enumerated here: they are fetched on demand (server-side typeahead) from the
+ * `resourceKind`'s collection as the user opens/types in the dropdown.
+ */
+interface IAsyncResourceField extends IFieldBase {
+  type: "asyncResource";
   resourceKind: EntityType;
 }
 
 /** A single form/page field. */
-export type IEntityField = IBasicField | ISelectField | IResourceField;
+export type IEntityField = IBasicField | ISelectField | IAsyncResourceField;

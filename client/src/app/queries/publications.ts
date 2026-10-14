@@ -7,6 +7,7 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   PaginatedPublicationResponseList,
   PublicationResponse,
   PublicationsListData,
@@ -132,4 +133,32 @@ export const useAllPublicationsListQuery = (
 ) => {
   const domain = useSelectedDomain();
   return useQuery(allPublicationsListQueryOptions(domain, params));
+};
+
+/**
+ * Creates a publication of the given plugin type: POSTs to `publications/<apiPath>/`
+ * (apiPath from the catalog). Publication creation is asynchronous, so it returns the
+ * Pulp 202 task. Publications are immutable — there is no update.
+ */
+export const usePublicationCreateMutation = () => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      apiPath,
+      body,
+    }: {
+      apiPath: string;
+      body: Record<string, unknown>;
+    }): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.post<AsyncOperationResponse>(
+          pulpApiPath(`publications/${apiPath}/`, domain),
+          body,
+        )
+      ).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
+    },
+  });
 };

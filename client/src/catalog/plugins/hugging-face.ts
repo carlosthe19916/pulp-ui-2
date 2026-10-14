@@ -9,7 +9,12 @@ import type { IEntityField } from "../field-types";
 import type { IPluginDefinition } from "../types";
 
 const huggingFaceRepositoryExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   { key: "retain_checkpoints", label: "Retained Checkpoints", type: "number" },
 ];
 
@@ -32,16 +37,21 @@ const huggingFaceDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
   {
     key: "publication",
     label: "Publication",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "publication",
   },
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
 ];
 
 export const huggingFace: IPluginDefinition = {

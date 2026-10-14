@@ -13,7 +13,12 @@ const pullThrough = {
 };
 
 const containerRepositoryExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   {
     key: "manifest_signing_service",
     label: "Manifest Signing Service",
@@ -56,7 +61,7 @@ const containerDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
   { key: "repository_version", label: "Repository Version", type: "text" },
@@ -170,7 +175,7 @@ export const container: IPluginDefinition = {
             {
               key: "remote",
               label: "Remote",
-              type: "resource",
+              type: "asyncResource",
               resourceKind: "remote",
               required: true,
             },
@@ -182,7 +187,7 @@ export const container: IPluginDefinition = {
             {
               key: "remote",
               label: "Remote",
-              type: "resource",
+              type: "asyncResource",
               resourceKind: "remote",
             },
             { key: "private", label: "Private", type: "boolean" },

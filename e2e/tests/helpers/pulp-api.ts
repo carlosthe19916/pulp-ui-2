@@ -183,6 +183,27 @@ export class PulpApi {
     throw new Error(`task for ${typedCollection} did not complete in time`);
   }
 
+  /**
+   * Hrefs of publications whose repository version belongs to the given repository
+   * (its `repository_version` is `<repoHref>versions/N/`). Used to confirm a
+   * UI-created publication exists and to register it for cleanup.
+   */
+  async publicationHrefsForRepository(
+    repositoryHref: string,
+  ): Promise<string[]> {
+    const res = await this.ctx.get(this.collectionUrl("publications"), {
+      params: { limit: 100 },
+    });
+    if (!res.ok()) return [];
+    const { results = [] } = (await res.json()) as {
+      results?: { pulp_href?: string; repository_version?: string | null }[];
+    };
+    return results
+      .filter((p) => p.repository_version?.startsWith(repositoryHref))
+      .map((p) => p.pulp_href ?? "")
+      .filter(Boolean);
+  }
+
   private async findOne<T>(
     collection: string,
     param: string,

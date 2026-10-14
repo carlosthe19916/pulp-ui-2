@@ -4,7 +4,12 @@ import type { IEntityField } from "../field-types";
 import type { IPluginDefinition } from "../types";
 
 const mavenRepositoryExtras: IEntityField[] = [
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
   { key: "retain_checkpoints", label: "Retained Checkpoints", type: "number" },
 ];
 
@@ -12,10 +17,15 @@ const mavenDistributionExtras: IEntityField[] = [
   {
     key: "repository",
     label: "Repository",
-    type: "resource",
+    type: "asyncResource",
     resourceKind: "repository",
   },
-  { key: "remote", label: "Remote", type: "resource", resourceKind: "remote" },
+  {
+    key: "remote",
+    label: "Remote",
+    type: "asyncResource",
+    resourceKind: "remote",
+  },
 ];
 
 export const maven: IPluginDefinition = {

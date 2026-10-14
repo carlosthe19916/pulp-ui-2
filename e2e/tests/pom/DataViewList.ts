@@ -58,4 +58,27 @@ export abstract class DataViewList {
   async expectRowGone(name: string): Promise<void> {
     await expect(this.row(name)).toHaveCount(0);
   }
+
+  /**
+   * Close open toast notifications. They auto-dismiss after 8s, but a test acting
+   * faster stacks them in the top-right `AlertGroup`, where they overlap the create
+   * button and confirm dialog and intercept clicks. OUIA attrs are PF's test hooks.
+   */
+  async dismissToasts(): Promise<void> {
+    const closeButtons = this.page.locator(
+      '[data-ouia-component-type="PF6/Alert"] button[aria-label*="lose"]',
+    );
+    for (
+      let remaining = await closeButtons.count();
+      remaining > 0;
+      remaining--
+    ) {
+      await closeButtons
+        .first()
+        .click({ timeout: 2000 })
+        .catch(() => {
+          // The toast may auto-dismiss between locating and clicking — ignore.
+        });
+    }
+  }
 }

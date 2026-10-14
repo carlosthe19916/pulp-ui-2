@@ -33,6 +33,8 @@ interface ITypeaheadSelectProps {
   onFilterChange?: (value: string) => void;
   /** Show a loading indicator in the menu (server-side options in flight). */
   isLoading?: boolean;
+  /** Notified when the menu opens/closes, so callers can lazily enable fetching. */
+  onOpenChange?: (isOpen: boolean) => void;
   /**
    * Label for the current `value` when it is not present in `options` (e.g. the
    * selection is outside the current server-filtered page).
@@ -53,6 +55,7 @@ export const TypeaheadSelect = ({
   isDisabled,
   onFilterChange,
   isLoading,
+  onOpenChange,
   selectedLabel: selectedLabelProp,
   isToggleFullWidth = true,
 }: ITypeaheadSelectProps) => {
@@ -97,6 +100,7 @@ export const TypeaheadSelect = ({
       selected={value}
       onOpenChange={(next) => {
         setIsOpen(next);
+        onOpenChange?.(next);
         if (!next) {
           setSearch("");
         }
@@ -113,7 +117,11 @@ export const TypeaheadSelect = ({
           ref={toggleRef}
           id={`${id}-toggle`}
           aria-label={ariaLabel}
-          onClick={() => setIsOpen((open) => !open)}
+          onClick={() => {
+            const next = !isOpen;
+            setIsOpen(next);
+            onOpenChange?.(next);
+          }}
           isExpanded={isOpen}
           isDisabled={isDisabled}
           isFullWidth={isToggleFullWidth}

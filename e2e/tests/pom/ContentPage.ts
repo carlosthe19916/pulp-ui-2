@@ -32,6 +32,8 @@ export class ContentPage extends DataViewList {
   }
 
   async openCreate(): Promise<Locator> {
+    // Clear any lingering success toasts first — they overlap the create button.
+    await this.dismissToasts();
     await this.page
       .getByRole("button", { name: this.opts.createButton, exact: true })
       .click();
@@ -128,6 +130,8 @@ export class ContentPage extends DataViewList {
   }
 
   async delete(name: string): Promise<void> {
+    // Clear any lingering success toasts first — they overlap the confirm dialog.
+    await this.dismissToasts();
     await this.rowAction(name, "Delete");
     await new ConfirmModal(this.page, `Delete ${this.opts.singular}`).confirm(
       "Delete",
@@ -154,6 +158,26 @@ export class ContentPage extends DataViewList {
     const listbox = this.page.getByRole("listbox");
     await listbox.waitFor({ state: "visible" });
     return listbox;
+  }
+
+  /**
+   * Open a resource picker, filter to `optionName`, and select it. The menu is
+   * portalled (page-level), and the filter narrows the (possibly server-paged)
+   * options so the target is rendered before we click it.
+   */
+  async selectResource(
+    dialog: Locator,
+    fieldLabel: string,
+    optionName: string,
+  ): Promise<void> {
+    const listbox = await this.openResourcePicker(dialog, fieldLabel);
+    const filter = this.page.getByLabel(`${fieldLabel} filter`);
+    if ((await filter.count()) > 0) {
+      await filter.fill(optionName);
+    }
+    await listbox
+      .getByRole("option", { name: optionName, exact: true })
+      .click();
   }
 
   /**

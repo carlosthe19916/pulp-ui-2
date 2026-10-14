@@ -15,9 +15,10 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { EntityType, IEntityField } from "@catalog";
+import type { IEntityField } from "@catalog";
 
-import { TypeaheadSelect, type ITypeaheadOption } from "./TypeaheadSelect";
+import { AsyncResourceSelect } from "./AsyncResourceSelect";
+import type { ResourceFilterMap } from "./PluginForm/resourceFilter";
 
 const isFile = (value: unknown): value is File => {
   return typeof File !== "undefined" && value instanceof File;
@@ -29,19 +30,12 @@ interface IEntityFormFieldsProps<
   fields: IEntityField[];
   control: Control<TFieldValues>;
   idPrefix: string;
-  /** Options for `type: "resource"` fields, keyed by the field's resourceKind. */
-  resourceOptions?: Partial<Record<EntityType, ITypeaheadOption[]>>;
   /**
-   * Server-side search for `type: "resource"` fields, keyed by resourceKind.
-   * When set, `options` are treated as already server-filtered and typed text is
-   * forwarded to `onFilterChange`.
+   * Compatibility predicates for `type: "asyncResource"` fields, keyed by the
+   * field's resourceKind. The pickers fetch their own options on demand; this only
+   * restricts which fetched hrefs are offered.
    */
-  resourceSearch?: Partial<
-    Record<
-      EntityType,
-      { onFilterChange: (value: string) => void; isLoading?: boolean }
-    >
-  >;
+  resourceFilter?: ResourceFilterMap;
 }
 
 /** Renders entity fields bound to a react-hook-form `control`. */
@@ -51,8 +45,7 @@ export const EntityFormFields = <
   fields,
   control,
   idPrefix,
-  resourceOptions,
-  resourceSearch,
+  resourceFilter,
 }: IEntityFormFieldsProps<TFieldValues>) => {
   return (
     <>
@@ -171,26 +164,20 @@ export const EntityFormFields = <
                 );
               }
 
-              if (field.type === "resource") {
-                const options = resourceOptions?.[field.resourceKind] ?? [];
-                const search = resourceSearch?.[field.resourceKind];
+              if (field.type === "asyncResource") {
                 return (
                   <FormGroup
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
                   >
-                    <TypeaheadSelect
+                    <AsyncResourceSelect
                       id={fieldId}
-                      ariaLabel={field.label}
-                      placeholder={`Select ${field.label.toLowerCase()}…`}
-                      options={options}
+                      label={field.label}
+                      resourceKind={field.resourceKind}
                       value={(rhfField.value as string) ?? ""}
                       onChange={(value) => rhfField.onChange(value)}
-                      onFilterChange={
-                        search ? search.onFilterChange : undefined
-                      }
-                      isLoading={search?.isLoading}
+                      filter={resourceFilter?.[field.resourceKind]}
                     />
                     {helper}
                   </FormGroup>

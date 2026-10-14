@@ -141,7 +141,7 @@ export const publicationBase: IBaseFields = {
     {
       key: "repository",
       label: "Repository",
-      type: "resource",
+      type: "asyncResource",
       resourceKind: "repository",
       required: true,
     },

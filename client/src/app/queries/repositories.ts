@@ -14,6 +14,7 @@ import type {
   PaginatedRepositoryVersionResponseList,
   RepositoriesFileFileVersionsListData,
   RepositoriesListData,
+  RepositoryResponse,
   RepositorySyncUrl,
   RepositoryVersionResponse,
   RpmRepositorySyncUrl,
@@ -112,7 +113,7 @@ export type RepositorySyncBody = RepositorySyncUrl &
 
 /**
  * Sync any repository. Plugin-neutral but path-constructed (like
- * `useEntityCreateMutation`): rather than appending to the server-provided
+ * `useRepositoryCreateMutation`): rather than appending to the server-provided
  * `pulp_href`, the client rebuilds the exact endpoint from parts it already
  * knows — the `repositories/` family, the plugin's catalog `apiPath` (e.g.
  * `python/python`), the resource `id`, and the active domain — so the URL is
@@ -242,4 +243,69 @@ export const useAllRepositoryVersionsListQuery = (
 ) => {
   const domain = useSelectedDomain();
   return useQuery(allRepositoryVersionsListQueryOptions(apiPath, id, domain));
+};
+
+/**
+ * Detail-by-href for a repository (non-suspense), used to pre-fill the edit form and
+ * to resolve a selected repository's label in resource pickers. Keyed the same as the
+ * list detail slot so the cache stays unified. Disabled until an href is present.
+ */
+export const repositoryDetailQueryOptions = (href: string | null) =>
+  queryOptions({
+    queryKey: repositoryKeys.detail(href ?? ""),
+    queryFn: async (): Promise<RepositoryResponse> =>
+      (await axiosInstance.get<RepositoryResponse>(toProxyHref(href ?? "")))
+        .data,
+    enabled: !!href,
+  });
+
+export const useRepositoryDetailQuery = (href: string | null) =>
+  useQuery(repositoryDetailQueryOptions(href));
+
+/**
+ * Creates a repository of the given plugin type: POSTs to `repositories/<apiPath>/`
+ * (apiPath from the catalog), returning the created repository.
+ */
+export const useRepositoryCreateMutation = () => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      apiPath,
+      body,
+    }: {
+      apiPath: string;
+      body: Record<string, unknown>;
+    }): Promise<RepositoryResponse> =>
+      (
+        await axiosInstance.post<RepositoryResponse>(
+          pulpApiPath(`repositories/${apiPath}/`, domain),
+          body,
+        )
+      ).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+    },
+  });
+};
+
+/** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
+export const useRepositoryUpdateMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      href,
+      body,
+    }: {
+      href: string;
+      body: Record<string, unknown>;
+    }): Promise<unknown> =>
+      (await axiosInstance.patch(toProxyHref(href), body)).data,
+    onSuccess: (_data, { href }) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(href),
+      });
+    },
+  });
 };
