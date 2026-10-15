@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { ArtifactResponse } from "@app/client";
@@ -6,8 +7,15 @@ import { toProxyHref } from "./utils/pulpApi";
 
 export const ArtifactsQueryKey = "artifacts";
 
-export const artifactDetailQueryOptions = (href: string) =>
+export const artifactDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<UseQueryOptions<ArtifactResponse>, "queryKey" | "queryFn">;
+}) =>
   queryOptions({
+    ...options,
     queryKey: [ArtifactsQueryKey, "detail", href],
     queryFn: async (): Promise<ArtifactResponse> => {
       const response = await axiosInstance.get<ArtifactResponse>(
@@ -15,15 +23,10 @@ export const artifactDetailQueryOptions = (href: string) =>
       );
       return response.data;
     },
-    enabled: !!href,
   });
 
-export const useArtifactDetailQuery = (
-  href: string,
-  options?: { enabled?: boolean },
-) => {
-  return useQuery({
-    ...artifactDetailQueryOptions(href),
-    enabled: (options?.enabled ?? true) && !!href,
+export const useArtifactDetailQuery = ({ href }: { href: string }) =>
+  useQuery({
+    ...artifactDetailQueryOptions({ href }),
+    enabled: !!href,
   });
-};

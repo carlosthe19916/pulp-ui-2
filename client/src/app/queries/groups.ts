@@ -5,6 +5,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -37,57 +38,41 @@ export type IGroupUserListParams = ListParams<GroupsUsersListData>;
 
 export type IGroupRoleListParams = ListParams<GroupsRolesListData>;
 
-export const groupsRootQueryOptions = queryOptions({
-  queryKey: [GroupsQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. Every identifying segment
- * (root → list/detail → href → sub-collection) precedes the fetch variant
- * (`"all"`) and params, so a prefix invalidates all variants of a collection.
- * Shared by the query options and the mutations below to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede
+ * params/`"all"` so a prefix invalidates all variants. Shared by the query
+ * options and mutations to prevent key drift.
  */
 export const groupKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["groups"]
   all: () => [GroupsQueryKey] as const,
-  // ["groups", "list"] — every list query, any domain/params
   list: () => [...groupKeys.all(), "list"] as const,
-  // ["groups", "detail", groupHref] — one group and its whole subtree
   detail: (groupHref: string) =>
     [...groupKeys.all(), "detail", groupHref] as const,
-  // ["groups", "detail", groupHref, "users"] — a group's user queries
   users: (groupHref: string) =>
     [...groupKeys.detail(groupHref), "users"] as const,
-  // ["groups", "detail", groupHref, "roles"] — a group's role queries
   roles: (groupHref: string) =>
     [...groupKeys.detail(groupHref), "roles"] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["groups", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IGroupListParams) =>
     [...groupKeys.list(), domain, params] as const,
-  // ["groups", "detail", groupHref] — same value as detail() (no params)
   detailQuery: (groupHref: string) => groupKeys.detail(groupHref),
-  // ["groups", "detail", groupHref, "users", params]
   usersQuery: (groupHref: string, params: IGroupUserListParams) =>
     [...groupKeys.users(groupHref), params] as const,
-  // ["groups", "detail", groupHref, "users", "all"]
   usersAllQuery: (groupHref: string) =>
     [...groupKeys.users(groupHref), "all"] as const,
-  // ["groups", "detail", groupHref, "roles", params]
   rolesQuery: (groupHref: string, params: IGroupRoleListParams) =>
     [...groupKeys.roles(groupHref), params] as const,
-  // ["groups", "detail", groupHref, "roles", "all"]
   rolesAllQuery: (groupHref: string) =>
     [...groupKeys.roles(groupHref), "all"] as const,
 };
 
-export const groupsListQueryOptions = (
-  domain: IPulpDomain,
-  params: IGroupListParams,
-) =>
+export const groupsListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IGroupListParams;
+}) =>
   queryOptions({
     queryKey: groupKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
@@ -104,8 +89,15 @@ export const groupsListQueryOptions = (
     },
   });
 
-export const groupDetailQueryOptions = (groupHref: string) =>
+export const groupDetailQueryOptions = ({
+  groupHref,
+  options,
+}: {
+  groupHref: string;
+  options?: Omit<UseQueryOptions<GroupResponse>, "queryKey" | "queryFn">;
+}) =>
   queryOptions({
+    ...options,
     queryKey: groupKeys.detailQuery(groupHref),
     queryFn: async (): Promise<GroupResponse> => {
       const response = await axiosInstance.get<GroupResponse>(
@@ -113,14 +105,22 @@ export const groupDetailQueryOptions = (groupHref: string) =>
       );
       return response.data;
     },
-    enabled: !!groupHref,
   });
 
-export const groupUsersListQueryOptions = (
-  groupHref: string,
-  params: IGroupUserListParams,
-) =>
+export const groupUsersListQueryOptions = ({
+  groupHref,
+  params,
+  options,
+}: {
+  groupHref: string;
+  params: IGroupUserListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupUserResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: groupKeys.usersQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
@@ -134,12 +134,21 @@ export const groupUsersListQueryOptions = (
       );
       return response.data;
     },
-    enabled: !!groupHref,
   });
 
 /** `groups_users_list` supports only limit/offset, so fetch all and sort/filter in memory. */
-export const allGroupUsersListQueryOptions = (groupHref: string) =>
+export const allGroupUsersListQueryOptions = ({
+  groupHref,
+  options,
+}: {
+  groupHref: string;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupUserResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: groupKeys.usersAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const { results, count } = await fetchAllPages<GroupUserResponse>(
@@ -154,12 +163,21 @@ export const allGroupUsersListQueryOptions = (groupHref: string) =>
       );
       return { count, next: null, previous: null, results };
     },
-    enabled: !!groupHref,
   });
 
 /** Roles tab renders the full list in one table (no pagination UI), so page through all. */
-export const allGroupRolesListQueryOptions = (groupHref: string) =>
+export const allGroupRolesListQueryOptions = ({
+  groupHref,
+  options,
+}: {
+  groupHref: string;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupRoleResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: groupKeys.rolesAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
       const { results, count } = await fetchAllPages<GroupRoleResponse>(
@@ -174,14 +192,22 @@ export const allGroupRolesListQueryOptions = (groupHref: string) =>
       );
       return { count, next: null, previous: null, results };
     },
-    enabled: !!groupHref,
   });
 
-export const groupRolesListQueryOptions = (
-  groupHref: string,
-  params: IGroupRoleListParams,
-) =>
+export const groupRolesListQueryOptions = ({
+  groupHref,
+  params,
+  options,
+}: {
+  groupHref: string;
+  params: IGroupRoleListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupRoleResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: groupKeys.rolesQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
@@ -195,58 +221,83 @@ export const groupRolesListQueryOptions = (
       );
       return response.data;
     },
-    enabled: !!groupHref,
   });
 
-export const useGroupsListQuery = (params: IGroupListParams) => {
+export const useGroupsListQuery = ({
+  params,
+}: {
+  params: IGroupListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(groupsListQueryOptions(domain, params));
+  return useQuery(groupsListQueryOptions({ domain, params }));
 };
 
-export const useGroupDetailQuery = (groupId: string) => {
+export const useGroupDetailQuery = ({ groupId }: { groupId: string }) => {
   const domain = useDefaultDomain();
-  return useQuery(groupDetailQueryOptions(buildGroupHref(groupId, domain)));
+  const groupHref = buildGroupHref(groupId, domain);
+  return useQuery({
+    ...groupDetailQueryOptions({ groupHref }),
+    enabled: !!groupHref,
+  });
 };
 
-export const useSuspenseGroupDetailQuery = (groupId: string) => {
+export const useSuspenseGroupDetailQuery = ({
+  groupId,
+}: {
+  groupId: string;
+}) => {
   const domain = useDefaultDomain();
   return useSuspenseQuery(
-    groupDetailQueryOptions(buildGroupHref(groupId, domain)),
+    groupDetailQueryOptions({ groupHref: buildGroupHref(groupId, domain) }),
   );
 };
 
-export const useGroupUsersListQuery = (
-  groupId: string,
-  params: IGroupUserListParams,
-) => {
+export const useGroupUsersListQuery = ({
+  groupId,
+  params,
+}: {
+  groupId: string;
+  params: IGroupUserListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    groupUsersListQueryOptions(buildGroupHref(groupId, domain), params),
-  );
+  const groupHref = buildGroupHref(groupId, domain);
+  return useQuery({
+    ...groupUsersListQueryOptions({ groupHref, params }),
+    enabled: !!groupHref,
+  });
 };
 
-export const useAllGroupUsersListQuery = (groupId: string) => {
+export const useAllGroupUsersListQuery = ({ groupId }: { groupId: string }) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    allGroupUsersListQueryOptions(buildGroupHref(groupId, domain)),
-  );
+  const groupHref = buildGroupHref(groupId, domain);
+  return useQuery({
+    ...allGroupUsersListQueryOptions({ groupHref }),
+    enabled: !!groupHref,
+  });
 };
 
-export const useGroupRolesListQuery = (
-  groupId: string,
-  params: IGroupRoleListParams,
-) => {
+export const useGroupRolesListQuery = ({
+  groupId,
+  params,
+}: {
+  groupId: string;
+  params: IGroupRoleListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    groupRolesListQueryOptions(buildGroupHref(groupId, domain), params),
-  );
+  const groupHref = buildGroupHref(groupId, domain);
+  return useQuery({
+    ...groupRolesListQueryOptions({ groupHref, params }),
+    enabled: !!groupHref,
+  });
 };
 
-export const useAllGroupRolesListQuery = (groupId: string) => {
+export const useAllGroupRolesListQuery = ({ groupId }: { groupId: string }) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    allGroupRolesListQueryOptions(buildGroupHref(groupId, domain)),
-  );
+  const groupHref = buildGroupHref(groupId, domain);
+  return useQuery({
+    ...allGroupRolesListQueryOptions({ groupHref }),
+    enabled: !!groupHref,
+  });
 };
 
 export const useGroupCreateMutation = () => {

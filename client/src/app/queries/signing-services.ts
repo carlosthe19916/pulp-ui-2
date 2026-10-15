@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -20,10 +21,13 @@ export const signingServicesRootQueryOptions = queryOptions({
   queryFn: async (): Promise<null> => null,
 });
 
-export const signingServicesListQueryOptions = (
-  domain: IPulpDomain,
-  params: ISigningServiceListParams,
-) =>
+export const signingServicesListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: ISigningServiceListParams;
+}) =>
   queryOptions({
     queryKey: [
       ...signingServicesRootQueryOptions.queryKey,
@@ -46,8 +50,18 @@ export const signingServicesListQueryOptions = (
     },
   });
 
-export const signingServiceDetailQueryOptions = (href: string) =>
+export const signingServiceDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<SigningServiceResponse>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: [...signingServicesRootQueryOptions.queryKey, "detail", href],
     queryFn: async (): Promise<SigningServiceResponse> => {
       const response = await axiosInstance.get<SigningServiceResponse>(
@@ -55,16 +69,19 @@ export const signingServiceDetailQueryOptions = (href: string) =>
       );
       return response.data;
     },
-    enabled: !!href,
   });
 
-export const useSigningServicesListQuery = (
-  params: ISigningServiceListParams,
-) => {
+export const useSigningServicesListQuery = ({
+  params,
+}: {
+  params: ISigningServiceListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(signingServicesListQueryOptions(domain, params));
+  return useQuery(signingServicesListQueryOptions({ domain, params }));
 };
 
-export const useSigningServiceDetailQuery = (href: string) => {
-  return useQuery(signingServiceDetailQueryOptions(href));
-};
+export const useSigningServiceDetailQuery = ({ href }: { href: string }) =>
+  useQuery({
+    ...signingServiceDetailQueryOptions({ href }),
+    enabled: !!href,
+  });

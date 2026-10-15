@@ -1,9 +1,11 @@
 import {
   queryOptions,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
+  type UseQueryResult,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -44,94 +46,114 @@ export const isTerminalTaskState = (state?: string | null): boolean =>
   state === "canceled" ||
   state === "skipped";
 
-export const tasksRootQueryOptions = queryOptions({
-  queryKey: [TasksQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. `domain` below is the pulp
- * *deployment* domain (`IPulpDomain`, the slug that scopes every API path).
- * Identifying segments precede params so a prefix invalidates all variants of a
- * collection. Shared by the query options and mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths. `domain` is the Pulp deployment
+ * slug that scopes every API path. Two tiers: folders (invalidateQueries
+ * prefixes) and the real query keys built on them.
  */
 export const taskKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["tasks"]
   all: () => [TasksQueryKey] as const,
-  // ["tasks", "list"] — every list query, any domain/params
   list: () => [...taskKeys.all(), "list"] as const,
-  // ["tasks", "detail", taskHref]
   detail: (taskHref: string) =>
     [...taskKeys.all(), "detail", taskHref] as const,
-  // ["tasks", "byIds"] — every watch-by-ids query
-  byIds: () => [...taskKeys.all(), "byIds"] as const,
+  // Per-row delete/update status, one query per on-screen resource PRN.
+  byPrn: () => [...taskKeys.all(), "byPrn"] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["tasks", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: ITaskListParams) =>
     [...taskKeys.list(), domain, params] as const,
-  // ["tasks", "detail", taskHref] — same value as detail() (no params)
   detailQuery: (taskHref: string) => taskKeys.detail(taskHref),
-  // ["tasks", "byIds", domain, taskIds]
-  byIdsQuery: (domain: IPulpDomain, taskIds: string[]) =>
-    [...taskKeys.byIds(), domain, taskIds] as const,
+  byPrnQuery: (domain: IPulpDomain, prn: string, limit: number) =>
+    [...taskKeys.byPrn(), domain, prn, limit] as const,
 };
 
-/** Poll a specific set of tasks (by id) until none are active — for watching in-flight operations. */
-export const tasksByIdsQueryOptions = (
-  domain: IPulpDomain,
-  taskIds: string[],
-) =>
-  queryOptions({
-    queryKey: taskKeys.byIdsQuery(domain, taskIds),
-    queryFn: async (): Promise<TaskResponse[]> => {
-      const response = await axiosInstance.get<PaginatedTaskResponseList>(
-        pulpApiPath("tasks/", domain),
-        {
-          params: {
-            pulp_id__in: taskIds.join(","),
-            fields: "pulp_href,state",
-            limit: 100,
-          },
-        },
-      );
-      return response.data.results ?? [];
-    },
-    enabled: taskIds.length > 0,
-    refetchInterval: (query) =>
-      query.state.data?.some((task) => isActiveTask(task.state))
-        ? DEFAULT_REFETCH_INTERVAL
-        : false,
-  });
+/**
+ * In-flight states plus terminal failures (to report a failed delete/update).
+ * `completed`/`skipped` are omitted — a successful delete just drops the row.
+ */
+const PRN_TASK_STATES = [
+  "running",
+  "waiting",
+  "canceling",
+  "failed",
+  "canceled",
+] as const;
 
-export const tasksListQueryOptions = (
+/**
+ * Shared `GET tasks/`, re-wrapping the single `ordering` to the spec's array
+ * form. The list and per-PRN queries share it but keep their own keys/shapes.
+ */
+const fetchTasksPage = async (
   domain: IPulpDomain,
   params: ITaskListParams,
-) =>
-  queryOptions({
-    queryKey: taskKeys.listQuery(domain, params),
-    queryFn: async (): Promise<PaginatedTaskResponseList> => {
-      const response = await axiosInstance.get<PaginatedTaskResponseList>(
-        pulpApiPath("tasks/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
-        },
-      );
-      return response.data;
+): Promise<PaginatedTaskResponseList> => {
+  const response = await axiosInstance.get<PaginatedTaskResponseList>(
+    pulpApiPath("tasks/", domain),
+    {
+      params: {
+        ...params,
+        ordering: params.ordering ? [params.ordering] : undefined,
+      },
     },
-    refetchInterval: (query) => {
-      const hasActive = query.state.data?.results?.some((t) =>
-        isActiveTask(t.state),
-      );
-      return hasActive ? DEFAULT_REFETCH_INTERVAL : false;
+  );
+  return response.data;
+};
+
+/**
+ * In-flight (and recently-failed) delete/update tasks per resource, one query
+ * per PRN, flattened into a single `TaskResponse[]`. Each row polls its own PRN
+ * because the task API has no OR-across-resources filter; status is
+ * server-derived, so it survives reloads.
+ */
+export const useTasksByPrnQueries = ({
+  prns,
+  limit,
+}: {
+  prns: string[];
+  /** Max recent tasks fetched per PRN. */
+  limit: number;
+}): TaskResponse[] => {
+  const domain = useSelectedDomain();
+  return useQueries({
+    queries: prns.map((prn) =>
+      queryOptions({
+        queryKey: taskKeys.byPrnQuery(domain, prn, limit),
+        queryFn: async (): Promise<TaskResponse[]> => {
+          const page = await fetchTasksPage(domain, {
+            reserved_resources: prn,
+            state__in: [...PRN_TASK_STATES],
+            fields: ["pulp_href", "state", "name", "reserved_resources_record"],
+            ordering: "-pulp_created",
+            limit,
+          });
+          return page.results ?? [];
+        },
+        enabled: !!prn,
+        refetchInterval: (query) => {
+          return query.state.data?.some((task) => isActiveTask(task.state))
+            ? DEFAULT_REFETCH_INTERVAL
+            : false;
+        },
+      }),
+    ),
+    combine: (results: UseQueryResult<TaskResponse[]>[]): TaskResponse[] => {
+      return results.flatMap((result) => result.data ?? []);
     },
   });
+};
 
-export const taskDetailQueryOptions = (taskHref: string) =>
+export const tasksListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: ITaskListParams;
+}) =>
+  queryOptions({
+    queryKey: taskKeys.listQuery(domain, params),
+    queryFn: () => fetchTasksPage(domain, params),
+  });
+
+export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
   queryOptions({
     queryKey: taskKeys.detailQuery(taskHref),
     queryFn: async (): Promise<TaskResponse> => {
@@ -140,32 +162,35 @@ export const taskDetailQueryOptions = (taskHref: string) =>
       );
       return response.data;
     },
+  });
+
+export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
+  const domain = useDefaultDomain();
+  return useQuery({
+    ...tasksListQueryOptions({ domain, params }),
+    refetchInterval: (query) =>
+      query.state.data?.results?.some((task) => isActiveTask(task.state))
+        ? DEFAULT_REFETCH_INTERVAL
+        : false,
+  });
+};
+
+export const useTaskDetailQuery = ({ taskId }: { taskId: string }) => {
+  const taskHref = buildTaskHref(taskId);
+  return useQuery({
+    ...taskDetailQueryOptions({ taskHref }),
     enabled: !!taskHref,
     refetchInterval: (query) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
-
-/**
- * Watch a specific set of tasks (by id). Resolves the domain with
- * `useSelectedDomain()` — the selected content domain, or the default off a
- * content route — matching the pages that track in-flight operations.
- */
-export const useTasksByIdsQuery = (taskIds: string[]) => {
-  const domain = useSelectedDomain();
-  return useQuery(tasksByIdsQueryOptions(domain, taskIds));
 };
 
-export const useTasksListQuery = (params: ITaskListParams) => {
-  const domain = useDefaultDomain();
-  return useQuery(tasksListQueryOptions(domain, params));
-};
-
-export const useTaskDetailQuery = (taskId: string) => {
-  return useQuery(taskDetailQueryOptions(buildTaskHref(taskId)));
-};
-
-export const useSuspenseTaskDetailQuery = (taskId: string) => {
-  return useSuspenseQuery(taskDetailQueryOptions(buildTaskHref(taskId)));
+export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
+  return useSuspenseQuery({
+    ...taskDetailQueryOptions({ taskHref: buildTaskHref(taskId) }),
+    refetchInterval: (query) =>
+      isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
+  });
 };
 
 export const useTaskCancelMutation = () => {

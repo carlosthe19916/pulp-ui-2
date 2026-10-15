@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -13,6 +14,7 @@ import type {
   PaginatedDistributionResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -21,43 +23,37 @@ export const DistributionsQueryKey = "distributions";
 
 export type IDistributionListParams = ListParams<DistributionsListData>;
 
-export const distributionsRootQueryOptions = queryOptions({
-  queryKey: [DistributionsQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. Identifying segments precede
- * params so a prefix invalidates all variants of a collection. Shared by the
- * query options and the generic CRUD mutations (via
- * `distributionsRootQueryOptions`) to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede
+ * params so a prefix invalidates all variants. Shared by the query options and
+ * the generic CRUD mutations to prevent key drift.
  */
 export const distributionKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["distributions"]
   all: () => [DistributionsQueryKey] as const,
-  // ["distributions", "list"] — every list query, any domain/params
   list: () => [...distributionKeys.all(), "list"] as const,
-  // ["distributions", "detail", distHref]
   detail: (distHref: string) =>
     [...distributionKeys.all(), "detail", distHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["distributions", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IDistributionListParams) =>
     [...distributionKeys.list(), domain, params] as const,
-  // ["distributions", "detail", distHref] — same value as detail() (no params)
   detailQuery: (distHref: string) => distributionKeys.detail(distHref),
 };
 
-export const distributionsListQueryOptions = (
-  domain: IPulpDomain,
-  params: IDistributionListParams,
-  options?: { enabled?: boolean },
-) =>
+export const distributionsListQueryOptions = ({
+  domain,
+  params,
+  options,
+}: {
+  domain: IPulpDomain;
+  params: IDistributionListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedDistributionResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: distributionKeys.listQuery(domain, params),
-    enabled: options?.enabled ?? true,
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedDistributionResponseList>(
@@ -73,12 +69,18 @@ export const distributionsListQueryOptions = (
     },
   });
 
-export const useDistributionsListQuery = (
-  params: IDistributionListParams,
-  options?: { enabled?: boolean },
-) => {
+export const useDistributionsListQuery = ({
+  params,
+  options,
+}: {
+  params: IDistributionListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedDistributionResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) => {
   const domain = useSelectedDomain();
-  return useQuery(distributionsListQueryOptions(domain, params, options));
+  return useQuery(distributionsListQueryOptions({ domain, params, options }));
 };
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
@@ -93,26 +95,45 @@ export const useDistributionDeleteMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: distributionKeys.detail(href),
       });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
   });
 };
 
 /**
- * Detail-by-href for a distribution (non-suspense), used to pre-fill the edit form.
- * Keyed the same as the list detail slot so the cache stays unified. Disabled until
- * an href is present.
+ * Caller-tunable slice of the query config: everything `useQuery`/`queryOptions`
+ * accept except the two fields this module owns (`queryKey`, `queryFn`).
  */
-export const distributionDetailQueryOptions = (href: string | null) =>
+type DistributionDetailOptions = Omit<
+  UseQueryOptions<DistributionResponse>,
+  "queryKey" | "queryFn"
+>;
+
+/**
+ * Detail-by-href for a distribution, used to pre-fill the edit form; keyed like
+ * the list detail slot, with the `!!href` guard living in the hook.
+ */
+export const distributionDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string | null;
+  options?: DistributionDetailOptions;
+}) =>
   queryOptions({
+    ...options,
     queryKey: distributionKeys.detail(href ?? ""),
     queryFn: async (): Promise<DistributionResponse> =>
       (await axiosInstance.get<DistributionResponse>(toProxyHref(href ?? "")))
         .data,
-    enabled: !!href,
   });
 
-export const useDistributionDetailQuery = (href: string | null) =>
-  useQuery(distributionDetailQueryOptions(href));
+export const useDistributionDetailQuery = ({ href }: { href: string | null }) =>
+  useQuery({
+    ...distributionDetailQueryOptions({ href }),
+    enabled: !!href,
+  });
 
 /**
  * Creates a distribution of the given plugin type: POSTs to `distributions/<apiPath>/`

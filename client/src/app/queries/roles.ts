@@ -26,39 +26,30 @@ export type IRoleListParams = ListParams<RolesListData>;
 
 export type IAllRoleListParams = AllListParams<RolesListData>;
 
-export const rolesRootQueryOptions = queryOptions({
-  queryKey: [RolesQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
  * Query-key factory mirroring the REST paths. Identifying segments precede the
  * `"all"` fetch variant and params, so a prefix invalidates all variants of a
  * collection. Shared by the query options and mutations to prevent key drift.
  */
 export const roleKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["roles"]
   all: () => [RolesQueryKey] as const,
-  // ["roles", "list"] — every list query (paginated + all), any domain/params
   list: () => [...roleKeys.all(), "list"] as const,
-  // ["roles", "detail", roleHref] — one role
   detail: (roleHref: string) =>
     [...roleKeys.all(), "detail", roleHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["roles", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IRoleListParams) =>
     [...roleKeys.list(), domain, params] as const,
-  // ["roles", "list", domain, "all", params]
   listAllQuery: (domain: IPulpDomain, params: IAllRoleListParams) =>
     [...roleKeys.list(), domain, "all", params] as const,
 };
 
-export const rolesListQueryOptions = (
-  domain: IPulpDomain,
-  params: IRoleListParams,
-) =>
+export const rolesListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IRoleListParams;
+}) =>
   queryOptions({
     queryKey: roleKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
@@ -76,10 +67,13 @@ export const rolesListQueryOptions = (
   });
 
 /** Fetch every role at once (e.g. dual-list picker). Prefer server-side paging for single pages. */
-export const allRolesListQueryOptions = (
-  domain: IPulpDomain,
-  params: IAllRoleListParams = {},
-) =>
+export const allRolesListQueryOptions = ({
+  domain,
+  params = {},
+}: {
+  domain: IPulpDomain;
+  params?: IAllRoleListParams;
+}) =>
   queryOptions({
     queryKey: roleKeys.listAllQuery(domain, params),
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
@@ -103,14 +97,18 @@ export const allRolesListQueryOptions = (
     },
   });
 
-export const useRolesListQuery = (params: IRoleListParams) => {
+export const useRolesListQuery = ({ params }: { params: IRoleListParams }) => {
   const domain = useDefaultDomain();
-  return useQuery(rolesListQueryOptions(domain, params));
+  return useQuery(rolesListQueryOptions({ domain, params }));
 };
 
-export const useAllRolesListQuery = (params: IAllRoleListParams = {}) => {
+export const useAllRolesListQuery = ({
+  params = {},
+}: {
+  params?: IAllRoleListParams;
+} = {}) => {
   const domain = useDefaultDomain();
-  return useQuery(allRolesListQueryOptions(domain, params));
+  return useQuery(allRolesListQueryOptions({ domain, params }));
 };
 
 export const useRoleCreateMutation = () => {

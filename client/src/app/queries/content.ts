@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -20,35 +21,35 @@ export const contentRootQueryOptions = queryOptions({
 });
 
 /**
- * Query-key factory mirroring the REST paths. Identifying segments precede
- * params so a prefix invalidates all variants of a collection. Shared by the
- * query options and the generic CRUD mutations (via `contentRootQueryOptions`)
- * to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params
+ * so a prefix invalidates all variants. Shared by the query options and the
+ * generic CRUD mutations (via `contentRootQueryOptions`) to prevent key drift.
  */
 export const contentKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["content"]
   all: () => [ContentQueryKey] as const,
-  // ["content", "list"] — every list query, any domain/params
   list: () => [...contentKeys.all(), "list"] as const,
-  // ["content", "detail", contentHref]
   detail: (contentHref: string) =>
     [...contentKeys.all(), "detail", contentHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["content", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IContentListParams) =>
     [...contentKeys.list(), domain, params] as const,
-  // ["content", "detail", contentHref] — same value as detail() (no params)
   detailQuery: (contentHref: string) => contentKeys.detail(contentHref),
 };
 
-export const contentListQueryOptions = (
-  domain: IPulpDomain,
-  params: IContentListParams,
-  options?: { enabled?: boolean },
-) =>
+export const contentListQueryOptions = ({
+  domain,
+  params,
+  options,
+}: {
+  domain: IPulpDomain;
+  params: IContentListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedMultipleArtifactContentResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: contentKeys.listQuery(domain, params),
     queryFn:
       async (): Promise<PaginatedMultipleArtifactContentResponseList> => {
@@ -64,13 +65,18 @@ export const contentListQueryOptions = (
           );
         return response.data;
       },
-    enabled: options?.enabled ?? true,
   });
 
-export const useContentListQuery = (
-  params: IContentListParams,
-  options?: { enabled?: boolean },
-) => {
+export const useContentListQuery = ({
+  params,
+  options,
+}: {
+  params: IContentListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedMultipleArtifactContentResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) => {
   const domain = useSelectedDomain();
-  return useQuery(contentListQueryOptions(domain, params, options));
+  return useQuery(contentListQueryOptions({ domain, params, options }));
 };

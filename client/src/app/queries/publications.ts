@@ -24,43 +24,31 @@ export type IPublicationListParams = ListParams<PublicationsListData>;
 
 export type IAllPublicationListParams = AllListParams<PublicationsListData>;
 
-export const publicationsRootQueryOptions = queryOptions({
-  queryKey: [PublicationsQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. The `"all"` fetch variant nests
- * under `list` (identifying segments precede params) so a `list` prefix
- * invalidates both the paginated and fetch-all list queries. Shared by the
- * query options and the generic CRUD mutations (via
- * `publicationsRootQueryOptions`) to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede
+ * params so a `list` prefix invalidates all variants (paginated + fetch-all).
+ * Shared by the query options and the generic CRUD mutations to prevent key drift.
  */
 export const publicationKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["publications"]
   all: () => [PublicationsQueryKey] as const,
-  // ["publications", "list"] — every list query (paginated + fetch-all)
   list: () => [...publicationKeys.all(), "list"] as const,
-  // ["publications", "detail", pubHref]
   detail: (pubHref: string) =>
     [...publicationKeys.all(), "detail", pubHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["publications", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IPublicationListParams) =>
     [...publicationKeys.list(), domain, params] as const,
-  // ["publications", "list", "all", domain, params] — fetch-all variant
   allListQuery: (domain: IPulpDomain, params: IAllPublicationListParams) =>
     [...publicationKeys.list(), "all", domain, params] as const,
-  // ["publications", "detail", pubHref] — same value as detail() (no params)
   detailQuery: (pubHref: string) => publicationKeys.detail(pubHref),
 };
 
-export const publicationsListQueryOptions = (
-  domain: IPulpDomain,
-  params: IPublicationListParams,
-) =>
+export const publicationsListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IPublicationListParams;
+}) =>
   queryOptions({
     queryKey: publicationKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
@@ -79,10 +67,13 @@ export const publicationsListQueryOptions = (
   });
 
 /** Publications have no server-side name filter, so fetch all for the static picker select. */
-export const allPublicationsListQueryOptions = (
-  domain: IPulpDomain,
-  params: IAllPublicationListParams = {},
-) =>
+export const allPublicationsListQueryOptions = ({
+  domain,
+  params = {},
+}: {
+  domain: IPulpDomain;
+  params?: IAllPublicationListParams;
+}) =>
   queryOptions({
     queryKey: publicationKeys.allListQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
@@ -107,9 +98,13 @@ export const allPublicationsListQueryOptions = (
     },
   });
 
-export const usePublicationsListQuery = (params: IPublicationListParams) => {
+export const usePublicationsListQuery = ({
+  params,
+}: {
+  params: IPublicationListParams;
+}) => {
   const domain = useSelectedDomain();
-  return useQuery(publicationsListQueryOptions(domain, params));
+  return useQuery(publicationsListQueryOptions({ domain, params }));
 };
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */
@@ -128,11 +123,13 @@ export const usePublicationDeleteMutation = () => {
   });
 };
 
-export const useAllPublicationsListQuery = (
-  params: IAllPublicationListParams = {},
-) => {
+export const useAllPublicationsListQuery = ({
+  params = {},
+}: {
+  params?: IAllPublicationListParams;
+} = {}) => {
   const domain = useSelectedDomain();
-  return useQuery(allPublicationsListQueryOptions(domain, params));
+  return useQuery(allPublicationsListQueryOptions({ domain, params }));
 };
 
 /**

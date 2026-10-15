@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -32,47 +33,34 @@ export type IUserRoleListParams = ListParams<UsersRolesListData>;
 
 export type IAllUserRoleListParams = AllListParams<UsersRolesListData>;
 
-export const usersRootQueryOptions = queryOptions({
-  queryKey: [UsersQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. The `roles` sub-collection nests
- * under the user's detail, and identifying segments precede the `"all"` fetch
- * variant and params, so a prefix invalidates all variants of a collection.
- * Shared by the query options and mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede
+ * params/`"all"` so a prefix invalidates all variants. Shared by the query
+ * options and mutations to prevent key drift.
  */
 export const userKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["users"]
   all: () => [UsersQueryKey] as const,
-  // ["users", "list"] — every list query, any domain/params
   list: () => [...userKeys.all(), "list"] as const,
-  // ["users", "detail", userHref] — one user and its whole subtree
   detail: (userHref: string) =>
     [...userKeys.all(), "detail", userHref] as const,
-  // ["users", "detail", userHref, "roles"] — a user's role queries
   roles: (userHref: string) => [...userKeys.detail(userHref), "roles"] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["users", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IUserListParams) =>
     [...userKeys.list(), domain, params] as const,
-  // ["users", "detail", userHref] — same value as detail() (no params)
   detailQuery: (userHref: string) => userKeys.detail(userHref),
-  // ["users", "detail", userHref, "roles", params]
   rolesQuery: (userHref: string, params: IUserRoleListParams) =>
     [...userKeys.roles(userHref), params] as const,
-  // ["users", "detail", userHref, "roles", "all", params]
   rolesAllQuery: (userHref: string, params: IAllUserRoleListParams) =>
     [...userKeys.roles(userHref), "all", params] as const,
 };
 
-export const usersListQueryOptions = (
-  domain: IPulpDomain,
-  params: IUserListParams,
-) =>
+export const usersListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IUserListParams;
+}) =>
   queryOptions({
     queryKey: userKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedUserResponseList> => {
@@ -89,8 +77,15 @@ export const usersListQueryOptions = (
     },
   });
 
-export const userDetailQueryOptions = (userHref: string) =>
+export const userDetailQueryOptions = ({
+  userHref,
+  options,
+}: {
+  userHref: string;
+  options?: Omit<UseQueryOptions<UserResponse>, "queryKey" | "queryFn">;
+}) =>
   queryOptions({
+    ...options,
     queryKey: userKeys.detailQuery(userHref),
     queryFn: async (): Promise<UserResponse> => {
       const response = await axiosInstance.get<UserResponse>(
@@ -98,14 +93,22 @@ export const userDetailQueryOptions = (userHref: string) =>
       );
       return response.data;
     },
-    enabled: !!userHref,
   });
 
-export const userRolesListQueryOptions = (
-  userHref: string,
-  params: IUserRoleListParams,
-) =>
+export const userRolesListQueryOptions = ({
+  userHref,
+  params,
+  options,
+}: {
+  userHref: string;
+  params: IUserRoleListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedUserRoleResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: userKeys.rolesQuery(userHref, params),
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
       const response = await axiosInstance.get<PaginatedUserRoleResponseList>(
@@ -119,15 +122,23 @@ export const userRolesListQueryOptions = (
       );
       return response.data;
     },
-    enabled: !!userHref,
   });
 
 /** The dual-list role editor needs every assignment at once, so page through the whole list. */
-export const allUserRolesListQueryOptions = (
-  userHref: string,
-  params: IAllUserRoleListParams = {},
-) =>
+export const allUserRolesListQueryOptions = ({
+  userHref,
+  params = {},
+  options,
+}: {
+  userHref: string;
+  params?: IAllUserRoleListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedUserRoleResponseList>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: userKeys.rolesAllQuery(userHref, params),
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
       const { results, count } = await fetchAllPages<UserRoleResponse>(
@@ -149,37 +160,50 @@ export const allUserRolesListQueryOptions = (
       );
       return { count, next: null, previous: null, results };
     },
-    enabled: !!userHref,
   });
 
-export const useUsersListQuery = (params: IUserListParams) => {
+export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
   const domain = useDefaultDomain();
-  return useQuery(usersListQueryOptions(domain, params));
+  return useQuery(usersListQueryOptions({ domain, params }));
 };
 
-export const useUserDetailQuery = (userId: string) => {
+export const useUserDetailQuery = ({ userId }: { userId: string }) => {
   const domain = useDefaultDomain();
-  return useQuery(userDetailQueryOptions(buildUserHref(userId, domain)));
+  const userHref = buildUserHref(userId, domain);
+  return useQuery({
+    ...userDetailQueryOptions({ userHref }),
+    enabled: !!userHref,
+  });
 };
 
-export const useUserRolesListQuery = (
-  userId: string,
-  params: IUserRoleListParams,
-) => {
+export const useUserRolesListQuery = ({
+  userId,
+  params,
+}: {
+  userId: string;
+  params: IUserRoleListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    userRolesListQueryOptions(buildUserHref(userId, domain), params),
-  );
+  const userHref = buildUserHref(userId, domain);
+  return useQuery({
+    ...userRolesListQueryOptions({ userHref, params }),
+    enabled: !!userHref,
+  });
 };
 
-export const useAllUserRolesListQuery = (
-  userId: string,
-  params: IAllUserRoleListParams = {},
-) => {
+export const useAllUserRolesListQuery = ({
+  userId,
+  params = {},
+}: {
+  userId: string;
+  params?: IAllUserRoleListParams;
+}) => {
   const domain = useDefaultDomain();
-  return useQuery(
-    allUserRolesListQueryOptions(buildUserHref(userId, domain), params),
-  );
+  const userHref = buildUserHref(userId, domain);
+  return useQuery({
+    ...allUserRolesListQueryOptions({ userHref, params }),
+    enabled: !!userHref,
+  });
 };
 
 export const useUserCreateMutation = () => {

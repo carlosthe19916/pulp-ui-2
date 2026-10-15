@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -18,45 +19,36 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { taskKeys } from "./tasks";
 import { buildDomainHref } from "./utils/pulpHref";
 
 export const DomainsQueryKey = "domains";
 
 export type IDomainListParams = ListParams<DomainsListData>;
 
-export const domainsRootQueryOptions = queryOptions({
-  queryKey: [DomainsQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. `apiDomain` below is the pulp
- * *deployment* domain (`IPulpDomain`, the slug that scopes every API path) — not
- * to be confused with the Domains *resource* this module lists. Identifying
- * segments precede params so a prefix invalidates all variants of a collection.
+ * Query-key factory mirroring the REST paths; identifying segments precede params
+ * so a prefix invalidates all variants. `apiDomain` is the pulp *deployment*
+ * domain (`IPulpDomain`) — not the Domains *resource* this module lists.
  */
 export const domainKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["domains"]
   all: () => [DomainsQueryKey] as const,
-  // ["domains", "list"] — every list query, any apiDomain/params
   list: () => [...domainKeys.all(), "list"] as const,
-  // ["domains", "detail", domainHref]
   detail: (domainHref: string) =>
     [...domainKeys.all(), "detail", domainHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["domains", "list", apiDomain, params]
   listQuery: (apiDomain: IPulpDomain, params: IDomainListParams) =>
     [...domainKeys.list(), apiDomain, params] as const,
-  // ["domains", "detail", domainHref] — same value as detail() (no params)
   detailQuery: (domainHref: string) => domainKeys.detail(domainHref),
 };
 
-export const domainsListQueryOptions = (
-  apiDomain: IPulpDomain,
-  params: IDomainListParams,
-) =>
+export const domainsListQueryOptions = ({
+  apiDomain,
+  params,
+}: {
+  apiDomain: IPulpDomain;
+  params: IDomainListParams;
+}) =>
   queryOptions({
     queryKey: domainKeys.listQuery(apiDomain, params),
     queryFn: async (): Promise<PaginatedDomainResponseList> => {
@@ -73,8 +65,15 @@ export const domainsListQueryOptions = (
     },
   });
 
-export const domainDetailQueryOptions = (domainHref: string) =>
+export const domainDetailQueryOptions = ({
+  domainHref,
+  options,
+}: {
+  domainHref: string;
+  options?: Omit<UseQueryOptions<DomainResponse>, "queryKey" | "queryFn">;
+}) =>
   queryOptions({
+    ...options,
     queryKey: domainKeys.detailQuery(domainHref),
     queryFn: async (): Promise<DomainResponse> => {
       const response = await axiosInstance.get<DomainResponse>(
@@ -82,19 +81,24 @@ export const domainDetailQueryOptions = (domainHref: string) =>
       );
       return response.data;
     },
-    enabled: !!domainHref,
   });
 
-export const useDomainsListQuery = (params: IDomainListParams) => {
+export const useDomainsListQuery = ({
+  params,
+}: {
+  params: IDomainListParams;
+}) => {
   const apiDomain = useDefaultDomain();
-  return useQuery(domainsListQueryOptions(apiDomain, params));
+  return useQuery(domainsListQueryOptions({ apiDomain, params }));
 };
 
-export const useDomainDetailQuery = (domainId: string) => {
+export const useDomainDetailQuery = ({ domainId }: { domainId: string }) => {
   const apiDomain = useDefaultDomain();
-  return useQuery(
-    domainDetailQueryOptions(buildDomainHref(domainId, apiDomain)),
-  );
+  const domainHref = buildDomainHref(domainId, apiDomain);
+  return useQuery({
+    ...domainDetailQueryOptions({ domainHref }),
+    enabled: !!domainHref,
+  });
 };
 
 export const useDomainCreateMutation = () => {
@@ -135,6 +139,8 @@ export const useDomainUpdateMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
       });
+      // Surface the new update task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
   });
 };
@@ -154,6 +160,8 @@ export const useDomainDeleteMutation = () => {
       void queryClient.invalidateQueries({
         queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
       });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
   });
 };

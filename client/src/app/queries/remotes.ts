@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -13,6 +14,7 @@ import type {
   RemotesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -21,39 +23,29 @@ export const RemotesQueryKey = "remotes";
 
 export type IRemoteListParams = ListParams<RemotesListData>;
 
-export const remotesRootQueryOptions = queryOptions({
-  queryKey: [RemotesQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
- * Query-key factory mirroring the REST paths. Identifying segments precede
- * params so a prefix invalidates all variants of a collection. Shared by the
- * query options and the generic CRUD mutations (via `remotesRootQueryOptions`)
- * to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede
+ * params so a prefix invalidates all variants. Shared by the query options and
+ * the generic CRUD mutations to prevent key drift.
  */
 export const remoteKeys = {
-  // --- invalidation folders (prefixes for invalidateQueries) ---
-  // ["remotes"]
   all: () => [RemotesQueryKey] as const,
-  // ["remotes", "list"] — every list query, any domain/params
   list: () => [...remoteKeys.all(), "list"] as const,
-  // ["remotes", "detail", remoteHref]
   detail: (remoteHref: string) =>
     [...remoteKeys.all(), "detail", remoteHref] as const,
 
-  // --- real query keys (for useQuery / queryOptions) ---
-  // ["remotes", "list", domain, params]
   listQuery: (domain: IPulpDomain, params: IRemoteListParams) =>
     [...remoteKeys.list(), domain, params] as const,
-  // ["remotes", "detail", remoteHref] — same value as detail() (no params)
   detailQuery: (remoteHref: string) => remoteKeys.detail(remoteHref),
 };
 
-export const remotesListQueryOptions = (
-  domain: IPulpDomain,
-  params: IRemoteListParams,
-) =>
+export const remotesListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IRemoteListParams;
+}) =>
   queryOptions({
     queryKey: remoteKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGenericRemoteResponseList> => {
@@ -71,9 +63,13 @@ export const remotesListQueryOptions = (
     },
   });
 
-export const useRemotesListQuery = (params: IRemoteListParams) => {
+export const useRemotesListQuery = ({
+  params,
+}: {
+  params: IRemoteListParams;
+}) => {
   const domain = useSelectedDomain();
-  return useQuery(remotesListQueryOptions(domain, params));
+  return useQuery(remotesListQueryOptions({ domain, params }));
 };
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
@@ -86,26 +82,40 @@ export const useRemoteDeleteMutation = () => {
     onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({ queryKey: remoteKeys.detail(href) });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
   });
 };
 
 /**
- * Detail-by-href for a remote (non-suspense), used to pre-fill the edit wizard and
- * to resolve a selected remote's label in resource pickers. Keyed the same as the
- * list detail slot so the cache stays unified. Disabled until an href is present.
+ * Detail-by-href for a remote, used to pre-fill the edit wizard and to resolve a
+ * selected remote's label in resource pickers; keyed like the list detail slot,
+ * with the `!!href` guard living in the hook.
  */
-export const remoteDetailQueryOptions = (href: string | null) =>
+export const remoteDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string | null;
+  options?: Omit<
+    UseQueryOptions<GenericRemoteResponse>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions({
+    ...options,
     queryKey: remoteKeys.detail(href ?? ""),
     queryFn: async (): Promise<GenericRemoteResponse> =>
       (await axiosInstance.get<GenericRemoteResponse>(toProxyHref(href ?? "")))
         .data,
-    enabled: !!href,
   });
 
-export const useRemoteDetailQuery = (href: string | null) =>
-  useQuery(remoteDetailQueryOptions(href));
+export const useRemoteDetailQuery = ({ href }: { href: string | null }) =>
+  useQuery({
+    ...remoteDetailQueryOptions({ href }),
+    enabled: !!href,
+  });
 
 /**
  * Creates a remote of the given plugin type: POSTs to the typed collection
