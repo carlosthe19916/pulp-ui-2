@@ -3,7 +3,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { PatchedRole, Role, RoleResponse } from "@app/client";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { useRoleActions } from "./useRoleActions";
 
@@ -70,8 +69,7 @@ export const useRoleForm = ({
       if (isCreate) {
         await createRole(valuesToNewRole(values));
       } else if (role?.pulp_href) {
-        const roleId = extractIdFromHref(role.pulp_href);
-        await updateRole(roleId, valuesToPatchedRole(values));
+        await updateRole(role.pulp_href, valuesToPatchedRole(values));
       } else {
         return;
       }

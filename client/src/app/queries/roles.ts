@@ -18,7 +18,6 @@ import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildRoleHref } from "./utils/pulpHref";
 
 export const RolesQueryKey = "roles";
 
@@ -130,25 +129,18 @@ export const useRoleCreateMutation = () => {
 
 export const useRoleUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async ({
-      roleId,
-      body,
-    }: {
-      roleId: string;
-      body: PatchedRole;
-    }) => {
+    mutationFn: async ({ href, body }: { href: string; body: PatchedRole }) => {
       const response = await axiosInstance.patch<RoleResponse>(
-        toProxyHref(buildRoleHref(roleId, domain)),
+        toProxyHref(href),
         body,
       );
       return response.data;
     },
-    onSuccess: (_data, { roleId }) => {
+    onSuccess: (_data, { href }) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(buildRoleHref(roleId, domain)),
+        queryKey: roleKeys.detail(toProxyHref(href)),
       });
     },
   });
@@ -156,18 +148,15 @@ export const useRoleUpdateMutation = () => {
 
 export const useRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async (roleId: string) => {
-      const response = await axiosInstance.delete<void>(
-        toProxyHref(buildRoleHref(roleId, domain)),
-      );
+    mutationFn: async (href: string) => {
+      const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, roleId) => {
+    onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(buildRoleHref(roleId, domain)),
+        queryKey: roleKeys.detail(toProxyHref(href)),
       });
     },
   });

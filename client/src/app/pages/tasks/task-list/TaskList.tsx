@@ -96,7 +96,7 @@ export const TaskList: React.FC = () => {
   const [stateFilter, setStateFilter] = useState<TaskState | "">("");
   const [isStateOpen, setIsStateOpen] = useState(false);
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
-  const [cancelTaskId, setCancelTaskId] = useState<string | null>(null);
+  const [cancelTaskHref, setCancelTaskHref] = useState<string | null>(null);
 
   const { cancelTask, purgeTasks, isCanceling, isPurging } = useTaskActions();
 
@@ -113,11 +113,13 @@ export const TaskList: React.FC = () => {
   const debouncedName = useDebouncedValue(filters.name);
 
   const { data, isLoading, error } = useTasksListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__contains: debouncedName || undefined,
-    state: stateFilter || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__contains: debouncedName || undefined,
+      state: stateFilter || undefined,
+    },
   });
 
   const tasks = data?.results ?? [];
@@ -171,8 +173,7 @@ export const TaskList: React.FC = () => {
               items={[
                 {
                   title: "Cancel",
-                  onClick: () =>
-                    setCancelTaskId(extractTaskId(task.pulp_href ?? "")),
+                  onClick: () => setCancelTaskHref(task.pulp_href ?? null),
                 },
               ]}
             />
@@ -242,13 +243,13 @@ export const TaskList: React.FC = () => {
   );
 
   const handleCancel = async () => {
-    if (!cancelTaskId) return;
+    if (!cancelTaskHref) return;
     try {
-      await cancelTask(cancelTaskId);
+      await cancelTask(cancelTaskHref);
     } catch {
       // Notifications are handled in useTaskActions.
     }
-    setCancelTaskId(null);
+    setCancelTaskHref(null);
   };
 
   const handlePurge = async () => {
@@ -302,7 +303,7 @@ export const TaskList: React.FC = () => {
         </DataView>
 
         <ConfirmActionModal
-          isOpen={!!cancelTaskId}
+          isOpen={!!cancelTaskHref}
           title="Cancel Task"
           body="Are you sure you want to cancel this task?"
           isConfirming={isCanceling}
@@ -310,7 +311,7 @@ export const TaskList: React.FC = () => {
           cancelLabel="Close"
           confirmVariant="primary"
           onConfirm={() => void handleCancel()}
-          onCancel={() => setCancelTaskId(null)}
+          onCancel={() => setCancelTaskHref(null)}
         />
 
         <ConfirmActionModal

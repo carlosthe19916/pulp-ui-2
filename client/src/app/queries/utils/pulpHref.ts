@@ -42,57 +42,11 @@ export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
   return pulpApiPath(`users/${userId}/`, domain);
 };
 
-export const buildDomainHref = (
-  domainId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`domains/${domainId}/`, domain);
-};
-
 export const buildGroupHref = (
   groupId: string,
   domain: IPulpDomain,
 ): string => {
   return pulpApiPath(`groups/${groupId}/`, domain);
-};
-
-export const buildRoleHref = (roleId: string, domain: IPulpDomain): string => {
-  return pulpApiPath(`roles/${roleId}/`, domain);
-};
-
-export const buildRepositoryHref = (
-  repoId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`repositories/file/file/${repoId}/`, domain);
-};
-
-export const buildRemoteHref = (
-  remoteId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`remotes/file/file/${remoteId}/`, domain);
-};
-
-export const buildDistributionHref = (
-  distId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`distributions/file/file/${distId}/`, domain);
-};
-
-export const buildPublicationHref = (
-  pubId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`publications/file/file/${pubId}/`, domain);
-};
-
-export const buildContentHref = (
-  contentId: string,
-  domain: IPulpDomain,
-): string => {
-  return pulpApiPath(`content/file/files/${contentId}/`, domain);
 };
 
 export const extractIdFromHref = (href: string): string => {

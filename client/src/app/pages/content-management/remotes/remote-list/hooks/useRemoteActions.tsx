@@ -1,5 +1,5 @@
+import type { GenericRemoteResponse } from "@app/client";
 import { useMutationAction } from "@app/hooks/useMutationAction";
-import { useTrackedDelete } from "@app/hooks/useTrackedDelete";
 import {
   useRemoteCreateMutation,
   useRemoteDeleteMutation,
@@ -17,10 +17,7 @@ export const useRemoteActions = () => {
   const { runAction } = useMutationAction();
   const createMutation = useRemoteCreateMutation();
   const updateMutation = useRemoteUpdateMutation();
-  const { deleteEntity, isDeleting } = useTrackedDelete({
-    mutation: useRemoteDeleteMutation(),
-    label: "Remote",
-  });
+  const deleteMutation = useRemoteDeleteMutation();
 
   const createRemote = async (apiPath: string, body: RemoteWriteBody) =>
     runAction(() => createMutation.mutateAsync({ apiPath, body }), {
@@ -38,11 +35,19 @@ export const useRemoteActions = () => {
       errorTitle: "Failed to update remote",
     });
 
+  const deleteRemote = (remote: GenericRemoteResponse) =>
+    runAction(() => deleteMutation.mutateAsync(remote.pulp_href ?? ""), {
+      successTitle: `Remote "${remote.name}" deleted`,
+      errorTitle: "Failed to delete remote",
+      taskAware: true,
+      taskTitle: `Remote "${remote.name}" deletion started`,
+    });
+
   return {
     createRemote,
     updateRemote,
-    deleteRemote: deleteEntity,
-    isDeleting,
+    deleteRemote,
+    isDeleting: deleteMutation.isPending,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

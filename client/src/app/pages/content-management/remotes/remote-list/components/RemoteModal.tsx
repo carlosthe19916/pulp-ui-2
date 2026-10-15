@@ -13,9 +13,9 @@ interface IRemoteModalInnerProps {
 }
 
 const RemoteModalInner = ({ entity, onClose }: IRemoteModalInnerProps) => {
-  const { data: full, isLoading } = useRemoteDetailQuery(
-    entity?.pulp_href ?? "",
-  );
+  const { data: full, isLoading } = useRemoteDetailQuery({
+    href: entity?.pulp_href ?? "",
+  });
   const effectiveEntity = full ?? entity;
   const isCreate = !entity;
   const {

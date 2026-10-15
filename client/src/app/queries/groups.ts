@@ -232,15 +232,6 @@ export const useGroupsListQuery = ({
   return useQuery(groupsListQueryOptions({ domain, params }));
 };
 
-export const useGroupDetailQuery = ({ groupId }: { groupId: string }) => {
-  const domain = useDefaultDomain();
-  const groupHref = buildGroupHref(groupId, domain);
-  return useQuery({
-    ...groupDetailQueryOptions({ groupHref }),
-    enabled: !!groupHref,
-  });
-};
-
 export const useSuspenseGroupDetailQuery = ({
   groupId,
 }: {
@@ -319,25 +310,24 @@ export const useGroupCreateMutation = () => {
 
 export const useGroupUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
-      groupId,
+      href,
       body,
     }: {
-      groupId: string;
+      href: string;
       body: PatchedGroup;
     }) => {
       const response = await axiosInstance.patch<GroupResponse>(
-        toProxyHref(buildGroupHref(groupId, domain)),
+        toProxyHref(href),
         body,
       );
       return response.data;
     },
-    onSuccess: (_data, { groupId }) => {
+    onSuccess: (_data, { href }) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupKeys.detail(buildGroupHref(groupId, domain)),
+        queryKey: groupKeys.detail(toProxyHref(href)),
       });
     },
   });
@@ -345,43 +335,15 @@ export const useGroupUpdateMutation = () => {
 
 export const useGroupDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async (groupId: string) => {
-      const response = await axiosInstance.delete<void>(
-        toProxyHref(buildGroupHref(groupId, domain)),
-      );
+    mutationFn: async (href: string) => {
+      const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, groupId) => {
+    onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupKeys.detail(buildGroupHref(groupId, domain)),
-      });
-    },
-  });
-};
-
-export const useGroupUserCreateMutation = () => {
-  const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
-  return useMutation({
-    mutationFn: async ({
-      groupId,
-      body,
-    }: {
-      groupId: string;
-      body: GroupUser;
-    }) => {
-      const response = await axiosInstance.post<GroupUserResponse>(
-        `${toProxyHref(buildGroupHref(groupId, domain))}users/`,
-        body,
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { groupId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.users(buildGroupHref(groupId, domain)),
+        queryKey: groupKeys.detail(toProxyHref(href)),
       });
     },
   });
@@ -462,31 +424,6 @@ export const useGroupUserDeleteMutation = () => {
   });
 };
 
-export const useGroupRoleCreateMutation = () => {
-  const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
-  return useMutation({
-    mutationFn: async ({
-      groupId,
-      body,
-    }: {
-      groupId: string;
-      body: GroupRole;
-    }) => {
-      const response = await axiosInstance.post<GroupRoleResponse>(
-        `${toProxyHref(buildGroupHref(groupId, domain))}roles/`,
-        body,
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { groupId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.roles(buildGroupHref(groupId, domain)),
-      });
-    },
-  });
-};
-
 /** Result of a batch role add: role names grouped by outcome. */
 export interface IGroupRolesBatchResult {
   succeeded: string[];
@@ -533,25 +470,28 @@ export const useGroupRolesBatchCreateMutation = () => {
   });
 };
 
+/**
+ * Removes a role assignment from a group. The group-roles list returns each
+ * assignment's own nested href (`groups/{groupId}/roles/{assignmentId}/`), so we
+ * DELETE that href directly; `groupHref` drives the parent-roles invalidation.
+ */
 export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
-      groupId,
-      assignmentId,
+      roleAssignmentHref,
     }: {
-      groupId: string;
-      assignmentId: string;
+      groupHref: string;
+      roleAssignmentHref: string;
     }) => {
       const response = await axiosInstance.delete<void>(
-        pulpApiPath(`groups/${groupId}/roles/${assignmentId}/`, domain),
+        toProxyHref(roleAssignmentHref),
       );
       return response.data;
     },
-    onSuccess: (_data, { groupId }) => {
+    onSuccess: (_data, { groupHref }) => {
       void queryClient.invalidateQueries({
-        queryKey: groupKeys.roles(buildGroupHref(groupId, domain)),
+        queryKey: groupKeys.roles(toProxyHref(groupHref)),
       });
     },
   });

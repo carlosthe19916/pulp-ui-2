@@ -8,8 +8,7 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-/** Delete and update are the async (202 + task) operations tracked per row. */
-export type EntityTaskKind = "delete" | "update";
+import type { EntityTaskKind } from "@app/hooks/useResourceTasks";
 
 const TASK_LABEL: Record<EntityTaskKind, string> = {
   delete: "Deleting",

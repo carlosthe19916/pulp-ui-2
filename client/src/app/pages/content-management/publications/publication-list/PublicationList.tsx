@@ -67,9 +67,11 @@ export const PublicationList: React.FC = () => {
   });
 
   const { data, isLoading, error } = usePublicationsListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+    },
   });
 
   const publications = data?.results ?? [];

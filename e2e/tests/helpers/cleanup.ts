@@ -8,6 +8,7 @@ type Kind =
   | "remote"
   | "repository"
   | "distribution"
+  // A full pulp_href, for resources without a unique name (e.g. publications).
   | "href";
 
 /**
@@ -54,7 +55,7 @@ export class Cleanup {
     return name;
   }
 
-  /** Track a record for deletion by its `pulp_href` (e.g. publications, which have no name). */
+  /** Track a resource by its full `pulp_href` (e.g. a publication). */
   href(href: string): string {
     this.items.push({ kind: "href", name: href });
     return href;

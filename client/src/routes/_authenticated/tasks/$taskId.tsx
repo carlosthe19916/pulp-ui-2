@@ -9,7 +9,7 @@ import { buildTaskHref } from "@app/utils/taskHref";
 export const Route = createFileRoute("/_authenticated/tasks/$taskId")({
   loader: async ({ context: { queryClient }, params: { taskId } }) => {
     await queryClient.ensureQueryData(
-      taskDetailQueryOptions(buildTaskHref(taskId)),
+      taskDetailQueryOptions({ taskHref: buildTaskHref(taskId) }),
     );
   },
   pendingComponent: () => <DetailRoutePending label="Loading task..." />,

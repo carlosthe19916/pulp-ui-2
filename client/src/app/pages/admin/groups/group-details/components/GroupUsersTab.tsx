@@ -50,7 +50,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
     data: usersData,
     isLoading,
     error,
-  } = useAllGroupUsersListQuery(group.id);
+  } = useAllGroupUsersListQuery({ groupId: group.id });
 
   const userDeleteMutation = useGroupUserDeleteMutation();
 

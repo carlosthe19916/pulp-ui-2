@@ -9,8 +9,6 @@ import type {
   StorageClassEnum,
 } from "@app/client";
 
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-
 import {
   buildStorageSettingsSchema,
   STORAGE_BACKEND_BY_CLASS,
@@ -144,7 +142,6 @@ export const useDomainForm = ({
     }
 
     if (!domain?.pulp_href) return;
-    const domainId = extractIdFromHref(domain.pulp_href);
     const body: PatchedDomain = {
       name: values.name,
       description: description || null,
@@ -155,7 +152,7 @@ export const useDomainForm = ({
     };
     try {
       // Wait for the 202 before closing; the row then shows "Updating".
-      await updateDomain(domainId, body);
+      await updateDomain(domain.pulp_href, body);
       onClose();
     } catch {
       // Keep the modal open; the error is already surfaced as a toast.

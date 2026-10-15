@@ -15,9 +15,9 @@ const RepositoryModalInner = ({
   entity,
   onClose,
 }: IRepositoryModalInnerProps) => {
-  const { data: full, isLoading } = useRepositoryDetailQuery(
-    entity?.pulp_href ?? "",
-  );
+  const { data: full, isLoading } = useRepositoryDetailQuery({
+    href: entity?.pulp_href ?? "",
+  });
   const effectiveEntity = full ?? entity;
   const isCreate = !entity;
   const {

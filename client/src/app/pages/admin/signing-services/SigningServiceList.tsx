@@ -52,10 +52,12 @@ export const SigningServiceList: React.FC = () => {
   const debouncedName = useDebouncedValue(filters.name);
 
   const { data, isLoading, error } = useSigningServicesListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name: debouncedName || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name: debouncedName || undefined,
+    },
   });
 
   const services = data?.results ?? [];

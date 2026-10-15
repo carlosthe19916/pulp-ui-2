@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildContentHref,
-  buildDistributionHref,
   buildGroupHref,
-  buildPublicationHref,
-  buildRemoteHref,
-  buildRepositoryHref,
-  buildRoleHref,
   buildUserHref,
   extractIdFromHref,
   resolvePulpType,
@@ -24,34 +18,11 @@ describe("pulpHref helpers", () => {
     expect(buildGroupHref("7", enabled)).toBe(
       "/api/pulp/default/api/v3/groups/7/",
     );
-    expect(buildRoleHref("abc", enabled)).toBe(
-      "/api/pulp/default/api/v3/roles/abc/",
-    );
   });
 
   it("omits the domain segment when the domain is disabled", () => {
     expect(buildUserHref("42", disabled)).toBe("/api/pulp/api/v3/users/42/");
-    expect(buildRepositoryHref("r1", disabled)).toBe(
-      "/api/pulp/api/v3/repositories/file/file/r1/",
-    );
-  });
-
-  it("builds file-typed resource hrefs", () => {
-    expect(buildRepositoryHref("r1", enabled)).toContain(
-      "/repositories/file/file/r1/",
-    );
-    expect(buildRemoteHref("rm1", enabled)).toContain(
-      "/remotes/file/file/rm1/",
-    );
-    expect(buildDistributionHref("d1", enabled)).toContain(
-      "/distributions/file/file/d1/",
-    );
-    expect(buildPublicationHref("p1", enabled)).toContain(
-      "/publications/file/file/p1/",
-    );
-    expect(buildContentHref("c1", enabled)).toContain(
-      "/content/file/files/c1/",
-    );
+    expect(buildGroupHref("7", disabled)).toBe("/api/pulp/api/v3/groups/7/");
   });
 
   it("extracts the trailing id from a pulp_href", () => {

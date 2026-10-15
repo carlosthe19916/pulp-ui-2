@@ -97,11 +97,13 @@ export const RoleList: React.FC = () => {
   };
 
   const { data, isLoading, error } = useRolesListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__icontains: debouncedName || undefined,
-    locked: lockedFilter === "" ? undefined : lockedFilter === "true",
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+      locked: lockedFilter === "" ? undefined : lockedFilter === "true",
+    },
   });
 
   const roles = data?.results ?? [];

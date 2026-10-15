@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -35,14 +35,12 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDomainListParams } from "@app/queries/domains";
 import { domainKeys, useDomainsListQuery } from "@app/queries/domains";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
 
 import { DomainModal } from "./components/DomainModal";
@@ -67,7 +65,6 @@ const YesNoLabel: React.FC<{ value?: boolean }> = ({ value }) => (
 );
 
 export const DomainList: React.FC = () => {
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -95,22 +92,25 @@ export const DomainList: React.FC = () => {
   const debouncedName = useDebouncedValue(filters.name);
 
   const { data, isLoading, error } = useDomainsListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__icontains: debouncedName || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+    },
   });
 
   const domains = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: domains,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
+      // Replace this with refetch
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} domain "${entity.name}"`,
+          title: `Failed to ${kind} domain "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -136,9 +136,7 @@ export const DomainList: React.FC = () => {
     const defaultTooltip = {
       content: "The default domain can't be edited or deleted.",
     };
-    const task = domain.pulp_href
-      ? tasksById[extractIdFromHref(domain.pulp_href)]
-      : undefined;
+    const taskKind = getTaskKind(domain.prn);
     return {
       id: domain.pulp_href,
       row: [
@@ -164,8 +162,8 @@ export const DomainList: React.FC = () => {
           props: { dataLabel: "Created" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn
               items={[

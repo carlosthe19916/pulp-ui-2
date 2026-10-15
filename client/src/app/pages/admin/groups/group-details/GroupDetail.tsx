@@ -38,11 +38,17 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
-  const { data: group } = useSuspenseGroupDetailQuery(groupId);
+  const { data: group } = useSuspenseGroupDetailQuery({ groupId });
   // These fetches feed only the tab-title counts, so request a single row and
   // read the paginated `count` rather than pulling a page of results.
-  const { data: usersData } = useGroupUsersListQuery(groupId, { limit: 1 });
-  const { data: rolesData } = useGroupRolesListQuery(groupId, { limit: 1 });
+  const { data: usersData } = useGroupUsersListQuery({
+    groupId,
+    params: { limit: 1 },
+  });
+  const { data: rolesData } = useGroupRolesListQuery({
+    groupId,
+    params: { limit: 1 },
+  });
 
   const deleteMutation = useGroupDeleteMutation();
 
@@ -55,7 +61,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(groupId);
+      await deleteMutation.mutateAsync(group.pulp_href ?? "");
       addNotification({
         title: `Group "${group.name}" deleted`,
         variant: "success",

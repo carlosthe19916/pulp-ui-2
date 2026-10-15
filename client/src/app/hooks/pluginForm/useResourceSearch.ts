@@ -60,37 +60,46 @@ export const useResourceSearch = ({
   const isPublication = resourceKind === "publication";
 
   const repositoryQuery = useQuery({
-    ...repositoriesListQueryOptions(domain, {
-      limit: PAGE_SIZE,
-      offset: 0,
-      ordering: "name",
-      name__icontains: term || undefined,
+    ...repositoriesListQueryOptions({
+      domain,
+      params: {
+        limit: PAGE_SIZE,
+        offset: 0,
+        ordering: "name",
+        name__icontains: term || undefined,
+      },
     }),
     enabled: enabled && isRepository,
   });
   const remoteQuery = useQuery({
-    ...remotesListQueryOptions(domain, {
-      limit: PAGE_SIZE,
-      offset: 0,
-      ordering: "name",
-      name__icontains: term || undefined,
+    ...remotesListQueryOptions({
+      domain,
+      params: {
+        limit: PAGE_SIZE,
+        offset: 0,
+        ordering: "name",
+        name__icontains: term || undefined,
+      },
     }),
     enabled: enabled && isRemote,
   });
   const publicationQuery = useQuery({
-    ...publicationsListQueryOptions(domain, { limit: PAGE_SIZE, offset: 0 }),
+    ...publicationsListQueryOptions({
+      domain,
+      params: { limit: PAGE_SIZE, offset: 0 },
+    }),
     enabled: enabled && isPublication,
   });
 
   // Resolve the selected item's label (edit mode): it may be outside the current
   // search page. Each family's detail-by-href is gated to the active kind + href;
   // publications derive the label from the id, so they need no detail fetch.
-  const { data: selectedRepository } = useRepositoryDetailQuery(
-    isRepository ? selectedHref : "",
-  );
-  const { data: selectedRemote } = useRemoteDetailQuery(
-    isRemote ? selectedHref : "",
-  );
+  const { data: selectedRepository } = useRepositoryDetailQuery({
+    href: isRepository ? selectedHref : "",
+  });
+  const { data: selectedRemote } = useRemoteDetailQuery({
+    href: isRemote ? selectedHref : "",
+  });
   const selectedDetail = isRepository ? selectedRepository : selectedRemote;
 
   if (isPublication) {

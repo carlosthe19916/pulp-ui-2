@@ -25,7 +25,6 @@ import {
   useAllGroupRolesListQuery,
   useGroupRoleDeleteMutation,
 } from "@app/queries/groups";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { AddGroupRoleModal } from "./AddGroupRoleModal";
 
@@ -50,7 +49,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     data: rolesData,
     isLoading,
     error,
-  } = useAllGroupRolesListQuery(group.id);
+  } = useAllGroupRolesListQuery({ groupId: group.id });
 
   const roleDeleteMutation = useGroupRoleDeleteMutation();
 
@@ -154,8 +153,8 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     if (!removeRoleTarget?.pulp_href) return;
     try {
       await roleDeleteMutation.mutateAsync({
-        groupId: group.id,
-        assignmentId: extractIdFromHref(removeRoleTarget.pulp_href),
+        groupHref: group.object.pulp_href ?? "",
+        roleAssignmentHref: removeRoleTarget.pulp_href,
       });
       addNotification({
         title: `Role "${removeRoleTarget.role}" removed from group "${group.object.name}"`,

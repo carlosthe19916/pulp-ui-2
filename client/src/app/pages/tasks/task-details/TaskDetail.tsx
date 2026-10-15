@@ -50,7 +50,7 @@ interface ITaskDetailProps {
 }
 
 export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
-  const { data: task } = useSuspenseTaskDetailQuery(taskId);
+  const { data: task } = useSuspenseTaskDetailQuery({ taskId });
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -59,7 +59,7 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
 
   const handleCancel = async () => {
     try {
-      await cancelMutation.mutateAsync(taskId);
+      await cancelMutation.mutateAsync(task.pulp_href ?? "");
       addNotification({
         title: "Task cancel requested",
         variant: "info",

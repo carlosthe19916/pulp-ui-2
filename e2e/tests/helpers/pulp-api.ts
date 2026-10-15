@@ -11,6 +11,20 @@ interface IListResponse {
   results?: { pulp_href?: string }[];
 }
 
+/** A created Pulp resource, with the PRN the row-status feature joins tasks on. */
+export interface ICreatedResource {
+  pulp_href: string;
+  prn: string;
+}
+
+interface ITaskResponse {
+  state?: string;
+  created_resources?: string[];
+  error?: unknown;
+}
+
+const TERMINAL_TASK_STATES = ["completed", "failed", "canceled", "skipped"];
+
 interface IRoleAssignment {
   role: string;
 }
@@ -202,6 +216,114 @@ export class PulpApi {
       .filter((p) => p.repository_version?.startsWith(repositoryHref))
       .map((p) => p.pulp_href ?? "")
       .filter(Boolean);
+  }
+
+  // --- Direct REST creation returning the PRN (task-status fixtures) -------
+  // These let a spec stand up exactly the resources it needs without driving the
+  // (slow) create wizard, and return the `prn` so a test can assert/mock the
+  // per-row task status that the UI joins on `reserved_resources_record`.
+
+  /** Create a File repository (synchronous, 201). */
+  async createFileRepository(name: string): Promise<ICreatedResource> {
+    return this.createSync("repositories/file/file", { name });
+  }
+
+  /** Create a File remote (synchronous, 201). */
+  async createFileRemote(name: string): Promise<ICreatedResource> {
+    return this.createSync("remotes/file/file", {
+      name,
+      url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+    });
+  }
+
+  /** Create a domain backed by local filesystem storage (synchronous, 201). */
+  async createDomain(name: string): Promise<ICreatedResource> {
+    return this.createSync("domains", {
+      name,
+      storage_class: "pulpcore.app.models.storage.FileSystem",
+      storage_settings: { MEDIA_ROOT: "/var/lib/pulp/media/artifact" },
+    });
+  }
+
+  /** Create a File distribution (asynchronous, 202 + task). */
+  async createDistribution(name: string): Promise<ICreatedResource> {
+    return this.createAsync("distributions/file/file", {
+      name,
+      base_path: `e2e/${name}`,
+    });
+  }
+
+  /** Publish a repository's latest version (asynchronous, 202 + task). */
+  async createPublication(repositoryHref: string): Promise<ICreatedResource> {
+    return this.createAsync("publications/file/file", {
+      repository: repositoryHref,
+    });
+  }
+
+  private async createSync(
+    collection: string,
+    body: Record<string, unknown>,
+  ): Promise<ICreatedResource> {
+    const res = await this.ctx.post(this.collectionUrl(collection), {
+      data: body,
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `Create ${collection} failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    const created = (await res.json()) as Partial<ICreatedResource>;
+    if (!created.pulp_href || !created.prn) {
+      throw new Error(`Create ${collection} returned no href/prn`);
+    }
+    return { pulp_href: created.pulp_href, prn: created.prn };
+  }
+
+  private async createAsync(
+    collection: string,
+    body: Record<string, unknown>,
+  ): Promise<ICreatedResource> {
+    const res = await this.ctx.post(this.collectionUrl(collection), {
+      data: body,
+    });
+    if (res.status() !== 202) {
+      throw new Error(
+        `Expected a task from ${collection} (got ${res.status()}): ${await res.text()}`,
+      );
+    }
+    const { task } = (await res.json()) as { task?: string };
+    if (!task) throw new Error(`Create ${collection} returned no task href`);
+    const finished = await this.waitForTask(task);
+    const href = finished.created_resources?.[0];
+    if (!href) throw new Error(`Task ${task} created no resource`);
+    const got = await this.ctx.get(href);
+    const created = (await got.json()) as Partial<ICreatedResource>;
+    if (!created.pulp_href || !created.prn) {
+      throw new Error(`Created resource ${href} has no href/prn`);
+    }
+    return { pulp_href: created.pulp_href, prn: created.prn };
+  }
+
+  /**
+   * Poll a task to completion. This is backend task settling (there is no push
+   * channel), not a UI wait — it resolves as soon as the task reaches a terminal
+   * state rather than sleeping a fixed duration.
+   */
+  private async waitForTask(taskHref: string): Promise<ITaskResponse> {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const res = await this.ctx.get(taskHref);
+      const task = (await res.json()) as ITaskResponse;
+      if (TERMINAL_TASK_STATES.includes(task.state ?? "")) {
+        if (task.state !== "completed") {
+          throw new Error(
+            `Task ${taskHref} ${task.state}: ${JSON.stringify(task.error)}`,
+          );
+        }
+        return task;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    throw new Error(`Task ${taskHref} did not finish`);
   }
 
   private async findOne<T>(

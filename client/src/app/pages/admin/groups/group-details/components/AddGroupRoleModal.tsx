@@ -72,10 +72,12 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     "name" | "-name" | "description" | "-description" | undefined;
 
   const { data, isLoading, error } = useRolesListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__icontains: debouncedName || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+    },
   });
 
   const roles = data?.results ?? [];

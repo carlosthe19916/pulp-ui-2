@@ -175,16 +175,6 @@ export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
   });
 };
 
-export const useTaskDetailQuery = ({ taskId }: { taskId: string }) => {
-  const taskHref = buildTaskHref(taskId);
-  return useQuery({
-    ...taskDetailQueryOptions({ taskHref }),
-    enabled: !!taskHref,
-    refetchInterval: (query) =>
-      isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
-  });
-};
-
 export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
   return useSuspenseQuery({
     ...taskDetailQueryOptions({ taskHref: buildTaskHref(taskId) }),
@@ -196,9 +186,9 @@ export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
 export const useTaskCancelMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (taskId: string) => {
+    mutationFn: async (href: string) => {
       const response = await axiosInstance.patch<TaskResponse>(
-        toProxyHref(buildTaskHref(taskId)),
+        toProxyHref(href),
         { state: "canceled" },
       );
       return response.data;

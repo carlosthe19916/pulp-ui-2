@@ -72,10 +72,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     "username" | "-username" | "email" | "-email" | undefined;
 
   const { data, isLoading, error } = useUsersListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    username__icontains: debouncedUsername || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      username__icontains: debouncedUsername || undefined,
+    },
   });
 
   const users = data?.results ?? [];

@@ -10,8 +10,8 @@ export const useTaskActions = () => {
   const cancelMutation = useTaskCancelMutation();
   const purgeMutation = useTaskPurgeMutation();
 
-  const cancelTask = async (taskId: string) =>
-    runAction(() => cancelMutation.mutateAsync(taskId), {
+  const cancelTask = async (href: string) =>
+    runAction(() => cancelMutation.mutateAsync(href), {
       successTitle: "Task cancel requested",
       successVariant: "info",
       errorTitle: "Failed to cancel task",

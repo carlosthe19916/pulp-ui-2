@@ -5,7 +5,6 @@ import {
   useRoleDeleteMutation,
   useRoleUpdateMutation,
 } from "@app/queries/roles";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useRoleActions = () => {
@@ -20,20 +19,17 @@ export const useRoleActions = () => {
       errorTitle: "Failed to create role",
     });
 
-  const updateRole = async (roleId: string, body: PatchedRole) =>
-    runAction(() => updateMutation.mutateAsync({ roleId, body }), {
+  const updateRole = async (href: string, body: PatchedRole) =>
+    runAction(() => updateMutation.mutateAsync({ href, body }), {
       successTitle: (result) => `Role "${result.name}" updated`,
       errorTitle: "Failed to update role",
     });
 
   const deleteRole = async (role: RoleResponse) =>
-    runAction(
-      () => deleteMutation.mutateAsync(extractIdFromHref(role.pulp_href ?? "")),
-      {
-        successTitle: `Role "${role.name}" deleted`,
-        errorTitle: "Failed to delete role",
-      },
-    );
+    runAction(() => deleteMutation.mutateAsync(role.pulp_href ?? ""), {
+      successTitle: `Role "${role.name}" deleted`,
+      errorTitle: "Failed to delete role",
+    });
 
   return {
     createRole,

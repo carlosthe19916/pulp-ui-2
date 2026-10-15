@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -39,18 +39,14 @@ import { useRemoteActions } from "./hooks/useRemoteActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import { remoteKeys, useRemotesListQuery } from "@app/queries/remotes";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -64,7 +60,6 @@ interface IRemoteFilters {
 }
 
 export const RemoteList: React.FC = () => {
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -96,23 +91,25 @@ export const RemoteList: React.FC = () => {
   const debouncedPulpType = useDebouncedValue(filters.pulp_type);
 
   const { data, isLoading, error } = useRemotesListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__icontains: debouncedName || undefined,
-    pulp_type: debouncedPulpType || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+      pulp_type: debouncedPulpType || undefined,
+    },
   });
 
   const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: remotes,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} remote "${entity.name}"`,
+          title: `Failed to ${kind} remote "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -156,9 +153,8 @@ export const RemoteList: React.FC = () => {
   ];
 
   const rows: DataViewTr[] = remotes.map((remote) => {
-    const remoteId = extractIdFromHref(remote.pulp_href ?? "");
     const pulpType = resolvePulpType(remote.pulp_href);
-    const task = remoteId ? tasksById[remoteId] : undefined;
+    const taskKind = getTaskKind(remote.prn);
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.remote);
 
     return {
@@ -181,8 +177,8 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn
               items={[

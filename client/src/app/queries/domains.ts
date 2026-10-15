@@ -4,7 +4,6 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -20,7 +19,6 @@ import type { ListParams } from "./utils/listParams";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { taskKeys } from "./tasks";
-import { buildDomainHref } from "./utils/pulpHref";
 
 export const DomainsQueryKey = "domains";
 
@@ -65,24 +63,6 @@ export const domainsListQueryOptions = ({
     },
   });
 
-export const domainDetailQueryOptions = ({
-  domainHref,
-  options,
-}: {
-  domainHref: string;
-  options?: Omit<UseQueryOptions<DomainResponse>, "queryKey" | "queryFn">;
-}) =>
-  queryOptions({
-    ...options,
-    queryKey: domainKeys.detailQuery(domainHref),
-    queryFn: async (): Promise<DomainResponse> => {
-      const response = await axiosInstance.get<DomainResponse>(
-        toProxyHref(domainHref),
-      );
-      return response.data;
-    },
-  });
-
 export const useDomainsListQuery = ({
   params,
 }: {
@@ -90,15 +70,6 @@ export const useDomainsListQuery = ({
 }) => {
   const apiDomain = useDefaultDomain();
   return useQuery(domainsListQueryOptions({ apiDomain, params }));
-};
-
-export const useDomainDetailQuery = ({ domainId }: { domainId: string }) => {
-  const apiDomain = useDefaultDomain();
-  const domainHref = buildDomainHref(domainId, apiDomain);
-  return useQuery({
-    ...domainDetailQueryOptions({ domainHref }),
-    enabled: !!domainHref,
-  });
 };
 
 export const useDomainCreateMutation = () => {
@@ -120,24 +91,23 @@ export const useDomainCreateMutation = () => {
 
 export const useDomainUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const apiDomain = useDefaultDomain();
   return useMutation({
     mutationFn: async ({
-      domainId,
+      href,
       body,
     }: {
-      domainId: string;
+      href: string;
       body: PatchedDomain;
     }) => {
       const response = await axiosInstance.patch<
         DomainResponse | AsyncOperationResponse
-      >(toProxyHref(buildDomainHref(domainId, apiDomain)), body);
+      >(toProxyHref(href), body);
       return response.data;
     },
-    onSuccess: (_data, { domainId }) => {
+    onSuccess: (_data, { href }) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
+        queryKey: domainKeys.detail(toProxyHref(href)),
       });
       // Surface the new update task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
@@ -147,18 +117,17 @@ export const useDomainUpdateMutation = () => {
 
 export const useDomainDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const apiDomain = useDefaultDomain();
   return useMutation({
-    mutationFn: async (domainId: string) => {
+    mutationFn: async (href: string) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(buildDomainHref(domainId, apiDomain)),
+        toProxyHref(href),
       );
       return response.data;
     },
-    onSuccess: (_data, domainId) => {
+    onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(buildDomainHref(domainId, apiDomain)),
+        queryKey: domainKeys.detail(toProxyHref(href)),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });

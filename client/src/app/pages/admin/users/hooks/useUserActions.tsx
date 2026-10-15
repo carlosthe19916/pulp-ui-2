@@ -5,7 +5,6 @@ import {
   useUserDeleteMutation,
   useUserUpdateMutation,
 } from "@app/queries/users";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 /** Each action rethrows on failure so callers can keep a modal open on error. */
 export const useUserActions = () => {
@@ -20,20 +19,17 @@ export const useUserActions = () => {
       errorTitle: "Failed to create user",
     });
 
-  const updateUser = async (userId: string, body: PatchedUser) =>
-    runAction(() => updateMutation.mutateAsync({ userId, body }), {
+  const updateUser = async (href: string, body: PatchedUser) =>
+    runAction(() => updateMutation.mutateAsync({ href, body }), {
       successTitle: (result) => `User "${result.username}" updated`,
       errorTitle: "Failed to update user",
     });
 
   const deleteUser = async (user: UserResponse) =>
-    runAction(
-      () => deleteMutation.mutateAsync(extractIdFromHref(user.pulp_href ?? "")),
-      {
-        successTitle: `User "${user.username}" deleted`,
-        errorTitle: "Failed to delete user",
-      },
-    );
+    runAction(() => deleteMutation.mutateAsync(user.pulp_href ?? ""), {
+      successTitle: `User "${user.username}" deleted`,
+      errorTitle: "Failed to delete user",
+    });
 
   return {
     createUser,

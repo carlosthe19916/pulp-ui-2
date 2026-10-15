@@ -55,8 +55,10 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
   const [selectedRepoLabel, setSelectedRepoLabel] = useState<string>();
   const { data: repositoriesData, isLoading: isReposLoading } =
     useRepositoriesListQuery({
-      limit: 20,
-      name__icontains: debouncedRepoSearch || undefined,
+      params: {
+        limit: 20,
+        name__icontains: debouncedRepoSearch || undefined,
+      },
     });
 
   const repositoryOptions = useMemo<ITypeaheadOption[]>(

@@ -15,9 +15,9 @@ const DistributionModalInner = ({
   entity,
   onClose,
 }: IDistributionModalInnerProps) => {
-  const { data: full, isLoading } = useDistributionDetailQuery(
-    entity?.pulp_href ?? "",
-  );
+  const { data: full, isLoading } = useDistributionDetailQuery({
+    href: entity?.pulp_href ?? null,
+  });
   const effectiveEntity = full ?? entity;
   const isCreate = !entity;
   const {

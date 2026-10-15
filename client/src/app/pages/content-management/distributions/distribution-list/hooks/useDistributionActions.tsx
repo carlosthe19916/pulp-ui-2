@@ -1,5 +1,5 @@
+import type { DistributionResponse } from "@app/client";
 import { useMutationAction } from "@app/hooks/useMutationAction";
-import { useTrackedDelete } from "@app/hooks/useTrackedDelete";
 import {
   useDistributionCreateMutation,
   useDistributionDeleteMutation,
@@ -17,10 +17,7 @@ export const useDistributionActions = () => {
   const { runAction } = useMutationAction();
   const createMutation = useDistributionCreateMutation();
   const updateMutation = useDistributionUpdateMutation();
-  const { deleteEntity, isDeleting } = useTrackedDelete({
-    mutation: useDistributionDeleteMutation(),
-    label: "Distribution",
-  });
+  const deleteMutation = useDistributionDeleteMutation();
 
   const createDistribution = async (
     apiPath: string,
@@ -43,11 +40,19 @@ export const useDistributionActions = () => {
       errorTitle: "Failed to update distribution",
     });
 
+  const deleteDistribution = (distribution: DistributionResponse) =>
+    runAction(() => deleteMutation.mutateAsync(distribution.pulp_href ?? ""), {
+      successTitle: `Distribution "${distribution.name}" deleted`,
+      errorTitle: "Failed to delete distribution",
+      taskAware: true,
+      taskTitle: `Distribution "${distribution.name}" deletion started`,
+    });
+
   return {
     createDistribution,
     updateDistribution,
-    deleteDistribution: deleteEntity,
-    isDeleting,
+    deleteDistribution,
+    isDeleting: deleteMutation.isPending,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

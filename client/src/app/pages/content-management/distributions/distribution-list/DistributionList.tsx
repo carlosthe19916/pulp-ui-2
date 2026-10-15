@@ -1,5 +1,5 @@
 import type React from "react";
-import { use, useState } from "react";
+import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -40,21 +40,17 @@ import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityTaskTrackerContext } from "@app/context/EntityTaskTracker/EntityTaskTrackerContext";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useEntityTaskWatcher } from "@app/hooks/useEntityTaskWatcher";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -66,7 +62,6 @@ interface IDistributionFilters {
 }
 
 export const DistributionList: React.FC = () => {
-  const { tasksById } = use(EntityTaskTrackerContext);
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
@@ -99,23 +94,25 @@ export const DistributionList: React.FC = () => {
   const debouncedPulpType = useDebouncedValue(filters.pulp_type);
 
   const { data, isLoading, error } = useDistributionsListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    name__icontains: debouncedName || undefined,
-    pulp_type: debouncedPulpType || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      name__icontains: debouncedName || undefined,
+      pulp_type: debouncedPulpType || undefined,
+    },
   });
 
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  useEntityTaskWatcher({
+  const { getTaskKind } = useResourceTasks({
     entities: distributions,
-    onFinishedState: ({ task, tracked, entity }) => {
+    onSettled: ({ entity, kind, state }) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
-      if (task.state === "failed" || task.state === "canceled") {
+      if (state) {
         addNotification({
-          title: `Failed to ${tracked.kind} distribution "${entity.name}"`,
+          title: `Failed to ${kind} distribution "${entity.name}"`,
           variant: "danger",
         });
       }
@@ -157,8 +154,7 @@ export const DistributionList: React.FC = () => {
   ];
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
-    const distId = extractIdFromHref(distribution.pulp_href ?? "");
-    const task = distId ? tasksById[distId] : undefined;
+    const taskKind = getTaskKind(distribution.prn);
     const pulpType = resolvePulpType(distribution.pulp_href);
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
 
@@ -187,8 +183,8 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Repository" },
         },
         {
-          cell: task ? (
-            <EntityTaskStatus kind={task.kind} />
+          cell: taskKind ? (
+            <EntityTaskStatus kind={taskKind} />
           ) : (
             <ActionsColumn
               items={[

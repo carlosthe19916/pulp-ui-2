@@ -269,7 +269,7 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
     data: assignedData,
     isLoading: assignedLoading,
     error: assignedError,
-  } = useAllUserRolesListQuery(userId);
+  } = useAllUserRolesListQuery({ userId });
   const {
     data: allRolesData,
     isLoading: allRolesLoading,

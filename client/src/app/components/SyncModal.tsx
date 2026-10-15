@@ -70,13 +70,15 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const [selectedRemoteLabel, setSelectedRemoteLabel] = useState<string>();
   const { data: remotesData, isLoading: isRemotesLoading } =
     useRemotesListQuery({
-      limit: 20,
-      name__icontains: debouncedRemoteSearch || undefined,
-      pulp_type__in: compatibleRemoteTypes.length
-        ? (compatibleRemoteTypes as NonNullable<
-            Parameters<typeof useRemotesListQuery>[0]
-          >["pulp_type__in"])
-        : undefined,
+      params: {
+        limit: 20,
+        name__icontains: debouncedRemoteSearch || undefined,
+        pulp_type__in: compatibleRemoteTypes.length
+          ? (compatibleRemoteTypes as NonNullable<
+              NonNullable<Parameters<typeof useRemotesListQuery>[0]>["params"]
+            >["pulp_type__in"])
+          : undefined,
+      },
     });
 
   const remoteOptions = useMemo<ITypeaheadOption[]>(

@@ -17,9 +17,11 @@ export const DomainContextSelector = () => {
   const { enabled, name } = useSelectedDomain();
   const navigate = useNavigate();
   const { data, isLoading } = useDomainsListQuery({
-    limit: 100,
-    offset: 0,
-    ordering: "name",
+    params: {
+      limit: 100,
+      offset: 0,
+      ordering: "name",
+    },
   });
 
   if (!enabled) {

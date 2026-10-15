@@ -3,7 +3,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { Group, GroupResponse, PatchedGroup } from "@app/client";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
 import { useGroupActions } from "./useGroupActions";
 
@@ -59,8 +58,7 @@ export const useGroupForm = ({
       if (isCreate) {
         await createGroup(valuesToNewGroup(values));
       } else if (group?.pulp_href) {
-        const groupId = extractIdFromHref(group.pulp_href);
-        await updateGroup(groupId, valuesToPatchedGroup(values));
+        await updateGroup(group.pulp_href, valuesToPatchedGroup(values));
       } else {
         return;
       }

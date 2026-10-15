@@ -74,10 +74,12 @@ export const UserList: React.FC = () => {
   const debouncedUsername = useDebouncedValue(filters.username);
 
   const { data, isLoading, error } = useUsersListQuery({
-    limit: perPage,
-    offset: (page - 1) * perPage,
-    ordering,
-    username__icontains: debouncedUsername || undefined,
+    params: {
+      limit: perPage,
+      offset: (page - 1) * perPage,
+      ordering,
+      username__icontains: debouncedUsername || undefined,
+    },
   });
 
   const users = data?.results ?? [];

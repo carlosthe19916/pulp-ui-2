@@ -12,7 +12,6 @@ import type {
   PaginatedUserRoleResponseList,
   PatchedUser,
   UserResponse,
-  UserRole,
   UserRoleResponse,
   UsersListData,
   UsersRolesListData,
@@ -77,53 +76,6 @@ export const usersListQueryOptions = ({
     },
   });
 
-export const userDetailQueryOptions = ({
-  userHref,
-  options,
-}: {
-  userHref: string;
-  options?: Omit<UseQueryOptions<UserResponse>, "queryKey" | "queryFn">;
-}) =>
-  queryOptions({
-    ...options,
-    queryKey: userKeys.detailQuery(userHref),
-    queryFn: async (): Promise<UserResponse> => {
-      const response = await axiosInstance.get<UserResponse>(
-        toProxyHref(userHref),
-      );
-      return response.data;
-    },
-  });
-
-export const userRolesListQueryOptions = ({
-  userHref,
-  params,
-  options,
-}: {
-  userHref: string;
-  params: IUserRoleListParams;
-  options?: Omit<
-    UseQueryOptions<PaginatedUserRoleResponseList>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions({
-    ...options,
-    queryKey: userKeys.rolesQuery(userHref, params),
-    queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
-      const response = await axiosInstance.get<PaginatedUserRoleResponseList>(
-        `${toProxyHref(userHref)}roles/`,
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
-        },
-      );
-      return response.data;
-    },
-  });
-
 /** The dual-list role editor needs every assignment at once, so page through the whole list. */
 export const allUserRolesListQueryOptions = ({
   userHref,
@@ -167,30 +119,6 @@ export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
   return useQuery(usersListQueryOptions({ domain, params }));
 };
 
-export const useUserDetailQuery = ({ userId }: { userId: string }) => {
-  const domain = useDefaultDomain();
-  const userHref = buildUserHref(userId, domain);
-  return useQuery({
-    ...userDetailQueryOptions({ userHref }),
-    enabled: !!userHref,
-  });
-};
-
-export const useUserRolesListQuery = ({
-  userId,
-  params,
-}: {
-  userId: string;
-  params: IUserRoleListParams;
-}) => {
-  const domain = useDefaultDomain();
-  const userHref = buildUserHref(userId, domain);
-  return useQuery({
-    ...userRolesListQueryOptions({ userHref, params }),
-    enabled: !!userHref,
-  });
-};
-
 export const useAllUserRolesListQuery = ({
   userId,
   params = {},
@@ -225,25 +153,18 @@ export const useUserCreateMutation = () => {
 
 export const useUserUpdateMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async ({
-      userId,
-      body,
-    }: {
-      userId: string;
-      body: PatchedUser;
-    }) => {
+    mutationFn: async ({ href, body }: { href: string; body: PatchedUser }) => {
       const response = await axiosInstance.patch<UserResponse>(
-        toProxyHref(buildUserHref(userId, domain)),
+        toProxyHref(href),
         body,
       );
       return response.data;
     },
-    onSuccess: (_data, { userId }) => {
+    onSuccess: (_data, { href }) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(buildUserHref(userId, domain)),
+        queryKey: userKeys.detail(toProxyHref(href)),
       });
     },
   });
@@ -251,67 +172,15 @@ export const useUserUpdateMutation = () => {
 
 export const useUserDeleteMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await axiosInstance.delete<void>(
-        toProxyHref(buildUserHref(userId, domain)),
-      );
+    mutationFn: async (href: string) => {
+      const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, userId) => {
+    onSuccess: (_data, href) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(buildUserHref(userId, domain)),
-      });
-    },
-  });
-};
-
-export const useUserRoleCreateMutation = () => {
-  const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      body,
-    }: {
-      userId: string;
-      body: UserRole;
-    }) => {
-      const response = await axiosInstance.post<UserRoleResponse>(
-        `${toProxyHref(buildUserHref(userId, domain))}roles/`,
-        body,
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { userId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: userKeys.roles(buildUserHref(userId, domain)),
-      });
-    },
-  });
-};
-
-export const useUserRoleDeleteMutation = () => {
-  const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      assignmentId,
-    }: {
-      userId: string;
-      assignmentId: string;
-    }) => {
-      const response = await axiosInstance.delete<void>(
-        pulpApiPath(`users/${userId}/roles/${assignmentId}/`, domain),
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { userId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: userKeys.roles(buildUserHref(userId, domain)),
+        queryKey: userKeys.detail(toProxyHref(href)),
       });
     },
   });
