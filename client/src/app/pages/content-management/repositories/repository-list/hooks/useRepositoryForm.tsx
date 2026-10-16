@@ -4,6 +4,7 @@ import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRepositoryCreateMutation,
   useRepositoryUpdateMutation,
@@ -22,9 +23,10 @@ interface IUseRepositoryFormArgs {
 
 /**
  * Repository create/edit form: maps form values to a repository write body
- * (`RepositoryForm`) and runs the family's create/update mutations. Toasts are
- * raised from the mutations' hook-level callbacks (survive unmount); the
- * call-level `onSuccess` closes the modal on success only (see `evals/toastr.md`).
+ * (`RepositoryForm`) and runs the family's create/update mutations. The success
+ * toast is raised from the mutations' hook-level callbacks and the call-level
+ * `onSuccess` closes the modal (see `evals/toastr.md`); a submission failure is
+ * shown in-form via `submitError`, not a toast (see `evals/forms.md`).
  */
 export const useRepositoryForm = ({
   plugin,
@@ -32,6 +34,7 @@ export const useRepositoryForm = ({
   onClose,
 }: IUseRepositoryFormArgs): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !entity;
   const entityPlugin = plugin?.entities.repository;
 
@@ -42,10 +45,9 @@ export const useRepositoryForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create repository"),
-        variant: "danger",
-      }),
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to create repository"),
+      ),
   });
   const updateMutation = useRepositoryUpdateMutation({
     onSuccess: (_data, { name }) =>
@@ -54,14 +56,14 @@ export const useRepositoryForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update repository"),
-        variant: "danger",
-      }),
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to update repository"),
+      ),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (values: Record<string, unknown>) => {
+    clearSubmitError();
     if (isCreate) {
       if (!entityPlugin) return;
       createMutation.mutate(
@@ -80,5 +82,5 @@ export const useRepositoryForm = ({
     }
   };
 
-  return { onSubmit, isSubmitting };
+  return { onSubmit, isSubmitting, submitError };
 };

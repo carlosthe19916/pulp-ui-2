@@ -18,15 +18,18 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useFileContentCreateMutation } from "@app/queries/file-content";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const uploadSchema = yup.object({
   relative_path: yup.string().required("Relative path is required"),
@@ -48,6 +51,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
   repositoryHref,
 }) => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const createMutation = useFileContentCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
@@ -111,6 +115,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
   };
 
   const onSubmit = handleSubmit(async (values) => {
+    clearSubmitError();
     if (!values.file) return;
     try {
       const result = await createMutation.mutateAsync({
@@ -132,11 +137,11 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
             : "Upload started",
         );
       }
-    } catch {
-      addNotification({
-        title: "Failed to upload content",
-        variant: "danger",
-      });
+    } catch (error) {
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to upload content"),
+      );
+      return;
     }
     reset({
       relative_path: "",
@@ -147,6 +152,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
   });
 
   const handleClose = () => {
+    clearSubmitError();
     reset({
       relative_path: "",
       file: undefined,
@@ -166,6 +172,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
             void onSubmit();
           }}
         >
+          <FormSubmitError error={submitError} />
           <FormGroup label="File" fieldId="upload-file" isRequired>
             <input id="upload-file" type="file" onChange={handleFileChange} />
             {errors.file && (

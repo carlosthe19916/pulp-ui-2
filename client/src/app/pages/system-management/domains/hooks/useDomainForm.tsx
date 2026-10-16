@@ -9,12 +9,16 @@ import type {
   StorageClassEnum,
 } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useDomainCreateMutation,
   useDomainUpdateMutation,
 } from "@app/queries/domains";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import {
+  getMutationErrorMessage,
+  type IMutationErrorMessage,
+} from "@app/utils/utils";
 
 import {
   buildStorageSettingsSchema,
@@ -109,6 +113,7 @@ interface IUseDomainFormResult {
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const useDomainForm = ({
@@ -116,6 +121,7 @@ export const useDomainForm = ({
   onClose,
 }: IUseDomainFormArgs): IUseDomainFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !domain;
 
   const createMutation = useDomainCreateMutation({
@@ -125,10 +131,7 @@ export const useDomainForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create domain"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to create domain")),
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { name }) => {
@@ -148,10 +151,7 @@ export const useDomainForm = ({
       }
     },
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update domain"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to update domain")),
   });
 
   const form = useForm<DomainFormValues>({
@@ -163,6 +163,7 @@ export const useDomainForm = ({
   });
 
   const onSubmit = form.handleSubmit((values) => {
+    clearSubmitError();
     const description = values.description.trim();
 
     if (isCreate) {
@@ -198,5 +199,6 @@ export const useDomainForm = ({
     isCreate,
     onSubmit,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
+    submitError,
   };
 };

@@ -6,6 +6,7 @@ import type {
   FileFileContentWritable,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath } from "./utils/pulpApi";
 
 import { contentRootQueryOptions } from "./content";
@@ -14,7 +15,11 @@ import { contentRootQueryOptions } from "./content";
 export const useFileContentCreateMutation = () => {
   const queryClient = useQueryClient();
   const domain = useSelectedDomain();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    FileFileContentWritable
+  >({
     mutationFn: async (body: FileFileContentWritable) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(
         pulpApiPath("content/file/files/", domain),

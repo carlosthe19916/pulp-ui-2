@@ -16,6 +16,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -50,7 +51,7 @@ export const publicationsListQueryOptions = ({
   domain: IPulpDomain;
   params: IPublicationListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedPublicationResponseList, DrfAxiosError>({
     queryKey: publicationKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
@@ -75,7 +76,7 @@ export const allPublicationsListQueryOptions = ({
   domain: IPulpDomain;
   params?: IAllPublicationListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedPublicationResponseList, DrfAxiosError>({
     queryKey: publicationKeys.allListQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const { results, count } = await fetchAllPages<PublicationResponse>(
@@ -113,7 +114,7 @@ export const usePublicationDeleteMutation = (
   options?: IMutationCallbacks<void, { href: string; name: string }>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
     mutationFn: async ({
       href,
     }: {
@@ -155,7 +156,11 @@ export const usePublicationCreateMutation = (
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { apiPath: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       apiPath,
       body,

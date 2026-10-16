@@ -4,11 +4,15 @@ import * as yup from "yup";
 
 import type { Group, GroupResponse, PatchedGroup } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useGroupCreateMutation,
   useGroupUpdateMutation,
 } from "@app/queries/groups";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import {
+  getMutationErrorMessage,
+  type IMutationErrorMessage,
+} from "@app/utils/utils";
 
 export type GroupFormValues = {
   name: string;
@@ -42,6 +46,7 @@ interface IUseGroupFormResult {
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const useGroupForm = ({
@@ -49,6 +54,7 @@ export const useGroupForm = ({
   onClose,
 }: IUseGroupFormArgs): IUseGroupFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !group;
 
   const createMutation = useGroupCreateMutation({
@@ -58,19 +64,13 @@ export const useGroupForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create group"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to create group")),
   });
   const updateMutation = useGroupUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `Group "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update group"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to update group")),
   });
 
   const form = useForm<GroupFormValues>({
@@ -80,6 +80,7 @@ export const useGroupForm = ({
   });
 
   const onSubmit = form.handleSubmit((values) => {
+    clearSubmitError();
     if (isCreate) {
       createMutation.mutate(valuesToNewGroup(values), {
         onSuccess: () => onClose(),
@@ -101,5 +102,6 @@ export const useGroupForm = ({
     isCreate,
     onSubmit,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
+    submitError,
   };
 };

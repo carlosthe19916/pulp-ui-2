@@ -5,7 +5,9 @@ import { Button, Form, ModalBody, ModalFooter } from "@patternfly/react-core";
 
 import type { IEntityField } from "@catalog";
 import { EntityFormFields } from "@app/components/EntityFormFields";
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import type { ResourceFilterMap } from "@app/components/PluginForm/resourceFilter";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 const FORM_ID = "entity-form";
 
@@ -20,6 +22,8 @@ interface IEntityFormBodyProps {
   onClose: () => void;
   typeSelector?: ReactNode;
   resourceFilter: ResourceFilterMap;
+  /** Submission failure shown at the top of the form (see `evals/forms.md`). */
+  submitError: IMutationErrorMessage | null;
 }
 
 /**
@@ -38,6 +42,7 @@ export const EntityFormBody = ({
   onClose,
   typeSelector,
   resourceFilter,
+  submitError,
 }: IEntityFormBodyProps) => (
   <>
     <ModalBody>
@@ -48,6 +53,7 @@ export const EntityFormBody = ({
           onSubmit();
         }}
       >
+        <FormSubmitError error={submitError} />
         {typeSelector}
         <EntityFormFields
           fields={fields}

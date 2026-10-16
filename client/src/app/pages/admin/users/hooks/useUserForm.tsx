@@ -4,11 +4,15 @@ import * as yup from "yup";
 
 import type { PatchedUser, UserResponse, UserWritable } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useUserCreateMutation,
   useUserUpdateMutation,
 } from "@app/queries/users";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import {
+  getMutationErrorMessage,
+  type IMutationErrorMessage,
+} from "@app/utils/utils";
 
 export type UserFormValues = {
   username: string;
@@ -80,6 +84,7 @@ interface IUseUserFormResult {
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const useUserForm = ({
@@ -87,6 +92,7 @@ export const useUserForm = ({
   onClose,
 }: IUseUserFormArgs): IUseUserFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !user;
 
   const createMutation = useUserCreateMutation({
@@ -96,19 +102,13 @@ export const useUserForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create user"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to create user")),
   });
   const updateMutation = useUserUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `User "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update user"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to update user")),
   });
 
   const form = useForm<UserFormValues>({
@@ -118,6 +118,7 @@ export const useUserForm = ({
   });
 
   const onSubmit = form.handleSubmit((values) => {
+    clearSubmitError();
     if (isCreate) {
       createMutation.mutate(valuesToNewUser(values), {
         onSuccess: () => onClose(),
@@ -139,5 +140,6 @@ export const useUserForm = ({
     isCreate,
     onSubmit,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
+    submitError,
   };
 };

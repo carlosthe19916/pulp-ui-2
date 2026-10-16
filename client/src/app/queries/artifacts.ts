@@ -3,6 +3,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { ArtifactResponse } from "@app/client";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
 
 export const ArtifactsQueryKey = "artifacts";
@@ -12,9 +13,12 @@ export const artifactDetailQueryOptions = ({
   options,
 }: {
   href: string;
-  options?: Omit<UseQueryOptions<ArtifactResponse>, "queryKey" | "queryFn">;
+  options?: Omit<
+    UseQueryOptions<ArtifactResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
-  queryOptions({
+  queryOptions<ArtifactResponse, DrfAxiosError>({
     ...options,
     queryKey: [ArtifactsQueryKey, "detail", href],
     queryFn: async (): Promise<ArtifactResponse> => {

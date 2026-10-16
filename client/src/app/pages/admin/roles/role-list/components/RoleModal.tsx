@@ -20,7 +20,7 @@ interface IRoleModalInnerProps {
 
 /** Only mounted while open so react-hook-form re-initializes on every open. */
 const RoleModalInner: React.FC<IRoleModalInnerProps> = ({ role, onClose }) => {
-  const { form, isCreate, onSubmit, isSubmitting } = useRoleForm({
+  const { form, isCreate, onSubmit, isSubmitting, submitError } = useRoleForm({
     role,
     onClose,
   });
@@ -36,6 +36,7 @@ const RoleModalInner: React.FC<IRoleModalInnerProps> = ({ role, onClose }) => {
           isCreate={isCreate}
           onSubmit={onSubmit}
           formId="role-form"
+          submitError={submitError}
         />
       </ModalBody>
       <ModalFooter>

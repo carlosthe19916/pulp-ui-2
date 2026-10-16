@@ -11,6 +11,7 @@ import {
   slugifyGroup,
 } from "@app/components/PluginForm/wizardSteps";
 import type { IEntityForEdit } from "@app/hooks/pluginForm/useEntityForm";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 interface IEntityWizardBodyProps {
   kind: EntityType;
@@ -23,6 +24,8 @@ interface IEntityWizardBodyProps {
   /** Family-supplied submit for the merged step values (create or edit). */
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   isSubmitting: boolean;
+  /** Submission failure shown on the final (submitting) step (see `evals/forms.md`). */
+  submitError: IMutationErrorMessage | null;
 }
 
 /**
@@ -42,6 +45,7 @@ export const EntityWizardBody = ({
   resourceFilter,
   onSubmit,
   isSubmitting,
+  submitError,
 }: IEntityWizardBodyProps) => {
   const isCreate = !entity;
   const entityPlugin = plugin?.entities[kind];
@@ -106,6 +110,7 @@ export const EntityWizardBody = ({
               onStateChanged={(state) => setStepState(step.group, state)}
               resourceFilter={resourceFilter}
               typeSelector={index === 0 ? typeSelector : undefined}
+              submitError={isLast ? submitError : null}
             />
           </WizardStep>
         );

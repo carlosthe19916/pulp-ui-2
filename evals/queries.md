@@ -1,3 +1,9 @@
+---
+name: queries
+description: Public query-reading surface in client/src/app/queries — single inline-object args, explicit domain + hook injection, precondition-guard detail queries, no throw in queryFn.
+globs: client/src/app/queries/**
+---
+
 # Query module conventions (`client/src/app/queries/`)
 
 Every **public** query-reading function — the `*QueryOptions` factories and the
@@ -105,6 +111,42 @@ flows straight from the caller through the pure spread. Still type `options` as
 `Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` and pure-spread it. Reference:
 `content.ts`.
 
+## Error typing (`TError`)
+
+Every query-reading surface and mutation declares its error type explicitly — the
+OpenAPI spec documents no error bodies, so the generated client has none. The
+hand-authored error types live in **`queries/utils/openapiErrorTypes.ts`**:
+
+- **`DrfAxiosError`** (`= AxiosError<IDrfValidationErrorData>`) — the **default**
+  `TError` for every hook. All `queries/` endpoints hit `/pulp/api/v3/…` stock-DRF
+  routes, whose errors are a validation dict / `non_field_errors` / scalar `detail`.
+- **`PulpAxiosError`** (the wide `PulpErrorData` union) — use **only** when the
+  error shape is genuinely unknown; it is just the fallback default of
+  `IMutationCallbacks`.
+
+Thread it explicitly (React Query v5 does not infer `TError`):
+
+```ts
+queryOptions<TData, DrfAxiosError>({ … })
+useMutation<TData, DrfAxiosError, TVariables>({ … })
+// options field: Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">
+// IMutationCallbacks<TData, TVariables> defaults TError = PulpAxiosError; pass
+// DrfAxiosError as the 3rd arg so onError is granular.
+```
+
+## Response typing (`TData`)
+
+`TData` mirrors the endpoint's declared **2xx** response(s) exactly — never `any`
+or `unknown`:
+
+- One documented success code → that single type (e.g. create `201` → entity;
+  async create/delete `202` → `AsyncOperationResponse`; sync delete `204` → `void`).
+- Both `200` **and** `202` (content/domain **PATCH** can finish sync or dispatch a
+  task) → the union `EntityResponse | AsyncOperationResponse`. Admin PATCH
+  (user/group/role) is `200`-only → single type, **not** a union.
+- A plugin-neutral write body stays `Record<string, unknown>` (a typed dictionary,
+  not `any`); it is not a `TData`/`TError`.
+
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check only the public query-reading surface in
@@ -119,8 +161,14 @@ changed `queries/` files.
       the id-style hook, never in the factory.
 - [ ] `domain` is passed explicitly to `*QueryOptions`; the **hook** injects it via
       `useDefaultDomain()` / `useSelectedDomain()` — callers never pass `domain`.
-- [ ] `options` is typed `Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` and
-      **spread first** so the factory's `queryKey` / `queryFn` win.
+- [ ] `options` is typed `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">`
+      and **spread first** so the factory's `queryKey` / `queryFn` win.
+- [ ] Every `queryOptions` / `useMutation` / `UseQueryOptions` declares its `TError`
+      explicitly — `DrfAxiosError` by default, `PulpAxiosError` only when the shape
+      is unknown. Error types come from `queries/utils/openapiErrorTypes.ts`.
+- [ ] `TData` matches the endpoint's declared 2xx response(s) — single type, or the
+      `Entity | AsyncOperationResponse` union when the spec declares both `200` and
+      `202`. No `any` / `unknown` as a `TData` or `TError`.
 - [ ] Precondition-guard detail queries: `*QueryOptions` sets **no `enabled`**; the
       `use*Query` hook owns the `enabled: !!href` guard and does **not** accept
       `options`. (Caller-preference lists keep `options` on both and forward it.)

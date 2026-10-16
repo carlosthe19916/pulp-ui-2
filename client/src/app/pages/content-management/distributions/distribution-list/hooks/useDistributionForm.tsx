@@ -4,6 +4,7 @@ import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useDistributionCreateMutation,
   useDistributionUpdateMutation,
@@ -22,9 +23,10 @@ interface IUseDistributionFormArgs {
 /**
  * Distribution create/edit form: maps form values to a distribution write body
  * (`DistributionForm`) and runs the family's create/update mutations. Create is
- * async (202 + task). Toasts are raised from the mutations' hook-level callbacks
- * (survive unmount); the call-level `onSuccess` closes the modal on success only
- * (see `evals/toastr.md`).
+ * async (202 + task). The success toast is raised from the mutations' hook-level
+ * callbacks and the call-level `onSuccess` closes the modal (see `evals/toastr.md`);
+ * a submission failure is shown in-form via `submitError`, not a toast (see
+ * `evals/forms.md`).
  */
 export const useDistributionForm = ({
   plugin,
@@ -32,6 +34,7 @@ export const useDistributionForm = ({
   onClose,
 }: IUseDistributionFormArgs): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !entity;
   const entityPlugin = plugin?.entities.distribution;
 
@@ -43,10 +46,9 @@ export const useDistributionForm = ({
         `Distribution "${name}" create started`,
       ),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create distribution"),
-        variant: "danger",
-      }),
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to create distribution"),
+      ),
   });
   const updateMutation = useDistributionUpdateMutation({
     onSuccess: (_data, { name }) =>
@@ -55,14 +57,14 @@ export const useDistributionForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update distribution"),
-        variant: "danger",
-      }),
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to update distribution"),
+      ),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (values: Record<string, unknown>) => {
+    clearSubmitError();
     if (isCreate) {
       if (!entityPlugin) return;
       const body = valuesToCreate(values);
@@ -82,5 +84,5 @@ export const useDistributionForm = ({
     }
   };
 
-  return { onSubmit, isSubmitting };
+  return { onSubmit, isSubmitting, submitError };
 };

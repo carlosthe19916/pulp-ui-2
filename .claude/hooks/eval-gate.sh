@@ -21,6 +21,14 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
 
 marker=".claude/.eval-ran"
 
+# Which convention specs apply to the current changes? Routing is self-describing
+# (each evals/*.md declares its own globs); eval-select.sh is the single source of
+# truth, shared with the /eval command.
+specs=$("$CLAUDE_PROJECT_DIR/.claude/hooks/eval-select.sh" "$cwd" 2>/dev/null || true)
+
+# No spec covers these changes -> nothing to verify.
+[ -z "$specs" ] && exit 0
+
 # Uncommitted changes (modified, staged, untracked) under client/src/.
 # porcelain line is "XY <path>"; strip the 3-char status prefix.
 newest=0
@@ -42,7 +50,14 @@ marker_mtime=0
 # /eval ran after the latest change -> allow.
 [ "$marker_mtime" -ge "$newest" ] && exit 0
 
-cat <<'EOF'
-{"decision":"block","reason":"Changes under client/src/ have not been verified against the convention specs in evals/ since the last edit. Run the /eval command now: check the changed files against the matching spec checklist, fix any VIOLATION it reports, and finish by running `touch .claude/.eval-ran` (as /eval instructs). Only then end the turn."}
-EOF
+# Name the specs that actually matched, so the message is actionable.
+spec_list=""
+while IFS= read -r s; do
+  [ -z "$s" ] && continue
+  spec_list="${spec_list:+$spec_list, }$s"
+done <<<"$specs"
+
+reason="Changes under client/src/ have not been verified against the convention specs in evals/ since the last edit. Matching specs: ${spec_list}. Run the /eval command now: check the changed files against each matching spec's checklist, fix any VIOLATION it reports, and finish by running \`touch .claude/.eval-ran\` (as /eval instructs). Only then end the turn."
+
+jq -nc --arg reason "$reason" '{decision:"block", reason:$reason}'
 exit 0

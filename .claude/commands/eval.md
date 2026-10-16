@@ -9,18 +9,35 @@ Verify that the code follows this repo's convention specs in `evals/`.
 Default target: the working-tree changes — `git status --short`, `git diff`, and
 untracked files. `$ARGUMENTS` can narrow or redirect the target:
 
-- a spec name (`queries`, `toastr`) → check all relevant files against that spec
+- a spec name (`queries`, `toastr`, `forms`) → check all relevant files against that spec
 - a path or glob → check those files
 - a PR number / branch / commit range → check that diff
 
-## Spec mapping
+## Selecting the specs
 
-Pick the spec(s) whose area the changed files touch:
+Routing is **self-describing**: each `evals/*.md` declares its own `globs` and
+`description` in frontmatter. Don't maintain a mapping here — derive it.
 
-| Changed files                                                                                                 | Spec               |
-| ------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `client/src/app/queries/**`                                                                                   | `evals/queries.md` |
-| mutation hooks (`use*Mutation`) + page-level `handleDelete` / `useXForm` `onSubmit` / one-off action handlers | `evals/toastr.md`  |
+- **Default (working-tree changes)** — run the selector:
+
+  ```bash
+  .claude/hooks/eval-select.sh
+  ```
+
+  Each printed path is an in-scope spec (it matched a changed file via the spec's
+  `globs`). If it prints nothing, no spec applies — say so and still mark
+  completion.
+
+- **By intent / `$ARGUMENTS`** — the frontmatter is the cheap, Skills-style
+  index; read only it to choose, not the bodies:
+
+  ```bash
+  grep -H '^name:' evals/*.md         # the available specs
+  grep -H '^description:' evals/*.md  # what each one covers
+  ```
+
+  A spec name (`queries` / `toastr` / `forms`) selects that spec; a path / glob /
+  PR / branch / commit range narrows the target as before.
 
 Each spec ends with a `## Checklist` — use those items as the pass/fail rubric.
 

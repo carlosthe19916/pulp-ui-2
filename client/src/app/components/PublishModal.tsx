@@ -15,6 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
@@ -22,6 +23,7 @@ import {
 import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
@@ -49,6 +51,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   repoVersionHref,
 }) => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const createMutation = usePublicationCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
@@ -110,11 +113,11 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
     : undefined;
 
   const onSubmit = handleSubmit(async (values) => {
+    clearSubmitError();
     if (!publicationApiPath) {
-      addNotification({
+      setSubmitError({
         title: "Failed to create publication",
         description: "This repository type does not support publishing.",
-        variant: "danger",
       });
       return;
     }
@@ -141,15 +144,16 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
         );
       }
     } catch (error) {
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create publication"),
-        variant: "danger",
-      });
+      setSubmitError(
+        getMutationErrorMessage(error, "Failed to create publication"),
+      );
+      return;
     }
     onClose();
   });
 
   const handleClose = () => {
+    clearSubmitError();
     onClose();
   };
 
@@ -164,6 +168,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
             void onSubmit();
           }}
         >
+          <FormSubmitError error={submitError} />
           <FormGroup label="Repository" fieldId="publish-repo">
             <TypeaheadSelect
               id="publish-repo"

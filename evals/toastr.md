@@ -1,3 +1,9 @@
+---
+name: toastr
+description: Mutation toast placement — raised at the page/feature layer via hook-level onSuccess/onError, hooks own invalidation only, mutate over mutateAsync, no useMutationAction wrapper.
+globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx, client/src/app/components/UploadModal.tsx
+---
+
 # Notification / toast conventions
 
 **Principle: mutation toasts are defined at the page/feature layer, never hidden
@@ -58,9 +64,12 @@ export const useRemoteDeleteMutation = (
 - **delete** → the list page instantiates the delete mutation with the toast
   callbacks; `handleDelete` fires `mutate(vars, { onSuccess: closeDialog })`.
 - **create / update** → the feature form hook (`useXForm`) instantiates the
-  create/update mutations with the toast callbacks; `onSubmit` fires
-  `mutate(vars, { onSuccess: onClose })`. `isSubmitting = createMutation.isPending
-|| updateMutation.isPending`.
+  create/update mutations; `onSubmit` fires `mutate(vars, { onSuccess: onClose })`.
+  `isSubmitting = createMutation.isPending || updateMutation.isPending`. The
+  **success** toast is raised from the mutation's hook-level `onSuccess`; the
+  **failure is shown in-form, not as a toast** — the hook's `onError` calls
+  `setSubmitError(getMutationErrorMessage(...))` and the form renders it at the top
+  via `FormSubmitError`. See **`evals/forms.md`** for this convention.
 - **one-off actions** (cancel, purge) → the triggering component's handler fires
   `mutate(vars, { onSettled: closeDialog })`.
 
@@ -111,14 +120,15 @@ explains the failure; the dialog stays for retry). Close via the **call-level**
 
 ## The `mutateAsync` exception
 
-Two cases keep `mutateAsync` + `try/catch`, raising the toast **before**
-`onClose`/navigate so it still survives unmount — the documented use of
-`mutateAsync` (you need the promise to compose a side effect):
+Two cases keep `mutateAsync` + `try/catch` (you need the promise to compose a
+side effect):
 
-- One-off modals that build the message from the **resolved result plus local
-  form state** — `SyncModal`, `PublishModal`, `UploadModal`.
+- One-off modals that build the **success** message from the resolved result plus
+  local form state — `SyncModal`, `PublishModal`, `UploadModal`. They raise the
+  success toast (`notifyTaskStarted`) before `onClose`, but a **failure is shown
+  in-form** (`setSubmitError` in the `catch`), not toasted — see `evals/forms.md`.
 - Detail-page delete/cancel that **navigate away** afterward — `GroupDetail`,
-  `TaskDetail`.
+  `TaskDetail`. These raise the toast **before** navigating so it survives unmount.
 
 Keep invalidation in the mutation hook regardless.
 
@@ -148,6 +158,8 @@ Pass/fail rubric for `/eval`.
       closed-over component value; delete vars are `{ href, name }`, update
       `{ href, name, body }`.
 - [ ] Error toasts use `getMutationErrorMessage(error, fallback)` with
-      `variant: "danger"`.
+      `variant: "danger"` — **except modal create/update/action form submissions**,
+      whose failure is shown in-form via `FormSubmitError`, not toasted (see
+      `evals/forms.md`).
 - [ ] No `useMutationAction` / `runAction` wrapper and no per-feature `useXActions`
       hub reintroduced.

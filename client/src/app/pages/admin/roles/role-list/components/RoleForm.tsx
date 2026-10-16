@@ -4,8 +4,10 @@ import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { Form, FormGroup } from "@patternfly/react-core";
 
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
 import { useAllRolesListQuery } from "@app/queries/roles";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import type { RoleFormValues } from "../hooks/useRoleForm";
 import { collectPermissionOptions } from "../../utils/permissionOptions";
@@ -16,6 +18,7 @@ interface IRoleFormProps {
   isCreate: boolean;
   onSubmit: () => void;
   formId: string;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const RoleForm: React.FC<IRoleFormProps> = ({
@@ -23,6 +26,7 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
   isCreate,
   onSubmit,
   formId,
+  submitError,
 }) => {
   const { control, watch } = form;
   const { data: rolesData } = useAllRolesListQuery();
@@ -45,6 +49,7 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
         onSubmit();
       }}
     >
+      <FormSubmitError error={submitError} />
       <HookFormPFTextInput
         control={control}
         name="name"

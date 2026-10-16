@@ -17,6 +17,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -47,7 +48,7 @@ export const remotesListQueryOptions = ({
   domain: IPulpDomain;
   params: IRemoteListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGenericRemoteResponseList, DrfAxiosError>({
     queryKey: remoteKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGenericRemoteResponseList> => {
       const response =
@@ -81,7 +82,11 @@ export const useRemoteDeleteMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string }
+  >({
     mutationFn: async ({
       href,
     }: {
@@ -114,11 +119,11 @@ export const remoteDetailQueryOptions = ({
 }: {
   href: string | null;
   options?: Omit<
-    UseQueryOptions<GenericRemoteResponse>,
+    UseQueryOptions<GenericRemoteResponse, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<GenericRemoteResponse, DrfAxiosError>({
     ...options,
     queryKey: remoteKeys.detail(href ?? ""),
     queryFn: async (): Promise<GenericRemoteResponse> =>
@@ -144,7 +149,11 @@ export const useRemoteCreateMutation = (
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    GenericRemoteResponse,
+    DrfAxiosError,
+    { apiPath: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       apiPath,
       body,
@@ -169,12 +178,16 @@ export const useRemoteCreateMutation = (
 /** PATCHes a remote by its own `pulp_href` (which embeds plugin + type). */
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
-    unknown,
+    GenericRemoteResponse | AsyncOperationResponse,
     { href: string; name: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    GenericRemoteResponse | AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -182,8 +195,12 @@ export const useRemoteUpdateMutation = (
       href: string;
       name: string;
       body: Record<string, unknown>;
-    }): Promise<unknown> =>
-      (await axiosInstance.patch(toProxyHref(href), body)).data,
+    }): Promise<GenericRemoteResponse | AsyncOperationResponse> =>
+      (
+        await axiosInstance.patch<
+          GenericRemoteResponse | AsyncOperationResponse
+        >(toProxyHref(href), body)
+      ).data,
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({

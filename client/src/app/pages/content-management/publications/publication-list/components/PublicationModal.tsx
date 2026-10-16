@@ -13,7 +13,7 @@ const PublicationModalInner = ({ onClose }: { onClose: () => void }) => {
     useWizard,
   } = usePluginTypeSelection({ kind: "publication" });
 
-  const { onSubmit, isSubmitting } = usePublicationForm({
+  const { onSubmit, isSubmitting, submitError } = usePublicationForm({
     plugin: selectedPlugin,
     onClose,
   });
@@ -45,6 +45,7 @@ const PublicationModalInner = ({ onClose }: { onClose: () => void }) => {
         onClose={onClose}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitError={submitError}
       />
     </EntityModalShell>
   );

@@ -9,6 +9,7 @@ import type {
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -28,7 +29,7 @@ export const signingServicesListQueryOptions = ({
   domain: IPulpDomain;
   params: ISigningServiceListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedSigningServiceResponseList, DrfAxiosError>({
     queryKey: [
       ...signingServicesRootQueryOptions.queryKey,
       "list",
@@ -56,11 +57,11 @@ export const signingServiceDetailQueryOptions = ({
 }: {
   href: string;
   options?: Omit<
-    UseQueryOptions<SigningServiceResponse>,
+    UseQueryOptions<SigningServiceResponse, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<SigningServiceResponse, DrfAxiosError>({
     ...options,
     queryKey: [...signingServicesRootQueryOptions.queryKey, "detail", href],
     queryFn: async (): Promise<SigningServiceResponse> => {

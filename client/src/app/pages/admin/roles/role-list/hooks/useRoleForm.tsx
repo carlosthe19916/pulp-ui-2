@@ -4,11 +4,15 @@ import * as yup from "yup";
 
 import type { PatchedRole, Role, RoleResponse } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRoleCreateMutation,
   useRoleUpdateMutation,
 } from "@app/queries/roles";
-import { getMutationErrorMessage } from "@app/utils/utils";
+import {
+  getMutationErrorMessage,
+  type IMutationErrorMessage,
+} from "@app/utils/utils";
 
 export type RoleFormValues = {
   name: string;
@@ -53,6 +57,7 @@ interface IUseRoleFormResult {
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const useRoleForm = ({
@@ -60,6 +65,7 @@ export const useRoleForm = ({
   onClose,
 }: IUseRoleFormArgs): IUseRoleFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !role;
 
   const createMutation = useRoleCreateMutation({
@@ -69,19 +75,13 @@ export const useRoleForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create role"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to create role")),
   });
   const updateMutation = useRoleUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `Role "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update role"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to update role")),
   });
 
   const form = useForm<RoleFormValues>({
@@ -91,6 +91,7 @@ export const useRoleForm = ({
   });
 
   const onSubmit = form.handleSubmit((values) => {
+    clearSubmitError();
     if (isCreate) {
       createMutation.mutate(valuesToNewRole(values), {
         onSuccess: () => onClose(),
@@ -112,5 +113,6 @@ export const useRoleForm = ({
     isCreate,
     onSubmit,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
+    submitError,
   };
 };

@@ -23,10 +23,12 @@ const DomainModalInner: React.FC<IDomainModalInnerProps> = ({
   domain,
   onClose,
 }) => {
-  const { form, isCreate, onSubmit, isSubmitting } = useDomainForm({
-    domain,
-    onClose,
-  });
+  const { form, isCreate, onSubmit, isSubmitting, submitError } = useDomainForm(
+    {
+      domain,
+      onClose,
+    },
+  );
 
   return (
     <Modal isOpen onClose={onClose} variant="medium">
@@ -34,7 +36,12 @@ const DomainModalInner: React.FC<IDomainModalInnerProps> = ({
         title={isCreate ? "Create Domain" : `Edit ${domain?.name}`}
       />
       <ModalBody>
-        <DomainForm form={form} onSubmit={onSubmit} formId="domain-form" />
+        <DomainForm
+          form={form}
+          onSubmit={onSubmit}
+          formId="domain-form"
+          submitError={submitError}
+        />
       </ModalBody>
       <ModalFooter>
         <Button

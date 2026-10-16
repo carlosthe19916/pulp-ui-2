@@ -17,6 +17,7 @@ import type {
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { taskKeys } from "./tasks";
@@ -48,7 +49,7 @@ export const domainsListQueryOptions = ({
   apiDomain: IPulpDomain;
   params: IDomainListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedDomainResponseList, DrfAxiosError>({
     queryKey: domainKeys.listQuery(apiDomain, params),
     queryFn: async (): Promise<PaginatedDomainResponseList> => {
       const response = await axiosInstance.get<PaginatedDomainResponseList>(
@@ -78,7 +79,7 @@ export const useDomainCreateMutation = (
 ) => {
   const queryClient = useQueryClient();
   const apiDomain = useDefaultDomain();
-  return useMutation({
+  return useMutation<DomainResponse, DrfAxiosError, Domain>({
     mutationFn: async (body: Domain) => {
       const response = await axiosInstance.post<DomainResponse>(
         pulpApiPath("domains/", apiDomain),
@@ -101,7 +102,11 @@ export const useDomainUpdateMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    DomainResponse | AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: PatchedDomain }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -135,7 +140,11 @@ export const useDomainDeleteMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string }
+  >({
     mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(href),

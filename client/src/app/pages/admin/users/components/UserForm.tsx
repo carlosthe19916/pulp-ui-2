@@ -7,6 +7,8 @@ import {
   HookFormPFGroupController,
   HookFormPFTextInput,
 } from "@app/components/HookFormPFFields";
+import { FormSubmitError } from "@app/components/FormSubmitError";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import type { UserFormValues } from "../hooks/useUserForm";
 
@@ -15,6 +17,7 @@ interface IUserFormProps {
   isCreate: boolean;
   onSubmit: () => void;
   formId: string;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const UserForm: React.FC<IUserFormProps> = ({
@@ -22,6 +25,7 @@ export const UserForm: React.FC<IUserFormProps> = ({
   isCreate,
   onSubmit,
   formId,
+  submitError,
 }) => {
   const { control } = form;
 
@@ -33,6 +37,7 @@ export const UserForm: React.FC<IUserFormProps> = ({
         onSubmit();
       }}
     >
+      <FormSubmitError error={submitError} />
       {isCreate && (
         <>
           <HookFormPFTextInput

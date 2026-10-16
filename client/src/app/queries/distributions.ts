@@ -17,6 +17,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -48,11 +49,11 @@ export const distributionsListQueryOptions = ({
   domain: IPulpDomain;
   params: IDistributionListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedDistributionResponseList>,
+    UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedDistributionResponseList, DrfAxiosError>({
     ...options,
     queryKey: distributionKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
@@ -76,7 +77,7 @@ export const useDistributionsListQuery = ({
 }: {
   params: IDistributionListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedDistributionResponseList>,
+    UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) => {
@@ -92,7 +93,11 @@ export const useDistributionDeleteMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string }
+  >({
     mutationFn: async ({
       href,
     }: {
@@ -119,7 +124,7 @@ export const useDistributionDeleteMutation = (
  * accept except the two fields this module owns (`queryKey`, `queryFn`).
  */
 type DistributionDetailOptions = Omit<
-  UseQueryOptions<DistributionResponse>,
+  UseQueryOptions<DistributionResponse, DrfAxiosError>,
   "queryKey" | "queryFn"
 >;
 
@@ -134,7 +139,7 @@ export const distributionDetailQueryOptions = ({
   href: string | null;
   options?: DistributionDetailOptions;
 }) =>
-  queryOptions({
+  queryOptions<DistributionResponse, DrfAxiosError>({
     ...options,
     queryKey: distributionKeys.detail(href ?? ""),
     queryFn: async (): Promise<DistributionResponse> =>
@@ -161,7 +166,11 @@ export const useDistributionCreateMutation = (
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { apiPath: string; name: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       apiPath,
       body,
@@ -187,12 +196,16 @@ export const useDistributionCreateMutation = (
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
-    unknown,
+    DistributionResponse | AsyncOperationResponse,
     { href: string; name: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    DistributionResponse | AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -200,8 +213,12 @@ export const useDistributionUpdateMutation = (
       href: string;
       name: string;
       body: Record<string, unknown>;
-    }): Promise<unknown> =>
-      (await axiosInstance.patch(toProxyHref(href), body)).data,
+    }): Promise<DistributionResponse | AsyncOperationResponse> =>
+      (
+        await axiosInstance.patch<
+          DistributionResponse | AsyncOperationResponse
+        >(toProxyHref(href), body)
+      ).data,
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({

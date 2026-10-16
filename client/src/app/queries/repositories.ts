@@ -25,6 +25,7 @@ import { taskKeys } from "./tasks";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -60,7 +61,7 @@ export const repositoriesListQueryOptions = ({
   domain: IPulpDomain;
   params: IRepositoryListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedRepositoryResponseList, DrfAxiosError>({
     queryKey: repositoryKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRepositoryResponseList> => {
       const response = await axiosInstance.get<PaginatedRepositoryResponseList>(
@@ -93,7 +94,11 @@ export const useRepositoryDeleteMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string }
+  >({
     mutationFn: async ({
       href,
     }: {
@@ -139,7 +144,11 @@ export type RepositorySyncBody = RepositorySyncUrl &
 export const useRepositorySyncMutation = () => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { apiPath: string; id: string; body: RepositorySyncBody }
+  >({
     mutationFn: async ({
       apiPath,
       id,
@@ -191,11 +200,11 @@ export const repositoryVersionsListQueryOptions = ({
   params: IRepositoryVersionsListParams;
   domain: IPulpDomain;
   options?: Omit<
-    UseQueryOptions<PaginatedRepositoryVersionResponseList>,
+    UseQueryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>({
     ...options,
     queryKey: [
       ...repositoriesRootQueryOptions.queryKey,
@@ -233,11 +242,11 @@ export const allRepositoryVersionsListQueryOptions = ({
   id: string;
   domain: IPulpDomain;
   options?: Omit<
-    UseQueryOptions<PaginatedRepositoryVersionResponseList>,
+    UseQueryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>({
     ...options,
     queryKey: [
       ...repositoriesRootQueryOptions.queryKey,
@@ -302,9 +311,12 @@ export const repositoryDetailQueryOptions = ({
   options,
 }: {
   href: string | null;
-  options?: Omit<UseQueryOptions<RepositoryResponse>, "queryKey" | "queryFn">;
+  options?: Omit<
+    UseQueryOptions<RepositoryResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
-  queryOptions({
+  queryOptions<RepositoryResponse, DrfAxiosError>({
     ...options,
     queryKey: repositoryKeys.detail(href ?? ""),
     queryFn: async (): Promise<RepositoryResponse> =>
@@ -330,7 +342,11 @@ export const useRepositoryCreateMutation = (
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    RepositoryResponse,
+    DrfAxiosError,
+    { apiPath: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       apiPath,
       body,
@@ -355,12 +371,16 @@ export const useRepositoryCreateMutation = (
 /** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
-    unknown,
+    RepositoryResponse | AsyncOperationResponse,
     { href: string; name: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    RepositoryResponse | AsyncOperationResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: Record<string, unknown> }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -368,8 +388,13 @@ export const useRepositoryUpdateMutation = (
       href: string;
       name: string;
       body: Record<string, unknown>;
-    }): Promise<unknown> =>
-      (await axiosInstance.patch(toProxyHref(href), body)).data,
+    }): Promise<RepositoryResponse | AsyncOperationResponse> =>
+      (
+        await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
+          toProxyHref(href),
+          body,
+        )
+      ).data,
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({

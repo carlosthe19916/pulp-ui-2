@@ -4,6 +4,7 @@ import type {
   IEntityForEdit,
   IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRemoteCreateMutation,
   useRemoteUpdateMutation,
@@ -21,9 +22,10 @@ interface IUseRemoteFormArgs {
 
 /**
  * Remote create/edit form: maps form values to a remote write body (`RemoteForm`)
- * and runs the family's create/update mutations. Toasts are raised from the
- * mutations' hook-level callbacks (survive unmount); the call-level `onSuccess`
- * closes the modal on success only (see `evals/toastr.md`).
+ * and runs the family's create/update mutations. The success toast is raised from
+ * the mutations' hook-level callbacks and the call-level `onSuccess` closes the
+ * modal (see `evals/toastr.md`); a submission failure is shown in-form via
+ * `submitError`, not a toast (see `evals/forms.md`).
  */
 export const useRemoteForm = ({
   plugin,
@@ -31,6 +33,7 @@ export const useRemoteForm = ({
   onClose,
 }: IUseRemoteFormArgs): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !entity;
   const entityPlugin = plugin?.entities.remote;
 
@@ -41,10 +44,7 @@ export const useRemoteForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to create remote"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to create remote")),
   });
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (_data, { name }) =>
@@ -53,14 +53,12 @@ export const useRemoteForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      addNotification({
-        ...getMutationErrorMessage(error, "Failed to update remote"),
-        variant: "danger",
-      }),
+      setSubmitError(getMutationErrorMessage(error, "Failed to update remote")),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (values: Record<string, unknown>) => {
+    clearSubmitError();
     if (isCreate) {
       if (!entityPlugin) return;
       createMutation.mutate(
@@ -79,5 +77,5 @@ export const useRemoteForm = ({
     }
   };
 
-  return { onSubmit, isSubmitting };
+  return { onSubmit, isSubmitting, submitError };
 };

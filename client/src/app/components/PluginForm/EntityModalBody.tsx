@@ -11,6 +11,7 @@ import {
   useEntityFormBase,
   type IEntityForEdit,
 } from "@app/hooks/pluginForm/useEntityForm";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 interface IEntityModalBodyProps {
   kind: EntityType;
@@ -24,6 +25,8 @@ interface IEntityModalBodyProps {
   /** Family-supplied, mode-agnostic submit for the (create or edit) values. */
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   isSubmitting: boolean;
+  /** Submission failure shown at the top of the form (see `evals/forms.md`). */
+  submitError: IMutationErrorMessage | null;
 }
 
 interface IPlainEntityFormBodyProps extends Omit<
@@ -43,6 +46,7 @@ const PlainEntityFormBody = ({
   onSubmit,
   isSubmitting,
   resourceFilter,
+  submitError,
 }: IPlainEntityFormBodyProps) => {
   const { form, isCreate, fields } = useEntityFormBase({
     kind,
@@ -61,6 +65,7 @@ const PlainEntityFormBody = ({
       onClose={onClose}
       typeSelector={typeSelector}
       resourceFilter={resourceFilter}
+      submitError={submitError}
     />
   );
 };
@@ -81,6 +86,7 @@ export const EntityModalBody = ({
   onClose,
   onSubmit,
   isSubmitting,
+  submitError,
 }: IEntityModalBodyProps) => {
   const resourceFilter = buildResourceFilter(kind, plugin);
 
@@ -96,6 +102,7 @@ export const EntityModalBody = ({
         resourceFilter={resourceFilter}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitError={submitError}
       />
     );
   }
@@ -110,6 +117,7 @@ export const EntityModalBody = ({
       onSubmit={onSubmit}
       isSubmitting={isSubmitting}
       resourceFilter={resourceFilter}
+      submitError={submitError}
     />
   );
 };

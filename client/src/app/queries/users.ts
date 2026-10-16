@@ -21,6 +21,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildUserHref } from "./utils/pulpHref";
@@ -61,7 +62,7 @@ export const usersListQueryOptions = ({
   domain: IPulpDomain;
   params: IUserListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedUserResponseList, DrfAxiosError>({
     queryKey: userKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedUserResponseList> => {
       const response = await axiosInstance.get<PaginatedUserResponseList>(
@@ -86,11 +87,11 @@ export const allUserRolesListQueryOptions = ({
   userHref: string;
   params?: IAllUserRoleListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedUserRoleResponseList>,
+    UseQueryOptions<PaginatedUserRoleResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedUserRoleResponseList, DrfAxiosError>({
     ...options,
     queryKey: userKeys.rolesAllQuery(userHref, params),
     queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
@@ -140,7 +141,7 @@ export const useUserCreateMutation = (
 ) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<UserResponse, DrfAxiosError, UserWritable>({
     mutationFn: async (body: UserWritable) => {
       const response = await axiosInstance.post<UserResponse>(
         pulpApiPath("users/", domain),
@@ -163,7 +164,11 @@ export const useUserUpdateMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    UserResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: PatchedUser }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -193,7 +198,7 @@ export const useUserDeleteMutation = (
   options?: IMutationCallbacks<void, { href: string; name: string }>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
     mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
@@ -221,7 +226,7 @@ interface IUserRolesSyncArgs {
 export const useUserRolesSyncMutation = () => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<void, DrfAxiosError, IUserRolesSyncArgs>({
     mutationFn: async ({ userId, toAdd, toRemove }: IUserRolesSyncArgs) => {
       await Promise.all([
         ...toAdd.map((role) =>

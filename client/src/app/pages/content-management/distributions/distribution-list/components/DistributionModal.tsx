@@ -28,7 +28,7 @@ const DistributionModalInner = ({
     useWizard,
   } = usePluginTypeSelection({ kind: "distribution", entity });
 
-  const { onSubmit, isSubmitting } = useDistributionForm({
+  const { onSubmit, isSubmitting, submitError } = useDistributionForm({
     plugin: selectedPlugin,
     entity: isCreate ? undefined : effectiveEntity,
     onClose,
@@ -65,6 +65,7 @@ const DistributionModalInner = ({
         onClose={onClose}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitError={submitError}
       />
     </EntityModalShell>
   );

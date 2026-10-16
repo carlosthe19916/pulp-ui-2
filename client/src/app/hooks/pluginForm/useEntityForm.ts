@@ -6,6 +6,7 @@ import {
   buildDefaultValues,
   buildFieldSchema,
 } from "@app/components/PluginForm/formSchema";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 type EntityFormValues = Record<string, unknown>;
 
@@ -70,8 +71,11 @@ export const useEntityFormBase = ({
  * calls it with the merged step values.
  */
 export interface IUseEntityFormResult {
-  // Fire-and-forget: the mutation's hook-level callbacks own the toast and the
-  // call-level onSuccess closes the modal (see `evals/toastr.md`).
+  // Submit the (create or edit) values. The success toast + call-level onSuccess
+  // close the modal (see `evals/toastr.md`); a submission failure is surfaced
+  // in-form via `submitError`, not a toast (see `evals/forms.md`).
   onSubmit: (values: Record<string, unknown>) => void;
   isSubmitting: boolean;
+  /** Submission failure to render at the top of the form; null when none. */
+  submitError: IMutationErrorMessage | null;
 }

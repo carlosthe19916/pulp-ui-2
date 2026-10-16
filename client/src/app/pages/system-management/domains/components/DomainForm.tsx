@@ -8,10 +8,12 @@ import {
   FormSelectOption,
 } from "@patternfly/react-core";
 
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import {
   HookFormPFGroupController,
   HookFormPFTextInput,
 } from "@app/components/HookFormPFFields";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import type { DomainFormValues } from "../hooks/useDomainForm";
 import { STORAGE_BACKEND_BY_CLASS, STORAGE_BACKENDS } from "../storageBackends";
@@ -21,12 +23,14 @@ interface IDomainFormProps {
   form: UseFormReturn<DomainFormValues>;
   onSubmit: () => void;
   formId: string;
+  submitError: IMutationErrorMessage | null;
 }
 
 export const DomainForm: React.FC<IDomainFormProps> = ({
   form,
   onSubmit,
   formId,
+  submitError,
 }) => {
   const { control, watch, resetField } = form;
   const storageClass = watch("storage_class");
@@ -40,6 +44,7 @@ export const DomainForm: React.FC<IDomainFormProps> = ({
         onSubmit();
       }}
     >
+      <FormSubmitError error={submitError} />
       <HookFormPFTextInput
         control={control}
         name="name"

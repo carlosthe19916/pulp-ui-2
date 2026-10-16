@@ -8,6 +8,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -44,11 +45,14 @@ export const contentListQueryOptions = ({
   domain: IPulpDomain;
   params: IContentListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedMultipleArtifactContentResponseList>,
+    UseQueryOptions<
+      PaginatedMultipleArtifactContentResponseList,
+      DrfAxiosError
+    >,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedMultipleArtifactContentResponseList, DrfAxiosError>({
     ...options,
     queryKey: contentKeys.listQuery(domain, params),
     queryFn:
@@ -73,7 +77,10 @@ export const useContentListQuery = ({
 }: {
   params: IContentListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedMultipleArtifactContentResponseList>,
+    UseQueryOptions<
+      PaginatedMultipleArtifactContentResponseList,
+      DrfAxiosError
+    >,
     "queryKey" | "queryFn"
   >;
 }) => {

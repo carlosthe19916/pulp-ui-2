@@ -16,6 +16,7 @@ import {
 } from "@patternfly/react-core";
 
 import type { RepositoryResponse } from "@app/client";
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import {
   TypeaheadSelect,
   type ITypeaheadOption,
@@ -23,6 +24,7 @@ import {
 import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useSubmitError } from "@app/hooks/useSubmitError";
 import type { WithId } from "@app/models/models";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import {
@@ -31,6 +33,7 @@ import {
 } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const syncSchema = yup.object({
   remote: yup.string(),
@@ -51,6 +54,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   repo,
 }) => {
   const { addNotification } = useNotifications();
+  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const syncMutation = useRepositorySyncMutation();
 
   const repoPulpType = resolvePulpType(repo.object.pulp_href);
@@ -110,11 +114,11 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const mirror = watch("mirror");
 
   const onSubmit = handleSubmit(async (values) => {
+    clearSubmitError();
     if (!apiPath) {
-      addNotification({
+      setSubmitError({
         title: "Failed to start sync",
         description: "This repository type does not support syncing.",
-        variant: "danger",
       });
       return;
     }
@@ -141,17 +145,16 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
             : "Sync started",
         );
       }
-    } catch {
-      addNotification({
-        title: "Failed to start sync",
-        variant: "danger",
-      });
+    } catch (error) {
+      setSubmitError(getMutationErrorMessage(error, "Failed to start sync"));
+      return;
     }
     reset();
     onClose();
   });
 
   const handleClose = () => {
+    clearSubmitError();
     reset();
     onClose();
   };
@@ -167,6 +170,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
             void onSubmit();
           }}
         >
+          <FormSubmitError error={submitError} />
           <FormGroup label="Remote" fieldId="sync-remote">
             <TypeaheadSelect
               id="sync-remote"

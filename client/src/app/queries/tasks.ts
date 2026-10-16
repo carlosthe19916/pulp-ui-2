@@ -21,6 +21,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -116,7 +117,7 @@ export const useTasksByPrnQueries = ({
   const domain = useSelectedDomain();
   return useQueries({
     queries: prns.map((prn) =>
-      queryOptions({
+      queryOptions<TaskResponse[], DrfAxiosError>({
         queryKey: taskKeys.byPrnQuery(domain, prn, limit),
         queryFn: async (): Promise<TaskResponse[]> => {
           const page = await fetchTasksPage(domain, {
@@ -136,7 +137,9 @@ export const useTasksByPrnQueries = ({
         },
       }),
     ),
-    combine: (results: UseQueryResult<TaskResponse[]>[]): TaskResponse[] => {
+    combine: (
+      results: UseQueryResult<TaskResponse[], DrfAxiosError>[],
+    ): TaskResponse[] => {
       return results.flatMap((result) => result.data ?? []);
     },
   });
@@ -149,13 +152,13 @@ export const tasksListQueryOptions = ({
   domain: IPulpDomain;
   params: ITaskListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedTaskResponseList, DrfAxiosError>({
     queryKey: taskKeys.listQuery(domain, params),
     queryFn: () => fetchTasksPage(domain, params),
   });
 
 export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
-  queryOptions({
+  queryOptions<TaskResponse, DrfAxiosError>({
     queryKey: taskKeys.detailQuery(taskHref),
     queryFn: async (): Promise<TaskResponse> => {
       const response = await axiosInstance.get<TaskResponse>(
@@ -188,7 +191,7 @@ export const useTaskCancelMutation = (
   options?: IMutationCallbacks<TaskResponse, string>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<TaskResponse, DrfAxiosError, string>({
     mutationFn: async (href: string) => {
       const response = await axiosInstance.patch<TaskResponse>(
         toProxyHref(href),
@@ -214,21 +217,23 @@ export const useTaskPurgeMutation = (
 ) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
-    mutationFn: async (body: TaskPurgeVariables) => {
-      const response = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath("tasks/purge/", domain),
-        {
-          finished_before: body.finished_before,
-          states: body.states,
-        },
-      );
-      return response.data;
+  return useMutation<AsyncOperationResponse, DrfAxiosError, TaskPurgeVariables>(
+    {
+      mutationFn: async (body: TaskPurgeVariables) => {
+        const response = await axiosInstance.post<AsyncOperationResponse>(
+          pulpApiPath("tasks/purge/", domain),
+          {
+            finished_before: body.finished_before,
+            states: body.states,
+          },
+        );
+        return response.data;
+      },
+      onSuccess: (data, variables) => {
+        void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
+        options?.onSuccess?.(data, variables);
+      },
+      onError: options?.onError,
     },
-    onSuccess: (data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
-      options?.onSuccess?.(data, variables);
-    },
-    onError: options?.onError,
-  });
+  );
 };

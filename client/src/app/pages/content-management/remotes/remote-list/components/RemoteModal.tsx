@@ -26,7 +26,7 @@ const RemoteModalInner = ({ entity, onClose }: IRemoteModalInnerProps) => {
     useWizard,
   } = usePluginTypeSelection({ kind: "remote", entity });
 
-  const { onSubmit, isSubmitting } = useRemoteForm({
+  const { onSubmit, isSubmitting, submitError } = useRemoteForm({
     plugin: selectedPlugin,
     entity: isCreate ? undefined : effectiveEntity,
     onClose,
@@ -61,6 +61,7 @@ const RemoteModalInner = ({ entity, onClose }: IRemoteModalInnerProps) => {
         onClose={onClose}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitError={submitError}
       />
     </EntityModalShell>
   );

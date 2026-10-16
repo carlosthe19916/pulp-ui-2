@@ -20,7 +20,7 @@ interface IUserModalInnerProps {
 
 /** Only mounted while open so react-hook-form re-initializes on every open. */
 const UserModalInner: React.FC<IUserModalInnerProps> = ({ user, onClose }) => {
-  const { form, isCreate, onSubmit, isSubmitting } = useUserForm({
+  const { form, isCreate, onSubmit, isSubmitting, submitError } = useUserForm({
     user,
     onClose,
   });
@@ -36,6 +36,7 @@ const UserModalInner: React.FC<IUserModalInnerProps> = ({ user, onClose }) => {
           isCreate={isCreate}
           onSubmit={onSubmit}
           formId="user-form"
+          submitError={submitError}
         />
       </ModalBody>
       <ModalFooter>

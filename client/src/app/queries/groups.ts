@@ -27,6 +27,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
+import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildGroupHref } from "./utils/pulpHref";
@@ -74,7 +75,7 @@ export const groupsListQueryOptions = ({
   domain: IPulpDomain;
   params: IGroupListParams;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGroupResponseList, DrfAxiosError>({
     queryKey: groupKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupResponseList>(
@@ -95,9 +96,12 @@ export const groupDetailQueryOptions = ({
   options,
 }: {
   groupHref: string;
-  options?: Omit<UseQueryOptions<GroupResponse>, "queryKey" | "queryFn">;
+  options?: Omit<
+    UseQueryOptions<GroupResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
-  queryOptions({
+  queryOptions<GroupResponse, DrfAxiosError>({
     ...options,
     queryKey: groupKeys.detailQuery(groupHref),
     queryFn: async (): Promise<GroupResponse> => {
@@ -116,11 +120,11 @@ export const groupUsersListQueryOptions = ({
   groupHref: string;
   params: IGroupUserListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedGroupUserResponseList>,
+    UseQueryOptions<PaginatedGroupUserResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGroupUserResponseList, DrfAxiosError>({
     ...options,
     queryKey: groupKeys.usersQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
@@ -144,11 +148,11 @@ export const allGroupUsersListQueryOptions = ({
 }: {
   groupHref: string;
   options?: Omit<
-    UseQueryOptions<PaginatedGroupUserResponseList>,
+    UseQueryOptions<PaginatedGroupUserResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGroupUserResponseList, DrfAxiosError>({
     ...options,
     queryKey: groupKeys.usersAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
@@ -173,11 +177,11 @@ export const allGroupRolesListQueryOptions = ({
 }: {
   groupHref: string;
   options?: Omit<
-    UseQueryOptions<PaginatedGroupRoleResponseList>,
+    UseQueryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>({
     ...options,
     queryKey: groupKeys.rolesAllQuery(groupHref),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
@@ -203,11 +207,11 @@ export const groupRolesListQueryOptions = ({
   groupHref: string;
   params: IGroupRoleListParams;
   options?: Omit<
-    UseQueryOptions<PaginatedGroupRoleResponseList>,
+    UseQueryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
   >;
 }) =>
-  queryOptions({
+  queryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>({
     ...options,
     queryKey: groupKeys.rolesQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
@@ -297,7 +301,7 @@ export const useGroupCreateMutation = (
 ) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<GroupResponse, DrfAxiosError, Group>({
     mutationFn: async (body: Group) => {
       const response = await axiosInstance.post<GroupResponse>(
         pulpApiPath("groups/", domain),
@@ -320,7 +324,11 @@ export const useGroupUpdateMutation = (
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    GroupResponse,
+    DrfAxiosError,
+    { href: string; name: string; body: PatchedGroup }
+  >({
     mutationFn: async ({
       href,
       body,
@@ -350,7 +358,7 @@ export const useGroupDeleteMutation = (
   options?: IMutationCallbacks<void, { href: string; name: string }>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
     mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
@@ -376,7 +384,11 @@ export interface IGroupUsersBatchResult {
 export const useGroupUsersBatchCreateMutation = () => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<
+    IGroupUsersBatchResult,
+    DrfAxiosError,
+    { groupId: string; usernames: string[] }
+  >({
     mutationFn: async ({
       groupId,
       usernames,
@@ -420,7 +432,7 @@ export const useGroupUsersBatchCreateMutation = () => {
 export const useGroupUserDeleteMutation = () => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<void, DrfAxiosError, { groupId: string; userId: string }>({
     mutationFn: async ({
       groupId,
       userId,
@@ -451,7 +463,11 @@ export interface IGroupRolesBatchResult {
 export const useGroupRolesBatchCreateMutation = () => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation({
+  return useMutation<
+    IGroupRolesBatchResult,
+    DrfAxiosError,
+    { groupId: string; roleNames: string[] }
+  >({
     mutationFn: async ({
       groupId,
       roleNames,
@@ -494,7 +510,11 @@ export const useGroupRolesBatchCreateMutation = () => {
  */
 export const useGroupRoleDeleteMutation = () => {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<
+    void,
+    DrfAxiosError,
+    { groupHref: string; roleAssignmentHref: string }
+  >({
     mutationFn: async ({
       roleAssignmentHref,
     }: {

@@ -28,7 +28,7 @@ const RepositoryModalInner = ({
     useWizard,
   } = usePluginTypeSelection({ kind: "repository", entity });
 
-  const { onSubmit, isSubmitting } = useRepositoryForm({
+  const { onSubmit, isSubmitting, submitError } = useRepositoryForm({
     plugin: selectedPlugin,
     entity: isCreate ? undefined : effectiveEntity,
     onClose,
@@ -65,6 +65,7 @@ const RepositoryModalInner = ({
         onClose={onClose}
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
+        submitError={submitError}
       />
     </EntityModalShell>
   );

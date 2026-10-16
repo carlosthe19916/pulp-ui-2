@@ -23,7 +23,7 @@ const GroupModalInner: React.FC<IGroupModalInnerProps> = ({
   group,
   onClose,
 }) => {
-  const { form, isCreate, onSubmit, isSubmitting } = useGroupForm({
+  const { form, isCreate, onSubmit, isSubmitting, submitError } = useGroupForm({
     group,
     onClose,
   });
@@ -32,7 +32,12 @@ const GroupModalInner: React.FC<IGroupModalInnerProps> = ({
     <Modal isOpen onClose={onClose} variant="small">
       <ModalHeader title={isCreate ? "Create Group" : `Edit ${group?.name}`} />
       <ModalBody>
-        <GroupForm form={form} onSubmit={onSubmit} formId="group-form" />
+        <GroupForm
+          form={form}
+          onSubmit={onSubmit}
+          formId="group-form"
+          submitError={submitError}
+        />
       </ModalBody>
       <ModalFooter>
         <Button

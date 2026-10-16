@@ -1,28 +1,103 @@
-import axios, { type AxiosError } from "axios";
+import axios from "axios";
 import dayjs from "dayjs";
 
 import { RENDER_DATETIME_FORMAT, RENDER_DATE_FORMAT } from "@app/Constants";
+import type {
+  IErrorsEnvelopeData,
+  PulpErrorData,
+} from "@app/queries/utils/openapiErrorTypes";
 import type { ToolbarLabel } from "@patternfly/react-core";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getAxiosErrorMessage = (axiosError: AxiosError<any>) => {
-  if (axiosError.response?.data?.errorMessage) {
-    return axiosError.response.data.errorMessage;
-  }
-  if (
-    axiosError.response?.data?.error &&
-    typeof axiosError?.response?.data?.error === "string"
-  ) {
-    return axiosError?.response?.data?.error;
-  }
-  return axiosError.message;
+/** A user-facing mutation failure message: an Alert/toast title plus optional detail. */
+export type IMutationErrorMessage = { title: string; description?: string };
+
+const PERMISSION_DENIED_DESCRIPTION =
+  "You do not have permission to perform this action. Ask an administrator to grant the required role.";
+
+/** "snake_case_field" → "Snake case field" for field-level error labels. */
+const humanizeFieldKey = (key: string): string => {
+  const spaced = key.replace(/_/g, " ").trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : key;
 };
 
-/** Build a user-facing mutation failure message, surfacing Pulp 403/validation detail when available. */
+/** Flatten a DRF field value (string, string[], or nested dict) to one message. */
+const describeFieldValue = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => describeFieldValue(item))
+      .filter(Boolean)
+      .join(" ");
+  }
+  if (value && typeof value === "object") {
+    return describeFieldErrors(value as Record<string, unknown>);
+  }
+  return "";
+};
+
+/** Render a DRF validation dict: `non_field_errors` unprefixed, others `Field: msgs`. */
+const describeFieldErrors = (data: Record<string, unknown>): string =>
+  Object.entries(data)
+    .map(([key, value]) => {
+      const message = describeFieldValue(value);
+      if (!message) return "";
+      if (key === "non_field_errors" || key === "detail") return message;
+      return `${humanizeFieldKey(key)}: ${message}`;
+    })
+    .filter(Boolean)
+    .join("; ");
+
+/** Join the messages of a container `/v2/` or Galaxy v3 `errors[]` envelope. */
+const describeErrorsEnvelope = (
+  errors: { message?: string; title?: string; detail?: unknown }[],
+): string =>
+  errors
+    .map((item) => {
+      const primary = item.message ?? item.title ?? "";
+      const detail = typeof item.detail === "string" ? item.detail : "";
+      return detail && detail !== primary ? `${primary} — ${detail}` : primary;
+    })
+    .filter(Boolean)
+    .join("; ");
+
+/** Extract a human description from any Pulp error body, or undefined if none. */
+const describePulpError = (
+  data: PulpErrorData | undefined,
+): string | undefined => {
+  if (!data) return undefined;
+  // Non-JSON body (e.g. pulp_hugging_face content-proxy) arrives as a plain string.
+  if (typeof data === "string") return data || undefined;
+  // Bare-array 400 (list serializer / bare ValidationError).
+  if (Array.isArray(data)) {
+    const message = data
+      .map((item) => describeFieldValue(item))
+      .filter(Boolean)
+      .join("; ");
+    return message || undefined;
+  }
+  // container /v2/ and Galaxy v3 `errors[]` envelopes.
+  if ("errors" in data && Array.isArray(data.errors)) {
+    return (
+      describeErrorsEnvelope((data as IErrorsEnvelopeData).errors) || undefined
+    );
+  }
+  // Plugin custom views: `{ error, detail? }` (an `error` string key is unambiguous).
+  if (typeof (data as { error?: unknown }).error === "string") {
+    const { error, detail } = data as { error: string; detail?: unknown };
+    return typeof detail === "string" && detail !== error
+      ? `${error} — ${detail}`
+      : error;
+  }
+  // Stock DRF dict: `{ detail }`, `{ non_field_errors }`, and/or per-field errors.
+  const message = describeFieldErrors(data as Record<string, unknown>);
+  return message || undefined;
+};
+
+/** Build a user-facing mutation failure message, surfacing Pulp/DRF error detail when available. */
 export const getMutationErrorMessage = (
   error: unknown,
   fallback: string,
-): { title: string; description?: string } => {
+): IMutationErrorMessage => {
   if (!axios.isAxiosError(error)) {
     if (error instanceof Error && error.message) {
       return { title: fallback, description: error.message };
@@ -30,37 +105,15 @@ export const getMutationErrorMessage = (
     return { title: fallback };
   }
 
-  const status = error.response?.status;
-  const data = error.response?.data as
-    | {
-        detail?: unknown;
-        non_field_errors?: unknown;
-        error?: unknown;
-        errorMessage?: unknown;
-      }
-    | undefined;
-
-  if (status === 403) {
-    return {
-      title: fallback,
-      description:
-        "You do not have permission to perform this action. Ask an administrator to grant the required role.",
-    };
+  if (error.response?.status === 403) {
+    return { title: fallback, description: PERMISSION_DENIED_DESCRIPTION };
   }
 
-  const detail =
-    (typeof data?.detail === "string" && data.detail) ||
-    (typeof data?.errorMessage === "string" && data.errorMessage) ||
-    (typeof data?.error === "string" && data.error) ||
-    (Array.isArray(data?.non_field_errors) &&
-      data.non_field_errors.filter((x) => typeof x === "string").join(" ")) ||
-    (data?.detail && typeof data.detail === "object"
-      ? JSON.stringify(data.detail)
-      : undefined) ||
-    error.message;
+  const data = error.response?.data as PulpErrorData | undefined;
+  const description = describePulpError(data) || error.message;
 
-  return detail && detail !== fallback
-    ? { title: fallback, description: detail }
+  return description && description !== fallback
+    ? { title: fallback, description }
     : { title: fallback };
 };
 

@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Form } from "@patternfly/react-core";
 
 import { EntityFormFields } from "@app/components/EntityFormFields";
+import { FormSubmitError } from "@app/components/FormSubmitError";
 import { buildFieldSchema } from "@app/components/PluginForm/formSchema";
 import type { ResourceFilterMap } from "@app/components/PluginForm/resourceFilter";
 import type { IFieldGroup } from "@app/components/PluginForm/wizardSteps";
@@ -13,6 +14,7 @@ import {
   type IFormStepState,
   useFormChangeHandler,
 } from "@app/hooks/useFormChangeHandler";
+import type { IMutationErrorMessage } from "@app/utils/utils";
 
 type StepFormValues = Record<string, unknown>;
 
@@ -24,6 +26,8 @@ interface IEntityWizardStepProps {
   resourceFilter: ResourceFilterMap;
   /** Rendered above the fields on the first step (create type picker). */
   typeSelector?: ReactNode;
+  /** Submission failure, set only on the final (submitting) step; null otherwise. */
+  submitError?: IMutationErrorMessage | null;
 }
 
 /**
@@ -36,6 +40,7 @@ export const EntityWizardStep = ({
   onStateChanged,
   resourceFilter,
   typeSelector,
+  submitError = null,
 }: IEntityWizardStepProps) => {
   const form = useForm<StepFormValues>({
     mode: "all",
@@ -54,6 +59,7 @@ export const EntityWizardStep = ({
 
   return (
     <Form id={idPrefix} onSubmit={(e) => e.preventDefault()}>
+      <FormSubmitError error={submitError} />
       {typeSelector}
       <EntityFormFields
         fields={step.fields}
