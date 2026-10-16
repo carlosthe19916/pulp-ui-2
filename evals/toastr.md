@@ -127,3 +127,27 @@ Keep invalidation in the mutation hook regardless.
 - List delete: `RemoteList.tsx` + `useRemoteDeleteMutation`.
 - Form create/update: `useRemoteForm.tsx` + `useRemote{Create,Update}Mutation`.
 - `mutateAsync` exception: `components/SyncModal.tsx`.
+
+## Checklist
+
+Pass/fail rubric for `/eval`.
+
+- [ ] Mutation hooks own **cache invalidation only** — no toast/notification text
+      inside the hook.
+- [ ] Mutation hooks accept caller callbacks (`IMutationCallbacks<TData, TVars>`)
+      and wire them into their own `useMutation` `onSuccess`/`onError`, **after**
+      the invalidation.
+- [ ] Toasts are raised at the page/feature layer via **hook-level**
+      `onSuccess`/`onError` (survives unmount), not call-level.
+- [ ] Dialog close / local-state reset uses the **call-level** callback and closes
+      **on success only** — never in `onError`.
+- [ ] Uses `mutate`, not `mutateAsync` — except the two documented cases
+      (resolved-result-plus-form-state modals; detail-page delete/cancel that
+      navigate away), which raise the toast **before** close/navigate.
+- [ ] Message is built from mutation **`variables`** (and `data` for create), not a
+      closed-over component value; delete vars are `{ href, name }`, update
+      `{ href, name, body }`.
+- [ ] Error toasts use `getMutationErrorMessage(error, fallback)` with
+      `variant: "danger"`.
+- [ ] No `useMutationAction` / `runAction` wrapper and no per-feature `useXActions`
+      hub reintroduced.

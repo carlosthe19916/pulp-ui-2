@@ -2,5 +2,18 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true
   },
-  "enabledMcpjsonServers": ["patternfly", "playwright"]
+  "enabledMcpjsonServers": ["patternfly", "playwright"],
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/eval-gate.sh",
+            "statusMessage": "Checking evals before finishing..."
+          }
+        ]
+      }
+    ]
+  }
 }

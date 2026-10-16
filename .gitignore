@@ -56,3 +56,6 @@ test_suite_analysis/
 .tmp-podman/
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+
+# eval-gate marker (local, not shared)
+.claude/.eval-ran

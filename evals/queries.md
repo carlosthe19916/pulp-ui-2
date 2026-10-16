@@ -104,3 +104,25 @@ hook, and the hook forwards it. There's no `!!href` guard to own, so enablement
 flows straight from the caller through the pure spread. Still type `options` as
 `Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` and pure-spread it. Reference:
 `content.ts`.
+
+## Checklist
+
+Pass/fail rubric for `/eval`. Check only the public query-reading surface in
+changed `queries/` files.
+
+- [ ] Every `*QueryOptions` factory and `use*Query` / `use*Queries` hook takes
+      **exactly one inline-typed object arg** (even with a single field).
+- [ ] Key factories, `use*Mutation` (and their call signatures), and private
+      helpers (`build*Href`, `fetchAllPages`) stay **positional** — NOT converted
+      to single-object.
+- [ ] `*QueryOptions` receive the **already-built href**; id→href building lives in
+      the id-style hook, never in the factory.
+- [ ] `domain` is passed explicitly to `*QueryOptions`; the **hook** injects it via
+      `useDefaultDomain()` / `useSelectedDomain()` — callers never pass `domain`.
+- [ ] `options` is typed `Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` and
+      **spread first** so the factory's `queryKey` / `queryFn` win.
+- [ ] Precondition-guard detail queries: `*QueryOptions` sets **no `enabled`**; the
+      `use*Query` hook owns the `enabled: !!href` guard and does **not** accept
+      `options`. (Caller-preference lists keep `options` on both and forward it.)
+- [ ] No `throw` inside a `queryFn` — errors propagate from the HTTP layer; non-HTTP
+      empty results return a falsy sentinel handled in the loader/consumer.
