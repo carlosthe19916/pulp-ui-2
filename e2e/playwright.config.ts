@@ -4,9 +4,6 @@ const authFile = ".auth/user.json";
 
 const pulpApiUrl = process.env.PULP_API_URL ?? "http://localhost:8080";
 
-// Keep the auth mode the dev server is built with in sync with the mode the tests
-// drive (see helpers/auth.ts). Only forwards keys that are set, so `basic`/`none`
-// need nothing extra and `oidc` picks up whatever OIDC_* the environment provides.
 const authEnv = Object.fromEntries(
   Object.entries({
     AUTH: process.env.E2E_AUTH,
