@@ -3,8 +3,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { Group, GroupResponse, PatchedGroup } from "@app/client";
-
-import { useGroupActions } from "./useGroupActions";
+import { useNotifications } from "@app/context/useNotifications";
+import {
+  useGroupCreateMutation,
+  useGroupUpdateMutation,
+} from "@app/queries/groups";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 export type GroupFormValues = {
   name: string;
@@ -44,8 +48,30 @@ export const useGroupForm = ({
   group,
   onClose,
 }: IUseGroupFormArgs): IUseGroupFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !group;
-  const { createGroup, updateGroup } = useGroupActions();
+
+  const createMutation = useGroupCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `Group "${data.name}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create group"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useGroupUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({ title: `Group "${name}" updated`, variant: "success" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update group"),
+        variant: "danger",
+      }),
+  });
 
   const form = useForm<GroupFormValues>({
     resolver: yupResolver(groupSchema),
@@ -53,18 +79,20 @@ export const useGroupForm = ({
     mode: "onChange",
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      if (isCreate) {
-        await createGroup(valuesToNewGroup(values));
-      } else if (group?.pulp_href) {
-        await updateGroup(group.pulp_href, valuesToPatchedGroup(values));
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Notifications are handled in useGroupActions; keep the modal open.
+  const onSubmit = form.handleSubmit((values) => {
+    if (isCreate) {
+      createMutation.mutate(valuesToNewGroup(values), {
+        onSuccess: () => onClose(),
+      });
+    } else if (group?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: group.pulp_href,
+          name: group.name ?? "",
+          body: valuesToPatchedGroup(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   });
 
@@ -72,6 +100,6 @@ export const useGroupForm = ({
     form,
     isCreate,
     onSubmit,
-    isSubmitting: form.formState.isSubmitting,
+    isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

@@ -1,11 +1,16 @@
 import type { IPlugin } from "@catalog";
+import { useNotifications } from "@app/context/useNotifications";
 import type {
   IEntityForEdit,
   IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import {
+  useRemoteCreateMutation,
+  useRemoteUpdateMutation,
+} from "@app/queries/remotes";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { valuesToCreate, valuesToPatch } from "../components/RemoteForm";
-import { useRemoteActions } from "./useRemoteActions";
 
 interface IUseRemoteFormArgs {
   plugin: IPlugin | undefined;
@@ -15,37 +20,62 @@ interface IUseRemoteFormArgs {
 }
 
 /**
- * Remote create/edit form: a values-based submit + pending state that maps the form
- * values to a remote write body (`RemoteForm`) and runs the family's actions. Create
- * POSTs to the selected plugin type's endpoint; edit PATCHes the `pulp_href`. The
- * body (wizard today) owns the form itself.
+ * Remote create/edit form: maps form values to a remote write body (`RemoteForm`)
+ * and runs the family's create/update mutations. Toasts are raised from the
+ * mutations' hook-level callbacks (survive unmount); the call-level `onSuccess`
+ * closes the modal on success only (see `evals/toastr.md`).
  */
 export const useRemoteForm = ({
   plugin,
   entity,
   onClose,
 }: IUseRemoteFormArgs): IUseEntityFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !entity;
-  const { createRemote, updateRemote, isSubmitting } = useRemoteActions();
   const entityPlugin = plugin?.entities.remote;
 
-  const onSubmit = async (values: Record<string, unknown>) => {
-    try {
-      if (isCreate) {
-        if (!entityPlugin) return;
-        await createRemote(entityPlugin.apiPath, valuesToCreate(values));
-      } else if (entity?.pulp_href) {
-        await updateRemote(
-          entity.pulp_href,
-          entity.name,
-          valuesToPatch(values),
-        );
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Toast raised in useRemoteActions; keep the modal open.
+  const createMutation = useRemoteCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `Remote "${data.name}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create remote"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useRemoteUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({
+        title: `Remote "${name}" updated`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update remote"),
+        variant: "danger",
+      }),
+  });
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const onSubmit = (values: Record<string, unknown>) => {
+    if (isCreate) {
+      if (!entityPlugin) return;
+      createMutation.mutate(
+        { apiPath: entityPlugin.apiPath, body: valuesToCreate(values) },
+        { onSuccess: () => onClose() },
+      );
+    } else if (entity?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: entity.pulp_href,
+          name: entity.name ?? "",
+          body: valuesToPatch(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   };
 

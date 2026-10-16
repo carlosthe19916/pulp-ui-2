@@ -1,11 +1,17 @@
 import type { IPlugin } from "@catalog";
+import { useNotifications } from "@app/context/useNotifications";
 import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import {
+  useDistributionCreateMutation,
+  useDistributionUpdateMutation,
+} from "@app/queries/distributions";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { valuesToCreate, valuesToPatch } from "../components/DistributionForm";
-import { useDistributionActions } from "./useDistributionActions";
 
 interface IUseDistributionFormArgs {
   plugin: IPlugin | undefined;
@@ -14,38 +20,65 @@ interface IUseDistributionFormArgs {
 }
 
 /**
- * Distribution create/edit form (mirrors `useRepositoryForm`): a values-based submit
- * that maps the form values to a distribution write body (`DistributionForm`) and
- * runs the family's actions. The body (plain or wizard) owns the form itself.
+ * Distribution create/edit form: maps form values to a distribution write body
+ * (`DistributionForm`) and runs the family's create/update mutations. Create is
+ * async (202 + task). Toasts are raised from the mutations' hook-level callbacks
+ * (survive unmount); the call-level `onSuccess` closes the modal on success only
+ * (see `evals/toastr.md`).
  */
 export const useDistributionForm = ({
   plugin,
   entity,
   onClose,
 }: IUseDistributionFormArgs): IUseEntityFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !entity;
-  const { createDistribution, updateDistribution, isSubmitting } =
-    useDistributionActions();
-
   const entityPlugin = plugin?.entities.distribution;
 
-  const onSubmit = async (values: Record<string, unknown>) => {
-    try {
-      if (isCreate) {
-        if (!entityPlugin) return;
-        await createDistribution(entityPlugin.apiPath, valuesToCreate(values));
-      } else if (entity?.pulp_href) {
-        await updateDistribution(
-          entity.pulp_href,
-          entity.name,
-          valuesToPatch(values),
-        );
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Toast raised in useDistributionActions; keep the modal open.
+  const createMutation = useDistributionCreateMutation({
+    onSuccess: (data, { name }) =>
+      notifyTaskStarted(
+        addNotification,
+        data.task,
+        `Distribution "${name}" create started`,
+      ),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create distribution"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useDistributionUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({
+        title: `Distribution "${name}" updated`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update distribution"),
+        variant: "danger",
+      }),
+  });
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const onSubmit = (values: Record<string, unknown>) => {
+    if (isCreate) {
+      if (!entityPlugin) return;
+      const body = valuesToCreate(values);
+      createMutation.mutate(
+        { apiPath: entityPlugin.apiPath, name: body.name ?? "", body },
+        { onSuccess: () => onClose() },
+      );
+    } else if (entity?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: entity.pulp_href,
+          name: entity.name ?? "",
+          body: valuesToPatch(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   };
 

@@ -1,11 +1,16 @@
 import type { IPlugin } from "@catalog";
+import { useNotifications } from "@app/context/useNotifications";
 import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import {
+  useRepositoryCreateMutation,
+  useRepositoryUpdateMutation,
+} from "@app/queries/repositories";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { valuesToCreate, valuesToPatch } from "../components/RepositoryForm";
-import { useRepositoryActions } from "./useRepositoryActions";
 
 interface IUseRepositoryFormArgs {
   /** Resolved plugin for the selected/edited pulp_type (undefined ⇒ no fields). */
@@ -16,39 +21,62 @@ interface IUseRepositoryFormArgs {
 }
 
 /**
- * Repository create/edit form (mirrors `useUserForm`): a values-based submit that
- * maps the form values to a repository write body (`RepositoryForm`) and runs the
- * family's actions. Create POSTs to the selected plugin type's endpoint; edit
- * PATCHes the `pulp_href`. The body (plain or wizard) owns the form itself.
+ * Repository create/edit form: maps form values to a repository write body
+ * (`RepositoryForm`) and runs the family's create/update mutations. Toasts are
+ * raised from the mutations' hook-level callbacks (survive unmount); the
+ * call-level `onSuccess` closes the modal on success only (see `evals/toastr.md`).
  */
 export const useRepositoryForm = ({
   plugin,
   entity,
   onClose,
 }: IUseRepositoryFormArgs): IUseEntityFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !entity;
-  const { createRepository, updateRepository, isSubmitting } =
-    useRepositoryActions();
-
   const entityPlugin = plugin?.entities.repository;
 
-  const onSubmit = async (values: Record<string, unknown>) => {
-    try {
-      if (isCreate) {
-        if (!entityPlugin) return;
-        await createRepository(entityPlugin.apiPath, valuesToCreate(values));
-      } else if (entity?.pulp_href) {
-        await updateRepository(
-          entity.pulp_href,
-          entity.name,
-          valuesToPatch(values),
-        );
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Toast raised in useRepositoryActions; keep the modal open.
+  const createMutation = useRepositoryCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `Repository "${data.name}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create repository"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useRepositoryUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({
+        title: `Repository "${name}" updated`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update repository"),
+        variant: "danger",
+      }),
+  });
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const onSubmit = (values: Record<string, unknown>) => {
+    if (isCreate) {
+      if (!entityPlugin) return;
+      createMutation.mutate(
+        { apiPath: entityPlugin.apiPath, body: valuesToCreate(values) },
+        { onSuccess: () => onClose() },
+      );
+    } else if (entity?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: entity.pulp_href,
+          name: entity.name ?? "",
+          body: valuesToPatch(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   };
 

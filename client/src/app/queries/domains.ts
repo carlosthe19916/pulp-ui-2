@@ -16,6 +16,7 @@ import type {
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { taskKeys } from "./tasks";
@@ -72,7 +73,9 @@ export const useDomainsListQuery = ({
   return useQuery(domainsListQueryOptions({ apiDomain, params }));
 };
 
-export const useDomainCreateMutation = () => {
+export const useDomainCreateMutation = (
+  options?: IMutationCallbacks<DomainResponse, Domain>,
+) => {
   const queryClient = useQueryClient();
   const apiDomain = useDefaultDomain();
   return useMutation({
@@ -83,13 +86,20 @@ export const useDomainCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useDomainUpdateMutation = () => {
+export const useDomainUpdateMutation = (
+  options?: IMutationCallbacks<
+    DomainResponse | AsyncOperationResponse,
+    { href: string; name: string; body: PatchedDomain }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -97,6 +107,7 @@ export const useDomainUpdateMutation = () => {
       body,
     }: {
       href: string;
+      name: string;
       body: PatchedDomain;
     }) => {
       const response = await axiosInstance.patch<
@@ -104,33 +115,42 @@ export const useDomainUpdateMutation = () => {
       >(toProxyHref(href), body);
       return response.data;
     },
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(toProxyHref(href)),
+        queryKey: domainKeys.detail(toProxyHref(variables.href)),
       });
       // Surface the new update task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useDomainDeleteMutation = () => {
+export const useDomainDeleteMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { href: string; name: string }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(href),
       );
       return response.data;
     },
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(toProxyHref(href)),
+        queryKey: domainKeys.detail(toProxyHref(variables.href)),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };

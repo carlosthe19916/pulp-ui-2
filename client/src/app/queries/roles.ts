@@ -16,6 +16,7 @@ import type {
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -110,7 +111,9 @@ export const useAllRolesListQuery = ({
   return useQuery(allRolesListQueryOptions({ domain, params }));
 };
 
-export const useRoleCreateMutation = () => {
+export const useRoleCreateMutation = (
+  options?: IMutationCallbacks<RoleResponse, Role>,
+) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
   return useMutation({
@@ -121,43 +124,63 @@ export const useRoleCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useRoleUpdateMutation = () => {
+export const useRoleUpdateMutation = (
+  options?: IMutationCallbacks<
+    RoleResponse,
+    { href: string; name: string; body: PatchedRole }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ href, body }: { href: string; body: PatchedRole }) => {
+    mutationFn: async ({
+      href,
+      body,
+    }: {
+      href: string;
+      name: string;
+      body: PatchedRole;
+    }) => {
       const response = await axiosInstance.patch<RoleResponse>(
         toProxyHref(href),
         body,
       );
       return response.data;
     },
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(toProxyHref(href)),
+        queryKey: roleKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useRoleDeleteMutation = () => {
+export const useRoleDeleteMutation = (
+  options?: IMutationCallbacks<void, { href: string; name: string }>,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(toProxyHref(href)),
+        queryKey: roleKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };

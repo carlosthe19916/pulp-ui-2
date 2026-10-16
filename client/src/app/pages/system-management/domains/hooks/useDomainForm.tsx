@@ -8,12 +8,18 @@ import type {
   PatchedDomain,
   StorageClassEnum,
 } from "@app/client";
+import { useNotifications } from "@app/context/useNotifications";
+import {
+  useDomainCreateMutation,
+  useDomainUpdateMutation,
+} from "@app/queries/domains";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import {
   buildStorageSettingsSchema,
   STORAGE_BACKEND_BY_CLASS,
 } from "../storageBackends";
-import { useDomainActions } from "./useDomainActions";
 
 const DEFAULT_STORAGE_CLASS: StorageClassEnum =
   "pulpcore.app.models.storage.FileSystem";
@@ -109,8 +115,44 @@ export const useDomainForm = ({
   domain,
   onClose,
 }: IUseDomainFormArgs): IUseDomainFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !domain;
-  const { createDomain, updateDomain } = useDomainActions();
+
+  const createMutation = useDomainCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `Domain "${data.name}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create domain"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useDomainUpdateMutation({
+    onSuccess: (data, { name }) => {
+      // Update may be sync (200) or async (202 + task) — branch on the response.
+      const taskHref = (data as { task?: string | null }).task;
+      if (taskHref) {
+        notifyTaskStarted(
+          addNotification,
+          taskHref,
+          `Domain "${name}" update started`,
+        );
+      } else {
+        addNotification({
+          title: `Domain "${name}" updated`,
+          variant: "success",
+        });
+      }
+    },
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update domain"),
+        variant: "danger",
+      }),
+  });
 
   const form = useForm<DomainFormValues>({
     // Cast needed: the `.when(...)`-built `storage_settings` schema is a generic yup
@@ -120,7 +162,7 @@ export const useDomainForm = ({
     mode: "onChange",
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const onSubmit = form.handleSubmit((values) => {
     const description = values.description.trim();
 
     if (isCreate) {
@@ -132,12 +174,7 @@ export const useDomainForm = ({
         redirect_to_object_storage: values.redirect_to_object_storage,
         hide_guarded_distributions: values.hide_guarded_distributions,
       };
-      try {
-        await createDomain(body);
-        onClose();
-      } catch {
-        // Keep the modal open; the error is already surfaced as a toast.
-      }
+      createMutation.mutate(body, { onSuccess: () => onClose() });
       return;
     }
 
@@ -150,19 +187,16 @@ export const useDomainForm = ({
       redirect_to_object_storage: values.redirect_to_object_storage,
       hide_guarded_distributions: values.hide_guarded_distributions,
     };
-    try {
-      // Wait for the 202 before closing; the row then shows "Updating".
-      await updateDomain(domain.pulp_href, body);
-      onClose();
-    } catch {
-      // Keep the modal open; the error is already surfaced as a toast.
-    }
+    updateMutation.mutate(
+      { href: domain.pulp_href, name: values.name, body },
+      { onSuccess: () => onClose() },
+    );
   });
 
   return {
     form,
     isCreate,
     onSubmit,
-    isSubmitting: form.formState.isSubmitting,
+    isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

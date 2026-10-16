@@ -34,7 +34,6 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { RepositoryModal } from "./components/RepositoryModal";
-import { useRepositoryActions } from "./hooks/useRepositoryActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
@@ -49,12 +48,15 @@ import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
   repositoryKeys,
   useRepositoriesListQuery,
+  useRepositoryDeleteMutation,
 } from "@app/queries/repositories";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPlugin } from "@catalog";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -86,7 +88,23 @@ export const RepositoryList: React.FC = () => {
   );
 
   const canCreate = useCreatablePlugins("repository").length > 0;
-  const { deleteRepository, isDeleting } = useRepositoryActions();
+  const deleteMutation = useRepositoryDeleteMutation({
+    onSuccess: (data, { name }) =>
+      notifyTaskStarted(
+        addNotification,
+        data.task,
+        `Repository "${name}" deletion started`,
+      ),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(
+          error,
+          `Failed to delete repository "${name}"`,
+        ),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -259,16 +277,13 @@ export const RepositoryList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    try {
-      // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteRepository(target);
-      setDeleteTarget(null);
-    } catch {
-      // Error surfaced as a toast; keep the modal open.
-    }
+    deleteMutation.mutate(
+      { href: target.pulp_href, name: target.name ?? "" },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -356,7 +371,7 @@ export const RepositoryList: React.FC = () => {
           title="Delete Repository"
           body={`Are you sure you want to delete repository "${deleteTarget?.name}"? This action cannot be undone.`}
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

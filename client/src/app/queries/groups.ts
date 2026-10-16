@@ -26,6 +26,7 @@ import type {
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildGroupHref } from "./utils/pulpHref";
@@ -291,7 +292,9 @@ export const useAllGroupRolesListQuery = ({ groupId }: { groupId: string }) => {
   });
 };
 
-export const useGroupCreateMutation = () => {
+export const useGroupCreateMutation = (
+  options?: IMutationCallbacks<GroupResponse, Group>,
+) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
   return useMutation({
@@ -302,13 +305,20 @@ export const useGroupCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useGroupUpdateMutation = () => {
+export const useGroupUpdateMutation = (
+  options?: IMutationCallbacks<
+    GroupResponse,
+    { href: string; name: string; body: PatchedGroup }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -316,6 +326,7 @@ export const useGroupUpdateMutation = () => {
       body,
     }: {
       href: string;
+      name: string;
       body: PatchedGroup;
     }) => {
       const response = await axiosInstance.patch<GroupResponse>(
@@ -324,28 +335,34 @@ export const useGroupUpdateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupKeys.detail(toProxyHref(href)),
+        queryKey: groupKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useGroupDeleteMutation = () => {
+export const useGroupDeleteMutation = (
+  options?: IMutationCallbacks<void, { href: string; name: string }>,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: groupKeys.detail(toProxyHref(href)),
+        queryKey: groupKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 

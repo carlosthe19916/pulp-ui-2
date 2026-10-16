@@ -20,6 +20,7 @@ import type {
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { buildUserHref } from "./utils/pulpHref";
@@ -134,7 +135,9 @@ export const useAllUserRolesListQuery = ({
   });
 };
 
-export const useUserCreateMutation = () => {
+export const useUserCreateMutation = (
+  options?: IMutationCallbacks<UserResponse, UserWritable>,
+) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
   return useMutation({
@@ -145,44 +148,64 @@ export const useUserCreateMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useUserUpdateMutation = () => {
+export const useUserUpdateMutation = (
+  options?: IMutationCallbacks<
+    UserResponse,
+    { href: string; name: string; body: PatchedUser }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ href, body }: { href: string; body: PatchedUser }) => {
+    mutationFn: async ({
+      href,
+      body,
+    }: {
+      href: string;
+      name: string;
+      body: PatchedUser;
+    }) => {
       const response = await axiosInstance.patch<UserResponse>(
         toProxyHref(href),
         body,
       );
       return response.data;
     },
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(toProxyHref(href)),
+        queryKey: userKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useUserDeleteMutation = () => {
+export const useUserDeleteMutation = (
+  options?: IMutationCallbacks<void, { href: string; name: string }>,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string) => {
+    mutationFn: async ({ href }: { href: string; name: string }) => {
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(toProxyHref(href)),
+        queryKey: userKeys.detail(toProxyHref(variables.href)),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 

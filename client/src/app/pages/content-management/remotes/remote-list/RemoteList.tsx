@@ -35,7 +35,6 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { RemoteModal } from "./components/RemoteModal";
-import { useRemoteActions } from "./hooks/useRemoteActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -44,9 +43,15 @@ import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IRemoteListParams } from "@app/queries/remotes";
-import { remoteKeys, useRemotesListQuery } from "@app/queries/remotes";
+import {
+  remoteKeys,
+  useRemoteDeleteMutation,
+  useRemotesListQuery,
+} from "@app/queries/remotes";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -73,7 +78,20 @@ export const RemoteList: React.FC = () => {
     useState<GenericRemoteResponse | null>(null);
 
   const canCreate = useCreatablePlugins("remote").length > 0;
-  const { deleteRemote, isDeleting } = useRemoteActions();
+  const deleteMutation = useRemoteDeleteMutation({
+    onSuccess: (data, { name }) =>
+      notifyTaskStarted(
+        addNotification,
+        data.task,
+        `Remote "${name}" deletion started`,
+      ),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(error, `Failed to delete remote "${name}"`),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -231,16 +249,15 @@ export const RemoteList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    try {
-      // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteRemote(target);
-      setDeleteTarget(null);
-    } catch {
-      // Error surfaced as a toast; keep the modal open.
-    }
+    // Toast fires from the hook-level callbacks (survives unmount); close the
+    // dialog only on success so it stays open to retry on error.
+    deleteMutation.mutate(
+      { href: target.pulp_href, name: target.name ?? "" },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -309,7 +326,7 @@ export const RemoteList: React.FC = () => {
           title="Delete Remote"
           body={`Are you sure you want to delete remote "${deleteTarget?.name}"? This action cannot be undone.`}
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

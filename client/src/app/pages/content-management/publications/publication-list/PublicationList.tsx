@@ -20,6 +20,7 @@ import {
 import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
+import { useNotifications } from "@app/context/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   dataViewBodyStates,
@@ -29,18 +30,20 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { PublicationModal } from "./components/PublicationModal";
-import { usePublicationActions } from "./hooks/usePublicationActions";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import type { IPublicationListParams } from "@app/queries/publications";
-import { usePublicationsListQuery } from "@app/queries/publications";
+import {
+  usePublicationDeleteMutation,
+  usePublicationsListQuery,
+} from "@app/queries/publications";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
-import { formatDateTime } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [
   "pulp_created",
@@ -53,8 +56,24 @@ export const PublicationList: React.FC = () => {
     null,
   );
 
+  const { addNotification } = useNotifications();
   const canCreate = useCreatablePlugins("publication").length > 0;
-  const { deletePublication, isDeleting } = usePublicationActions();
+  const deleteMutation = usePublicationDeleteMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({
+        title: `Publication "${name}" deleted`,
+        variant: "success",
+      }),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(
+          error,
+          `Failed to delete publication "${name}"`,
+        ),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -171,16 +190,16 @@ export const PublicationList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    try {
-      // Publication deletion is synchronous (204, no task) — no row tracking.
-      await deletePublication(target);
-      setDeleteTarget(null);
-    } catch {
-      // Error surfaced as a toast; keep the modal open.
-    }
+    deleteMutation.mutate(
+      {
+        href: target.pulp_href,
+        name: extractIdFromHref(target.pulp_href),
+      },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -234,7 +253,7 @@ export const PublicationList: React.FC = () => {
               : "Are you sure you want to delete this publication? This action cannot be undone."
           }
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

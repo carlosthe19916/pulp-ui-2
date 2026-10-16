@@ -3,8 +3,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { PatchedRole, Role, RoleResponse } from "@app/client";
-
-import { useRoleActions } from "./useRoleActions";
+import { useNotifications } from "@app/context/useNotifications";
+import {
+  useRoleCreateMutation,
+  useRoleUpdateMutation,
+} from "@app/queries/roles";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 export type RoleFormValues = {
   name: string;
@@ -55,8 +59,30 @@ export const useRoleForm = ({
   role,
   onClose,
 }: IUseRoleFormArgs): IUseRoleFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !role;
-  const { createRole, updateRole } = useRoleActions();
+
+  const createMutation = useRoleCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `Role "${data.name}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create role"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useRoleUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({ title: `Role "${name}" updated`, variant: "success" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update role"),
+        variant: "danger",
+      }),
+  });
 
   const form = useForm<RoleFormValues>({
     resolver: yupResolver(buildRoleSchema(isCreate)),
@@ -64,18 +90,20 @@ export const useRoleForm = ({
     mode: "onChange",
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      if (isCreate) {
-        await createRole(valuesToNewRole(values));
-      } else if (role?.pulp_href) {
-        await updateRole(role.pulp_href, valuesToPatchedRole(values));
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Notifications are handled in useRoleActions; keep the modal open.
+  const onSubmit = form.handleSubmit((values) => {
+    if (isCreate) {
+      createMutation.mutate(valuesToNewRole(values), {
+        onSuccess: () => onClose(),
+      });
+    } else if (role?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: role.pulp_href,
+          name: role.name ?? "",
+          body: valuesToPatchedRole(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   });
 
@@ -83,6 +111,6 @@ export const useRoleForm = ({
     form,
     isCreate,
     onSubmit,
-    isSubmitting: form.formState.isSubmitting,
+    isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

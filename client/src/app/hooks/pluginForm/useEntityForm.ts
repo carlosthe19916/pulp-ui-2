@@ -70,6 +70,8 @@ export const useEntityFormBase = ({
  * calls it with the merged step values.
  */
 export interface IUseEntityFormResult {
-  onSubmit: (values: Record<string, unknown>) => Promise<void>;
+  // Fire-and-forget: the mutation's hook-level callbacks own the toast and the
+  // call-level onSuccess closes the modal (see `evals/toastr.md`).
+  onSubmit: (values: Record<string, unknown>) => void;
   isSubmitting: boolean;
 }

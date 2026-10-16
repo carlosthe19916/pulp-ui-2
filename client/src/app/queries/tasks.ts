@@ -20,6 +20,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -183,7 +184,9 @@ export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
   });
 };
 
-export const useTaskCancelMutation = () => {
+export const useTaskCancelMutation = (
+  options?: IMutationCallbacks<TaskResponse, string>,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (href: string) => {
@@ -193,20 +196,26 @@ export const useTaskCancelMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
-export const useTaskPurgeMutation = () => {
+type TaskPurgeVariables = {
+  finished_before?: string;
+  states?: Array<"completed" | "failed" | "canceled" | "skipped">;
+};
+
+export const useTaskPurgeMutation = (
+  options?: IMutationCallbacks<AsyncOperationResponse, TaskPurgeVariables>,
+) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
   return useMutation({
-    mutationFn: async (body: {
-      finished_before?: string;
-      states?: Array<"completed" | "failed" | "canceled" | "skipped">;
-    }) => {
+    mutationFn: async (body: TaskPurgeVariables) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(
         pulpApiPath("tasks/purge/", domain),
         {
@@ -216,8 +225,10 @@ export const useTaskPurgeMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };

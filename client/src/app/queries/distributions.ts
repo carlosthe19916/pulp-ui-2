@@ -16,6 +16,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -84,20 +85,32 @@ export const useDistributionsListQuery = ({
 };
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
-export const useDistributionDeleteMutation = () => {
+export const useDistributionDeleteMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { href: string; name: string }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
+    mutationFn: async ({
+      href,
+    }: {
+      href: string;
+      name: string;
+    }): Promise<AsyncOperationResponse> =>
       (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
         .data,
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: distributionKeys.detail(href),
+        queryKey: distributionKeys.detail(variables.href),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
@@ -140,7 +153,12 @@ export const useDistributionDetailQuery = ({ href }: { href: string | null }) =>
  * (apiPath from the catalog). Distribution creation is asynchronous, so it returns the
  * Pulp 202 task.
  */
-export const useDistributionCreateMutation = () => {
+export const useDistributionCreateMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { apiPath: string; name: string; body: Record<string, unknown> }
+  >,
+) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation({
@@ -149,6 +167,7 @@ export const useDistributionCreateMutation = () => {
       body,
     }: {
       apiPath: string;
+      name: string;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
       (
@@ -157,14 +176,21 @@ export const useDistributionCreateMutation = () => {
           body,
         )
       ).data,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
-export const useDistributionUpdateMutation = () => {
+export const useDistributionUpdateMutation = (
+  options?: IMutationCallbacks<
+    unknown,
+    { href: string; name: string; body: Record<string, unknown> }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -172,14 +198,17 @@ export const useDistributionUpdateMutation = () => {
       body,
     }: {
       href: string;
+      name: string;
       body: Record<string, unknown>;
     }): Promise<unknown> =>
       (await axiosInstance.patch(toProxyHref(href), body)).data,
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: distributionKeys.detail(href),
+        queryKey: distributionKeys.detail(variables.href),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };

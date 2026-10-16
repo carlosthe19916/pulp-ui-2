@@ -61,7 +61,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(group.pulp_href ?? "");
+      await deleteMutation.mutateAsync({
+        href: group.pulp_href ?? "",
+        name: group.name ?? "",
+      });
       addNotification({
         title: `Group "${group.name}" deleted`,
         variant: "success",

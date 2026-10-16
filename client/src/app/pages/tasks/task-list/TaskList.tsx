@@ -30,6 +30,7 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
+import { useNotifications } from "@app/context/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   dataViewBodyStates,
@@ -40,12 +41,16 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { ITaskListParams } from "@app/queries/tasks";
-import { type TaskState, useTasksListQuery } from "@app/queries/tasks";
+import {
+  type TaskState,
+  useTaskCancelMutation,
+  useTaskPurgeMutation,
+  useTasksListQuery,
+} from "@app/queries/tasks";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractTaskId } from "@app/utils/taskHref";
-import { formatDateTime } from "@app/utils/utils";
-
-import { useTaskActions } from "./hooks/useTaskActions";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const stateColors: Record<
   string,
@@ -98,7 +103,27 @@ export const TaskList: React.FC = () => {
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
   const [cancelTaskHref, setCancelTaskHref] = useState<string | null>(null);
 
-  const { cancelTask, purgeTasks, isCanceling, isPurging } = useTaskActions();
+  const { addNotification } = useNotifications();
+  const cancelMutation = useTaskCancelMutation({
+    onSuccess: () =>
+      addNotification({ title: "Task cancel requested", variant: "info" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to cancel task"),
+        variant: "danger",
+      }),
+  });
+  const purgeMutation = useTaskPurgeMutation({
+    onSuccess: (data) =>
+      notifyTaskStarted(addNotification, data.task, "Purge task started"),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to purge tasks"),
+        variant: "danger",
+      }),
+  });
+  const isCanceling = cancelMutation.isPending;
+  const isPurging = purgeMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -242,23 +267,18 @@ export const TaskList: React.FC = () => {
     </ToolbarItem>
   );
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (!cancelTaskHref) return;
-    try {
-      await cancelTask(cancelTaskHref);
-    } catch {
-      // Notifications are handled in useTaskActions.
-    }
-    setCancelTaskHref(null);
+    cancelMutation.mutate(cancelTaskHref, {
+      onSettled: () => setCancelTaskHref(null),
+    });
   };
 
-  const handlePurge = async () => {
-    try {
-      await purgeTasks();
-    } catch {
-      // Notifications are handled in useTaskActions.
-    }
-    setIsPurgeOpen(false);
+  const handlePurge = () => {
+    purgeMutation.mutate(
+      { states: ["completed", "failed", "canceled", "skipped"] },
+      { onSettled: () => setIsPurgeOpen(false) },
+    );
   };
 
   return (
@@ -310,7 +330,7 @@ export const TaskList: React.FC = () => {
           confirmLabel="Cancel Task"
           cancelLabel="Close"
           confirmVariant="primary"
-          onConfirm={() => void handleCancel()}
+          onConfirm={handleCancel}
           onCancel={() => setCancelTaskHref(null)}
         />
 
@@ -322,7 +342,7 @@ export const TaskList: React.FC = () => {
           confirmLabel="Purge"
           cancelLabel="Close"
           confirmVariant="primary"
-          onConfirm={() => void handlePurge()}
+          onConfirm={handlePurge}
           onCancel={() => setIsPurgeOpen(false)}
         />
       </PageSection>

@@ -23,6 +23,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
+import { useNotifications } from "@app/context/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   dataViewBodyStates,
@@ -33,13 +34,12 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IUserListParams } from "@app/queries/users";
-import { useUsersListQuery } from "@app/queries/users";
+import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { formatDateTime } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { UserModal } from "./components/UserModal";
 import { UserRolesModal } from "./components/UserRolesModal";
-import { useUserActions } from "./hooks/useUserActions";
 
 const SORTABLE_COLUMN_KEYS = [
   "username",
@@ -59,7 +59,17 @@ export const UserList: React.FC = () => {
   const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null);
 
-  const { deleteUser, isDeleting } = useUserActions();
+  const { addNotification } = useNotifications();
+  const deleteMutation = useUserDeleteMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({ title: `User "${name}" deleted`, variant: "success" }),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(error, `Failed to delete user "${name}"`),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -178,14 +188,13 @@ export const UserList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
-    if (!deleteTarget?.pulp_href) return;
-    try {
-      await deleteUser(deleteTarget);
-    } catch {
-      // Notifications are handled in useUserActions.
-    }
-    setDeleteTarget(null);
+  const handleDelete = () => {
+    const target = deleteTarget;
+    if (!target?.pulp_href) return;
+    deleteMutation.mutate(
+      { href: target.pulp_href, name: target.username ?? "" },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -245,7 +254,7 @@ export const UserList: React.FC = () => {
           title="Delete User"
           body={`Are you sure you want to delete "${deleteTarget?.username}"? This action cannot be undone.`}
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

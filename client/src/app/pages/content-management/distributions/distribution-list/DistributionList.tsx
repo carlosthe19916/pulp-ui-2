@@ -35,7 +35,6 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { DistributionModal } from "./components/DistributionModal";
-import { useDistributionActions } from "./hooks/useDistributionActions";
 import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -47,10 +46,13 @@ import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
+  useDistributionDeleteMutation,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -76,7 +78,23 @@ export const DistributionList: React.FC = () => {
   );
 
   const canCreate = useCreatablePlugins("distribution").length > 0;
-  const { deleteDistribution, isDeleting } = useDistributionActions();
+  const deleteMutation = useDistributionDeleteMutation({
+    onSuccess: (data, { name }) =>
+      notifyTaskStarted(
+        addNotification,
+        data.task,
+        `Distribution "${name}" deletion started`,
+      ),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(
+          error,
+          `Failed to delete distribution "${name}"`,
+        ),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -237,16 +255,13 @@ export const DistributionList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    try {
-      // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteDistribution(target);
-      setDeleteTarget(null);
-    } catch {
-      // Error surfaced as a toast; keep the modal open.
-    }
+    deleteMutation.mutate(
+      { href: target.pulp_href, name: target.name ?? "" },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -315,7 +330,7 @@ export const DistributionList: React.FC = () => {
           title="Delete Distribution"
           body={`Are you sure you want to delete distribution "${deleteTarget?.name}"? This action cannot be undone.`}
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

@@ -3,8 +3,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
 import type { PatchedUser, UserResponse, UserWritable } from "@app/client";
-
-import { useUserActions } from "./useUserActions";
+import { useNotifications } from "@app/context/useNotifications";
+import {
+  useUserCreateMutation,
+  useUserUpdateMutation,
+} from "@app/queries/users";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 export type UserFormValues = {
   username: string;
@@ -82,8 +86,30 @@ export const useUserForm = ({
   user,
   onClose,
 }: IUseUserFormArgs): IUseUserFormResult => {
+  const { addNotification } = useNotifications();
   const isCreate = !user;
-  const { createUser, updateUser } = useUserActions();
+
+  const createMutation = useUserCreateMutation({
+    onSuccess: (data) =>
+      addNotification({
+        title: `User "${data.username}" created`,
+        variant: "success",
+      }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to create user"),
+        variant: "danger",
+      }),
+  });
+  const updateMutation = useUserUpdateMutation({
+    onSuccess: (_data, { name }) =>
+      addNotification({ title: `User "${name}" updated`, variant: "success" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage(error, "Failed to update user"),
+        variant: "danger",
+      }),
+  });
 
   const form = useForm<UserFormValues>({
     resolver: yupResolver(buildUserSchema(isCreate)),
@@ -91,18 +117,20 @@ export const useUserForm = ({
     mode: "onChange",
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      if (isCreate) {
-        await createUser(valuesToNewUser(values));
-      } else if (user?.pulp_href) {
-        await updateUser(user.pulp_href, valuesToPatchedUser(values));
-      } else {
-        return;
-      }
-      onClose();
-    } catch {
-      // Notifications are handled in useUserActions; keep the modal open.
+  const onSubmit = form.handleSubmit((values) => {
+    if (isCreate) {
+      createMutation.mutate(valuesToNewUser(values), {
+        onSuccess: () => onClose(),
+      });
+    } else if (user?.pulp_href) {
+      updateMutation.mutate(
+        {
+          href: user.pulp_href,
+          name: user.username ?? "",
+          body: valuesToPatchedUser(values),
+        },
+        { onSuccess: () => onClose() },
+      );
     }
   });
 
@@ -110,6 +138,6 @@ export const useUserForm = ({
     form,
     isCreate,
     onSubmit,
-    isSubmitting: form.formState.isSubmitting,
+    isSubmitting: createMutation.isPending || updateMutation.isPending,
   };
 };

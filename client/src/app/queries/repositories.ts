@@ -24,6 +24,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -85,20 +86,32 @@ export const useRepositoriesListQuery = ({
 };
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
-export const useRepositoryDeleteMutation = () => {
+export const useRepositoryDeleteMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { href: string; name: string }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string): Promise<AsyncOperationResponse> =>
+    mutationFn: async ({
+      href,
+    }: {
+      href: string;
+      name: string;
+    }): Promise<AsyncOperationResponse> =>
       (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
         .data,
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: repositoryKeys.detail(href),
+        queryKey: repositoryKeys.detail(variables.href),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
@@ -309,7 +322,12 @@ export const useRepositoryDetailQuery = ({ href }: { href: string | null }) =>
  * Creates a repository of the given plugin type: POSTs to `repositories/<apiPath>/`
  * (apiPath from the catalog), returning the created repository.
  */
-export const useRepositoryCreateMutation = () => {
+export const useRepositoryCreateMutation = (
+  options?: IMutationCallbacks<
+    RepositoryResponse,
+    { apiPath: string; body: Record<string, unknown> }
+  >,
+) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation({
@@ -326,14 +344,21 @@ export const useRepositoryCreateMutation = () => {
           body,
         )
       ).data,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
 /** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
-export const useRepositoryUpdateMutation = () => {
+export const useRepositoryUpdateMutation = (
+  options?: IMutationCallbacks<
+    unknown,
+    { href: string; name: string; body: Record<string, unknown> }
+  >,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -341,14 +366,17 @@ export const useRepositoryUpdateMutation = () => {
       body,
     }: {
       href: string;
+      name: string;
       body: Record<string, unknown>;
     }): Promise<unknown> =>
       (await axiosInstance.patch(toProxyHref(href), body)).data,
-    onSuccess: (_data, { href }) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: repositoryKeys.detail(href),
+        queryKey: repositoryKeys.detail(variables.href),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };

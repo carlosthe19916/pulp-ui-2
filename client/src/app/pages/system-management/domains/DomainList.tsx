@@ -39,12 +39,16 @@ import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDomainListParams } from "@app/queries/domains";
-import { domainKeys, useDomainsListQuery } from "@app/queries/domains";
+import {
+  domainKeys,
+  useDomainDeleteMutation,
+  useDomainsListQuery,
+} from "@app/queries/domains";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { formatDateTime } from "@app/utils/utils";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainModal } from "./components/DomainModal";
-import { useDomainActions } from "./hooks/useDomainActions";
 import { storageClassLabel } from "./storageBackends";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -75,7 +79,20 @@ export const DomainList: React.FC = () => {
     modalState === "create" ? undefined : (modalState ?? undefined);
   const [deleteTarget, setDeleteTarget] = useState<DomainResponse | null>(null);
 
-  const { deleteDomain, isDeleting } = useDomainActions();
+  const deleteMutation = useDomainDeleteMutation({
+    onSuccess: (data, { name }) =>
+      notifyTaskStarted(
+        addNotification,
+        data.task,
+        `Domain "${name}" deletion started`,
+      ),
+    onError: (error, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage(error, `Failed to delete domain "${name}"`),
+        variant: "danger",
+      }),
+  });
+  const isDeleting = deleteMutation.isPending;
 
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 10,
@@ -213,16 +230,13 @@ export const DomainList: React.FC = () => {
     />
   );
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    try {
-      // Wait for the 202 (task accepted) before closing; the row then shows "Deleting".
-      await deleteDomain(target);
-      setDeleteTarget(null);
-    } catch {
-      // Error surfaced as a toast; keep the modal open.
-    }
+    deleteMutation.mutate(
+      { href: target.pulp_href, name: target.name ?? "" },
+      { onSuccess: () => setDeleteTarget(null) },
+    );
   };
 
   return (
@@ -278,7 +292,7 @@ export const DomainList: React.FC = () => {
           title="Delete Domain"
           body={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
           isConfirming={isDeleting}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />
       </PageSection>

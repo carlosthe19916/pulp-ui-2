@@ -15,6 +15,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
@@ -108,18 +109,27 @@ export const usePublicationsListQuery = ({
 };
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */
-export const usePublicationDeleteMutation = () => {
+export const usePublicationDeleteMutation = (
+  options?: IMutationCallbacks<void, { href: string; name: string }>,
+) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (href: string): Promise<void> => {
+    mutationFn: async ({
+      href,
+    }: {
+      href: string;
+      name: string;
+    }): Promise<void> => {
       await axiosInstance.delete(toProxyHref(href));
     },
-    onSuccess: (_data, href) => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: publicationKeys.detail(href),
+        queryKey: publicationKeys.detail(variables.href),
       });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
 
@@ -137,7 +147,12 @@ export const useAllPublicationsListQuery = ({
  * (apiPath from the catalog). Publication creation is asynchronous, so it returns the
  * Pulp 202 task. Publications are immutable — there is no update.
  */
-export const usePublicationCreateMutation = () => {
+export const usePublicationCreateMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { apiPath: string; body: Record<string, unknown> }
+  >,
+) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation({
@@ -154,8 +169,10 @@ export const usePublicationCreateMutation = () => {
           body,
         )
       ).data,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
+      options?.onSuccess?.(data, variables);
     },
+    onError: options?.onError,
   });
 };
