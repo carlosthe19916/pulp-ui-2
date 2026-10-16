@@ -400,6 +400,8 @@ export const useRepositoryUpdateMutation = (
       void queryClient.invalidateQueries({
         queryKey: repositoryKeys.detail(variables.href),
       });
+      // Surface the new update task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
       options?.onSuccess?.(data, variables);
     },
     onError: options?.onError,
