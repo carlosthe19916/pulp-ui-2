@@ -36,7 +36,10 @@ export const useUserRoleActions = () => {
       });
     } catch (error) {
       addNotification({
-        ...getMutationErrorMessage(error, "Failed to update roles"),
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to update roles",
+        }),
         variant: "danger",
       });
       throw error;

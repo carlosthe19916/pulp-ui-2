@@ -58,7 +58,7 @@ export const useEntityFormBase = ({
 
   const form = useForm<EntityFormValues>({
     resolver: yupResolver(buildFieldSchema(fields)),
-    defaultValues: buildDefaultValues(fields, entity),
+    defaultValues: buildDefaultValues({ fields, source: entity }),
     mode: "onChange",
   });
 

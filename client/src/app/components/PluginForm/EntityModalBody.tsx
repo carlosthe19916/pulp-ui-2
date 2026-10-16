@@ -88,7 +88,7 @@ export const EntityModalBody = ({
   isSubmitting,
   submitError,
 }: IEntityModalBodyProps) => {
-  const resourceFilter = buildResourceFilter(kind, plugin);
+  const resourceFilter = buildResourceFilter({ kind, plugin });
 
   if (useWizard) {
     return (

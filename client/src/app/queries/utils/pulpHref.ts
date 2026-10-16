@@ -35,7 +35,10 @@ export const resolvePulpType = (
   );
   if (!match) return undefined;
   const entity = FAMILY_TO_ENTITY[match[1]];
-  return resolvePulpTypeByApiPath(entity, `${match[2]}/${match[3]}`);
+  return resolvePulpTypeByApiPath({
+    entity,
+    apiPath: `${match[2]}/${match[3]}`,
+  });
 };
 
 export const buildUserHref = (userId: string, domain: IPulpDomain): string => {

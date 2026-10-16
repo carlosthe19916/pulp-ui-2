@@ -55,7 +55,7 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
   const createMutation = useFileContentCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
-  const debouncedRepoSearch = useDebouncedValue(repoSearch);
+  const debouncedRepoSearch = useDebouncedValue({ value: repoSearch });
   const [selectedRepoLabel, setSelectedRepoLabel] = useState<string>();
   const { data: repositoriesData, isLoading: isReposLoading } =
     useRepositoriesListQuery({
@@ -129,17 +129,20 @@ export const UploadModal: React.FC<IUploadModalProps> = ({
           selectedRepoLabel ??
           repositoryOptions.find((option) => option.value === values.repository)
             ?.label;
-        notifyTaskStarted(
+        notifyTaskStarted({
           addNotification,
           taskHref,
-          repositoryName
+          title: repositoryName
             ? `Upload started for "${repositoryName}"`
             : "Upload started",
-        );
+        });
       }
     } catch (error) {
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to upload content"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to upload content",
+        }),
       );
       return;
     }

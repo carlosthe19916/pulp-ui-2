@@ -94,10 +94,13 @@ const describePulpError = (
 };
 
 /** Build a user-facing mutation failure message, surfacing Pulp/DRF error detail when available. */
-export const getMutationErrorMessage = (
-  error: unknown,
-  fallback: string,
-): IMutationErrorMessage => {
+export const getMutationErrorMessage = ({
+  error,
+  fallback,
+}: {
+  error: unknown;
+  fallback: string;
+}): IMutationErrorMessage => {
   if (!axios.isAxiosError(error)) {
     if (error instanceof Error && error.message) {
       return { title: fallback, description: error.message };
@@ -129,20 +132,39 @@ export const formatDateTime = (value?: string | null) => {
   return value ? dayjs.utc(value).local().format(RENDER_DATETIME_FORMAT) : null;
 };
 
-export const duplicateFieldCheck = <T>(
-  fieldKey: keyof T,
-  itemList: T[],
-  currentItem: T | null,
-  fieldValue: T[keyof T],
-) =>
+interface IDuplicateFieldCheckParams<T> {
+  fieldKey: keyof T;
+  itemList: T[];
+  currentItem: T | null;
+  fieldValue: T[keyof T];
+}
+
+export const duplicateFieldCheck = <T>({
+  fieldKey,
+  itemList,
+  currentItem,
+  fieldValue,
+}: IDuplicateFieldCheckParams<T>) =>
   (currentItem && currentItem[fieldKey] === fieldValue) ||
   !itemList.some((item) => item[fieldKey] === fieldValue);
 
-export const duplicateNameCheck = <T extends { name?: string }>(
-  itemList: T[],
-  currentItem: T | null,
-  nameValue: T["name"],
-) => duplicateFieldCheck("name", itemList, currentItem, nameValue);
+interface IDuplicateNameCheckParams<T extends { name?: string }> {
+  itemList: T[];
+  currentItem: T | null;
+  nameValue: T["name"];
+}
+
+export const duplicateNameCheck = <T extends { name?: string }>({
+  itemList,
+  currentItem,
+  nameValue,
+}: IDuplicateNameCheckParams<T>) =>
+  duplicateFieldCheck({
+    fieldKey: "name",
+    itemList,
+    currentItem,
+    fieldValue: nameValue,
+  });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const dedupeFunction = (arr: any[]) =>
@@ -167,12 +189,19 @@ export const parseMaybeNumericString = (
 export const objectKeys = <T extends object>(obj: T) =>
   Object.keys(obj) as (keyof T)[];
 
-export const getValidatedFromErrors = (
-  error: unknown | undefined,
-  dirty: boolean | undefined,
-  isTouched: boolean | undefined,
-  isSubmitted?: boolean,
-) => {
+interface IGetValidatedFromErrorsParams {
+  error: unknown | undefined;
+  dirty: boolean | undefined;
+  isTouched: boolean | undefined;
+  isSubmitted?: boolean;
+}
+
+export const getValidatedFromErrors = ({
+  error,
+  dirty,
+  isTouched,
+  isSubmitted,
+}: IGetValidatedFromErrorsParams) => {
   return error && (dirty || isTouched || isSubmitted) ? "error" : "default";
 };
 

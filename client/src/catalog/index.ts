@@ -55,10 +55,13 @@ export const getPlugin = (pulpType: PulpType): IPlugin | undefined =>
   catalog[pulpType];
 
 /** Plugins implementing `entity` whose package is installed in this environment. */
-export const getAvailablePlugins = (
-  entity: EntityType,
-  installed: VersionResponse[],
-): IPlugin[] =>
+export const getAvailablePlugins = ({
+  entity,
+  installed,
+}: {
+  entity: EntityType;
+  installed: VersionResponse[];
+}): IPlugin[] =>
   Object.values(catalog).filter(
     (plugin) => plugin.entities[entity] && plugin.isAvailable(installed),
   );
@@ -67,10 +70,13 @@ export const getAvailablePlugins = (
  * Resolve a pulp_type from an entity + its `apiPath` (the `<app>/<slug>` segment of
  * a resource href). Returns `undefined` for an unmodelled plugin.
  */
-export const resolvePulpTypeByApiPath = (
-  entity: EntityType,
-  apiPath: string,
-): PulpType | undefined => apiPathIndex[entity][apiPath];
+export const resolvePulpTypeByApiPath = ({
+  entity,
+  apiPath,
+}: {
+  entity: EntityType;
+  apiPath: string;
+}): PulpType | undefined => apiPathIndex[entity][apiPath];
 
 /** Human-readable singular label for an entity type (UI titles, toasts). */
 export const getEntityLabel = (entity: EntityType): string =>

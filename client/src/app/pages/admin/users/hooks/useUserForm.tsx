@@ -25,7 +25,7 @@ export type UserFormValues = {
 };
 
 /** Username and password are required (and shown) only when creating a user. */
-const buildUserSchema = (isCreate: boolean) =>
+const buildUserSchema = ({ isCreate }: { isCreate: boolean }) =>
   yup.object({
     username: isCreate
       ? yup.string().default("").required("Username is required")
@@ -102,17 +102,21 @@ export const useUserForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create user")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to create user" }),
+      ),
   });
   const updateMutation = useUserUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `User "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to update user")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to update user" }),
+      ),
   });
 
   const form = useForm<UserFormValues>({
-    resolver: yupResolver(buildUserSchema(isCreate)),
+    resolver: yupResolver(buildUserSchema({ isCreate })),
     defaultValues: toDefaults(user),
     mode: "onChange",
   });

@@ -83,7 +83,10 @@ export const RoleList: React.FC = () => {
       addNotification({ title: `Role "${name}" deleted`, variant: "success" }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(error, `Failed to delete role "${name}"`),
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to delete role "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -99,7 +102,7 @@ export const RoleList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
   const clearFilters = () => {
     clearAllFilters();

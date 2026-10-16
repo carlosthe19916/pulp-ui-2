@@ -11,12 +11,18 @@ interface INotifyFn {
   }): void;
 }
 
+export interface INotifyTaskStartedOptions {
+  addNotification: INotifyFn;
+  taskHref: string;
+  title?: string;
+}
+
 /** Toast helper for task-producing operations (202 responses). */
-export const notifyTaskStarted = (
-  addNotification: INotifyFn,
-  taskHref: string,
+export const notifyTaskStarted = ({
+  addNotification,
+  taskHref,
   title = "Task started",
-) => {
+}: INotifyTaskStartedOptions) => {
   const taskId = extractTaskId(taskHref);
   addNotification({
     title,

@@ -1,7 +1,10 @@
-export const collectPermissionOptions = (
-  rolePermissionLists: Array<string[] | undefined | null>,
-  selected: string[] = [],
-): string[] => {
+export const collectPermissionOptions = ({
+  rolePermissionLists,
+  selected = [],
+}: {
+  rolePermissionLists: Array<string[] | undefined | null>;
+  selected?: string[];
+}): string[] => {
   const set = new Set<string>();
   for (const list of rolePermissionLists) {
     for (const permission of list ?? []) {

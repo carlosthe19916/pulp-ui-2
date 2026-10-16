@@ -44,7 +44,9 @@ export const useRemoteForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create remote")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to create remote" }),
+      ),
   });
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (_data, { name }) =>
@@ -53,7 +55,9 @@ export const useRemoteForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to update remote")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to update remote" }),
+      ),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 

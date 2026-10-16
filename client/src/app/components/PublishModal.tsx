@@ -55,7 +55,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   const createMutation = usePublicationCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
-  const debouncedRepoSearch = useDebouncedValue(repoSearch);
+  const debouncedRepoSearch = useDebouncedValue({ value: repoSearch });
   const [selectedRepoLabel, setSelectedRepoLabel] = useState<string>();
   const { data: repositoriesData, isLoading: isReposLoading } =
     useRepositoriesListQuery({
@@ -135,17 +135,20 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
           selectedRepoLabel ??
           repositoryOptions.find((option) => option.value === values.repository)
             ?.label;
-        notifyTaskStarted(
+        notifyTaskStarted({
           addNotification,
           taskHref,
-          repositoryName
+          title: repositoryName
             ? `Publication started for "${repositoryName}"`
             : "Publication started",
-        );
+        });
       }
     } catch (error) {
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to create publication"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to create publication",
+        }),
       );
       return;
     }

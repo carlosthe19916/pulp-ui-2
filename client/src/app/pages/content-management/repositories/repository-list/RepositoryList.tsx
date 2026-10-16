@@ -90,17 +90,17 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatablePlugins("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        `Repository "${name}" deletion started`,
-      ),
+        taskHref: data.task,
+        title: `Repository "${name}" deletion started`,
+      }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(
+        ...getMutationErrorMessage({
           error,
-          `Failed to delete repository "${name}"`,
-        ),
+          fallback: `Failed to delete repository "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -117,8 +117,8 @@ export const RepositoryList: React.FC = () => {
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRepositoryFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
-  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
+  const debouncedName = useDebouncedValue({ value: filters.name });
+  const debouncedPulpType = useDebouncedValue({ value: filters.pulp_type });
 
   const { data, isLoading, error } = useRepositoriesListQuery({
     params: {

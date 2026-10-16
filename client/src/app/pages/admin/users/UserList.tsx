@@ -65,7 +65,10 @@ export const UserList: React.FC = () => {
       addNotification({ title: `User "${name}" deleted`, variant: "success" }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(error, `Failed to delete user "${name}"`),
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to delete user "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -81,7 +84,7 @@ export const UserList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IUserFilters>({});
-  const debouncedUsername = useDebouncedValue(filters.username);
+  const debouncedUsername = useDebouncedValue({ value: filters.username });
 
   const { data, isLoading, error } = useUsersListQuery({
     params: {

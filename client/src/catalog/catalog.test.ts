@@ -144,33 +144,46 @@ describe("getPlugin", () => {
 describe("getAvailablePlugins", () => {
   it("lists plugins implementing an entity whose package is installed", () => {
     const installed = [{ component: "file" }] as VersionResponse[];
-    const remotes = getAvailablePlugins("remote", installed);
+    const remotes = getAvailablePlugins({ entity: "remote", installed });
     const pulpTypes = remotes.map((p) => p.pulpType);
     // Only the file plugin is installed → file.file + file.git remotes; no rpm.
     expect(pulpTypes).toContain("file.file");
     expect(pulpTypes).toContain("file.git");
     expect(pulpTypes).not.toContain("rpm.rpm");
     // Nothing installed → nothing available.
-    expect(getAvailablePlugins("remote", [])).toHaveLength(0);
+    expect(
+      getAvailablePlugins({ entity: "remote", installed: [] }),
+    ).toHaveLength(0);
   });
 });
 
 describe("resolvePulpTypeByApiPath", () => {
   it("reverse-maps (entity, apiPath) to the catalog pulp_type", () => {
-    expect(resolvePulpTypeByApiPath("repository", "python/python")).toBe(
-      "python.python",
-    );
+    expect(
+      resolvePulpTypeByApiPath({
+        entity: "repository",
+        apiPath: "python/python",
+      }),
+    ).toBe("python.python");
     // apiPath ≠ pulp_type (content pluralizes the slug).
-    expect(resolvePulpTypeByApiPath("content", "file/files")).toBe("file.file");
+    expect(
+      resolvePulpTypeByApiPath({ entity: "content", apiPath: "file/files" }),
+    ).toBe("file.file");
     // Non-"doubled" distribution slug.
-    expect(resolvePulpTypeByApiPath("distribution", "python/pypi")).toBe(
-      "python.pypi",
-    );
+    expect(
+      resolvePulpTypeByApiPath({
+        entity: "distribution",
+        apiPath: "python/pypi",
+      }),
+    ).toBe("python.pypi");
   });
 
   it("returns undefined for an unmodelled apiPath", () => {
     expect(
-      resolvePulpTypeByApiPath("repository", "bogus/bogus"),
+      resolvePulpTypeByApiPath({
+        entity: "repository",
+        apiPath: "bogus/bogus",
+      }),
     ).toBeUndefined();
   });
 });

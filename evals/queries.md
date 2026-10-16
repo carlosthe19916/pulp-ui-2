@@ -1,69 +1,74 @@
 ---
 name: queries
-description: Public query-reading surface in client/src/app/queries — single inline-object args, explicit domain + hook injection, precondition-guard detail queries, no throw in queryFn.
+description: Public query-reading surface in client/src/app/queries — single inline-object args, explicit domain + hook injection, precondition-guard detail queries, explicit TError/TData, no throw in queryFn.
 globs: client/src/app/queries/**
 ---
 
 # Query module conventions (`client/src/app/queries/`)
 
-Every **public** query-reading function — the `*QueryOptions` factories and the
-`use*Query` / `use*Queries` hooks — takes **exactly one argument: an inline-typed
-object**, even for a single input. Reference: `users.ts`.
+Scope: the **public query-reading surface** only — `*QueryOptions` factories and
+`use*Query` / `use*Queries` hooks. Mutation signatures/toasts live in
+`evals/toastr.md`; this spec only requires their `TError`/`TData` typing (below).
+
+## One inline-object arg
+
+Every `*QueryOptions` factory and `use*Query`/`use*Queries` hook takes **exactly
+one inline-typed object**, even for a single field. Reference: `users.ts`.
 
 ```ts
-// QueryOptions factory — one object arg (takes the already-built href)
-export const userDetailQueryOptions = ({
-  userHref,
-  options,
+// factory — one object arg; receives the already-built href / domain
+export const usersListQueryOptions = ({
+  domain,
+  params,
 }: {
-  userHref: string;
-  options?: Omit<UseQueryOptions<UserResponse>, "queryKey" | "queryFn">;
-}) => queryOptions({ ... });
+  domain: IPulpDomain;
+  params: IUserListParams;
+}) => queryOptions<PaginatedUserResponseList, DrfAxiosError>({ ... });
 
-// hook — one object arg
-export const useUserDetailQuery = ({ userId }: { userId: string }) => { ... };
+// hook — one object arg; injects domain itself
+export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
+  const domain = useDefaultDomain();
+  return useQuery(usersListQueryOptions({ domain, params }));
+};
 ```
 
-## Fields inside the object
+Object fields:
 
-- **`params`** — list/filter/ordering params (`ListParams<…>` / `AllListParams<…>`),
-  optional with a `= {}` default when every field is optional.
-- **`domain`** — passed explicitly to `*QueryOptions` (pure, no hooks); the **hook**
-  injects it, so callers never pass it. Two injectors are in use:
-  - `useDefaultDomain()` — users, groups, roles, signing-services, domains, tasks.
-  - `useSelectedDomain()` — the plugin-typed/CRUD families: distributions,
-    remotes, repositories, content, publications, file-content.
-- **id vs href** — hooks come in two styles; either way the lower-level
-  `*QueryOptions` receive the **already-built href**:
-  - _id-building_ hooks take a resource **id** (`userId`) and build the href
-    internally via `buildUserHref` (users, groups, domains, tasks).
-  - _href-passthrough_ hooks take `{ href }` directly and build nothing
-    (distributions, remotes, repositories, artifacts, signing-services).
-- **`options`** — optional pass-through of extra React Query config, typed
-  `Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` (the two fields the module
-  owns), spread **first** so the factory's `queryKey` / `queryFn` always win.
+- **`params`** — list/filter/ordering (`ListParams<…>` / `AllListParams<…>`);
+  optional with `= {}` when all fields are optional.
+- **`domain`** — passed explicitly to the pure `*QueryOptions`; the **hook**
+  injects it so callers never pass it. Injectors:
+  - `useDefaultDomain()` — users, groups, roles, signing-services, domains.
+  - `useSelectedDomain()` — distributions, remotes, repositories, content,
+    publications, file-content.
+  - `tasks.ts` uses **both** (mixed per query).
+  - `artifacts.ts` uses neither (no domain).
+- **id vs href** — either way `*QueryOptions` get the **already-built href**:
+  _id-building_ hooks take an id (`userId`) and build via `buildUserHref`
+  internally (users, groups, domains, tasks); _href-passthrough_ hooks take
+  `{ href }` and build nothing (distributions, remotes, repositories, artifacts,
+  signing-services).
+- **`options`** — optional extra React Query config, typed
+  `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">` (the two
+  fields the module owns), **spread first** so the factory's `queryKey`/`queryFn`
+  win.
 
-## Stay positional (not single-object)
+## Stay positional (NOT single-object)
 
 Key factories (`userKeys.listQuery(domain, params)`, `detail(userHref)`),
-mutations (`use*Mutation` and their call signatures), and private helpers
-(`buildUserHref(userId, domain)`, `fetchAllPages(cb)`).
+`use*Mutation` (and their call signatures), and private helpers
+(`buildUserHref(userId, domain)`, `fetchAllPages(cb)`). Rule is narrow: only the
+query-reading surface is single-object.
 
-So the rule is narrowly scoped: the query-reading surface is single-object; keys,
-mutations, and private helpers stay positional. Benefits: named call sites,
-order-independence, and adding an optional field without touching callers.
+## Precondition-guard detail queries
 
-## The precondition-guard pattern
+For a detail/nested query that runs once an `href`/id exists. Reference:
+`distributionDetailQueryOptions` + `useDistributionDetailQuery` (`distributions.ts`).
 
-For a detail / nested-resource query that only runs once an `href` / id is
-present. Reference: `distributionDetailQueryOptions` + `useDistributionDetailQuery`
-in `distributions.ts`.
-
-- **`*QueryOptions` accepts `options?` and spreads it first, but sets no
-  `enabled`.** It is the bare, composable config for direct consumers (route
-  loaders, `prefetchQuery`), which are responsible for their own guard — the
-  `!!href` check is a **precondition of the queryFn** (it builds
-  `toProxyHref(href ?? "")`), so it belongs with the consumer that runs the query.
+- **`*QueryOptions`**: accepts `options?`, spreads it first, sets **no `enabled`**
+  — bare composable config for route loaders / `prefetchQuery`, which own their
+  guard. The `!!href` check is a queryFn precondition (it builds
+  `toProxyHref(href ?? "")`).
 
   ```ts
   export const distributionDetailQueryOptions = ({
@@ -79,15 +84,15 @@ in `distributions.ts`.
     queryOptions({
       ...options,
       queryKey: distributionKeys.detail(href ?? ""),
-      queryFn: async (): Promise<DistributionResponse> =>
+      queryFn: async () =>
         (await axiosInstance.get<DistributionResponse>(toProxyHref(href ?? "")))
           .data,
     });
   ```
 
-- **The `use*Query` hook owns the guard.** It does **not** accept `options`; it
-  takes only the identifying args, spreads the bare options, and re-asserts
-  `enabled` — so call sites just pass the nullable id/href, never `enabled`.
+- **`use*Query` hook** owns the guard: takes only the identifying args (no
+  `options`), spreads the bare options, re-asserts `enabled`. Callers pass only
+  the nullable id/href.
 
   ```ts
   export const useDistributionDetailQuery = ({
@@ -95,57 +100,53 @@ in `distributions.ts`.
   }: {
     href: string | null;
   }) =>
-    useQuery({
-      ...distributionDetailQueryOptions({ href }),
-      enabled: !!href, // precondition guard
-    });
+    useQuery({ ...distributionDetailQueryOptions({ href }), enabled: !!href });
   ```
 
-## Variant: caller-preference lists (no guard)
+**Variant — caller-preference lists (no guard):** when `enabled` is a caller
+preference, not a queryFn precondition (e.g. `contentListQueryOptions`, fetch only
+once a type is chosen), keep `options` on **both** factory and hook and have the
+hook forward it. Same `Omit<…>` typing, pure-spread. Reference: `content.ts`.
 
-A list whose `enabled` is a genuine **caller preference** rather than a queryFn
-precondition — e.g. `contentListQueryOptions` (fetch only once a content type is
-chosen) — keeps `options` on **both** the `*QueryOptions` and the `use*Query`
-hook, and the hook forwards it. There's no `!!href` guard to own, so enablement
-flows straight from the caller through the pure spread. Still type `options` as
-`Omit<UseQueryOptions<T>, "queryKey" | "queryFn">` and pure-spread it. Reference:
-`content.ts`.
+## Error typing (`TError`) — always explicit
 
-## Error typing (`TError`)
+RQ v5 does not infer `TError`; thread it. Types live in
+`queries/utils/openapiErrorTypes.ts`:
 
-Every query-reading surface and mutation declares its error type explicitly — the
-OpenAPI spec documents no error bodies, so the generated client has none. The
-hand-authored error types live in **`queries/utils/openapiErrorTypes.ts`**:
-
-- **`DrfAxiosError`** (`= AxiosError<IDrfValidationErrorData>`) — the **default**
-  `TError` for every hook. All `queries/` endpoints hit `/pulp/api/v3/…` stock-DRF
-  routes, whose errors are a validation dict / `non_field_errors` / scalar `detail`.
-- **`PulpAxiosError`** (the wide `PulpErrorData` union) — use **only** when the
-  error shape is genuinely unknown; it is just the fallback default of
-  `IMutationCallbacks`.
-
-Thread it explicitly (React Query v5 does not infer `TError`):
+- **`DrfAxiosError`** (`= AxiosError<IDrfValidationErrorData>`) — **default** for
+  every hook; all `queries/` endpoints hit stock-DRF `/pulp/api/v3/…` routes
+  (validation dict / `non_field_errors` / scalar `detail`).
+- **`PulpAxiosError`** (wide `PulpErrorData` union) — only when the shape is
+  genuinely unknown; it is the fallback default of `IMutationCallbacks`.
 
 ```ts
-queryOptions<TData, DrfAxiosError>({ … })
-useMutation<TData, DrfAxiosError, TVariables>({ … })
-// options field: Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">
-// IMutationCallbacks<TData, TVariables> defaults TError = PulpAxiosError; pass
+queryOptions<TData, DrfAxiosError>({ … });
+useMutation<TData, DrfAxiosError, TVariables>({ … });
+// options: Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">
+// IMutationCallbacks<TData, TVariables> defaults TError = PulpAxiosError — pass
 // DrfAxiosError as the 3rd arg so onError is granular.
 ```
 
-## Response typing (`TData`)
+## Response typing (`TData`) — mirror the 2xx response
 
-`TData` mirrors the endpoint's declared **2xx** response(s) exactly — never `any`
-or `unknown`:
+Never `any`/`unknown`:
 
-- One documented success code → that single type (e.g. create `201` → entity;
-  async create/delete `202` → `AsyncOperationResponse`; sync delete `204` → `void`).
-- Both `200` **and** `202` (content/domain **PATCH** can finish sync or dispatch a
-  task) → the union `EntityResponse | AsyncOperationResponse`. Admin PATCH
-  (user/group/role) is `200`-only → single type, **not** a union.
-- A plugin-neutral write body stays `Record<string, unknown>` (a typed dictionary,
-  not `any`); it is not a `TData`/`TError`.
+- One success code → that type (create `201` → entity; async create/delete `202`
+  → `AsyncOperationResponse`; sync delete `204` → `void`).
+- Both `200` **and** `202` (content/domain **PATCH** may finish sync or dispatch)
+  → `EntityResponse | AsyncOperationResponse`. Admin PATCH (user/group/role) is
+  `200`-only → single type.
+- A plugin-neutral write body stays `Record<string, unknown>` (not `any`); it is
+  not a `TData`/`TError`.
+
+## No `throw` in a `queryFn`
+
+Errors propagate from the HTTP layer (a rejected axios request carries the
+status/shape the app expects); a manual `throw` triggers RQ retry/backoff on a
+non-recoverable condition. There are **zero** `throw`s in any `queries/*.ts`
+queryFn. A non-HTTP "empty/not found" returns a **falsy sentinel** (`"" `/`null`,
+matching the field's `enabled: !!value`) and is handled where the throw belongs —
+the route `loader` (→ `errorComponent`) or the consumer.
 
 ## Checklist
 

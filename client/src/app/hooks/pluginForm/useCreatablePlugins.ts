@@ -9,7 +9,7 @@ export const NON_CREATABLE_TYPES = new Set(["container.container-push"]);
 /** Catalog plugins that implement `kind`, are installed in this environment, and UI-creatable. */
 export const useCreatablePlugins = (kind: EntityType): IPlugin[] => {
   const plugins = use(ApiStatusContext)?.plugins ?? [];
-  return getAvailablePlugins(kind, plugins).filter(
+  return getAvailablePlugins({ entity: kind, installed: plugins }).filter(
     (plugin) => !NON_CREATABLE_TYPES.has(plugin.pulpType),
   );
 };

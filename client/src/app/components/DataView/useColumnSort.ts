@@ -40,7 +40,7 @@ export const useColumnSort = <K extends string>({
     sortBy !== undefined && (columnKeys as readonly string[]).includes(sortBy)
       ? (sortBy as K)
       : undefined;
-  const ordering = toOrderingParam(typedSortBy, direction);
+  const ordering = toOrderingParam({ sortBy: typedSortBy, direction });
   const sortProps = (columnKey: K) =>
     buildThSort({
       columnKeys,

@@ -31,14 +31,17 @@ export const usePublicationForm = ({
 
   const createMutation = usePublicationCreateMutation({
     onSuccess: (data) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        "Publication create started",
-      ),
+        taskHref: data.task,
+        title: "Publication create started",
+      }),
     onError: (error) =>
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to create publication"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to create publication",
+        }),
       ),
   });
   const isSubmitting = createMutation.isPending;

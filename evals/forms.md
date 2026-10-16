@@ -6,91 +6,82 @@ globs: client/src/app/**/*Form.tsx, client/src/app/**/use*Form.tsx, client/src/a
 
 # Modal form submission-error conventions
 
-**Principle: a modal form's submission failure is shown _in the form_, not as a
-toast.** When a create / update / action form inside a modal fails to submit, the
-error is rendered as an inline PatternFly `Alert` at the **top of the `<Form>`**
-(below the modal header, full form width) — per PatternFly's Form error
-guidelines. The modal **stays open** so the user can read the error and retry; the
-error is anchored to the form it belongs to instead of a detached, auto-dismissing
-toast.
+**A modal form's submission failure is shown _in the form_, not as a toast.** On
+create/update/action failure, the error renders as an inline PatternFly `Alert` at
+the **top of `<Form>`** (first child, full width) per PatternFly Form guidelines;
+the modal **stays open** for retry. This is the counterpart to `evals/toastr.md`:
+**success** toasts and all list/detail error toasts (delete, one-off actions,
+navigate-away) still go through `addNotification` — only the **modal form
+submission** error moves in-form.
 
-This is the counterpart to `evals/toastr.md`: _success_ toasts and all
-list/detail-page error toasts (delete, one-off actions, navigate-away) still go
-through `addNotification`. Only the **modal form submission** error moves in-form.
+## Building blocks
 
-## The building blocks
-
-- **`useSubmitError`** (`client/src/app/hooks/useSubmitError.ts`) — owns the error
-  state: `{ submitError, setSubmitError, clearSubmitError }`, where
+- **`useSubmitError`** (`hooks/useSubmitError.ts`) — owns the state:
+  `{ submitError, setSubmitError, clearSubmitError }`,
   `submitError: IMutationErrorMessage | null`.
-- **`FormSubmitError`** (`client/src/app/components/FormSubmitError.tsx`) — renders
-  nothing when `error` is null, else a `<FormAlert>` wrapping an
-  `<Alert variant="danger" isInline aria-live="polite">`. Placed as the **first
-  child of `<Form>`**.
-- **`getMutationErrorMessage(error, fallback)`** (`client/src/app/utils/utils.ts`)
-  — builds the `IMutationErrorMessage` (`{ title, description? }`) from the axios
-  error, surfacing Pulp 403 / `detail` / `non_field_errors`. Reused unchanged.
+- **`FormSubmitError`** (`components/FormSubmitError.tsx`) — null when `error` is
+  null, else `<FormAlert>` wrapping
+  `<Alert variant="danger" isInline aria-live="polite">`. **First child of
+  `<Form>`.**
+- **`getMutationErrorMessage(error, fallback)`** (`utils/utils.ts`) → builds
+  `IMutationErrorMessage` (`{ title, description? }`) from the axios error
+  (Pulp 403 / `detail` / `non_field_errors`). Reused unchanged.
 
-## The pattern
+## Pattern
 
 The **form hook** owns the error; the **form component** renders it; the **modal**
-threads it between them.
-
-### Form hook (owns the state)
-
-Set the error in the mutation's **`onError`** (replacing the danger toast) and
-clear it at the start of each submit. Expose `submitError` from the hook.
+threads it. Set the error in the mutation `onError` (replacing the danger toast)
+and `clearSubmitError()` at the start of each submit. Success still toasts; the
+modal closes **on success only** (close-on-success rule: `evals/toastr.md`).
 
 ```ts
-export const useRepositoryForm = ({ ... }): IUseEntityFormResult => {
-  const { addNotification } = useNotifications();
-  const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
+// form hook — useRepositoryForm.tsx (pages/content-management/repositories/...)
+const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
-  const createMutation = useRepositoryCreateMutation({
-    onSuccess: (data) =>
-      addNotification({ title: `Repository "${data.name}" created`, variant: "success" }),
-    onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create repository")),
-  });
-  // update mutation: same shape
+const createMutation = useRepositoryCreateMutation({
+  onSuccess: (data) =>
+    addNotification({
+      title: `Repository "${data.name}" created`,
+      variant: "success",
+    }),
+  onError: (error) =>
+    setSubmitError(
+      getMutationErrorMessage(error, "Failed to create repository"),
+    ),
+});
+// update mutation: same shape
 
-  const onSubmit = (values: Record<string, unknown>) => {
-    clearSubmitError();
-    // …mutate(vars, { onSuccess: () => onClose() })…
-  };
-
-  return { onSubmit, isSubmitting, submitError };
+const onSubmit = (values: Record<string, unknown>) => {
+  clearSubmitError();
+  // …mutate(vars, { onSuccess: () => onClose() })…   // close on success only
 };
+return { onSubmit, isSubmitting, submitError };
 ```
 
-Success still toasts; the call-level `onSuccess: () => onClose()` closes the modal
-on success only (so a failure leaves the modal open with the alert showing).
-
-### Form component (renders the alert)
-
 ```tsx
+// form component — UserForm.tsx (pages/admin/users/...)
 <Form id={formId} onSubmit={...}>
-  <FormSubmitError error={submitError} />
+  <FormSubmitError error={submitError} />   {/* first child */}
   {/* fields */}
 </Form>
 ```
 
-`FormSubmitError` is the **first child** of `<Form>`. In the entity wizard it is
-rendered only on the final (submitting) step.
+In the entity wizard, `FormSubmitError` renders only on the final (submitting)
+step (`EntityWizardStep` fed `isLast ? submitError : null`).
 
 ### `mutateAsync` modals (Sync / Publish / Upload)
 
-These catch in the component instead of a mutation hook. `clearSubmitError()` at
-submit start; in `catch (error)` call
-`setSubmitError(getMutationErrorMessage(error, fallback))` **and `return`** so the
-modal does **not** close on error; convert guard-clause failures to
-`setSubmitError(...)`; clear the error in the close handler.
+These catch in the component (not a mutation hook). `clearSubmitError()` at submit
+start; in `catch (error)` call `setSubmitError(getMutationErrorMessage(error,
+fallback))` **and `return`** so the modal does **not** close; convert guard-clause
+failures to `setSubmitError(...)`; clear the error in the close handler. (Why
+`mutateAsync` here: `evals/toastr.md`.)
 
 ## Out of scope
 
 Batch/selection modals with partial-success semantics (`AddGroupUserModal`,
 `AddGroupRoleModal`, `UserRolesModal`) and delete confirmations
-(`ConfirmActionModal`, whose errors are owned by the list page) keep toasts.
+(`ConfirmActionModal`, errors owned by the list page) keep toasts.
 
 ## Canonical examples
 

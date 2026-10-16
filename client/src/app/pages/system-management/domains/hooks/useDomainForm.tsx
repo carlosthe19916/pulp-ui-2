@@ -131,18 +131,20 @@ export const useDomainForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create domain")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to create domain" }),
+      ),
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { name }) => {
       // Update may be sync (200) or async (202 + task) — branch on the response.
       const taskHref = (data as { task?: string | null }).task;
       if (taskHref) {
-        notifyTaskStarted(
+        notifyTaskStarted({
           addNotification,
           taskHref,
-          `Domain "${name}" update started`,
-        );
+          title: `Domain "${name}" update started`,
+        });
       } else {
         addNotification({
           title: `Domain "${name}" updated`,
@@ -151,7 +153,9 @@ export const useDomainForm = ({
       }
     },
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to update domain")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to update domain" }),
+      ),
   });
 
   const form = useForm<DomainFormValues>({

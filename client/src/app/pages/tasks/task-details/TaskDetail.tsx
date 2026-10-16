@@ -66,7 +66,10 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
       });
     } catch (error) {
       addNotification({
-        ...getMutationErrorMessage(error, "Failed to cancel task"),
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to cancel task",
+        }),
         variant: "danger",
       });
     }

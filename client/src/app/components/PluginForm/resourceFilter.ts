@@ -13,10 +13,13 @@ export type ResourceFilterMap = Partial<
  * include its type. Pure (no queries): the predicates run client-side against each
  * fetched search page. Kinds without a restriction are absent (picker shows all).
  */
-export const buildResourceFilter = (
-  kind: EntityType,
-  plugin: IPlugin | undefined,
-): ResourceFilterMap => {
+export const buildResourceFilter = ({
+  kind,
+  plugin,
+}: {
+  kind: EntityType;
+  plugin: IPlugin | undefined;
+}): ResourceFilterMap => {
   const filters: ResourceFilterMap = {};
 
   if (kind === "repository") {

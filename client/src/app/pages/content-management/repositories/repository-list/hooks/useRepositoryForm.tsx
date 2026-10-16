@@ -46,7 +46,10 @@ export const useRepositoryForm = ({
       }),
     onError: (error) =>
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to create repository"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to create repository",
+        }),
       ),
   });
   const updateMutation = useRepositoryUpdateMutation({
@@ -57,7 +60,10 @@ export const useRepositoryForm = ({
       }),
     onError: (error) =>
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to update repository"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to update repository",
+        }),
       ),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;

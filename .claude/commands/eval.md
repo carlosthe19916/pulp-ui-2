@@ -9,7 +9,7 @@ Verify that the code follows this repo's convention specs in `evals/`.
 Default target: the working-tree changes — `git status --short`, `git diff`, and
 untracked files. `$ARGUMENTS` can narrow or redirect the target:
 
-- a spec name (`queries`, `toastr`, `forms`) → check all relevant files against that spec
+- a spec name (`queries`, `toastr`, `forms`, `signatures`) → check all relevant files against that spec
 - a path or glob → check those files
 - a PR number / branch / commit range → check that diff
 
@@ -36,8 +36,8 @@ Routing is **self-describing**: each `evals/*.md` declares its own `globs` and
   grep -H '^description:' evals/*.md  # what each one covers
   ```
 
-  A spec name (`queries` / `toastr` / `forms`) selects that spec; a path / glob /
-  PR / branch / commit range narrows the target as before.
+  A spec name (`queries` / `toastr` / `forms` / `signatures`) selects that spec; a
+  path / glob / PR / branch / commit range narrows the target as before.
 
 Each spec ends with a `## Checklist` — use those items as the pass/fail rubric.
 

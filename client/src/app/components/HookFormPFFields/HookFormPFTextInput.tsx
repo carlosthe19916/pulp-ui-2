@@ -71,7 +71,12 @@ export const HookFormPFTextInput = <
           validated={
             errorsSuppressed
               ? "default"
-              : getValidatedFromErrors(error, isDirty, isTouched, isSubmitted)
+              : getValidatedFromErrors({
+                  error,
+                  dirty: isDirty,
+                  isTouched,
+                  isSubmitted,
+                })
           }
           {...remainingProps}
           type={inputType}

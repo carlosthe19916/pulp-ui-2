@@ -3,11 +3,17 @@ import { useCallback, useEffect, useState } from "react";
 
 type StorageType = "localStorage" | "sessionStorage";
 
-const getValueFromStorage = <T>(
-  storageType: StorageType,
-  key: string,
-  defaultValue: T,
-): T => {
+interface IGetValueFromStorageParams<T> {
+  storageType: StorageType;
+  key: string;
+  defaultValue: T;
+}
+
+const getValueFromStorage = <T>({
+  storageType,
+  key,
+  defaultValue,
+}: IGetValueFromStorageParams<T>): T => {
   if (typeof window === "undefined") return defaultValue;
   try {
     const itemJSON = window[storageType].getItem(key);
@@ -18,11 +24,17 @@ const getValueFromStorage = <T>(
   }
 };
 
-const setValueInStorage = <T>(
-  storageType: StorageType,
-  key: string,
-  newValue: T | undefined,
-) => {
+interface ISetValueInStorageParams<T> {
+  storageType: StorageType;
+  key: string;
+  newValue: T | undefined;
+}
+
+const setValueInStorage = <T>({
+  storageType,
+  key,
+  newValue,
+}: ISetValueInStorageParams<T>) => {
   if (typeof window === "undefined") return;
   try {
     if (newValue !== undefined) {
@@ -62,7 +74,7 @@ const useStorage = <T>({
   defaultValue,
 }: IUseStorageOptions<T>): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [cachedValue, setCachedValue] = useState<T>(() =>
-    getValueFromStorage(type, key, defaultValue),
+    getValueFromStorage({ storageType: type, key, defaultValue }),
   );
 
   const usingStorageEvents =
@@ -72,9 +84,11 @@ const useStorage = <T>({
     (newValueOrFn: T | ((prevState: T) => T)) => {
       const newValue =
         newValueOrFn instanceof Function
-          ? newValueOrFn(getValueFromStorage(type, key, defaultValue))
+          ? newValueOrFn(
+              getValueFromStorage({ storageType: type, key, defaultValue }),
+            )
           : newValueOrFn;
-      setValueInStorage(type, key, newValue);
+      setValueInStorage({ storageType: type, key, newValue });
       if (!usingStorageEvents) {
         setCachedValue(newValue);
       }

@@ -70,7 +70,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   const compatibleRemoteTypes = repoPlugin?.compatibleRemoteTypes ?? [];
 
   const [remoteSearch, setRemoteSearch] = useState("");
-  const debouncedRemoteSearch = useDebouncedValue(remoteSearch);
+  const debouncedRemoteSearch = useDebouncedValue({ value: remoteSearch });
   const [selectedRemoteLabel, setSelectedRemoteLabel] = useState<string>();
   const { data: remotesData, isLoading: isRemotesLoading } =
     useRemotesListQuery({
@@ -137,16 +137,18 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
         const remoteName =
           selectedRemoteLabel ??
           remoteOptions.find((option) => option.value === values.remote)?.label;
-        notifyTaskStarted(
+        notifyTaskStarted({
           addNotification,
           taskHref,
-          remoteName
+          title: remoteName
             ? `Sync started from remote "${remoteName}"`
             : "Sync started",
-        );
+        });
       }
     } catch (error) {
-      setSubmitError(getMutationErrorMessage(error, "Failed to start sync"));
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to start sync" }),
+      );
       return;
     }
     reset();

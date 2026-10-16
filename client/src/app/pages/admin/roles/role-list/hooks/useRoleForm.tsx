@@ -21,7 +21,7 @@ export type RoleFormValues = {
 };
 
 /** Name is required (and editable) only when creating a role. */
-const buildRoleSchema = (isCreate: boolean) =>
+const buildRoleSchema = ({ isCreate }: { isCreate: boolean }) =>
   yup.object({
     name: isCreate
       ? yup.string().default("").required("Name is required")
@@ -75,17 +75,21 @@ export const useRoleForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create role")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to create role" }),
+      ),
   });
   const updateMutation = useRoleUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `Role "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to update role")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to update role" }),
+      ),
   });
 
   const form = useForm<RoleFormValues>({
-    resolver: yupResolver(buildRoleSchema(isCreate)),
+    resolver: yupResolver(buildRoleSchema({ isCreate })),
     defaultValues: toDefaults(role),
     mode: "onChange",
   });

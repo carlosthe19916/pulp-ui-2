@@ -107,7 +107,9 @@ export const EntityWizardBody = ({
             <EntityWizardStep
               step={step}
               initialValues={slice?.values ?? {}}
-              onStateChanged={(state) => setStepState(step.group, state)}
+              onStateChanged={(state) =>
+                setStepState({ group: step.group, slice: state })
+              }
               resourceFilter={resourceFilter}
               typeSelector={index === 0 ? typeSelector : undefined}
               submitError={isLast ? submitError : null}

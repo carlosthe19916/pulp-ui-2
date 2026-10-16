@@ -68,7 +68,10 @@ export const GroupList: React.FC = () => {
       addNotification({ title: `Group "${name}" deleted`, variant: "success" }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(error, `Failed to delete group "${name}"`),
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to delete group "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -84,7 +87,7 @@ export const GroupList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IGroupFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useGroupsListQuery({
     params: {

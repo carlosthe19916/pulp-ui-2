@@ -2,7 +2,13 @@ import * as yup from "yup";
 
 import type { IEntityField } from "@catalog";
 
-export const getFieldValue = (entity: object, key: string): unknown => {
+export const getFieldValue = ({
+  entity,
+  key,
+}: {
+  entity: object;
+  key: string;
+}): unknown => {
   return Object.hasOwn(entity, key)
     ? Object.getOwnPropertyDescriptor(entity, key)?.value
     : undefined;
@@ -57,14 +63,19 @@ export const buildFieldSchema = (
 };
 
 /** Optionally seeded from an existing record (edit forms). */
-export const buildDefaultValues = (
-  fields: IEntityField[],
-  source?: object | null,
-): Record<string, unknown> => {
+export const buildDefaultValues = ({
+  fields,
+  source,
+}: {
+  fields: IEntityField[];
+  source?: object | null;
+}): Record<string, unknown> => {
   const values: Record<string, unknown> = {};
   for (const field of fields) {
     const sourceValue =
-      source != null ? getFieldValue(source, field.key) : undefined;
+      source != null
+        ? getFieldValue({ entity: source, key: field.key })
+        : undefined;
     if (sourceValue !== undefined) {
       values[field.key] =
         sourceValue ?? (field.type === "boolean" ? false : "");

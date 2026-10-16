@@ -23,14 +23,17 @@ interface IBuildThSortArgs<K extends string> {
  * (`"name"` / `"-name"`). Generic over the key `K`, so the result type is the
  * exact ascending/descending union — no cast needed when `sortBy` is typed.
  *
- * @param sortBy - Active sort key, or `undefined` when unsorted.
- * @param direction - `"desc"` prefixes the key with `-`; otherwise ascending.
+ * @param args.sortBy - Active sort key, or `undefined` when unsorted.
+ * @param args.direction - `"desc"` prefixes the key with `-`; otherwise ascending.
  * @returns The `ordering` value, or `undefined` when `sortBy` is unset.
  */
-export const toOrderingParam = <K extends string>(
-  sortBy: K | undefined,
-  direction: ISortBy["direction"],
-): K | `-${K}` | undefined =>
+export const toOrderingParam = <K extends string>({
+  sortBy,
+  direction,
+}: {
+  sortBy: K | undefined;
+  direction: ISortBy["direction"];
+}): K | `-${K}` | undefined =>
   sortBy ? (direction === "desc" ? `-${sortBy}` : sortBy) : undefined;
 
 /**

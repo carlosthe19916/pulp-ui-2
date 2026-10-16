@@ -109,16 +109,26 @@ export const TaskList: React.FC = () => {
       addNotification({ title: "Task cancel requested", variant: "info" }),
     onError: (error) =>
       addNotification({
-        ...getMutationErrorMessage(error, "Failed to cancel task"),
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to cancel task",
+        }),
         variant: "danger",
       }),
   });
   const purgeMutation = useTaskPurgeMutation({
     onSuccess: (data) =>
-      notifyTaskStarted(addNotification, data.task, "Purge task started"),
+      notifyTaskStarted({
+        addNotification,
+        taskHref: data.task,
+        title: "Purge task started",
+      }),
     onError: (error) =>
       addNotification({
-        ...getMutationErrorMessage(error, "Failed to purge tasks"),
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to purge tasks",
+        }),
         variant: "danger",
       }),
   });
@@ -135,7 +145,7 @@ export const TaskList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ITaskFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useTasksListQuery({
     params: {

@@ -80,17 +80,17 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatablePlugins("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        `Distribution "${name}" deletion started`,
-      ),
+        taskHref: data.task,
+        title: `Distribution "${name}" deletion started`,
+      }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(
+        ...getMutationErrorMessage({
           error,
-          `Failed to delete distribution "${name}"`,
-        ),
+          fallback: `Failed to delete distribution "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -108,8 +108,8 @@ export const DistributionList: React.FC = () => {
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IDistributionFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
-  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
+  const debouncedName = useDebouncedValue({ value: filters.name });
+  const debouncedPulpType = useDebouncedValue({ value: filters.pulp_type });
 
   const { data, isLoading, error } = useDistributionsListQuery({
     params: {

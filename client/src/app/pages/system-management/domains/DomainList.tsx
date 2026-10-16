@@ -81,14 +81,17 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        `Domain "${name}" deletion started`,
-      ),
+        taskHref: data.task,
+        title: `Domain "${name}" deletion started`,
+      }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(error, `Failed to delete domain "${name}"`),
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to delete domain "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -106,7 +109,7 @@ export const DomainList: React.FC = () => {
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IDomainFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useDomainsListQuery({
     params: {

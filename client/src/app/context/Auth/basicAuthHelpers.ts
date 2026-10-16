@@ -8,10 +8,13 @@ export interface IStoredCredentials {
   remember: boolean;
 }
 
-export const encodeBasicAuthHeader = (
-  username: string,
-  password: string,
-): string => {
+export const encodeBasicAuthHeader = ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}): string => {
   return `Basic ${btoa(`${username}:${password}`)}`;
 };
 

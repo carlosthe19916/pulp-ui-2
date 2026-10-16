@@ -95,7 +95,7 @@ export const LoginPage: React.FC = () => {
           : `/api/pulp/api/v3/groups/?limit=0&offset=0`,
         {
           headers: {
-            Authorization: encodeBasicAuthHeader(username, password),
+            Authorization: encodeBasicAuthHeader({ username, password }),
           },
           credentials: "omit",
         },

@@ -32,7 +32,7 @@ export const AsyncResourceSelect = ({
 }: IAsyncResourceSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
-  const debouncedTerm = useDebouncedValue(term);
+  const debouncedTerm = useDebouncedValue({ value: term });
 
   const { options, isLoading, selectedLabel } = useResourceSearch({
     resourceKind,

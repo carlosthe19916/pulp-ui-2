@@ -40,14 +40,17 @@ export const useDistributionForm = ({
 
   const createMutation = useDistributionCreateMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        `Distribution "${name}" create started`,
-      ),
+        taskHref: data.task,
+        title: `Distribution "${name}" create started`,
+      }),
     onError: (error) =>
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to create distribution"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to create distribution",
+        }),
       ),
   });
   const updateMutation = useDistributionUpdateMutation({
@@ -58,7 +61,10 @@ export const useDistributionForm = ({
       }),
     onError: (error) =>
       setSubmitError(
-        getMutationErrorMessage(error, "Failed to update distribution"),
+        getMutationErrorMessage({
+          error,
+          fallback: "Failed to update distribution",
+        }),
       ),
   });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;

@@ -66,9 +66,9 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
-  const debouncedUsername = useDebouncedValue(filters.username);
+  const debouncedUsername = useDebouncedValue({ value: filters.username });
 
-  const ordering = toOrderingParam(sortBy, direction) as
+  const ordering = toOrderingParam({ sortBy, direction }) as
     "username" | "-username" | "email" | "-email" | undefined;
 
   const { data, isLoading, error } = useUsersListQuery({

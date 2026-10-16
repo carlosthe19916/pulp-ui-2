@@ -66,10 +66,10 @@ export const PublicationList: React.FC = () => {
       }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(
+        ...getMutationErrorMessage({
           error,
-          `Failed to delete publication "${name}"`,
-        ),
+          fallback: `Failed to delete publication "${name}"`,
+        }),
         variant: "danger",
       }),
   });

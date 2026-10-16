@@ -27,7 +27,7 @@ const fields: IEntityField[] = [
 
 describe("formSchema helpers", () => {
   it("builds defaults from entity fields", () => {
-    expect(buildDefaultValues(fields)).toEqual({
+    expect(buildDefaultValues({ fields })).toEqual({
       name: "",
       description: "",
       autopublish: false,

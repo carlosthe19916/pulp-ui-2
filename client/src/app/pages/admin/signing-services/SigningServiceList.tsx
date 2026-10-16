@@ -49,7 +49,7 @@ export const SigningServiceList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ISigningServiceFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useSigningServicesListQuery({
     params: {

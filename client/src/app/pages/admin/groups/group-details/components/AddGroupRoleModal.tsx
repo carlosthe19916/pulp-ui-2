@@ -66,9 +66,9 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({ initialFilters: { name: "" } });
-  const debouncedName = useDebouncedValue(filters.name);
+  const debouncedName = useDebouncedValue({ value: filters.name });
 
-  const ordering = toOrderingParam(sortBy, direction) as
+  const ordering = toOrderingParam({ sortBy, direction }) as
     "name" | "-name" | "description" | "-description" | undefined;
 
   const { data, isLoading, error } = useRolesListQuery({

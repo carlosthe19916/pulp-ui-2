@@ -30,14 +30,22 @@ describe("utils", () => {
   };
 
   it("getMutationErrorMessage: returns fallback only for a plain non-Error value", () => {
-    expect(getMutationErrorMessage("boom", "Failed to create thing")).toEqual({
+    expect(
+      getMutationErrorMessage({
+        error: "boom",
+        fallback: "Failed to create thing",
+      }),
+    ).toEqual({
       title: "Failed to create thing",
     });
   });
 
   it("getMutationErrorMessage: surfaces message from a generic Error", () => {
     expect(
-      getMutationErrorMessage(new Error("network down"), "Failed to save"),
+      getMutationErrorMessage({
+        error: new Error("network down"),
+        fallback: "Failed to save",
+      }),
     ).toEqual({
       title: "Failed to save",
       description: "network down",
@@ -46,7 +54,9 @@ describe("utils", () => {
 
   it("getMutationErrorMessage: surfaces a permission message on 403", () => {
     const error = makeAxiosError(403);
-    expect(getMutationErrorMessage(error, "Failed to delete role")).toEqual({
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to delete role" }),
+    ).toEqual({
       title: "Failed to delete role",
       description:
         "You do not have permission to perform this action. Ask an administrator to grant the required role.",
@@ -55,7 +65,9 @@ describe("utils", () => {
 
   it("getMutationErrorMessage: surfaces validation detail from response data", () => {
     const error = makeAxiosError(400, { detail: "name already exists" });
-    expect(getMutationErrorMessage(error, "Failed to create group")).toEqual({
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to create group" }),
+    ).toEqual({
       title: "Failed to create group",
       description: "name already exists",
     });
@@ -65,7 +77,9 @@ describe("utils", () => {
     const error = makeAxiosError(400, {
       non_field_errors: ["This field is required.", "Invalid value."],
     });
-    expect(getMutationErrorMessage(error, "Failed to create user")).toEqual({
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to create user" }),
+    ).toEqual({
       title: "Failed to create user",
       description: "This field is required. Invalid value.",
     });
@@ -76,7 +90,10 @@ describe("utils", () => {
       name: ["This field is required."],
     });
     expect(
-      getMutationErrorMessage(error, "Failed to create repository"),
+      getMutationErrorMessage({
+        error,
+        fallback: "Failed to create repository",
+      }),
     ).toEqual({
       title: "Failed to create repository",
       description: "Name: This field is required.",
@@ -88,7 +105,9 @@ describe("utils", () => {
       name: ["Required."],
       url: ["Enter a valid URL."],
     });
-    expect(getMutationErrorMessage(error, "Failed to create remote")).toEqual({
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to create remote" }),
+    ).toEqual({
       title: "Failed to create remote",
       description: "Name: Required.; Url: Enter a valid URL.",
     });
@@ -98,16 +117,17 @@ describe("utils", () => {
     const error = makeAxiosError(400, {
       config: { proxy_url: ["Enter a valid URL."] },
     });
-    expect(getMutationErrorMessage(error, "Failed to save").description).toBe(
-      "Config: Proxy url: Enter a valid URL.",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to save" })
+        .description,
+    ).toBe("Config: Proxy url: Enter a valid URL.");
   });
 
   it("getMutationErrorMessage: handles a bare-array 400 body", () => {
     const error = makeAxiosError(400, ["URI not valid: /bad/uri"]);
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "URI not valid: /bad/uri",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("URI not valid: /bad/uri");
   });
 
   it("getMutationErrorMessage: handles a list-serializer array body", () => {
@@ -115,34 +135,34 @@ describe("utils", () => {
       {},
       { name: ["This field is required."] },
     ]);
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "Name: This field is required.",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("Name: This field is required.");
   });
 
   it("getMutationErrorMessage: reads a container errors[] envelope", () => {
     const error = makeAxiosError(401, {
       errors: [{ code: "UNAUTHORIZED", message: "authentication required" }],
     });
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "authentication required",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("authentication required");
   });
 
   it("getMutationErrorMessage: reads a Galaxy v3 errors[] envelope", () => {
     const error = makeAxiosError(404, {
       errors: [{ status: "404", code: "not_found", title: "Not found." }],
     });
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "Not found.",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("Not found.");
   });
 
   it("getMutationErrorMessage: reads a plugin { error } body", () => {
     const error = makeAxiosError(400, { error: "Service unavailable" });
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "Service unavailable",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("Service unavailable");
   });
 
   it("getMutationErrorMessage: combines a plugin { error, detail } body", () => {
@@ -150,21 +170,23 @@ describe("utils", () => {
       error: "Migration failed",
       detail: "domain is busy",
     });
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "Migration failed — domain is busy",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("Migration failed — domain is busy");
   });
 
   it("getMutationErrorMessage: surfaces a plain-text (non-JSON) body", () => {
     const error = makeAxiosError(502, "Proxy error: upstream down");
-    expect(getMutationErrorMessage(error, "Failed").description).toBe(
-      "Proxy error: upstream down",
-    );
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed" }).description,
+    ).toBe("Proxy error: upstream down");
   });
 
   it("getMutationErrorMessage: falls back to the axios message on a network error", () => {
     const error = new AxiosError("Network Error", "ERR_NETWORK");
-    expect(getMutationErrorMessage(error, "Failed to save")).toEqual({
+    expect(
+      getMutationErrorMessage({ error, fallback: "Failed to save" }),
+    ).toEqual({
       title: "Failed to save",
       description: "Network Error",
     });
@@ -172,7 +194,10 @@ describe("utils", () => {
 
   it("getMutationErrorMessage: falls back to title-only when no useful detail exists", () => {
     const error = makeAxiosError(500, {});
-    const result = getMutationErrorMessage(error, "Failed to create remote");
+    const result = getMutationErrorMessage({
+      error,
+      fallback: "Failed to create remote",
+    });
     expect(result.title).toBe("Failed to create remote");
   });
 });

@@ -64,13 +64,17 @@ export const useGroupForm = ({
         variant: "success",
       }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to create group")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to create group" }),
+      ),
   });
   const updateMutation = useGroupUpdateMutation({
     onSuccess: (_data, { name }) =>
       addNotification({ title: `Group "${name}" updated`, variant: "success" }),
     onError: (error) =>
-      setSubmitError(getMutationErrorMessage(error, "Failed to update group")),
+      setSubmitError(
+        getMutationErrorMessage({ error, fallback: "Failed to update group" }),
+      ),
   });
 
   const form = useForm<GroupFormValues>({

@@ -72,7 +72,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
       void navigate({ to: "/admin/groups" });
     } catch (error) {
       addNotification({
-        ...getMutationErrorMessage(error, "Failed to delete group"),
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to delete group",
+        }),
         variant: "danger",
       });
     }

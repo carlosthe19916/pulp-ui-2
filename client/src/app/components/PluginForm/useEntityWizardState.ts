@@ -20,7 +20,7 @@ interface IUseEntityWizardStateArgs {
 
 export interface IUseEntityWizardStateResult {
   stepStates: Record<string, IWizardStepSlice>;
-  setStepState: (group: string, slice: IWizardStepSlice) => void;
+  setStepState: (args: { group: string; slice: IWizardStepSlice }) => void;
   mergedValues: Record<string, unknown>;
   isReady: boolean;
 }
@@ -40,7 +40,10 @@ export const useEntityWizardState = ({
   >(() => {
     const initial: Record<string, IWizardStepSlice> = {};
     for (const step of steps) {
-      const values = buildDefaultValues(step.fields, entity);
+      const values = buildDefaultValues({
+        fields: step.fields,
+        source: entity,
+      });
       initial[step.group] = {
         values,
         isValid: buildFieldSchema(step.fields).isValidSync(values),
@@ -50,20 +53,23 @@ export const useEntityWizardState = ({
     return initial;
   });
 
-  const setStepState = useCallback((group: string, slice: IWizardStepSlice) => {
-    setStepStates((prev) => {
-      const current = prev[group];
-      if (
-        current &&
-        current.isValid === slice.isValid &&
-        current.isDirty === slice.isDirty &&
-        current.values === slice.values
-      ) {
-        return prev;
-      }
-      return { ...prev, [group]: slice };
-    });
-  }, []);
+  const setStepState = useCallback(
+    ({ group, slice }: { group: string; slice: IWizardStepSlice }) => {
+      setStepStates((prev) => {
+        const current = prev[group];
+        if (
+          current &&
+          current.isValid === slice.isValid &&
+          current.isDirty === slice.isDirty &&
+          current.values === slice.values
+        ) {
+          return prev;
+        }
+        return { ...prev, [group]: slice };
+      });
+    },
+    [],
+  );
 
   const mergedValues = useMemo(
     () =>

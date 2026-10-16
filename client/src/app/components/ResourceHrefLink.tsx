@@ -10,7 +10,7 @@ interface IResourceHrefLinkProps {
   truncateAt?: number;
 }
 
-const truncate = (value: string, max: number): string => {
+const truncate = ({ value, max }: { value: string; max: number }): string => {
   return value.length > max ? `${value.slice(0, max)}...` : value;
 };
 
@@ -31,6 +31,6 @@ export const ResourceHrefLink = ({
   return (
     label?.trim() ||
     (id && id.length <= truncateAt ? id : undefined) ||
-    truncate(href, truncateAt)
+    truncate({ value: href, max: truncateAt })
   );
 };

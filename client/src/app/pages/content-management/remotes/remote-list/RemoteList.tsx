@@ -80,14 +80,17 @@ export const RemoteList: React.FC = () => {
   const canCreate = useCreatablePlugins("remote").length > 0;
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted(
+      notifyTaskStarted({
         addNotification,
-        data.task,
-        `Remote "${name}" deletion started`,
-      ),
+        taskHref: data.task,
+        title: `Remote "${name}" deletion started`,
+      }),
     onError: (error, { name }) =>
       addNotification({
-        ...getMutationErrorMessage(error, `Failed to delete remote "${name}"`),
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to delete remote "${name}"`,
+        }),
         variant: "danger",
       }),
   });
@@ -105,8 +108,8 @@ export const RemoteList: React.FC = () => {
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRemoteFilters>({});
-  const debouncedName = useDebouncedValue(filters.name);
-  const debouncedPulpType = useDebouncedValue(filters.pulp_type);
+  const debouncedName = useDebouncedValue({ value: filters.name });
+  const debouncedPulpType = useDebouncedValue({ value: filters.pulp_type });
 
   const { data, isLoading, error } = useRemotesListQuery({
     params: {

@@ -48,7 +48,10 @@ export const initInterceptors = () => {
         if (credentials) {
           config.headers.set(
             "Authorization",
-            encodeBasicAuthHeader(credentials.username, credentials.password),
+            encodeBasicAuthHeader({
+              username: credentials.username,
+              password: credentials.password,
+            }),
           );
         }
       }

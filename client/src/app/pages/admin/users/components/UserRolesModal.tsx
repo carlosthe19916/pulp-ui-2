@@ -79,7 +79,13 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
   const [availableFilter, setAvailableFilter] = useState("");
   const [chosenFilter, setChosenFilter] = useState("");
 
-  const applyFilter = (options: IRoleOption[], filter: string): IRoleOption[] =>
+  const applyFilter = ({
+    options,
+    filter,
+  }: {
+    options: IRoleOption[];
+    filter: string;
+  }): IRoleOption[] =>
     options.map((option) => ({
       ...option,
       isVisible:
@@ -87,17 +93,29 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
         option.name.toLowerCase().includes(filter.toLowerCase()),
     }));
 
-  const onFilterChange = (value: string, isAvailable: boolean) => {
+  const onFilterChange = ({
+    value,
+    isAvailable,
+  }: {
+    value: string;
+    isAvailable: boolean;
+  }) => {
     if (isAvailable) {
       setAvailableFilter(value);
-      setAvailable((prev) => applyFilter(prev, value));
+      setAvailable((prev) => applyFilter({ options: prev, filter: value }));
     } else {
       setChosenFilter(value);
-      setChosen((prev) => applyFilter(prev, value));
+      setChosen((prev) => applyFilter({ options: prev, filter: value }));
     }
   };
 
-  const onOptionSelect = (index: number, isChosen: boolean) => {
+  const onOptionSelect = ({
+    index,
+    isChosen,
+  }: {
+    index: number;
+    isChosen: boolean;
+  }) => {
     const setter = isChosen ? setChosen : setAvailable;
     setter((prev) =>
       prev.map((option, i) =>
@@ -106,7 +124,7 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
     );
   };
 
-  const moveSelected = (fromAvailable: boolean) => {
+  const moveSelected = ({ fromAvailable }: { fromAvailable: boolean }) => {
     const source = fromAvailable ? available : chosen;
     const destination = fromAvailable ? chosen : available;
     const moved = source
@@ -125,7 +143,7 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
     }
   };
 
-  const moveAll = (fromAvailable: boolean) => {
+  const moveAll = ({ fromAvailable }: { fromAvailable: boolean }) => {
     const source = fromAvailable ? available : chosen;
     const destination = fromAvailable ? chosen : available;
     const moved = source
@@ -142,11 +160,11 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
     }
   };
 
-  const buildSearchInput = (isAvailable: boolean) => (
+  const buildSearchInput = ({ isAvailable }: { isAvailable: boolean }) => (
     <SearchInput
       value={isAvailable ? availableFilter : chosenFilter}
-      onChange={(_e, value) => onFilterChange(value, isAvailable)}
-      onClear={() => onFilterChange("", isAvailable)}
+      onChange={(_e, value) => onFilterChange({ value, isAvailable })}
+      onClear={() => onFilterChange({ value: "", isAvailable })}
       aria-label={
         isAvailable ? "Search available roles" : "Search assigned roles"
       }
@@ -173,7 +191,7 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
         <DualListSelector>
           <DualListSelectorPane
             title="Available roles"
-            searchInput={buildSearchInput(true)}
+            searchInput={buildSearchInput({ isAvailable: true })}
             listMinHeight="300px"
           >
             <DualListSelectorList>
@@ -182,7 +200,9 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
                   <DualListSelectorListItem
                     key={option.name}
                     isSelected={option.selected}
-                    onOptionSelect={() => onOptionSelect(index, false)}
+                    onOptionSelect={() =>
+                      onOptionSelect({ index, isChosen: false })
+                    }
                   >
                     {option.name}
                   </DualListSelectorListItem>
@@ -193,32 +213,32 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
           <DualListSelectorControlsWrapper>
             <DualListSelectorControl
               isDisabled={!available.some((option) => option.selected)}
-              onClick={() => moveSelected(true)}
+              onClick={() => moveSelected({ fromAvailable: true })}
               aria-label="Assign selected"
               icon={<AngleRightIcon />}
             />
             <DualListSelectorControl
               isDisabled={available.length === 0}
-              onClick={() => moveAll(true)}
+              onClick={() => moveAll({ fromAvailable: true })}
               aria-label="Assign all"
               icon={<AngleDoubleRightIcon />}
             />
             <DualListSelectorControl
               isDisabled={chosen.length === 0}
-              onClick={() => moveAll(false)}
+              onClick={() => moveAll({ fromAvailable: false })}
               aria-label="Remove all"
               icon={<AngleDoubleLeftIcon />}
             />
             <DualListSelectorControl
               isDisabled={!chosen.some((option) => option.selected)}
-              onClick={() => moveSelected(false)}
+              onClick={() => moveSelected({ fromAvailable: false })}
               aria-label="Remove selected"
               icon={<AngleLeftIcon />}
             />
           </DualListSelectorControlsWrapper>
           <DualListSelectorPane
             title="Assigned roles"
-            searchInput={buildSearchInput(false)}
+            searchInput={buildSearchInput({ isAvailable: false })}
             listMinHeight="300px"
             isChosen
           >
@@ -228,7 +248,9 @@ const UserRolesForm: React.FC<IUserRolesFormProps> = ({
                   <DualListSelectorListItem
                     key={option.name}
                     isSelected={option.selected}
-                    onOptionSelect={() => onOptionSelect(index, true)}
+                    onOptionSelect={() =>
+                      onOptionSelect({ index, isChosen: true })
+                    }
                   >
                     {option.name}
                   </DualListSelectorListItem>

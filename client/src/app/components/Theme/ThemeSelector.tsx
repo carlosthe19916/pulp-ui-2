@@ -43,7 +43,8 @@ const CONTRAST_BUTTON_IDS: Record<ContrastMode, string> = {
   glass: "contrast-glass",
 };
 
-const prefixed = (id: string, suffix: string) => `${id}-${suffix}`;
+const prefixed = ({ id, suffix }: { id: string; suffix: string }) =>
+  `${id}-${suffix}`;
 
 const invertIds = <K extends string>(
   ids: Record<K, string>,
@@ -137,13 +138,13 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({
             <ToggleGroup aria-labelledby={`${id}-variant-title`}>
               <ToggleGroupItem
                 text="Default"
-                buttonId={prefixed(id, VARIANT_BUTTON_IDS.default)}
+                buttonId={prefixed({ id, suffix: VARIANT_BUTTON_IDS.default })}
                 isSelected={variant === THEME_VARIANTS.DEFAULT}
                 onChange={handleVariantChange}
               />
               <ToggleGroupItem
                 text="Project Felt"
-                buttonId={prefixed(id, VARIANT_BUTTON_IDS.felt)}
+                buttonId={prefixed({ id, suffix: VARIANT_BUTTON_IDS.felt })}
                 isSelected={variant === THEME_VARIANTS.FELT}
                 onChange={handleVariantChange}
               />
@@ -158,19 +159,19 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({
             <ToggleGroup aria-labelledby={`${id}-color-scheme-title`}>
               <ToggleGroupItem
                 text="System"
-                buttonId={prefixed(id, COLOR_BUTTON_IDS.system)}
+                buttonId={prefixed({ id, suffix: COLOR_BUTTON_IDS.system })}
                 isSelected={mode === THEME_MODES.SYSTEM}
                 onChange={handleColorChange}
               />
               <ToggleGroupItem
                 text="Light"
-                buttonId={prefixed(id, COLOR_BUTTON_IDS.light)}
+                buttonId={prefixed({ id, suffix: COLOR_BUTTON_IDS.light })}
                 isSelected={mode === THEME_MODES.LIGHT}
                 onChange={handleColorChange}
               />
               <ToggleGroupItem
                 text="Dark"
-                buttonId={prefixed(id, COLOR_BUTTON_IDS.dark)}
+                buttonId={prefixed({ id, suffix: COLOR_BUTTON_IDS.dark })}
                 isSelected={mode === THEME_MODES.DARK}
                 onChange={handleColorChange}
               />
@@ -185,25 +186,28 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({
             <ToggleGroup aria-labelledby={`${id}-contrast-title`}>
               <ToggleGroupItem
                 text="System"
-                buttonId={prefixed(id, CONTRAST_BUTTON_IDS.system)}
+                buttonId={prefixed({ id, suffix: CONTRAST_BUTTON_IDS.system })}
                 isSelected={contrast === CONTRAST_MODES.SYSTEM}
                 onChange={handleContrastChange}
               />
               <ToggleGroupItem
                 text="Default"
-                buttonId={prefixed(id, CONTRAST_BUTTON_IDS.default)}
+                buttonId={prefixed({ id, suffix: CONTRAST_BUTTON_IDS.default })}
                 isSelected={contrast === CONTRAST_MODES.DEFAULT}
                 onChange={handleContrastChange}
               />
               <ToggleGroupItem
                 text="High contrast"
-                buttonId={prefixed(id, CONTRAST_BUTTON_IDS["high-contrast"])}
+                buttonId={prefixed({
+                  id,
+                  suffix: CONTRAST_BUTTON_IDS["high-contrast"],
+                })}
                 isSelected={contrast === CONTRAST_MODES.HIGH_CONTRAST}
                 onChange={handleContrastChange}
               />
               <ToggleGroupItem
                 text="Glass"
-                buttonId={prefixed(id, CONTRAST_BUTTON_IDS.glass)}
+                buttonId={prefixed({ id, suffix: CONTRAST_BUTTON_IDS.glass })}
                 isSelected={contrast === CONTRAST_MODES.GLASS}
                 onChange={handleContrastChange}
               />

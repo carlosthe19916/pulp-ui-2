@@ -34,10 +34,12 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
   const permissions = watch("permissions");
   const permissionOptions = useMemo(
     () =>
-      collectPermissionOptions(
-        (rolesData?.results ?? []).map((role) => role.permissions),
-        permissions ?? [],
-      ),
+      collectPermissionOptions({
+        rolePermissionLists: (rolesData?.results ?? []).map(
+          (role) => role.permissions,
+        ),
+        selected: permissions ?? [],
+      }),
     [permissions, rolesData?.results],
   );
 
