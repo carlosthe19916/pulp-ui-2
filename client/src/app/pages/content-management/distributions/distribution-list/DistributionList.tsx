@@ -20,6 +20,7 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  type DataViewTd,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -35,14 +36,13 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { DistributionModal } from "./components/DistributionModal";
-import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
@@ -124,16 +124,14 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const { getTaskKind } = useResourceTasks({
+  const STATUS_COLUMN_INDEX = 4;
+  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
     entities: distributions,
-    onSettled: ({ entity, kind, state }) => {
-      void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
-      if (state) {
-        addNotification({
-          title: `Failed to ${kind} distribution "${entity.name}"`,
-          variant: "danger",
-        });
-      }
+    statusColumnIndex: STATUS_COLUMN_INDEX,
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: distributionKeys.list(),
+      });
     },
   });
 
@@ -163,6 +161,7 @@ export const DistributionList: React.FC = () => {
         width: 25,
       },
     },
+    { cell: "Status" },
     {
       cell: "",
       props: {
@@ -171,8 +170,7 @@ export const DistributionList: React.FC = () => {
     },
   ];
 
-  const rows: DataViewTr[] = distributions.map((distribution) => {
-    const taskKind = getTaskKind(distribution.prn);
+  const rows: DataViewTr[] = distributions.map((distribution, rowIndex) => {
     const pulpType = resolvePulpType(distribution.pulp_href);
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
 
@@ -182,7 +180,8 @@ export const DistributionList: React.FC = () => {
         {
           cell: distribution.name,
           props: { dataLabel: "Name" },
-        },
+          id: rowIndex,
+        } as DataViewTd,
         {
           cell: distribution.base_path || "—",
           props: { dataLabel: "Base Path", modifier: "truncate" },
@@ -201,9 +200,11 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Repository" },
         },
         {
-          cell: taskKind ? (
-            <EntityTaskStatus kind={taskKind} />
-          ) : (
+          cell: renderStatusCell(distribution),
+          props: { dataLabel: "Status" },
+        },
+        {
+          cell: (
             <ActionsColumn
               items={[
                 {
@@ -314,6 +315,8 @@ export const DistributionList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
           />
 
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />

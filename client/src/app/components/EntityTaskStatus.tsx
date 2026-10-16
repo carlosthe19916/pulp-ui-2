@@ -15,11 +15,11 @@ const TASK_LABEL: Record<EntityTaskKind, string> = {
   update: "Updating",
 };
 
-/** Inline spinner + label shown in a row while its entity's task runs. */
-export const EntityTaskStatus: React.FC<{ kind: EntityTaskKind }> = ({
+/** Inline spinner + label shown in a row while its entity's single task runs. */
+export const EntityTaskStatus: React.FC<{ kind?: EntityTaskKind }> = ({
   kind,
 }) => {
-  const label = `${TASK_LABEL[kind]}…`;
+  const label = kind ? `${TASK_LABEL[kind]}…` : "In progress…";
   return (
     <Flex
       flexWrap={{ default: "nowrap" }}

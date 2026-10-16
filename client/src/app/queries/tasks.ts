@@ -58,20 +58,24 @@ export const taskKeys = {
   list: () => [...taskKeys.all(), "list"] as const,
   detail: (taskHref: string) =>
     [...taskKeys.all(), "detail", taskHref] as const,
-  // Per-row delete/update status, one query per on-screen resource PRN.
+  // Per-row delete/update status probe, one query per on-screen resource PRN.
   byPrn: () => [...taskKeys.all(), "byPrn"] as const,
+  // Paginated task list scoped to a single resource PRN (the expanded row table).
+  byPrnList: () => [...taskKeys.all(), "byPrnList"] as const,
 
   listQuery: (domain: IPulpDomain, params: ITaskListParams) =>
     [...taskKeys.list(), domain, params] as const,
   detailQuery: (taskHref: string) => taskKeys.detail(taskHref),
-  byPrnQuery: (domain: IPulpDomain, prn: string, limit: number) =>
-    [...taskKeys.byPrn(), domain, prn, limit] as const,
+  byPrnQuery: (domain: IPulpDomain, prn: string) =>
+    [...taskKeys.byPrn(), domain, prn] as const,
+  byPrnListQuery: (
+    domain: IPulpDomain,
+    prn: string,
+    params: { limit: number; offset: number },
+  ) => [...taskKeys.byPrnList(), domain, prn, params] as const,
 };
 
-/**
- * In-flight states plus terminal failures (to report a failed delete/update).
- * `completed`/`skipped` are omitted — a successful delete just drops the row.
- */
+/** Active states plus recent failures — for the expanded per-PRN task table. */
 const PRN_TASK_STATES = [
   "running",
   "waiting",
@@ -79,6 +83,9 @@ const PRN_TASK_STATES = [
   "failed",
   "canceled",
 ] as const;
+
+/** Strictly-active states — the probe's `count` is the exact in-progress count. */
+const PRN_ACTIVE_STATES = ["running", "waiting", "canceling"] as const;
 
 /**
  * Shared `GET tasks/`, re-wrapping the single `ordering` to the spec's array
@@ -100,47 +107,53 @@ const fetchTasksPage = async (
   return response.data;
 };
 
+/** Per-row probe result: the exact active-task count plus one sample task. */
+export interface IPrnTaskProbe {
+  /** Number of in-progress (running/waiting/canceling) tasks for the resource. */
+  count: number;
+  /** The most recent active task — present whenever `count > 0`. */
+  task?: TaskResponse;
+}
+
 /**
- * In-flight (and recently-failed) delete/update tasks per resource, one query
- * per PRN, flattened into a single `TaskResponse[]`. Each row polls its own PRN
- * because the task API has no OR-across-resources filter; status is
- * server-derived, so it survives reloads.
+ * Per-PRN in-flight probe, one query each (the task API has no OR-across-resources
+ * filter). Fetches `limit: 1` but reads the paginated `count`, giving the exact
+ * active count plus a sample task without pulling the whole list.
  */
 export const useTasksByPrnQueries = ({
   prns,
-  limit,
 }: {
   prns: string[];
-  /** Max recent tasks fetched per PRN. */
-  limit: number;
-}): TaskResponse[] => {
+}): Map<string, IPrnTaskProbe> => {
   const domain = useSelectedDomain();
   return useQueries({
     queries: prns.map((prn) =>
-      queryOptions<TaskResponse[], DrfAxiosError>({
-        queryKey: taskKeys.byPrnQuery(domain, prn, limit),
-        queryFn: async (): Promise<TaskResponse[]> => {
+      queryOptions<IPrnTaskProbe, DrfAxiosError>({
+        queryKey: taskKeys.byPrnQuery(domain, prn),
+        queryFn: async (): Promise<IPrnTaskProbe> => {
           const page = await fetchTasksPage(domain, {
             reserved_resources: prn,
-            state__in: [...PRN_TASK_STATES],
-            fields: ["pulp_href", "state", "name", "reserved_resources_record"],
+            state__in: [...PRN_ACTIVE_STATES],
+            fields: ["pulp_href", "state", "name"],
             ordering: "-pulp_created",
-            limit,
+            limit: 1,
           });
-          return page.results ?? [];
+          return { count: page.count ?? 0, task: page.results?.[0] };
         },
         enabled: !!prn,
-        refetchInterval: (query) => {
-          return query.state.data?.some((task) => isActiveTask(task.state))
-            ? DEFAULT_REFETCH_INTERVAL
-            : false;
-        },
+        refetchInterval: (query) =>
+          (query.state.data?.count ?? 0) > 0 ? DEFAULT_REFETCH_INTERVAL : false,
       }),
     ),
     combine: (
-      results: UseQueryResult<TaskResponse[], DrfAxiosError>[],
-    ): TaskResponse[] => {
-      return results.flatMap((result) => result.data ?? []);
+      results: UseQueryResult<IPrnTaskProbe, DrfAxiosError>[],
+    ): Map<string, IPrnTaskProbe> => {
+      const byPrn = new Map<string, IPrnTaskProbe>();
+      prns.forEach((prn, index) => {
+        const data = results[index]?.data;
+        if (data) byPrn.set(prn, data);
+      });
+      return byPrn;
     },
   });
 };
@@ -172,6 +185,57 @@ export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
   const domain = useDefaultDomain();
   return useQuery({
     ...tasksListQueryOptions({ domain, params }),
+    refetchInterval: (query) =>
+      query.state.data?.results?.some((task) => isActiveTask(task.state))
+        ? DEFAULT_REFETCH_INTERVAL
+        : false,
+  });
+};
+
+export const tasksByPrnListQueryOptions = ({
+  domain,
+  prn,
+  limit,
+  offset,
+}: {
+  domain: IPulpDomain;
+  prn: string;
+  limit: number;
+  offset: number;
+}) =>
+  queryOptions<PaginatedTaskResponseList, DrfAxiosError>({
+    queryKey: taskKeys.byPrnListQuery(domain, prn, { limit, offset }),
+    queryFn: () =>
+      fetchTasksPage(domain, {
+        reserved_resources: prn,
+        state__in: [...PRN_TASK_STATES],
+        fields: [
+          "pulp_href",
+          "name",
+          "state",
+          "pulp_created",
+          "reserved_resources_record",
+        ],
+        ordering: "-pulp_created",
+        limit,
+        offset,
+      }),
+  });
+
+/** Paginated task list for one PRN — the row's expanded table; polls while active. */
+export const useTasksByPrnListQuery = ({
+  prn,
+  limit,
+  offset,
+}: {
+  prn: string;
+  limit: number;
+  offset: number;
+}) => {
+  const domain = useSelectedDomain();
+  return useQuery({
+    ...tasksByPrnListQueryOptions({ domain, prn, limit, offset }),
+    enabled: !!prn,
     refetchInterval: (query) =>
       query.state.data?.results?.some((task) => isActiveTask(task.state))
         ? DEFAULT_REFETCH_INTERVAL

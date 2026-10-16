@@ -105,7 +105,7 @@ describe("query-key factories", () => {
     it("keeps the per-resource by-PRN query under the byPrn folder", () => {
       expect(
         startsWith(
-          taskKeys.byPrnQuery(domain, "prn:file.filerepository:abc", 10),
+          taskKeys.byPrnQuery(domain, "prn:file.filerepository:abc"),
           taskKeys.byPrn(),
         ),
       ).toBe(true);

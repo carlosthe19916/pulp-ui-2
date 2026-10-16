@@ -20,6 +20,7 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  type DataViewTd,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn, type IAction } from "@patternfly/react-table";
@@ -34,7 +35,6 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { RepositoryModal } from "./components/RepositoryModal";
-import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
@@ -42,7 +42,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
 import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
@@ -133,16 +133,12 @@ export const RepositoryList: React.FC = () => {
   const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const { getTaskKind } = useResourceTasks({
+  const STATUS_COLUMN_INDEX = 4;
+  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
     entities: repositories,
-    onSettled: ({ entity, kind, state }) => {
+    statusColumnIndex: STATUS_COLUMN_INDEX,
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-      if (state) {
-        addNotification({
-          title: `Failed to ${kind} repository "${entity.name}"`,
-          variant: "danger",
-        });
-      }
     },
   });
 
@@ -173,6 +169,7 @@ export const RepositoryList: React.FC = () => {
         width: 20,
       },
     },
+    { cell: "Status" },
     {
       cell: "",
       props: {
@@ -181,8 +178,7 @@ export const RepositoryList: React.FC = () => {
     },
   ];
 
-  const rows: DataViewTr[] = repositories.map((repository) => {
-    const taskKind = getTaskKind(repository.prn);
+  const rows: DataViewTr[] = repositories.map((repository, rowIndex) => {
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
       ? getPlugin(pulpType)?.entities.repository
@@ -227,7 +223,8 @@ export const RepositoryList: React.FC = () => {
         {
           cell: repository.name,
           props: { dataLabel: "Name" },
-        },
+          id: rowIndex,
+        } as DataViewTd,
         {
           cell: repository.description || "—",
           props: { dataLabel: "Description", modifier: "truncate" },
@@ -241,11 +238,11 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Remote", modifier: "truncate" },
         },
         {
-          cell: taskKind ? (
-            <EntityTaskStatus kind={taskKind} />
-          ) : (
-            <ActionsColumn items={actionItems} />
-          ),
+          cell: renderStatusCell(repository),
+          props: { dataLabel: "Status" },
+        },
+        {
+          cell: <ActionsColumn items={actionItems} />,
           props: { dataLabel: "Actions", isActionCell: true },
         },
       ],
@@ -336,6 +333,8 @@ export const RepositoryList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
           />
 
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />

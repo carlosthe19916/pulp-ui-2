@@ -21,6 +21,7 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  type DataViewTd,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
@@ -33,11 +34,10 @@ import {
   type DataViewTh,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
 import type { IDomainListParams } from "@app/queries/domains";
 import {
   domainKeys,
@@ -123,17 +123,12 @@ export const DomainList: React.FC = () => {
   const domains = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const { getTaskKind } = useResourceTasks({
+  const STATUS_COLUMN_INDEX = 6;
+  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
     entities: domains,
-    onSettled: ({ entity, kind, state }) => {
-      // Replace this with refetch
+    statusColumnIndex: STATUS_COLUMN_INDEX,
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
-      if (state) {
-        addNotification({
-          title: `Failed to ${kind} domain "${entity.name}"`,
-          variant: "danger",
-        });
-      }
     },
   });
 
@@ -147,20 +142,24 @@ export const DomainList: React.FC = () => {
     { cell: "Redirect", props: { width: 10 } },
     { cell: "Hide guarded", props: { width: 15 } },
     { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
+    { cell: "Status" },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const rows: DataViewTr[] = domains.map((domain) => {
+  const rows: DataViewTr[] = domains.map((domain, rowIndex) => {
     // Pulp forbids editing or deleting the default domain.
     const isDefault = domain.name === DEFAULT_PULP_DOMAIN;
     const defaultTooltip = {
       content: "The default domain can't be edited or deleted.",
     };
-    const taskKind = getTaskKind(domain.prn);
     return {
       id: domain.pulp_href,
       row: [
-        { cell: domain.name, props: { dataLabel: "Name" } },
+        {
+          cell: domain.name,
+          props: { dataLabel: "Name" },
+          id: rowIndex,
+        } as DataViewTd,
         {
           cell: domain.description || "—",
           props: { dataLabel: "Description", modifier: "truncate" },
@@ -182,9 +181,11 @@ export const DomainList: React.FC = () => {
           props: { dataLabel: "Created" },
         },
         {
-          cell: taskKind ? (
-            <EntityTaskStatus kind={taskKind} />
-          ) : (
+          cell: renderStatusCell(domain),
+          props: { dataLabel: "Status" },
+        },
+        {
+          cell: (
             <ActionsColumn
               items={[
                 {
@@ -279,6 +280,8 @@ export const DomainList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
           />
 
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />

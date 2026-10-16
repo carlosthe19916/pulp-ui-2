@@ -20,6 +20,7 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
+  type DataViewTd,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -35,13 +36,12 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { RemoteModal } from "./components/RemoteModal";
-import { EntityTaskStatus } from "@app/components/EntityTaskStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import {
   remoteKeys,
@@ -124,16 +124,12 @@ export const RemoteList: React.FC = () => {
   const remotes = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const { getTaskKind } = useResourceTasks({
+  const STATUS_COLUMN_INDEX = 4;
+  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
     entities: remotes,
-    onSettled: ({ entity, kind, state }) => {
+    statusColumnIndex: STATUS_COLUMN_INDEX,
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
-      if (state) {
-        addNotification({
-          title: `Failed to ${kind} remote "${entity.name}"`,
-          variant: "danger",
-        });
-      }
     },
   });
 
@@ -165,6 +161,7 @@ export const RemoteList: React.FC = () => {
         width: 10,
       },
     },
+    { cell: "Status" },
     {
       cell: "",
       props: {
@@ -173,18 +170,19 @@ export const RemoteList: React.FC = () => {
     },
   ];
 
-  const rows: DataViewTr[] = remotes.map((remote) => {
+  const rows: DataViewTr[] = remotes.map((remote, rowIndex) => {
     const pulpType = resolvePulpType(remote.pulp_href);
-    const taskKind = getTaskKind(remote.prn);
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.remote);
 
     return {
       id: remote.pulp_href,
       row: [
+        // First-cell id: compound-expand matches it to expandedRows[].rowId.
         {
           cell: remote.name,
           props: { dataLabel: "Name" },
-        },
+          id: rowIndex,
+        } as DataViewTd,
         {
           cell: remote.url || "—",
           props: { dataLabel: "URL", modifier: "truncate" },
@@ -198,9 +196,11 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: taskKind ? (
-            <EntityTaskStatus kind={taskKind} />
-          ) : (
+          cell: renderStatusCell(remote),
+          props: { dataLabel: "Status" },
+        },
+        {
+          cell: (
             <ActionsColumn
               items={[
                 {
@@ -313,6 +313,8 @@ export const RemoteList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
           />
 
           <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
