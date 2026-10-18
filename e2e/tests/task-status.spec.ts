@@ -18,12 +18,15 @@ import type { DataViewList } from "./pom/DataViewList";
  * drives real deletes to prove the async-vs-sync contract end-to-end.
  */
 
-/** A row is in-progress when it shows the status label and its kebab is replaced. */
+/**
+ * A row is in-progress when its dedicated Status cell shows the labelled spinner
+ * ("Deleting…" / "Updating…"). The row keeps its kebab available throughout — the
+ * redesign surfaces status in its own column rather than swapping out the actions —
+ * so we assert the label shows, not that the actions disappear.
+ */
 async function expectRowInProgress(row: Locator, label: string): Promise<void> {
   await expect(row.getByText(label).first()).toBeVisible();
-  await expect(row.getByRole("button", { name: "Kebab toggle" })).toHaveCount(
-    0,
-  );
+  await expect(row.getByRole("button", { name: "Kebab toggle" })).toBeVisible();
 }
 
 /**
@@ -113,6 +116,45 @@ test.describe("Row task status — in-progress (server-derived, survives reload)
     const { prn } = await api.createDomain(name);
     await mockInFlightTask(page, prn, "update");
     await expectStatusSurvivesReload(page, domainsPage, name, "Updating…");
+  });
+});
+
+test.describe("Row task status — multiple tasks (count toggle + sub-table)", () => {
+  /** The Status cell's compound-expand toggle for a row with 2+ in-flight tasks. */
+  function countToggle(row: Locator, count: number): Locator {
+    return row.getByRole("button", { name: new RegExp(`\\b${count}\\b`) });
+  }
+
+  test("repository with 2 tasks shows a count toggle that expands the task list", async ({
+    page,
+    repositoriesPage,
+    api,
+    cleanup,
+  }) => {
+    const name = cleanup.repository(uniqueName("repo"));
+    const { prn } = await api.createFileRepository(name);
+    await mockInFlightTask(page, prn, "delete", 2);
+
+    // With 2 tasks the Status cell collapses to a count toggle — not the single
+    // "Deleting…" label — and survives a full reload like the single-task case.
+    await repositoriesPage.goto();
+    await repositoriesPage.filterBy("Name", name);
+    await expect(repositoriesPage.row(name).getByText("Deleting…")).toHaveCount(
+      0,
+    );
+    await expect(countToggle(repositoriesPage.row(name), 2)).toBeVisible();
+
+    await repositoriesPage.goto();
+    await repositoriesPage.filterBy("Name", name);
+    await expect(countToggle(repositoriesPage.row(name), 2)).toBeVisible();
+
+    // Expanding reveals the paginated per-resource task sub-table, one row per task.
+    await countToggle(repositoriesPage.row(name), 2).click();
+    const subTable = page.getByRole("grid", { name: "Resource tasks table" });
+    await expect(subTable).toBeVisible();
+    await expect(
+      subTable.getByRole("row").filter({ hasText: "Delete" }),
+    ).toHaveCount(2);
   });
 });
 
