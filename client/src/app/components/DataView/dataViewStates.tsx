@@ -13,10 +13,9 @@ import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
 interface IDataViewStatesArgs<TError = unknown> {
-  /** Data columns only; leading control columns are set via the flags below. */
+  /** Data columns only; a leading selection column is set via the flag below. */
   columnCount: number;
   hasSelectionColumn?: boolean;
-  hasExpansionColumn?: boolean;
   loadingRows?: number;
   isLoading?: boolean;
   loadingState?: React.ReactNode;
@@ -29,7 +28,6 @@ interface IDataViewStatesArgs<TError = unknown> {
 export function dataViewBodyStates<TError = unknown>({
   columnCount,
   hasSelectionColumn,
-  hasExpansionColumn,
   loadingRows = 10,
   isLoading,
   loadingState,
@@ -56,7 +54,6 @@ export function dataViewBodyStates<TError = unknown>({
   const wrapCentered = (node: React.ReactNode): React.ReactNode => (
     <Tbody>
       <Tr>
-        {hasExpansionColumn && <Td className={tableStyles.tableToggle} />}
         {hasSelectionColumn && (
           <Td className={tableStyles.tableCheck}>
             <div
@@ -80,7 +77,6 @@ export function dataViewBodyStates<TError = unknown>({
         rowsCount={loadingRows}
         columnsCount={columnCount}
         isSelectable={hasSelectionColumn}
-        isExpandable={hasExpansionColumn}
       />
     ),
     [DataViewState.error]:

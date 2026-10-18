@@ -1,5 +1,7 @@
 // Shared helpers for pages built on `@patternfly/react-data-view` (raw API):
-// the string-key ↔ index sort bridge and consistent loading/empty/error states.
+// the string-key ↔ index sort bridge, consistent loading/empty/error states, and
+// the compound-expand builder.
+export { compoundExpansions } from "./compoundExpansions";
 export { dataViewBodyStates } from "./dataViewStates";
 export { ListPagination } from "./ListPagination";
 export { buildThSort, toOrderingParam } from "./sortHelpers";

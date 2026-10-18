@@ -3,9 +3,11 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 
+import { getPlugin } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
@@ -136,6 +138,33 @@ export const useRemoteDetailQuery = ({ href }: { href: string | null }) =>
     ...remoteDetailQueryOptions({ href }),
     enabled: !!href,
   });
+
+const remoteApiPath = (pulpType: string): string | undefined =>
+  getPlugin(pulpType)?.entities.remote?.apiPath;
+
+export const buildRemoteHref = (
+  pulpType: string,
+  id: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = remoteApiPath(pulpType);
+  return apiPath ? pulpApiPath(`remotes/${apiPath}/${id}/`, domain) : null;
+};
+
+export const useSuspenseRemoteDetailQuery = ({
+  pulpType,
+  id,
+}: {
+  pulpType: string;
+  id: string;
+}) => {
+  const domain = useSelectedDomain();
+  return useSuspenseQuery(
+    remoteDetailQueryOptions({
+      href: buildRemoteHref(pulpType, id, domain),
+    }),
+  );
+};
 
 /**
  * Creates a remote of the given plugin type: POSTs to the typed collection

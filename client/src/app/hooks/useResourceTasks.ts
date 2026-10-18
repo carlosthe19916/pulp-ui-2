@@ -18,6 +18,7 @@ const entityTaskKindFromName = (
 export interface IResourceEntity {
   prn?: string | null;
   name?: string | null;
+  pulp_href?: string | null;
 }
 
 /** A single active task surfaced for a row (the probe's sample task). */

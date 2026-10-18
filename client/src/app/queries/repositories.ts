@@ -3,9 +3,11 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 
+import { getPlugin } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
@@ -329,6 +331,81 @@ export const useRepositoryDetailQuery = ({ href }: { href: string | null }) =>
     ...repositoryDetailQueryOptions({ href }),
     enabled: !!href,
   });
+
+const repositoryApiPath = (pulpType: string): string | undefined =>
+  getPlugin(pulpType)?.entities.repository?.apiPath;
+
+export const buildRepositoryHref = (
+  pulpType: string,
+  id: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = repositoryApiPath(pulpType);
+  return apiPath ? pulpApiPath(`repositories/${apiPath}/${id}/`, domain) : null;
+};
+
+export const useSuspenseRepositoryDetailQuery = ({
+  pulpType,
+  id,
+}: {
+  pulpType: string;
+  id: string;
+}) => {
+  const domain = useSelectedDomain();
+  return useSuspenseQuery(
+    repositoryDetailQueryOptions({
+      href: buildRepositoryHref(pulpType, id, domain),
+    }),
+  );
+};
+
+export const buildRepositoryVersionHref = (
+  pulpType: string,
+  id: string,
+  number: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = repositoryApiPath(pulpType);
+  return apiPath
+    ? pulpApiPath(`repositories/${apiPath}/${id}/versions/${number}/`, domain)
+    : null;
+};
+
+export const repositoryVersionDetailQueryOptions = ({
+  versionHref,
+}: {
+  versionHref: string | null;
+}) =>
+  queryOptions<RepositoryVersionResponse, DrfAxiosError>({
+    queryKey: [
+      ...repositoriesRootQueryOptions.queryKey,
+      "version-detail",
+      versionHref ?? "",
+    ],
+    queryFn: async (): Promise<RepositoryVersionResponse> =>
+      (
+        await axiosInstance.get<RepositoryVersionResponse>(
+          toProxyHref(versionHref ?? ""),
+        )
+      ).data,
+  });
+
+export const useSuspenseRepositoryVersionDetailQuery = ({
+  pulpType,
+  id,
+  number,
+}: {
+  pulpType: string;
+  id: string;
+  number: string;
+}) => {
+  const domain = useSelectedDomain();
+  return useSuspenseQuery(
+    repositoryVersionDetailQueryOptions({
+      versionHref: buildRepositoryVersionHref(pulpType, id, number, domain),
+    }),
+  );
+};
 
 /**
  * Creates a repository of the given plugin type: POSTs to `repositories/<apiPath>/`

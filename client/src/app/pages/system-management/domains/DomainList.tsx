@@ -20,7 +20,6 @@ import {
   DataViewToolbar,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTd,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
@@ -34,10 +33,12 @@ import {
   ListPagination,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
+import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDomainListParams } from "@app/queries/domains";
 import {
   domainKeys,
@@ -122,9 +123,8 @@ export const DomainList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const STATUS_COLUMN_INDEX = 6;
-  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
+  const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: domains,
-    statusColumnIndex: STATUS_COLUMN_INDEX,
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
     },
@@ -144,7 +144,7 @@ export const DomainList: React.FC = () => {
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const rows: DataViewTr[] = domains.map((domain, rowIndex) => {
+  const rows: DataViewTr[] = domains.map((domain) => {
     // Pulp forbids editing or deleting the default domain.
     const isDefault = domain.name === DEFAULT_PULP_DOMAIN;
     const defaultTooltip = {
@@ -156,8 +156,7 @@ export const DomainList: React.FC = () => {
         {
           cell: domain.name,
           props: { dataLabel: "Name" },
-          id: rowIndex,
-        } as DataViewTd,
+        },
         {
           cell: domain.description || "—",
           props: { dataLabel: "Description", modifier: "truncate" },
@@ -179,7 +178,12 @@ export const DomainList: React.FC = () => {
           props: { dataLabel: "Created" },
         },
         {
-          cell: renderStatusCell(domain),
+          cell: (
+            <ResourceTaskStatus
+              count={getActiveCount(domain.prn)}
+              kind={getTaskKinds(domain.prn)[0]}
+            />
+          ),
           props: { dataLabel: "Status" },
         },
         {
@@ -205,6 +209,12 @@ export const DomainList: React.FC = () => {
         },
       ],
     };
+  });
+
+  const expandedRows = resourceTaskExpansions({
+    entities: domains,
+    getActiveCount,
+    statusColumnIndex: STATUS_COLUMN_INDEX,
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
@@ -273,8 +283,9 @@ export const DomainList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
-            isExpandable
+            isExpandable={expandedRows.length > 0}
             expandedRows={expandedRows}
+            indexBy="id"
           />
 
           <DataViewToolbar

@@ -16,6 +16,7 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
+  type ExpandableContent,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -24,6 +25,7 @@ import type { PublicationResponse } from "@app/client";
 import { useNotifications } from "@app/context/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
+  compoundExpansions,
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
@@ -32,6 +34,7 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
+import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
 import { PublicationModal } from "./components/PublicationModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -98,49 +101,22 @@ export const PublicationList: React.FC = () => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    {
-      cell: "Publication",
-      props: {
-        width: 30,
-      },
-    },
-    {
-      cell: "Type",
-      props: {
-        width: 20,
-      },
-    },
-    {
-      cell: "Repository Version",
-      props: {
-        width: 35,
-      },
-    },
-    {
-      cell: "Created",
-      props: {
-        sort: sortProps("pulp_created"),
-        width: 15,
-      },
-    },
-    {
-      cell: "",
-      props: {
-        screenReaderText: "Actions",
-      },
-    },
+    { cell: "Publication", props: { width: 30 } },
+    { cell: "Type", props: { width: 20 } },
+    { cell: "Repository Version", props: { width: 35 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
+    { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
   const rows: DataViewTr[] = publications.map((pub) => {
     const href = pub.pulp_href;
     const pubId = href ? extractIdFromHref(href) : "";
     const pulpType = resolvePulpType(pub.pulp_href);
-    const label = href ? `Publication ${pubId}` : "—";
     return {
       id: href,
       row: [
         {
-          cell: label,
+          cell: href ? `Publication ${pubId}` : "—",
           props: { dataLabel: "Publication" },
         },
         {
@@ -170,6 +146,14 @@ export const PublicationList: React.FC = () => {
         },
       ],
     };
+  });
+
+  const PUBLICATION_COLUMN_INDEX = 0;
+  const expandedRows: ExpandableContent[] = compoundExpansions({
+    entities: publications,
+    columnIndex: PUBLICATION_COLUMN_INDEX,
+    rowId: (pub) => pub.pulp_href ?? "",
+    render: (pub) => <PublicationDetailPanel publication={pub} />,
   });
 
   const { activeState, bodyStates } = dataViewBodyStates({
@@ -240,6 +224,9 @@ export const PublicationList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
+            indexBy="id"
           />
 
           <DataViewToolbar

@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test";
  * Only `useTasksByPrnQueries` requests the `reserved_resources_record` field, so
  * this matches that query and nothing else.
  */
-const TASKS_BY_PRN_POLL = /\/api\/v3\/tasks\/\?.*reserved_resources_record/;
+const TASKS_BY_PRN_POLL = /\/api\/v3\/tasks\/\?.*reserved_resources=/;
 
 type MockTaskKind = "delete" | "update";
 

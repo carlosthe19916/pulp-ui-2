@@ -19,10 +19,10 @@ import {
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
+  type ExpandableContent,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTd,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -30,6 +30,7 @@ import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
+  compoundExpansions,
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
@@ -40,11 +41,13 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
+import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useResourceTaskColumn } from "@app/hooks/useResourceTaskColumn";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
@@ -56,6 +59,7 @@ import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
+import { DistributionDetailPanel } from "./components/DistributionDetailPanel";
 import { DistributionModal } from "./components/DistributionModal";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -126,53 +130,23 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const STATUS_COLUMN_INDEX = 4;
-  const { renderStatusCell, expandedRows } = useResourceTaskColumn({
+  const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: distributions,
-    statusColumnIndex: STATUS_COLUMN_INDEX,
     onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: distributionKeys.list(),
-      });
+      void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
     },
   });
 
   const columns: DataViewTh[] = [
-    {
-      cell: "Name",
-      props: {
-        sort: sortProps("name"),
-        width: 25,
-      },
-    },
-    {
-      cell: "Base Path",
-      props: {
-        width: 30,
-      },
-    },
-    {
-      cell: "Type",
-      props: {
-        width: 20,
-      },
-    },
-    {
-      cell: "Repository",
-      props: {
-        width: 25,
-      },
-    },
+    { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
+    { cell: "Base Path", props: { width: 30 } },
+    { cell: "Type", props: { width: 20 } },
+    { cell: "Repository", props: { width: 25 } },
     { cell: "Status" },
-    {
-      cell: "",
-      props: {
-        screenReaderText: "Actions",
-      },
-    },
+    { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const rows: DataViewTr[] = distributions.map((distribution, rowIndex) => {
+  const rows: DataViewTr[] = distributions.map((distribution) => {
     const pulpType = resolvePulpType(distribution.pulp_href);
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
 
@@ -181,9 +155,8 @@ export const DistributionList: React.FC = () => {
       row: [
         {
           cell: distribution.name,
-          props: { dataLabel: "Name" },
-          id: rowIndex,
-        } as DataViewTd,
+          props: { dataLabel: "Name", modifier: "truncate" },
+        },
         {
           cell: distribution.base_path || "—",
           props: { dataLabel: "Base Path", modifier: "truncate" },
@@ -202,7 +175,12 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Repository" },
         },
         {
-          cell: renderStatusCell(distribution),
+          cell: (
+            <ResourceTaskStatus
+              count={getActiveCount(distribution.prn)}
+              kind={getTaskKinds(distribution.prn)[0]}
+            />
+          ),
           props: { dataLabel: "Status" },
         },
         {
@@ -232,6 +210,24 @@ export const DistributionList: React.FC = () => {
       ],
     };
   });
+
+  const NAME_COLUMN_INDEX = 0;
+  const STATUS_COLUMN_INDEX = 4;
+  const expandedRows: ExpandableContent[] = [
+    ...compoundExpansions({
+      entities: distributions,
+      columnIndex: NAME_COLUMN_INDEX,
+      rowId: (distribution) => distribution.pulp_href ?? "",
+      render: (distribution) => (
+        <DistributionDetailPanel distribution={distribution} />
+      ),
+    }),
+    ...resourceTaskExpansions({
+      entities: distributions,
+      getActiveCount,
+      statusColumnIndex: STATUS_COLUMN_INDEX,
+    }),
+  ];
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
@@ -323,6 +319,7 @@ export const DistributionList: React.FC = () => {
             bodyStates={bodyStates}
             isExpandable
             expandedRows={expandedRows}
+            indexBy="id"
           />
 
           <DataViewToolbar

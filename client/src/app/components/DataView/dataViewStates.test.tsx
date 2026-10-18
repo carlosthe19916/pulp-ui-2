@@ -32,13 +32,6 @@ describe("dataViewBodyStates empty state", () => {
     expect(html).not.toContain('type="checkbox"');
   });
 
-  it("keeps the expansion column narrow without rendering a toggle", () => {
-    const html = emptyMarkup({ ...base, hasExpansionColumn: true });
-    expect(html).toContain(tableStyles.tableToggle);
-    expect(html).not.toContain(tableStyles.tableCheck);
-    expect(html).not.toContain("<button");
-  });
-
   it("renders no control cells when the table has neither", () => {
     const html = emptyMarkup(base);
     expect(html).not.toContain(tableStyles.tableCheck);

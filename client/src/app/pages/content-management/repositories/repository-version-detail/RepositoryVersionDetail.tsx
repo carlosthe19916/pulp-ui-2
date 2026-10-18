@@ -1,0 +1,92 @@
+import type React from "react";
+
+import { Link } from "@tanstack/react-router";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  PageSection,
+  Stack,
+  StackItem,
+} from "@patternfly/react-core";
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
+
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useRepositoryDetailQuery } from "@app/queries/repositories";
+import { useSuspenseRepositoryVersionDetailQuery } from "@app/queries/repositories";
+import { buildRepositoryHref } from "@app/queries/repositories";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
+import { VersionContentSummary } from "./components/VersionContentSummary";
+import { VersionContentTable } from "./components/VersionContentTable";
+
+interface IRepositoryVersionDetailProps {
+  pulpDomain: string;
+  pulpType: string;
+  id: string;
+  versionNumber: string;
+}
+
+export const RepositoryVersionDetail: React.FC<
+  IRepositoryVersionDetailProps
+> = ({ pulpDomain, pulpType, id, versionNumber }) => {
+  const domain = useSelectedDomain();
+  const { data: version } = useSuspenseRepositoryVersionDetailQuery({
+    pulpType,
+    id,
+    number: versionNumber,
+  });
+
+  // Repo name for the breadcrumb (cached from navigation; optional).
+  const { data: repository } = useRepositoryDetailQuery({
+    href: buildRepositoryHref(pulpType, id, domain),
+  });
+  const repositoryName = repository?.name ?? "Repository";
+
+  const title = `Version ${version.number ?? versionNumber}`;
+
+  return (
+    <>
+      <DocumentTitle title={`${repositoryName} · ${title}`} />
+      <PageHeader
+        title={title}
+        breadcrumbs={
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <Link
+                to="/content-management/$pulpDomain/repositories"
+                params={{ pulpDomain }}
+              >
+                Repositories
+              </Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem>
+              <Link
+                to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId"
+                params={{
+                  pulpDomain,
+                  repositoryType: pulpType,
+                  repositoryId: id,
+                }}
+              >
+                {repositoryName}
+              </Link>
+            </BreadcrumbItem>
+            <BreadcrumbItem isActive>{title}</BreadcrumbItem>
+          </Breadcrumb>
+        }
+      />
+
+      <PageSection>
+        <Stack hasGutter>
+          <StackItem>
+            <VersionContentSummary summary={version.content_summary} />
+          </StackItem>
+          <StackItem>
+            <VersionContentTable versionHref={version.pulp_href ?? ""} />
+          </StackItem>
+        </Stack>
+      </PageSection>
+    </>
+  );
+};
