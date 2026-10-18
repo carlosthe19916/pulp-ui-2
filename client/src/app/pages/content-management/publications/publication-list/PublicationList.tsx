@@ -22,7 +22,7 @@ import {
 import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   compoundExpansions,

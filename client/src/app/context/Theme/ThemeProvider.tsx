@@ -11,9 +11,7 @@ import {
   type ContrastMode,
   type ThemeMode,
   type ThemeVariant,
-} from "./theme-context";
-
-export type { ContrastMode, ThemeMode, ThemeVariant } from "./theme-context";
+} from "./ThemeContext";
 
 const DARK_MODE_CLASS = "pf-v6-theme-dark";
 const FELT_THEME_CLASS = "pf-v6-theme-felt";

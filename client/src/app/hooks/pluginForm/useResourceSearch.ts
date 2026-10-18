@@ -104,15 +104,18 @@ export const useResourceSearch = ({
 
   if (isPublication) {
     const query = term.trim().toLowerCase();
-    const options = (publicationQuery.data?.results ?? [])
-      .filter((pub) => !filter || filter(pub.pulp_href ?? ""))
-      .map((pub) => ({
-        value: pub.pulp_href ?? "",
-        label: pub.pulp_href
-          ? `Publication ${extractIdFromHref(pub.pulp_href)}`
-          : "",
-      }))
-      .filter((option) => !query || option.label.toLowerCase().includes(query));
+    const options: { value: string; label: string }[] = [];
+    for (const pub of publicationQuery.data?.results ?? []) {
+      const href = pub.pulp_href ?? "";
+      if (filter && !filter(href)) {
+        continue;
+      }
+      const label = href ? `Publication ${extractIdFromHref(href)}` : "";
+      if (query && !label.toLowerCase().includes(query)) {
+        continue;
+      }
+      options.push({ value: href, label });
+    }
     return {
       options,
       isLoading: publicationQuery.isFetching,

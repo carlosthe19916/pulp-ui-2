@@ -1,5 +1,5 @@
 import type { UserResponse } from "@app/client";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useUserRolesSyncMutation } from "@app/queries/users";
 import { getMutationErrorMessage } from "@app/utils/utils";
 

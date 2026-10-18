@@ -1,5 +1,4 @@
 import type React from "react";
-import { use } from "react";
 import { Link } from "@tanstack/react-router";
 import prettyBytes from "pretty-bytes";
 
@@ -22,11 +21,11 @@ import {
 } from "@patternfly/react-core";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 export const Dashboard: React.FC = () => {
-  const { status, isLoading, error } = use(ApiStatusContext) ?? {};
+  const { status, isLoading, error } = useApiStatus();
   const { name: pulpDomain } = useSelectedDomain();
 
   return (

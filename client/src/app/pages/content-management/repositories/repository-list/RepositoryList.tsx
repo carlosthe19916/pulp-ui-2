@@ -41,7 +41,7 @@ import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";

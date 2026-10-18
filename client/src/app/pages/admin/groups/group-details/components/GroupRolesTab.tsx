@@ -23,7 +23,7 @@ import {
   ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import type { WithId } from "@app/models/models";
 import {
   useAllGroupRolesListQuery,

@@ -1,5 +1,5 @@
 import type { IPlugin } from "@catalog";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import type {
   IEntityForEdit,
   IUseEntityFormResult,

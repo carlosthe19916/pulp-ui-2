@@ -7,7 +7,7 @@ import {
   EmptyStateBody,
   PageSection,
 } from "@patternfly/react-core";
-import { CubesIcon } from "@patternfly/react-icons";
+import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 

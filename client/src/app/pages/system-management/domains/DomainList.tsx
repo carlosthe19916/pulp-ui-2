@@ -36,7 +36,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDomainListParams } from "@app/queries/domains";

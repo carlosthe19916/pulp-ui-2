@@ -1,5 +1,5 @@
 import type { IPlugin } from "@catalog";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { type IUseEntityFormResult } from "@app/hooks/pluginForm/useEntityForm";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";

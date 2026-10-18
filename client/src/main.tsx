@@ -25,7 +25,9 @@ root.render(
           <App router={router} />
         </AnimationsProvider>
       </AuthProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.DEV ? (
+        <ReactQueryDevtools initialIsOpen={false} />
+      ) : null}
     </QueryClientProvider>
   </React.StrictMode>,
 );

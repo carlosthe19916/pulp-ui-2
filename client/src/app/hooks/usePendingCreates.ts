@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getEntityLabel } from "@catalog";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { distributionKeys } from "@app/queries/distributions";
 import { publicationKeys } from "@app/queries/publications";

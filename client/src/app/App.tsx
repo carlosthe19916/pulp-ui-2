@@ -1,18 +1,16 @@
-import { use } from "react";
-
 import { RouterProvider } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { AppPlaceholder } from "@app/components/AppPlaceholder";
+import { useAuth } from "@app/hooks/useAuth";
 import { queryClient } from "@app/queries/config";
 
 import type { AppRouter } from "../router";
-import { AuthContext } from "./context/Auth/AuthContext";
 
 export const App = ({ router }: { router: AppRouter }) => {
-  const authContext = use(AuthContext);
+  const authContext = useAuth();
 
-  if (authContext?.isLoading) {
+  if (authContext.isLoading) {
     return <AppPlaceholder />;
   }
 
@@ -22,7 +20,9 @@ export const App = ({ router }: { router: AppRouter }) => {
         router={router}
         context={{ queryClient, auth: authContext }}
       />
-      <TanStackRouterDevtools router={router} initialIsOpen={false} />
+      {import.meta.env.DEV ? (
+        <TanStackRouterDevtools router={router} initialIsOpen={false} />
+      ) : null}
     </>
   );
 };

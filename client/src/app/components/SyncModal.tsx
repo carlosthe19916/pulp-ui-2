@@ -22,7 +22,7 @@ import {
   type ITypeaheadOption,
 } from "@app/components/TypeaheadSelect";
 import { getPlugin } from "@catalog";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import type { WithId } from "@app/models/models";

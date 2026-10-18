@@ -17,7 +17,7 @@ import {
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { withId } from "@app/models/models";
 import {
   useGroupDeleteMutation,

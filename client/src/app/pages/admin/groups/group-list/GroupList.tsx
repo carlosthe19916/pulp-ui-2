@@ -23,7 +23,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { GroupResponse } from "@app/client";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   dataViewBodyStates,

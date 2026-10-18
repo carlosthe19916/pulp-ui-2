@@ -1,4 +1,4 @@
-import React, { use } from "react";
+import React from "react";
 import { useReducer, useState } from "react";
 
 import {
@@ -33,13 +33,13 @@ import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external
 
 import { ThemeSelector } from "@app/components/Theme";
 import ENV from "@app/env";
+import { useAuth } from "@app/hooks/useAuth";
 import useBranding from "@app/hooks/useBranding";
-import { AuthContext } from "@app/context/Auth/AuthContext";
 
 import { AboutApp } from "./about";
 
 export const HeaderApp: React.FC = () => {
-  const auth = use(AuthContext);
+  const auth = useAuth();
 
   const {
     masthead: { leftBrand, leftTitle, rightBrand, supportUrl },

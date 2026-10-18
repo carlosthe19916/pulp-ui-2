@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
@@ -12,13 +12,14 @@ import {
 import RhUiErrorFillIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-error-fill-icon";
 import pfBackground from "@patternfly/patternfly/assets/images/pf-background.svg";
 
-import { ThemeContext, ThemeSelector } from "@app/components/Theme";
+import { ThemeSelector } from "@app/components/Theme";
 import {
   encodeBasicAuthHeader,
   saveCredentials,
 } from "@app/context/Auth/basicAuthHelpers";
+import { useApiStatus } from "@app/hooks/useApiStatus";
 import useBranding from "@app/hooks/useBranding";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { useTheme } from "@app/hooks/useTheme";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 
 const INVALID_CREDENTIALS = "Invalid login credentials.";
@@ -27,12 +28,12 @@ const storageWarning =
   "Pulp UI is currently using HTTP Basic Authentication. Your credentials will be stored in your browser's sessionStorage or localStorage, in plain text.";
 
 export const LoginPage: React.FC = () => {
-  const apiStatus = use(ApiStatusContext);
+  const apiStatus = useApiStatus();
 
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
   const branding = useBranding();
-  const { isGlass } = use(ThemeContext);
+  const { isGlass } = useTheme();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -90,7 +91,7 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        apiStatus?.status?.domain_enabled
+        apiStatus.status?.domain_enabled
           ? `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/groups/?limit=0&offset=0`
           : `/api/pulp/api/v3/groups/?limit=0&offset=0`,
         {

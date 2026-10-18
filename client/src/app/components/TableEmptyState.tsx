@@ -7,7 +7,8 @@ import {
   EmptyStateBody,
   EmptyStateFooter,
 } from "@patternfly/react-core";
-import { CubesIcon, SearchIcon } from "@patternfly/react-icons";
+import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
+import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 
 interface ITableEmptyStateProps {
   title: string;

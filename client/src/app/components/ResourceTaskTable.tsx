@@ -21,7 +21,7 @@ import {
 
 import { dataViewBodyStates, type DataViewTh } from "@app/components/DataView";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import {
   isTerminalTaskState,
   useTaskCancelMutation,

@@ -47,13 +47,4 @@ export interface IThemeState {
   isGlass: boolean;
 }
 
-export const ThemeContext = createContext<IThemeState>({
-  mode: "system",
-  setMode: () => {},
-  isDark: false,
-  variant: "default",
-  setVariant: () => {},
-  contrast: "system",
-  setContrast: () => {},
-  isGlass: false,
-});
+export const ThemeContext = createContext<IThemeState | null>(null);

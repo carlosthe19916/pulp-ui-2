@@ -1,6 +1,4 @@
-import { use } from "react";
-
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
+import { useApiStatus } from "@app/hooks/useApiStatus";
 import { defaultDomainFromStatus } from "@app/queries/utils/pulpApi";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 
@@ -13,8 +11,8 @@ import type { IPulpDomain } from "@app/queries/utils/pulpApi";
  * `WaitForApiStatus` (RootLayout) gates rendering until status has loaded.
  */
 export const useDefaultDomain = (): IPulpDomain => {
-  const apiStatus = use(ApiStatusContext);
-  return defaultDomainFromStatus(apiStatus?.status);
+  const apiStatus = useApiStatus();
+  return defaultDomainFromStatus(apiStatus.status);
 };
 
 export default useDefaultDomain;

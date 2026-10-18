@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 
 import {
   Divider,
@@ -17,13 +17,13 @@ import OutlinedSunIcon from "@patternfly/react-icons/dist/esm/icons/outlined-sun
 
 import {
   CONTRAST_MODES,
-  ThemeContext,
   THEME_MODES,
   THEME_VARIANTS,
   type ContrastMode,
   type ThemeMode,
   type ThemeVariant,
-} from "./theme-context";
+} from "@app/context/Theme/ThemeContext";
+import { useTheme } from "@app/hooks/useTheme";
 
 const VARIANT_BUTTON_IDS: Record<ThemeVariant, string> = {
   default: "theme-default",
@@ -77,7 +77,7 @@ export const ThemeSelector: React.FC<{ id?: string }> = ({
   id = "theme-selector",
 }) => {
   const { mode, setMode, variant, setVariant, contrast, setContrast } =
-    use(ThemeContext);
+    useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleVariantChange = (

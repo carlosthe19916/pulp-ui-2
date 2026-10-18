@@ -9,7 +9,7 @@ import {
 import {
   NotificationsContext,
   type INotification,
-} from "./notifications-context";
+} from "./NotificationsContext";
 
 let notificationId = 0;
 

@@ -31,7 +31,7 @@ import {
   ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { WithId } from "@app/models/models";
 import { useGroupUsersBatchCreateMutation } from "@app/queries/groups";

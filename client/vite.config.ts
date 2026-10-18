@@ -108,8 +108,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ["react", "react-dom"],
+        // Group only modules already in the graph into stable vendor chunks.
+        // The function form (vs. a list of package names) avoids force-resolving
+        // a package's barrel, which would pull in tree-shaken-away optional deps.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+          if (id.includes("/react/") || id.includes("/react-dom/")) {
+            return "react";
+          }
+          if (id.includes("/@patternfly/")) {
+            return "patternfly";
+          }
+          return undefined;
         },
       },
     },

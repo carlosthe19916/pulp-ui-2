@@ -14,7 +14,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,

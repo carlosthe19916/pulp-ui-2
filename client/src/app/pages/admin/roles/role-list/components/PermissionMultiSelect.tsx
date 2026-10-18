@@ -48,6 +48,8 @@ export const PermissionMultiSelect = ({
     );
   }, [filter, options]);
 
+  const selectedSet = useMemo(() => new Set(value), [value]);
+
   const togglePermission = (permission: string) => {
     if (value.includes(permission)) {
       onChange(value.filter((item) => item !== permission));
@@ -137,7 +139,7 @@ export const PermissionMultiSelect = ({
               key={permission}
               value={permission}
               hasCheckbox
-              isSelected={value.includes(permission)}
+              isSelected={selectedSet.has(permission)}
             >
               {permission}
             </SelectOption>

@@ -1,5 +1,3 @@
-import { use } from "react";
-
 import { Outlet, useRouterState } from "@tanstack/react-router";
 
 import {
@@ -11,15 +9,15 @@ import {
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
+import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
+import { NotificationsProvider } from "@app/context/Notifications/NotificationsProvider";
 import {
-  ThemeProvider,
   type ContrastMode,
   type ThemeMode,
   type ThemeVariant,
-} from "@app/components/Theme";
-import { ApiStatusContext } from "@app/context/ApiStatus/ApiStatusContext";
-import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
-import { NotificationsProvider } from "@app/context/NotificationsContext";
+} from "@app/context/Theme/ThemeContext";
+import { ThemeProvider } from "@app/context/Theme/ThemeProvider";
+import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { DefaultLayout } from "./default-layout";
@@ -61,11 +59,11 @@ export const RootComponent = () => {
 export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const apiStatus = use(ApiStatusContext);
+  const apiStatus = useApiStatus();
   return (
     <LoadingWrapper
-      isFetching={apiStatus?.isLoading ?? false}
-      fetchError={apiStatus?.error}
+      isFetching={apiStatus.isLoading}
+      fetchError={apiStatus.error}
       fetchErrorState={(error) => (
         <Bullseye>
           <EmptyState

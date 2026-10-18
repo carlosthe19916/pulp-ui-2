@@ -8,7 +8,7 @@ import type {
   PatchedDomain,
   StorageClassEnum,
 } from "@app/client";
-import { useNotifications } from "@app/context/useNotifications";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useDomainCreateMutation,
