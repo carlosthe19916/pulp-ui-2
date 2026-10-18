@@ -1,4 +1,5 @@
 import type React from "react";
+import { useMemo } from "react";
 
 import { useStatusQuery } from "@app/queries/status";
 
@@ -10,22 +11,19 @@ export const ApiStatusProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { data: status, isLoading, error } = useStatusQuery();
 
-  const plugins = status?.versions ?? [];
-
-  const isPluginInstalled = (componentName: string) =>
-    plugins.some((p) => p.component === componentName);
-
-  const getPluginVersion = (componentName: string) =>
-    plugins.find((p) => p.component === componentName)?.version;
-
-  const value: IApiStatusContext = {
-    status,
-    isLoading,
-    error,
-    plugins,
-    isPluginInstalled,
-    getPluginVersion,
-  };
+  const value = useMemo<IApiStatusContext>(() => {
+    const plugins = status?.versions ?? [];
+    return {
+      status,
+      isLoading,
+      error,
+      plugins,
+      isPluginInstalled: (componentName: string) =>
+        plugins.some((p) => p.component === componentName),
+      getPluginVersion: (componentName: string) =>
+        plugins.find((p) => p.component === componentName)?.version,
+    };
+  }, [status, isLoading, error]);
 
   return <ApiStatusContext value={value}>{children}</ApiStatusContext>;
 };

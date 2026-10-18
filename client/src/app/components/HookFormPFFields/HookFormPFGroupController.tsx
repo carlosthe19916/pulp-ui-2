@@ -40,6 +40,8 @@ export interface IHookFormPFGroupControllerProps<
   renderInput: ControllerProps<TFieldValues, TName>["render"];
 }
 
+const EMPTY_FORM_GROUP_PROPS: FormGroupProps = {};
+
 export const HookFormPFGroupController = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends Path<TFieldValues> = Path<TFieldValues>,
@@ -53,7 +55,7 @@ export const HookFormPFGroupController = <
   errorsSuppressed = false,
   helperText,
   className,
-  formGroupProps = {},
+  formGroupProps = EMPTY_FORM_GROUP_PROPS,
   helperTextTestId,
   renderInput,
 }: IHookFormPFGroupControllerProps<TFieldValues, TName>) => (

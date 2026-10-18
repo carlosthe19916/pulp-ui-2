@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 import {
   Alert,
@@ -30,8 +30,10 @@ export const NotificationsProvider: React.FC<{
     [],
   );
 
+  const value = useMemo(() => ({ addNotification }), [addNotification]);
+
   return (
-    <NotificationsContext value={{ addNotification }}>
+    <NotificationsContext value={value}>
       {children}
       <AlertGroup isToast isLiveRegion>
         {notifications.map((n) => (

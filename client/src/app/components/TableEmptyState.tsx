@@ -60,7 +60,7 @@ export const TableEmptyState: React.FC<ITableEmptyStateProps> = ({
       titleText={title}
       headingLevel="h4"
     >
-      {body && <EmptyStateBody>{body}</EmptyStateBody>}
+      {body ? <EmptyStateBody>{body}</EmptyStateBody> : null}
     </EmptyState>
   );
 };

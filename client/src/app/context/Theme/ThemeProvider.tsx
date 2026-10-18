@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   CONTRAST_MODES,
@@ -120,20 +120,28 @@ export const ThemeProvider: React.FC<IThemeProviderProps> = ({
     themeMeta?.setAttribute("content", isDark ? "#000000" : "#ffffff");
   }, [isDark, isFelt, isHighContrast, isGlass]);
 
-  return (
-    <ThemeContext
-      value={{
-        isDark,
-        isGlass,
-        mode: sanitizedMode,
-        setMode: setSanitizedMode,
-        variant: sanitizedVariant,
-        setVariant: setSanitizedVariant,
-        contrast: sanitizedContrast,
-        setContrast: setSanitizedContrast,
-      }}
-    >
-      {children}
-    </ThemeContext>
+  const value = useMemo(
+    () => ({
+      isDark,
+      isGlass,
+      mode: sanitizedMode,
+      setMode: setSanitizedMode,
+      variant: sanitizedVariant,
+      setVariant: setSanitizedVariant,
+      contrast: sanitizedContrast,
+      setContrast: setSanitizedContrast,
+    }),
+    [
+      isDark,
+      isGlass,
+      sanitizedMode,
+      setSanitizedMode,
+      sanitizedVariant,
+      setSanitizedVariant,
+      sanitizedContrast,
+      setSanitizedContrast,
+    ],
   );
+
+  return <ThemeContext value={value}>{children}</ThemeContext>;
 };
