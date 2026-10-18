@@ -166,8 +166,7 @@ export const duplicateNameCheck = <T extends { name?: string }>({
     fieldValue: nameValue,
   });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const dedupeFunction = (arr: any[]) =>
+export const dedupeFunction = <T extends { value: unknown }>(arr: T[]) =>
   arr?.filter(
     (value, index, self) =>
       index === self.findIndex((t) => t.value === value.value),

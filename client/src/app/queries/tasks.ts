@@ -12,6 +12,7 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
   PaginatedTaskResponseList,
+  Purge,
   TaskResponse,
   TasksListData,
 } from "@app/client";
@@ -317,33 +318,26 @@ export const useTaskCancelMutation = (
   });
 };
 
-type TaskPurgeVariables = {
-  finished_before?: string;
-  states?: Array<"completed" | "failed" | "canceled" | "skipped">;
-};
-
 export const useTaskPurgeMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, TaskPurgeVariables>,
+  options?: IMutationCallbacks<AsyncOperationResponse, Purge>,
 ) => {
   const queryClient = useQueryClient();
   const domain = useDefaultDomain();
-  return useMutation<AsyncOperationResponse, DrfAxiosError, TaskPurgeVariables>(
-    {
-      mutationFn: async (body: TaskPurgeVariables) => {
-        const response = await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath("tasks/purge/", domain),
-          {
-            finished_before: body.finished_before,
-            states: body.states,
-          },
-        );
-        return response.data;
-      },
-      onSuccess: (data, variables) => {
-        void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
-        options?.onSuccess?.(data, variables);
-      },
-      onError: options?.onError,
+  return useMutation<AsyncOperationResponse, DrfAxiosError, Purge>({
+    mutationFn: async (body: Purge) => {
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath("tasks/purge/", domain),
+        {
+          finished_before: body.finished_before,
+          states: body.states,
+        },
+      );
+      return response.data;
     },
-  );
+    onSuccess: (data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: taskKeys.all() });
+      options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
 };

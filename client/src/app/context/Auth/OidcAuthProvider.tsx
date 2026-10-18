@@ -35,7 +35,7 @@ const OidcAuthBridge: React.FC<{ children: React.ReactNode }> = ({
 
   const login = useCallback(
     (_redirectTo?: string) => {
-      auth
+      void auth
         .signinRedirect({
           url_state: window.location.pathname + window.location.search,
         })

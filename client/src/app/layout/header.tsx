@@ -61,7 +61,7 @@ export const HeaderApp: React.FC = () => {
     setIsKebabDropdownOpen(!isKebabDropdownOpen);
   };
 
-  const onLogout = async () => {
+  const onLogout = () => {
     auth?.logout();
   };
 

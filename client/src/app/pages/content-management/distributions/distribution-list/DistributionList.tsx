@@ -38,7 +38,6 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
-import { DistributionModal } from "./components/DistributionModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -56,6 +55,8 @@ import type { OrderingField } from "@app/queries/utils/listParams";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+
+import { DistributionModal } from "./components/DistributionModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

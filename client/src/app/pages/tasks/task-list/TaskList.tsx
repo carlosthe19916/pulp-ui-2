@@ -16,7 +16,6 @@ import {
   MenuToggle,
   type MenuToggleElement,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -27,6 +26,7 @@ import {
   useDataViewPagination,
   type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import { useNotifications } from "@app/context/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
