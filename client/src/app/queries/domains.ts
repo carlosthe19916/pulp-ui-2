@@ -123,7 +123,7 @@ export const useDomainUpdateMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(toProxyHref(variables.href)),
+        queryKey: domainKeys.detail(variables.href),
       });
       // Surface the new update task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
@@ -154,7 +154,7 @@ export const useDomainDeleteMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(toProxyHref(variables.href)),
+        queryKey: domainKeys.detail(variables.href),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });

@@ -41,10 +41,6 @@ export const resolvePulpType = (
   });
 };
 
-export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
-  return pulpApiPath(`users/${userId}/`, domain);
-};
-
 export const buildGroupHref = (
   groupId: string,
   domain: IPulpDomain,

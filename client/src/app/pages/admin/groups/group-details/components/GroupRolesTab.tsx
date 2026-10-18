@@ -49,7 +49,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     data: rolesData,
     isLoading,
     error,
-  } = useAllGroupRolesListQuery({ groupId: group.id });
+  } = useAllGroupRolesListQuery({ groupHref: group.object.pulp_href ?? "" });
 
   const roleDeleteMutation = useGroupRoleDeleteMutation();
 

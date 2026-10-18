@@ -24,7 +24,6 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildUserHref } from "./utils/pulpHref";
 
 export const UsersQueryKey = "users";
 
@@ -122,19 +121,16 @@ export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
 };
 
 export const useAllUserRolesListQuery = ({
-  userId,
+  userHref,
   params = {},
 }: {
-  userId: string;
+  userHref: string;
   params?: IAllUserRoleListParams;
-}) => {
-  const domain = useDefaultDomain();
-  const userHref = buildUserHref(userId, domain);
-  return useQuery({
+}) =>
+  useQuery({
     ...allUserRolesListQueryOptions({ userHref, params }),
     enabled: !!userHref,
   });
-};
 
 export const useUserCreateMutation = (
   options?: IMutationCallbacks<UserResponse, UserWritable>,
@@ -186,7 +182,7 @@ export const useUserUpdateMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(toProxyHref(variables.href)),
+        queryKey: userKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },
@@ -206,7 +202,7 @@ export const useUserDeleteMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(toProxyHref(variables.href)),
+        queryKey: userKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },
@@ -215,7 +211,7 @@ export const useUserDeleteMutation = (
 };
 
 interface IUserRolesSyncArgs {
-  userId: string;
+  userHref: string;
   /** Role names to assign. */
   toAdd: string[];
   /** Assignment IDs to unassign. */
@@ -225,29 +221,24 @@ interface IUserRolesSyncArgs {
 /** Batches role assigns/unassigns for one user and invalidates once. */
 export const useUserRolesSyncMutation = () => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
   return useMutation<void, DrfAxiosError, IUserRolesSyncArgs>({
-    mutationFn: async ({ userId, toAdd, toRemove }: IUserRolesSyncArgs) => {
+    mutationFn: async ({ userHref, toAdd, toRemove }: IUserRolesSyncArgs) => {
+      const rolesUrl = `${toProxyHref(userHref)}roles/`;
       await Promise.all([
         ...toAdd.map((role) =>
-          axiosInstance.post<UserRoleResponse>(
-            `${toProxyHref(buildUserHref(userId, domain))}roles/`,
-            {
-              role,
-              content_object: null,
-            },
-          ),
+          axiosInstance.post<UserRoleResponse>(rolesUrl, {
+            role,
+            content_object: null,
+          }),
         ),
         ...toRemove.map((assignmentId) =>
-          axiosInstance.delete<void>(
-            pulpApiPath(`users/${userId}/roles/${assignmentId}/`, domain),
-          ),
+          axiosInstance.delete<void>(`${rolesUrl}${assignmentId}/`),
         ),
       ]);
     },
-    onSuccess: (_data, { userId }) => {
+    onSuccess: (_data, { userHref }) => {
       void queryClient.invalidateQueries({
-        queryKey: userKeys.roles(buildUserHref(userId, domain)),
+        queryKey: userKeys.roles(userHref),
       });
     },
   });

@@ -286,12 +286,11 @@ const UserRolesModalInner: React.FC<IUserRolesModalInnerProps> = ({
   user,
   onClose,
 }) => {
-  const userId = extractIdFromHref(user.pulp_href ?? "");
   const {
     data: assignedData,
     isLoading: assignedLoading,
     error: assignedError,
-  } = useAllUserRolesListQuery({ userId });
+  } = useAllUserRolesListQuery({ userHref: user.pulp_href ?? "" });
   const {
     data: allRolesData,
     isLoading: allRolesLoading,

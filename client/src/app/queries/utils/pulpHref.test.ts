@@ -1,27 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildGroupHref,
-  buildUserHref,
-  extractIdFromHref,
-  resolvePulpType,
-} from "./pulpHref";
+import { buildGroupHref, extractIdFromHref, resolvePulpType } from "./pulpHref";
 
 describe("pulpHref helpers", () => {
   const enabled = { enabled: true, name: "default" };
   const disabled = { enabled: false, name: "default" };
 
   it("builds domain-scoped hrefs with the domain segment when enabled", () => {
-    expect(buildUserHref("42", enabled)).toBe(
-      "/api/pulp/default/api/v3/users/42/",
-    );
     expect(buildGroupHref("7", enabled)).toBe(
       "/api/pulp/default/api/v3/groups/7/",
     );
   });
 
   it("omits the domain segment when the domain is disabled", () => {
-    expect(buildUserHref("42", disabled)).toBe("/api/pulp/api/v3/users/42/");
     expect(buildGroupHref("7", disabled)).toBe("/api/pulp/api/v3/groups/7/");
   });
 

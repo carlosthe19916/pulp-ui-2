@@ -173,7 +173,7 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
 
     try {
       const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupId: group.id,
+        groupHref: group.object.pulp_href ?? "",
         roleNames,
       });
       if (succeeded.length > 0) {

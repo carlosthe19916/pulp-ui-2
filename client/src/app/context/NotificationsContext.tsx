@@ -26,9 +26,8 @@ export const NotificationsProvider: React.FC<{
     (notification: Omit<INotification, "id">) => {
       const id = ++notificationId;
       setNotifications((prev) => [...prev, { ...notification, id }]);
-      setTimeout(() => removeNotification(id), 8000);
     },
-    [removeNotification],
+    [],
   );
 
   return (
@@ -40,6 +39,8 @@ export const NotificationsProvider: React.FC<{
             key={n.id}
             variant={n.variant}
             title={n.title}
+            timeout={8000}
+            onTimeout={() => removeNotification(n.id)}
             actionClose={
               <AlertActionCloseButton
                 onClose={() => removeNotification(n.id)}

@@ -39,14 +39,15 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
   const { addNotification } = useNotifications();
 
   const { data: group } = useSuspenseGroupDetailQuery({ groupId });
+  const groupHref = group.pulp_href ?? "";
   // These fetches feed only the tab-title counts, so request a single row and
   // read the paginated `count` rather than pulling a page of results.
   const { data: usersData } = useGroupUsersListQuery({
-    groupId,
+    groupHref,
     params: { limit: 1 },
   });
   const { data: rolesData } = useGroupRolesListQuery({
-    groupId,
+    groupHref,
     params: { limit: 1 },
   });
 

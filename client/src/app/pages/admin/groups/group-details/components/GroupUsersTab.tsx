@@ -50,7 +50,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
     data: usersData,
     isLoading,
     error,
-  } = useAllGroupUsersListQuery({ groupId: group.id });
+  } = useAllGroupUsersListQuery({ groupHref: group.object.pulp_href ?? "" });
 
   const userDeleteMutation = useGroupUserDeleteMutation();
 
@@ -141,7 +141,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
     if (!removeUserTarget?.pulp_href) return;
     try {
       await userDeleteMutation.mutateAsync({
-        groupId: group.id,
+        groupHref: group.object.pulp_href ?? "",
         userId: extractIdFromHref(removeUserTarget.pulp_href),
       });
       addNotification({

@@ -167,7 +167,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
     try {
       const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupId: group.id,
+        groupHref: group.object.pulp_href ?? "",
         usernames,
       });
       if (succeeded.length > 0) {

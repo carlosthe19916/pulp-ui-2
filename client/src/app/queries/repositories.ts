@@ -165,9 +165,9 @@ export const useRepositorySyncMutation = () => {
       return response.data;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: repositoriesRootQueryOptions.queryKey,
-      });
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      // Surface the new sync task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
   });
 };
