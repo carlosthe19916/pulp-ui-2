@@ -59,3 +59,5 @@ test_suite_analysis/
 
 # eval-gate marker (local, not shared)
 .claude/.eval-ran
+# eval-gate per-session edit records (local, not shared)
+.claude/.eval-state/

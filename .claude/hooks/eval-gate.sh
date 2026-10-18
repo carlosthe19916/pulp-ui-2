@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # Stop hook: before a turn may end, require that /eval has run against the
-# current client/src changes. The /eval command touches .claude/.eval-ran when
-# it finishes; this gate blocks the stop while that marker is older than the
-# newest uncommitted change under client/src/.
+# client/src changes THIS session made. The /eval command touches
+# .claude/.eval-ran when it finishes; this gate blocks the stop while that marker
+# is older than the newest session-edited change under client/src/.
+#
+# Session scoping: the PostToolUse hook eval-record-edit.sh records which
+# client/src files Claude edited this session in .claude/.eval-state/<id>.edits.
+# The gate only considers those files — so a question turn (no edits) and
+# pre-existing, Claude-untouched tree changes never block.
 #
 # Self-correcting: running /eval refreshes the marker and unblocks.
 # Safety escape: if we are already continuing because of this hook
@@ -19,6 +24,15 @@ cd "$cwd" 2>/dev/null || exit 0
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
 
+# Only files Claude edited this session count. No record -> nothing to verify.
+session_id=$(printf '%s' "$input" | jq -r '.session_id // ""' 2>/dev/null || echo "")
+edits_file=".claude/.eval-state/${session_id}.edits"
+if [ -z "$session_id" ] || [ ! -s "$edits_file" ]; then
+  # Opportunistically prune stale per-session records (best effort).
+  find .claude/.eval-state -name '*.edits' -mtime +7 -delete 2>/dev/null || true
+  exit 0
+fi
+
 marker=".claude/.eval-ran"
 
 # Which convention specs apply to the current changes? Routing is self-describing
@@ -29,7 +43,8 @@ specs=$("$CLAUDE_PROJECT_DIR/.claude/hooks/eval-select.sh" "$cwd" 2>/dev/null ||
 # No spec covers these changes -> nothing to verify.
 [ -z "$specs" ] && exit 0
 
-# Uncommitted changes (modified, staged, untracked) under client/src/.
+# Uncommitted changes (modified, staged, untracked) under client/src/, limited to
+# files Claude edited this session (present in edits_file).
 # porcelain line is "XY <path>"; strip the 3-char status prefix.
 newest=0
 while IFS= read -r line; do
@@ -37,11 +52,12 @@ while IFS= read -r line; do
   f=${line:3}
   f=${f##*-> }          # for renames, take the new path
   [ -f "$f" ] || continue
+  grep -qxF "$f" "$edits_file" || continue   # only this session's edits
   m=$(stat -c %Y "$f" 2>/dev/null || echo 0)
   [ "$m" -gt "$newest" ] && newest=$m
 done < <(git status --porcelain=v1 -- client/src 2>/dev/null)
 
-# No watched changes -> nothing to verify.
+# No session-edited watched changes -> nothing to verify.
 [ "$newest" -eq 0 ] && exit 0
 
 marker_mtime=0
