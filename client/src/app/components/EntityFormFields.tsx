@@ -6,11 +6,13 @@ import {
   type DropEvent,
   FileUpload,
   FormGroup,
+  FormGroupLabelHelp,
   FormHelperText,
   FormSelect,
   FormSelectOption,
   HelperText,
   HelperTextItem,
+  Popover,
   TextArea,
   TextInput,
 } from "@patternfly/react-core";
@@ -78,12 +80,27 @@ export const EntityFormFields = <
                 </FormHelperText>
               ) : null;
 
+              // Catalog field description, rendered as a help-icon popover on the
+              // field label — mirrors the detail page's term help popover
+              // (EntityDetailFields.tsx). Undefined when a field has no helpText.
+              const labelHelp = field.helpText ? (
+                <Popover
+                  headerContent={field.label}
+                  bodyContent={field.helpText}
+                >
+                  <FormGroupLabelHelp
+                    aria-label={`More info for ${field.label}`}
+                  />
+                </Popover>
+              ) : undefined;
+
               if (field.type === "boolean") {
                 return (
                   <FormGroup fieldId={fieldId}>
                     <Checkbox
                       id={fieldId}
                       label={field.label}
+                      description={field.helpText}
                       isChecked={Boolean(rhfField.value)}
                       onChange={(_e, checked) => rhfField.onChange(checked)}
                     />
@@ -97,6 +114,7 @@ export const EntityFormFields = <
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
+                    labelHelp={labelHelp}
                   >
                     <TextArea
                       id={fieldId}
@@ -116,6 +134,7 @@ export const EntityFormFields = <
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
+                    labelHelp={labelHelp}
                   >
                     <TextInput
                       id={fieldId}
@@ -145,6 +164,7 @@ export const EntityFormFields = <
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
+                    labelHelp={labelHelp}
                   >
                     <FormSelect
                       id={fieldId}
@@ -170,6 +190,7 @@ export const EntityFormFields = <
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
+                    labelHelp={labelHelp}
                   >
                     <AsyncResourceSelect
                       id={fieldId}
@@ -190,6 +211,7 @@ export const EntityFormFields = <
                     label={field.label}
                     fieldId={fieldId}
                     isRequired={field.required}
+                    labelHelp={labelHelp}
                   >
                     <FileUpload
                       id={fieldId}
@@ -211,6 +233,7 @@ export const EntityFormFields = <
                   label={field.label}
                   fieldId={fieldId}
                   isRequired={field.required}
+                  labelHelp={labelHelp}
                 >
                   <TextInput
                     id={fieldId}
