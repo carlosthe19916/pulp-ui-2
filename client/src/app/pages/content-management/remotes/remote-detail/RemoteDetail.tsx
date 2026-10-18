@@ -6,11 +6,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  Label,
   PageSection,
-  Tab,
-  TabContentBody,
-  TabTitleText,
-  Tabs,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
@@ -18,7 +15,6 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { useNotifications } from "@app/context/useNotifications";
-import { useRepositoriesListQuery } from "@app/queries/repositories";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
@@ -28,8 +24,7 @@ import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { RemoteModal } from "../remote-list/components/RemoteModal";
-import { RemoteDetailsTab } from "./components/RemoteDetailsTab";
-import { RemoteRepositoriesTab } from "./components/RemoteRepositoriesTab";
+import { RemoteDetailsView } from "./components/RemoteDetailsView";
 
 interface IRemoteDetailProps {
   pulpDomain: string;
@@ -47,10 +42,6 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ pulpType, id });
   const href = remote.pulp_href ?? "";
-
-  const { data: repositoriesCount } = useRepositoriesListQuery({
-    params: { remote: href, limit: 1 },
-  });
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) => {
@@ -74,7 +65,6 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       }),
   });
 
-  const [activeTab, setActiveTab] = useState<string | number>("details");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -83,6 +73,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       <DocumentTitle title={`Remote · ${remote.name}`} />
       <PageHeader
         title={remote.name ?? extractIdFromHref(href)}
+        label={<Label color="blue">plugin: {pulpType}</Label>}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
@@ -119,29 +110,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       />
 
       <PageSection>
-        <Tabs
-          activeKey={activeTab}
-          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
-          mountOnEnter
-        >
-          <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>
-            <TabContentBody hasPadding>
-              <RemoteDetailsTab remote={remote} pulpType={pulpType} />
-            </TabContentBody>
-          </Tab>
-          <Tab
-            eventKey="repositories"
-            title={
-              <TabTitleText>
-                Repositories ({repositoriesCount?.count ?? 0})
-              </TabTitleText>
-            }
-          >
-            <TabContentBody hasPadding>
-              <RemoteRepositoriesTab remoteHref={href} />
-            </TabContentBody>
-          </Tab>
-        </Tabs>
+        <RemoteDetailsView remote={remote} pulpType={pulpType} />
       </PageSection>
 
       <RemoteModal

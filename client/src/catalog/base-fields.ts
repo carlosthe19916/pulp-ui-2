@@ -25,63 +25,140 @@ const remoteCommon: IEntityField[] = [
     type: "select",
     defaultValue: "immediate",
     group: GENERAL,
+    helpText:
+      "Download policy used when syncing. 'immediate' downloads all content now; " +
+      "'on_demand' downloads content as clients request it and saves it; 'streamed' " +
+      "downloads on request but never saves it.",
     options: [
       { value: "immediate", label: "Immediate" },
       { value: "on_demand", label: "On Demand" },
       { value: "streamed", label: "Streamed" },
     ],
   },
-  { key: "proxy_url", label: "Proxy URL", type: "text", group: AUTH },
-  { key: "username", label: "Username", type: "text", group: AUTH },
-  { key: "password", label: "Password", type: "text", group: AUTH },
-  { key: "proxy_username", label: "Proxy Username", type: "text", group: AUTH },
-  { key: "proxy_password", label: "Proxy Password", type: "text", group: AUTH },
+  {
+    key: "proxy_url",
+    label: "Proxy URL",
+    type: "text",
+    group: AUTH,
+    helpText: "The proxy URL. Format: scheme://host:port",
+  },
+  {
+    key: "username",
+    label: "Username",
+    type: "text",
+    group: AUTH,
+    helpText: "The username to be used for authentication when syncing.",
+  },
+  {
+    key: "password",
+    label: "Password",
+    type: "text",
+    group: AUTH,
+    helpText: "The password to be used for authentication when syncing.",
+  },
+  {
+    key: "proxy_username",
+    label: "Proxy Username",
+    type: "text",
+    group: AUTH,
+    helpText: "The username to authenticate to the proxy.",
+  },
+  {
+    key: "proxy_password",
+    label: "Proxy Password",
+    type: "text",
+    group: AUTH,
+    helpText: "The password to authenticate to the proxy.",
+  },
   {
     key: "tls_validation",
     label: "TLS Validation",
     type: "boolean",
     group: TLS,
+    helpText:
+      "If enabled, the server's TLS certificate is validated against the CA certificate.",
   },
-  { key: "ca_cert", label: "CA Certificate", type: "textarea", group: TLS },
+  {
+    key: "ca_cert",
+    label: "CA Certificate",
+    type: "textarea",
+    group: TLS,
+    helpText:
+      "A PEM encoded CA certificate used to validate the server certificate presented " +
+      "by the remote server.",
+  },
   {
     key: "client_cert",
     label: "Client Certificate",
     type: "textarea",
     group: TLS,
+    helpText: "A PEM encoded client certificate used for authentication.",
   },
-  { key: "client_key", label: "Client Key", type: "textarea", group: TLS },
+  {
+    key: "client_key",
+    label: "Client Key",
+    type: "textarea",
+    group: TLS,
+    helpText: "A PEM encoded private key used for authentication.",
+  },
   {
     key: "total_timeout",
     label: "Total Timeout",
     type: "number",
     group: TIMEOUTS,
+    helpText:
+      "aiohttp total timeout (seconds) for download connections. Null uses the aiohttp " +
+      "library default.",
   },
   {
     key: "connect_timeout",
     label: "Connect Timeout",
     type: "number",
     group: TIMEOUTS,
+    helpText:
+      "aiohttp connect timeout (seconds) for download connections. Null uses the " +
+      "aiohttp library default.",
   },
   {
     key: "sock_connect_timeout",
     label: "Socket Connect Timeout",
     type: "number",
     group: TIMEOUTS,
+    helpText:
+      "aiohttp socket connect timeout (seconds). Null uses the aiohttp library default.",
   },
   {
     key: "sock_read_timeout",
     label: "Socket Read Timeout",
     type: "number",
     group: TIMEOUTS,
+    helpText:
+      "aiohttp socket read timeout (seconds). Null uses the aiohttp library default.",
   },
   {
     key: "download_concurrency",
     label: "Download Concurrency",
     type: "number",
     group: LIMITS,
+    helpText:
+      "Total number of simultaneous connections. If unset, the default value is used.",
   },
-  { key: "max_retries", label: "Max Retries", type: "number", group: LIMITS },
-  { key: "rate_limit", label: "Rate Limit", type: "number", group: LIMITS },
+  {
+    key: "max_retries",
+    label: "Max Retries",
+    type: "number",
+    group: LIMITS,
+    helpText:
+      "Maximum number of retry attempts after a download failure. If unset, the " +
+      "default (3) is used.",
+  },
+  {
+    key: "rate_limit",
+    label: "Rate Limit",
+    type: "number",
+    group: LIMITS,
+    helpText: "Limits requests per second for each concurrent downloader.",
+  },
 ];
 
 /** Remotes: the pulpcore RemoteSerializer common field set (wizard-grouped). */
@@ -93,13 +170,33 @@ export const remoteBase: IBaseFields = {
       type: "text",
       required: true,
       group: GENERAL,
+      helpText: "A unique name for this remote.",
     },
-    { key: "url", label: "URL", type: "text", required: true, group: GENERAL },
+    {
+      key: "url",
+      label: "URL",
+      type: "text",
+      required: true,
+      group: GENERAL,
+      helpText: "The URL of an external content source.",
+    },
     ...remoteCommon,
   ],
   edit: [
-    { key: "name", label: "Name", type: "text", group: GENERAL },
-    { key: "url", label: "URL", type: "text", group: GENERAL },
+    {
+      key: "name",
+      label: "Name",
+      type: "text",
+      group: GENERAL,
+      helpText: "A unique name for this remote.",
+    },
+    {
+      key: "url",
+      label: "URL",
+      type: "text",
+      group: GENERAL,
+      helpText: "The URL of an external content source.",
+    },
     ...remoteCommon,
   ],
 };

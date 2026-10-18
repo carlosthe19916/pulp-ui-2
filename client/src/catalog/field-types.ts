@@ -29,6 +29,11 @@ interface IFieldBase {
   defaultValue?: unknown;
   /** Wizard step this field belongs to (when the form renders as a wizard). */
   group?: string;
+  /**
+   * Contextual help for the field, shown as a popover on forms and detail pages.
+   * Sourced from the pulpcore/plugin serializer field descriptions (OpenAPI spec).
+   */
+  helpText?: string;
 }
 
 /** Plain input fields — no options, no resource picker. */
