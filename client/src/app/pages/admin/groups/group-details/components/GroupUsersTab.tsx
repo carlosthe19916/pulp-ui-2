@@ -1,7 +1,7 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 
-import { Button, Pagination, PaginationVariant } from "@patternfly/react-core";
+import { Button, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
@@ -17,7 +17,11 @@ import {
 
 import type { GroupResponse, GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  ListPagination,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import type { WithId } from "@app/models/models";
@@ -30,8 +34,7 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { AddGroupUserModal } from "./AddGroupUserModal";
 
 // The group-users API only supports limit/offset — no server-side ordering or
-// filtering — so all members are fetched (paging through every page) and then
-// paginated/sorted/filtered in memory.
+// filtering — so all members are fetched and then paginated/sorted/filtered in memory.
 const COLUMN_KEYS = ["username", "actions"] as const;
 type UserColumnKey = (typeof COLUMN_KEYS)[number];
 
@@ -58,9 +61,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
   const [removeUserTarget, setRemoveUserTarget] =
     useState<GroupUserResponse | null>(null);
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "username", direction: "asc" },
   });
@@ -91,9 +92,9 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
   const totalCount = filteredSortedUsers.length;
 
   const pagedUsers = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return filteredSortedUsers.slice(start, start + perPage);
-  }, [filteredSortedUsers, page, perPage]);
+    const start = (pagination.page - 1) * pagination.perPage;
+    return filteredSortedUsers.slice(start, start + pagination.perPage);
+  }, [filteredSortedUsers, pagination.page, pagination.perPage]);
 
   const sortProps = (columnKey: UserColumnKey) =>
     buildThSort({
@@ -103,7 +104,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
       direction,
       onSort: (event, sortedKey, newDirection) => {
         onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
+        pagination.onSetPage(undefined, 1);
       },
     });
 
@@ -172,17 +173,6 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
     ),
   });
 
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
-
   return (
     <>
       <DataView activeState={groupUsersStates.activeState}>
@@ -192,7 +182,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
             <DataViewFilters
               onChange={(_key, newFilters) => {
                 onSetFilters(newFilters);
-                onSetPage(undefined, 1);
+                pagination.onSetPage(undefined, 1);
               }}
               values={filters}
             >
@@ -204,7 +194,13 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
               Add User
             </Button>
           }
-          pagination={pagination(PaginationVariant.top)}
+          pagination={
+            <ListPagination
+              variant={PaginationVariant.top}
+              itemCount={totalCount}
+              pagination={pagination}
+            />
+          }
         />
         <DataViewTable
           aria-label="Group users table"
@@ -212,7 +208,15 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
           rows={userRows}
           bodyStates={groupUsersStates.bodyStates}
         />
-        <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+        <DataViewToolbar
+          pagination={
+            <ListPagination
+              variant={PaginationVariant.bottom}
+              itemCount={totalCount}
+              pagination={pagination}
+            />
+          }
+        />
       </DataView>
 
       <AddGroupUserModal

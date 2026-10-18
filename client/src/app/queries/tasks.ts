@@ -48,6 +48,10 @@ export const isTerminalTaskState = (state?: string | null): boolean =>
   state === "canceled" ||
   state === "skipped";
 
+/** A task can be canceled only while still running or waiting. */
+export const isCancelable = (state?: string | null): boolean =>
+  state === "running" || state === "waiting";
+
 /**
  * Query-key factory mirroring the REST paths. `domain` is the Pulp deployment
  * slug that scopes every API path. Two tiers: folders (invalidateQueries

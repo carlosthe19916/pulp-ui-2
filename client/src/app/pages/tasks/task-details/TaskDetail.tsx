@@ -13,7 +13,6 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Label,
   PageSection,
   Progress,
   Stack,
@@ -24,26 +23,15 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/context/useNotifications";
 import {
+  isCancelable,
   useSuspenseTaskDetailQuery,
   useTaskCancelMutation,
 } from "@app/queries/tasks";
-import { extractTaskId } from "@app/utils/taskHref";
+import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-
-const stateColors: Record<
-  string,
-  "green" | "blue" | "red" | "orange" | "grey" | "teal"
-> = {
-  completed: "green",
-  running: "blue",
-  failed: "red",
-  canceled: "orange",
-  canceling: "orange",
-  waiting: "teal",
-  skipped: "grey",
-};
 
 interface ITaskDetailProps {
   taskId: string;
@@ -54,8 +42,6 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-
-  const isRunning = task.state === "running" || task.state === "waiting";
 
   const handleCancel = async () => {
     try {
@@ -76,20 +62,14 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
     setIsCancelModalOpen(false);
   };
 
-  const taskName = task.name.includes(".")
-    ? (task.name.split(".").pop() ?? task.name)
-    : task.name;
+  const taskName = shortTaskName(task.name);
 
   return (
     <>
       <DocumentTitle title={taskName} />
       <PageHeader
         title={taskName}
-        label={
-          <Label color={stateColors[task.state ?? ""] ?? "grey"}>
-            {task.state}
-          </Label>
-        }
+        label={<TaskStateLabel state={task.state} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
@@ -101,7 +81,7 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
         actionMenu={
           <PageHeaderActionsMenu
             actions={[
-              isRunning && {
+              isCancelable(task.state) && {
                 key: "cancel",
                 dropdownItemProps: {
                   children: "Cancel Task",

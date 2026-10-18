@@ -9,7 +9,6 @@ import {
   MenuToggle,
   type MenuToggleElement,
   PageSection,
-  Pagination,
   PaginationVariant,
   Select,
   SelectList,
@@ -35,6 +34,7 @@ import {
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -92,13 +92,11 @@ export const RoleList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => onSetPage(undefined, 1),
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({});
@@ -107,13 +105,13 @@ export const RoleList: React.FC = () => {
   const clearFilters = () => {
     clearAllFilters();
     setLockedFilter("");
-    onSetPage(undefined, 1);
+    pagination.onSetPage(undefined, 1);
   };
 
   const { data, isLoading, error } = useRolesListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__icontains: debouncedName || undefined,
       locked: lockedFilter === "" ? undefined : lockedFilter === "true",
@@ -225,7 +223,7 @@ export const RoleList: React.FC = () => {
         onSelect={(_e, value) => {
           setLockedFilter((value as LockedFilter) ?? "");
           setIsLockedOpen(false);
-          onSetPage(undefined, 1);
+          pagination.onSetPage(undefined, 1);
         }}
         onOpenChange={setIsLockedOpen}
         toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
@@ -247,17 +245,6 @@ export const RoleList: React.FC = () => {
         </SelectList>
       </Select>
     </ToolbarItem>
-  );
-
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
   );
 
   const handleDelete = () => {
@@ -283,7 +270,7 @@ export const RoleList: React.FC = () => {
                 <DataViewFilters
                   onChange={(_key, newFilters) => {
                     onSetFilters(newFilters);
-                    onSetPage(undefined, 1);
+                    pagination.onSetPage(undefined, 1);
                   }}
                   values={filters}
                 >
@@ -297,7 +284,13 @@ export const RoleList: React.FC = () => {
                 Create Role
               </Button>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -307,7 +300,15 @@ export const RoleList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
 
         <RoleModal

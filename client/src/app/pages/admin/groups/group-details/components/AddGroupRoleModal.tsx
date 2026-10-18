@@ -7,7 +7,6 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
-  Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
 import {
@@ -29,6 +28,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
@@ -58,9 +58,7 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
 }) => {
   const { addNotification } = useNotifications();
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "name", direction: "asc" },
   });
@@ -73,8 +71,8 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
 
   const { data, isLoading, error } = useRolesListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__icontains: debouncedName || undefined,
     },
@@ -111,7 +109,7 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
       direction,
       onSort: (event, sortedKey, newDirection) => {
         onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
+        pagination.onSetPage(undefined, 1);
       },
     });
 
@@ -153,17 +151,6 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
       />
     ),
   });
-
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
 
   const onSubmit = async () => {
     const roleNames = selection.selected
@@ -214,14 +201,20 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
               <DataViewFilters
                 onChange={(_key, newFilters) => {
                   onSetFilters(newFilters);
-                  onSetPage(undefined, 1);
+                  pagination.onSetPage(undefined, 1);
                 }}
                 values={filters}
               >
                 <DataViewTextFilter filterId="name" title="Role" />
               </DataViewFilters>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -231,7 +224,15 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
       </ModalBody>
       <ModalFooter>

@@ -1,7 +1,7 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 
-import { Button, Pagination, PaginationVariant } from "@patternfly/react-core";
+import { Button, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
@@ -17,7 +17,11 @@ import {
 
 import type { GroupResponse, GroupRoleResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { buildThSort, dataViewBodyStates } from "@app/components/DataView";
+import {
+  buildThSort,
+  dataViewBodyStates,
+  ListPagination,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
 import type { WithId } from "@app/models/models";
@@ -57,9 +61,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   const [removeRoleTarget, setRemoveRoleTarget] =
     useState<GroupRoleResponse | null>(null);
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "role", direction: "asc" },
   });
@@ -88,9 +90,9 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
   const totalCount = filteredSortedRoles.length;
 
   const pagedRoles = useMemo(() => {
-    const start = (page - 1) * perPage;
-    return filteredSortedRoles.slice(start, start + perPage);
-  }, [filteredSortedRoles, page, perPage]);
+    const start = (pagination.page - 1) * pagination.perPage;
+    return filteredSortedRoles.slice(start, start + pagination.perPage);
+  }, [filteredSortedRoles, pagination.page, pagination.perPage]);
 
   const sortProps = (columnKey: RoleColumnKey) =>
     buildThSort({
@@ -100,7 +102,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
       direction,
       onSort: (event, sortedKey, newDirection) => {
         onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
+        pagination.onSetPage(undefined, 1);
       },
     });
 
@@ -184,17 +186,6 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
     ),
   });
 
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
-
   return (
     <>
       <DataView activeState={groupRolesStates.activeState}>
@@ -204,7 +195,7 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
             <DataViewFilters
               onChange={(_key, newFilters) => {
                 onSetFilters(newFilters);
-                onSetPage(undefined, 1);
+                pagination.onSetPage(undefined, 1);
               }}
               values={filters}
             >
@@ -216,7 +207,13 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
               Add Role
             </Button>
           }
-          pagination={pagination(PaginationVariant.top)}
+          pagination={
+            <ListPagination
+              variant={PaginationVariant.top}
+              itemCount={totalCount}
+              pagination={pagination}
+            />
+          }
         />
         <DataViewTable
           aria-label="Group roles table"
@@ -224,7 +221,15 @@ export const GroupRolesTab: React.FC<IGroupRolesTabProps> = ({ group }) => {
           rows={roleRows}
           bodyStates={groupRolesStates.bodyStates}
         />
-        <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+        <DataViewToolbar
+          pagination={
+            <ListPagination
+              variant={PaginationVariant.bottom}
+              itemCount={totalCount}
+              pagination={pagination}
+            />
+          }
+        />
       </DataView>
 
       <AddGroupRoleModal

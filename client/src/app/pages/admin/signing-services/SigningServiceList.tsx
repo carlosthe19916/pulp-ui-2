@@ -4,7 +4,6 @@ import {
   Content,
   ContentVariants,
   PageSection,
-  Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
 import {
@@ -22,6 +21,7 @@ import {
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -39,13 +39,11 @@ interface ISigningServiceFilters {
 }
 
 export const SigningServiceList: React.FC = () => {
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => onSetPage(undefined, 1),
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ISigningServiceFilters>({});
@@ -53,8 +51,8 @@ export const SigningServiceList: React.FC = () => {
 
   const { data, isLoading, error } = useSigningServicesListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name: debouncedName || undefined,
     },
@@ -104,17 +102,6 @@ export const SigningServiceList: React.FC = () => {
     ),
   });
 
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
-
   return (
     <>
       <DocumentTitle title="Signing Services" />
@@ -132,14 +119,20 @@ export const SigningServiceList: React.FC = () => {
               <DataViewFilters
                 onChange={(_key, newFilters) => {
                   onSetFilters(newFilters);
-                  onSetPage(undefined, 1);
+                  pagination.onSetPage(undefined, 1);
                 }}
                 values={filters}
               >
                 <DataViewTextFilter filterId="name" title="Name" />
               </DataViewFilters>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -149,7 +142,15 @@ export const SigningServiceList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
       </PageSection>
     </>

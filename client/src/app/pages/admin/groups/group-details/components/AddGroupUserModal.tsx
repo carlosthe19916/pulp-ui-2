@@ -7,7 +7,6 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
-  Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
 import {
@@ -29,6 +28,7 @@ import {
   dataViewBodyStates,
   toOrderingParam,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/context/useNotifications";
@@ -58,9 +58,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 }) => {
   const { addNotification } = useNotifications();
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { sortBy, direction, onSort } = useDataViewSort({
     initialSort: { sortBy: "username", direction: "asc" },
   });
@@ -73,8 +71,8 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
   const { data, isLoading, error } = useUsersListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       username__icontains: debouncedUsername || undefined,
     },
@@ -111,7 +109,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       direction,
       onSort: (event, sortedKey, newDirection) => {
         onSort(event, sortedKey, newDirection);
-        onSetPage(undefined, 1);
+        pagination.onSetPage(undefined, 1);
       },
     });
 
@@ -147,17 +145,6 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       />
     ),
   });
-
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
 
   const onSubmit = async () => {
     const usernames = selection.selected
@@ -208,14 +195,20 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
               <DataViewFilters
                 onChange={(_key, newFilters) => {
                   onSetFilters(newFilters);
-                  onSetPage(undefined, 1);
+                  pagination.onSetPage(undefined, 1);
                 }}
                 values={filters}
               >
                 <DataViewTextFilter filterId="username" title="Username" />
               </DataViewFilters>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -225,7 +218,15 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
       </ModalBody>
       <ModalFooter>

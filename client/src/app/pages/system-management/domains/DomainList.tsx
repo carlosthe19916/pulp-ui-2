@@ -9,7 +9,6 @@ import {
   Button,
   Label,
   PageSection,
-  Pagination,
   PaginationVariant,
 } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -32,6 +31,7 @@ import {
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -97,14 +97,12 @@ export const DomainList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
 
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => onSetPage(undefined, 1),
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
 
   const { filters, onSetFilters, clearAllFilters } =
@@ -113,8 +111,8 @@ export const DomainList: React.FC = () => {
 
   const { data, isLoading, error } = useDomainsListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__icontains: debouncedName || undefined,
     },
@@ -223,17 +221,6 @@ export const DomainList: React.FC = () => {
     ),
   });
 
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
-
   const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
@@ -260,7 +247,7 @@ export const DomainList: React.FC = () => {
               <DataViewFilters
                 onChange={(_key, newFilters) => {
                   onSetFilters(newFilters);
-                  onSetPage(undefined, 1);
+                  pagination.onSetPage(undefined, 1);
                 }}
                 values={filters}
               >
@@ -272,7 +259,13 @@ export const DomainList: React.FC = () => {
                 Create domain
               </Button>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -284,7 +277,15 @@ export const DomainList: React.FC = () => {
             expandedRows={expandedRows}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
 
         <DomainModal

@@ -8,7 +8,6 @@ import {
   Flex,
   FlexItem,
   PageSection,
-  Pagination,
   PaginationVariant,
   Tooltip,
 } from "@patternfly/react-core";
@@ -16,8 +15,8 @@ import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -28,6 +27,7 @@ import {
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
@@ -78,20 +78,18 @@ export const PublicationList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
 
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => onSetPage(undefined, 1),
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
 
   const { data, isLoading, error } = usePublicationsListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
     },
   });
@@ -182,17 +180,6 @@ export const PublicationList: React.FC = () => {
     emptyState: <TableEmptyState title="No publications found" />,
   });
 
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
-
   const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
@@ -239,7 +226,13 @@ export const PublicationList: React.FC = () => {
                 <PendingCreatesStatus entityType="publication" />
               </Flex>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -249,7 +242,15 @@ export const PublicationList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
 
         <PublicationModal

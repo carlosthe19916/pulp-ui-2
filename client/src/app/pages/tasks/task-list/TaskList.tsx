@@ -7,9 +7,7 @@ import {
   Button,
   Content,
   ContentVariants,
-  Label,
   PageSection,
-  Pagination,
   PaginationVariant,
   Select,
   SelectList,
@@ -36,34 +34,24 @@ import {
   dataViewBodyStates,
   useColumnSort,
   type DataViewTh,
+  ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
+  isCancelable,
   type TaskState,
   useTaskCancelMutation,
   useTaskPurgeMutation,
   useTasksListQuery,
 } from "@app/queries/tasks";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { extractTaskId } from "@app/utils/taskHref";
+import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-
-const stateColors: Record<
-  string,
-  "green" | "blue" | "red" | "orange" | "grey" | "teal"
-> = {
-  completed: "green",
-  running: "blue",
-  failed: "red",
-  canceled: "orange",
-  canceling: "orange",
-  waiting: "teal",
-  skipped: "grey",
-};
 
 const TASK_STATES: Array<TaskState | ""> = [
   "",
@@ -75,15 +63,6 @@ const TASK_STATES: Array<TaskState | ""> = [
   "canceling",
   "skipped",
 ];
-
-const getTaskName = (name: string): string => {
-  const parts = name.split(".");
-  return parts[parts.length - 1] ?? name;
-};
-
-const isCancelable = (state?: string | null) => {
-  return state === "running" || state === "waiting";
-};
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -135,13 +114,11 @@ export const TaskList: React.FC = () => {
   const isCanceling = cancelMutation.isPending;
   const isPurging = purgeMutation.isPending;
 
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 10,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => onSetPage(undefined, 1),
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ITaskFilters>({});
@@ -149,8 +126,8 @@ export const TaskList: React.FC = () => {
 
   const { data, isLoading, error } = useTasksListQuery({
     params: {
-      limit: perPage,
-      offset: (page - 1) * perPage,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__contains: debouncedName || undefined,
       state: stateFilter || undefined,
@@ -181,17 +158,13 @@ export const TaskList: React.FC = () => {
         {
           cell: (
             <Link to="/tasks/$taskId" params={{ taskId }}>
-              {getTaskName(task.name)}
+              {shortTaskName(task.name)}
             </Link>
           ),
           props: { dataLabel: "Name" },
         },
         {
-          cell: (
-            <Label color={stateColors[task.state ?? ""] ?? "grey"} isCompact>
-              {task.state}
-            </Label>
-          ),
+          cell: <TaskStateLabel state={task.state} isCompact />,
           props: { dataLabel: "State" },
         },
         {
@@ -234,17 +207,6 @@ export const TaskList: React.FC = () => {
       />
     ),
   });
-
-  const pagination = (variant: PaginationVariant) => (
-    <Pagination
-      variant={variant}
-      itemCount={totalCount}
-      page={page}
-      perPage={perPage}
-      onSetPage={onSetPage}
-      onPerPageSelect={onPerPageSelect}
-    />
-  );
 
   const stateSelect = (
     <ToolbarItem>
@@ -305,7 +267,7 @@ export const TaskList: React.FC = () => {
                 <DataViewFilters
                   onChange={(_key, newFilters) => {
                     onSetFilters(newFilters);
-                    onSetPage(undefined, 1);
+                    pagination.onSetPage(undefined, 1);
                   }}
                   values={filters}
                 >
@@ -319,7 +281,13 @@ export const TaskList: React.FC = () => {
                 Purge tasks
               </Button>
             }
-            pagination={pagination(PaginationVariant.top)}
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
           />
 
           <DataViewTable
@@ -329,7 +297,15 @@ export const TaskList: React.FC = () => {
             bodyStates={bodyStates}
           />
 
-          <DataViewToolbar pagination={pagination(PaginationVariant.bottom)} />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
         </DataView>
 
         <ConfirmActionModal

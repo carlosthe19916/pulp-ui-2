@@ -7,7 +7,6 @@ import {
   Button,
   Flex,
   FlexItem,
-  Label,
   Pagination,
   PaginationVariant,
   Tooltip,
@@ -21,6 +20,7 @@ import {
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates, type DataViewTh } from "@app/components/DataView";
+import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/context/useNotifications";
 import {
   isTerminalTaskState,
@@ -29,19 +29,6 @@ import {
 } from "@app/queries/tasks";
 import { extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
-
-const stateColors: Record<
-  string,
-  "green" | "blue" | "red" | "orange" | "grey" | "teal"
-> = {
-  completed: "green",
-  running: "blue",
-  failed: "red",
-  canceled: "orange",
-  canceling: "orange",
-  waiting: "teal",
-  skipped: "grey",
-};
 
 /** Operation label from a Pulp task name. */
 const actionLabel = (name?: string | null): string => {
@@ -93,11 +80,7 @@ export const ResourceTaskTable: React.FC<{ prn: string }> = ({ prn }) => {
       row: [
         { cell: actionLabel(task.name), props: { dataLabel: "Action" } },
         {
-          cell: (
-            <Label color={stateColors[task.state ?? ""] ?? "grey"} isCompact>
-              {task.state}
-            </Label>
-          ),
+          cell: <TaskStateLabel state={task.state} isCompact />,
           props: { dataLabel: "State" },
         },
         {
