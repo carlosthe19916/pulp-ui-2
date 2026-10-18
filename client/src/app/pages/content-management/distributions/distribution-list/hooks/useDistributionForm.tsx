@@ -4,6 +4,7 @@ import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useDistributionCreateMutation,
@@ -35,16 +36,21 @@ export const useDistributionForm = ({
 }: IUseDistributionFormArgs): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
+  const { recordPendingCreate } = usePendingCreateRecorder({
+    entityType: "distribution",
+  });
   const isCreate = !entity;
   const entityPlugin = plugin?.entities.distribution;
 
   const createMutation = useDistributionCreateMutation({
-    onSuccess: (data, { name }) =>
+    onSuccess: (data, { name }) => {
       notifyTaskStarted({
         addNotification,
         taskHref: data.task,
         title: `Distribution "${name}" create started`,
-      }),
+      });
+      recordPendingCreate({ taskHref: data.task, name });
+    },
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({

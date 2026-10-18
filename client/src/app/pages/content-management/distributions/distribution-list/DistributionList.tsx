@@ -7,6 +7,8 @@ import {
   Button,
   Content,
   ContentVariants,
+  Flex,
+  FlexItem,
   PageSection,
   Pagination,
   PaginationVariant,
@@ -35,6 +37,7 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { DistributionModal } from "./components/DistributionModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -292,20 +295,29 @@ export const DistributionList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              canCreate ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setModalState("create")}
-                >
-                  Create distribution
-                </Button>
-              ) : (
-                <Tooltip content="No distribution plugin is available. Install a content plugin (e.g. pulp_file) to create distributions.">
-                  <Button variant="primary" isAriaDisabled>
-                    Create distribution
-                  </Button>
-                </Tooltip>
-              )
+              <Flex
+                spaceItems={{ default: "spaceItemsMd" }}
+                alignItems={{ default: "alignItemsCenter" }}
+                flexWrap={{ default: "nowrap" }}
+              >
+                <FlexItem>
+                  {canCreate ? (
+                    <Button
+                      variant="primary"
+                      onClick={() => setModalState("create")}
+                    >
+                      Create distribution
+                    </Button>
+                  ) : (
+                    <Tooltip content="No distribution plugin is available. Install a content plugin (e.g. pulp_file) to create distributions.">
+                      <Button variant="primary" isAriaDisabled>
+                        Create distribution
+                      </Button>
+                    </Tooltip>
+                  )}
+                </FlexItem>
+                <PendingCreatesStatus entityType="distribution" />
+              </Flex>
             }
             pagination={pagination(PaginationVariant.top)}
           />

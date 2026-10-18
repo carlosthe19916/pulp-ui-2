@@ -1,6 +1,7 @@
 import type { IPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { type IUseEntityFormResult } from "@app/hooks/pluginForm/useEntityForm";
+import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
@@ -27,15 +28,20 @@ export const usePublicationForm = ({
 }: IUsePublicationFormArgs): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
+  const { recordPendingCreate } = usePendingCreateRecorder({
+    entityType: "publication",
+  });
   const entityPlugin = plugin?.entities.publication;
 
   const createMutation = usePublicationCreateMutation({
-    onSuccess: (data) =>
+    onSuccess: (data) => {
       notifyTaskStarted({
         addNotification,
         taskHref: data.task,
         title: "Publication create started",
-      }),
+      });
+      recordPendingCreate({ taskHref: data.task, name: "" });
+    },
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({

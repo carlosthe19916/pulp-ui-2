@@ -23,6 +23,7 @@ import {
 import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/context/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
@@ -52,6 +53,9 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
 }) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
+  const { recordPendingCreate } = usePendingCreateRecorder({
+    entityType: "publication",
+  });
   const createMutation = usePublicationCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
@@ -142,6 +146,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
             ? `Publication started for "${repositoryName}"`
             : "Publication started",
         });
+        recordPendingCreate({ taskHref, name: repositoryName ?? "" });
       }
     } catch (error) {
       setSubmitError(

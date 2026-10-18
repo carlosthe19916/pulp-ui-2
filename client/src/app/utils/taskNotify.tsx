@@ -38,3 +38,31 @@ export const notifyTaskStarted = ({
     ),
   });
 };
+
+export interface INotifyTaskFailedOptions {
+  addNotification: INotifyFn;
+  taskHref: string;
+  title?: string;
+}
+
+/** Toast helper for a task that ended in failure/cancellation. */
+export const notifyTaskFailed = ({
+  addNotification,
+  taskHref,
+  title = "Task failed",
+}: INotifyTaskFailedOptions) => {
+  const taskId = extractTaskId(taskHref);
+  addNotification({
+    title,
+    variant: "danger",
+    description: (
+      <>
+        See the{" "}
+        <Link to="/tasks/$taskId" params={{ taskId }}>
+          task detail
+        </Link>{" "}
+        page for the error.
+      </>
+    ),
+  });
+};

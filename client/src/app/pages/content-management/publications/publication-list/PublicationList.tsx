@@ -5,6 +5,8 @@ import {
   Button,
   Content,
   ContentVariants,
+  Flex,
+  FlexItem,
   PageSection,
   Pagination,
   PaginationVariant,
@@ -29,6 +31,7 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PublicationModal } from "./components/PublicationModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -212,17 +215,29 @@ export const PublicationList: React.FC = () => {
         <DataView activeState={activeState}>
           <DataViewToolbar
             actions={
-              canCreate ? (
-                <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-                  Create publication
-                </Button>
-              ) : (
-                <Tooltip content="No publication plugin is available. Install a content plugin (e.g. pulp_file) to create publications.">
-                  <Button variant="primary" isAriaDisabled>
-                    Create publication
-                  </Button>
-                </Tooltip>
-              )
+              <Flex
+                spaceItems={{ default: "spaceItemsMd" }}
+                alignItems={{ default: "alignItemsCenter" }}
+                flexWrap={{ default: "nowrap" }}
+              >
+                <FlexItem>
+                  {canCreate ? (
+                    <Button
+                      variant="primary"
+                      onClick={() => setIsCreateOpen(true)}
+                    >
+                      Create publication
+                    </Button>
+                  ) : (
+                    <Tooltip content="No publication plugin is available. Install a content plugin (e.g. pulp_file) to create publications.">
+                      <Button variant="primary" isAriaDisabled>
+                        Create publication
+                      </Button>
+                    </Tooltip>
+                  )}
+                </FlexItem>
+                <PendingCreatesStatus entityType="publication" />
+              </Flex>
             }
             pagination={pagination(PaginationVariant.top)}
           />

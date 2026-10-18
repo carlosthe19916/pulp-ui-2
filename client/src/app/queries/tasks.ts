@@ -181,6 +181,48 @@ export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
     },
   });
 
+/** Poll result for one task href: its latest state and whether it 404'd (purged). */
+export interface ITaskStateProbe {
+  state?: string;
+  notFound: boolean;
+}
+
+/**
+ * Polls a set of task hrefs (one query each) until each is terminal or 404s
+ * (purged); keeps polling through transient errors. Returns a Map keyed by href.
+ * Tracks dispatched tasks with no on-screen row yet (e.g. in-flight creates).
+ */
+export const useTaskDetailQueries = ({
+  taskHrefs,
+}: {
+  taskHrefs: string[];
+}): Map<string, ITaskStateProbe> =>
+  useQueries({
+    queries: taskHrefs.map((taskHref) =>
+      queryOptions<TaskResponse, DrfAxiosError>({
+        ...taskDetailQueryOptions({ taskHref }),
+        refetchInterval: (query) =>
+          isTerminalTaskState(query.state.data?.state) ||
+          query.state.error?.response?.status === 404
+            ? false
+            : DEFAULT_REFETCH_INTERVAL,
+      }),
+    ),
+    combine: (
+      results: UseQueryResult<TaskResponse, DrfAxiosError>[],
+    ): Map<string, ITaskStateProbe> => {
+      const byHref = new Map<string, ITaskStateProbe>();
+      taskHrefs.forEach((taskHref, index) => {
+        const result = results[index];
+        byHref.set(taskHref, {
+          state: result?.data?.state,
+          notFound: result?.error?.response?.status === 404,
+        });
+      });
+      return byHref;
+    },
+  });
+
 export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
   const domain = useDefaultDomain();
   return useQuery({
