@@ -32,6 +32,8 @@ interface IEntityDetailFieldsProps {
   copyableKeys?: string[];
   /** Responsive column layout, forwarded to the underlying `DescriptionList`. */
   columnModifier?: DescriptionListProps["columnModifier"];
+  /** Term beside value (true) vs term stacked above value (false). Default true. */
+  isHorizontal?: boolean;
 }
 
 const getHiddenField = ({
@@ -61,8 +63,7 @@ const renderValue = ({
   data,
   copyable,
 }: IFieldRender): React.ReactNode => {
-  // Write-only secrets are never returned by the API — the server only tells us
-  // whether a value is set, via `hidden_fields`.
+  // Secrets aren't returned by the API; `hidden_fields` only reports whether they're set.
   const secret = getHiddenField({ key: field.key, data });
   if (secret) {
     return secret.is_set ? "Set" : "Not set";
@@ -91,8 +92,7 @@ const renderValue = ({
     return value.filter((item) => item != null && item !== "").join(", ");
   }
 
-  // PEM blocks (CA/client certificates) are long and multi-line — collapse them
-  // into an expandable, copyable code block rather than dumping them inline.
+  // Certificates are long and multi-line — collapse into an expandable copyable block.
   if (typeof value === "string" && value.startsWith("-----BEGIN")) {
     return (
       <ClipboardCopy variant="expansion" isReadOnly isCode>
@@ -132,30 +132,26 @@ const FieldGroup: React.FC<IFieldRender> = ({ field, data, copyable }) => (
 );
 
 /**
- * Renders a read-only `DescriptionList` for an entity from its catalog field
- * descriptors (the same `IEntityField`s that drive the create/edit form), reading
- * values out of the response by `field.key`. Plugin-generic: any plugin's declared
- * fields render with no per-plugin detail code.
- *
- * Value rendering: write-only secrets show "Set"/"Not set" from `hidden_fields`;
- * PEM certificates collapse into an expandable copyable block; arrays join on commas;
- * empty values show "—". A field's `helpText` (catalog metadata) renders as an
- * OpenShift-style term help popover. `copyableKeys` adds an inline copy affordance —
- * a presentation choice passed by the caller, not part of the catalog field model.
- * Callers wanting visual grouping (a section per wizard group) split `fields`
- * themselves and render one list per group.
+ * Read-only `DescriptionList` built from an entity's catalog field descriptors,
+ * reading values by `field.key`. Plugin-generic. A field's `helpText` renders a term
+ * popover; `copyableKeys` is a presentation-only opt-in. Callers split `fields` by
+ * group for sectioned layouts.
  */
 export const EntityDetailFields: React.FC<IEntityDetailFieldsProps> = ({
   fields,
   data,
   copyableKeys,
   columnModifier,
+  isHorizontal = true,
 }) => {
   const visible = fields.filter((field) => field.type !== "file");
   const copyable = new Set(copyableKeys);
 
   return (
-    <DescriptionList isHorizontal columnModifier={columnModifier}>
+    <DescriptionList
+      isHorizontal={isHorizontal}
+      columnModifier={columnModifier}
+    >
       {visible.map((field) => (
         <FieldGroup
           key={field.key}

@@ -7,7 +7,9 @@
 
 import type { VersionResponse } from "@app/client";
 
+import { remoteBase } from "./base-fields";
 import { buildCatalog } from "./compose";
+import type { IEntityField } from "./field-types";
 import { ansible } from "./plugins/ansible";
 import { container } from "./plugins/container";
 import { deb } from "./plugins/deb";
@@ -59,6 +61,14 @@ for (const plugin of Object.values(catalog)) {
 /** Safe lookup — the plugin resolved for a pulp_type, or `undefined` if unknown. */
 export const getPlugin = (pulpType: PulpType): IPlugin | undefined =>
   catalog[pulpType];
+
+/**
+ * Remote edit fields for a pulp_type, falling back to the shared pulpcore base when
+ * the plugin (or its remote slot) isn't modelled, so any remote still shows its
+ * standard fields.
+ */
+export const getRemoteEditFields = (pulpType: PulpType): IEntityField[] =>
+  getPlugin(pulpType)?.entities.remote?.form.editFields ?? remoteBase.edit;
 
 /** Plugins implementing `entity` whose package is installed in this environment. */
 export const getAvailablePlugins = ({

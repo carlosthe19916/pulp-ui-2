@@ -3,22 +3,30 @@ import type React from "react";
 import {
   Card,
   CardBody,
+  CardHeader,
+  CardTitle,
   ClipboardCopy,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Divider,
+  Flex,
+  FlexItem,
+  Icon,
   Label,
   LabelGroup,
   Stack,
   StackItem,
-  Title,
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
-import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
+import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
+import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
+import InfoCircleIcon from "@patternfly/react-icons/dist/esm/icons/info-circle-icon";
+import KeyIcon from "@patternfly/react-icons/dist/esm/icons/key-icon";
+import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
+import OutlinedClockIcon from "@patternfly/react-icons/dist/esm/icons/outlined-clock-icon";
+import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 
-import { getPlugin } from "@catalog";
+import { getRemoteEditFields } from "@catalog";
 import type { GenericRemoteResponse } from "@app/client";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
@@ -26,8 +34,30 @@ import { formatDateTime } from "@app/utils/utils";
 
 const DEFAULT_GROUP = "General";
 
-/** Two columns from md up, single column on narrow screens (OpenShift detail layout). */
+// Shared transport groups, in trailing order. Any other group is plugin-specific and
+// is surfaced right after General, so each plugin's distinctive fields lead the page.
+const CONNECTION_GROUPS = ["Authentication", "TLS", "Timeouts", "Limits"];
+
+// Two columns from md up, one on narrow screens.
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
+
+const SECTION_ICONS: Record<string, React.ComponentType> = {
+  General: CogIcon,
+  Authentication: KeyIcon,
+  TLS: LockIcon,
+  Timeouts: OutlinedClockIcon,
+  Limits: TachometerAltIcon,
+  Metadata: InfoCircleIcon,
+};
+
+const orderGroups = (groups: string[]): string[] => {
+  const general = groups.filter((g) => g === DEFAULT_GROUP);
+  const pluginGroups = groups.filter(
+    (g) => g !== DEFAULT_GROUP && !CONNECTION_GROUPS.includes(g),
+  );
+  const connection = CONNECTION_GROUPS.filter((g) => groups.includes(g));
+  return [...general, ...pluginGroups, ...connection];
+};
 
 interface IRemoteDetailsViewProps {
   remote: GenericRemoteResponse;
@@ -52,7 +82,6 @@ const PulpLabels: React.FC<{ labels?: Record<string, string | null> }> = ({
   );
 };
 
-/** A read-only value with a copy affordance, or an em dash when absent. */
 const CopyableValue: React.FC<{ value?: string }> = ({ value }) =>
   value ? (
     <ClipboardCopy variant="inline-compact" isReadOnly>
@@ -62,99 +91,117 @@ const CopyableValue: React.FC<{ value?: string }> = ({ value }) =>
     <>—</>
   );
 
-interface ISectionProps {
-  title: string;
-  withDivider: boolean;
-  children: React.ReactNode;
-}
-
-const Section: React.FC<ISectionProps> = ({ title, withDivider, children }) => (
-  <StackItem>
-    {withDivider ? <Divider className={spacing.mbMd} /> : null}
-    <Title headingLevel="h2" size="lg" className={css(spacing.mbMd)}>
-      {title}
-    </Title>
-    {children}
-  </StackItem>
+const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
+  remote,
+  pulpType,
+}) => (
+  <DescriptionList columnModifier={COLUMNS}>
+    <DescriptionListGroup>
+      <DescriptionListTerm>Type</DescriptionListTerm>
+      <DescriptionListDescription>
+        <PulpTypeLabel pulpType={pulpType} />
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+    <DescriptionListGroup>
+      <DescriptionListTerm>Created</DescriptionListTerm>
+      <DescriptionListDescription>
+        {formatDateTime(remote.pulp_created) ?? "—"}
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+    <DescriptionListGroup>
+      <DescriptionListTerm>Last updated</DescriptionListTerm>
+      <DescriptionListDescription>
+        {formatDateTime(remote.pulp_last_updated) ?? "—"}
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+    <DescriptionListGroup>
+      <DescriptionListTerm>Labels</DescriptionListTerm>
+      <DescriptionListDescription>
+        <PulpLabels labels={remote.pulp_labels} />
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+    <DescriptionListGroup>
+      <DescriptionListTerm>PRN</DescriptionListTerm>
+      <DescriptionListDescription>
+        <CopyableValue value={remote.prn} />
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+    <DescriptionListGroup>
+      <DescriptionListTerm>HREF</DescriptionListTerm>
+      <DescriptionListDescription>
+        <CopyableValue value={remote.pulp_href} />
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+  </DescriptionList>
 );
 
-/**
- * OpenShift-style details pane for a remote: a single card of sections (one per
- * catalog field group, plus Metadata), each a responsive two-column description list.
- * Field rows, help popovers, and value rendering are handled by `EntityDetailFields`.
- */
+interface ISection {
+  title: string;
+  content: React.ReactNode;
+}
+
+const SectionCard: React.FC<ISection> = ({ title, content }) => {
+  const IconComponent = SECTION_ICONS[title] ?? CubesIcon;
+  return (
+    <Card isFullHeight>
+      <CardHeader>
+        <CardTitle>
+          <Flex
+            spaceItems={{ default: "spaceItemsSm" }}
+            alignItems={{ default: "alignItemsCenter" }}
+          >
+            <FlexItem>
+              <Icon size="md" isInline>
+                <IconComponent />
+              </Icon>
+            </FlexItem>
+            <FlexItem>{title}</FlexItem>
+          </Flex>
+        </CardTitle>
+      </CardHeader>
+      <CardBody>{content}</CardBody>
+    </Card>
+  );
+};
+
 export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
 }) => {
-  const fields = getPlugin(pulpType)?.entities.remote?.form.editFields ?? [];
+  const fields = getRemoteEditFields(pulpType);
   const data = remote as Record<string, unknown>;
 
-  // Section headings come from the resolved field groups, in first-appearance order.
-  // Plugin extras may introduce their own groups (e.g. "Advanced") — never hardcoded.
-  const groupNames = [
+  const groupNames = orderGroups([
     ...new Set(fields.map((field) => field.group ?? DEFAULT_GROUP)),
-  ];
+  ]);
+
+  const sections: ISection[] = groupNames.map((groupName) => ({
+    title: groupName,
+    content: (
+      <EntityDetailFields
+        fields={fields.filter(
+          (field) => (field.group ?? DEFAULT_GROUP) === groupName,
+        )}
+        data={data}
+        copyableKeys={["url"]}
+        columnModifier={COLUMNS}
+        isHorizontal={false}
+      />
+    ),
+  }));
+
+  sections.push({
+    title: "Metadata",
+    content: <RemoteMetadata remote={remote} pulpType={pulpType} />,
+  });
 
   return (
-    <Card>
-      <CardBody>
-        <Stack hasGutter>
-          {groupNames.map((groupName, index) => (
-            <Section key={groupName} title={groupName} withDivider={index > 0}>
-              <EntityDetailFields
-                fields={fields.filter(
-                  (field) => (field.group ?? DEFAULT_GROUP) === groupName,
-                )}
-                data={data}
-                copyableKeys={["url"]}
-                columnModifier={COLUMNS}
-              />
-            </Section>
-          ))}
-
-          <Section title="Metadata" withDivider>
-            <DescriptionList isHorizontal columnModifier={COLUMNS}>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Type</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <PulpTypeLabel pulpType={pulpType} />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Created</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {formatDateTime(remote.pulp_created) ?? "—"}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Last updated</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {formatDateTime(remote.pulp_last_updated) ?? "—"}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Labels</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <PulpLabels labels={remote.pulp_labels} />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>PRN</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <CopyableValue value={remote.prn} />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>HREF</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <CopyableValue value={remote.pulp_href} />
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-            </DescriptionList>
-          </Section>
-        </Stack>
-      </CardBody>
-    </Card>
+    <Stack hasGutter>
+      {sections.map((section) => (
+        <StackItem key={section.title}>
+          <SectionCard title={section.title} content={section.content} />
+        </StackItem>
+      ))}
+    </Stack>
   );
 };

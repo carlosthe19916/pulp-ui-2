@@ -6,6 +6,7 @@ import { buildCatalog } from "./compose";
 import {
   getAvailablePlugins,
   getPlugin,
+  getRemoteEditFields,
   resolvePulpTypeByApiPath,
 } from "./index";
 import type { IPluginDefinition } from "./types";
@@ -34,6 +35,16 @@ describe("catalog composition", () => {
     expect(keys?.[0]).toBe("name");
     expect(keys).toContain("sles_auth_token");
     expect(remote?.form.isWizard).toBe(true);
+  });
+
+  it("getRemoteEditFields returns plugin fields, or the base for unmodelled types", () => {
+    expect(getRemoteEditFields("rpm.rpm").map((f) => f.key)).toContain(
+      "sles_auth_token",
+    );
+    // An unknown pulp_type still yields the shared base fields, never empty.
+    const fallback = getRemoteEditFields("not.a.plugin").map((f) => f.key);
+    expect(fallback).toContain("url");
+    expect(fallback).toContain("policy");
   });
 
   it("carries each repository's valid sync remote types (backend REMOTE_TYPES)", () => {
