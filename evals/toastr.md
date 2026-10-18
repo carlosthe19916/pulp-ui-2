@@ -79,7 +79,10 @@ const deleteMutation = useRemoteDeleteMutation({
     }),
   onError: (error, { name }) =>
     addNotification({
-      ...getMutationErrorMessage(error, `Failed to delete remote "${name}"`),
+      ...getMutationErrorMessage({
+        error,
+        fallback: `Failed to delete remote "${name}"`,
+      }),
       variant: "danger",
     }),
 });
@@ -102,7 +105,7 @@ can't be closed over (stale risk) — it flows through mutation **variables**:
   202 has no entity).
 - **create** callbacks may read the created entity from `data`
   (`data.name`/`data.username`).
-- **Error** toasts reuse `getMutationErrorMessage(error, fallback)` spread into a
+- **Error** toasts reuse `getMutationErrorMessage({ error, fallback })` spread into a
   `variant: "danger"` toast — **except** modal form submissions, which show the
   error in-form (`evals/forms.md`).
 
@@ -146,7 +149,7 @@ Pass/fail rubric for `/eval`.
 - [ ] Message is built from mutation **`variables`** (and `data` for create), not a
       closed-over component value; delete vars `{ href, name }`, update
       `{ href, name, body }`.
-- [ ] Error toasts use `getMutationErrorMessage(error, fallback)` with
+- [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**,
       shown in-form via `FormSubmitError` (see `evals/forms.md`).
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature

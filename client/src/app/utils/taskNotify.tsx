@@ -43,6 +43,8 @@ export interface INotifyTaskFailedOptions {
   addNotification: INotifyFn;
   taskHref: string;
   title?: string;
+  /** The task's failure detail (e.g. `getTaskErrorMessage(task)`), shown inline. */
+  description?: string;
 }
 
 /** Toast helper for a task that ended in failure/cancellation. */
@@ -50,6 +52,7 @@ export const notifyTaskFailed = ({
   addNotification,
   taskHref,
   title = "Task failed",
+  description,
 }: INotifyTaskFailedOptions) => {
   const taskId = extractTaskId(taskHref);
   addNotification({
@@ -57,7 +60,7 @@ export const notifyTaskFailed = ({
     variant: "danger",
     description: (
       <>
-        See the{" "}
+        {description ? <>{description} </> : "See the "}
         <Link to="/tasks/$taskId" params={{ taskId }}>
           task detail
         </Link>{" "}

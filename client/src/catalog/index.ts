@@ -8,12 +8,15 @@
 import type { VersionResponse } from "@app/client";
 
 import { buildCatalog } from "./compose";
+import { ansible } from "./plugins/ansible";
 import { container } from "./plugins/container";
+import { deb } from "./plugins/deb";
 import { file } from "./plugins/file";
 import { gem } from "./plugins/gem";
 import { huggingFace } from "./plugins/hugging-face";
 import { maven } from "./plugins/maven";
 import { npm } from "./plugins/npm";
+import { ostree } from "./plugins/ostree";
 import { python } from "./plugins/python";
 import { rpm } from "./plugins/rpm";
 import { ENTITY_TYPE_LABELS, ENTITY_TYPES } from "./types";
@@ -29,6 +32,9 @@ const pluginDefinitions: IPluginDefinition[] = [
   npm,
   maven,
   huggingFace,
+  ostree,
+  deb,
+  ansible,
 ];
 
 /** The assembled catalog: pulp_type → the plugin resolved for that pulp_type. */

@@ -61,6 +61,7 @@ export const usePendingCreates = ({
       entry,
       settled: notFound || isTerminalTaskState(probe?.state),
       failed: !notFound && FAILED_STATES.has(probe?.state ?? ""),
+      errorMessage: probe?.errorMessage,
     };
   });
 
@@ -74,7 +75,7 @@ export const usePendingCreates = ({
   // on failure.
   const processedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    settledRef.current.forEach(({ entry, failed }) => {
+    settledRef.current.forEach(({ entry, failed, errorMessage }) => {
       if (processedRef.current.has(entry.taskHref)) return;
       processedRef.current.add(entry.taskHref);
 
@@ -92,6 +93,7 @@ export const usePendingCreates = ({
           title: entry.name
             ? `${label} "${entry.name}" creation failed`
             : `${label} creation failed`,
+          description: errorMessage,
         });
       }
     });

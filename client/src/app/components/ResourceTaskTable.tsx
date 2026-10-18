@@ -28,7 +28,7 @@ import {
   useTasksByPrnListQuery,
 } from "@app/queries/tasks";
 import { extractTaskId } from "@app/utils/taskHref";
-import { formatDateTime } from "@app/utils/utils";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 /** Operation label from a Pulp task name. */
 const actionLabel = (name?: string | null): string => {
@@ -58,8 +58,14 @@ export const ResourceTaskTable: React.FC<{ prn: string }> = ({ prn }) => {
         title: "Task cancellation requested",
         variant: "info",
       }),
-    onError: () =>
-      addNotification({ title: "Failed to cancel task", variant: "danger" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to cancel task",
+        }),
+        variant: "danger",
+      }),
   });
 
   const tasks = data?.results ?? [];

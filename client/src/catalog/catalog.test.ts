@@ -96,6 +96,59 @@ describe("catalog composition", () => {
     expect(getPlugin("python.pypi")?.label).toBe("Python (PyPI)");
   });
 
+  it("models deb's per-entity pulp_types (repository, remote, distribution, publications)", () => {
+    const repo = getPlugin("deb.deb")?.entities.repository;
+    expect(repo?.compatibleRemoteTypes).toEqual(["deb.apt-remote"]);
+    expect(repo?.compatiblePublicationTypes).toEqual([
+      "deb.apt-publication",
+      "deb.verbatim-publication",
+    ]);
+    // The deb entities carry distinct pulp_types resolved under their own keys.
+    expect(getPlugin("deb.apt-remote")?.entities.remote).toBeDefined();
+    expect(
+      getPlugin("deb.apt-distribution")?.entities.distribution,
+    ).toBeDefined();
+    expect(getPlugin("deb.apt-publication")?.label).toBe("APT");
+    expect(getPlugin("deb.verbatim-publication")?.label).toBe("Verbatim");
+    // Verbatim overrides the apiPath slug; APT keeps the plugin default.
+    expect(
+      getPlugin("deb.verbatim-publication")?.entities.publication?.apiPath,
+    ).toBe("deb/verbatim");
+    expect(
+      getPlugin("deb.apt-publication")?.entities.publication?.apiPath,
+    ).toBe("deb/apt");
+    expect(
+      resolvePulpTypeByApiPath({ entity: "distribution", apiPath: "deb/apt" }),
+    ).toBe("deb.apt-distribution");
+  });
+
+  it("models ansible's three remote variants and non-publishable repository", () => {
+    const repo = getPlugin("ansible.ansible")?.entities.repository;
+    expect(repo?.compatibleRemoteTypes).toEqual([
+      "ansible.collection",
+      "ansible.role",
+      "ansible.git",
+    ]);
+    expect(repo?.compatiblePublicationTypes).toEqual([]);
+    expect(getPlugin("ansible.collection")?.label).toBe("Collection");
+    expect(getPlugin("ansible.role")?.label).toBe("Role");
+    expect(getPlugin("ansible.git")?.label).toBe("Git");
+    // The git remote drops the inherited `policy` field.
+    expect(
+      getPlugin("ansible.git")?.entities.remote?.form.createFields.map(
+        (f) => f.key,
+      ),
+    ).not.toContain("policy");
+  });
+
+  it("models ostree (syncable, no publication)", () => {
+    const repo = getPlugin("ostree.ostree")?.entities.repository;
+    expect(repo?.compatibleRemoteTypes).toEqual(["ostree.ostree"]);
+    expect(repo?.compatiblePublicationTypes).toEqual([]);
+    expect(getPlugin("ostree.ostree")?.entities.publication).toBeUndefined();
+    expect(getPlugin("ostree.ostree")?.label).toBe("OSTree");
+  });
+
   it("hoists plugin-level concerns to every entity it implements", () => {
     // Fully-invariant plugin: one ui/app declared once reaches all four slots.
     const gem = getPlugin("gem.gem");

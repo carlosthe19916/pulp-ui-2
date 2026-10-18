@@ -1,6 +1,12 @@
 import { AxiosError, AxiosHeaders } from "axios";
 
-import { getMutationErrorMessage, getToolbarChipKey } from "./utils";
+import type { TaskResponse } from "@app/client";
+
+import {
+  getMutationErrorMessage,
+  getTaskErrorMessage,
+  getToolbarChipKey,
+} from "./utils";
 
 describe("utils", () => {
   it("getToolbarChipKey: test 'string'", () => {
@@ -199,5 +205,55 @@ describe("utils", () => {
       fallback: "Failed to create remote",
     });
     expect(result.title).toBe("Failed to create remote");
+  });
+
+  it("getMutationErrorMessage: appends the server detail to a 403 message", () => {
+    const error = makeAxiosError(403, { detail: "repository is read-only" });
+    const result = getMutationErrorMessage({ error, fallback: "Failed" });
+    expect(result.description).toContain("repository is read-only");
+    expect(result.description).toContain("You do not have permission");
+  });
+
+  it("getMutationErrorMessage: keeps DRF field errors when a field is named 'error'", () => {
+    const error = makeAxiosError(400, {
+      error: ["This field is required."],
+      name: ["Required."],
+    });
+    const result = getMutationErrorMessage({ error, fallback: "Failed" });
+    expect(result.description).toContain("Name: Required.");
+  });
+
+  const makeTask = (task: Partial<TaskResponse> & Record<string, unknown>) =>
+    task as TaskResponse;
+
+  it("getTaskErrorMessage: prefers the error description", () => {
+    expect(
+      getTaskErrorMessage(
+        makeTask({ state: "failed", error: { description: "boom" } }),
+      ),
+    ).toBe("boom");
+  });
+
+  it("getTaskErrorMessage: falls back to the cancellation reason", () => {
+    expect(
+      getTaskErrorMessage(
+        makeTask({ state: "canceled", error: { reason: "user canceled" } }),
+      ),
+    ).toBe("user canceled");
+  });
+
+  it("getTaskErrorMessage: falls back to a string result when there is no error", () => {
+    expect(
+      getTaskErrorMessage(
+        makeTask({ state: "failed", result: "legacy error" }),
+      ),
+    ).toBe("legacy error");
+  });
+
+  it("getTaskErrorMessage: returns undefined for a task with no failure detail", () => {
+    expect(
+      getTaskErrorMessage(makeTask({ state: "completed" })),
+    ).toBeUndefined();
+    expect(getTaskErrorMessage(undefined)).toBeUndefined();
   });
 });

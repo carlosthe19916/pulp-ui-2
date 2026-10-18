@@ -1,5 +1,7 @@
 import type { AxiosError } from "axios";
 
+import type { TaskResponse } from "@app/client";
+
 /**
  * Hand-authored error-body types for the Pulp API.
  *
@@ -62,6 +64,25 @@ export type PulpErrorData =
   | IPluginErrorData
   | Array<string | IDrfValidationErrorData>
   | string;
+
+/**
+ * Pulp's fatal-task error object, carried in `TaskResponse.error` when a task ends in
+ * `failed`. The OpenAPI spec types this field as an untyped `object`, so the generated
+ * client drops it entirely — this fills that gap. The backend populates `description`
+ * (+ `traceback`) for a crashed task, or `reason` for a cancellation.
+ */
+export interface ITaskErrorData {
+  description?: string;
+  traceback?: string;
+  reason?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * `TaskResponse` augmented with the `error` field the generated client omits (see
+ * `ITaskErrorData`). Use when reading a task's failure detail.
+ */
+export type TaskWithError = TaskResponse & { error?: ITaskErrorData | null };
 
 /**
  * The error type for a standard Pulp v3 DRF endpoint (validation dict,

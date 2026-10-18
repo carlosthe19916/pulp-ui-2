@@ -20,6 +20,7 @@ import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
+import { getTaskErrorMessage } from "@app/utils/utils";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -190,6 +191,8 @@ export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
 export interface ITaskStateProbe {
   state?: string;
   notFound: boolean;
+  /** The task's failure detail, when it ended in `failed` (see `getTaskErrorMessage`). */
+  errorMessage?: string;
 }
 
 /**
@@ -222,6 +225,7 @@ export const useTaskDetailQueries = ({
         byHref.set(taskHref, {
           state: result?.data?.state,
           notFound: result?.error?.response?.status === 404,
+          errorMessage: getTaskErrorMessage(result?.data),
         });
       });
       return byHref;

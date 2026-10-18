@@ -2,9 +2,11 @@ import axios from "axios";
 import dayjs from "dayjs";
 
 import { RENDER_DATETIME_FORMAT, RENDER_DATE_FORMAT } from "@app/Constants";
+import type { TaskResponse } from "@app/client";
 import type {
   IErrorsEnvelopeData,
   PulpErrorData,
+  TaskWithError,
 } from "@app/queries/utils/openapiErrorTypes";
 import type { ToolbarLabel } from "@patternfly/react-core";
 
@@ -81,12 +83,19 @@ const describePulpError = (
       describeErrorsEnvelope((data as IErrorsEnvelopeData).errors) || undefined
     );
   }
-  // Plugin custom views: `{ error, detail? }` (an `error` string key is unambiguous).
+  // Plugin custom views: `{ error, detail? }`. Only treat a string `error` key as this
+  // shape when the body carries nothing but `error`/`detail` — otherwise it is a DRF
+  // validation dict that happens to have a field literally named `error`, and must fall
+  // through to `describeFieldErrors` so the other field errors aren't dropped.
   if (typeof (data as { error?: unknown }).error === "string") {
-    const { error, detail } = data as { error: string; detail?: unknown };
-    return typeof detail === "string" && detail !== error
-      ? `${error} — ${detail}`
-      : error;
+    const keys = Object.keys(data);
+    const isPluginShape = keys.every((k) => k === "error" || k === "detail");
+    if (isPluginShape) {
+      const { error, detail } = data as { error: string; detail?: unknown };
+      return typeof detail === "string" && detail !== error
+        ? `${error} — ${detail}`
+        : error;
+    }
   }
   // Stock DRF dict: `{ detail }`, `{ non_field_errors }`, and/or per-field errors.
   const message = describeFieldErrors(data as Record<string, unknown>);
@@ -109,7 +118,16 @@ export const getMutationErrorMessage = ({
   }
 
   if (error.response?.status === 403) {
-    return { title: fallback, description: PERMISSION_DENIED_DESCRIPTION };
+    // Prefer the server's specific reason when present, over the canned message.
+    const detail = describePulpError(
+      error.response?.data as PulpErrorData | undefined,
+    );
+    return {
+      title: fallback,
+      description: detail
+        ? `${PERMISSION_DENIED_DESCRIPTION} ${detail}`
+        : PERMISSION_DENIED_DESCRIPTION,
+    };
   }
 
   const data = error.response?.data as PulpErrorData | undefined;
@@ -118,6 +136,30 @@ export const getMutationErrorMessage = ({
   return description && description !== fallback
     ? { title: fallback, description }
     : { title: fallback };
+};
+
+/**
+ * Extract a human-readable failure message from a terminal task, reading the
+ * `error` object the generated client drops (see `TaskWithError`). Prefers the
+ * crash `description`, then a cancellation `reason`, then the raw `error`/`result`
+ * payload. Returns `undefined` when the task carries no failure detail.
+ */
+export const getTaskErrorMessage = (
+  task: TaskResponse | undefined,
+): string | undefined => {
+  if (!task) return undefined;
+  const { error } = task as TaskWithError;
+  if (error) {
+    if (typeof error.description === "string" && error.description) {
+      return error.description;
+    }
+    if (typeof error.reason === "string" && error.reason) return error.reason;
+    const serialized = JSON.stringify(error);
+    if (serialized && serialized !== "{}") return serialized;
+  }
+  const { result } = task;
+  if (typeof result === "string" && result) return result;
+  return undefined;
 };
 
 export const getToolbarChipKey = (value: string | ToolbarLabel) => {

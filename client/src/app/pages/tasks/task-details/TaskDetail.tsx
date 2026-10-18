@@ -31,6 +31,7 @@ import {
   useSuspenseTaskDetailQuery,
   useTaskCancelMutation,
 } from "@app/queries/tasks";
+import type { TaskWithError } from "@app/queries/utils/openapiErrorTypes";
 import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
@@ -40,6 +41,7 @@ interface ITaskDetailProps {
 
 export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
   const { data: task } = useSuspenseTaskDetailQuery({ taskId });
+  const taskError = (task as TaskWithError).error;
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -161,14 +163,23 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
             </StackItem>
           )}
 
-          {task.state === "failed" && task.result != null && (
+          {task.state === "failed" && (taskError || task.result != null) && (
             <StackItem>
               <Content component={ContentVariants.h2}>Error</Content>
+              {taskError?.description && (
+                <Content component={ContentVariants.p}>
+                  {taskError.description}
+                </Content>
+              )}
               <CodeBlock>
                 <CodeBlockCode>
-                  {typeof task.result === "string"
-                    ? task.result
-                    : JSON.stringify(task.result, null, 2)}
+                  {taskError?.traceback ||
+                    (taskError && !taskError.description
+                      ? JSON.stringify(taskError, null, 2)
+                      : "") ||
+                    (typeof task.result === "string"
+                      ? task.result
+                      : JSON.stringify(task.result, null, 2))}
                 </CodeBlockCode>
               </CodeBlock>
             </StackItem>
