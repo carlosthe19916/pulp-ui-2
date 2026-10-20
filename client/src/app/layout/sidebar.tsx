@@ -31,8 +31,8 @@ export const SidebarApp: React.FC = () => {
             </NavItem>
           </NavGroup>
 
-          {domainsEnabled && (
-            <NavGroup title="System Management">
+          <NavGroup title="System Management">
+            {domainsEnabled && (
               <NavItem
                 isActive={
                   !!matchRoute({
@@ -43,21 +43,17 @@ export const SidebarApp: React.FC = () => {
               >
                 <Link to="/system-management/domains">Domains</Link>
               </NavItem>
-            </NavGroup>
-          )}
-
-          <NavGroup title="Monitoring">
+            )}
             <NavItem
               isActive={
                 !!matchRoute({
-                  to: "/monitoring/$pulpDomain/tasks",
-                  params: { pulpDomain },
+                  to: "/system-management/signing-services",
                   fuzzy: true,
                 })
               }
             >
-              <Link to="/monitoring/$pulpDomain/tasks" params={{ pulpDomain }}>
-                Tasks
+              <Link to="/system-management/signing-services">
+                Signing Services
               </Link>
             </NavItem>
           </NavGroup>
@@ -132,6 +128,22 @@ export const SidebarApp: React.FC = () => {
             </NavItem>
           </NavGroup>
 
+          <NavGroup title="Monitoring">
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/monitoring/$pulpDomain/tasks",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link to="/monitoring/$pulpDomain/tasks" params={{ pulpDomain }}>
+                Tasks
+              </Link>
+            </NavItem>
+          </NavGroup>
+
           <NavGroup title="Administration">
             <NavItem
               isActive={!!matchRoute({ to: "/admin/users", fuzzy: true })}
@@ -147,13 +159,6 @@ export const SidebarApp: React.FC = () => {
               isActive={!!matchRoute({ to: "/admin/roles", fuzzy: true })}
             >
               <Link to="/admin/roles">Roles</Link>
-            </NavItem>
-            <NavItem
-              isActive={
-                !!matchRoute({ to: "/admin/signing-services", fuzzy: true })
-              }
-            >
-              <Link to="/admin/signing-services">Signing Services</Link>
             </NavItem>
           </NavGroup>
         </Nav>
