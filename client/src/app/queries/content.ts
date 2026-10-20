@@ -4,12 +4,13 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   ContentListData,
+  MultipleArtifactContentResponse,
   PaginatedMultipleArtifactContentResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
@@ -81,3 +82,28 @@ export const useContentListQuery = ({
   const domain = useSelectedDomain();
   return useQuery(contentListQueryOptions({ domain, params, options }));
 };
+
+/**
+ * Typed per-unit GET (the aggregate list is sparse). Generic over the response type:
+ * the payload varies by pulp_type, so each caller passes the concrete generated type
+ * (e.g. `useContentDetailQuery<FileFileContentResponse>`) — never a union.
+ */
+export const contentDetailQueryOptions = <T = MultipleArtifactContentResponse>({
+  href,
+  options,
+}: {
+  href: string | null;
+  options?: Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">;
+}) =>
+  queryOptions<T, DrfAxiosError>({
+    ...options,
+    queryKey: contentKeys.detail(href ?? ""),
+    queryFn: async (): Promise<T> =>
+      (await axiosInstance.get<T>(toProxyHref(href ?? ""))).data,
+  });
+
+export const useContentDetailQuery = <T = MultipleArtifactContentResponse>({
+  href,
+}: {
+  href: string | null;
+}) => useQuery({ ...contentDetailQueryOptions<T>({ href }), enabled: !!href });

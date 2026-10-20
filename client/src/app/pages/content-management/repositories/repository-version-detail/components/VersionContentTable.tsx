@@ -7,9 +7,12 @@ import {
   DataViewToolbar,
   useDataViewPagination,
   type DataViewTr,
+  type ExpandableContent,
 } from "@patternfly/react-data-view";
 
+import { ContentDetailPanel } from "@app/components/ContentDetailPanel";
 import {
+  compoundExpansions,
   dataViewBodyStates,
   ListPagination,
   type DataViewTh,
@@ -72,6 +75,14 @@ export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
     };
   });
 
+  const IDENTIFIER_COLUMN_INDEX = 1;
+  const expandedRows: ExpandableContent[] = compoundExpansions({
+    entities: content,
+    columnIndex: IDENTIFIER_COLUMN_INDEX,
+    rowId: (unit) => unit.pulp_href ?? "",
+    render: (unit) => <ContentDetailPanel href={unit.pulp_href ?? ""} />,
+  });
+
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     isLoading,
@@ -87,6 +98,9 @@ export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
         columns={columns}
         rows={rows}
         bodyStates={bodyStates}
+        isExpandable={expandedRows.length > 0}
+        expandedRows={expandedRows}
+        indexBy="id"
       />
       <DataViewToolbar
         pagination={

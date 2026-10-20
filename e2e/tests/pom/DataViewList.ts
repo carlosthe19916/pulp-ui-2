@@ -59,6 +59,11 @@ export abstract class DataViewList {
     await expect(this.row(name)).toHaveCount(0);
   }
 
+  /** Expand a compound-expandable row by clicking its toggle cell (the only button). */
+  async expandRow(name: string): Promise<void> {
+    await this.row(name).getByRole("button").first().click();
+  }
+
   /**
    * Close open toast notifications. They auto-dismiss after 8s, but a test acting
    * faster stacks them in the top-right `AlertGroup`, where they overlap the create

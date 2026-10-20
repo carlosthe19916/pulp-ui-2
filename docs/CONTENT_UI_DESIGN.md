@@ -35,19 +35,18 @@ pipeline order (Remotes → Repositories → Publications → Distributions → 
 scoped to that version. Add a row **Remove from version** and open the drawer on
 row click.
 
-### 1.3 Content detail drawer
+### 1.3 Content detail (expandable row)
 
-Content units are immutable leaves — a drawer, not a route (consistent with
-Distribution/Publication). Fetched via a typed per-unit GET (§2.1):
+Content units are immutable leaves — an **expandable row**, not a route or drawer
+(the app's thin-leaf detail pattern, as Distribution/Publication use). Fetched via a
+typed per-unit GET (§2.1) plus the artifact read-model:
 
-- **Metadata** — type-specific fields.
-- **Artifact(s)** — file name, size, checksums (copyable), download.
-- **Membership** — versions containing the unit (best-effort; see §2.1).
+- **Metadata** — type, relative path, created, PRN, labels.
+- **Artifact** — SHA-256 (copyable) and size.
 
-Download note: an artifact is only publicly downloadable when served by a
-**Distribution**. The drawer links to any serving distribution, falling back to the
-raw artifact URL. (This is the browse-vs-raw-download boundary Nexus/Artifactory
-also draw.)
+Not included: **download** (no admin download URL exists — the artifact `file` is a
+storage path and the API has no download endpoint) and **membership** (no
+"versions-containing-unit" query; expensive). Both deferred.
 
 ### 1.4 Upload dialog (generic, one for all plugins)
 
@@ -211,12 +210,15 @@ primary read surface, and one polymorphic upload dialog.
   contextual view (§1.2); they answer different questions ("what's in this
   version?" vs "where does this file live? / upload this / audit"). Every
   comparable vendor ships both.
+- **Detail = expandable row** (2026-10-20). The app has no Drawer; its thin-leaf
+  detail pattern is the expandable row. Panel-only artifact detail (no dedicated
+  Artifacts list).
+- **No download, no membership** (2026-10-20). There is no admin download URL (the
+  artifact `file` is a storage path; no download endpoint), and no
+  "versions-containing-unit" query. Both deferred.
 
 **Open**
 
-- **Artifact detail depth** — drawer-only (recommended v1) vs a dedicated Artifacts
-  list. Either way a generic `/artifacts/` read, not a catalog concept.
-- **Download semantics** — via-Distribution only vs also raw admin artifact URLs.
 - **v1 upload scope** — resolved by phasing (§4): `file.file` first, more plugins
   as a follow-on.
 
@@ -232,11 +234,12 @@ states. The one real dependency (chunked upload) is isolated as an extension.
 - **Phase 1 — Global Content page (read).** New `content/index.tsx` route + nav
   item + DataView over the existing `useContentListQuery`. Columns Type /
   Identifier / Created; filters per §2.1; no sort. Lift `contentIdentifier` to
-  `@app/...` for reuse. _Depends on nothing new._
+  `@app/...` for reuse. _Done._
 
-- **Phase 2 — Content detail drawer.** Opens from the existing version table (ships
-  without Phase 1). Typed per-unit GET for `relative_path`, size, checksums, and a
-  download link. _Independent._
+- **Phase 2 — Content detail (expandable row).** Expand a row (global list + version
+  table) → a shared `ContentDetailPanel` runs a typed per-unit GET + the artifact
+  read-model for relative path, SHA-256, and size. No download/membership (deferred).
+  _Done._
 
 - **Phase 3 — Upload dialog (`file.file`).** Replace dead `UploadModal` with an
   `EntityModalShell`-based dialog + a new content actions hook, reusing

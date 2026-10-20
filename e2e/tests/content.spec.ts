@@ -78,5 +78,13 @@ test.describe("Content", () => {
       contentPage.page.getByPlaceholder("Filter by Label").fill(`e2e=${label}`),
     ]);
     await contentPage.expectRowVisible(contentId);
+
+    // Expand the row → the detail panel runs the per-unit GET and shows the real
+    // relative_path (absent from the sparse list row) plus a checksum.
+    await contentPage.expandRow(contentId);
+    await expect(contentPage.page.getByText(relativePath)).toBeVisible();
+    await expect(
+      contentPage.page.getByText("SHA-256", { exact: true }),
+    ).toBeVisible();
   });
 });
