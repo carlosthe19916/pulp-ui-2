@@ -8,9 +8,8 @@ import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
 import type { IPluginDefinition } from "../types";
 
-/** Shared ui + rest override for the PyPI variant (distribution + publication). */
+/** Shared rest override for the PyPI variant (distribution + publication). */
 const pypi = {
-  ui: { label: "Python (PyPI)" },
   rest: { pulpType: "python.pypi", apiPath: "python/pypi" },
 };
 
@@ -113,7 +112,6 @@ const pythonDistributionExtras: IEntityField[] = [
 
 export const python: IPluginDefinition = {
   app: { isAvailable: whenInstalled("python", "pulp-python") },
-  ui: { label: "Python" },
   rest: { pulpType: "python.python", apiPath: "python/python" },
   entities: {
     // Python repository: remote, auto-publish and package-substitution controls.
@@ -166,4 +164,19 @@ export const python: IPluginDefinition = {
       },
     },
   },
+
+  content: [
+    {
+      pulpType: "python.python",
+      apiPath: "python/packages",
+    },
+    {
+      pulpType: "python.provenance",
+      apiPath: "python/provenance",
+    },
+    {
+      pulpType: "python.python_yank",
+      apiPath: "python/yanks",
+    },
+  ],
 };

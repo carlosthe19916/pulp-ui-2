@@ -2,19 +2,22 @@ import type React from "react";
 
 import { Label } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
+import { getContentType, getPlugin } from "@catalog";
 
 interface IPulpTypeLabelProps {
   pulpType: string;
 }
 
-/** Render a pulp_type as a compact PF Label, using the plugin label when available. */
+/**
+ * Render a pulp_type as a compact PF Label showing the raw type. Blue when the type
+ * is known to the catalog (a CRUD plugin or a modelled content type), grey otherwise.
+ */
 export const PulpTypeLabel: React.FC<IPulpTypeLabelProps> = ({ pulpType }) => {
-  const plugin = getPlugin(pulpType);
+  const known = getContentType(pulpType) ?? getPlugin(pulpType);
 
   return (
-    <Label color={plugin ? "blue" : "grey"} isCompact>
-      {plugin?.label ?? pulpType}
+    <Label color={known ? "blue" : "grey"} isCompact>
+      {pulpType}
     </Label>
   );
 };

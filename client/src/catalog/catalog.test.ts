@@ -5,8 +5,11 @@ import type { VersionResponse } from "@app/client";
 import { buildCatalog } from "./compose";
 import {
   getAvailablePlugins,
+  getContentType,
+  getContentTypes,
   getPlugin,
   getRemoteEditFields,
+  resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "./index";
 import type { IPluginDefinition } from "./types";
@@ -99,12 +102,10 @@ describe("catalog composition", () => {
     ).toEqual([]);
   });
 
-  it("resolves variants to their own pulp_type with per-variant ui labels", () => {
-    expect(getPlugin("rpm.uln")?.label).toBe("ULN");
+  it("resolves variants to their own pulp_type", () => {
     expect(getPlugin("rpm.uln")?.entities.remote).toBeDefined();
-    expect(getPlugin("file.git")?.label).toBe("File (Git)");
+    expect(getPlugin("file.git")?.entities.remote).toBeDefined();
     expect(getPlugin("python.pypi")?.entities.distribution).toBeDefined();
-    expect(getPlugin("python.pypi")?.label).toBe("Python (PyPI)");
   });
 
   it("models deb's per-entity pulp_types (repository, remote, distribution, publications)", () => {
@@ -119,8 +120,6 @@ describe("catalog composition", () => {
     expect(
       getPlugin("deb.apt-distribution")?.entities.distribution,
     ).toBeDefined();
-    expect(getPlugin("deb.apt-publication")?.label).toBe("APT");
-    expect(getPlugin("deb.verbatim-publication")?.label).toBe("Verbatim");
     // Verbatim overrides the apiPath slug; APT keeps the plugin default.
     expect(
       getPlugin("deb.verbatim-publication")?.entities.publication?.apiPath,
@@ -141,9 +140,9 @@ describe("catalog composition", () => {
       "ansible.git",
     ]);
     expect(repo?.compatiblePublicationTypes).toEqual([]);
-    expect(getPlugin("ansible.collection")?.label).toBe("Collection");
-    expect(getPlugin("ansible.role")?.label).toBe("Role");
-    expect(getPlugin("ansible.git")?.label).toBe("Git");
+    expect(getPlugin("ansible.collection")?.entities.remote).toBeDefined();
+    expect(getPlugin("ansible.role")?.entities.remote).toBeDefined();
+    expect(getPlugin("ansible.git")?.entities.remote).toBeDefined();
     // The git remote drops the inherited `policy` field.
     expect(
       getPlugin("ansible.git")?.entities.remote?.form.createFields.map(
@@ -157,13 +156,11 @@ describe("catalog composition", () => {
     expect(repo?.compatibleRemoteTypes).toEqual(["ostree.ostree"]);
     expect(repo?.compatiblePublicationTypes).toEqual([]);
     expect(getPlugin("ostree.ostree")?.entities.publication).toBeUndefined();
-    expect(getPlugin("ostree.ostree")?.label).toBe("OSTree");
   });
 
   it("hoists plugin-level concerns to every entity it implements", () => {
-    // Fully-invariant plugin: one ui/app declared once reaches all four slots.
+    // Fully-invariant plugin: one app declared once reaches all four slots.
     const gem = getPlugin("gem.gem");
-    expect(gem?.label).toBe("Gem");
     for (const entity of [
       "repository",
       "remote",
@@ -179,10 +176,6 @@ describe("catalog composition", () => {
       "rpm/rpm",
     );
     expect(getPlugin("rpm.uln")?.entities.remote?.apiPath).toBe("rpm/uln");
-    // file content overrides only apiPath; pulpType stays the plugin default.
-    expect(getPlugin("file.file")?.entities.content?.apiPath).toBe(
-      "file/files",
-    );
   });
 });
 
@@ -190,9 +183,7 @@ describe("getPlugin", () => {
   it("returns a plugin with every entity it implements", () => {
     const file = getPlugin("file.file");
     expect(file?.pulpType).toBe("file.file");
-    expect(file?.label).toBe("File");
     expect(Object.keys(file?.entities ?? {}).sort()).toEqual([
-      "content",
       "distribution",
       "publication",
       "remote",
@@ -229,10 +220,6 @@ describe("resolvePulpTypeByApiPath", () => {
         apiPath: "python/python",
       }),
     ).toBe("python.python");
-    // apiPath ≠ pulp_type (content pluralizes the slug).
-    expect(
-      resolvePulpTypeByApiPath({ entity: "content", apiPath: "file/files" }),
-    ).toBe("file.file");
     // Non-"doubled" distribution slug.
     expect(
       resolvePulpTypeByApiPath({
@@ -255,7 +242,6 @@ describe("resolvePulpTypeByApiPath", () => {
 describe("buildCatalog", () => {
   const makeRemote = (): IPluginDefinition => ({
     app: { isAvailable: () => true },
-    ui: { label: "Dup" },
     rest: { pulpType: "dup.dup", apiPath: "dup/dup" },
     entities: {
       remote: {
@@ -280,11 +266,10 @@ describe("buildCatalog", () => {
     }).toThrow();
   });
 
-  it("hoists plugin ui/rest into a slot whose overrides are empty", () => {
+  it("hoists plugin rest into a slot whose overrides are empty", () => {
     const catalog = buildCatalog([
       {
         app: { isAvailable: () => true },
-        ui: { label: "Test" },
         rest: { pulpType: "test.test", apiPath: "test/test" },
         entities: {
           repository: {
@@ -296,9 +281,73 @@ describe("buildCatalog", () => {
       },
     ]);
     const plugin = catalog["test.test"];
-    expect(plugin.label).toBe("Test");
     expect(plugin.entities.repository?.apiPath).toBe("test/test");
     expect(plugin.entities.repository?.form.isWizard).toBe(false);
     expect(plugin.entities.repository?.compatibleRemoteTypes).toEqual([]);
+  });
+
+  it("throws on a duplicate content pulp_type", () => {
+    const def: IPluginDefinition = {
+      app: { isAvailable: () => true },
+      rest: { pulpType: "dupc.dupc", apiPath: "dupc/dupc" },
+      entities: {},
+      content: [
+        { pulpType: "dupc.a", apiPath: "dupc/a" },
+        { pulpType: "dupc.a", apiPath: "dupc/b" },
+      ],
+    };
+    expect(() => buildCatalog([def])).toThrow(/Duplicate content type/);
+  });
+
+  it("throws on a duplicate content apiPath", () => {
+    const def: IPluginDefinition = {
+      app: { isAvailable: () => true },
+      rest: { pulpType: "dupp.dupp", apiPath: "dupp/dupp" },
+      entities: {},
+      content: [
+        { pulpType: "dupp.a", apiPath: "dupp/x" },
+        { pulpType: "dupp.b", apiPath: "dupp/x" },
+      ],
+    };
+    expect(() => buildCatalog([def])).toThrow(/Duplicate content apiPath/);
+  });
+});
+
+describe("content types", () => {
+  it("getContentType resolves identity + capabilities", () => {
+    expect(getContentType("rpm.package")?.apiPath).toBe("rpm/packages");
+    // file.file is the one type with a populated upload capability.
+    expect(getContentType("file.file")?.uploadable?.mechanism).toBe("file");
+    // A read-only type has no upload capability.
+    expect(getContentType("rpm.packagegroup")?.uploadable).toBeUndefined();
+    expect(getContentType("nope.nope")).toBeUndefined();
+  });
+
+  it("getContentTypes filters by installed plugin", () => {
+    expect(getContentTypes({ installed: [] })).toHaveLength(0);
+    const rpmOnly = getContentTypes({
+      installed: [{ component: "rpm" }] as VersionResponse[],
+    });
+    const pulpTypes = rpmOnly.map((ct) => ct.pulpType);
+    expect(pulpTypes).toContain("rpm.package");
+    expect(pulpTypes).toHaveLength(11);
+    expect(pulpTypes).not.toContain("file.file");
+  });
+
+  it("resolveContentTypeByApiPath maps slug → content pulp_type", () => {
+    expect(resolveContentTypeByApiPath({ apiPath: "file/files" })).toBe(
+      "file.file",
+    );
+    expect(resolveContentTypeByApiPath({ apiPath: "rpm/packages" })).toBe(
+      "rpm.package",
+    );
+    expect(resolveContentTypeByApiPath({ apiPath: "python/packages" })).toBe(
+      "python.python",
+    );
+    expect(
+      resolveContentTypeByApiPath({ apiPath: "bogus/bogus" }),
+    ).toBeUndefined();
+    // Endpoint-less types carry no apiPath, so they aren't in the path index.
+    expect(resolveContentTypeByApiPath({ apiPath: "" })).toBeUndefined();
   });
 });

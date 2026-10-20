@@ -260,6 +260,38 @@ export class PulpApi {
     });
   }
 
+  /**
+   * Upload a File content unit via one-shot multipart (asynchronous, 202 + task)
+   * and return the created content unit's `pulp_href`. Seeds the Content list
+   * without a repository, so the unit is a standalone orphan. Optional `labels`
+   * let a test filter the shared list down to just its own unit.
+   */
+  async createFileContent(
+    relativePath: string,
+    labels?: Record<string, string>,
+  ): Promise<string> {
+    const res = await this.ctx.post(this.collectionUrl("content/file/files"), {
+      multipart: {
+        relative_path: relativePath,
+        ...(labels ? { pulp_labels: JSON.stringify(labels) } : {}),
+        file: {
+          name: relativePath.split("/").pop() ?? "file.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from(`e2e content ${relativePath}\n`),
+        },
+      },
+    });
+    if (res.status() !== 202) {
+      throw new Error(
+        `Upload content failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    const { task } = (await res.json()) as { task?: string };
+    if (!task) throw new Error("Content upload returned no task href");
+    const finished = await this.waitForTask(task);
+    return finished.created_resources?.[0] ?? "";
+  }
+
   private async createSync(
     collection: string,
     body: Record<string, unknown>,

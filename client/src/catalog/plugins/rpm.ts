@@ -107,7 +107,6 @@ const rpmDistributionExtras: IEntityField[] = [
 
 export const rpm: IPluginDefinition = {
   app: { isAvailable: whenInstalled("rpm", "pulp-rpm") },
-  ui: { label: "RPM" },
   rest: { pulpType: "rpm.rpm", apiPath: "rpm/rpm" },
   entities: {
     // RPM repository: remotes, signing services and metadata layout options.
@@ -131,7 +130,6 @@ export const rpm: IPluginDefinition = {
         },
       },
       {
-        ui: { label: "ULN" },
         rest: { pulpType: "rpm.uln", apiPath: "rpm/uln" },
         form: {
           isWizard: true,
@@ -202,4 +200,47 @@ export const rpm: IPluginDefinition = {
       },
     },
   },
+
+  // RPM content types. Only identity is modelled now; `uploadable` fields are
+  // authored in the upload phase.
+  content: [
+    { pulpType: "rpm.package", apiPath: "rpm/packages" },
+    {
+      pulpType: "rpm.advisory",
+      apiPath: "rpm/advisories",
+    },
+    { pulpType: "rpm.modulemd", apiPath: "rpm/modulemds" },
+    {
+      pulpType: "rpm.modulemd_defaults",
+      apiPath: "rpm/modulemd_defaults",
+    },
+    {
+      pulpType: "rpm.modulemd_obsolete",
+      apiPath: "rpm/modulemd_obsoletes",
+    },
+    {
+      pulpType: "rpm.packagecategory",
+      apiPath: "rpm/packagecategories",
+    },
+    {
+      pulpType: "rpm.packageenvironment",
+      apiPath: "rpm/packageenvironments",
+    },
+    {
+      pulpType: "rpm.packagegroup",
+      apiPath: "rpm/packagegroups",
+    },
+    {
+      pulpType: "rpm.packagelangpacks",
+      apiPath: "rpm/packagelangpacks",
+    },
+    {
+      pulpType: "rpm.distribution_tree",
+      apiPath: "rpm/distribution_trees",
+    },
+    {
+      pulpType: "rpm.repo_metadata_file",
+      apiPath: "rpm/repo_metadata_files",
+    },
+  ],
 };

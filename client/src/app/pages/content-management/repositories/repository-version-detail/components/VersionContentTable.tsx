@@ -17,25 +17,13 @@ import {
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useContentListQuery } from "@app/queries/content";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { contentIdentifier } from "@app/utils/contentIdentifier";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IVersionContentTableProps {
   versionHref: string;
 }
-
-/** Best-effort human identifier for a content unit across plugins. */
-const contentIdentifier = (unit: Record<string, unknown>): string => {
-  const relativePath = unit.relative_path;
-  if (typeof relativePath === "string" && relativePath) return relativePath;
-  const name = unit.name;
-  if (typeof name === "string" && name) return name;
-  const href = unit.pulp_href;
-  return typeof href === "string" ? extractIdFromHref(href) : "—";
-};
 
 export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
   versionHref,

@@ -40,7 +40,6 @@ const fileGitRemoteExtras: IEntityField[] = [
 /** File: the pulpcore reference plugin — implements all five entity types. */
 export const file: IPluginDefinition = {
   app: { isAvailable: whenInstalled("file", "pulp-file") },
-  ui: { label: "File" },
   rest: { pulpType: "file.file", apiPath: "file/file" },
   entities: {
     // File repository: a remote to sync from plus auto-publish.
@@ -90,7 +89,6 @@ export const file: IPluginDefinition = {
         },
       },
       {
-        ui: { label: "File (Git)" },
         rest: { pulpType: "file.git", apiPath: "file/git" },
         form: {
           isWizard: true,
@@ -130,14 +128,17 @@ export const file: IPluginDefinition = {
         editFields: [],
       },
     },
+  },
 
-    // File content: an uploadable file unit; the collection path is file/files.
-    content: {
-      ui: {},
-      rest: { apiPath: "file/files" },
-      form: {
-        isWizard: false,
-        createFields: [
+  // File content: one uploadable type. The collection path (file/files) differs
+  // from the pulp_type (file.file).
+  content: [
+    {
+      pulpType: "file.file",
+      apiPath: "file/files",
+      uploadable: {
+        mechanism: "file",
+        fields: [
           {
             key: "relative_path",
             label: "Relative Path",
@@ -152,8 +153,7 @@ export const file: IPluginDefinition = {
             resourceKind: "repository",
           },
         ],
-        editFields: [],
       },
     },
-  },
+  ],
 };

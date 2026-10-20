@@ -126,6 +126,22 @@ export const SidebarApp: React.FC = () => {
                 Distributions
               </Link>
             </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/content-management/$pulpDomain/content",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/content-management/$pulpDomain/content"
+                params={{ pulpDomain }}
+              >
+                Content
+              </Link>
+            </NavItem>
           </NavGroup>
 
           <NavGroup title="Monitoring">

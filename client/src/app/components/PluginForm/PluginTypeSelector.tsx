@@ -33,7 +33,7 @@ export const PluginTypeSelector = ({
           <FormSelectOption
             key={p.pulpType}
             value={p.pulpType}
-            label={p.label}
+            label={p.pulpType}
           />
         ))}
       </FormSelect>

@@ -83,7 +83,6 @@ const debDistributionExtras: IEntityField[] = [
 
 export const deb: IPluginDefinition = {
   app: { isAvailable: whenInstalled("deb", "pulp-deb") },
-  ui: { label: "Deb" },
   // Repository is `deb.deb`; its remote/distribution/publication use distinct
   // pulp_types, overridden per slot below.
   rest: { pulpType: "deb.deb", apiPath: "deb/apt" },
@@ -104,7 +103,6 @@ export const deb: IPluginDefinition = {
 
     // APT remote (deb.apt-remote): release filters and sync toggles.
     remote: {
-      ui: {},
       rest: { pulpType: "deb.apt-remote" },
       form: {
         isWizard: true,
@@ -115,7 +113,6 @@ export const deb: IPluginDefinition = {
 
     // APT distribution (deb.apt-distribution): serves a repository/publication.
     distribution: {
-      ui: {},
       rest: { pulpType: "deb.apt-distribution" },
       form: {
         isWizard: false,
@@ -127,7 +124,6 @@ export const deb: IPluginDefinition = {
     // Two publication types: a structured APT publication and a verbatim mirror.
     publication: [
       {
-        ui: { label: "APT" },
         rest: { pulpType: "deb.apt-publication" },
         form: {
           isWizard: false,
@@ -148,7 +144,6 @@ export const deb: IPluginDefinition = {
         },
       },
       {
-        ui: { label: "Verbatim" },
         rest: { pulpType: "deb.verbatim-publication", apiPath: "deb/verbatim" },
         form: {
           isWizard: false,
@@ -158,4 +153,53 @@ export const deb: IPluginDefinition = {
       },
     ],
   },
+
+  content: [
+    { pulpType: "deb.package", apiPath: "deb/packages" },
+    {
+      pulpType: "deb.generic",
+      apiPath: "deb/generic_contents",
+    },
+    {
+      pulpType: "deb.installer_file_index",
+      apiPath: "deb/installer_file_indices",
+    },
+    {
+      pulpType: "deb.installer_package",
+      apiPath: "deb/installer_packages",
+    },
+    {
+      pulpType: "deb.package_index",
+      apiPath: "deb/package_indices",
+    },
+    {
+      pulpType: "deb.package_release_component",
+      apiPath: "deb/package_release_components",
+    },
+    { pulpType: "deb.release", apiPath: "deb/releases" },
+    {
+      pulpType: "deb.release_architecture",
+      apiPath: "deb/release_architectures",
+    },
+    {
+      pulpType: "deb.release_component",
+      apiPath: "deb/release_components",
+    },
+    {
+      pulpType: "deb.release_file",
+      apiPath: "deb/release_files",
+    },
+    {
+      pulpType: "deb.source_index",
+      apiPath: "deb/source_indices",
+    },
+    {
+      pulpType: "deb.source_package",
+      apiPath: "deb/source_packages",
+    },
+    {
+      pulpType: "deb.source_package_release_component",
+      apiPath: "deb/source_release_components",
+    },
+  ],
 };

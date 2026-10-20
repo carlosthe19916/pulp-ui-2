@@ -4,6 +4,10 @@
 export { compoundExpansions } from "./compoundExpansions";
 export { dataViewBodyStates } from "./dataViewStates";
 export { ListPagination } from "./ListPagination";
+export {
+  MultiSelectFilter,
+  type IMultiSelectOption,
+} from "./MultiSelectFilter";
 export { buildThSort, toOrderingParam } from "./sortHelpers";
 export { useColumnSort } from "./useColumnSort";
 

@@ -1,16 +1,18 @@
-import { resolvePulpTypeByApiPath } from "@catalog";
+import {
+  resolveContentTypeByApiPath,
+  resolvePulpTypeByApiPath,
+} from "@catalog";
 import type { EntityType } from "@catalog";
 
 import { pulpApiPath } from "./pulpApi";
 import type { IPulpDomain } from "./pulpApi";
 
-/** URL collection family (first href segment) → catalog entity type. */
+/** URL collection family (first href segment) → catalog entity type (CRUD only). */
 const FAMILY_TO_ENTITY: Record<string, EntityType> = {
   repositories: "repository",
   remotes: "remote",
   distributions: "distribution",
   publications: "publication",
-  content: "content",
 };
 
 /**
@@ -34,10 +36,13 @@ export const resolvePulpType = (
     /\/(repositories|remotes|distributions|publications|content)\/([^/]+)\/([^/]+)\//,
   );
   if (!match) return undefined;
-  const entity = FAMILY_TO_ENTITY[match[1]];
+  const apiPath = `${match[2]}/${match[3]}`;
+  // Content is its own axis (a plugin owns many content types); CRUD entities use
+  // the per-entity apiPath index.
+  if (match[1] === "content") return resolveContentTypeByApiPath({ apiPath });
   return resolvePulpTypeByApiPath({
-    entity,
-    apiPath: `${match[2]}/${match[3]}`,
+    entity: FAMILY_TO_ENTITY[match[1]],
+    apiPath,
   });
 };
 

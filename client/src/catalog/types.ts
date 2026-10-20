@@ -9,13 +9,16 @@ import type { IEntityField } from "./field-types";
  * Data only.
  */
 
-/** The five content entity types Pulp exposes — the static, closed backbone. */
+/**
+ * The mutable CRUD entity types Pulp exposes — the static, closed backbone. Content
+ * is deliberately NOT here: it is immutable (no create/edit form) and a single
+ * plugin owns many content types, so it is modelled separately as `IContentType`.
+ */
 export const ENTITY_TYPES = [
   "repository",
   "remote",
   "distribution",
   "publication",
-  "content",
 ] as const;
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
@@ -26,15 +29,38 @@ export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   remote: "Remote",
   distribution: "Distribution",
   publication: "Publication",
-  content: "Content",
 };
 
 /** A Pulp type identifier, e.g. "file.file" or "rpm.uln". */
 export type PulpType = string;
 
-/** UI concern: the label shown for the plugin (e.g. in the create type selector). */
-export interface IPluginUi {
-  label: string;
+// --- Content types (immutable, many-per-plugin; NOT a CRUD entity) ---
+
+/** How a content unit is uploaded. Widen as the upload phase adds mechanisms. */
+export type ContentUploadMechanism = "file";
+
+/** Upload capability of an uploadable content type. Absent ⇒ read-only (sync/push only). */
+export interface IContentUpload {
+  mechanism: ContentUploadMechanism;
+  fields: IEntityField[];
+}
+
+/** Optional detail-page field layout for a content type (drawer). */
+export interface IContentDetail {
+  fields: IEntityField[];
+}
+
+/**
+ * One content type owned by a plugin. Identity is always present; capabilities are
+ * optional and phase-populated. Content is IMMUTABLE — no create/edit field lists.
+ * `pulpType` is NOT a catalog key (a plugin owns many content types); `apiPath` is
+ * the `<app>/<slug>` collection segment, omitted for endpoint-less types.
+ */
+export interface IContentType {
+  pulpType: PulpType;
+  apiPath?: string;
+  uploadable?: IContentUpload;
+  detail?: IContentDetail;
 }
 
 /** App-environment concern: whether the plugin's package is installed. */
@@ -82,23 +108,23 @@ export interface IPluginRepositoryEntity extends IPluginEntity {
  */
 export interface IPlugin {
   pulpType: PulpType;
-  label: string;
   isAvailable: (installedPlugins: VersionResponse[]) => boolean;
   entities: {
     repository?: IPluginRepositoryEntity;
     remote?: IPluginEntity;
     distribution?: IPluginEntity;
     publication?: IPluginEntity;
-    content?: IPluginEntity;
   };
+  /** Content types this plugin owns (immutable; separate from CRUD `entities`). */
+  content?: IContentType[];
 }
 
 // --- Authored shapes (what a `plugins/*.ts` file writes) ---
 
 /**
- * What every entity slot provides. No identity (`ui`/`rest`) — that comes from the
- * plugin defaults, overridden only by variants (see `IEntityVariant`). Every field
- * is required and explicit.
+ * What every entity slot provides. No identity (`rest`) — that comes from the plugin
+ * defaults, overridden only by variants (see `IEntityVariant`). Every field is
+ * required and explicit.
  */
 export interface IContributionBase {
   form: {
@@ -121,11 +147,10 @@ export interface IRepositoryContribution extends IContributionBase {
 
 /**
  * A variant slot — a second pulp_type for one entity (e.g. `file.git`, `rpm.uln`,
- * `python.pypi`, container pull-through, file content's `file/files`). It overrides
- * the plugin's identity; non-variant slots inherit the plugin defaults.
+ * `python.pypi`, container pull-through). It overrides the plugin's REST identity;
+ * non-variant slots inherit the plugin defaults.
  */
 export type IEntityVariant<T extends IContributionBase> = T & {
-  ui: Partial<IPluginUi>;
   rest: Partial<IPluginRest>;
 };
 
@@ -134,21 +159,21 @@ export type IEntitySlot<T extends IContributionBase> =
   T | IEntityVariant<T> | Array<T | IEntityVariant<T>>;
 
 /**
- * A plugin: its `app`/`ui`/`rest` identity once, then the entities it implements.
- * `ui`/`rest` are the defaults for every slot; a variant slot overrides them. Only
- * `repository` slots carry remote/publication type lists.
+ * A plugin: its `app`/`rest` identity once, then the entities it implements. `rest`
+ * is the default for every slot; a variant slot overrides it. Only `repository`
+ * slots carry remote/publication type lists.
  */
 export interface IPluginDefinition {
   app: IPluginApp;
-  ui: IPluginUi;
   rest: IPluginRest;
   entities: {
     repository?: IEntitySlot<IRepositoryContribution>;
     remote?: IEntitySlot<IContributionBase>;
     distribution?: IEntitySlot<IContributionBase>;
     publication?: IEntitySlot<IContributionBase>;
-    content?: IEntitySlot<IContributionBase>;
   };
+  /** Content types this plugin owns (immutable; separate from CRUD `entities`). */
+  content?: IContentType[];
 }
 
 /** The assembled catalog: pulp_type → the plugin resolved for that pulp_type. */

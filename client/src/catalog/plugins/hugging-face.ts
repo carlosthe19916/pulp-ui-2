@@ -62,7 +62,6 @@ export const huggingFace: IPluginDefinition = {
       "pulp_hugging_face",
     ),
   },
-  ui: { label: "Hugging Face" },
   rest: {
     pulpType: "hugging_face.hugging-face",
     apiPath: "hugging_face/hugging-face",
@@ -122,4 +121,11 @@ export const huggingFace: IPluginDefinition = {
       },
     },
   },
+
+  content: [
+    {
+      pulpType: "hugging_face.hugging-face",
+      apiPath: "hugging_face/hugging-face",
+    },
+  ],
 };

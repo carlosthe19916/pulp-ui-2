@@ -9,7 +9,6 @@ import {
   LabelGroup,
 } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
 import type { ContentSummaryResponse } from "@app/client";
 import {
   summaryEntries,
@@ -24,7 +23,7 @@ const BucketLabels: React.FC<{ entries: IContentTypeCount[] }> = ({
     <LabelGroup numLabels={10}>
       {entries.map((entry) => (
         <Label key={entry.pulpType} color="blue" isCompact>
-          {getPlugin(entry.pulpType)?.label ?? entry.pulpType}: {entry.count}
+          {entry.pulpType}: {entry.count}
         </Label>
       ))}
     </LabelGroup>

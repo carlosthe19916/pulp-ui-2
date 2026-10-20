@@ -36,7 +36,6 @@ const ostreeDistributionExtras: IEntityField[] = [
 
 export const ostree: IPluginDefinition = {
   app: { isAvailable: whenInstalled("ostree", "pulp-ostree") },
-  ui: { label: "OSTree" },
   rest: { pulpType: "ostree.ostree", apiPath: "ostree/ostree" },
   entities: {
     // OSTree repository: a remote to sync from plus static-delta generation.
@@ -68,4 +67,28 @@ export const ostree: IPluginDefinition = {
       },
     },
   },
+
+  content: [
+    {
+      pulpType: "ostree.content",
+      apiPath: "ostree/content",
+    },
+    {
+      pulpType: "ostree.commit",
+      apiPath: "ostree/commits",
+    },
+    {
+      pulpType: "ostree.config",
+      apiPath: "ostree/configs",
+    },
+    {
+      pulpType: "ostree.object",
+      apiPath: "ostree/objects",
+    },
+    { pulpType: "ostree.refs", apiPath: "ostree/refs" },
+    {
+      pulpType: "ostree.summary",
+      apiPath: "ostree/summaries",
+    },
+  ],
 };

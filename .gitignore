@@ -61,3 +61,6 @@ test_suite_analysis/
 .claude/.eval-ran
 # eval-gate per-session edit records (local, not shared)
 .claude/.eval-state/
+
+# Playwright saved auth state (contains credentials)
+.auth/

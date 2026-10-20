@@ -52,7 +52,6 @@ const gemDistributionExtras: IEntityField[] = [
 
 export const gem: IPluginDefinition = {
   app: { isAvailable: whenInstalled("gem", "pulp-gem") },
-  ui: { label: "Gem" },
   rest: { pulpType: "gem.gem", apiPath: "gem/gem" },
   entities: {
     // Gem repository: a remote to sync from.
@@ -100,4 +99,6 @@ export const gem: IPluginDefinition = {
       },
     },
   },
+
+  content: [{ pulpType: "gem.gem", apiPath: "gem/gem" }],
 };

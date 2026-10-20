@@ -47,7 +47,6 @@ const ansibleDistributionExtras: IEntityField[] = [
 
 export const ansible: IPluginDefinition = {
   app: { isAvailable: whenInstalled("ansible", "pulp-ansible") },
-  ui: { label: "Ansible" },
   rest: { pulpType: "ansible.ansible", apiPath: "ansible/ansible" },
   entities: {
     // Ansible repository: a remote to sync from plus GPG verification.
@@ -68,7 +67,6 @@ export const ansible: IPluginDefinition = {
     // Three remote types: Collection (primary), Role, and Git.
     remote: [
       {
-        ui: { label: "Collection" },
         rest: { pulpType: "ansible.collection", apiPath: "ansible/collection" },
         form: {
           isWizard: true,
@@ -77,7 +75,6 @@ export const ansible: IPluginDefinition = {
         },
       },
       {
-        ui: { label: "Role" },
         rest: { pulpType: "ansible.role", apiPath: "ansible/role" },
         form: {
           isWizard: true,
@@ -86,7 +83,6 @@ export const ansible: IPluginDefinition = {
         },
       },
       {
-        ui: { label: "Git" },
         rest: { pulpType: "ansible.git", apiPath: "ansible/git" },
         form: {
           isWizard: true,
@@ -111,4 +107,31 @@ export const ansible: IPluginDefinition = {
       },
     },
   },
+
+  content: [
+    {
+      pulpType: "ansible.collection_version",
+      apiPath: "ansible/collection_versions",
+    },
+    {
+      pulpType: "ansible.collection_deprecation",
+      apiPath: "ansible/collection_deprecations",
+    },
+    {
+      pulpType: "ansible.collection_mark",
+      apiPath: "ansible/collection_marks",
+    },
+    {
+      pulpType: "ansible.collection_signature",
+      apiPath: "ansible/collection_signatures",
+    },
+    {
+      pulpType: "ansible.namespace",
+      apiPath: "ansible/namespaces",
+    },
+    {
+      pulpType: "ansible.role",
+      apiPath: "ansible/roles",
+    },
+  ],
 };

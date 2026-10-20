@@ -3,9 +3,8 @@ import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
 import type { IPluginDefinition } from "../types";
 
-/** Shared ui + rest override for the pull-through variant (remote + distribution). */
+/** Shared rest override for the pull-through variant (remote + distribution). */
 const pullThrough = {
-  ui: { label: "Container (pull-through)" },
   rest: {
     pulpType: "container.pull-through",
     apiPath: "container/pull-through",
@@ -71,7 +70,6 @@ const containerDistributionExtras: IEntityField[] = [
 
 export const container: IPluginDefinition = {
   app: { isAvailable: whenInstalled("container", "pulp-container") },
-  ui: { label: "Container" },
   rest: { pulpType: "container.container", apiPath: "container/container" },
   entities: {
     // container.container (sync, no publish) + container.container-push (implicit).
@@ -89,7 +87,6 @@ export const container: IPluginDefinition = {
         compatiblePublicationTypes: [],
       },
       {
-        ui: { label: "Container (push)" },
         rest: {
           pulpType: "container.container-push",
           apiPath: "container/container-push",
@@ -197,4 +194,24 @@ export const container: IPluginDefinition = {
       },
     ],
   },
+
+  // Container content is read-only in the API (populated by registry push / sync).
+  content: [
+    {
+      pulpType: "container.blob",
+      apiPath: "container/blobs",
+    },
+    {
+      pulpType: "container.manifest",
+      apiPath: "container/manifests",
+    },
+    {
+      pulpType: "container.signature",
+      apiPath: "container/signatures",
+    },
+    {
+      pulpType: "container.tag",
+      apiPath: "container/tags",
+    },
+  ],
 };

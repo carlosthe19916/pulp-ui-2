@@ -16,15 +16,9 @@ export const ContentQueryKey = "content";
 
 export type IContentListParams = ListParams<ContentListData>;
 
-export const contentRootQueryOptions = queryOptions({
-  queryKey: [ContentQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
-
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede params
- * so a prefix invalidates all variants. Shared by the query options and the
- * generic CRUD mutations (via `contentRootQueryOptions`) to prevent key drift.
+ * so a prefix invalidates all variants.
  */
 export const contentKeys = {
   all: () => [ContentQueryKey] as const,

@@ -34,6 +34,10 @@ describe("pulpHref helpers", () => {
     expect(
       resolvePulpType("/api/pulp/default/api/v3/content/file/files/abc/"),
     ).toBe("file.file");
+    // Content now resolves for every modelled type, not just file.
+    expect(
+      resolvePulpType("/api/pulp/default/api/v3/content/rpm/packages/abc/"),
+    ).toBe("rpm.package");
   });
 
   it("returns undefined for falsy, untyped, or unmodelled hrefs", () => {
@@ -46,5 +50,7 @@ describe("pulpHref helpers", () => {
     expect(resolvePulpType("/repositories/")).toBeUndefined();
     // Family matches but the plugin is not in the catalog.
     expect(resolvePulpType("/repositories/bogus/bogus/x/")).toBeUndefined();
+    // Content family but an unmodelled content type.
+    expect(resolvePulpType("/content/bogus/bogus/x/")).toBeUndefined();
   });
 });

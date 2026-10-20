@@ -30,7 +30,6 @@ const npmDistributionExtras: IEntityField[] = [
 
 export const npm: IPluginDefinition = {
   app: { isAvailable: whenInstalled("npm", "pulp-npm") },
-  ui: { label: "npm" },
   rest: { pulpType: "npm.npm", apiPath: "npm/npm" },
   entities: {
     // npm repository: supports sync but has no publications (publish stays off).
@@ -62,4 +61,6 @@ export const npm: IPluginDefinition = {
       },
     },
   },
+
+  content: [{ pulpType: "npm.package", apiPath: "npm/packages" }],
 };

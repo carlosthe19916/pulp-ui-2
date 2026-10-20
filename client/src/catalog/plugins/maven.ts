@@ -30,7 +30,6 @@ const mavenDistributionExtras: IEntityField[] = [
 
 export const maven: IPluginDefinition = {
   app: { isAvailable: whenInstalled("maven", "pulp-maven") },
-  ui: { label: "Maven" },
   rest: { pulpType: "maven.maven", apiPath: "maven/maven" },
   entities: {
     // Maven repository: a pull-through cache — no sync or publish (both stay off).
@@ -62,4 +61,21 @@ export const maven: IPluginDefinition = {
       },
     },
   },
+
+  content: [
+    {
+      pulpType: "maven.artifact",
+      apiPath: "maven/artifact",
+    },
+    {
+      pulpType: "maven.metadata",
+      apiPath: "maven/metadata",
+    },
+    {
+      pulpType: "maven.package",
+      apiPath: "maven/package",
+    },
+    // Internal index page — no browsable collection endpoint, so no apiPath.
+    { pulpType: "maven.index-page" },
+  ],
 };
