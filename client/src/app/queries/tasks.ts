@@ -17,7 +17,6 @@ import type {
   TasksListData,
 } from "@app/client";
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
-import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildTaskHref } from "@app/utils/taskHref";
 import { getTaskErrorMessage } from "@app/utils/utils";
@@ -233,7 +232,7 @@ export const useTaskDetailQueries = ({
   });
 
 export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
-  const domain = useDefaultDomain();
+  const domain = useSelectedDomain();
   return useQuery({
     ...tasksListQueryOptions({ domain, params }),
     refetchInterval: (query) =>
@@ -295,8 +294,9 @@ export const useTasksByPrnListQuery = ({
 };
 
 export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
+  const domain = useSelectedDomain();
   return useSuspenseQuery({
-    ...taskDetailQueryOptions({ taskHref: buildTaskHref(taskId) }),
+    ...taskDetailQueryOptions({ taskHref: buildTaskHref(taskId, domain) }),
     refetchInterval: (query) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
@@ -326,7 +326,7 @@ export const useTaskPurgeMutation = (
   options?: IMutationCallbacks<AsyncOperationResponse, Purge>,
 ) => {
   const queryClient = useQueryClient();
-  const domain = useDefaultDomain();
+  const domain = useSelectedDomain();
   return useMutation<AsyncOperationResponse, DrfAxiosError, Purge>({
     mutationFn: async (body: Purge) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(

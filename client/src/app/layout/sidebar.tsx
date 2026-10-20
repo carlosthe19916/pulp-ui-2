@@ -29,9 +29,6 @@ export const SidebarApp: React.FC = () => {
             <NavItem isActive={!!matchRoute({ to: "/" })}>
               <Link to="/">Dashboard</Link>
             </NavItem>
-            <NavItem isActive={!!matchRoute({ to: "/tasks", fuzzy: true })}>
-              <Link to="/tasks">Tasks</Link>
-            </NavItem>
           </NavGroup>
 
           {domainsEnabled && (
@@ -48,6 +45,22 @@ export const SidebarApp: React.FC = () => {
               </NavItem>
             </NavGroup>
           )}
+
+          <NavGroup title="Monitoring">
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/monitoring/$pulpDomain/tasks",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link to="/monitoring/$pulpDomain/tasks" params={{ pulpDomain }}>
+                Tasks
+              </Link>
+            </NavItem>
+          </NavGroup>
 
           {/* Ordered to follow the Pulp content pipeline: a Remote feeds a
               Repository, which is snapshotted as a Publication and served by a

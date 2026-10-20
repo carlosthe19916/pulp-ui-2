@@ -140,7 +140,12 @@ export const Dashboard: React.FC = () => {
                 <CardBody>
                   <Content component="ul">
                     <Content component="li">
-                      <Link to="/tasks">Tasks</Link>
+                      <Link
+                        to="/monitoring/$pulpDomain/tasks"
+                        params={{ pulpDomain }}
+                      >
+                        Tasks
+                      </Link>
                     </Content>
                     <Content component="li">
                       <Link

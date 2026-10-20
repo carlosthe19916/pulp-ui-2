@@ -27,7 +27,7 @@ import {
   useTaskCancelMutation,
   useTasksByPrnListQuery,
 } from "@app/queries/tasks";
-import { extractTaskId } from "@app/utils/taskHref";
+import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 /** Operation label from a Pulp task name. */
@@ -79,7 +79,9 @@ export const ResourceTaskTable: React.FC<{ prn: string }> = ({ prn }) => {
   ];
 
   const rows: DataViewTr[] = tasks.map((task) => {
-    const taskId = extractTaskId(task.pulp_href ?? "");
+    const taskHref = task.pulp_href ?? "";
+    const taskId = extractTaskId(taskHref);
+    const pulpDomain = extractTaskDomain(taskHref);
     const isActive = !isTerminalTaskState(task.state);
     return {
       id: task.pulp_href,
@@ -106,7 +108,10 @@ export const ResourceTaskTable: React.FC<{ prn: string }> = ({ prn }) => {
               flexWrap={{ default: "nowrap" }}
             >
               <FlexItem>
-                <Link to="/tasks/$taskId" params={{ taskId }}>
+                <Link
+                  to="/monitoring/$pulpDomain/tasks/$taskId"
+                  params={{ pulpDomain, taskId }}
+                >
                   Detail
                 </Link>
               </FlexItem>

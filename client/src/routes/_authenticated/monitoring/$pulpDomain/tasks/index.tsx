@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { TaskList } from "@app/pages/tasks/task-list/TaskList";
 
-export const Route = createFileRoute("/_authenticated/tasks/")({
+export const Route = createFileRoute(
+  "/_authenticated/monitoring/$pulpDomain/tasks/",
+)({
   component: TaskList,
 });

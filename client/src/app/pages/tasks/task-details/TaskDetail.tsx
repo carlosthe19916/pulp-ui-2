@@ -26,6 +26,7 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   isCancelable,
   useSuspenseTaskDetailQuery,
@@ -40,6 +41,7 @@ interface ITaskDetailProps {
 }
 
 export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
+  const { name: pulpDomain } = useSelectedDomain();
   const { data: task } = useSuspenseTaskDetailQuery({ taskId });
   const taskError = (task as TaskWithError).error;
   const cancelMutation = useTaskCancelMutation();
@@ -76,7 +78,9 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
-              <Link to="/tasks">Tasks</Link>
+              <Link to="/monitoring/$pulpDomain/tasks" params={{ pulpDomain }}>
+                Tasks
+              </Link>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>{taskName}</BreadcrumbItem>
           </Breadcrumb>
@@ -208,7 +212,10 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
                   const childId = extractTaskId(href);
                   return (
                     <Content component="li" key={href}>
-                      <Link to="/tasks/$taskId" params={{ taskId: childId }}>
+                      <Link
+                        to="/monitoring/$pulpDomain/tasks/$taskId"
+                        params={{ pulpDomain, taskId: childId }}
+                      >
                         {childId}
                       </Link>
                     </Content>

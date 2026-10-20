@@ -8,6 +8,10 @@ import {
   BreadcrumbItem,
   Label,
   PageSection,
+  Tab,
+  TabContentBody,
+  TabTitleText,
+  Tabs,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
@@ -19,12 +23,14 @@ import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
+import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { RemoteModal } from "../remote-list/components/RemoteModal";
 import { RemoteDetailsView } from "./components/RemoteDetailsView";
+import { RemoteTasksTab } from "./components/RemoteTasksTab";
 
 interface IRemoteDetailProps {
   pulpDomain: string;
@@ -42,6 +48,12 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ pulpType, id });
   const href = remote.pulp_href ?? "";
+  const prn = remote.prn ?? "";
+
+  // Tab-title count: one row, read the paginated `count`.
+  const { data: tasksCount } = useTasksListQuery({
+    params: { reserved_resources: prn, limit: 1 },
+  });
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) => {
@@ -67,6 +79,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | number>("details");
 
   return (
     <>
@@ -110,7 +123,27 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       />
 
       <PageSection>
-        <RemoteDetailsView remote={remote} pulpType={pulpType} />
+        <Tabs
+          activeKey={activeTab}
+          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          mountOnEnter
+        >
+          <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>
+            <TabContentBody hasPadding>
+              <RemoteDetailsView remote={remote} pulpType={pulpType} />
+            </TabContentBody>
+          </Tab>
+          <Tab
+            eventKey="tasks"
+            title={
+              <TabTitleText>Tasks ({tasksCount?.count ?? 0})</TabTitleText>
+            }
+          >
+            <TabContentBody hasPadding>
+              <RemoteTasksTab prn={prn} />
+            </TabContentBody>
+          </Tab>
+        </Tabs>
       </PageSection>
 
       <RemoteModal

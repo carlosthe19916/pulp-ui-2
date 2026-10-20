@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
-import { extractTaskId } from "./taskHref";
+import { extractTaskDomain, extractTaskId } from "./taskHref";
 
 interface INotifyFn {
   (notification: {
@@ -24,13 +24,17 @@ export const notifyTaskStarted = ({
   title = "Task started",
 }: INotifyTaskStartedOptions) => {
   const taskId = extractTaskId(taskHref);
+  const pulpDomain = extractTaskDomain(taskHref);
   addNotification({
     title,
     variant: "info",
     description: (
       <>
         Track progress on the{" "}
-        <Link to="/tasks/$taskId" params={{ taskId }}>
+        <Link
+          to="/monitoring/$pulpDomain/tasks/$taskId"
+          params={{ pulpDomain, taskId }}
+        >
           task detail
         </Link>{" "}
         page.
@@ -55,13 +59,17 @@ export const notifyTaskFailed = ({
   description,
 }: INotifyTaskFailedOptions) => {
   const taskId = extractTaskId(taskHref);
+  const pulpDomain = extractTaskDomain(taskHref);
   addNotification({
     title,
     variant: "danger",
     description: (
       <>
         {description ? <>{description} </> : "See the "}
-        <Link to="/tasks/$taskId" params={{ taskId }}>
+        <Link
+          to="/monitoring/$pulpDomain/tasks/$taskId"
+          params={{ pulpDomain, taskId }}
+        >
           task detail
         </Link>{" "}
         page for the error.
