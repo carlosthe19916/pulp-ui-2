@@ -8,6 +8,17 @@ import type {
   PerPageOptions,
 } from "@patternfly/react-core";
 
+/**
+ * Per-page choices for every list built on `ListPagination`. Capping at 20 bounds
+ * the per-row task probe fan-out on probe lists (`useResourceTasks`: domains,
+ * repositories, remotes, distributions) — without it PatternFly's default menu
+ * offers 100, which is 100 polling `tasks/?limit=1` requests per refetch.
+ */
+const PER_PAGE_OPTIONS: PerPageOptions[] = [
+  { title: "10", value: 10 },
+  { title: "20", value: 20 },
+];
+
 interface IListPaginationProps {
   variant: PaginationVariant;
   itemCount: number;
@@ -18,8 +29,6 @@ interface IListPaginationProps {
     onSetPage: OnSetPage;
     onPerPageSelect: OnPerPageSelect;
   };
-  /** Override the per-page menu (defaults to PatternFly's 10/20/50/100). */
-  perPageOptions?: PerPageOptions[];
 }
 
 /** Standard list `<Pagination>` wiring, so list pages don't each repeat it. */
@@ -27,7 +36,6 @@ export const ListPagination: React.FC<IListPaginationProps> = ({
   variant,
   itemCount,
   pagination,
-  perPageOptions,
 }) => (
   <Pagination
     variant={variant}
@@ -36,6 +44,6 @@ export const ListPagination: React.FC<IListPaginationProps> = ({
     perPage={pagination.perPage}
     onSetPage={pagination.onSetPage}
     onPerPageSelect={pagination.onPerPageSelect}
-    perPageOptions={perPageOptions}
+    perPageOptions={PER_PAGE_OPTIONS}
   />
 );

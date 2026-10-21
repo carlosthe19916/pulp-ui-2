@@ -35,7 +35,6 @@ import {
   useColumnSort,
   type DataViewTh,
   ListPagination,
-  PROBE_LIST_PER_PAGE_OPTIONS,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
@@ -311,7 +310,6 @@ export const DistributionList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
-                perPageOptions={PROBE_LIST_PER_PAGE_OPTIONS}
               />
             }
           />
@@ -332,7 +330,6 @@ export const DistributionList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
-                perPageOptions={PROBE_LIST_PER_PAGE_OPTIONS}
               />
             }
           />
