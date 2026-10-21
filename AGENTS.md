@@ -201,8 +201,10 @@ import tableStyles from "@patternfly/react-styles/css/components/Table/table";
   answers `200` with an empty list), **return a falsy sentinel** (`""` / `null` —
   match the field's `enabled: !!value` convention) and handle it where the throw
   belongs: the route **`loader`** (throw there → `errorComponent` renders) or the
-  consuming component. See `entityHrefByIdQueryOptions` in
-  `client/src/app/queries/utils/entityCrud.ts`.
+  consuming component. See `buildContentHref` in
+  `client/src/app/queries/content.ts` (returns `null` for a `pulp_type` with no
+  `apiPath`), which the content detail route `loader` throws on → `DetailRouteError`
+  (`routes/_authenticated/content-management/$pulpDomain/content/$contentType/$contentId/index.tsx`).
 
 ### Content query file layout
 
@@ -217,7 +219,7 @@ duplicate generic reads in the plugin file.
   actions **and sub-resources that are uniform across plugins** — e.g. repository
   `sync` (`useRepositorySyncMutation`) and `versions`
   (`useRepositoryVersionsListQuery`): one hook serves every plugin. Like
-  `useEntityCreateMutation`, these rebuild the endpoint client-side from parts
+  `useRepositoryCreateMutation`, these rebuild the endpoint client-side from parts
   (`pulpApiPath(`repositories/${apiPath}/${id}/<action>/`, domain)`, with
   `apiPath` from the catalog) rather than appending to the server `pulp_href`. A
   sub-resource counts as uniform when its response type is generic and its query
@@ -232,11 +234,15 @@ duplicate generic reads in the plugin file.
   Reuse the base's `*RootQueryOptions.queryKey` for invalidation so cache slots
   stay unified.
 - **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
-  `toProxyHref(href)`. Use `entityDetailQueryOptions` /
-  `useSuspenseEntityDetailQuery` from `queries/utils/entityCrud.ts`, keyed on
-  `<family>RootQueryOptions.queryKey` (which makes the key identical to
-  `<name>Keys.detail(href)`). Do **not** add a `<plugin><Family>DetailQueryOptions`
-  to the plugin file.
+  `toProxyHref(href)`. It lives in the **base family file** as that family's own
+  `<family>DetailQueryOptions` + `use<Family>DetailQuery` /
+  `useSuspense<Family>DetailQuery` (e.g. `contentDetailQueryOptions` /
+  `useContentDetailQuery` in `queries/content.ts`; `repositoryDetailQueryOptions` /
+  `useSuspenseRepositoryDetailQuery` in `queries/repositories.ts`), keyed on the
+  family's `<name>Keys.detail(href)` so the slot is unified. Generic over the
+  response type — each caller passes the concrete generated type
+  (`useContentDetailQuery<FileFileContentResponse>`), never a union. Do **not** add a
+  `<plugin><Family>DetailQueryOptions` to the plugin file.
 
 ## Development
 
