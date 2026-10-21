@@ -3,6 +3,7 @@
 // the lazy-mount wrapper for expanded-row content.
 export { dataViewBodyStates } from "./dataViewStates";
 export { ListPagination } from "./ListPagination";
+export { PROBE_LIST_PER_PAGE_OPTIONS } from "./perPageOptions";
 export {
   MultiSelectFilter,
   type IMultiSelectOption,

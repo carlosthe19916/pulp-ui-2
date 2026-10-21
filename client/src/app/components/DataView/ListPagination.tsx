@@ -5,6 +5,7 @@ import type {
   OnSetPage,
   OnPerPageSelect,
   PaginationVariant,
+  PerPageOptions,
 } from "@patternfly/react-core";
 
 interface IListPaginationProps {
@@ -17,6 +18,8 @@ interface IListPaginationProps {
     onSetPage: OnSetPage;
     onPerPageSelect: OnPerPageSelect;
   };
+  /** Override the per-page menu (defaults to PatternFly's 10/20/50/100). */
+  perPageOptions?: PerPageOptions[];
 }
 
 /** Standard list `<Pagination>` wiring, so list pages don't each repeat it. */
@@ -24,6 +27,7 @@ export const ListPagination: React.FC<IListPaginationProps> = ({
   variant,
   itemCount,
   pagination,
+  perPageOptions,
 }) => (
   <Pagination
     variant={variant}
@@ -32,5 +36,6 @@ export const ListPagination: React.FC<IListPaginationProps> = ({
     perPage={pagination.perPage}
     onSetPage={pagination.onSetPage}
     onPerPageSelect={pagination.onPerPageSelect}
+    perPageOptions={perPageOptions}
   />
 );

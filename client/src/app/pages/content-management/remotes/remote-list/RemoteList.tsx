@@ -31,6 +31,7 @@ import {
   useColumnSort,
   type DataViewTh,
   ListPagination,
+  PROBE_LIST_PER_PAGE_OPTIONS,
 } from "@app/components/DataView";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
@@ -314,6 +315,7 @@ export const RemoteList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                perPageOptions={PROBE_LIST_PER_PAGE_OPTIONS}
               />
             }
           />
@@ -334,6 +336,7 @@ export const RemoteList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                perPageOptions={PROBE_LIST_PER_PAGE_OPTIONS}
               />
             }
           />

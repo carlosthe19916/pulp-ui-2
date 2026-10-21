@@ -24,7 +24,6 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
-import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -233,46 +232,6 @@ export const repositoryVersionsListQueryOptions = ({
     },
   });
 
-/** Versions tab renders every version in one table (no pagination UI), so page through all. */
-export const allRepositoryVersionsListQueryOptions = ({
-  apiPath,
-  id,
-  domain,
-  options,
-}: {
-  apiPath?: string;
-  id: string;
-  domain: IPulpDomain;
-  options?: Omit<
-    UseQueryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>({
-    ...options,
-    queryKey: [
-      ...repositoriesRootQueryOptions.queryKey,
-      "versions",
-      "all",
-      domain,
-      apiPath,
-      id,
-    ],
-    queryFn: async (): Promise<PaginatedRepositoryVersionResponseList> => {
-      const { results, count } = await fetchAllPages<RepositoryVersionResponse>(
-        async (offset, limit) => {
-          const response =
-            await axiosInstance.get<PaginatedRepositoryVersionResponseList>(
-              repositoryVersionsPath(apiPath ?? "", id, domain),
-              { params: { offset, limit } },
-            );
-          return response.data;
-        },
-      );
-      return { count, next: null, previous: null, results };
-    },
-  });
-
 export const useRepositoryVersionsListQuery = ({
   apiPath,
   id,
@@ -285,20 +244,6 @@ export const useRepositoryVersionsListQuery = ({
   const domain = useSelectedDomain();
   return useQuery({
     ...repositoryVersionsListQueryOptions({ apiPath, id, params, domain }),
-    enabled: !!apiPath && !!id,
-  });
-};
-
-export const useAllRepositoryVersionsListQuery = ({
-  apiPath,
-  id,
-}: {
-  apiPath?: string;
-  id: string;
-}) => {
-  const domain = useSelectedDomain();
-  return useQuery({
-    ...allRepositoryVersionsListQueryOptions({ apiPath, id, domain }),
     enabled: !!apiPath && !!id,
   });
 };

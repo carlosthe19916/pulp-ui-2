@@ -2,15 +2,22 @@ import type React from "react";
 
 import { Link } from "@tanstack/react-router";
 
+import { PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
   DataViewTable,
+  DataViewToolbar,
+  useDataViewPagination,
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import { dataViewBodyStates, type DataViewTh } from "@app/components/DataView";
+import {
+  dataViewBodyStates,
+  ListPagination,
+  type DataViewTh,
+} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useAllRepositoryVersionsListQuery } from "@app/queries/repositories";
+import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime } from "@app/utils/utils";
@@ -28,14 +35,19 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   pulpType,
   pulpDomain,
 }) => {
-  const { data, isLoading, error } = useAllRepositoryVersionsListQuery({
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { data, isLoading, error } = useRepositoryVersionsListQuery({
     apiPath,
     id,
+    params: {
+      ordering: "-number",
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
   });
 
-  const versions = [...(data?.results ?? [])].sort(
-    (a, b) => (b.number ?? 0) - (a.number ?? 0),
-  );
+  const versions = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
     { cell: "Version" },
@@ -103,6 +115,15 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
         columns={columns}
         rows={rows}
         bodyStates={bodyStates}
+      />
+      <DataViewToolbar
+        pagination={
+          <ListPagination
+            variant={PaginationVariant.bottom}
+            itemCount={totalCount}
+            pagination={pagination}
+          />
+        }
       />
     </DataView>
   );
