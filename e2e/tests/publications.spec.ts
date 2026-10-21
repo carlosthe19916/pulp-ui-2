@@ -31,7 +31,7 @@ test.describe("Publications", () => {
     await publicationsPage.goto();
     const dialog = await publicationsPage.openCreate();
     // Pick File so the create routes to publications/file/file, then the repo.
-    await publicationsPage.selectType(dialog, "File");
+    await publicationsPage.selectType(dialog, "file.file");
     await publicationsPage.selectResource(dialog, "Repository", repoName);
     await dialog.getByRole("button", { name: "Create", exact: true }).click();
     await expect(dialog).toBeHidden();

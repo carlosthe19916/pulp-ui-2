@@ -13,7 +13,7 @@ test.describe("Remotes", () => {
 
     const name = cleanup.remote(uniqueName("remote"));
     await remotesPage.create({
-      type: "File",
+      type: "file.file",
       fields: { Name: name, URL: FILE_URL },
     });
     await remotesPage.expectRowVisible(name);
@@ -31,7 +31,7 @@ test.describe("Remotes", () => {
   }) => {
     await remotesPage.goto();
     const types = await remotesPage.typeOptions();
-    expect(types).toContain("File");
+    expect(types).toContain("file.file");
     // Multiple plugins are installed in the dev/e2e backend.
     expect(types.length).toBeGreaterThan(1);
   });
@@ -76,7 +76,7 @@ test.describe("Remotes", () => {
     await remotesPage.goto();
     const name = cleanup.remote(uniqueName("remote"));
     await remotesPage.create({
-      type: "Container",
+      type: "container.container",
       fields: {
         Name: name,
         URL: "https://registry-1.docker.io",
@@ -84,7 +84,7 @@ test.describe("Remotes", () => {
       },
     });
     await remotesPage.expectRowVisible(name);
-    await expect(remotesPage.row(name)).toContainText("Container");
+    await expect(remotesPage.row(name)).toContainText("container.container");
 
     await remotesPage.delete(name);
     await remotesPage.expectRowGone(name);

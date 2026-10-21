@@ -51,8 +51,10 @@ test.describe("Content", () => {
       e2e: label,
     });
     cleanup.href(contentHref);
-    const contentId =
-      contentHref.split("/").filter(Boolean).pop() ?? contentHref;
+    // The list filters down to this one unit by its unique label, and the Labels
+    // column renders `e2e=<label>` — a stable row identifier. (The PRN column shows
+    // only a truncated short id, so the full href uuid never appears as row text.)
+    const rowText = `e2e=${label}`;
 
     await contentPage.goto();
     // Switch the filter attribute from the default (Type) to Label. The attribute
@@ -77,14 +79,15 @@ test.describe("Content", () => {
       ),
       contentPage.page.getByPlaceholder("Filter by Label").fill(`e2e=${label}`),
     ]);
-    await contentPage.expectRowVisible(contentId);
+    await contentPage.expectRowVisible(rowText);
 
-    // Expand the row → the detail panel runs the per-unit GET and shows the real
-    // relative_path (absent from the sparse list row) plus a checksum.
-    await contentPage.expandRow(contentId);
+    // Expand the row → the artifacts panel lists each artifact (relative_path →
+    // artifact href) from the row's own data, with no extra per-unit GET. The full
+    // per-unit detail (checksums, etc.) lives on the dedicated Content detail page.
+    await contentPage.expandRow(rowText);
     await expect(contentPage.page.getByText(relativePath)).toBeVisible();
     await expect(
-      contentPage.page.getByText("SHA-256", { exact: true }),
+      contentPage.page.getByText("/artifacts/").first(),
     ).toBeVisible();
   });
 });

@@ -21,7 +21,7 @@ test.describe("Create form — Remote wizard", () => {
   test("opens without showing validation errors", async ({ remotesPage }) => {
     await remotesPage.goto();
     const dialog = await remotesPage.openCreate();
-    await remotesPage.selectType(dialog, "File");
+    await remotesPage.selectType(dialog, "file.file");
 
     // Required fields are empty, but a freshly opened form must not show errors.
     await expect(dialog.getByText(/is required/)).toHaveCount(0);
@@ -32,7 +32,7 @@ test.describe("Create form — Remote wizard", () => {
   }) => {
     await remotesPage.goto();
     const dialog = await remotesPage.openCreate();
-    await remotesPage.selectType(dialog, "File");
+    await remotesPage.selectType(dialog, "file.file");
     const next = dialog.getByRole("button", { name: "Next", exact: true });
 
     await expect(next).toBeDisabled();
@@ -51,7 +51,7 @@ test.describe("Create form — Remote wizard", () => {
   }) => {
     await remotesPage.goto();
     const dialog = await remotesPage.openCreate();
-    await remotesPage.selectType(dialog, "File");
+    await remotesPage.selectType(dialog, "file.file");
 
     const authStep = dialog.getByRole("button", { name: "Authentication" });
     const timeoutsStep = dialog.getByRole("button", { name: "Timeouts" });
@@ -80,7 +80,7 @@ test.describe("Create form — Remote wizard", () => {
   }) => {
     await remotesPage.goto();
     const dialog = await remotesPage.openCreate();
-    await remotesPage.selectType(dialog, "File");
+    await remotesPage.selectType(dialog, "file.file");
 
     const name = uniqueName("remote");
     await dialog.getByRole("textbox", { name: "Name", exact: true }).fill(name);
@@ -120,7 +120,7 @@ test.describe("Create form — plain modal", () => {
   }) => {
     await repositoriesPage.goto();
     const dialog = await repositoriesPage.openCreate();
-    await repositoriesPage.selectType(dialog, "File");
+    await repositoriesPage.selectType(dialog, "file.file");
 
     // Nothing typed yet → no error on open.
     await expect(dialog.getByText("Name is required")).toHaveCount(0);
@@ -147,7 +147,7 @@ test.describe("Create form — cross-entity compatibility", () => {
     await repositoriesPage.goto();
     const dialog = await repositoriesPage.openCreate();
 
-    await repositoriesPage.selectType(dialog, "File");
+    await repositoriesPage.selectType(dialog, "file.file");
     let listbox = await repositoriesPage.openResourcePicker(dialog, "Remote");
     await expect(
       listbox.getByRole("option", { name: fileRemote }),
@@ -158,7 +158,7 @@ test.describe("Create form — cross-entity compatibility", () => {
     await repositoriesPage.closeResourcePicker(dialog, "Remote");
 
     // Switching the type re-filters the picker to that type's remotes.
-    await repositoriesPage.selectType(dialog, "RPM");
+    await repositoriesPage.selectType(dialog, "rpm.rpm");
     listbox = await repositoriesPage.openResourcePicker(dialog, "Remote");
     await expect(
       listbox.getByRole("option", { name: rpmRemote }),
@@ -182,7 +182,7 @@ test.describe("Create form — cross-entity compatibility", () => {
     await publicationsPage.goto();
     const dialog = await publicationsPage.openCreate();
 
-    await publicationsPage.selectType(dialog, "File");
+    await publicationsPage.selectType(dialog, "file.file");
     let listbox = await publicationsPage.openResourcePicker(
       dialog,
       "Repository",
@@ -191,7 +191,7 @@ test.describe("Create form — cross-entity compatibility", () => {
     await expect(listbox.getByRole("option", { name: rpmRepo })).toHaveCount(0);
     await publicationsPage.closeResourcePicker(dialog, "Repository");
 
-    await publicationsPage.selectType(dialog, "RPM");
+    await publicationsPage.selectType(dialog, "rpm.rpm");
     listbox = await publicationsPage.openResourcePicker(dialog, "Repository");
     await expect(listbox.getByRole("option", { name: rpmRepo })).toBeVisible();
     await expect(listbox.getByRole("option", { name: fileRepo })).toHaveCount(
@@ -219,7 +219,7 @@ test.describe("Create form — cross-entity compatibility", () => {
 
     await distributionsPage.goto();
     const dialog = await distributionsPage.openCreate();
-    await distributionsPage.selectType(dialog, "File");
+    await distributionsPage.selectType(dialog, "file.file");
     const listbox = await distributionsPage.openResourcePicker(
       dialog,
       "Publication",

@@ -56,7 +56,11 @@ export abstract class DataViewList {
   }
 
   async expectRowGone(name: string): Promise<void> {
-    await expect(this.row(name)).toHaveCount(0);
+    // Async (202 + task) deletes — remotes, repositories, distributions — only drop
+    // the row once the delete task settles and the next task-status poll (every 5s,
+    // DEFAULT_REFETCH_INTERVAL) invalidates the list. The default 5s expect timeout
+    // sits right on that boundary, so wait generously past one poll cycle.
+    await expect(this.row(name)).toHaveCount(0, { timeout: 15_000 });
   }
 
   /** Expand a compound-expandable row by clicking its toggle cell (the only button). */

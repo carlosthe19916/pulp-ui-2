@@ -11,6 +11,10 @@ test.describe("Repositories", () => {
     repositoriesPage,
     cleanup,
   }) => {
+    // One full create+delete round-trip per installed plugin type (a dozen-plus on
+    // a fully-loaded backend). Each async delete waits out a ~5s task-status poll,
+    // so the whole loop needs well past the default 30s test budget.
+    test.setTimeout(180_000);
     await repositoriesPage.goto();
 
     const types = await repositoriesPage.typeOptions();
@@ -32,7 +36,10 @@ test.describe("Repositories", () => {
   }) => {
     await repositoriesPage.goto();
     const name = cleanup.repository(uniqueName("repo"));
-    await repositoriesPage.create({ type: "File", fields: { Name: name } });
+    await repositoriesPage.create({
+      type: "file.file",
+      fields: { Name: name },
+    });
     await repositoriesPage.expectRowVisible(name);
 
     await repositoriesPage.editField(name, { Description: "updated by e2e" });

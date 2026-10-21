@@ -10,7 +10,7 @@ test.describe("Distributions", () => {
 
     const name = cleanup.distribution(uniqueName("dist"));
     await distributionsPage.create({
-      type: "File",
+      type: "file.file",
       fields: { Name: name, "Base Path": `e2e/${name}` },
     });
 
