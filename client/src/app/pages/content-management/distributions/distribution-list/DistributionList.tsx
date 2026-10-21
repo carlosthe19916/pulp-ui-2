@@ -30,8 +30,8 @@ import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
-  compoundExpansions,
   dataViewBodyStates,
+  RevealCellOnExpand,
   useColumnSort,
   type DataViewTh,
   ListPagination,
@@ -214,14 +214,15 @@ export const DistributionList: React.FC = () => {
   const NAME_COLUMN_INDEX = 0;
   const STATUS_COLUMN_INDEX = 4;
   const expandedRows: ExpandableContent[] = [
-    ...compoundExpansions({
-      entities: distributions,
-      columnIndex: NAME_COLUMN_INDEX,
-      rowId: (distribution) => distribution.pulp_href ?? "",
-      render: (distribution) => (
-        <DistributionDetailPanel distribution={distribution} />
+    ...distributions.map((distribution) => ({
+      rowId: distribution.pulp_href ?? "",
+      columnId: NAME_COLUMN_INDEX,
+      content: (
+        <RevealCellOnExpand>
+          {() => <DistributionDetailPanel distribution={distribution} />}
+        </RevealCellOnExpand>
       ),
-    }),
+    })),
     ...resourceTaskExpansions({
       entities: distributions,
       getActiveCount,

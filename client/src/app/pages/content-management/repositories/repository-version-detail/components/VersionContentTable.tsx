@@ -12,16 +12,15 @@ import {
 
 import { ContentDetailPanel } from "@app/components/ContentDetailPanel";
 import {
-  compoundExpansions,
   dataViewBodyStates,
   ListPagination,
+  RevealCellOnExpand,
   type DataViewTh,
 } from "@app/components/DataView";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useContentListQuery } from "@app/queries/content";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { contentIdentifier } from "@app/utils/contentIdentifier";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IVersionContentTableProps {
@@ -61,7 +60,7 @@ export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
           props: { dataLabel: "Type" },
         },
         {
-          cell: contentIdentifier(record),
+          cell: typeof record.prn === "string" ? record.prn : "—",
           props: { dataLabel: "Identifier", modifier: "truncate" },
         },
         {
@@ -76,12 +75,15 @@ export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
   });
 
   const IDENTIFIER_COLUMN_INDEX = 1;
-  const expandedRows: ExpandableContent[] = compoundExpansions({
-    entities: content,
-    columnIndex: IDENTIFIER_COLUMN_INDEX,
-    rowId: (unit) => unit.pulp_href ?? "",
-    render: (unit) => <ContentDetailPanel href={unit.pulp_href ?? ""} />,
-  });
+  const expandedRows: ExpandableContent[] = content.map((unit) => ({
+    rowId: unit.pulp_href ?? "",
+    columnId: IDENTIFIER_COLUMN_INDEX,
+    content: (
+      <RevealCellOnExpand>
+        {() => <ContentDetailPanel href={unit.pulp_href ?? ""} />}
+      </RevealCellOnExpand>
+    ),
+  }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,

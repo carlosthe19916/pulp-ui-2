@@ -25,8 +25,8 @@ import type { PublicationResponse } from "@app/client";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
-  compoundExpansions,
   dataViewBodyStates,
+  RevealCellOnExpand,
   useColumnSort,
   type DataViewTh,
   ListPagination,
@@ -149,12 +149,15 @@ export const PublicationList: React.FC = () => {
   });
 
   const PUBLICATION_COLUMN_INDEX = 0;
-  const expandedRows: ExpandableContent[] = compoundExpansions({
-    entities: publications,
-    columnIndex: PUBLICATION_COLUMN_INDEX,
-    rowId: (pub) => pub.pulp_href ?? "",
-    render: (pub) => <PublicationDetailPanel publication={pub} />,
-  });
+  const expandedRows: ExpandableContent[] = publications.map((pub) => ({
+    rowId: pub.pulp_href ?? "",
+    columnId: PUBLICATION_COLUMN_INDEX,
+    content: (
+      <RevealCellOnExpand>
+        {() => <PublicationDetailPanel publication={pub} />}
+      </RevealCellOnExpand>
+    ),
+  }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,

@@ -1,8 +1,15 @@
 import type React from "react";
 
 import {
+  ClipboardCopy,
   Content,
   ContentVariants,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  Label,
+  LabelGroup,
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
@@ -19,9 +26,8 @@ import {
 } from "@patternfly/react-data-view";
 
 import { getContentTypes } from "@catalog";
-import { ContentDetailPanel } from "@app/components/ContentDetailPanel";
+import type { MultipleArtifactContentResponse } from "@app/client";
 import {
-  compoundExpansions,
   dataViewBodyStates,
   ListPagination,
   MultiSelectFilter,
@@ -37,8 +43,18 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { contentIdentifier } from "@app/utils/contentIdentifier";
 import { formatDateTime } from "@app/utils/utils";
+
+/**
+ * The aggregate `content/` response carries an `artifacts` map (relative path →
+ * artifact href), but the OpenAPI generator drops it (it's declared as an untyped
+ * `object`), so the generated `MultipleArtifactContentResponse` omits it. Extend the
+ * type here rather than editing the generated client. Values are nullable: on-demand
+ * content has the path key present with no downloaded artifact behind it.
+ */
+type IContentUnit = MultipleArtifactContentResponse & {
+  artifacts?: Record<string, string | null>;
+};
 
 /**
  * Filters for the global Content list. `pulp_type` is a closed server-side enum,
@@ -49,6 +65,41 @@ interface IContentFilters {
   pulp_type: string[];
   pulp_label_select: IContentListParams["pulp_label_select"];
 }
+
+/** Zero-based index of the Artifacts column — the compound-expand toggle lives here. */
+const ARTIFACTS_COLUMN_INDEX = 2;
+
+/** The GitHub-style short identifier: first 8 chars of the PRN's/href's uuid. */
+const SHORT_ID_LENGTH = 8;
+
+/** The uuid segment of a PRN (`prn:<type>:<uuid>`), falling back to the href's pk. */
+const unitUuid = (unit: IContentUnit): string => {
+  if (unit.prn) return unit.prn.split(":").pop() ?? unit.prn;
+  const parts = (unit.pulp_href ?? "").split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? "";
+};
+
+/** Expanded-row body: the row's own artifacts map — no extra REST call. */
+const ArtifactsPanel: React.FC<{
+  artifacts: Record<string, string | null>;
+}> = ({ artifacts }) => (
+  <DescriptionList isCompact>
+    {Object.entries(artifacts).map(([relativePath, href]) => (
+      <DescriptionListGroup key={relativePath}>
+        <DescriptionListTerm>{relativePath}</DescriptionListTerm>
+        <DescriptionListDescription>
+          {href ? (
+            <ClipboardCopy variant="inline-compact" isReadOnly>
+              {href}
+            </ClipboardCopy>
+          ) : (
+            "Not downloaded"
+          )}
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+    ))}
+  </DescriptionList>
+);
 
 export const ContentList: React.FC = () => {
   const pagination = useDataViewPagination({ perPage: 10 });
@@ -84,48 +135,77 @@ export const ContentList: React.FC = () => {
     },
   });
 
-  const content = data?.results ?? [];
+  const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
+    { cell: "PRN", props: { width: 15 } },
     { cell: "Type", props: { width: 20 } },
-    { cell: "Identifier", props: { width: 50 } },
-    { cell: "Created", props: { width: 25 } },
+    { cell: "Artifacts", props: { width: 15 } },
+    { cell: "Labels", props: { width: 30 } },
+    { cell: "Created", props: { width: 20 } },
   ];
 
   const rows: DataViewTr[] = content.map((unit) => {
-    const record = unit as Record<string, unknown>;
-    const href = typeof record.pulp_href === "string" ? record.pulp_href : "";
-    const pulpType = resolvePulpType(href);
+    const pulpType = resolvePulpType(unit.pulp_href);
+    const artifacts = unit.artifacts ?? {};
+    const labelEntries = Object.entries(unit.pulp_labels ?? {});
     return {
-      id: href,
+      id: unit.pulp_href,
       row: [
+        {
+          cell: (
+            <ClipboardCopy
+              variant="inline-compact"
+              isCode
+              copyAriaLabel="Copy PRN"
+              hoverTip="Copy"
+              clickTip="Copied"
+            >
+              {unitUuid(unit).slice(0, SHORT_ID_LENGTH)}
+            </ClipboardCopy>
+          ),
+          props: { dataLabel: "PRN" },
+        },
         {
           cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
           props: { dataLabel: "Type" },
         },
         {
-          cell: contentIdentifier(record),
-          props: { dataLabel: "Identifier", modifier: "truncate" },
+          cell: Object.keys(artifacts).length,
+          props: { dataLabel: "Artifacts" },
         },
         {
-          cell:
-            typeof record.pulp_created === "string"
-              ? (formatDateTime(record.pulp_created) ?? "—")
-              : "—",
+          cell: labelEntries.length ? (
+            <LabelGroup numLabels={3} isCompact>
+              {labelEntries.map(([key, value]) => (
+                <Label key={key} color="grey" isCompact>
+                  {value == null ? key : `${key}=${value}`}
+                </Label>
+              ))}
+            </LabelGroup>
+          ) : (
+            "—"
+          ),
+          props: { dataLabel: "Labels" },
+        },
+        {
+          cell: formatDateTime(unit.pulp_created) ?? "—",
           props: { dataLabel: "Created" },
         },
       ],
     };
   });
 
-  const IDENTIFIER_COLUMN_INDEX = 1;
-  const expandedRows: ExpandableContent[] = compoundExpansions({
-    entities: content,
-    columnIndex: IDENTIFIER_COLUMN_INDEX,
-    rowId: (unit) => unit.pulp_href ?? "",
-    render: (unit) => <ContentDetailPanel href={unit.pulp_href ?? ""} />,
-  });
+  // Only rows with artifacts are expandable; the toggle attaches to the Artifacts
+  // cell (ARTIFACTS_COLUMN_INDEX). The panel reads the artifacts already on the row.
+  const expandedRows: ExpandableContent[] = content
+    .filter((unit) => Object.keys(unit.artifacts ?? {}).length > 0)
+    .map((unit) => ({
+      rowId: unit.pulp_href ?? "",
+      columnId: ARTIFACTS_COLUMN_INDEX,
+      content: <ArtifactsPanel artifacts={unit.artifacts ?? {}} />,
+    }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
