@@ -1,0 +1,12 @@
+client/src/app/components/PluginContentPanel/MavenContent.tsx
+client/src/app/components/PluginContentPanel/PythonContent.tsx
+client/src/app/components/PluginContentPanel/RpmContent.tsx
+client/src/app/components/PluginContentPanel/DebContent.tsx
+client/src/app/components/PluginContentPanel/GemContent.tsx
+client/src/app/components/PluginContentPanel/NpmContent.tsx
+client/src/app/components/PluginContentPanel/AnsibleContent.tsx
+client/src/app/components/PluginContentPanel/FileContent.tsx
+client/src/app/components/PluginContentPanel/OstreeContent.tsx
+client/src/app/components/PluginContentPanel/BaseContent.tsx
+client/src/app/components/PluginContentPanel/PluginContentPanel.tsx
+client/src/app/components/PluginContentPanel/index.ts

@@ -436,6 +436,8 @@ const DETAIL_BY_TYPE: Record<string, React.FC<IContentDetailPanelProps>> = {
  * component typed with that type's concrete generated response (no union/projection),
  * falling back to the sparse base for types without a dedicated component. Presentational
  * (no `PageSection`) so it renders both in the detail page and in an expanded table row.
+ *
+ * @deprecated Use `PluginContentPanel` from `@app/components/PluginContentPanel`.
  */
 export const ContentDetailPanel: React.FC<IContentDetailPanelProps> = ({
   href,

@@ -14,8 +14,8 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { ContentDetailPanel } from "@app/components/ContentDetailPanel";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildContentHref, useContentDetailQuery } from "@app/queries/content";
@@ -69,7 +69,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
         >
           <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>
             <TabContentBody hasPadding>
-              <ContentDetailPanel href={href} />
+              <PluginContentPanel href={href} />
             </TabContentBody>
           </Tab>
           <Tab

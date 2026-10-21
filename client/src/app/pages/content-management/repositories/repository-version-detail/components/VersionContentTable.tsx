@@ -80,7 +80,10 @@ export const VersionContentTable: React.FC<IVersionContentTableProps> = ({
     columnId: IDENTIFIER_COLUMN_INDEX,
     content: (
       <RevealCellOnExpand>
-        {() => <ContentDetailPanel href={unit.pulp_href ?? ""} />}
+        {() => (
+          // eslint-disable-next-line @typescript-eslint/no-deprecated -- not migrated to PluginContentPanel yet
+          <ContentDetailPanel href={unit.pulp_href ?? ""} />
+        )}
       </RevealCellOnExpand>
     ),
   }));
