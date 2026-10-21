@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 
+import { getContentType } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   ContentListData,
@@ -107,3 +108,17 @@ export const useContentDetailQuery = <T = MultipleArtifactContentResponse>({
 }: {
   href: string | null;
 }) => useQuery({ ...contentDetailQueryOptions<T>({ href }), enabled: !!href });
+
+/**
+ * Reconstruct a content unit's `pulp_href` from its route parts — the content detail
+ * route encodes `pulp_type` + pk rather than the opaque href. Mirrors
+ * `buildRepositoryHref`; `null` for endpoint-less types (no `apiPath`).
+ */
+export const buildContentHref = (
+  pulpType: string,
+  id: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = getContentType(pulpType)?.apiPath;
+  return apiPath ? pulpApiPath(`content/${apiPath}/${id}/`, domain) : null;
+};

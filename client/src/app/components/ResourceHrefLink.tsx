@@ -10,8 +10,8 @@ import {
 } from "@app/queries/utils/pulpHref";
 
 interface IResourceHrefLinkProps {
-  /** Kept for call-site clarity; content entities no longer have detail pages. */
-  kind: EntityType;
+  /** Which family's detail route to target; `"content"` links the content detail page. */
+  kind: EntityType | "content";
   href: string | null | undefined;
   /** Human-readable label; falls back to a short id, then a truncated href. */
   label?: string | null;
@@ -22,8 +22,8 @@ const truncate = ({ value, max }: { value: string; max: number }): string =>
   value.length > max ? `${value.slice(0, max)}...` : value;
 
 /**
- * Renders a human-readable label for a resource `pulp_href`. Content families no
- * longer have detail pages, so this is plain text (name → short id → truncated href).
+ * Renders a link (or plain text, when the family has no detail page) for a resource
+ * `pulp_href`. The label falls back name → short id → truncated href.
  */
 export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   kind,
@@ -61,6 +61,17 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
       <Link
         to="/content-management/$pulpDomain/remotes/$remoteType/$remoteId"
         params={{ pulpDomain, remoteType: pulpType, remoteId: id }}
+      >
+        {text}
+      </Link>
+    );
+  }
+
+  if (pulpType && kind === "content") {
+    return (
+      <Link
+        to="/content-management/$pulpDomain/content/$contentType/$contentId"
+        params={{ pulpDomain, contentType: pulpType, contentId: id }}
       >
         {text}
       </Link>

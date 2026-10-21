@@ -37,6 +37,7 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -155,15 +156,11 @@ export const ContentList: React.FC = () => {
       row: [
         {
           cell: (
-            <ClipboardCopy
-              variant="inline-compact"
-              isCode
-              copyAriaLabel="Copy PRN"
-              hoverTip="Copy"
-              clickTip="Copied"
-            >
-              {unitUuid(unit).slice(0, SHORT_ID_LENGTH)}
-            </ClipboardCopy>
+            <ResourceHrefLink
+              kind="content"
+              href={unit.pulp_href}
+              label={unitUuid(unit).slice(0, SHORT_ID_LENGTH)}
+            />
           ),
           props: { dataLabel: "PRN" },
         },
