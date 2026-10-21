@@ -31,7 +31,7 @@ export const PublicationDetailPanel: React.FC<IPublicationDetailPanelProps> = ({
     : [];
 
   return (
-    <DescriptionList isHorizontal isCompact>
+    <DescriptionList isCompact>
       <DescriptionListGroup>
         <DescriptionListTerm>Repository</DescriptionListTerm>
         <DescriptionListDescription>

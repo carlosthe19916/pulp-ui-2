@@ -37,7 +37,7 @@ const BucketLabels: React.FC<{ entries: IContentTypeCount[] }> = ({
 export const VersionContentSummary: React.FC<{
   summary?: ContentSummaryResponse;
 }> = ({ summary }) => (
-  <DescriptionList isHorizontal>
+  <DescriptionList>
     <DescriptionListGroup>
       <DescriptionListTerm>Present</DescriptionListTerm>
       <DescriptionListDescription>

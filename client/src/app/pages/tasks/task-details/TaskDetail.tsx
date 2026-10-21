@@ -36,6 +36,9 @@ import type { TaskWithError } from "@app/queries/utils/openapiErrorTypes";
 import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
+// Two columns from md up, one on narrow screens.
+const COLUMNS = { default: "1Col", md: "2Col" } as const;
+
 interface ITaskDetailProps {
   taskId: string;
 }
@@ -103,7 +106,7 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
       <PageSection>
         <Stack hasGutter>
           <StackItem>
-            <DescriptionList isHorizontal>
+            <DescriptionList columnModifier={COLUMNS}>
               <DescriptionListGroup>
                 <DescriptionListTerm>Full Name</DescriptionListTerm>
                 <DescriptionListDescription>

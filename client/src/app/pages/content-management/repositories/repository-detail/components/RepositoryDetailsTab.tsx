@@ -24,6 +24,9 @@ interface IRepositoryDetailsTabProps {
   pulpDomain: string;
 }
 
+// Two columns from md up, one on narrow screens.
+const COLUMNS = { default: "1Col", md: "2Col" } as const;
+
 export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
   repository,
   pulpType,
@@ -40,10 +43,11 @@ export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
         <EntityDetailFields
           fields={fields}
           data={repository as Record<string, unknown>}
+          columnModifier={COLUMNS}
         />
       </StackItem>
       <StackItem>
-        <DescriptionList isHorizontal>
+        <DescriptionList columnModifier={COLUMNS}>
           <DescriptionListGroup>
             <DescriptionListTerm>Type</DescriptionListTerm>
             <DescriptionListDescription>

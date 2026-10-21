@@ -32,8 +32,6 @@ interface IEntityDetailFieldsProps {
   copyableKeys?: string[];
   /** Responsive column layout, forwarded to the underlying `DescriptionList`. */
   columnModifier?: DescriptionListProps["columnModifier"];
-  /** Term beside value (true) vs term stacked above value (false). Default true. */
-  isHorizontal?: boolean;
 }
 
 const getHiddenField = ({
@@ -142,16 +140,12 @@ export const EntityDetailFields: React.FC<IEntityDetailFieldsProps> = ({
   data,
   copyableKeys,
   columnModifier,
-  isHorizontal = true,
 }) => {
   const visible = fields.filter((field) => field.type !== "file");
   const copyable = new Set(copyableKeys);
 
   return (
-    <DescriptionList
-      isHorizontal={isHorizontal}
-      columnModifier={columnModifier}
-    >
+    <DescriptionList columnModifier={columnModifier}>
       {visible.map((field) => (
         <FieldGroup
           key={field.key}

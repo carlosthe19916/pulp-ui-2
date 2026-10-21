@@ -139,7 +139,7 @@ const ContentDetailView: React.FC<IContentDetailViewProps> = (props) => {
       <Stack hasGutter>
         {propertyRows.length > 0 && (
           <Section title="Properties">
-            <DescriptionList isHorizontal isCompact>
+            <DescriptionList isCompact>
               {propertyRows.map((row) => (
                 <DetailRow key={row.term} term={row.term}>
                   {row.term === "SHA-256" && typeof row.value === "string" ? (
@@ -156,7 +156,7 @@ const ContentDetailView: React.FC<IContentDetailViewProps> = (props) => {
         )}
 
         <Section title="Metadata">
-          <DescriptionList isHorizontal isCompact>
+          <DescriptionList isCompact>
             <DetailRow term="Type">
               {pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—"}
             </DetailRow>

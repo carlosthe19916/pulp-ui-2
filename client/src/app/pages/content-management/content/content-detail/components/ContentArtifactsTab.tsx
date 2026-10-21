@@ -60,7 +60,7 @@ const ArtifactCard: React.FC<{
     <Card>
       <CardTitle>{relativePath}</CardTitle>
       <CardBody>
-        <DescriptionList isHorizontal isCompact>
+        <DescriptionList isCompact>
           <DetailRow term="Status">
             {artifactHref ? "Downloaded" : "Not downloaded"}
           </DetailRow>

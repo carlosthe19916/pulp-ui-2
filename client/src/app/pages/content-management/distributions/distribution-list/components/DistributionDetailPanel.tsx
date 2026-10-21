@@ -29,7 +29,7 @@ export const DistributionDetailPanel: React.FC<
     typeof record.publication === "string" ? record.publication : null;
 
   return (
-    <DescriptionList isHorizontal isCompact>
+    <DescriptionList isCompact>
       <DescriptionListGroup>
         <DescriptionListTerm>Base URL</DescriptionListTerm>
         <DescriptionListDescription>

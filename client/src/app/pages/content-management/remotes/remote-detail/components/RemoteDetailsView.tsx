@@ -34,12 +34,12 @@ import { formatDateTime } from "@app/utils/utils";
 
 const DEFAULT_GROUP = "General";
 
+// Two columns from md up, one on narrow screens.
+const COLUMNS = { default: "1Col", md: "2Col" } as const;
+
 // Shared transport groups, in trailing order. Any other group is plugin-specific and
 // is surfaced right after General, so each plugin's distinctive fields lead the page.
 const CONNECTION_GROUPS = ["Authentication", "TLS", "Timeouts", "Limits"];
-
-// Two columns from md up, one on narrow screens.
-const COLUMNS = { default: "1Col", md: "2Col" } as const;
 
 const SECTION_ICONS: Record<string, React.ComponentType> = {
   General: CogIcon,
@@ -185,7 +185,6 @@ export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
         data={data}
         copyableKeys={["url"]}
         columnModifier={COLUMNS}
-        isHorizontal={false}
       />
     ),
   }));
