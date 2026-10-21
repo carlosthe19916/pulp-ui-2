@@ -293,7 +293,8 @@ export const RepositoryList: React.FC = () => {
       <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Repositories</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}

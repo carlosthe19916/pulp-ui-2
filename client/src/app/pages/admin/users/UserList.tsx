@@ -192,7 +192,8 @@ export const UserList: React.FC = () => {
       <DocumentTitle title="Users" />
       <PageSection>
         <Content component={ContentVariants.h1}>Users</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}

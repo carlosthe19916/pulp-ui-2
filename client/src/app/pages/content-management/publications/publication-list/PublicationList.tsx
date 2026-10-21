@@ -185,7 +185,8 @@ export const PublicationList: React.FC = () => {
       <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Publications</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             actions={

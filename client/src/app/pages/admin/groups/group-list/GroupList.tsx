@@ -171,7 +171,8 @@ export const GroupList: React.FC = () => {
       <DocumentTitle title="Groups" />
       <PageSection>
         <Content component={ContentVariants.h1}>Groups</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}

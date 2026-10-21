@@ -111,7 +111,8 @@ export const SigningServiceList: React.FC = () => {
           Signing services are provisioned by an administrator via the Pulp API
           or CLI; they can&apos;t be created, edited, or deleted from this UI.
         </Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}

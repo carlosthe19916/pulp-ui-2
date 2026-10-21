@@ -13,6 +13,8 @@ export const TaskList: React.FC = () => {
       <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Tasks</Content>
+      </PageSection>
+      <PageSection>
         <TasksTable showPurge />
       </PageSection>
     </>

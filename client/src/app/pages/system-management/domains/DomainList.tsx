@@ -249,7 +249,8 @@ export const DomainList: React.FC = () => {
           A domain is a tenancy boundary (similar to a namespace) that isolates
           content and has its own storage backend.
         </Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}

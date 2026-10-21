@@ -261,7 +261,8 @@ export const RoleList: React.FC = () => {
       <DocumentTitle title="Roles" />
       <PageSection>
         <Content component={ContentVariants.h1}>Roles</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearFilters}

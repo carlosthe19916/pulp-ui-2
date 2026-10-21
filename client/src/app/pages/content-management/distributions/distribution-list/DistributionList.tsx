@@ -259,7 +259,8 @@ export const DistributionList: React.FC = () => {
       <DomainContextSelector />
       <PageSection>
         <Content component={ContentVariants.h1}>Distributions</Content>
-
+      </PageSection>
+      <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
