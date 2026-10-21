@@ -2,6 +2,7 @@ import { test as base } from "@playwright/test";
 
 import { Cleanup } from "./helpers/cleanup";
 import { PulpApi } from "./helpers/pulp-api";
+import { ContentListPage } from "./pom/ContentListPage";
 import { ContentPage } from "./pom/ContentPage";
 import { DomainsPage } from "./pom/DomainsPage";
 import { GroupsPage } from "./pom/GroupsPage";
@@ -17,7 +18,7 @@ interface ITestFixtures {
   repositoriesPage: ContentPage;
   distributionsPage: ContentPage;
   publicationsPage: ContentPage;
-  contentPage: ContentPage;
+  contentPage: ContentListPage;
   /** Register test-created names here; leftovers are removed in teardown. */
   cleanup: Cleanup;
 }
@@ -107,17 +108,8 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
     );
   },
   contentPage: async ({ page }, provide) => {
-    // Content is read-only (no create/edit/delete); the singular/createButton
-    // fields are unused but required by the shared POM options.
-    await provide(
-      new ContentPage(page, {
-        path: "/content-management/default/content",
-        heading: "Content",
-        tableName: "Content table",
-        singular: "Content",
-        createButton: "",
-      }),
-    );
+    // Content is read-only and renders as a DataList (not the shared table POM).
+    await provide(new ContentListPage(page));
   },
 });
 

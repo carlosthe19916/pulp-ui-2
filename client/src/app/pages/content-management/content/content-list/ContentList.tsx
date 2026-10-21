@@ -1,120 +1,70 @@
 import type React from "react";
 
 import {
-  ClipboardCopy,
   Content,
   ContentVariants,
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Label,
-  LabelGroup,
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
 import {
   DataView,
   DataViewFilters,
-  DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
-  type DataViewTr,
-  type ExpandableContent,
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { getContentTypes } from "@catalog";
-import type { MultipleArtifactContentResponse } from "@app/client";
 import {
-  dataViewBodyStates,
   ListPagination,
   MultiSelectFilter,
-  type DataViewTh,
   type IMultiSelectOption,
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { formatDateTime } from "@app/utils/utils";
+
+import { ContentDataList } from "./components/ContentDataList";
+import { OrphanedForFilter } from "./components/OrphanedForFilter";
+import { RepositoryVersionFilter } from "./components/RepositoryVersionFilter";
+import { VersionDiffFilter } from "./components/VersionDiffFilter";
+import {
+  decodeRepositoryVersion,
+  decodeVersionDiff,
+} from "./components/versionFilterCodec";
+import type { IContentUnit } from "./components/types";
 
 /**
- * The aggregate `content/` response carries an `artifacts` map (relative path →
- * artifact href), but the OpenAPI generator drops it (it's declared as an untyped
- * `object`), so the generated `MultipleArtifactContentResponse` omits it. Extend the
- * type here rather than editing the generated client. Values are nullable: on-demand
- * content has the path key present with no downloaded artifact behind it.
- */
-type IContentUnit = MultipleArtifactContentResponse & {
-  artifacts?: Record<string, string | null>;
-};
-
-/**
- * Filters for the global Content list. `pulp_type` is a closed server-side enum,
- * so Type is a multi-select (free text 400s) sent as `pulp_type__in`; the aggregate
- * has no free-text `q`, so the search box maps to `pulp_label_select`.
+ * Filters for the global Content list, all backed by the aggregate `content/` endpoint.
+ * `pulp_type` is a closed enum (multi-select → `pulp_type__in`); `pulp_label_select` and
+ * `orphaned_for` are text inputs; `repo_version` and `version_diff` are composite dropdowns
+ * whose encoded value the page decodes into the `repository_version*` / `*_between` params.
  */
 interface IContentFilters {
   pulp_type: string[];
-  pulp_label_select: IContentListParams["pulp_label_select"];
+  pulp_label_select?: string;
+  orphaned_for?: string;
+  repo_version?: string;
+  version_diff?: string;
 }
-
-/** Zero-based index of the Artifacts column — the compound-expand toggle lives here. */
-const ARTIFACTS_COLUMN_INDEX = 2;
-
-/** The GitHub-style short identifier: first 8 chars of the PRN's/href's uuid. */
-const SHORT_ID_LENGTH = 8;
-
-/** The uuid segment of a PRN (`prn:<type>:<uuid>`), falling back to the href's pk. */
-const unitUuid = (unit: IContentUnit): string => {
-  if (unit.prn) return unit.prn.split(":").pop() ?? unit.prn;
-  const parts = (unit.pulp_href ?? "").split("/").filter(Boolean);
-  return parts[parts.length - 1] ?? "";
-};
-
-/** Expanded-row body: the row's own artifacts map — no extra REST call. */
-const ArtifactsPanel: React.FC<{
-  artifacts: Record<string, string | null>;
-}> = ({ artifacts }) => (
-  <DescriptionList isCompact>
-    {Object.entries(artifacts).map(([relativePath, href]) => (
-      <DescriptionListGroup key={relativePath}>
-        <DescriptionListTerm>{relativePath}</DescriptionListTerm>
-        <DescriptionListDescription>
-          {href ? (
-            <ClipboardCopy variant="inline-compact" isReadOnly>
-              {href}
-            </ClipboardCopy>
-          ) : (
-            "Not downloaded"
-          )}
-        </DescriptionListDescription>
-      </DescriptionListGroup>
-    ))}
-  </DescriptionList>
-);
 
 export const ContentList: React.FC = () => {
   const pagination = useDataViewPagination({ perPage: 10 });
 
   const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IContentFilters>({});
+    useDataViewFilters<IContentFilters>({ initialFilters: { pulp_type: [] } });
   const debouncedLabel = useDebouncedValue({
     value: filters.pulp_label_select,
   });
+  const debouncedOrphaned = useDebouncedValue({ value: filters.orphaned_for });
   const selectedTypes = filters.pulp_type ?? [];
 
-  // Type options are the catalog's content types for installed plugins, grouped by
-  // their owning app (the pulp_type prefix). Each pulpType is a valid content
-  // `pulp_type`, so it filters safely via pulp_type__in.
+  // Type options are the catalog's content types for installed plugins, grouped by owning app.
   const typeOptions: IMultiSelectOption[] = getContentTypes({
     installed: useApiStatus().plugins,
   }).map((ct) => ({
@@ -123,8 +73,15 @@ export const ContentList: React.FC = () => {
     group: ct.pulpType.split(".")[0],
   }));
 
-  // The aggregate content endpoint only orders by `pk`, so this list is not
-  // column-sortable; no `ordering` is passed.
+  const orphanedNum = Number(debouncedOrphaned);
+  const repoVersion = decodeRepositoryVersion(filters.repo_version ?? "");
+  const diff = decodeVersionDiff(filters.version_diff ?? "");
+  const diffPair =
+    diff.baseHref && diff.targetHref
+      ? [diff.baseHref, diff.targetHref]
+      : undefined;
+
+  // The aggregate content endpoint only orders by `pk`, so this list is not column-sortable.
   const { data, isLoading, error } = useContentListQuery({
     params: {
       limit: pagination.perPage,
@@ -133,90 +90,37 @@ export const ContentList: React.FC = () => {
         ? (selectedTypes as IContentListParams["pulp_type__in"])
         : undefined,
       pulp_label_select: debouncedLabel || undefined,
+      orphaned_for:
+        debouncedOrphaned && Number.isFinite(orphanedNum)
+          ? orphanedNum
+          : undefined,
+      repository_version:
+        repoVersion.relation === "in"
+          ? repoVersion.versionHref || undefined
+          : undefined,
+      repository_version_added:
+        repoVersion.relation === "added"
+          ? repoVersion.versionHref || undefined
+          : undefined,
+      repository_version_removed:
+        repoVersion.relation === "removed"
+          ? repoVersion.versionHref || undefined
+          : undefined,
+      added_between: diff.relation === "added" ? diffPair : undefined,
+      removed_between: diff.relation === "removed" ? diffPair : undefined,
     },
   });
 
   const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
 
-  const columns: DataViewTh[] = [
-    { cell: "PRN", props: { width: 15 } },
-    { cell: "Type", props: { width: 20 } },
-    { cell: "Artifacts", props: { width: 15 } },
-    { cell: "Labels", props: { width: 30 } },
-    { cell: "Created", props: { width: 20 } },
-  ];
-
-  const rows: DataViewTr[] = content.map((unit) => {
-    const pulpType = resolvePulpType(unit.pulp_href);
-    const artifacts = unit.artifacts ?? {};
-    const labelEntries = Object.entries(unit.pulp_labels ?? {});
-    return {
-      id: unit.pulp_href,
-      row: [
-        {
-          cell: (
-            <ResourceHrefLink
-              kind="content"
-              href={unit.pulp_href}
-              label={unitUuid(unit).slice(0, SHORT_ID_LENGTH)}
-            />
-          ),
-          props: { dataLabel: "PRN" },
-        },
-        {
-          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
-          props: { dataLabel: "Type" },
-        },
-        {
-          cell: Object.keys(artifacts).length,
-          props: { dataLabel: "Artifacts" },
-        },
-        {
-          cell: labelEntries.length ? (
-            <LabelGroup numLabels={3} isCompact>
-              {labelEntries.map(([key, value]) => (
-                <Label key={key} color="grey" isCompact>
-                  {value == null ? key : `${key}=${value}`}
-                </Label>
-              ))}
-            </LabelGroup>
-          ) : (
-            "—"
-          ),
-          props: { dataLabel: "Labels" },
-        },
-        {
-          cell: formatDateTime(unit.pulp_created) ?? "—",
-          props: { dataLabel: "Created" },
-        },
-      ],
-    };
-  });
-
-  // Only rows with artifacts are expandable; the toggle attaches to the Artifacts
-  // cell (ARTIFACTS_COLUMN_INDEX). The panel reads the artifacts already on the row.
-  const expandedRows: ExpandableContent[] = content
-    .filter((unit) => Object.keys(unit.artifacts ?? {}).length > 0)
-    .map((unit) => ({
-      rowId: unit.pulp_href ?? "",
-      columnId: ARTIFACTS_COLUMN_INDEX,
-      content: <ArtifactsPanel artifacts={unit.artifacts ?? {}} />,
-    }));
-
-  const { activeState, bodyStates } = dataViewBodyStates({
-    columnCount: columns.length,
-    isLoading,
-    error,
-    isEmpty: content.length === 0,
-    emptyState: (
-      <TableEmptyState
-        title="No content found"
-        isFiltered={Boolean(selectedTypes.length || debouncedLabel)}
-        onClearFilters={clearAllFilters}
-      />
-    ),
-  });
+  const isFiltered = Boolean(
+    selectedTypes.length ||
+    debouncedLabel ||
+    debouncedOrphaned ||
+    filters.repo_version ||
+    filters.version_diff,
+  );
 
   return (
     <>
@@ -226,7 +130,7 @@ export const ContentList: React.FC = () => {
         <Content component={ContentVariants.h1}>Content</Content>
       </PageSection>
       <PageSection>
-        <DataView activeState={activeState}>
+        <DataView>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
             filters={
@@ -247,6 +151,18 @@ export const ContentList: React.FC = () => {
                   filterId="pulp_label_select"
                   title="Label"
                 />
+                <OrphanedForFilter
+                  filterId="orphaned_for"
+                  title="Orphaned (minutes)"
+                />
+                <RepositoryVersionFilter
+                  filterId="repo_version"
+                  title="Repository version"
+                />
+                <VersionDiffFilter
+                  filterId="version_diff"
+                  title="Version diff"
+                />
               </DataViewFilters>
             }
             pagination={
@@ -258,14 +174,22 @@ export const ContentList: React.FC = () => {
             }
           />
 
-          <DataViewTable
-            aria-label="Content table"
-            columns={columns}
-            rows={rows}
-            bodyStates={bodyStates}
-            isExpandable={expandedRows.length > 0}
-            expandedRows={expandedRows}
-            indexBy="id"
+          <ContentDataList
+            units={content}
+            isLoading={isLoading}
+            error={error}
+            loadingRows={pagination.perPage}
+            onLabelClick={(selector) => {
+              onSetFilters({ ...filters, pulp_label_select: selector });
+              pagination.onSetPage(undefined, 1);
+            }}
+            emptyState={
+              <TableEmptyState
+                title="No content found"
+                isFiltered={isFiltered}
+                onClearFilters={clearAllFilters}
+              />
+            }
           />
 
           <DataViewToolbar
