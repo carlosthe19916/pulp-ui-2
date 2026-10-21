@@ -16,8 +16,9 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ContentDetailPanel } from "@app/components/ContentDetailPanel";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { buildContentHref } from "@app/queries/content";
+import { buildContentHref, useContentDetailQuery } from "@app/queries/content";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
 
@@ -27,9 +28,6 @@ interface IContentDetailProps {
   id: string;
 }
 
-/** The GitHub-style short identifier: first 8 chars of the content unit's pk. */
-const SHORT_ID_LENGTH = 8;
-
 export const ContentDetail: React.FC<IContentDetailProps> = ({
   pulpDomain,
   pulpType,
@@ -37,7 +35,8 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
 }) => {
   const domain = useSelectedDomain();
   const href = buildContentHref(pulpType, id, domain) ?? "";
-  const shortId = id.slice(0, SHORT_ID_LENGTH);
+  const { data } = useContentDetailQuery({ href });
+  const prn = data?.prn ?? id;
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
 
@@ -45,7 +44,8 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
     <>
       <DocumentTitle title={`Content · ${pulpType}`} />
       <PageHeader
-        title={pulpType}
+        title={prn}
+        label={<PulpTypeLabel pulpType={pulpType} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>
@@ -56,7 +56,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
                 Content
               </Link>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>{shortId}</BreadcrumbItem>
+            <BreadcrumbItem isActive>{prn}</BreadcrumbItem>
           </Breadcrumb>
         }
       />

@@ -15,9 +15,5 @@ interface IPulpTypeLabelProps {
 export const PulpTypeLabel: React.FC<IPulpTypeLabelProps> = ({ pulpType }) => {
   const known = getContentType(pulpType) ?? getPlugin(pulpType);
 
-  return (
-    <Label color={known ? "blue" : "grey"} isCompact>
-      {pulpType}
-    </Label>
-  );
+  return <Label color={known ? "blue" : "grey"}>{pulpType}</Label>;
 };
