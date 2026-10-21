@@ -1,10 +1,18 @@
+import { useState } from "react";
+
 import { Divider, PageSection } from "@patternfly/react-core";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useDomainsListQuery } from "@app/queries/domains";
+import { domainsListQueryOptions } from "@app/queries/domains";
 
 import { TypeaheadSelect } from "./TypeaheadSelect";
+
+/** One page of options per keystroke — the picker is a search, not a full list. */
+const PAGE_SIZE = 10;
 
 /**
  * OpenShift-style page-level context selector for the active Pulp domain,
@@ -12,16 +20,33 @@ import { TypeaheadSelect } from "./TypeaheadSelect";
  * the URL (`$pulpDomain` path param) — switching navigates to the same route
  * with the new domain, re-scoping every content query. Hidden when the backend
  * has domains disabled.
+ *
+ * Deployments can have hundreds of domains, so options are searched server-side:
+ * nothing is fetched until the dropdown opens, then a page of at most
+ * {@link PAGE_SIZE} matches is loaded and refined (debounced) as the user types.
+ * The selected value is the domain name itself, so it renders correctly even when
+ * it falls outside the current search page.
  */
 export const DomainContextSelector = () => {
   const { enabled, name } = useSelectedDomain();
   const navigate = useNavigate();
-  const { data, isLoading } = useDomainsListQuery({
-    params: {
-      limit: 100,
-      offset: 0,
-      ordering: "name",
-    },
+  const apiDomain = useDefaultDomain();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [term, setTerm] = useState("");
+  const debouncedTerm = useDebouncedValue({ value: term });
+
+  const { data, isFetching } = useQuery({
+    ...domainsListQueryOptions({
+      apiDomain,
+      params: {
+        limit: PAGE_SIZE,
+        offset: 0,
+        ordering: "name",
+        name__icontains: debouncedTerm || undefined,
+      },
+    }),
+    enabled: enabled && isOpen,
   });
 
   if (!enabled) {
@@ -48,7 +73,10 @@ export const DomainContextSelector = () => {
               params: (prev) => ({ ...prev, pulpDomain: value }),
             })
           }
-          isLoading={isLoading}
+          onFilterChange={setTerm}
+          onOpenChange={setIsOpen}
+          isLoading={isFetching}
+          selectedLabel={name}
           isToggleFullWidth={false}
         />
       </PageSection>
