@@ -1,7 +1,7 @@
 ---
 name: forms
 description: Modal form submission errors shown in-form via FormSubmitError + useSubmitError (not a toast); modal closes on success only.
-globs: client/src/app/**/*Form.tsx, client/src/app/**/use*Form.tsx, client/src/app/components/PluginForm/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx, client/src/app/components/UploadModal.tsx, client/src/app/components/FormSubmitError.tsx, client/src/app/hooks/useSubmitError.ts
+globs: client/src/app/**/*Form.tsx, client/src/app/**/use*Form.tsx, client/src/app/**/use*Form.ts, client/src/app/components/PluginForm/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx, client/src/app/components/FormSubmitError.tsx, client/src/app/hooks/useSubmitError.ts
 ---
 
 # Modal form submission-error conventions
@@ -23,7 +23,7 @@ submission** error moves in-form.
   null, else `<FormAlert>` wrapping
   `<Alert variant="danger" isInline aria-live="polite">`. **First child of
   `<Form>`.**
-- **`getMutationErrorMessage(error, fallback)`** (`utils/utils.ts`) → builds
+- **`getMutationErrorMessage({ error, fallback })`** (`utils/utils.ts`) → builds
   `IMutationErrorMessage` (`{ title, description? }`) from the axios error
   (Pulp 403 / `detail` / `non_field_errors`). Reused unchanged.
 
@@ -35,7 +35,7 @@ and `clearSubmitError()` at the start of each submit. Success still toasts; the
 modal closes **on success only** (close-on-success rule: `evals/toastr.md`).
 
 ```ts
-// form hook — useRepositoryForm.tsx (pages/content-management/repositories/...)
+// form hook — useRepositoryForm.ts (pages/content-management/repositories/repository-list/hooks/)
 const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
 const createMutation = useRepositoryCreateMutation({
@@ -46,7 +46,10 @@ const createMutation = useRepositoryCreateMutation({
     }),
   onError: (error) =>
     setSubmitError(
-      getMutationErrorMessage(error, "Failed to create repository"),
+      getMutationErrorMessage({
+        error,
+        fallback: "Failed to create repository",
+      }),
     ),
 });
 // update mutation: same shape
@@ -59,7 +62,7 @@ return { onSubmit, isSubmitting, submitError };
 ```
 
 ```tsx
-// form component — UserForm.tsx (pages/admin/users/...)
+// form component — UserForm.tsx (pages/admin/users/components/)
 <Form id={formId} onSubmit={...}>
   <FormSubmitError error={submitError} />   {/* first child */}
   {/* fields */}
@@ -67,13 +70,13 @@ return { onSubmit, isSubmitting, submitError };
 ```
 
 In the entity wizard, `FormSubmitError` renders only on the final (submitting)
-step (`EntityWizardStep` fed `isLast ? submitError : null`).
+step (`EntityWizardBody` passes `isLast ? submitError : null` to `EntityWizardStep`).
 
-### `mutateAsync` modals (Sync / Publish / Upload)
+### `mutateAsync` modals (Sync / Publish)
 
 These catch in the component (not a mutation hook). `clearSubmitError()` at submit
-start; in `catch (error)` call `setSubmitError(getMutationErrorMessage(error,
-fallback))` **and `return`** so the modal does **not** close; convert guard-clause
+start; in `catch (error)` call `setSubmitError(getMutationErrorMessage({ error,
+fallback }))` **and `return`** so the modal does **not** close; convert guard-clause
 failures to `setSubmitError(...)`; clear the error in the close handler. (Why
 `mutateAsync` here: `evals/toastr.md`.)
 
@@ -85,20 +88,20 @@ Batch/selection modals with partial-success semantics (`AddGroupUserModal`,
 
 ## Canonical examples
 
-- Entity framework: `useRepositoryForm.tsx` + `EntityFormBody.tsx` /
+- Entity framework: `useRepositoryForm.ts` + `EntityFormBody.tsx` /
   `EntityWizardStep.tsx`.
-- Admin: `useUserForm.tsx` + `UserForm.tsx`.
+- Admin: `useUserForm.ts` + `UserForm.tsx`.
 - `mutateAsync` modal: `components/SyncModal.tsx`.
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check modal create/update/action forms in changed
-`*Form.tsx`, `use*Form.tsx`, `PluginForm/**`, and the Sync/Publish/Upload modals.
+`*Form.tsx`, `use*Form.ts(x)`, `PluginForm/**`, and the Sync/Publish modals.
 
 - [ ] Modal form submission failures are shown in-form via `FormSubmitError` as the
       **first child of `<Form>`**, fed by `useSubmitError` — **not** a danger toast.
 - [ ] The form hook sets `submitError` in the mutation `onError` (or the `catch`
-      for `mutateAsync` modals) using `getMutationErrorMessage(error, fallback)`.
+      for `mutateAsync` modals) using `getMutationErrorMessage({ error, fallback })`.
 - [ ] `clearSubmitError()` runs at the start of each submit; the close handler of a
       persistently-mounted modal also clears it.
 - [ ] The modal **closes on success only** and stays open on error (success via the

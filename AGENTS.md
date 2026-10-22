@@ -15,6 +15,7 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 │       ├── router.ts         # TanStack Router instance
 │       ├── routes/           # file-based routes (TanStack Router)
 │       ├── routeTree.gen.ts  # auto-generated route tree (DO NOT EDIT)
+│       ├── catalog/          # `@catalog`: per-plugin data (pulp_type → endpoints, form fields)
 │       └── app/
 │           ├── App.tsx       # root app component
 │           ├── pages/        # page components, grouped by area
@@ -23,7 +24,6 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 │           ├── hooks/        # custom hooks (useBranding, useStorage)
 │           ├── context/      # React context providers
 │           ├── layout/       # app shell / layout components
-│           ├── descriptors/  # domain metadata/descriptors
 │           ├── utils/        # shared utilities
 │           ├── client/       # auto-generated API client (DO NOT EDIT)
 │           ├── axios-config/ # Axios instance and interceptors
@@ -31,8 +31,10 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 ├── server/                   # Express.js production server (proxying, env injection)
 └── e2e/                      # Playwright end-to-end tests
     └── tests/
-        ├── *.spec.ts         # test specs (browse, admin, login, repositories, tasks)
+        ├── *.spec.ts         # one spec per area (remotes, repositories, content, users, …)
         ├── auth.setup.ts     # authentication setup project
+        ├── fixtures.ts       # shared Playwright fixtures
+        ├── pom/              # page objects
         └── helpers/          # shared test helpers
 ```
 
@@ -75,7 +77,7 @@ npm run build
 - **Build**: [Vite](https://vite.dev/guide/) (client), [Rollup](https://rollupjs.org/) (common, server)
 - **Routing**: [TanStack Router](https://tanstack.com/router/latest) (file-based, code-split routes)
 - **Data fetching**: [TanStack React Query](https://tanstack.com/query/latest)
-- **Tables**: [TanStack Table](https://tanstack.com/table/latest)
+- **Tables**: [PatternFly Data view](https://www.patternfly.org/extensions/data-view/overview) (`@patternfly/react-data-view`)
 - **HTTP client**: [Axios](https://axios-http.com/)
 - **API client codegen**: [@hey-api/openapi-ts](https://heyapi.dev/)
 - **Forms**: [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup)
@@ -89,7 +91,7 @@ npm run build
 ### PatternFly & UI Patterns
 
 - **Use PatternFly components** for all UI.
-- **Tables**: Use [TanStack Table](https://tanstack.com/table/latest) (`@tanstack/react-table`) for pagination/sorting/filtering, rendered with PatternFly table components.
+- **Tables**: Use `@patternfly/react-data-view` with the shared helpers in `@app/components/DataView`. `UserList` is the reference. Pagination, sorting and filtering are server-side.
 - **Detail pages** use tab-based layouts. Tab content components **must not** include their own `<PageSection>` wrapper.
 - **Forms**: Use `react-hook-form` + `yup` validation.
 - **Empty states**: Use PatternFly `EmptyState` components.
@@ -115,8 +117,6 @@ context/<Name>/
 
 Keep the `createContext` call and the provider in separate files so provider-only edits don't invalidate the context module (and to keep `react-refresh` happy).
 
-> Some existing contexts under `context/` (e.g. `notifications-context.ts`, `plugin-context.ts`) predate this standard and use flat kebab-case files. Use the `Auth/` layout above for **new** contexts.
-
 ### Client structure patterns (`client/src/app/`)
 
 Placement is by **scope**, not type. **Only two layers exist:**
@@ -136,19 +136,24 @@ client/src/app/
   components/  hooks/  context/  utils/   # shared, app-root layers
   pages/
     content-management/                   # area — NO sub-dirs of its own
-      repositories/
-        RepositoryList.tsx                # main component (page root)
-        RepositoryDetail.tsx              # main component (page root)
-        RepositoryDetailRoute.tsx         # route → component adapter (page root)
-        components/                       # used only by this page
-          CreateRepositoryModal.tsx
-        hooks/  context/  utils/          # other page-local layers
+      repositories/                       # entity — groups its pages
+        repository-list/                  # page
+          RepositoryList.tsx              # main component (page root)
+          components/                     # used only by this page
+            RepositoryModal.tsx
+          hooks/
+            useRepositoryForm.ts
+        repository-detail/                # page
+          RepositoryDetail.tsx
+          RepositoryDetailRoute.tsx       # route → component adapter (page root)
+          components/
       content/
-        ContentList.tsx  …
+        content-list/  content-detail/  …
 ```
 
-`UploadModal` is used by both `repositories` and `content` → shared, so it
-lives in `@app/components/`, not `pages/content-management/components/`.
+`PluginContentPanel` is used by both the content detail page and the repository
+version page (via `VersionContent`) → shared, so it lives in `@app/components/`,
+not under `pages/content-management/`.
 
 ### API endpoints
 
@@ -248,14 +253,13 @@ duplicate generic reads in the plugin file.
   `apiPath` from the catalog). A sub-resource counts as uniform when its response type is generic and its query
   params are identical across plugins (the per-plugin generated type differs only
   in a `path` param, which `ListParams` drops). Per-plugin body/field shape is
-  modelled in the catalog (e.g. `ISyncCapability.fields`), not by separate hooks.
-  No plugin-typed create/update/delete here.
-- **`queries/<plugin>-<family>.ts`** (e.g. `file-content.ts`) holds **only
-  plugin-specific** queries: typed create/mutations against
-  `<family>/<plugin>/<type>/`, and sub-resources that genuinely vary by plugin
-  (e.g. content upload, or a typed list when the aggregate returns a union type).
-  Reuse the base's `*Keys` factory for keys and invalidation so cache slots stay
-  unified.
+  modelled in the catalog (`form.createFields`, `compatibleRemoteTypes`, …), not by
+  separate hooks. Create takes the catalog `apiPath` and update/delete take the
+  `href`, with a `Record<string, unknown>` body, so one hook serves every plugin.
+- **`queries/<plugin>-<family>.ts`** (none exist yet; content upload will likely be
+  the first) holds **only plugin-specific** queries: sub-resources that genuinely
+  vary by plugin, or a typed list when the aggregate returns a union type. Reuse the
+  base's `*Keys` factory for keys and invalidation so cache slots stay unified.
 - **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
   `toProxyHref(href)`. It lives in the **base family file** as that family's own
   `<family>DetailQueryOptions` + `use<Family>DetailQuery` /
@@ -305,8 +309,8 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 
 ### E2E Tests (Playwright)
 
-- Plain Playwright `.spec.ts` files in `e2e/tests/`, one per area (`browse`, `admin`, `login`, `repositories`, `tasks`).
-- `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/tests/helpers/`.
+- Plain Playwright `.spec.ts` files in `e2e/tests/`, one per area (`remotes`, `repositories`, `publications`, `distributions`, `content`, `domains`, `users`, `groups`, `roles`, `task-status`, …).
+- `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/tests/helpers/`, `fixtures.ts` and the page objects in `pom/`.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
 
 ## Branding

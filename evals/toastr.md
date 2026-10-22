@@ -1,7 +1,7 @@
 ---
 name: toastr
 description: Mutation toast placement — raised at the page/feature layer via hook-level onSuccess/onError, hooks own invalidation only, mutate over mutateAsync, no useMutationAction wrapper.
-globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx, client/src/app/components/UploadModal.tsx
+globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx
 ---
 
 # Notification / toast conventions
@@ -121,7 +121,7 @@ Keep `mutateAsync` + try/catch only when you need the promise to compose a side
 effect:
 
 - One-off modals building the **success** message from the resolved result plus
-  local form state — `SyncModal`, `PublishModal`, `UploadModal`: raise
+  local form state — `SyncModal`, `PublishModal`: raise
   `notifyTaskStarted` before `onClose`; a **failure is shown in-form** (`catch` →
   `setSubmitError`, see `evals/forms.md`), not toasted.
 - Detail-page delete/cancel — `GroupDetail` (deletes then **navigates away**),

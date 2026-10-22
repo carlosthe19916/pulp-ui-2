@@ -40,8 +40,7 @@ Object fields:
   injects it so callers never pass it. Injectors:
   - `useDefaultDomain()` — users, groups, roles, signing-services, domains.
   - `useSelectedDomain()` — distributions, remotes, repositories, content,
-    publications, file-content.
-  - `tasks.ts` uses **both** (mixed per query).
+    publications, tasks.
   - `artifacts.ts` uses neither (no domain).
 - **href only** — every `*QueryOptions` and `use*Query` hook takes an **href**
   (the resource's, or the parent's for a nested list — read as
@@ -86,11 +85,11 @@ For a detail/nested query that runs once an `href`/id exists. Reference:
   }: {
     href: string | null;
     options?: Omit<
-      UseQueryOptions<DistributionResponse>,
+      UseQueryOptions<DistributionResponse, DrfAxiosError>,
       "queryKey" | "queryFn"
     >;
   }) =>
-    queryOptions({
+    queryOptions<DistributionResponse, DrfAxiosError>({
       ...options,
       queryKey: distributionKeys.detail(href ?? ""),
       queryFn: async () =>
