@@ -37,6 +37,7 @@ import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
 import { PublicationModal } from "./components/PublicationModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import type { IPublicationListParams } from "@app/queries/publications";
@@ -124,7 +125,14 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Type" },
         },
         {
-          cell: pub.repository_version ?? pub.repository ?? "—",
+          cell: pub.repository_version ? (
+            <ResourceHrefLink
+              kind="repositoryVersion"
+              href={pub.repository_version}
+            />
+          ) : (
+            <ResourceHrefLink kind="repository" href={pub.repository} />
+          ),
           props: { dataLabel: "Repository Version", modifier: "truncate" },
         },
         {

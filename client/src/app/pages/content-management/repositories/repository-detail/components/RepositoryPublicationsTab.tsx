@@ -15,6 +15,7 @@ import {
   type DataViewTh,
 } from "@app/components/DataView";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -65,7 +66,12 @@ export const RepositoryPublicationsTab: React.FC<
           props: { dataLabel: "Type" },
         },
         {
-          cell: pub.repository_version ?? "—",
+          cell: (
+            <ResourceHrefLink
+              kind="repositoryVersion"
+              href={pub.repository_version}
+            />
+          ),
           props: { dataLabel: "Repository Version", modifier: "truncate" },
         },
         {

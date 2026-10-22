@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildGroupHref, extractIdFromHref, resolvePulpType } from "./pulpHref";
+import {
+  buildGroupHref,
+  extractIdFromHref,
+  parseRepositoryVersionHref,
+  resolvePulpType,
+} from "./pulpHref";
 
 describe("pulpHref helpers", () => {
   const enabled = { enabled: true, name: "default" };
@@ -50,5 +55,21 @@ describe("pulpHref helpers", () => {
     expect(resolvePulpType("/repositories/bogus/bogus/x/")).toBeUndefined();
     // Content family but an unmodelled content type.
     expect(resolvePulpType("/content/bogus/bogus/x/")).toBeUndefined();
+  });
+
+  it("splits a repository-version href into repository href and number", () => {
+    expect(
+      parseRepositoryVersionHref(
+        "/pulp/default/api/v3/repositories/rpm/rpm/abc/versions/3/",
+      ),
+    ).toEqual({
+      repositoryHref: "/pulp/default/api/v3/repositories/rpm/rpm/abc/",
+      number: "3",
+    });
+    expect(
+      parseRepositoryVersionHref(
+        "/pulp/default/api/v3/repositories/rpm/rpm/abc/",
+      ),
+    ).toBeUndefined();
   });
 });

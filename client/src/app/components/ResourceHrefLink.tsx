@@ -6,12 +6,15 @@ import type { EntityType } from "@catalog";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   extractIdFromHref,
+  parseRepositoryVersionHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 
+export type ResourceHrefKind = EntityType | "content" | "repositoryVersion";
+
 interface IResourceHrefLinkProps {
   /** Which family's detail route to target; `"content"` links the content detail page. */
-  kind: EntityType | "content";
+  kind: ResourceHrefKind;
   href: string | null | undefined;
   /** Human-readable label; falls back to a short id, then a truncated href. */
   label?: string | null;
@@ -23,7 +26,8 @@ const truncate = ({ value, max }: { value: string; max: number }): string =>
 
 /**
  * Renders a link (or plain text, when the family has no detail page) for a resource
- * `pulp_href`. The label falls back name → short id → truncated href.
+ * `pulp_href`. The label falls back name → short id → truncated href; a repository
+ * version falls back to "Version N".
  */
 export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   kind,
@@ -38,8 +42,11 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   }
 
   const id = extractIdFromHref(href);
+  const version =
+    kind === "repositoryVersion" ? parseRepositoryVersionHref(href) : undefined;
   const text =
     label?.trim() ||
+    (version ? `Version ${version.number}` : undefined) ||
     (id && id.length <= truncateAt ? id : undefined) ||
     truncate({ value: href, max: truncateAt });
 
@@ -50,6 +57,22 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
       <Link
         to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId"
         params={{ pulpDomain, repositoryType: pulpType, repositoryId: id }}
+      >
+        {text}
+      </Link>
+    );
+  }
+
+  if (pulpType && version) {
+    return (
+      <Link
+        to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/versions/$versionNumber"
+        params={{
+          pulpDomain,
+          repositoryType: pulpType,
+          repositoryId: extractIdFromHref(version.repositoryHref),
+          versionNumber: version.number,
+        }}
       >
         {text}
       </Link>

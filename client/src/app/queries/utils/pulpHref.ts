@@ -57,3 +57,19 @@ export const extractIdFromHref = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;
 };
+
+/**
+ * Split a repository-version href into its parent repository href and version
+ * number. The repository href keeps the server form, so it hits the same
+ * `repositoryKeys.detail(href)` slot as the repository's own `pulp_href`.
+ *
+ * @example
+ * parseRepositoryVersionHref("/pulp/api/v3/repositories/rpm/rpm/0190.../versions/3/")
+ * // { repositoryHref: "/pulp/api/v3/repositories/rpm/rpm/0190.../", number: "3" }
+ */
+export const parseRepositoryVersionHref = (
+  href: string,
+): { repositoryHref: string; number: string } | undefined => {
+  const match = href.match(/^(.*\/)versions\/(\d+)\/?$/);
+  return match ? { repositoryHref: match[1], number: match[2] } : undefined;
+};

@@ -8,8 +8,8 @@ import {
 } from "@patternfly/react-core";
 
 import type { DistributionResponse } from "@app/client";
+import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IDistributionDetailPanelProps {
@@ -52,13 +52,19 @@ export const DistributionDetailPanel: React.FC<
       <DescriptionListGroup>
         <DescriptionListTerm>Repository</DescriptionListTerm>
         <DescriptionListDescription>
-          <ResourceHrefLink kind="repository" href={distribution.repository} />
+          <NamedResourceHrefLink
+            kind="repository"
+            href={distribution.repository}
+          />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Repository version</DescriptionListTerm>
         <DescriptionListDescription>
-          {distribution.repository_version || "—"}
+          <NamedResourceHrefLink
+            kind="repositoryVersion"
+            href={distribution.repository_version}
+          />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>

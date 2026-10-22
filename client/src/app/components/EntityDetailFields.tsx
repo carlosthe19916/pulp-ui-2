@@ -13,7 +13,7 @@ import {
 import type { DescriptionListProps } from "@patternfly/react-core";
 
 import type { IEntityField } from "@catalog";
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { isEmptyValue } from "@app/utils/utils";
 
 /** The server's write-only-secret descriptor (`hidden_fields` on every response). */
@@ -64,7 +64,7 @@ const renderValue = ({
 
   if (field.type === "asyncResource") {
     return (
-      <ResourceHrefLink
+      <NamedResourceHrefLink
         kind={field.resourceKind}
         href={typeof value === "string" ? value : null}
       />

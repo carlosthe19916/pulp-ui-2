@@ -138,6 +138,24 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
+                <DescriptionListTerm>Parent Task</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {task.parent_task ? (
+                    <Link
+                      to="/monitoring/$pulpDomain/tasks/$taskId"
+                      params={{
+                        pulpDomain,
+                        taskId: extractTaskId(task.parent_task),
+                      }}
+                    >
+                      {extractTaskId(task.parent_task)}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
                 <DescriptionListTerm>Logging CID</DescriptionListTerm>
                 <DescriptionListDescription>
                   {task.logging_cid}

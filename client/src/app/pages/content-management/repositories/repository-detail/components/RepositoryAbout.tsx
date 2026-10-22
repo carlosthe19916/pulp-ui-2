@@ -19,10 +19,9 @@ import type {
   RepositoryVersionResponse,
 } from "@app/client";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
+import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PulpLabels } from "@app/components/PulpLabels";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { useRemoteDetailQuery } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
@@ -57,10 +56,6 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   pulpType,
   pulpDomain,
 }) => {
-  const { data: remote } = useRemoteDetailQuery({
-    href: repository.remote ?? null,
-  });
-
   const data = repository as Record<string, unknown>;
   const settings = (
     getPlugin(pulpType)?.entities.repository?.form.editFields ?? []
@@ -110,11 +105,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
         </Fact>
         {repository.remote && (
           <Fact term="Remote">
-            <ResourceHrefLink
-              kind="remote"
-              href={repository.remote}
-              label={remote?.name}
-            />
+            <NamedResourceHrefLink kind="remote" href={repository.remote} />
           </Fact>
         )}
         <Fact term="Last updated">

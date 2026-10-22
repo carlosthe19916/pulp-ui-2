@@ -10,7 +10,7 @@ import {
 } from "@patternfly/react-core";
 
 import type { PublicationResponse } from "@app/client";
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IPublicationDetailPanelProps {
@@ -35,13 +35,19 @@ export const PublicationDetailPanel: React.FC<IPublicationDetailPanelProps> = ({
       <DescriptionListGroup>
         <DescriptionListTerm>Repository</DescriptionListTerm>
         <DescriptionListDescription>
-          <ResourceHrefLink kind="repository" href={publication.repository} />
+          <NamedResourceHrefLink
+            kind="repository"
+            href={publication.repository}
+          />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>Repository version</DescriptionListTerm>
         <DescriptionListDescription>
-          {publication.repository_version || "—"}
+          <NamedResourceHrefLink
+            kind="repositoryVersion"
+            href={publication.repository_version}
+          />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
