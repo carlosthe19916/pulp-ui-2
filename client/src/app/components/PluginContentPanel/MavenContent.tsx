@@ -17,12 +17,46 @@ import {
 import { facts } from "./contentFields";
 import type { IPluginContentProps } from "./contentFields";
 
+/** Maven / Gradle dependency snippets for one GAV, as Maven Central shows them. */
+export const MavenInstall: React.FC<{
+  groupId: string;
+  artifactId: string;
+  version: string;
+}> = ({ groupId, artifactId, version }) => {
+  const [tool, setTool] = useState<string | number>("maven");
+  return (
+    <ContentSection title="Install">
+      <Tabs
+        activeKey={tool}
+        onSelect={(_e, key) => setTool(key)}
+        isSubtab
+        aria-label="Build tool"
+      >
+        <Tab eventKey="maven" title={<TabTitleText>Maven</TabTitleText>}>
+          <Snippet
+            code={[
+              "<dependency>",
+              `  <groupId>${groupId}</groupId>`,
+              `  <artifactId>${artifactId}</artifactId>`,
+              `  <version>${version}</version>`,
+              "</dependency>",
+            ].join("\n")}
+          />
+        </Tab>
+        <Tab eventKey="gradle" title={<TabTitleText>Gradle</TabTitleText>}>
+          <Snippet
+            code={`implementation '${groupId}:${artifactId}:${version}'`}
+          />
+        </Tab>
+      </Tabs>
+    </ContentSection>
+  );
+};
+
 /** Maven Central style: coordinates up front, build-tool snippets to copy. */
 export const MavenContent: React.FC<IPluginContentProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<MavenMavenArtifactResponse>({ href });
-  const [tool, setTool] = useState<string | number>("maven");
-
   const groupId = data?.group_id ?? "";
   const artifactId = data?.artifact_id ?? "";
   const version = data?.version ?? "";
@@ -56,31 +90,11 @@ export const MavenContent: React.FC<IPluginContentProps> = ({ href }) => {
         </>
       }
     >
-      <ContentSection title="Install">
-        <Tabs
-          activeKey={tool}
-          onSelect={(_e, key) => setTool(key)}
-          isSubtab
-          aria-label="Build tool"
-        >
-          <Tab eventKey="maven" title={<TabTitleText>Maven</TabTitleText>}>
-            <Snippet
-              code={[
-                "<dependency>",
-                `  <groupId>${groupId}</groupId>`,
-                `  <artifactId>${artifactId}</artifactId>`,
-                `  <version>${version}</version>`,
-                "</dependency>",
-              ].join("\n")}
-            />
-          </Tab>
-          <Tab eventKey="gradle" title={<TabTitleText>Gradle</TabTitleText>}>
-            <Snippet
-              code={`implementation '${groupId}:${artifactId}:${version}'`}
-            />
-          </Tab>
-        </Tabs>
-      </ContentSection>
+      <MavenInstall
+        groupId={groupId}
+        artifactId={artifactId}
+        version={version}
+      />
     </ContentPanelLayout>
   );
 };

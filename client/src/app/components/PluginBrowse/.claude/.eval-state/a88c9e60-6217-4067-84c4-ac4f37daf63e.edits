@@ -1,0 +1,4 @@
+client/src/app/components/RepositoryContent/RepositoryContent.tsx
+client/src/app/components/PluginBrowse/helpers.ts
+client/src/app/components/PluginBrowse/registry.ts
+client/src/app/components/PluginBrowse/PluginBrowse.tsx

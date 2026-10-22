@@ -30,6 +30,10 @@ export const links = (urls: Record<string, unknown>): ILink[] =>
     )
     .map(([label, url]) => ({ label, url }));
 
+/** An untyped (`unknown`) list field read as `T[]`; `[]` when it isn't an array. */
+export const asArray = <T>(value: unknown): T[] =>
+  Array.isArray(value) ? (value as T[]) : [];
+
 export const asStrings = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")

@@ -1,8 +1,10 @@
 import type React from "react";
+import { useId, useState } from "react";
 
 import {
   Card,
   CardBody,
+  CardExpandableContent,
   CardHeader,
   CardTitle,
   Stack,
@@ -11,7 +13,7 @@ import {
 } from "@patternfly/react-core";
 
 import type { RepositoryResponse } from "@app/client";
-import { VersionContent } from "@app/components/VersionContent";
+import { RepositoryContent } from "@app/components/RepositoryContent";
 import { useRepositoryVersionDetailQuery } from "@app/queries/repositories";
 
 import { RepositoryAbout } from "./RepositoryAbout";
@@ -24,17 +26,31 @@ interface IRepositoryDetailsTabProps {
   onViewDistributions: () => void;
 }
 
+/** A PatternFly expandable card, open by default. */
 const TitledCard: React.FC<{ title: string; children: React.ReactNode }> = ({
   title,
   children,
-}) => (
-  <Card isCompact>
-    <CardHeader>
-      <CardTitle>{title}</CardTitle>
-    </CardHeader>
-    <CardBody>{children}</CardBody>
-  </Card>
-);
+}) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const titleId = useId();
+  return (
+    <Card isCompact isExpanded={isExpanded}>
+      <CardHeader
+        onExpand={() => setIsExpanded((expanded) => !expanded)}
+        toggleButtonProps={{
+          "aria-label": title,
+          "aria-labelledby": titleId,
+          "aria-expanded": isExpanded,
+        }}
+      >
+        <CardTitle id={titleId}>{title}</CardTitle>
+      </CardHeader>
+      <CardExpandableContent>
+        <CardBody>{children}</CardBody>
+      </CardExpandableContent>
+    </Card>
+  );
+};
 
 /** Overview, client setup, and the latest version's content. */
 export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
@@ -76,7 +92,9 @@ export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
             <Title headingLevel="h2" size="lg">
               Latest version content
             </Title>
-            <VersionContent
+            <RepositoryContent
+              repositoryHref={repository.pulp_href ?? ""}
+              repositoryType={pulpType}
               versionHref={latestVersion.pulp_href}
               summary={latestVersion.content_summary}
             />

@@ -65,6 +65,8 @@ export const repositoryKeys = {
   detailQuery: (repoHref: string) => repositoryKeys.detail(repoHref),
   versionsQuery: (repoHref: string, params: IRepositoryVersionsListParams) =>
     [...repositoryKeys.versions(repoHref), params] as const,
+  subResourceQuery: (repoHref: string, path: string, params: object) =>
+    [...repositoryKeys.detail(repoHref), path, params] as const,
 };
 
 export const repositoriesListQueryOptions = ({
@@ -229,6 +231,58 @@ export const useRepositoryVersionsListQuery = ({
 }) =>
   useQuery({
     ...repositoryVersionsListQueryOptions({ repositoryHref, params, options }),
+    enabled: !!repositoryHref && options?.enabled !== false,
+  });
+
+/**
+ * A plugin's read-only sub-resource of a repository (`{href}<path>`, e.g. Maven
+ * `packages/` or `metrics/`). The caller passes the generated response and query
+ * types; the key nests under the repository's detail so a sync refreshes it.
+ */
+export const repositorySubResourceQueryOptions = <
+  TData,
+  TParams extends object,
+>({
+  repositoryHref,
+  path,
+  params,
+  options,
+}: {
+  repositoryHref: string;
+  path: string;
+  params: TParams;
+  options?: Omit<UseQueryOptions<TData, DrfAxiosError>, "queryKey" | "queryFn">;
+}) =>
+  queryOptions<TData, DrfAxiosError>({
+    ...options,
+    queryKey: repositoryKeys.subResourceQuery(repositoryHref, path, params),
+    queryFn: async (): Promise<TData> =>
+      (
+        await axiosInstance.get<TData>(
+          `${toProxyHref(repositoryHref)}${path}`,
+          { params },
+        )
+      ).data,
+  });
+
+export const useRepositorySubResourceQuery = <TData, TParams extends object>({
+  repositoryHref,
+  path,
+  params,
+  options,
+}: {
+  repositoryHref: string;
+  path: string;
+  params: TParams;
+  options?: Omit<UseQueryOptions<TData, DrfAxiosError>, "queryKey" | "queryFn">;
+}) =>
+  useQuery({
+    ...repositorySubResourceQueryOptions<TData, TParams>({
+      repositoryHref,
+      path,
+      params,
+      options,
+    }),
     enabled: !!repositoryHref && options?.enabled !== false,
   });
 

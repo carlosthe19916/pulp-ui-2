@@ -292,6 +292,32 @@ export class PulpApi {
     return finished.created_resources?.[0] ?? "";
   }
 
+  /** Upload a File content unit into a repository, creating a new repository version. */
+  async addFileContent(
+    repositoryHref: string,
+    relativePath: string,
+  ): Promise<void> {
+    const res = await this.ctx.post(this.collectionUrl("content/file/files"), {
+      multipart: {
+        relative_path: relativePath,
+        repository: repositoryHref,
+        file: {
+          name: relativePath.split("/").pop() ?? "file.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from(`e2e content ${relativePath}\n`),
+        },
+      },
+    });
+    if (res.status() !== 202) {
+      throw new Error(
+        `Upload content failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    const { task } = (await res.json()) as { task?: string };
+    if (!task) throw new Error("Content upload returned no task href");
+    await this.waitForTask(task);
+  }
+
   private async createSync(
     collection: string,
     body: Record<string, unknown>,

@@ -1,7 +1,10 @@
 import type React from "react";
 
 import type { AnsibleCollectionVersionResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
 
 import {
   ContentHeader,
@@ -16,7 +19,43 @@ import {
 import { facts, links } from "./contentFields";
 import type { IPluginContentProps } from "./contentFields";
 
-/** Ansible Galaxy style: FQCN, install command, tags; project links in the sidebar. */
+interface ICollectionContent {
+  name: string;
+  content_type: string;
+}
+
+/**
+ * Modules, plugins and roles in the collection, grouped by type. The REST API omits
+ * `contents` unless it's requested with `fields`, so ask for it explicitly.
+ */
+const CollectionContents: React.FC<{ href: string }> = ({ href }) => {
+  const { data } = useContentTypeListQuery({
+    pulpType: "ansible.collection_version",
+    params: { pulp_href__in: [href], limit: 1, fields: ["contents"] },
+  });
+  // `contents` is only returned when requested, so the generated row type omits it.
+  const row = data?.results[0] as
+    { contents?: ICollectionContent[] } | undefined;
+  const contents = row?.contents ?? [];
+  const byType = Object.entries(
+    contents.reduce<Record<string, string[]>>((groups, content) => {
+      (groups[content.content_type] ??= []).push(content.name);
+      return groups;
+    }, {}),
+  );
+
+  return (
+    <FactList
+      title={`Contents (${contents.length})`}
+      items={byType.map(([type, names]) => ({
+        term: type,
+        value: names.join(", "),
+      }))}
+    />
+  );
+};
+
+/** Ansible Galaxy style: FQCN, install command, tags, contents; project links in the sidebar. */
 export const AnsibleContent: React.FC<IPluginContentProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<AnsibleCollectionVersionResponse>({ href });
@@ -64,6 +103,7 @@ export const AnsibleContent: React.FC<IPluginContentProps> = ({ href }) => {
       <ContentSection title="Tags">
         <LabelList items={tags} emptyText="No tags" />
       </ContentSection>
+      <CollectionContents href={href} />
     </ContentPanelLayout>
   );
 };

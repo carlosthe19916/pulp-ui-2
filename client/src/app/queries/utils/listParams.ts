@@ -21,6 +21,18 @@ export type ListParams<TData extends { query?: object }> = Omit<
   limit: number;
 };
 
+/**
+ * Like `ListParams`, but keeps the spec's `ordering` array so a caller can sort by
+ * several fields (e.g. `["namespace", "name", "-version"]`). The axios params
+ * serializer comma-joins it.
+ */
+export type MultiOrderListParams<TData extends { query?: object }> = Omit<
+  QueryOf<TData>,
+  "limit"
+> & {
+  limit: number;
+};
+
 /** Params for a fetch-all query: `limit`/`offset` are managed by the paging loop, only filtering/ordering remain. */
 export type AllListParams<TData extends { query?: object }> = Omit<
   ListParams<TData>,

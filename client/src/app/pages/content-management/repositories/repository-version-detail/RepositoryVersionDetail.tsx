@@ -10,7 +10,7 @@ import {
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { VersionContent } from "@app/components/VersionContent";
+import { RepositoryContent } from "@app/components/RepositoryContent";
 import {
   useRepositoryDetailQuery,
   useSuspenseRepositoryVersionDetailQuery,
@@ -80,7 +80,9 @@ export const RepositoryVersionDetail: React.FC<
       />
 
       <PageSection>
-        <VersionContent
+        <RepositoryContent
+          repositoryHref={repositoryHref}
+          repositoryType={pulpType}
           versionHref={version.pulp_href ?? ""}
           summary={version.content_summary}
         />

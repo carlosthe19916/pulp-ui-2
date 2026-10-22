@@ -1,0 +1,199 @@
+import type React from "react";
+
+import { useState } from "react";
+
+import { useQueryClient } from "@tanstack/react-query";
+
+import {
+  Content,
+  ContentVariants,
+  Label,
+  LabelGroup,
+} from "@patternfly/react-core";
+
+import type {
+  MavenRepositoryMetricsResponse,
+  MavenRepositoryPackageResponse,
+  PaginatedMavenRepositoryPackageListResponse,
+  RepositoriesMavenMavenMetricsData,
+  RepositoriesMavenMavenPackagesData,
+} from "@app/client";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { contentTypeListQueryOptions } from "@app/queries/content";
+import { useRepositorySubResourceQuery } from "@app/queries/repositories";
+import { formatDateTime } from "@app/utils/utils";
+
+import { snapshotBuild } from "./helpers";
+import { BrowseTable } from "./BrowseTable";
+import type { IBrowseContext } from "./types";
+import { useBrowseListState } from "./useBrowseListState";
+
+const MAX_VERSION_LABELS = 5;
+
+const artifactKey = ({
+  group_id,
+  artifact_id,
+}: MavenRepositoryPackageResponse) => `${group_id}:${artifact_id}`;
+
+/** Maven Central style: one row per groupId:artifactId with its versions, newest first. */
+export const MavenArtifacts: React.FC<IBrowseContext> = ({
+  versionHref,
+  repositoryHref,
+  selectedHref,
+  onSelect,
+}) => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  // The artifact whose version is open in the drawer, for the row highlight.
+  const [openedArtifact, setOpenedArtifact] = useState<string | null>(null);
+  const list = useBrowseListState({
+    sort: {
+      keys: ["group_id", "artifact_id", "last_updated"] as const,
+      initial: { sortBy: "group_id", direction: "asc" },
+    },
+    filters: [
+      {
+        param: "search",
+        label: "Artifact",
+        placeholder: "group or group:artifact",
+      },
+    ] as const,
+  });
+  const packages = useRepositorySubResourceQuery<
+    PaginatedMavenRepositoryPackageListResponse,
+    NonNullable<RepositoriesMavenMavenPackagesData["query"]>
+  >({
+    repositoryHref,
+    path: "packages/",
+    params: { ...list.params, repository_version: versionHref },
+  });
+  const metrics = useRepositorySubResourceQuery<
+    MavenRepositoryMetricsResponse,
+    NonNullable<RepositoriesMavenMavenMetricsData["query"]>
+  >({
+    repositoryHref,
+    path: "metrics/",
+    params: { repository_version: versionHref },
+  });
+
+  // packages/ rows aren't content; a row (its latest version) or a version label opens
+  // that version's MavenPackage in the drawer.
+  const openVersion = async ({
+    row,
+    version,
+  }: {
+    row: MavenRepositoryPackageResponse;
+    version: string;
+  }) => {
+    const page = await queryClient.fetchQuery(
+      contentTypeListQueryOptions({
+        domain,
+        pulpType: "maven.package",
+        params: {
+          repository_version: versionHref,
+          group_id: row.group_id,
+          artifact_id: row.artifact_id,
+          version,
+          limit: 1,
+          fields: ["pulp_href"],
+        },
+      }),
+    );
+    const href = page.results[0]?.pulp_href;
+    if (href) {
+      setOpenedArtifact(artifactKey(row));
+      onSelect(href);
+    }
+  };
+
+  const counts = metrics.data;
+
+  return (
+    <BrowseTable
+      ariaLabel="Artifacts"
+      list={list}
+      rows={packages.data?.results ?? []}
+      count={packages.data?.count ?? 0}
+      isLoading={packages.isLoading}
+      error={packages.error}
+      emptyTitle="No artifacts"
+      header={
+        counts ? (
+          <Content component={ContentVariants.small}>
+            {counts.package_count.toLocaleString()} packages ·{" "}
+            {counts.version_count.toLocaleString()} versions ·{" "}
+            {counts.build_count.toLocaleString()} builds
+          </Content>
+        ) : undefined
+      }
+      onSelect={onSelect}
+      onRowClick={(row) => {
+        const version = row.latest_releases[0]?.version ?? row.versions[0];
+        if (version) void openVersion({ row, version });
+      }}
+      isRowSelected={(row) =>
+        !!selectedHref && openedArtifact === artifactKey(row)
+      }
+      columns={[
+        {
+          title: "Artifact",
+          sort: list.sortProps("artifact_id"),
+          width: 30,
+          cell: (row) => (
+            <>
+              {row.artifact_id}
+              <Content component={ContentVariants.small}>
+                {row.group_id}
+              </Content>
+            </>
+          ),
+        },
+        {
+          title: "Latest",
+          cell: (row) => {
+            const latest = row.latest_releases[0];
+            const build = latest ? snapshotBuild(latest) : "";
+            return latest ? (
+              <>
+                {latest.version}
+                {build ? (
+                  <Content component={ContentVariants.small}>
+                    build {build}
+                  </Content>
+                ) : null}
+              </>
+            ) : (
+              "—"
+            );
+          },
+        },
+        {
+          title: "Versions",
+          width: 35,
+          cell: (row) => (
+            <LabelGroup numLabels={MAX_VERSION_LABELS}>
+              {row.versions.map((version) => (
+                <Label
+                  key={version}
+                  isCompact
+                  variant="outline"
+                  onClick={(event: React.MouseEvent) => {
+                    event.stopPropagation();
+                    void openVersion({ row, version });
+                  }}
+                >
+                  {version}
+                </Label>
+              ))}
+            </LabelGroup>
+          ),
+        },
+        {
+          title: "Updated",
+          sort: list.sortProps("last_updated"),
+          cell: (row) => formatDateTime(row.last_updated) ?? "—",
+        },
+      ]}
+    />
+  );
+};

@@ -1,15 +1,9 @@
 import type React from "react";
 import { useState } from "react";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerContentBody,
-} from "@patternfly/react-core";
-
 import type { ContentSummaryResponse } from "@app/client";
 
-import { ContentDrawerPanel } from "./ContentDrawerPanel";
+import { ContentDrawer } from "./ContentDrawer";
 import { VersionContentList } from "./VersionContentList";
 
 interface IVersionContentProps {
@@ -25,24 +19,16 @@ export const VersionContent: React.FC<IVersionContentProps> = ({
   const [selectedHref, setSelectedHref] = useState<string | null>(null);
 
   return (
-    <Drawer isExpanded={selectedHref != null} isInline>
-      <DrawerContent
-        panelContent={
-          <ContentDrawerPanel
-            href={selectedHref}
-            onClose={() => setSelectedHref(null)}
-          />
-        }
-      >
-        <DrawerContentBody>
-          <VersionContentList
-            versionHref={versionHref}
-            summary={summary}
-            selectedHref={selectedHref ?? undefined}
-            onSelect={setSelectedHref}
-          />
-        </DrawerContentBody>
-      </DrawerContent>
-    </Drawer>
+    <ContentDrawer
+      selectedHref={selectedHref}
+      onClose={() => setSelectedHref(null)}
+    >
+      <VersionContentList
+        versionHref={versionHref}
+        summary={summary}
+        selectedHref={selectedHref ?? undefined}
+        onSelect={setSelectedHref}
+      />
+    </ContentDrawer>
   );
 };

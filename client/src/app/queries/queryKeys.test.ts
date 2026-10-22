@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { contentKeys } from "./content";
 import { domainKeys } from "./domains";
 import { groupKeys } from "./groups";
 import { repositoryKeys } from "./repositories";
@@ -124,6 +125,23 @@ describe("query-key factories", () => {
     });
   });
 
+  describe("contentKeys", () => {
+    it("keeps typed list queries (page and fetch-all) under the list folder", () => {
+      expect(
+        startsWith(
+          contentKeys.typeListQuery(domain, "file.file", { limit: 10 }),
+          contentKeys.list(),
+        ),
+      ).toBe(true);
+      expect(
+        startsWith(
+          contentKeys.typeAllListQuery(domain, "file.file", {}),
+          contentKeys.list(),
+        ),
+      ).toBe(true);
+    });
+  });
+
   describe("repositoryKeys", () => {
     const repoHref = "/pulp/api/v3/repositories/file/file/abc/";
 
@@ -131,6 +149,15 @@ describe("query-key factories", () => {
       expect(
         startsWith(
           repositoryKeys.versionsQuery(repoHref, { limit: 1 }),
+          repositoryKeys.detail(repoHref),
+        ),
+      ).toBe(true);
+    });
+
+    it("nests plugin sub-resources under the repository detail folder", () => {
+      expect(
+        startsWith(
+          repositoryKeys.subResourceQuery(repoHref, "packages/", {}),
           repositoryKeys.detail(repoHref),
         ),
       ).toBe(true);

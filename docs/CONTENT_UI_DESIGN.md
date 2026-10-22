@@ -7,14 +7,15 @@ and an Artifact is the _file_ it points at (0..N per unit). See
 
 ## Status
 
-| Surface                      | Status  | Where                                                                        |
-| ---------------------------- | ------- | ---------------------------------------------------------------------------- |
-| Global Content list          | Done    | `…/content`, `ContentList` + shared `ContentDataList`                        |
-| Content detail page          | Done    | `…/content/$contentType/$contentId`, tabs Details · Artifacts · Repositories |
-| Version content (contextual) | Done    | `RepositoryVersionDetail` → `VersionContent` (summary, list, detail drawer)  |
-| Upload dialog                | Planned | catalog already has `IContentType.uploadable`. No UI yet                     |
-| Add/remove via `modify/`     | Planned |                                                                              |
-| Chunked upload (`/uploads/`) | Planned | extends upload only                                                          |
+| Surface                      | Status  | Where                                                                                                  |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| Global Content list          | Done    | `…/content`, `ContentList` + shared `ContentDataList`                                                  |
+| Content detail page          | Done    | `…/content/$contentType/$contentId`, tabs Details · Artifacts · Repositories                           |
+| Version content (contextual) | Done    | `RepositoryVersionDetail` → `VersionContent` (summary, list, detail drawer)                            |
+| Browse (per-plugin view)     | Done    | `RepositoryContent` → `PluginBrowse`; see [REPOSITORY_CONTENT_DESIGN.md](REPOSITORY_CONTENT_DESIGN.md) |
+| Upload dialog                | Planned | catalog already has `IContentType.uploadable`. No UI yet                                               |
+| Add/remove via `modify/`     | Planned |                                                                                                        |
+| Chunked upload (`/uploads/`) | Planned | extends upload only                                                                                    |
 
 ## What's built
 

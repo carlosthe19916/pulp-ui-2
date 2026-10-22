@@ -9,6 +9,14 @@ import type {
   PaginatedMultipleArtifactContentResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import type {
+  ContentTypeKey,
+  ContentTypePage,
+  ContentTypeRow,
+  IContentTypeAllListParams,
+  IContentTypeListParams,
+} from "./contentTypes";
+import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
@@ -30,6 +38,10 @@ export const contentKeys = {
 
   listQuery: (domain: IPulpDomain, params: IContentListParams) =>
     [...contentKeys.list(), domain, params] as const,
+  typeListQuery: (domain: IPulpDomain, pulpType: string, params: object) =>
+    [...contentKeys.list(), domain, pulpType, params] as const,
+  typeAllListQuery: (domain: IPulpDomain, pulpType: string, params: object) =>
+    [...contentKeys.list(), "all", domain, pulpType, params] as const,
   detailQuery: (contentHref: string) => contentKeys.detail(contentHref),
 };
 
@@ -82,6 +94,113 @@ export const useContentListQuery = ({
 }) => {
   const domain = useSelectedDomain();
   return useQuery(contentListQueryOptions({ domain, params, options }));
+};
+
+/** A content type's own list endpoint (`content/<apiPath>/`), from the catalog. */
+const contentTypeUrl = (pulpType: ContentTypeKey, domain: IPulpDomain) =>
+  pulpApiPath(`content/${getContentType(pulpType)?.apiPath}/`, domain);
+
+type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
+  UseQueryOptions<ContentTypePage<K>, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
+/**
+ * One content type's own list (`content/<apiPath>/`, path from the catalog): full typed
+ * rows, the type's filters and multi-field ordering. The caller decides every param,
+ * so one query serves every list, lookup (`pulp_href__in`) and field selection.
+ */
+export const contentTypeListQueryOptions = <K extends ContentTypeKey>({
+  domain,
+  pulpType,
+  params,
+  options,
+}: {
+  domain: IPulpDomain;
+  pulpType: K;
+  params: IContentTypeListParams<K>;
+  options?: ContentTypeListOptions<K>;
+}) =>
+  queryOptions<ContentTypePage<K>, DrfAxiosError>({
+    ...options,
+    queryKey: contentKeys.typeListQuery(domain, pulpType, params),
+    queryFn: async (): Promise<ContentTypePage<K>> => {
+      const response = await axiosInstance.get<ContentTypePage<K>>(
+        contentTypeUrl(pulpType, domain),
+        { params },
+      );
+      return response.data;
+    },
+  });
+
+/** Disabled for a type without an endpoint, or when the caller passes `enabled: false`. */
+export const useContentTypeListQuery = <K extends ContentTypeKey>({
+  pulpType,
+  params,
+  options,
+}: {
+  pulpType: K;
+  params: IContentTypeListParams<K>;
+  options?: ContentTypeListOptions<K>;
+}) => {
+  const domain = useSelectedDomain();
+  return useQuery({
+    ...contentTypeListQueryOptions({ domain, pulpType, params, options }),
+    enabled: !!getContentType(pulpType)?.apiPath && options?.enabled !== false,
+  });
+};
+
+/**
+ * Every page of one content type's list, for small sets matched in the browser
+ * (e.g. a version's signatures) when the endpoint has no `__in` filter for the link.
+ */
+export const allContentTypeListQueryOptions = <K extends ContentTypeKey>({
+  domain,
+  pulpType,
+  params,
+  options,
+}: {
+  domain: IPulpDomain;
+  pulpType: K;
+  params: IContentTypeAllListParams<K>;
+  options?: ContentTypeListOptions<K>;
+}) =>
+  queryOptions<ContentTypePage<K>, DrfAxiosError>({
+    ...options,
+    queryKey: contentKeys.typeAllListQuery(domain, pulpType, params),
+    queryFn: async (): Promise<ContentTypePage<K>> => {
+      const { results, count } = await fetchAllPages<ContentTypeRow<K>>(
+        async (offset, limit) => {
+          const response = await axiosInstance.get<ContentTypePage<K>>(
+            contentTypeUrl(pulpType, domain),
+            { params: { ...params, offset, limit } },
+          );
+          return response.data;
+        },
+      );
+      return {
+        count,
+        next: null,
+        previous: null,
+        results,
+      } as ContentTypePage<K>;
+    },
+  });
+
+export const useContentTypeAllQuery = <K extends ContentTypeKey>({
+  pulpType,
+  params,
+  options,
+}: {
+  pulpType: K;
+  params: IContentTypeAllListParams<K>;
+  options?: ContentTypeListOptions<K>;
+}) => {
+  const domain = useSelectedDomain();
+  return useQuery({
+    ...allContentTypeListQueryOptions({ domain, pulpType, params, options }),
+    enabled: !!getContentType(pulpType)?.apiPath && options?.enabled !== false,
+  });
 };
 
 /**

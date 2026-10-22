@@ -1,232 +1,202 @@
-# Pulp plugin endpoints — what exists and what the UI could use
+# Pulp API endpoints — what we use and what we don't (yet)
 
-Research date: 2026-10-22. Sources: `client/openapi/pulp.json` (core 3.122.0.dev,
-1271 operations / 923 paths) and the plugin backends in `../pulp_*/…/app/urls.py`.
-Paths below drop the `/api/pulp/{pulp_domain}/api/v3` prefix.
+Sources: `client/openapi/pulp.json` and plugin source in `../pulp_*`. Checked 2026-10-22.
+Paths drop the `/api/pulp/{domain}/api/v3/` prefix. `{repo}` = a repository href, etc.
 
-Trigger: the old UI lists a repository's collections with
-`GET content/ansible/collection_versions/?repository=<uuid>`, which fails with
-`400 Invalid Filter: 'repository'`. Typed content lists filter by
-**`repository_version=<href>`**, not by repository.
+**Contents**
 
-## 1. What our UI uses today
+1. [What our UI calls today](#1-what-our-ui-calls-today)
+2. [Generic actions not called](#2-generic-actions-not-called)
+3. [Generic GETs not called](#3-generic-gets-not-called)
+4. [Plugin-specific actions](#4-plugin-specific-actions)
+5. [Plugin-specific GETs](#5-plugin-specific-gets)
+6. [The rest (non-REST APIs, uploads)](#6-the-rest)
+7. [Gotchas](#7-gotchas)
 
-| Area                                                  | Endpoint(s)                                                                              |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Content list                                          | aggregate `content/` only (sparse: `pulp_href`, `artifacts`, `prn`, labels, timestamps)  |
-| Content detail                                        | typed `content/<apiPath>/<id>/` — one GET per row (catalog `apiPath`)                    |
-| Remotes / Repositories / Distributions / Publications | aggregate list + typed CRUD on `<family>/<plugin>/<type>/`                               |
-| Repository actions                                    | `sync/` and `versions/` only                                                             |
-| Admin                                                 | `users/`, `groups/`, `roles/`, `domains/`, `tasks/`, `tasks/purge/`, `signing-services/` |
+---
 
-Nothing else is called: no `modify/`, no plugin-specific actions, no typed content lists,
-no uploads, no labels/RBAC sub-resources, no ACS, no content guards.
+## 1. What our UI calls today
 
-## 2. Typed content lists vs the aggregate
+| Area                                 | Calls                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| Remotes, Repositories, Distributions | aggregate list · typed `POST` · `GET`/`PATCH`/`DELETE {href}`          |
+| Publications                         | aggregate list · typed `POST` · `DELETE {href}`                        |
+| Repository                           | `sync/` · `versions/` · `GET {version}`                                |
+| Content                              | aggregate `content/` list · `GET {content}` per row · `GET {artifact}` |
+| Tasks                                | list · `GET` · `PATCH` (cancel) · `tasks/purge/`                       |
+| Users, Groups, Roles, Domains        | full CRUD · `{user}roles/` · `{group}users/` · `{group}roles/`         |
+| Other                                | `status/` · `signing-services/` · `groups/` (login check)              |
 
-The aggregate `content/` supports only generic filters: `pulp_type(__in)` (57 types),
-`repository_version(_added/_removed)`, `added_between/removed_between`, `q`,
-`pulp_href__in/pulp_id__in/prn__in`, `pulp_label_select`, `orphaned_for`,
-`fields/exclude_fields`. It returns no type-specific fields, so you can't search
-by name or version or sort by them.
+Everything below is **not called** by our UI.
 
-Each typed list (`content/<plugin>/<type>/`) supports the same generic filters, **plus**
-the type's own field filters and ordering on every model field, and returns the full typed
-payload (use `fields=` to keep it small). That's how the old UI shows rich tables in one
-request instead of our N+1 detail GETs.
+---
 
-**Plugin-neutral entry point:** `GET repositories/…/versions/<n>/` returns
-`content_summary.{present,added,removed}[pulp_type].href`, which is already the typed list
-URL with `?repository_version=<href>`, e.g.
+## 2. Generic actions not called
 
-```
-"ansible.collection_version": { "count": 2,
-  "href": "/pulp/api/v3/content/ansible/collection_versions/?repository_version=…/versions/1/" }
-```
+Same shape on every plugin, so one hook could serve them all.
 
-So a version page can render one typed table per present type by following those hrefs.
-No plugin-specific code is needed to _find_ the endpoint, only to pick columns.
+| Action                    | Endpoint                                                                                                                     | Notes                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Add/remove content        | `POST {repo}modify/`                                                                                                         | `{add_content_units, remove_content_units, base_version}`. Every plugin except container. |
+| Delete a version          | `DELETE {version}`                                                                                                           | async                                                                                     |
+| Repair a version          | `POST {version}repair/`                                                                                                      | re-download missing/corrupt artifacts                                                     |
+| Labels                    | `POST {href}set_label/` · `unset_label/`                                                                                     | remotes, repos, distributions, content, domains                                           |
+| Object roles              | `POST {href}add_role/` · `remove_role/`                                                                                      | most remotes, repos, distributions, publications, guards, tasks                           |
+| Delete a task             | `DELETE {task}`                                                                                                              |                                                                                           |
+| Orphan cleanup            | `POST orphans/cleanup/`                                                                                                      | `{orphan_protection_time, content_hrefs}`                                                 |
+| Reclaim space             | `POST repositories/reclaim_space/`                                                                                           | drop artifacts of old versions                                                            |
+| Repair all                | `POST repair/`                                                                                                               | whole-system artifact repair                                                              |
+| Chunked upload            | `POST uploads/` → `PUT {upload}` → `POST {upload}commit/` · `DELETE {upload}`                                                | big-file uploads                                                                          |
+| Artifacts                 | `POST artifacts/` · `DELETE {artifact}`                                                                                      |                                                                                           |
+| Content guards            | CRUD on `contentguards/core/{rbac,composite,content_redirect,header,envvar_header}/`, `contentguards/certguard/{x509,rhsm}/` | attach to distributions                                                                   |
+| Alternate content sources | CRUD + `POST {acs}refresh/` on `acs/{file,rpm,deb}/…/`                                                                       |                                                                                           |
+| Export                    | CRUD `exporters/core/{pulp,filesystem}/` · `POST {exporter}exports/`                                                         |                                                                                           |
+| Import                    | CRUD `importers/core/pulp/` · `POST {importer}imports/` · `POST importers/core/pulp/import-check/`                           |                                                                                           |
+| Replication               | CRUD `upstream-pulps/` · `POST {upstream}replicate/`                                                                         | tech preview                                                                              |
+| Access policies           | `PATCH`/`PUT {policy}` · `POST {policy}reset/`                                                                               |                                                                                           |
+| OpenPGP keyrings          | CRUD `repositories/core/openpgp_keyring/` · `modify/` · `distributions/core/openpgp/`                                        |                                                                                           |
+| Domain migrate            | `POST domains/migrate/`                                                                                                      | switch a domain's storage backend                                                         |
+| Session login             | `POST`/`DELETE login/`                                                                                                       | we use basic auth instead                                                                 |
 
-### Type-specific filters per content list
+---
 
-Generic filters are omitted. `__in`/`__iexact`/`__istartswith`/`__regex` variants exist where noted with `*`.
+## 3. Generic GETs not called
 
-| Plugin       | Endpoint                                                                                                                                        | Filters                                                                                                                       |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| ansible      | `content/ansible/collection_versions/`                                                                                                          | name, namespace, version, tags                                                                                                |
-|              | `content/ansible/namespaces/`                                                                                                                   | name\*, company\*, metadata_sha256                                                                                            |
-|              | `content/ansible/roles/`                                                                                                                        | name, namespace, version                                                                                                      |
-|              | `content/ansible/collection_signatures/`                                                                                                        | signed_collection, pubkey_fingerprint, signing_service                                                                        |
-|              | `content/ansible/collection_marks/`                                                                                                             | marked_collection, value                                                                                                      |
-|              | `content/ansible/collection_deprecations/`                                                                                                      | —                                                                                                                             |
-| container    | `content/container/tags/`                                                                                                                       | name, digest, media_type                                                                                                      |
-|              | `content/container/manifests/`                                                                                                                  | digest, media_type, is_bootable, is_flatpak                                                                                   |
-|              | `content/container/blobs/`                                                                                                                      | digest                                                                                                                        |
-|              | `content/container/signatures/`                                                                                                                 | name\*, digest, key_id, manifest                                                                                              |
-| rpm          | `content/rpm/packages/`                                                                                                                         | name, epoch, version, release, arch, pkgId, checksum_type, filename, sha256, signing_key                                      |
-|              | `content/rpm/advisories/`                                                                                                                       | id, severity, status, type                                                                                                    |
-|              | `content/rpm/modulemds/`                                                                                                                        | name, stream, version, context, arch, sha256                                                                                  |
-|              | `content/rpm/modulemd_defaults/`                                                                                                                | module, stream, sha256                                                                                                        |
-|              | `content/rpm/{distribution_trees,packagegroups,packagecategories,packageenvironments,packagelangpacks,repo_metadata_files,modulemd_obsoletes}/` | —                                                                                                                             |
-| deb          | `content/deb/packages/`                                                                                                                         | package\*, version, architecture, section, priority, maintainer, source, release, release_component, relative_path, sha256, … |
-|              | `content/deb/source_packages/`                                                                                                                  | source, version, architecture, maintainer, format, homepage, vcs_\*, …                                                        |
-|              | `content/deb/releases/`                                                                                                                         | codename, suite, distribution, version, origin, label                                                                         |
-|              | `content/deb/release_components/`, `release_architectures/`, `release_files/`                                                                   | component/architecture/codename, distribution, suite                                                                          |
-|              | `content/deb/{package,source,installer_file}_indices/`                                                                                          | component, architecture, relative_path                                                                                        |
-|              | `content/deb/installer_packages/`, `generic_contents/`, `*_release_components/`                                                                 | package/relative_path/sha256/joins                                                                                            |
-| python       | `content/python/packages/`                                                                                                                      | name, version, version_specifier, filename, packagetype, author, keywords, requires_python, sha256                            |
-|              | `content/python/provenance/`                                                                                                                    | package, sha256                                                                                                               |
-|              | `content/python/yanks/`                                                                                                                         | —                                                                                                                             |
-| file         | `content/file/files/`                                                                                                                           | relative_path\*, digest, sha256                                                                                               |
-| gem          | `content/gem/gem/`                                                                                                                              | name, version, prerelease, checksum                                                                                           |
-| maven        | `content/maven/artifact/`, `metadata/`                                                                                                          | group_id, artifact_id, version, filename                                                                                      |
-|              | `content/maven/package/`                                                                                                                        | group_id, artifact_id, name, version, base_version, packaging, collapse_builds                                                |
-| npm          | `content/npm/packages/`                                                                                                                         | name                                                                                                                          |
-| ostree       | `content/ostree/refs/`                                                                                                                          | name\*, checksum                                                                                                              |
-|              | `content/ostree/commits/`, `objects/`                                                                                                           | checksum                                                                                                                      |
-|              | `content/ostree/{configs,summaries,content}/`                                                                                                   | —                                                                                                                             |
-| hugging_face | `content/hugging_face/hugging-face/`                                                                                                            | repo_id, repo_type, revision, relative_path                                                                                   |
-| core         | `content/core/openpgp_{publickey,publicsubkey,signature,userid,userattribute}/`                                                                 | fingerprint / issuer / user_id\* / sha256                                                                                     |
+| Endpoint                                           | Gives                                               | Useful filters                                         |
+| -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| **Typed content lists** `content/<plugin>/<type>/` | full typed rows in one call (we do N+1 detail GETs) | `repository_version` + type fields (see below)         |
+| Typed family lists `remotes/<plugin>/<type>/` etc. | typed rows with plugin fields                       | name, base_path, …                                     |
+| `{href}list_roles/` · `{href}my_permissions/`      | who has access · what I can do                      | —                                                      |
+| `repository_versions/`                             | versions across all repos                           | `content` (which versions contain X)                   |
+| `artifacts/`                                       | artifacts                                           | `sha256`/`md5`/…, `repository_version`, `orphaned_for` |
+| `uploads/`                                         | in-progress uploads                                 | size                                                   |
+| `contentguards/`                                   | all guards                                          | —                                                      |
+| `vuln_report/`                                     | CVE scan results                                    | `repo_versions`                                        |
+| `workers/`                                         | worker health                                       | `online`, `missing`                                    |
+| `task-groups/` · `task-schedules/`                 | grouped/scheduled tasks                             | `task_name`                                            |
+| `{task}profile_artifacts/`                         | task profiling output                               | —                                                      |
+| `access_policies/`                                 | RBAC policies                                       | `viewset_name`, `customized`                           |
+| `exporters/…`, `importers/…`, `upstream-pulps/`    | lists                                               | name                                                   |
+| `distributions/core/artifacts/`                    | artifact distributions                              | base_path                                              |
+| `livez/` · `docs/api.json`                         | liveness · schema                                   | —                                                      |
 
-### Content creation / upload
+**Tip:** a version's `content_summary.present[type].href` is already the typed list URL with
+`?repository_version=…`. Follow it to get typed tables without hardcoding endpoints.
 
-| Shape                                                                                                 | Endpoints                                                                                                                                                                                                        |
-| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sync upload (returns content, no task)                                                                | `content/{file/files,rpm/packages,python/packages,npm/packages,maven/artifact,maven/metadata}/upload/`                                                                                                           |
-| Async create from `file` / `upload` / `artifact` / `file_url` (+ optional `repository` → new version) | ansible collection_versions & signatures, core openpgp_publickey, deb packages/installer_packages/generic_contents, file, gem, maven artifact/metadata, npm, python packages/provenance, rpm packages/advisories |
-| Create from existing artifact(s) or JSON only                                                         | ansible roles/marks/deprecations, deb indices/releases/components, hugging_face, ostree content, rpm modulemds/defaults/obsoletes                                                                                |
-| Chunked uploads (core)                                                                                | `uploads/` → `PUT {upload_href}` chunks → `{upload_href}commit/`, then pass `upload` to a create                                                                                                                 |
-| Not uploadable via REST                                                                               | container (push via registry), ostree (use `import_all`/`import_commits`)                                                                                                                                        |
+<details><summary>Type-specific filters on content lists</summary>
 
-## 3. Shared patterns (every plugin)
+| Plugin       | Endpoint → filters                                                                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ansible      | `collection_versions` → name, namespace, version, tags · `namespaces` → name, company · `roles` → name, namespace, version · `collection_signatures` → signed_collection, pubkey_fingerprint · `collection_marks` → marked_collection, value |
+| container    | `tags` → name, digest, media_type · `manifests` → digest, media_type, is_bootable, is_flatpak · `blobs` → digest · `signatures` → name, digest, key_id, manifest                                                                             |
+| rpm          | `packages` → name, epoch, version, release, arch, pkgId, filename, sha256, signing_key · `advisories` → id, severity, status, type · `modulemds` → name, stream, version, context, arch                                                      |
+| deb          | `packages` → package, version, architecture, section, maintainer, source, release, release_component · `releases` → codename, suite, distribution · `release_components` → component                                                         |
+| python       | `packages` → name, version, version_specifier, filename, packagetype, author, keywords, requires_python                                                                                                                                      |
+| file         | `files` → relative_path, digest, sha256                                                                                                                                                                                                      |
+| gem          | `gem` → name, version, prerelease                                                                                                                                                                                                            |
+| maven        | `artifact`/`metadata` → group_id, artifact_id, version, filename · `package` → group_id, artifact_id, version, packaging                                                                                                                     |
+| npm          | `packages` → name                                                                                                                                                                                                                            |
+| ostree       | `refs` → name, checksum · `commits`/`objects` → checksum                                                                                                                                                                                     |
+| hugging_face | `hugging-face` → repo_id, repo_type, revision, relative_path                                                                                                                                                                                 |
 
-These are uniform, so one generic hook could serve all plugins:
+Every list also sorts on any model field.
+</details>
 
-- **Repository** `{repo_href}modify/` — body `{add_content_units, remove_content_units, base_version}`
-  (deb uses `AptRepositoryAddRemoveContent` with extra fields). Async. Every plugin except
-  `container`, which uses recursive `add/`/`remove/` instead.
-- **Repository version** `{version_href}repair/`, `DELETE {version_href}`.
-- **Labels** `set_label/` / `unset_label/` on remotes, repositories, distributions, content, domains.
-- **Object RBAC** `list_roles/`, `add_role/`, `remove_role/`, `my_permissions/` on most remotes,
-  repositories, distributions, publications, content guards, tasks, uploads (not hugging_face).
-- **Aggregates**: `repositories/`, `remotes/`, `distributions/`, `publications/`, `content/`,
-  `contentguards/`, `repository_versions/`.
+---
 
-## 4. Per plugin — repository-level actions and extra resources
+## 4. Plugin-specific actions
 
-### ansible (`pulp_ansible`)
+| Plugin                           | Endpoint                                                              | Does                                                     |
+| -------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- |
+| **ansible**                      | `{repo}sign/`                                                         | sign collections                                         |
+|                                  | `{repo}mark/` · `unmark/`                                             | add/remove a mark (e.g. "approved")                      |
+|                                  | `{repo}copy_collection_version/` · `move_collection_version/`         | copy/move between repos                                  |
+|                                  | `{repo}rebuild_metadata/` · `{version}rebuild_metadata/`              | rebuild collection metadata                              |
+|                                  | `ansible/copy/`                                                       | copy content between repos (`config` list)               |
+|                                  | `ansible/collections/` (POST)                                         | upload a collection tarball                              |
+| **container**                    | `{repo}add/` · `remove/`                                              | recursive add/remove (replaces `modify/`)                |
+|                                  | `{repo}tag/` · `untag/`                                               | tag/untag a manifest                                     |
+|                                  | `{repo}copy_tags/` · `copy_manifests/`                                | copy from another repo                                   |
+|                                  | `{repo}sign/`                                                         | sign manifests                                           |
+|                                  | `{repo}build_image/`                                                  | build from a Containerfile                               |
+|                                  | push repo: `remove_image/` · `remove_signatures/` · `migrate/`        | delete image · drop signatures · convert to regular repo |
+| **rpm**                          | `rpm/copy/`                                                           | dependency-aware copy                                    |
+|                                  | `rpm/comps/`                                                          | upload comps.xml                                         |
+|                                  | `rpm/prune/`                                                          | prune old package versions                               |
+|                                  | `{version}scan/`                                                      | CVE scan → `vuln_report/`                                |
+| **deb**                          | `deb/copy/`                                                           | copy between repos                                       |
+| **python**                       | `{repo}repair_metadata/`                                              | fix package metadata                                     |
+|                                  | `{repo}blocklist_entries/` (POST) · `DELETE {entry}`                  | block packages from sync                                 |
+|                                  | `{version}scan/`                                                      | CVE scan → `vuln_report/`                                |
+|                                  | `remotes/python/python/from_bandersnatch/`                            | create remote from a bandersnatch config                 |
+| **maven**                        | `{repo}repair_metadata/` · `repair_packages/` · `repair_index_pages/` | rebuild metadata / packages / index pages                |
+|                                  | `{repo}build_path_index/` · `compact_path_index/`                     | path index maintenance                                   |
+|                                  | —                                                                     | **no `sync/`** (pull-through only)                       |
+| **ostree**                       | `{repo}import_all/` · `import_commits/`                               | import an ostree tarball                                 |
+| **file, gem, npm, hugging_face** | —                                                                     | only the generic `sync/` + `modify/`                     |
 
-- Types: repository `ansible/ansible`, remotes `ansible/collection`, `ansible/role`, `ansible/git`,
-  distribution `ansible/ansible`. No publications.
-- Repo actions: `sync/`, `modify/`, `sign/` (AnsibleRepositorySignature), `mark/` / `unmark/`,
-  `copy_collection_version/` / `move_collection_version/` (CollectionVersionCopyMove),
-  `rebuild_metadata/` (also on a version).
-- Other REST: `ansible/collections/` (upload, legacy), `ansible/copy/`, `pulp_ansible/tags/`,
-  `{ansible_collection_import_href}` (import log), namespace `avatar/`, role `versions/`.
-- **Galaxy API** (in spec, galaxy-shaped, keyed by distribution base_path):
-  `pulp_ansible/galaxy/{domain}/{path}/api/v3/…`
-  - `collections/`, `collections/{ns}/{name}/`, `…/versions/`, `…/versions/{v}/`, `…/docs-blob/`
-    — collection-level grouping with `highest_version`, deprecation, and rendered docs.
-  - `plugin/ansible/content/{base_path}/collections/index/…` and `…/namespaces/` (read/write namespaces).
-  - `plugin/ansible/search/collection-versions/` — **cross-repository index**
-    (filter by repository_name, distribution, namespace, name, is_highest, is_deprecated, is_signed, tags, keywords).
-    The old UI uses it only for reverse dependencies (`?dependency=ns.name`). Its Collections
-    page instead calls `content/ansible/collection_versions/?repository_name=…`, an unsupported
-    filter (same class of bug as `?repository=`), which is why it showed 0 results.
-  - `plugin/ansible/client-configuration/`, `v3/artifacts/collections/…` (download/upload).
-  - Galaxy v1 roles API (`…/api/v1/roles/`) is routed in `urls.py`.
+---
 
-### container (`pulp_container`)
+## 5. Plugin-specific GETs
 
-- Types: repositories `container/container`, `container/container-push` (read-only list, created by push),
-  remotes `container/container`, `container/pull-through`, distributions `container/container`,
-  `container/pull-through`. No publications.
-- Repo actions: `sync/`, `add/` / `remove/` (recursive), `tag/` / `untag/`, `copy_tags/`,
-  `copy_manifests/`, `sign/`, `build_image/` (Containerfile). Push repo: `tag/`, `untag/`,
-  `remove_image/`, `remove_signatures/`, `sign/`, `migrate/` (push → regular repo).
-- Other REST: `pulp_container/namespaces/` (+ RBAC).
-- **Registry API (not in spec)**, `pulp_container/app/urls.py`: `token/`, `v2/`, `v2/_catalog`,
-  `v2/{name}/tags/list`, `v2/{name}/manifests/{ref}`, `v2/{name}/blobs/{digest}`,
-  `extensions/v2/{name}/signatures/`, flatpak `index/static|dynamic`.
+| Plugin                                             | Endpoint                                                                         | Gives                                                                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **ansible**                                        | `ansible/collections/` ✅                                                        | distinct collections `{namespace, name}`                                                                         |
+|                                                    | `pulp_ansible/tags/` ✅                                                          | tag facets `{name, count}`                                                                                       |
+|                                                    | `{namespace}avatar/`                                                             | namespace logo                                                                                                   |
+|                                                    | `{collection_import}`                                                            | upload import log                                                                                                |
+|                                                    | `{role}versions/`                                                                | role versions                                                                                                    |
+|                                                    | `galaxy/…/search/collection-versions/` ✅                                        | **cross-repo search**: repository_name, is_highest, is_deprecated, is_signed, version_range, dependency, tags, q |
+|                                                    | `galaxy/…/content/{base_path}/collections/index/[{ns}/{name}/[versions/[{v}/]]]` | collections → versions → detail (download_url, signatures) per distribution                                      |
+|                                                    | `galaxy/…/versions/{v}/docs-blob/` ✅                                            | rendered module docs                                                                                             |
+|                                                    | `galaxy/…/content/{base_path}/namespaces/` ✅                                    | namespaces per distribution                                                                                      |
+|                                                    | `galaxy/…/client-configuration/` ✅                                              | ansible-galaxy client config                                                                                     |
+| **container**                                      | `pulp_container/namespaces/`                                                     | registry namespaces                                                                                              |
+| **maven**                                          | `{repo}packages/`                                                                | one row per group:artifact (searchable)                                                                          |
+|                                                    | `{repo}packages/flat/`                                                           | one row per build                                                                                                |
+|                                                    | `{repo}metrics/`                                                                 | package / version / build counts                                                                                 |
+|                                                    | `{repo}path_index_status/`                                                       | index state                                                                                                      |
+| **python**                                         | `{repo}blocklist_entries/`                                                       | blocklist rules                                                                                                  |
+| **rpm, deb, gem, ostree, file, npm, hugging_face** | —                                                                                | nothing beyond typed content lists                                                                               |
 
-### rpm (`pulp_rpm`)
+`galaxy/` = `/pulp_ansible/galaxy/{domain}/default/api/v3/plugin/ansible/`.
+✅ = verified against the local backend.
 
-- Types: repository `rpm/rpm`, remotes `rpm/rpm`, `rpm/uln`, distribution, publication `rpm/rpm`, ACS `acs/rpm/rpm/`.
-- Repo actions: `sync/`, `modify/`; version `scan/` (CVE scan via osv.dev → `vuln_report/`).
-- Top-level: `rpm/copy/` (dependency-aware copy between repos), `rpm/comps/` (upload comps.xml),
-  `rpm/prune/` (prune old package versions).
+---
 
-### deb (`pulp_deb`)
+## 6. The rest
 
-- Types: repository `deb/apt`, remote `deb/apt`, distribution `deb/apt`, publications `deb/apt` and
-  `deb/verbatim`, ACS `acs/deb/deb/`.
-- Repo actions: `sync/`, `modify/` (Apt variant). Top-level `deb/copy/`.
+### Uploading content
 
-### python (`pulp_python`)
+| Shape                                                                             | Endpoints                                                                                                              |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Sync upload (no task)                                                             | `content/{file/files, rpm/packages, python/packages, npm/packages, maven/artifact, maven/metadata}/upload/`            |
+| Async create (`file` / `upload` / `artifact` / `file_url`, optional `repository`) | ansible collections & signatures, deb packages, file, gem, maven, npm, python, rpm packages & advisories, openpgp keys |
+| From existing artifacts only                                                      | deb indices/releases, rpm modulemds, ostree, hugging_face, ansible roles                                               |
+| Not via REST                                                                      | container (`docker push`), ostree (`import_all`)                                                                       |
 
-- Types: repository/remote `python/python`, distribution/publication `python/pypi`.
-- Repo actions: `sync/`, `modify/`, `repair_metadata/`, `blocklist_entries/` (GET/POST, + `DELETE {entry_href}`);
-  version `scan/`. Remote helper `remotes/python/python/from_bandersnatch/`.
-- **PyPI API** (in spec): `pypi/{domain}/{path}/simple/`, `simple/{pkg}/`, `pypi/{meta}/`
-  (JSON metadata), `legacy/` (twine upload), `yank/` / `unyank/`, `rss/…`, `integrity/…/provenance/`.
+### Client-facing APIs (outside `/pulp/api/v3/`)
 
-### file (`pulp_file`)
+| Plugin                                                                           | API                                                                               | Main reads                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ansible                                                                          | Galaxy v3 / v1 at `/pulp_ansible/galaxy/{domain}/{base_path}/api/`                | collections, versions, docs-blob, namespaces, artifact download                                                                                                                             |
+| container                                                                        | OCI registry at `/v2/` (bearer auth via `/token/`)                                | `_catalog`, `{name}/tags/list`, manifests, blobs, signatures, Flatpak `index/static`                                                                                                        |
+| python                                                                           | PyPI at `/pypi/{domain}/{base_path}/`                                             | `simple/`, `pypi/{pkg}/json/`, provenance, RSS                                                                                                                                              |
+| npm                                                                              | `/npm/{domain}/{base_path}/`                                                      | `-/ping`, `-/whoami`, publish (PUT)                                                                                                                                                         |
+| maven                                                                            | `/pulp/maven/{domain}/{name}/{path}`                                              | file GET/PUT (deploy)                                                                                                                                                                       |
+| hugging_face                                                                     | content app proxy                                                                 | Hub API proxy, `resolve/` downloads, `content/huggingface/resolve-cache/…`                                                                                                                  |
+| rpm, deb, gem, ostree, file                                                      | content app only                                                                  | repo metadata at the distribution `base_url`                                                                                                                                                |
+| all (pulpcore, **[PR #7996](https://github.com/pulp/pulpcore/pull/7996), open**) | content app JSON listing at `{base_url}{subpath}` with `Accept: application/json` | `{path, packages:[{path,size,date}], count, limit, offset, next_offset?}` · `?limit` (default 1000, max 10000) / `?offset` · plugins can override via `Distribution.content_handler_json()` |
 
-- Types: repository `file/file`, remotes `file/file` and `file/git`, distribution, publication, ACS `acs/file/file/`.
-- Repo actions: `sync/`, `modify/`.
+---
 
-### maven (`pulp_maven`)
+## 7. Gotchas
 
-- Types: repository/remote/distribution `maven/maven`. No publications.
-- Repo actions: `modify/`, **no `sync/`** (pull-through only); `packages/` and `packages/flat/`
-  (one row per group_id:artifact_id), `metrics/`, `build_path_index/`, `compact_path_index/`,
-  `path_index_status/`, `repair_metadata/`, `repair_packages/`, `repair_index_pages/`.
-- Other: `content/maven/maven/index-page/`. Deploy API `pulp/maven/{domain}/{name}/{path}` (GET/PUT).
-
-### npm (`pulp_npm`)
-
-- Types: repository/remote/distribution `npm/npm`. Repo: `sync/`, `modify/`.
-- Registry API: `npm/{domain}/{path}/{package}` (PUT publish), `-/ping`, `-/whoami`.
-
-### gem (`pulp_gem`)
-
-- Types: repository/remote/distribution/publication `gem/gem`. Repo: `sync/`, `modify/`.
-
-### ostree (`pulp_ostree`)
-
-- Types: repository/remote/distribution `ostree/ostree`. No publications.
-- Repo actions: `sync/`, `modify/`, `import_all/` (OstreeImportAll), `import_commits/` (OstreeImportCommitsToRef).
-
-### hugging_face (`pulp_hugging_face`)
-
-- Types: repository/remote/distribution/publication `hugging_face/hugging-face`.
-- Repo: `sync/`, `modify/`. No object RBAC endpoints. HF Hub proxy routes in `urls.py`.
-
-### core / certguard
-
-- OpenPGP keyrings: `repositories/core/openpgp_keyring/` (+ `modify/`), `distributions/core/openpgp/`,
-  `content/core/openpgp_*`.
-- Content guards: `contentguards/core/{rbac,composite,content_redirect,header,envvar_header}/`,
-  `contentguards/certguard/{x509,rhsm}/`.
-- Ops: `orphans/cleanup/`, `repositories/reclaim_space/`, `repair/`, `artifacts/`, `uploads/`,
-  `exporters/core/{pulp,filesystem}/` (+ `exports/`), `importers/core/pulp/` (+ `imports/`, `import-check/`),
-  `upstream-pulps/` (+ `replicate/`), `task-groups/`, `task-schedules/`, `workers/`,
-  `access_policies/`, `vuln_report/`, `distributions/core/artifacts/`.
-
-## 5. Candidates worth adopting
-
-1. **Typed content tables via `content_summary[...].href`.** This fixes the N+1 problem, enables
-   search and sort by name/version, and stays plugin-neutral. Columns per `pulp_type` belong in the
-   UI-layer registry (like `DETAIL_BY_TYPE`), not the catalog.
-2. **`modify/`** — add/remove content from a repository. One generic hook works for every plugin
-   except container (`add/`/`remove/`) and deb (extra fields).
-3. **Per-plugin upload** — `…/upload/` for file/rpm/python/npm/maven; async create with
-   `repository` for the rest; `uploads/` chunking for big files.
-4. **Plugin-specific actions** in a catalog capability map (like `ISyncCapability`):
-   ansible sign/mark/copy/move, container tag/untag/copy_tags/copy_manifests, rpm `rpm/copy/` & prune,
-   python/rpm vulnerability `scan/` → `vuln_report/`.
-5. **Ansible collection view** — Galaxy v3 `collections/` + `docs-blob/` and the cross-repo
-   `search/collection-versions/` give a "Collection" grouping the content model can't. Only use these
-   if we want a Galaxy-like browse experience. They're ansible-only and keyed by distribution `base_path`.
-6. **Admin gaps** — content guards, ACS, orphan cleanup / reclaim space, exporters/importers,
-   upstream replication, labels, object RBAC.
+- Typed content lists filter by **`repository_version=<href>`**. `?repository=` and
+  `?repository_name=` return `400 Invalid Filter`. The old UI hits both bugs, which is why its
+  Collection versions tab and Collections page are broken.
+- The cross-repo Galaxy search **does** accept `repository_name`.
+- Galaxy, registry and PyPI APIs live outside `/pulp/api`, so our dev proxy needs extra routes
+  to reach them.
+- The registry needs a bearer token. With basic auth, `/v2/_catalog` returns 500 locally.
+- Container has no `modify/` (use `add/`/`remove/`). Maven has no `sync/`.
