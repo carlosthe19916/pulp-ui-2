@@ -24,6 +24,7 @@ import {
   Label,
   LabelGroup,
   Stack,
+  StackItem,
   Title,
 } from "@patternfly/react-core";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
@@ -46,18 +47,22 @@ export const ContentPanelLayout: React.FC<{
 }> = ({ isLoading, error, header, aside, children }) => (
   <LoadingWrapper isFetching={isLoading} fetchError={error}>
     <Stack hasGutter>
-      {header}
-      <Divider />
-      <Grid hasGutter>
-        {children ? (
-          <GridItem lg={8}>
-            <Column>{children}</Column>
+      <StackItem>{header}</StackItem>
+      <StackItem>
+        <Divider />
+      </StackItem>
+      <StackItem>
+        <Grid hasGutter>
+          {children ? (
+            <GridItem lg={8}>
+              <Column>{children}</Column>
+            </GridItem>
+          ) : null}
+          <GridItem lg={children ? 4 : 12}>
+            <Column>{aside}</Column>
           </GridItem>
-        ) : null}
-        <GridItem lg={children ? 4 : 12}>
-          <Column>{aside}</Column>
-        </GridItem>
-      </Grid>
+        </Grid>
+      </StackItem>
     </Stack>
   </LoadingWrapper>
 );

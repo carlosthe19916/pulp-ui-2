@@ -1,0 +1,214 @@
+import type React from "react";
+import { useState } from "react";
+
+import {
+  PaginationVariant,
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@patternfly/react-core";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+} from "@patternfly/react-data-view";
+
+import type { ContentSummaryResponse } from "@app/client";
+import {
+  ContentDataList,
+  type IContentUnit,
+} from "@app/components/ContentDataList";
+import {
+  ListPagination,
+  MultiSelectFilter,
+  type IMultiSelectOption,
+} from "@app/components/DataView";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IContentListParams } from "@app/queries/content";
+import { useContentListQuery } from "@app/queries/content";
+import { summaryEntries, summaryTotal } from "@app/utils/contentSummary";
+
+interface IBucket {
+  key: keyof ContentSummaryResponse;
+  param: keyof Pick<
+    IContentListParams,
+    | "repository_version"
+    | "repository_version_added"
+    | "repository_version_removed"
+  >;
+  label: string;
+  emptyTitle: string;
+}
+
+const BUCKETS: IBucket[] = [
+  {
+    key: "present",
+    param: "repository_version",
+    label: "All content",
+    emptyTitle: "No content in this version",
+  },
+  {
+    key: "added",
+    param: "repository_version_added",
+    label: "Added",
+    emptyTitle: "No content added in this version",
+  },
+  {
+    key: "removed",
+    param: "repository_version_removed",
+    label: "Removed",
+    emptyTitle: "No content removed in this version",
+  },
+];
+
+/** Every type in the summary (so a selection survives a bucket switch), counted for `bucket`. */
+const typeOptions = ({
+  summary,
+  bucket,
+}: {
+  summary?: ContentSummaryResponse;
+  bucket: IBucket;
+}): IMultiSelectOption[] => {
+  const counts = new Map(
+    summaryEntries(summary?.[bucket.key]).map((e) => [e.pulpType, e.count]),
+  );
+  const types = new Set(
+    BUCKETS.flatMap(({ key }) =>
+      summaryEntries(summary?.[key]).map((e) => e.pulpType),
+    ),
+  );
+  return [...types].map((pulpType) => ({
+    label: `${pulpType} (${counts.get(pulpType) ?? 0})`,
+    value: pulpType,
+    group: pulpType.split(".")[0],
+  }));
+};
+
+interface IVersionContentFilters {
+  pulp_type: string[];
+  pulp_label_select?: string;
+}
+
+interface IVersionContentListProps {
+  versionHref: string;
+  summary?: ContentSummaryResponse;
+  selectedHref?: string;
+  onSelect: (href: string) => void;
+}
+
+/** A repository version's content, split into the `content_summary` buckets. */
+export const VersionContentList: React.FC<IVersionContentListProps> = ({
+  versionHref,
+  summary,
+  selectedHref,
+  onSelect,
+}) => {
+  const [bucket, setBucket] = useState(BUCKETS[0]);
+  const pagination = useDataViewPagination({ perPage: 10 });
+
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IVersionContentFilters>({
+      initialFilters: { pulp_type: [] },
+    });
+  const debouncedLabel = useDebouncedValue({
+    value: filters.pulp_label_select,
+  });
+  const selectedTypes = filters.pulp_type ?? [];
+
+  const { data, isLoading, error } = useContentListQuery({
+    params: {
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+      [bucket.param]: versionHref,
+      pulp_type__in: selectedTypes.length
+        ? (selectedTypes as IContentListParams["pulp_type__in"])
+        : undefined,
+      pulp_label_select: debouncedLabel || undefined,
+    },
+  });
+
+  const content = (data?.results ?? []) as IContentUnit[];
+  const totalCount = data?.count ?? 0;
+  const isFiltered = Boolean(selectedTypes.length || debouncedLabel);
+
+  const applyFilters = (next: Partial<IVersionContentFilters>) => {
+    onSetFilters(next);
+    pagination.onSetPage(undefined, 1);
+  };
+
+  return (
+    <DataView>
+      <DataViewToolbar
+        clearAllFilters={clearAllFilters}
+        toggleGroup={
+          <ToggleGroup aria-label="Version content">
+            {BUCKETS.map((b) => (
+              <ToggleGroupItem
+                key={b.key}
+                text={`${b.label} (${summaryTotal(summary?.[b.key])})`}
+                isSelected={bucket.key === b.key}
+                onChange={() => {
+                  setBucket(b);
+                  pagination.onSetPage(undefined, 1);
+                }}
+              />
+            ))}
+          </ToggleGroup>
+        }
+        filters={
+          <DataViewFilters
+            onChange={(_key, next) => applyFilters(next)}
+            values={filters}
+          >
+            <MultiSelectFilter
+              filterId="pulp_type"
+              title="Type"
+              options={typeOptions({ summary, bucket })}
+              searchPlaceholder="Search types…"
+            />
+            <DataViewTextFilter filterId="pulp_label_select" title="Label" />
+          </DataViewFilters>
+        }
+        pagination={
+          <ListPagination
+            variant={PaginationVariant.top}
+            itemCount={totalCount}
+            pagination={pagination}
+          />
+        }
+      />
+
+      <ContentDataList
+        units={content}
+        isLoading={isLoading}
+        error={error}
+        loadingRows={pagination.perPage}
+        selectedHref={selectedHref}
+        onSelect={onSelect}
+        onLabelClick={(selector) =>
+          applyFilters({ pulp_label_select: selector })
+        }
+        emptyState={
+          <TableEmptyState
+            title={bucket.emptyTitle}
+            isFiltered={isFiltered}
+            onClearFilters={clearAllFilters}
+          />
+        }
+      />
+
+      <DataViewToolbar
+        pagination={
+          <ListPagination
+            variant={PaginationVariant.bottom}
+            itemCount={totalCount}
+            pagination={pagination}
+          />
+        }
+      />
+    </DataView>
+  );
+};

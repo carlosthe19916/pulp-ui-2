@@ -35,6 +35,9 @@ interface IContentDataListProps {
   loadingRows?: number;
   /** Clicking a row's label sets the label filter to its selector. */
   onLabelClick?: (selector: string) => void;
+  /** Makes whole rows clickable instead of linking the PRN. */
+  onSelect?: (href: string) => void;
+  selectedHref?: string;
 }
 
 /**
@@ -49,6 +52,8 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
   emptyState,
   loadingRows = 10,
   onLabelClick,
+  onSelect,
+  selectedHref,
 }) => {
   // Row expansion is a selected-set over the rows' hrefs (same hook used for selection).
   const hrefs = useMemo(
@@ -99,7 +104,11 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
   }
 
   return (
-    <DataList aria-label="Content list">
+    <DataList
+      aria-label="Content list"
+      selectedDataListItemId={selectedHref}
+      onSelectDataListItem={onSelect ? (_event, id) => onSelect(id) : undefined}
+    >
       {units.map((unit) => {
         const href = unit.pulp_href ?? "";
         return (
@@ -109,6 +118,7 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
             isExpanded={expansion.isItemSelected(href)}
             onToggle={() => expansion.toggleItem(href)}
             onLabelClick={onLabelClick}
+            isSelectable={onSelect != null}
           />
         );
       })}

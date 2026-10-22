@@ -77,6 +77,7 @@ interface IContentListItemProps {
   onToggle: () => void;
   /** Clicking a label sets the label filter to its `key=value` (or `key`) selector. */
   onLabelClick?: (selector: string) => void;
+  isSelectable?: boolean;
 }
 
 /**
@@ -89,6 +90,7 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
   isExpanded,
   onToggle,
   onLabelClick,
+  isSelectable,
 }) => {
   const href = unit.pulp_href ?? "";
   const key = rowKey(href);
@@ -100,7 +102,7 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
   const labelEntries = Object.entries(unit.pulp_labels ?? {});
 
   return (
-    <DataListItem isExpanded={isExpanded} aria-labelledby={labelId}>
+    <DataListItem id={href} isExpanded={isExpanded} aria-labelledby={labelId}>
       <DataListItemRow>
         <DataListToggle
           id={`${key}-toggle`}
@@ -117,11 +119,15 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
               >
                 <FlexItem>
                   <span id={labelId}>
-                    <ResourceHrefLink
-                      kind="content"
-                      href={href}
-                      label={unit.prn ?? undefined}
-                    />
+                    {isSelectable ? (
+                      unit.prn
+                    ) : (
+                      <ResourceHrefLink
+                        kind="content"
+                        href={href}
+                        label={unit.prn ?? undefined}
+                      />
+                    )}
                   </span>
                 </FlexItem>
                 {pulpType && (
@@ -166,7 +172,11 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
                       tooltipPosition="top"
                       onClick={
                         onLabelClick
-                          ? () => onLabelClick(labelSelector([labelKey, value]))
+                          ? (event) => {
+                              // Don't also select the row.
+                              event.stopPropagation();
+                              onLabelClick(labelSelector([labelKey, value]));
+                            }
                           : undefined
                       }
                     >

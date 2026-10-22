@@ -17,6 +17,10 @@ import {
 
 import { getContentTypes } from "@catalog";
 import {
+  ContentDataList,
+  type IContentUnit,
+} from "@app/components/ContentDataList";
+import {
   ListPagination,
   MultiSelectFilter,
   type IMultiSelectOption,
@@ -29,7 +33,6 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
 
-import { ContentDataList } from "./components/ContentDataList";
 import { OrphanedForFilter } from "./components/OrphanedForFilter";
 import { RepositoryVersionFilter } from "./components/RepositoryVersionFilter";
 import { VersionDiffFilter } from "./components/VersionDiffFilter";
@@ -37,7 +40,6 @@ import {
   decodeRepositoryVersion,
   decodeVersionDiff,
 } from "./components/versionFilterCodec";
-import type { IContentUnit } from "./components/types";
 
 /**
  * Filters for the global Content list, all backed by the aggregate `content/` endpoint.
