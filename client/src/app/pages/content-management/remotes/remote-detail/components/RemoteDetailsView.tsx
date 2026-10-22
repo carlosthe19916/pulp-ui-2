@@ -13,8 +13,6 @@ import {
   Flex,
   FlexItem,
   Icon,
-  Label,
-  LabelGroup,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
@@ -29,6 +27,7 @@ import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer
 import { getRemoteEditFields } from "@catalog";
 import type { GenericRemoteResponse } from "@app/client";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
+import { PulpLabels } from "@app/components/PulpLabels";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -63,24 +62,6 @@ interface IRemoteDetailsViewProps {
   remote: GenericRemoteResponse;
   pulpType: string;
 }
-
-const PulpLabels: React.FC<{ labels?: Record<string, string | null> }> = ({
-  labels,
-}) => {
-  const entries = Object.entries(labels ?? {});
-  if (entries.length === 0) {
-    return <>—</>;
-  }
-  return (
-    <LabelGroup numLabels={8} isCompact>
-      {entries.map(([key, value]) => (
-        <Label key={key} isCompact>
-          {value == null ? key : `${key}: ${value}`}
-        </Label>
-      ))}
-    </LabelGroup>
-  );
-};
 
 const CopyableValue: React.FC<{ value?: string }> = ({ value }) =>
   value ? (

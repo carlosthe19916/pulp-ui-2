@@ -1,99 +1,88 @@
 import type React from "react";
 
-import { Link } from "@tanstack/react-router";
-
 import {
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
   Stack,
   StackItem,
+  Title,
 } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
-import { EntityDetailFields } from "@app/components/EntityDetailFields";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { formatDateTime } from "@app/utils/utils";
+import { VersionContent } from "@app/components/VersionContent";
+import { useRepositoryVersionDetailQuery } from "@app/queries/repositories";
+
+import { RepositoryAbout } from "./RepositoryAbout";
+import { RepositoryUsage } from "./RepositoryUsage";
 
 interface IRepositoryDetailsTabProps {
   repository: RepositoryResponse;
   pulpType: string;
   pulpDomain: string;
+  onViewDistributions: () => void;
 }
 
-// Two columns from md up, one on narrow screens.
-const COLUMNS = { default: "1Col", md: "2Col" } as const;
+const TitledCard: React.FC<{ title: string; children: React.ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <Card isCompact>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+    </CardHeader>
+    <CardBody>{children}</CardBody>
+  </Card>
+);
 
+/** Overview, client setup, and the latest version's content. */
 export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
   repository,
   pulpType,
   pulpDomain,
+  onViewDistributions,
 }) => {
-  const fields =
-    getPlugin(pulpType)?.entities.repository?.form.editFields ?? [];
-  const latestHref = repository.latest_version_href;
-  const latestNumber = latestHref ? extractIdFromHref(latestHref) : undefined;
+  const { data: latestVersion } = useRepositoryVersionDetailQuery({
+    href: repository.latest_version_href ?? null,
+  });
 
   return (
     <Stack hasGutter>
       <StackItem>
-        <EntityDetailFields
-          fields={fields}
-          data={repository as Record<string, unknown>}
-          columnModifier={COLUMNS}
-        />
+        <TitledCard title="About">
+          <RepositoryAbout
+            repository={repository}
+            latestVersion={latestVersion}
+            pulpType={pulpType}
+            pulpDomain={pulpDomain}
+          />
+        </TitledCard>
       </StackItem>
+
       <StackItem>
-        <DescriptionList columnModifier={COLUMNS}>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Type</DescriptionListTerm>
-            <DescriptionListDescription>
-              <PulpTypeLabel pulpType={pulpType} />
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Latest version</DescriptionListTerm>
-            <DescriptionListDescription>
-              {latestNumber != null ? (
-                <Link
-                  to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/versions/$versionNumber"
-                  params={{
-                    pulpDomain,
-                    repositoryType: pulpType,
-                    repositoryId: extractIdFromHref(repository.pulp_href ?? ""),
-                    versionNumber: latestNumber,
-                  }}
-                >
-                  Version {latestNumber}
-                </Link>
-              ) : (
-                "—"
-              )}
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Created</DescriptionListTerm>
-            <DescriptionListDescription>
-              {formatDateTime(repository.pulp_created) ?? "—"}
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>Last updated</DescriptionListTerm>
-            <DescriptionListDescription>
-              {formatDateTime(repository.pulp_last_updated) ?? "—"}
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-          <DescriptionListGroup>
-            <DescriptionListTerm>PRN</DescriptionListTerm>
-            <DescriptionListDescription>
-              {repository.prn ?? "—"}
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-        </DescriptionList>
+        <TitledCard title="Use this repository">
+          <RepositoryUsage
+            repositoryHref={repository.pulp_href ?? ""}
+            pulpType={pulpType}
+            onViewDistributions={onViewDistributions}
+          />
+        </TitledCard>
       </StackItem>
+
+      {latestVersion?.pulp_href && (
+        <StackItem>
+          <Stack hasGutter>
+            <Title headingLevel="h2" size="lg">
+              Latest version content
+            </Title>
+            <VersionContent
+              versionHref={latestVersion.pulp_href}
+              summary={latestVersion.content_summary}
+            />
+          </Stack>
+        </StackItem>
+      )}
     </Stack>
   );
 };

@@ -1,15 +1,10 @@
 import type React from "react";
-import { useId, useState } from "react";
 
 import prettyBytes from "pretty-bytes";
 
 import {
   Button,
   ClipboardCopy,
-  ClipboardCopyButton,
-  CodeBlock,
-  CodeBlockAction,
-  CodeBlockCode,
   Content,
   ContentVariants,
   DescriptionList,
@@ -30,6 +25,7 @@ import {
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
+import { Snippet } from "@app/components/Snippet";
 import { useArtifactDetailQuery } from "@app/queries/artifacts";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { formatDateTime } from "@app/utils/utils";
@@ -123,44 +119,6 @@ export const ContentSection: React.FC<{
     {children}
   </Flex>
 );
-
-const CopyableCodeBlock: React.FC<{ code: string }> = ({ code }) => {
-  const id = useId();
-  const [copied, setCopied] = useState(false);
-  return (
-    <CodeBlock
-      actions={
-        <CodeBlockAction>
-          <ClipboardCopyButton
-            id={`${id}-copy`}
-            aria-label="Copy to clipboard"
-            variant="plain"
-            onClick={() => {
-              navigator.clipboard?.writeText(code).then(
-                () => setCopied(true),
-                () => undefined,
-              );
-            }}
-            onTooltipHidden={() => setCopied(false)}
-          >
-            {copied ? "Copied" : "Copy"}
-          </ClipboardCopyButton>
-        </CodeBlockAction>
-      }
-    >
-      <CodeBlockCode>{code}</CodeBlockCode>
-    </CodeBlock>
-  );
-};
-
-export const Snippet: React.FC<{ code: string }> = ({ code }) =>
-  code.includes("\n") ? (
-    <CopyableCodeBlock code={code} />
-  ) : (
-    <ClipboardCopy isReadOnly isCode hoverTip="Copy" clickTip="Copied">
-      {code}
-    </ClipboardCopy>
-  );
 
 export const InstallSnippet: React.FC<{
   title?: string;

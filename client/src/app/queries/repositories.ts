@@ -335,6 +335,16 @@ export const repositoryVersionDetailQueryOptions = ({
       ).data,
   });
 
+export const useRepositoryVersionDetailQuery = ({
+  href,
+}: {
+  href: string | null;
+}) =>
+  useQuery({
+    ...repositoryVersionDetailQueryOptions({ versionHref: href }),
+    enabled: !!href,
+  });
+
 export const useSuspenseRepositoryVersionDetailQuery = ({
   pulpType,
   id,

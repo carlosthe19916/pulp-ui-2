@@ -36,17 +36,27 @@ export const distributionKeys = {
   detail: (distHref: string) =>
     [...distributionKeys.all(), "detail", distHref] as const,
 
-  listQuery: (domain: IPulpDomain, params: IDistributionListParams) =>
-    [...distributionKeys.list(), domain, params] as const,
+  listQuery: (
+    domain: IPulpDomain,
+    params: IDistributionListParams,
+    apiPath?: string,
+  ) => [...distributionKeys.list(), domain, apiPath, params] as const,
   detailQuery: (distHref: string) => distributionKeys.detail(distHref),
 };
 
+/**
+ * Lists distributions: the cross-type aggregate by default, or one plugin's typed
+ * collection when `apiPath` is given (the aggregate omits plugin fields like
+ * `publication`).
+ */
 export const distributionsListQueryOptions = ({
   domain,
+  apiPath,
   params,
   options,
 }: {
   domain: IPulpDomain;
+  apiPath?: string;
   params: IDistributionListParams;
   options?: Omit<
     UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
@@ -55,11 +65,14 @@ export const distributionsListQueryOptions = ({
 }) =>
   queryOptions<PaginatedDistributionResponseList, DrfAxiosError>({
     ...options,
-    queryKey: distributionKeys.listQuery(domain, params),
+    queryKey: distributionKeys.listQuery(domain, params, apiPath),
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedDistributionResponseList>(
-          pulpApiPath("distributions/", domain),
+          pulpApiPath(
+            apiPath ? `distributions/${apiPath}/` : "distributions/",
+            domain,
+          ),
           {
             params: {
               ...params,
@@ -72,9 +85,11 @@ export const distributionsListQueryOptions = ({
   });
 
 export const useDistributionsListQuery = ({
+  apiPath,
   params,
   options,
 }: {
+  apiPath?: string;
   params: IDistributionListParams;
   options?: Omit<
     UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
@@ -82,7 +97,9 @@ export const useDistributionsListQuery = ({
   >;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(distributionsListQueryOptions({ domain, params, options }));
+  return useQuery(
+    distributionsListQueryOptions({ domain, apiPath, params, options }),
+  );
 };
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */

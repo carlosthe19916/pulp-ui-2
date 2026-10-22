@@ -1,26 +1,20 @@
 import type React from "react";
-import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Drawer,
-  DrawerContent,
-  DrawerContentBody,
   PageSection,
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { VersionContent } from "@app/components/VersionContent";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { useSuspenseRepositoryVersionDetailQuery } from "@app/queries/repositories";
 import { buildRepositoryHref } from "@app/queries/repositories";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-
-import { ContentDrawerPanel } from "./components/ContentDrawerPanel";
-import { VersionContentList } from "./components/VersionContentList";
 
 interface IRepositoryVersionDetailProps {
   pulpDomain: string;
@@ -44,8 +38,6 @@ export const RepositoryVersionDetail: React.FC<
     href: buildRepositoryHref(pulpType, id, domain),
   });
   const repositoryName = repository?.name ?? "Repository";
-
-  const [selectedHref, setSelectedHref] = useState<string | null>(null);
 
   const title = `Version ${version.number ?? versionNumber}`;
 
@@ -82,25 +74,10 @@ export const RepositoryVersionDetail: React.FC<
       />
 
       <PageSection>
-        <Drawer isExpanded={selectedHref != null} isInline>
-          <DrawerContent
-            panelContent={
-              <ContentDrawerPanel
-                href={selectedHref}
-                onClose={() => setSelectedHref(null)}
-              />
-            }
-          >
-            <DrawerContentBody>
-              <VersionContentList
-                versionHref={version.pulp_href ?? ""}
-                summary={version.content_summary}
-                selectedHref={selectedHref ?? undefined}
-                onSelect={setSelectedHref}
-              />
-            </DrawerContentBody>
-          </DrawerContent>
-        </Drawer>
+        <VersionContent
+          versionHref={version.pulp_href ?? ""}
+          summary={version.content_summary}
+        />
       </PageSection>
     </>
   );

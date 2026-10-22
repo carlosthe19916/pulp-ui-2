@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Tab, TabTitleText, Tabs } from "@patternfly/react-core";
 
 import type { MavenMavenArtifactResponse } from "@app/client";
+import { Snippet } from "@app/components/Snippet";
 import { useContentDetailQuery } from "@app/queries/content";
 
 import {
@@ -12,7 +13,6 @@ import {
   ContentSection,
   FactList,
   StorageFacts,
-  Snippet,
 } from "./ContentPanelLayout";
 import { facts } from "./contentFields";
 import type { IPluginContentProps } from "./contentFields";

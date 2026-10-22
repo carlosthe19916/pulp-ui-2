@@ -170,6 +170,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 repository={repository}
                 pulpType={pulpType}
                 pulpDomain={pulpDomain}
+                onViewDistributions={() => setActiveTab("distributions")}
               />
             </TabContentBody>
           </Tab>

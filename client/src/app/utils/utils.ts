@@ -288,3 +288,12 @@ export const parseBooleanIfPossible = (value?: string): boolean => {
 export const toCamelCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1).replace("_", " ");
 };
+
+/** `null`/`undefined`, `""`, `[]` or `{}` — a field value with nothing to show. */
+export const isEmptyValue = (value: unknown): boolean =>
+  value == null ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0) ||
+  (typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.keys(value as object).length === 0);

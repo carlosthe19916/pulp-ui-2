@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -44,14 +45,22 @@ export const publicationKeys = {
   detailQuery: (pubHref: string) => publicationKeys.detail(pubHref),
 };
 
+type PublicationListOptions = Omit<
+  UseQueryOptions<PaginatedPublicationResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const publicationsListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IPublicationListParams;
+  options?: PublicationListOptions;
 }) =>
   queryOptions<PaginatedPublicationResponseList, DrfAxiosError>({
+    ...options,
     queryKey: publicationKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
@@ -102,11 +111,13 @@ export const allPublicationsListQueryOptions = ({
 
 export const usePublicationsListQuery = ({
   params,
+  options,
 }: {
   params: IPublicationListParams;
+  options?: PublicationListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(publicationsListQueryOptions({ domain, params }));
+  return useQuery(publicationsListQueryOptions({ domain, params, options }));
 };
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */

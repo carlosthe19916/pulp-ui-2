@@ -14,6 +14,7 @@ import type { DescriptionListProps } from "@patternfly/react-core";
 
 import type { IEntityField } from "@catalog";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { isEmptyValue } from "@app/utils/utils";
 
 /** The server's write-only-secret descriptor (`hidden_fields` on every response). */
 type HiddenField = { name: string; is_set: boolean };
@@ -48,14 +49,6 @@ const getHiddenField = ({
   return (hidden as HiddenField[]).find((field) => field.name === key);
 };
 
-const isEmpty = (value: unknown): boolean =>
-  value == null ||
-  value === "" ||
-  (Array.isArray(value) && value.length === 0) ||
-  (typeof value === "object" &&
-    !Array.isArray(value) &&
-    Object.keys(value as object).length === 0);
-
 const renderValue = ({
   field,
   data,
@@ -82,7 +75,7 @@ const renderValue = ({
     return value == null ? "—" : value ? "Yes" : "No";
   }
 
-  if (isEmpty(value)) {
+  if (isEmptyValue(value)) {
     return "—";
   }
 

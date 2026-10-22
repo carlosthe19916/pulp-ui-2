@@ -8,6 +8,7 @@ import {
 } from "@patternfly/react-core";
 
 import type { DistributionResponse } from "@app/client";
+import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -34,6 +35,12 @@ export const DistributionDetailPanel: React.FC<
         <DescriptionListTerm>Base URL</DescriptionListTerm>
         <DescriptionListDescription>
           {distribution.base_url || "—"}
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Client setup</DescriptionListTerm>
+        <DescriptionListDescription>
+          <PluginRepositoryClientSetup distribution={distribution} />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
