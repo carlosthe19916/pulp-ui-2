@@ -415,6 +415,16 @@ export class PulpApi {
     return results.map((r) => r.role);
   }
 
+  /** The names of every group a user belongs to (by username). */
+  async userGroupNames(username: string): Promise<string[]> {
+    const user = await this.findOne<{ groups?: { name: string }[] }>(
+      "users",
+      "username",
+      username,
+    );
+    return (user?.groups ?? []).map((g) => g.name);
+  }
+
   /** A role's stored description (by exact name), or undefined if not found. */
   async roleDescription(name: string): Promise<string | null | undefined> {
     const role = await this.findOne<IRoleRecord>("roles", "name", name);

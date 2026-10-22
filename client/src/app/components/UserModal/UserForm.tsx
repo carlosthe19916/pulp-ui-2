@@ -10,7 +10,7 @@ import {
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
-import type { UserFormValues } from "../hooks/useUserForm";
+import type { UserFormValues } from "./useUserForm";
 
 interface IUserFormProps {
   form: UseFormReturn<UserFormValues>;

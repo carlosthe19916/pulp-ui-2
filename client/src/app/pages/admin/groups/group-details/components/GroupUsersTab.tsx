@@ -1,5 +1,7 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+
+import { Link } from "@tanstack/react-router";
 
 import { Button, PaginationVariant } from "@patternfly/react-core";
 import { ActionsColumn } from "@patternfly/react-table";
@@ -15,51 +17,65 @@ import {
   useDataViewSort,
 } from "@patternfly/react-data-view";
 
-import type { GroupResponse, GroupUserResponse } from "@app/client";
+import type { GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import {
   buildThSort,
   dataViewBodyStates,
+  type DataViewTh,
   ListPagination,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
-import type { WithId } from "@app/models/models";
 import {
   useAllGroupUsersListQuery,
-  useGroupUserDeleteMutation,
+  useSuspenseGroupDetailQuery,
 } from "@app/queries/groups";
+import { useMembershipRemoveMutation } from "@app/queries/memberships";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { AddGroupUserModal } from "./AddGroupUserModal";
 
-// The group-users API only supports limit/offset — no server-side ordering or
-// filtering — so all members are fetched and then paginated/sorted/filtered in memory.
-const COLUMN_KEYS = ["username", "actions"] as const;
-type UserColumnKey = (typeof COLUMN_KEYS)[number];
+// `groups_users_list` supports only limit/offset — no server-side ordering or
+// filtering — so all members are fetched and paginated/sorted/filtered here.
+const COLUMN_KEYS = ["username"] as const;
 
 interface IGroupUsersFilters {
   username: string;
 }
 
 interface IGroupUsersTabProps {
-  group: WithId<GroupResponse>;
+  groupHref: string;
 }
 
-export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
+export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
+  const { data: group } = useSuspenseGroupDetailQuery({ groupHref });
   const { addNotification } = useNotifications();
 
-  const {
-    data: usersData,
-    isLoading,
-    error,
-  } = useAllGroupUsersListQuery({ groupHref: group.object.pulp_href ?? "" });
-
-  const userDeleteMutation = useGroupUserDeleteMutation();
-
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [removeUserTarget, setRemoveUserTarget] =
-    useState<GroupUserResponse | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<GroupUserResponse | null>(
+    null,
+  );
+
+  const removeMutation = useMembershipRemoveMutation({
+    onSuccess: (_data, { username, groupName }) =>
+      addNotification({
+        title: `User "${username}" removed from group "${groupName}"`,
+        variant: "success",
+      }),
+    onError: (error, { username, groupName }) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error,
+          fallback: `Failed to remove user "${username}" from group "${groupName}"`,
+        }),
+        variant: "danger",
+      }),
+  });
+
+  const { data, isLoading, error } = useAllGroupUsersListQuery({ groupHref });
+  const allUsers = data?.results ?? [];
 
   const pagination = useDataViewPagination({ perPage: 10 });
   const { sortBy, direction, onSort } = useDataViewSort({
@@ -70,67 +86,60 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
       initialFilters: { username: "" },
     });
 
-  const allUsers = useMemo(
-    () => usersData?.results ?? [],
-    [usersData?.results],
+  const query = filters.username.trim().toLowerCase();
+  const sign = direction === "desc" ? -1 : 1;
+  const visibleUsers = allUsers
+    .filter((user) => user.username.toLowerCase().includes(query))
+    .sort((a, b) =>
+      sortBy === "username" ? a.username.localeCompare(b.username) * sign : 0,
+    );
+  const totalCount = visibleUsers.length;
+  const pageStart = (pagination.page - 1) * pagination.perPage;
+  const pagedUsers = visibleUsers.slice(
+    pageStart,
+    pageStart + pagination.perPage,
   );
 
-  const filteredSortedUsers = useMemo(() => {
-    const query = filters.username.trim().toLowerCase();
-    const filtered = query
-      ? allUsers.filter((user) => user.username.toLowerCase().includes(query))
-      : allUsers;
-
-    if (sortBy !== "username") return filtered;
-
-    const dir = direction === "desc" ? -1 : 1;
-    return [...filtered].sort(
-      (a, b) => a.username.localeCompare(b.username) * dir,
-    );
-  }, [allUsers, filters.username, sortBy, direction]);
-
-  const totalCount = filteredSortedUsers.length;
-
-  const pagedUsers = useMemo(() => {
-    const start = (pagination.page - 1) * pagination.perPage;
-    return filteredSortedUsers.slice(start, start + pagination.perPage);
-  }, [filteredSortedUsers, pagination.page, pagination.perPage]);
-
-  const sortProps = (columnKey: UserColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        pagination.onSetPage(undefined, 1);
-      },
-    });
-
-  const userColumns = [
-    { cell: "Username", props: { sort: sortProps("username") } },
+  const columns: DataViewTh[] = [
     {
-      cell: "",
+      cell: "Username",
       props: {
-        screenReaderText: "Actions",
+        sort: buildThSort({
+          columnKeys: COLUMN_KEYS,
+          columnKey: "username",
+          sortBy,
+          direction,
+          onSort: (event, sortedKey, newDirection) => {
+            onSort(event, sortedKey, newDirection);
+            pagination.onSetPage(undefined, 1);
+          },
+        }),
       },
     },
+    { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
-  const userRows: DataViewTr[] = pagedUsers.map((user) => ({
+  // Each member's `pulp_href` is the user's own `/users/{id}/` href.
+  const rows: DataViewTr[] = pagedUsers.map((user) => ({
     id: user.pulp_href,
     row: [
-      { cell: user.username, props: { dataLabel: "Username" } },
+      {
+        cell: user.pulp_href ? (
+          <Link
+            to="/admin/users/$userId"
+            params={{ userId: extractIdFromHref(user.pulp_href) }}
+          >
+            {user.username}
+          </Link>
+        ) : (
+          user.username
+        ),
+        props: { dataLabel: "Username" },
+      },
       {
         cell: (
           <ActionsColumn
-            items={[
-              {
-                title: "Remove",
-                onClick: () => setRemoveUserTarget(user),
-              },
-            ]}
+            items={[{ title: "Remove", onClick: () => setRemoveTarget(user) }]}
           />
         ),
         props: { dataLabel: "Actions", isActionCell: true },
@@ -138,36 +147,29 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
     ],
   }));
 
-  const handleRemoveUser = async () => {
-    if (!removeUserTarget?.pulp_href) return;
-    try {
-      await userDeleteMutation.mutateAsync({
-        groupHref: group.object.pulp_href ?? "",
-        userId: extractIdFromHref(removeUserTarget.pulp_href),
-      });
-      addNotification({
-        title: `User "${removeUserTarget.username}" removed from group "${group.object.name}"`,
-        variant: "success",
-      });
-    } catch {
-      addNotification({
-        title: "Failed to remove user from group",
-        variant: "danger",
-      });
-    }
-    setRemoveUserTarget(null);
+  const handleRemove = () => {
+    if (!removeTarget?.pulp_href) return;
+    removeMutation.mutate(
+      {
+        userHref: removeTarget.pulp_href,
+        groupHref,
+        username: removeTarget.username,
+        groupName: group.name,
+      },
+      { onSuccess: () => setRemoveTarget(null) },
+    );
   };
 
-  const groupUsersStates = dataViewBodyStates({
-    columnCount: userColumns.length,
-    isLoading: isLoading,
+  const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
+    isLoading,
     error,
     isEmpty: totalCount === 0,
     emptyState: (
       <TableEmptyState
         title="No users in this group"
         filteredTitle="No users match the filter"
-        isFiltered={Boolean(filters.username.trim())}
+        isFiltered={query !== ""}
         onClearFilters={clearAllFilters}
       />
     ),
@@ -175,7 +177,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
 
   return (
     <>
-      <DataView activeState={groupUsersStates.activeState}>
+      <DataView activeState={activeState}>
         <DataViewToolbar
           clearAllFilters={clearAllFilters}
           filters={
@@ -204,9 +206,9 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
         />
         <DataViewTable
           aria-label="Group users table"
-          columns={userColumns}
-          rows={userRows}
-          bodyStates={groupUsersStates.bodyStates}
+          columns={columns}
+          rows={rows}
+          bodyStates={bodyStates}
         />
         <DataViewToolbar
           pagination={
@@ -221,19 +223,18 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ group }) => {
 
       <AddGroupUserModal
         isOpen={isAddUserOpen}
-        group={group}
-        existingUsernames={allUsers.map((u) => u.username)}
+        groupHref={groupHref}
         onClose={() => setIsAddUserOpen(false)}
       />
 
       <ConfirmActionModal
-        isOpen={!!removeUserTarget}
+        isOpen={!!removeTarget}
         title="Remove User"
-        body={`Are you sure you want to remove user "${removeUserTarget?.username}" from the group?`}
-        isConfirming={userDeleteMutation.isPending}
+        body={`Are you sure you want to remove user "${removeTarget?.username}" from group "${group.name}"?`}
+        isConfirming={removeMutation.isPending}
         confirmLabel="Remove"
-        onConfirm={() => void handleRemoveUser()}
-        onCancel={() => setRemoveUserTarget(null)}
+        onConfirm={handleRemove}
+        onCancel={() => setRemoveTarget(null)}
       />
     </>
   );

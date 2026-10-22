@@ -62,7 +62,7 @@ return { onSubmit, isSubmitting, submitError };
 ```
 
 ```tsx
-// form component — UserForm.tsx (pages/admin/users/components/)
+// form component — UserForm.tsx (components/UserModal/)
 <Form id={formId} onSubmit={...}>
   <FormSubmitError error={submitError} />   {/* first child */}
   {/* fields */}
@@ -83,7 +83,7 @@ failures to `setSubmitError(...)`; clear the error in the close handler. (Why
 ## Out of scope
 
 Batch/selection modals with partial-success semantics (`AddGroupUserModal`,
-`AddGroupRoleModal`, `UserRolesModal`) and delete confirmations
+`AddUserGroupModal`, `AddRoleAssignmentModal`) and delete confirmations
 (`ConfirmActionModal`, errors owned by the list page) keep toasts.
 
 ## Canonical examples

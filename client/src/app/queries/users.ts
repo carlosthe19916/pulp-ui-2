@@ -3,23 +3,21 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   PaginatedUserResponseList,
-  PaginatedUserRoleResponseList,
   PatchedUser,
   UserResponse,
-  UserRoleResponse,
   UsersListData,
   UsersRolesListData,
   UserWritable,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
-import { fetchAllPages } from "./utils/fetchAllPages";
-import type { AllListParams, ListParams } from "./utils/listParams";
+import { groupKeys } from "./groups";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -31,8 +29,6 @@ export type IUserListParams = ListParams<UsersListData>;
 
 export type IUserRoleListParams = ListParams<UsersRolesListData>;
 
-export type IAllUserRoleListParams = AllListParams<UsersRolesListData>;
-
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede
  * params/`"all"` so a prefix invalidates all variants. Shared by the query
@@ -41,8 +37,8 @@ export type IAllUserRoleListParams = AllListParams<UsersRolesListData>;
 export const userKeys = {
   all: () => [UsersQueryKey] as const,
   list: () => [...userKeys.all(), "list"] as const,
-  detail: (userHref: string) =>
-    [...userKeys.all(), "detail", userHref] as const,
+  details: () => [...userKeys.all(), "detail"] as const,
+  detail: (userHref: string) => [...userKeys.details(), userHref] as const,
   roles: (userHref: string) => [...userKeys.detail(userHref), "roles"] as const,
 
   listQuery: (domain: IPulpDomain, params: IUserListParams) =>
@@ -50,8 +46,6 @@ export const userKeys = {
   detailQuery: (userHref: string) => userKeys.detail(userHref),
   rolesQuery: (userHref: string, params: IUserRoleListParams) =>
     [...userKeys.roles(userHref), params] as const,
-  rolesAllQuery: (userHref: string, params: IAllUserRoleListParams) =>
-    [...userKeys.roles(userHref), "all", params] as const,
 };
 
 export const usersListQueryOptions = ({
@@ -77,41 +71,14 @@ export const usersListQueryOptions = ({
     },
   });
 
-/** The dual-list role editor needs every assignment at once, so page through the whole list. */
-export const allUserRolesListQueryOptions = ({
-  userHref,
-  params = {},
-  options,
-}: {
-  userHref: string;
-  params?: IAllUserRoleListParams;
-  options?: Omit<
-    UseQueryOptions<PaginatedUserRoleResponseList, DrfAxiosError>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions<PaginatedUserRoleResponseList, DrfAxiosError>({
-    ...options,
-    queryKey: userKeys.rolesAllQuery(userHref, params),
-    queryFn: async (): Promise<PaginatedUserRoleResponseList> => {
-      const { results, count } = await fetchAllPages<UserRoleResponse>(
-        async (offset, limit) => {
-          const response =
-            await axiosInstance.get<PaginatedUserRoleResponseList>(
-              `${toProxyHref(userHref)}roles/`,
-              {
-                params: {
-                  ...params,
-                  offset,
-                  limit,
-                  ordering: params.ordering ? [params.ordering] : undefined,
-                },
-              },
-            );
-          return response.data;
-        },
+export const userDetailQueryOptions = ({ userHref }: { userHref: string }) =>
+  queryOptions<UserResponse, DrfAxiosError>({
+    queryKey: userKeys.detailQuery(userHref),
+    queryFn: async (): Promise<UserResponse> => {
+      const response = await axiosInstance.get<UserResponse>(
+        toProxyHref(userHref),
       );
-      return { count, next: null, previous: null, results };
+      return response.data;
     },
   });
 
@@ -120,17 +87,11 @@ export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
   return useQuery(usersListQueryOptions({ domain, params }));
 };
 
-export const useAllUserRolesListQuery = ({
+export const useSuspenseUserDetailQuery = ({
   userHref,
-  params = {},
 }: {
   userHref: string;
-  params?: IAllUserRoleListParams;
-}) =>
-  useQuery({
-    ...allUserRolesListQueryOptions({ userHref, params }),
-    enabled: !!userHref,
-  });
+}) => useSuspenseQuery(userDetailQueryOptions({ userHref }));
 
 export const useUserCreateMutation = (
   options?: IMutationCallbacks<UserResponse, UserWritable>,
@@ -184,6 +145,8 @@ export const useUserUpdateMutation = (
       void queryClient.invalidateQueries({
         queryKey: userKeys.detail(variables.href),
       });
+      // Group member lists show usernames.
+      void queryClient.invalidateQueries({ queryKey: groupKeys.details() });
       options?.onSuccess?.(data, variables);
     },
     onError: options?.onError,
@@ -199,47 +162,16 @@ export const useUserDeleteMutation = (
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
-      void queryClient.invalidateQueries({
-        queryKey: userKeys.detail(variables.href),
-      });
-      options?.onSuccess?.(data, variables);
+      // Group member lists may include the deleted user.
+      void queryClient.invalidateQueries({ queryKey: groupKeys.details() });
+      // Drop the deleted record only once the caller's onSuccess (e.g. navigating
+      // away from its detail page) settles; while that page is mounted, removing
+      // or invalidating it would refetch a 404.
+      await options?.onSuccess?.(data, variables);
+      queryClient.removeQueries({ queryKey: userKeys.detail(variables.href) });
     },
     onError: options?.onError,
-  });
-};
-
-interface IUserRolesSyncArgs {
-  userHref: string;
-  /** Role names to assign. */
-  toAdd: string[];
-  /** Assignment IDs to unassign. */
-  toRemove: string[];
-}
-
-/** Batches role assigns/unassigns for one user and invalidates once. */
-export const useUserRolesSyncMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<void, DrfAxiosError, IUserRolesSyncArgs>({
-    mutationFn: async ({ userHref, toAdd, toRemove }: IUserRolesSyncArgs) => {
-      const rolesUrl = `${toProxyHref(userHref)}roles/`;
-      await Promise.all([
-        ...toAdd.map((role) =>
-          axiosInstance.post<UserRoleResponse>(rolesUrl, {
-            role,
-            content_object: null,
-          }),
-        ),
-        ...toRemove.map((assignmentId) =>
-          axiosInstance.delete<void>(`${rolesUrl}${assignmentId}/`),
-        ),
-      ]);
-    },
-    onSuccess: (_data, { userHref }) => {
-      void queryClient.invalidateQueries({
-        queryKey: userKeys.roles(userHref),
-      });
-    },
   });
 };

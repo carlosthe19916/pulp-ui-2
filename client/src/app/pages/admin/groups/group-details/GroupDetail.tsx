@@ -15,31 +15,26 @@ import {
 } from "@patternfly/react-core";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { GroupModal } from "@app/components/GroupModal";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
+import { RoleAssignmentsTab } from "@app/components/RoleAssignments";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { withId } from "@app/models/models";
 import {
   useGroupDeleteMutation,
-  useGroupRolesListQuery,
   useGroupUsersListQuery,
   useSuspenseGroupDetailQuery,
 } from "@app/queries/groups";
+import { useRoleAssignmentsListQuery } from "@app/queries/roleAssignments";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { GroupModal } from "../components/GroupModal";
-import { GroupRolesTab } from "./components/GroupRolesTab";
 import { GroupUsersTab } from "./components/GroupUsersTab";
 
 interface IGroupDetailProps {
-  groupId: string;
   groupHref: string;
 }
 
-export const GroupDetail: React.FC<IGroupDetailProps> = ({
-  groupId,
-  groupHref,
-}) => {
+export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
@@ -50,42 +45,34 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({
     groupHref,
     params: { limit: 1 },
   });
-  const { data: rolesData } = useGroupRolesListQuery({
-    groupHref,
+  const { data: rolesData } = useRoleAssignmentsListQuery({
+    kind: "group",
+    href: groupHref,
     params: { limit: 1 },
   });
 
-  const deleteMutation = useGroupDeleteMutation();
-
-  const [activeTab, setActiveTab] = useState<string | number>("users");
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isEditNameOpen, setIsEditNameOpen] = useState(false);
-
-  const userCount = usersData?.count ?? 0;
-  const roleCount = rolesData?.count ?? 0;
-
-  const handleDelete = async () => {
-    try {
-      await deleteMutation.mutateAsync({
-        href: group.pulp_href ?? "",
-        name: group.name ?? "",
-      });
-      addNotification({
-        title: `Group "${group.name}" deleted`,
-        variant: "success",
-      });
-      void navigate({ to: "/admin/groups" });
-    } catch (error) {
+  const deleteMutation = useGroupDeleteMutation({
+    onSuccess: (_data, { name }) => {
+      addNotification({ title: `Group "${name}" deleted`, variant: "success" });
+      // Returned so the hook drops the deleted record once the page has left.
+      return navigate({ to: "/admin/groups" });
+    },
+    onError: (error, { name }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: "Failed to delete group",
+          fallback: `Failed to delete group "${name}"`,
         }),
         variant: "danger",
-      });
-    }
-    setIsDeleteOpen(false);
-  };
+      }),
+  });
+
+  const [activeTab, setActiveTab] = useState<string | number>("users");
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const userCount = usersData?.count ?? 0;
+  const roleCount = rolesData?.count ?? 0;
 
   return (
     <>
@@ -106,8 +93,8 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({
               {
                 key: "edit",
                 dropdownItemProps: {
-                  children: "Edit Name",
-                  onClick: () => setIsEditNameOpen(true),
+                  children: "Edit Group",
+                  onClick: () => setIsEditOpen(true),
                 },
               },
               {
@@ -133,7 +120,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({
             title={<TabTitleText>Users ({userCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupUsersTab group={withId(groupId, group)} />
+              <GroupUsersTab groupHref={groupHref} />
             </TabContentBody>
           </Tab>
           <Tab
@@ -141,16 +128,20 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupRolesTab group={withId(groupId, group)} />
+              <RoleAssignmentsTab
+                kind="group"
+                href={groupHref}
+                name={group.name}
+              />
             </TabContentBody>
           </Tab>
         </Tabs>
       </PageSection>
 
       <GroupModal
-        isOpen={isEditNameOpen}
+        isOpen={isEditOpen}
         group={group}
-        onClose={() => setIsEditNameOpen(false)}
+        onClose={() => setIsEditOpen(false)}
       />
 
       <ConfirmActionModal
@@ -158,7 +149,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({
         title="Delete Group"
         body={`Are you sure you want to delete group "${group.name}"? This action cannot be undone.`}
         isConfirming={deleteMutation.isPending}
-        onConfirm={() => void handleDelete()}
+        onConfirm={() =>
+          // Success navigates away; on error the dialog stays open for a retry.
+          deleteMutation.mutate({ href: groupHref, name: group.name })
+        }
         onCancel={() => setIsDeleteOpen(false)}
       />
     </>

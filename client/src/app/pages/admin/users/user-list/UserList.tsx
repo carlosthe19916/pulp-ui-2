@@ -1,6 +1,8 @@
 import type React from "react";
 import { useState } from "react";
 
+import { Link } from "@tanstack/react-router";
+
 import {
   Button,
   Content,
@@ -9,7 +11,7 @@ import {
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn, TableText } from "@patternfly/react-table";
+import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -32,14 +34,13 @@ import {
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { UserModal } from "@app/components/UserModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IUserListParams } from "@app/queries/users";
 import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-
-import { UserModal } from "./components/UserModal";
-import { UserRolesModal } from "./components/UserRolesModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "username",
@@ -56,7 +57,6 @@ export const UserList: React.FC = () => {
   );
   const userToEdit =
     modalState === "create" ? undefined : (modalState ?? undefined);
-  const [rolesUser, setRolesUser] = useState<UserResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null);
 
   const { addNotification } = useNotifications();
@@ -108,12 +108,6 @@ export const UserList: React.FC = () => {
     {
       cell: "",
       props: {
-        screenReaderText: "Manage roles",
-      },
-    },
-    {
-      cell: "",
-      props: {
         screenReaderText: "Actions",
       },
     },
@@ -122,7 +116,19 @@ export const UserList: React.FC = () => {
   const rows: DataViewTr[] = users.map((user) => ({
     id: user.pulp_href,
     row: [
-      { cell: user.username, props: { dataLabel: "Username" } },
+      {
+        cell: user.pulp_href ? (
+          <Link
+            to="/admin/users/$userId"
+            params={{ userId: extractIdFromHref(user.pulp_href) }}
+          >
+            {user.username}
+          </Link>
+        ) : (
+          user.username
+        ),
+        props: { dataLabel: "Username" },
+      },
       { cell: user.email || "—", props: { dataLabel: "Email" } },
       {
         cell: (
@@ -136,16 +142,6 @@ export const UserList: React.FC = () => {
       {
         cell: formatDateTime(user.date_joined) ?? "—",
         props: { dataLabel: "Date Joined" },
-      },
-      {
-        cell: (
-          <TableText>
-            <Button variant="secondary" onClick={() => setRolesUser(user)}>
-              Roles
-            </Button>
-          </TableText>
-        ),
-        props: { dataLabel: "Roles", modifier: "fitContent", hasAction: true },
       },
       {
         cell: (
@@ -245,14 +241,6 @@ export const UserList: React.FC = () => {
           user={userToEdit}
           onClose={() => setModalState(null)}
         />
-
-        {rolesUser && (
-          <UserRolesModal
-            isOpen
-            user={rolesUser}
-            onClose={() => setRolesUser(null)}
-          />
-        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

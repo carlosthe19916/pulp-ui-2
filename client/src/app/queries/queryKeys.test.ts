@@ -26,12 +26,11 @@ describe("query-key factories", () => {
       expect(startsWith(groupKeys.usersAllQuery(href), folder)).toBe(true);
     });
 
-    it("nests both role-query variants under the group's roles folder", () => {
+    it("nests the role query under the group's roles folder", () => {
       const folder = groupKeys.roles(href);
       expect(
         startsWith(groupKeys.rolesQuery(href, { limit: 10 }), folder),
       ).toBe(true);
-      expect(startsWith(groupKeys.rolesAllQuery(href), folder)).toBe(true);
     });
 
     it("nests users/roles sub-collections under the group detail folder", () => {
@@ -59,12 +58,11 @@ describe("query-key factories", () => {
   });
 
   describe("userKeys", () => {
-    it("nests both role-query variants under the user's roles folder", () => {
+    it("nests the role query under the user's roles folder", () => {
       const folder = userKeys.roles(href);
       expect(startsWith(userKeys.rolesQuery(href, { limit: 10 }), folder)).toBe(
         true,
       );
-      expect(startsWith(userKeys.rolesAllQuery(href, {}), folder)).toBe(true);
     });
 
     it("nests the roles sub-collection under the user detail folder", () => {

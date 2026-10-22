@@ -7,7 +7,7 @@ import { FormSubmitError } from "@app/components/FormSubmitError";
 import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
-import type { GroupFormValues } from "../hooks/useGroupForm";
+import type { GroupFormValues } from "./useGroupForm";
 
 interface IGroupFormProps {
   form: UseFormReturn<GroupFormValues>;

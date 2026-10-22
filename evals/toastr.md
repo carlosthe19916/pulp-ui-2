@@ -14,9 +14,11 @@ that triggers the mutation owns the message and passes it as **hook-level**
 message-free reusable hooks, `mutate` + callbacks over `mutateAsync` + try/catch.)
 
 > No `useMutationAction`/`runAction` wrapper, and no general per-feature
-> `useXActions` toast-hub for standard create/update/delete. (A batch/selection
-> modal may own its own hub — `useUserRoleActions` for `UserRolesModal` — see
-> _Out of scope_; don't generalize it.)
+> `useXActions` toast-hub for standard create/update/delete. Batch/selection
+> modals (`AddGroupUserModal`, `AddUserGroupModal`, `AddRoleAssignmentModal`)
+> follow the same rules; their mutation returns an
+> `IBatchResult` and the hook-level `onSuccess` reports it with
+> `notifyBatchResult` (one success toast + one naming what failed).
 
 ## Hook-level callbacks, and `mutate` not `mutateAsync`
 
@@ -124,9 +126,14 @@ effect:
   local form state — `SyncModal`, `PublishModal`: raise
   `notifyTaskStarted` before `onClose`; a **failure is shown in-form** (`catch` →
   `setSubmitError`, see `evals/forms.md`), not toasted.
-- Detail-page delete/cancel — `GroupDetail` (deletes then **navigates away**),
-  `TaskDetail` (cancels then **closes the cancel modal**, stays on page). Both
-  raise the toast **before** the close/navigate so it survives unmount.
+- Detail-page cancel — `TaskDetail` (cancels then **closes the cancel modal**,
+  stays on page), raising the toast **before** the close.
+
+Detail-page **delete** needs no exception: `UserDetail` / `GroupDetail` pass the
+toast **and** the `navigate()` in the hook-level `onSuccess` and call plain
+`mutate` (on error the dialog simply stays open). They **return** the
+`navigate()` promise: the delete hook awaits it before dropping the deleted
+record from the cache, so the still-mounted page never refetches a 404.
 
 Invalidation stays in the mutation hook regardless.
 
@@ -144,8 +151,8 @@ Pass/fail rubric for `/eval`.
 - [ ] Dialog close / local-state reset uses the **call-level** callback and closes
       **on success only** — never in `onError`.
 - [ ] Uses `mutate`, not `mutateAsync` — except the documented cases
-      (resolved-result-plus-form-state modals; detail-page delete/cancel), which
-      raise the toast **before** close/navigate.
+      (resolved-result-plus-form-state modals; detail-page cancel), which
+      raise the toast **before** the close.
 - [ ] Message is built from mutation **`variables`** (and `data` for create), not a
       closed-over component value; delete vars `{ href, name }`, update
       `{ href, name, body }`.

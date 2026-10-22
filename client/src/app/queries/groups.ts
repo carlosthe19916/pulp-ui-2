@@ -11,19 +11,16 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   Group,
   GroupResponse,
-  GroupRole,
-  GroupRoleResponse,
   GroupsListData,
   GroupsRolesListData,
   GroupsUsersListData,
-  GroupUser,
   GroupUserResponse,
   PaginatedGroupResponseList,
-  PaginatedGroupRoleResponseList,
   PaginatedGroupUserResponseList,
   PatchedGroup,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+import { userKeys } from "./users";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -47,8 +44,8 @@ export type IGroupRoleListParams = ListParams<GroupsRolesListData>;
 export const groupKeys = {
   all: () => [GroupsQueryKey] as const,
   list: () => [...groupKeys.all(), "list"] as const,
-  detail: (groupHref: string) =>
-    [...groupKeys.all(), "detail", groupHref] as const,
+  details: () => [...groupKeys.all(), "detail"] as const,
+  detail: (groupHref: string) => [...groupKeys.details(), groupHref] as const,
   users: (groupHref: string) =>
     [...groupKeys.detail(groupHref), "users"] as const,
   roles: (groupHref: string) =>
@@ -63,18 +60,22 @@ export const groupKeys = {
     [...groupKeys.users(groupHref), "all"] as const,
   rolesQuery: (groupHref: string, params: IGroupRoleListParams) =>
     [...groupKeys.roles(groupHref), params] as const,
-  rolesAllQuery: (groupHref: string) =>
-    [...groupKeys.roles(groupHref), "all"] as const,
 };
 
 export const groupsListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IGroupListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupResponseList, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
   queryOptions<PaginatedGroupResponseList, DrfAxiosError>({
+    ...options,
     queryKey: groupKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupResponseList>(
@@ -169,71 +170,18 @@ export const allGroupUsersListQueryOptions = ({
     },
   });
 
-/** Roles tab renders the full list in one table (no pagination UI), so page through all. */
-export const allGroupRolesListQueryOptions = ({
-  groupHref,
-  options,
-}: {
-  groupHref: string;
-  options?: Omit<
-    UseQueryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>({
-    ...options,
-    queryKey: groupKeys.rolesAllQuery(groupHref),
-    queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
-      const { results, count } = await fetchAllPages<GroupRoleResponse>(
-        async (offset, limit) => {
-          const response =
-            await axiosInstance.get<PaginatedGroupRoleResponseList>(
-              `${toProxyHref(groupHref)}roles/`,
-              { params: { offset, limit } },
-            );
-          return response.data;
-        },
-      );
-      return { count, next: null, previous: null, results };
-    },
-  });
-
-export const groupRolesListQueryOptions = ({
-  groupHref,
-  params,
-  options,
-}: {
-  groupHref: string;
-  params: IGroupRoleListParams;
-  options?: Omit<
-    UseQueryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions<PaginatedGroupRoleResponseList, DrfAxiosError>({
-    ...options,
-    queryKey: groupKeys.rolesQuery(groupHref, params),
-    queryFn: async (): Promise<PaginatedGroupRoleResponseList> => {
-      const response = await axiosInstance.get<PaginatedGroupRoleResponseList>(
-        `${toProxyHref(groupHref)}roles/`,
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
-        },
-      );
-      return response.data;
-    },
-  });
-
 export const useGroupsListQuery = ({
   params,
+  options,
 }: {
   params: IGroupListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedGroupResponseList, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) => {
   const domain = useDefaultDomain();
-  return useQuery(groupsListQueryOptions({ domain, params }));
+  return useQuery(groupsListQueryOptions({ domain, params, options }));
 };
 
 export const useSuspenseGroupDetailQuery = ({
@@ -261,28 +209,6 @@ export const useAllGroupUsersListQuery = ({
 }) =>
   useQuery({
     ...allGroupUsersListQueryOptions({ groupHref }),
-    enabled: !!groupHref,
-  });
-
-export const useGroupRolesListQuery = ({
-  groupHref,
-  params,
-}: {
-  groupHref: string;
-  params: IGroupRoleListParams;
-}) =>
-  useQuery({
-    ...groupRolesListQueryOptions({ groupHref, params }),
-    enabled: !!groupHref,
-  });
-
-export const useAllGroupRolesListQuery = ({
-  groupHref,
-}: {
-  groupHref: string;
-}) =>
-  useQuery({
-    ...allGroupRolesListQueryOptions({ groupHref }),
     enabled: !!groupHref,
   });
 
@@ -353,174 +279,17 @@ export const useGroupDeleteMutation = (
       const response = await axiosInstance.delete<void>(toProxyHref(href));
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.detail(variables.href),
-      });
-      options?.onSuccess?.(data, variables);
+      // User records embed their groups (list column + detail Groups tab).
+      void queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: userKeys.details() });
+      // Drop the deleted record only once the caller's onSuccess (e.g. navigating
+      // away from its detail page) settles; while that page is mounted, removing
+      // or invalidating it would refetch a 404.
+      await options?.onSuccess?.(data, variables);
+      queryClient.removeQueries({ queryKey: groupKeys.detail(variables.href) });
     },
     onError: options?.onError,
-  });
-};
-
-/** Result of a batch add: usernames grouped by outcome. */
-export interface IGroupUsersBatchResult {
-  succeeded: string[];
-  failed: string[];
-}
-
-/** Adds multiple users to a group via parallel POSTs and invalidates once. */
-export const useGroupUsersBatchCreateMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    IGroupUsersBatchResult,
-    DrfAxiosError,
-    { groupHref: string; usernames: string[] }
-  >({
-    mutationFn: async ({
-      groupHref,
-      usernames,
-    }: {
-      groupHref: string;
-      usernames: string[];
-    }): Promise<IGroupUsersBatchResult> => {
-      const usersUrl = `${toProxyHref(groupHref)}users/`;
-      const results = await Promise.allSettled(
-        usernames.map((username) =>
-          axiosInstance.post<GroupUserResponse>(usersUrl, {
-            username,
-          } satisfies GroupUser),
-        ),
-      );
-      const succeeded: string[] = [];
-      const failed: string[] = [];
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          succeeded.push(usernames[index]);
-        } else {
-          failed.push(usernames[index]);
-        }
-      });
-      return { succeeded, failed };
-    },
-    onSuccess: (_data, { groupHref }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.users(groupHref),
-      });
-    },
-  });
-};
-
-/**
- * Removes a user from a group. The group-users list returns each user's own
- * detail href (`/users/{pk}/`) — deleting that would delete the user from the
- * system. To only detach the membership we DELETE the nested
- * `{groupHref}users/{userId}/` path instead.
- */
-export const useGroupUserDeleteMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    void,
-    DrfAxiosError,
-    { groupHref: string; userId: string }
-  >({
-    mutationFn: async ({
-      groupHref,
-      userId,
-    }: {
-      groupHref: string;
-      userId: string;
-    }) => {
-      const response = await axiosInstance.delete<void>(
-        `${toProxyHref(groupHref)}users/${userId}/`,
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { groupHref }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.users(groupHref),
-      });
-    },
-  });
-};
-
-/** Result of a batch role add: role names grouped by outcome. */
-export interface IGroupRolesBatchResult {
-  succeeded: string[];
-  failed: string[];
-}
-
-/** Adds multiple roles to a group via parallel POSTs and invalidates once. */
-export const useGroupRolesBatchCreateMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    IGroupRolesBatchResult,
-    DrfAxiosError,
-    { groupHref: string; roleNames: string[] }
-  >({
-    mutationFn: async ({
-      groupHref,
-      roleNames,
-    }: {
-      groupHref: string;
-      roleNames: string[];
-    }): Promise<IGroupRolesBatchResult> => {
-      const rolesUrl = `${toProxyHref(groupHref)}roles/`;
-      const results = await Promise.allSettled(
-        roleNames.map((role) =>
-          axiosInstance.post<GroupRoleResponse>(rolesUrl, {
-            role,
-            content_object: null,
-          } satisfies GroupRole),
-        ),
-      );
-      const succeeded: string[] = [];
-      const failed: string[] = [];
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
-          succeeded.push(roleNames[index]);
-        } else {
-          failed.push(roleNames[index]);
-        }
-      });
-      return { succeeded, failed };
-    },
-    onSuccess: (_data, { groupHref }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.roles(groupHref),
-      });
-    },
-  });
-};
-
-/**
- * Removes a role assignment from a group. The group-roles list returns each
- * assignment's own nested href (`groups/{groupId}/roles/{assignmentId}/`), so we
- * DELETE that href directly; `groupHref` drives the parent-roles invalidation.
- */
-export const useGroupRoleDeleteMutation = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    void,
-    DrfAxiosError,
-    { groupHref: string; roleAssignmentHref: string }
-  >({
-    mutationFn: async ({
-      roleAssignmentHref,
-    }: {
-      groupHref: string;
-      roleAssignmentHref: string;
-    }) => {
-      const response = await axiosInstance.delete<void>(
-        toProxyHref(roleAssignmentHref),
-      );
-      return response.data;
-    },
-    onSuccess: (_data, { groupHref }) => {
-      void queryClient.invalidateQueries({
-        queryKey: groupKeys.roles(groupHref),
-      });
-    },
   });
 };

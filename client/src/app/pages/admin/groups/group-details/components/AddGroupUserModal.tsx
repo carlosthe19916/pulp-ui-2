@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo } from "react";
 
 import {
   Button,
@@ -18,56 +17,61 @@ import {
   useDataViewFilters,
   useDataViewPagination,
   useDataViewSelection,
-  useDataViewSort,
   type DataViewTrObject,
 } from "@patternfly/react-data-view";
 
-import type { GroupResponse } from "@app/client";
 import {
-  buildThSort,
   dataViewBodyStates,
-  toOrderingParam,
   type DataViewTh,
   ListPagination,
+  useColumnSort,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import type { WithId } from "@app/models/models";
-import { useGroupUsersBatchCreateMutation } from "@app/queries/groups";
+import { useNotifications } from "@app/hooks/useNotifications";
+import { useSuspenseGroupDetailQuery } from "@app/queries/groups";
+import { useGroupUsersBatchAddMutation } from "@app/queries/memberships";
+import type { IUserListParams } from "@app/queries/users";
 import { useUsersListQuery } from "@app/queries/users";
+import type { OrderingField } from "@app/queries/utils/listParams";
+import { notifyBatchResult } from "@app/utils/batchNotify";
 
-const COLUMN_KEYS = ["username", "email", "name"] as const;
-type UserColumnKey = (typeof COLUMN_KEYS)[number];
+const SORTABLE_COLUMN_KEYS = [
+  "username",
+  "email",
+] as const satisfies readonly OrderingField<IUserListParams>[];
+
+/** Rows carry the username so a selection spanning pages still knows each one. */
+type UserRow = DataViewTrObject & {
+  username: string;
+  isMember: boolean;
+};
 
 interface IUserFilters {
   username: string;
 }
 
 interface IAddGroupUserModalInnerProps {
-  group: WithId<GroupResponse>;
-  existingUsernames: string[];
+  groupHref: string;
   onClose: () => void;
 }
 
-/** Mounted only while open so the form resets and the user list is fetched only then. */
 const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
-  group,
-  existingUsernames,
+  groupHref,
   onClose,
 }) => {
+  const { data: group } = useSuspenseGroupDetailQuery({ groupHref });
   const { addNotification } = useNotifications();
 
   const pagination = useDataViewPagination({ perPage: 10 });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "username", direction: "asc" },
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
   const debouncedUsername = useDebouncedValue({ value: filters.username });
-
-  const ordering = toOrderingParam({ sortBy, direction }) as
-    "username" | "-username" | "email" | "-email" | undefined;
 
   const { data, isLoading, error } = useUsersListQuery({
     params: {
@@ -78,40 +82,16 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     },
   });
 
-  const users = data?.results ?? [];
-  const totalCount = data?.count ?? 0;
-
-  const batchCreateMutation = useGroupUsersBatchCreateMutation();
-
-  const existingSet = useMemo(
-    () => new Set(existingUsernames),
-    [existingUsernames],
-  );
-
-  const selection = useDataViewSelection<DataViewTrObject>({
-    matchOption: (a, b) => a.id === b.id,
+  // Each request settles on its own, so failures arrive in `result`, not onError.
+  const batchAddMutation = useGroupUsersBatchAddMutation({
+    onSuccess: (result, { groupName }) =>
+      notifyBatchResult({
+        addNotification,
+        result,
+        item: "user",
+        target: `group "${groupName}"`,
+      }),
   });
-  const tableSelection = useMemo(
-    () => ({
-      ...selection,
-      isSelectDisabled: (row: DataViewTrObject) =>
-        existingSet.has(row.id ?? ""),
-    }),
-    [selection, existingSet],
-  );
-  const selectedCount = selection.selected.length;
-
-  const sortProps = (columnKey: UserColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        pagination.onSetPage(undefined, 1);
-      },
-    });
 
   const columns: DataViewTh[] = [
     { cell: "Username", props: { sort: sortProps("username"), width: 30 } },
@@ -119,24 +99,45 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     { cell: "Name", props: { width: 30 } },
   ];
 
-  const rows: DataViewTrObject[] = users.map((user) => ({
-    id: user.username,
-    row: [
-      { cell: user.username, props: { dataLabel: "Username" } },
-      { cell: user.email || "—", props: { dataLabel: "Email" } },
-      {
-        cell: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "—",
-        props: { dataLabel: "Name" },
-      },
-    ],
-  }));
+  const rows: UserRow[] = (data?.results ?? []).flatMap((user) =>
+    user.pulp_href
+      ? [
+          {
+            id: user.pulp_href,
+            username: user.username,
+            // Each user record embeds its groups, so membership shows on any page.
+            isMember: !!user.groups?.some(
+              (userGroup) => userGroup.pulp_href === groupHref,
+            ),
+            row: [
+              { cell: user.username, props: { dataLabel: "Username" } },
+              { cell: user.email || "—", props: { dataLabel: "Email" } },
+              {
+                cell:
+                  `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() ||
+                  "—",
+                props: { dataLabel: "Name" },
+              },
+            ],
+          },
+        ]
+      : [],
+  );
+
+  const totalCount = data?.count ?? 0;
+
+  const selection = useDataViewSelection<UserRow>({
+    matchOption: (a, b) => a.id === b.id,
+  });
+  const selectedCount = selection.selected.length;
+  const isSubmitting = batchAddMutation.isPending;
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     hasSelectionColumn: true,
-    isLoading: isLoading,
+    isLoading,
     error,
-    isEmpty: users.length === 0,
+    isEmpty: rows.length === 0,
     emptyState: (
       <TableEmptyState
         title="No users found"
@@ -146,49 +147,28 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     ),
   });
 
-  const onSubmit = async () => {
-    const usernames = selection.selected
-      .map((row) => row.id)
-      .filter((id): id is string => !!id);
-    if (usernames.length === 0) return;
-
-    try {
-      const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupHref: group.object.pulp_href ?? "",
-        usernames,
-      });
-      if (succeeded.length > 0) {
-        addNotification({
-          title: `${succeeded.length} user${
-            succeeded.length === 1 ? "" : "s"
-          } added to group "${group.object.name}"`,
-          variant: "success",
-        });
-      }
-      if (failed.length > 0) {
-        addNotification({
-          title: `Failed to add ${failed.length} user${
-            failed.length === 1 ? "" : "s"
-          } to group "${group.object.name}": ${failed.join(", ")}`,
-          variant: "danger",
-        });
-      }
-      onClose();
-    } catch {
-      addNotification({
-        title: "Failed to add users to group",
-        variant: "danger",
-      });
-    }
-  };
-
-  const isSubmitting = batchCreateMutation.isPending;
+  const handleAdd = () =>
+    batchAddMutation.mutate(
+      {
+        groupHref,
+        groupName: group.name,
+        usernames: selection.selected.map((row) => row.username),
+      },
+      // Keep the selection for a retry when nothing went through.
+      { onSuccess: ({ succeeded }) => succeeded.length > 0 && onClose() },
+    );
 
   return (
     <Modal isOpen onClose={onClose} variant="large">
       <ModalHeader title="Add User to Group" />
       <ModalBody>
-        <DataView activeState={activeState} selection={tableSelection}>
+        <DataView
+          activeState={activeState}
+          selection={{
+            ...selection,
+            isSelectDisabled: (row: UserRow) => row.isMember,
+          }}
+        >
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
             filters={
@@ -210,14 +190,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
               />
             }
           />
-
           <DataViewTable
             aria-label="Select users"
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
           />
-
           <DataViewToolbar
             pagination={
               <ListPagination
@@ -232,7 +210,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={() => void onSubmit()}
+          onClick={handleAdd}
           isDisabled={selectedCount === 0 || isSubmitting}
           isLoading={isSubmitting}
         >
@@ -246,24 +224,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   );
 };
 
-interface IAddGroupUserModalProps {
+interface IAddGroupUserModalProps extends IAddGroupUserModalInnerProps {
   isOpen: boolean;
-  group: WithId<GroupResponse>;
-  existingUsernames: string[];
-  onClose: () => void;
 }
 
 /** Mounted only while open so its table state and user query reset on every open. */
 export const AddGroupUserModal: React.FC<IAddGroupUserModalProps> = ({
   isOpen,
-  group,
-  existingUsernames,
-  onClose,
-}) =>
-  isOpen ? (
-    <AddGroupUserModalInner
-      group={group}
-      existingUsernames={existingUsernames}
-      onClose={onClose}
-    />
-  ) : null;
+  ...props
+}) => (isOpen ? <AddGroupUserModalInner {...props} /> : null);

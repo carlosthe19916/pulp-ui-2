@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo } from "react";
 
 import {
   Button,
@@ -18,56 +17,60 @@ import {
   useDataViewFilters,
   useDataViewPagination,
   useDataViewSelection,
-  useDataViewSort,
   type DataViewTrObject,
 } from "@patternfly/react-data-view";
 
-import type { GroupResponse } from "@app/client";
 import {
-  buildThSort,
   dataViewBodyStates,
-  toOrderingParam,
   type DataViewTh,
   ListPagination,
+  useColumnSort,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import type { WithId } from "@app/models/models";
-import { useGroupRolesBatchCreateMutation } from "@app/queries/groups";
+import { useNotifications } from "@app/hooks/useNotifications";
+import {
+  useRoleAssignmentsBatchCreateMutation,
+  useRoleAssignmentsListQuery,
+} from "@app/queries/roleAssignments";
+import type { IRoleListParams } from "@app/queries/roles";
 import { useRolesListQuery } from "@app/queries/roles";
+import type { OrderingField } from "@app/queries/utils/listParams";
+import { notifyBatchResult } from "@app/utils/batchNotify";
 
-const COLUMN_KEYS = ["name", "description", "permissions"] as const;
-type RoleColumnKey = (typeof COLUMN_KEYS)[number];
+const SORTABLE_COLUMN_KEYS = [
+  "name",
+  "description",
+] as const satisfies readonly OrderingField<IRoleListParams>[];
+
+type RoleRow = DataViewTrObject & { roleName: string };
 
 interface IRoleFilters {
   name: string;
 }
 
-interface IAddGroupRoleModalInnerProps {
-  group: WithId<GroupResponse>;
-  existingRoleNames: string[];
+interface IAddRoleAssignmentModalInnerProps {
+  kind: "user" | "group";
+  href: string;
+  /** Username or group name, for toasts. */
+  name: string;
   onClose: () => void;
 }
 
-/** Mounted only while open so the table state and role list are fetched only then. */
-const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
-  group,
-  existingRoleNames,
-  onClose,
-}) => {
+const AddRoleAssignmentModalInner: React.FC<
+  IAddRoleAssignmentModalInnerProps
+> = ({ kind, href, name, onClose }) => {
   const { addNotification } = useNotifications();
 
   const pagination = useDataViewPagination({ perPage: 10 });
-  const { sortBy, direction, onSort } = useDataViewSort({
+  const { ordering, sortProps } = useColumnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "name", direction: "asc" },
+    onSortChange: () => pagination.onSetPage(undefined, 1),
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IRoleFilters>({ initialFilters: { name: "" } });
   const debouncedName = useDebouncedValue({ value: filters.name });
-
-  const ordering = toOrderingParam({ sortBy, direction }) as
-    "name" | "-name" | "description" | "-description" | undefined;
 
   const { data, isLoading, error } = useRolesListQuery({
     params: {
@@ -77,41 +80,38 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
       name__icontains: debouncedName || undefined,
     },
   });
-
   const roles = data?.results ?? [];
-  const totalCount = data?.count ?? 0;
 
-  const batchCreateMutation = useGroupRolesBatchCreateMutation();
-
-  const existingSet = useMemo(
-    () => new Set(existingRoleNames),
-    [existingRoleNames],
-  );
-
-  const selection = useDataViewSelection<DataViewTrObject>({
-    matchOption: (a, b) => a.id === b.id,
+  // Ask the server which visible roles are already assigned, instead of fetching
+  // every assignment. This modal creates global assignments only, so only those
+  // block a row; there is at most one global assignment per role, so `limit` is
+  // exact.
+  const visibleRoleNames = roles.map((role) => role.name);
+  const { data: assignedData } = useRoleAssignmentsListQuery({
+    kind,
+    href,
+    params: {
+      limit: visibleRoleNames.length,
+      role__in: visibleRoleNames,
+      content_object: "null",
+      domain: "null",
+    },
+    options: { enabled: visibleRoleNames.length > 0 },
   });
-  const tableSelection = useMemo(
-    () => ({
-      ...selection,
-      isSelectDisabled: (row: DataViewTrObject) =>
-        existingSet.has(row.id ?? ""),
-    }),
-    [selection, existingSet],
+  const assignedNames = new Set(
+    assignedData?.results.map((assignment) => assignment.role),
   );
-  const selectedCount = selection.selected.length;
 
-  const sortProps = (columnKey: RoleColumnKey) =>
-    buildThSort({
-      columnKeys: COLUMN_KEYS,
-      columnKey,
-      sortBy,
-      direction,
-      onSort: (event, sortedKey, newDirection) => {
-        onSort(event, sortedKey, newDirection);
-        pagination.onSetPage(undefined, 1);
-      },
-    });
+  // Each request settles on its own, so failures arrive in `result`, not onError.
+  const batchCreateMutation = useRoleAssignmentsBatchCreateMutation({
+    onSuccess: (result, { kind, name }) =>
+      notifyBatchResult({
+        addNotification,
+        result,
+        item: "role",
+        target: `${kind} "${name}"`,
+      }),
+  });
 
   const columns: DataViewTh[] = [
     { cell: "Role", props: { sort: sortProps("name"), width: 25 } },
@@ -122,8 +122,9 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     { cell: "Permissions", props: { width: 30 } },
   ];
 
-  const rows: DataViewTrObject[] = roles.map((role) => ({
+  const rows: RoleRow[] = roles.map((role) => ({
     id: role.name,
+    roleName: role.name,
     row: [
       { cell: role.name, props: { dataLabel: "Role" } },
       {
@@ -137,12 +138,20 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     ],
   }));
 
+  const totalCount = data?.count ?? 0;
+
+  const selection = useDataViewSelection<RoleRow>({
+    matchOption: (a, b) => a.id === b.id,
+  });
+  const selectedCount = selection.selected.length;
+  const isSubmitting = batchCreateMutation.isPending;
+
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     hasSelectionColumn: true,
-    isLoading: isLoading,
+    isLoading,
     error,
-    isEmpty: roles.length === 0,
+    isEmpty: rows.length === 0,
     emptyState: (
       <TableEmptyState
         title="No roles found"
@@ -152,49 +161,31 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
     ),
   });
 
-  const onSubmit = async () => {
-    const roleNames = selection.selected
-      .map((row) => row.id)
-      .filter((id): id is string => !!id);
-    if (roleNames.length === 0) return;
-
-    try {
-      const { succeeded, failed } = await batchCreateMutation.mutateAsync({
-        groupHref: group.object.pulp_href ?? "",
-        roleNames,
-      });
-      if (succeeded.length > 0) {
-        addNotification({
-          title: `${succeeded.length} role${
-            succeeded.length === 1 ? "" : "s"
-          } added to group "${group.object.name}"`,
-          variant: "success",
-        });
-      }
-      if (failed.length > 0) {
-        addNotification({
-          title: `Failed to add ${failed.length} role${
-            failed.length === 1 ? "" : "s"
-          } to group "${group.object.name}": ${failed.join(", ")}`,
-          variant: "danger",
-        });
-      }
-      onClose();
-    } catch {
-      addNotification({
-        title: "Failed to add roles to group",
-        variant: "danger",
-      });
-    }
-  };
-
-  const isSubmitting = batchCreateMutation.isPending;
+  const handleAdd = () =>
+    batchCreateMutation.mutate(
+      {
+        kind,
+        href,
+        name,
+        roleNames: selection.selected.map((row) => row.roleName),
+      },
+      // Keep the selection for a retry when nothing went through.
+      { onSuccess: ({ succeeded }) => succeeded.length > 0 && onClose() },
+    );
 
   return (
     <Modal isOpen onClose={onClose} variant="large">
-      <ModalHeader title="Add Role to Group" />
+      <ModalHeader
+        title={`Add Role to ${kind === "user" ? "User" : "Group"}`}
+      />
       <ModalBody>
-        <DataView activeState={activeState} selection={tableSelection}>
+        <DataView
+          activeState={activeState}
+          selection={{
+            ...selection,
+            isSelectDisabled: (row: RoleRow) => assignedNames.has(row.roleName),
+          }}
+        >
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
             filters={
@@ -216,14 +207,12 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
               />
             }
           />
-
           <DataViewTable
             aria-label="Select roles"
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
           />
-
           <DataViewToolbar
             pagination={
               <ListPagination
@@ -238,7 +227,7 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
       <ModalFooter>
         <Button
           variant="primary"
-          onClick={() => void onSubmit()}
+          onClick={handleAdd}
           isDisabled={selectedCount === 0 || isSubmitting}
           isLoading={isSubmitting}
         >
@@ -252,24 +241,12 @@ const AddGroupRoleModalInner: React.FC<IAddGroupRoleModalInnerProps> = ({
   );
 };
 
-interface IAddGroupRoleModalProps {
+interface IAddRoleAssignmentModalProps extends IAddRoleAssignmentModalInnerProps {
   isOpen: boolean;
-  group: WithId<GroupResponse>;
-  existingRoleNames: string[];
-  onClose: () => void;
 }
 
 /** Mounted only while open so its table state and role query reset on every open. */
-export const AddGroupRoleModal: React.FC<IAddGroupRoleModalProps> = ({
+export const AddRoleAssignmentModal: React.FC<IAddRoleAssignmentModalProps> = ({
   isOpen,
-  group,
-  existingRoleNames,
-  onClose,
-}) =>
-  isOpen ? (
-    <AddGroupRoleModalInner
-      group={group}
-      existingRoleNames={existingRoleNames}
-      onClose={onClose}
-    />
-  ) : null;
+  ...props
+}) => (isOpen ? <AddRoleAssignmentModalInner {...props} /> : null);

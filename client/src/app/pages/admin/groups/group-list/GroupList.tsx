@@ -33,6 +33,7 @@ import {
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { GroupModal } from "@app/components/GroupModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IGroupListParams } from "@app/queries/groups";
 import {
@@ -42,8 +43,6 @@ import {
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
-
-import { GroupModal } from "../components/GroupModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

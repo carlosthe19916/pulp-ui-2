@@ -53,6 +53,10 @@ export const buildGroupHref = (
   return pulpHref(`groups/${groupId}/`, domain);
 };
 
+export const buildUserHref = (userId: string, domain: IPulpDomain): string => {
+  return pulpHref(`users/${userId}/`, domain);
+};
+
 export const extractIdFromHref = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? href;

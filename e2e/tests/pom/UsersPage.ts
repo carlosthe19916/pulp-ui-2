@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
 import { DataViewList } from "./DataViewList";
+import { UserDetailPage } from "./UserDetailPage";
 
 export interface ICreateUserInput {
   username: string;
@@ -57,29 +58,14 @@ export class UsersPage extends DataViewList {
     await new ConfirmModal(this.page, "Delete User").confirm("Delete");
   }
 
-  /** Assign an existing role to a user via the "Manage roles" dual-list modal. */
-  async assignRole(username: string, roleName: string): Promise<void> {
-    const dialog = await this.openRolesModal(username);
-    await dialog
-      .getByRole("textbox", { name: "Search available roles" })
-      .fill(roleName);
-    // The "chosen" pane is empty at this point, so the option is unambiguous.
-    await dialog.getByRole("option", { name: roleName, exact: true }).click();
-    await dialog.getByRole("button", { name: "Assign selected" }).click();
-    await dialog.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(dialog).toBeHidden();
-  }
-
-  private async openRolesModal(username: string): Promise<Locator> {
+  /** Click a user's username link and return its detail page object. */
+  async openDetail(username: string): Promise<UserDetailPage> {
     await this.row(username)
-      .getByRole("button", { name: "Roles", exact: true })
+      .getByRole("link", { name: username, exact: true })
       .click();
-    const dialog = this.page.getByRole("dialog", {
-      name: `Manage roles for ${username}`,
-    });
-    // Wait for both role queries to resolve (Save renders only once loaded).
-    await expect(dialog.getByRole("button", { name: "Save" })).toBeVisible();
-    return dialog;
+    const detail = new UserDetailPage(this.page, username);
+    await expect(detail.title).toBeVisible();
+    return detail;
   }
 
   private async fillOptional(

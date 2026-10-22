@@ -10,7 +10,7 @@ import {
 
 import type { GroupResponse } from "@app/client";
 
-import { useGroupForm } from "../hooks/useGroupForm";
+import { useGroupForm } from "./useGroupForm";
 import { GroupForm } from "./GroupForm";
 
 interface IGroupModalInnerProps {

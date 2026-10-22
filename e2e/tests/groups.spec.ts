@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { recordApiNotFound } from "./helpers/notFound";
 import { STRONG_PASSWORD, uniqueName } from "./helpers/unique";
 
 test.describe("Groups", () => {
@@ -70,6 +71,44 @@ test.describe("Groups", () => {
     await detail.removeUser(username);
   });
 
+  test("a member added on the group page shows on the cached user page", async ({
+    groupsPage,
+    usersPage,
+    cleanup,
+    page,
+  }) => {
+    const username = cleanup.user(uniqueName("user"));
+    const name = cleanup.group(uniqueName("group"));
+    await groupsPage.create(name);
+
+    // Visit the user page first so its record (with no groups) is cached.
+    await usersPage.goto();
+    await usersPage.create({ username, password: STRONG_PASSWORD });
+    await usersPage.filterBy("Username", username);
+    const userDetail = await usersPage.openDetail(username);
+    await expect(userDetail.groupsTab).toHaveText("Groups (0)");
+
+    // Navigate in-app (no reload) so the cache survives.
+    await page
+      .getByRole("navigation")
+      .getByRole("link", { name: "Groups", exact: true })
+      .click();
+    // The user page also has a "Filter by Name" box; wait for the list first.
+    await expect(groupsPage.heading).toBeVisible();
+    await groupsPage.filterBy("Name", name);
+    const groupDetail = await groupsPage.openDetail(name);
+    await groupDetail.addUser(username);
+
+    await groupDetail.usersTable
+      .getByRole("link", { name: username, exact: true })
+      .click();
+    await expect(userDetail.groupsTab).toHaveText("Groups (1)");
+    await userDetail.groupsTab.click();
+    await expect(
+      userDetail.groupsTable.getByRole("link", { name, exact: true }),
+    ).toBeVisible();
+  });
+
   test("adds and removes a role in the group", async ({
     groupsPage,
     rolesPage,
@@ -100,7 +139,10 @@ test.describe("Groups", () => {
     await groupsPage.filterBy("Name", name);
 
     const detail = await groupsPage.openDetail(name);
+    const notFound = recordApiNotFound(page);
     await detail.deleteGroup();
     await expect(page).toHaveURL(/\/admin\/groups$/);
+    // The still-mounted detail page must not refetch the deleted group.
+    expect(notFound).toEqual([]);
   });
 });

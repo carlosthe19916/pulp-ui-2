@@ -1,4 +1,5 @@
 import { expect, test } from "./fixtures";
+import { recordApiNotFound } from "./helpers/notFound";
 import { STRONG_PASSWORD, uniqueName } from "./helpers/unique";
 
 test.describe("Users", () => {
@@ -66,7 +67,7 @@ test.describe("Users", () => {
     await usersPage.expectRowGone(username);
   });
 
-  test("assigns a role to a user", async ({
+  test("assigns and removes a role from the user detail page", async ({
     usersPage,
     rolesPage,
     cleanup,
@@ -82,10 +83,58 @@ test.describe("Users", () => {
     await usersPage.create({ username, password: STRONG_PASSWORD });
     await usersPage.filterBy("Username", username);
 
-    await usersPage.assignRole(username, roleName);
-    // The modal seeds its state once from a cached query, so verify the
-    // persisted assignment through the API rather than reopening the modal.
+    const detail = await usersPage.openDetail(username);
+    await detail.addRole(roleName);
     await expect.poll(() => api.userRoleNames(username)).toContain(roleName);
+    await detail.expectRoleNotSelectable(roleName);
+
+    await detail.removeRole(roleName);
+    await expect
+      .poll(() => api.userRoleNames(username))
+      .not.toContain(roleName);
+  });
+
+  test("adds and removes the user from a group on the detail page", async ({
+    usersPage,
+    groupsPage,
+    cleanup,
+    api,
+  }) => {
+    const groupName = cleanup.group(uniqueName("group"));
+    const username = cleanup.user(uniqueName("user"));
+
+    await groupsPage.goto();
+    await groupsPage.create(groupName);
+
+    await usersPage.goto();
+    await usersPage.create({ username, password: STRONG_PASSWORD });
+    await usersPage.filterBy("Username", username);
+
+    const detail = await usersPage.openDetail(username);
+    await detail.addGroup(groupName);
+    await expect.poll(() => api.userGroupNames(username)).toContain(groupName);
+
+    await detail.removeGroup(groupName);
+    await expect
+      .poll(() => api.userGroupNames(username))
+      .not.toContain(groupName);
+  });
+
+  test("deletes a user from its detail page", async ({
+    usersPage,
+    cleanup,
+    page,
+  }) => {
+    const username = cleanup.user(uniqueName("user"));
+    await usersPage.create({ username, password: STRONG_PASSWORD });
+    await usersPage.filterBy("Username", username);
+
+    const detail = await usersPage.openDetail(username);
+    const notFound = recordApiNotFound(page);
+    await detail.deleteUser();
+    await expect(page).toHaveURL(/\/admin\/users$/);
+    // The still-mounted detail page must not refetch the deleted user.
+    expect(notFound).toEqual([]);
   });
 
   test("filters the list by username", async ({ usersPage, cleanup }) => {

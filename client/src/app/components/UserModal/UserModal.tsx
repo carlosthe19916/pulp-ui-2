@@ -10,7 +10,7 @@ import {
 
 import type { UserResponse } from "@app/client";
 
-import { useUserForm } from "../hooks/useUserForm";
+import { useUserForm } from "./useUserForm";
 import { UserForm } from "./UserForm";
 
 interface IUserModalInnerProps {

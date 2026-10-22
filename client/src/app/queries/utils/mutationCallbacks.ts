@@ -18,6 +18,7 @@ export interface IMutationCallbacks<
   TVariables,
   TError = PulpAxiosError,
 > {
-  onSuccess?: (data: TData, variables: TVariables) => void;
+  /** May return a promise (e.g. `navigate()`); hooks that clean up after the caller await it. */
+  onSuccess?: (data: TData, variables: TVariables) => void | Promise<void>;
   onError?: (error: TError, variables: TVariables) => void;
 }
