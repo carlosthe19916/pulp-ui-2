@@ -14,6 +14,7 @@ import {
   ListPagination,
   type DataViewTh,
 } from "@app/components/DataView";
+import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDistributionsListQuery } from "@app/queries/distributions";
@@ -59,7 +60,7 @@ export const RepositoryDistributionsTab: React.FC<
           props: { dataLabel: "Base Path", modifier: "truncate" },
         },
         {
-          cell: distribution.base_url || "—",
+          cell: <ContentUrlLink distribution={distribution} />,
           props: { dataLabel: "Base URL", modifier: "truncate" },
         },
         {

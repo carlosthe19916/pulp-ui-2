@@ -8,6 +8,7 @@ import {
 } from "@patternfly/react-core";
 
 import type { DistributionResponse } from "@app/client";
+import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 import { formatDateTime } from "@app/utils/utils";
@@ -34,7 +35,7 @@ export const DistributionDetailPanel: React.FC<
       <DescriptionListGroup>
         <DescriptionListTerm>Base URL</DescriptionListTerm>
         <DescriptionListDescription>
-          {distribution.base_url || "—"}
+          <ContentUrlLink distribution={distribution} />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>

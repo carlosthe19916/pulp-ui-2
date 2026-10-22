@@ -3,6 +3,10 @@ import { useState } from "react";
 
 import {
   Button,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
   EmptyState,
   EmptyStateBody,
   Flex,
@@ -12,6 +16,7 @@ import {
   Stack,
 } from "@patternfly/react-core";
 
+import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 
 import { useServingDistributions } from "../hooks/useServingDistributions";
@@ -22,7 +27,7 @@ interface IRepositoryUsageProps {
   onViewDistributions: () => void;
 }
 
-/** How clients consume the repository: the setup snippet of one of its distributions. */
+/** How clients consume the repository: the content URL and setup snippet of one of its distributions. */
 export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
   repositoryHref,
   pulpType,
@@ -79,6 +84,14 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
           </FlexItem>
         </Flex>
       )}
+      <DescriptionList isCompact isHorizontal>
+        <DescriptionListGroup>
+          <DescriptionListTerm>Content URL</DescriptionListTerm>
+          <DescriptionListDescription>
+            <ContentUrlLink distribution={selected} />
+          </DescriptionListDescription>
+        </DescriptionListGroup>
+      </DescriptionList>
       <PluginRepositoryClientSetup distribution={selected} />
     </Stack>
   );
