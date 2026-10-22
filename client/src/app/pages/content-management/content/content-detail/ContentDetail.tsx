@@ -21,6 +21,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { buildContentHref, useContentDetailQuery } from "@app/queries/content";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
+import { ContentRepositoriesTab } from "./components/ContentRepositoriesTab";
 
 interface IContentDetailProps {
   pulpDomain: string;
@@ -78,6 +79,14 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
           >
             <TabContentBody hasPadding>
               <ContentArtifactsTab href={href} />
+            </TabContentBody>
+          </Tab>
+          <Tab
+            eventKey="repositories"
+            title={<TabTitleText>Repositories</TabTitleText>}
+          >
+            <TabContentBody hasPadding>
+              <ContentRepositoriesTab href={href} />
             </TabContentBody>
           </Tab>
         </Tabs>
