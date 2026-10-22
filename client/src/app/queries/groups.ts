@@ -30,7 +30,6 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { buildGroupHref } from "./utils/pulpHref";
 
 export const GroupsQueryKey = "groups";
 
@@ -238,15 +237,10 @@ export const useGroupsListQuery = ({
 };
 
 export const useSuspenseGroupDetailQuery = ({
-  groupId,
+  groupHref,
 }: {
-  groupId: string;
-}) => {
-  const domain = useDefaultDomain();
-  return useSuspenseQuery(
-    groupDetailQueryOptions({ groupHref: buildGroupHref(groupId, domain) }),
-  );
-};
+  groupHref: string;
+}) => useSuspenseQuery(groupDetailQueryOptions({ groupHref }));
 
 export const useGroupUsersListQuery = ({
   groupHref,
@@ -342,8 +336,7 @@ export const useGroupUpdateMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        // normalize to match the buildGroupHref-keyed detail query
-        queryKey: groupKeys.detail(toProxyHref(variables.href)),
+        queryKey: groupKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },
@@ -363,8 +356,7 @@ export const useGroupDeleteMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       void queryClient.invalidateQueries({
-        // normalize to match the buildGroupHref-keyed detail query
-        queryKey: groupKeys.detail(toProxyHref(variables.href)),
+        queryKey: groupKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },

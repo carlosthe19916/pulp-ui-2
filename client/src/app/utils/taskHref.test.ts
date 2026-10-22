@@ -5,13 +5,13 @@ import { buildTaskHref, extractTaskDomain, extractTaskId } from "./taskHref";
 describe("taskHref helpers", () => {
   it("builds a domain-scoped task href when domains are enabled", () => {
     expect(buildTaskHref("abc-123", { enabled: true, name: "myd" })).toBe(
-      "/api/pulp/myd/api/v3/tasks/abc-123/",
+      "/pulp/myd/api/v3/tasks/abc-123/",
     );
   });
 
   it("omits the domain segment when domains are disabled", () => {
     expect(buildTaskHref("abc-123", { enabled: false, name: "default" })).toBe(
-      "/api/pulp/api/v3/tasks/abc-123/",
+      "/pulp/api/v3/tasks/abc-123/",
     );
   });
 

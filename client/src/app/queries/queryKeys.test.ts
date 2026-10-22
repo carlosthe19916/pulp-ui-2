@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { domainKeys } from "./domains";
 import { groupKeys } from "./groups";
+import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
 import { taskKeys } from "./tasks";
 import { userKeys } from "./users";
@@ -119,6 +120,19 @@ describe("query-key factories", () => {
       ).toBe(true);
       expect(
         startsWith(roleKeys.listAllQuery(domain, {}), roleKeys.list()),
+      ).toBe(true);
+    });
+  });
+
+  describe("repositoryKeys", () => {
+    const repoHref = "/pulp/api/v3/repositories/file/file/abc/";
+
+    it("nests the versions list under the repository detail folder", () => {
+      expect(
+        startsWith(
+          repositoryKeys.versionsQuery(repoHref, { limit: 1 }),
+          repositoryKeys.detail(repoHref),
+        ),
       ).toBe(true);
     });
   });

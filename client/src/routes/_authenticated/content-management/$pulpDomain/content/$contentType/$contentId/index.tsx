@@ -20,6 +20,7 @@ export const Route = createFileRoute(
     const href = buildContentHref(contentType, contentId, domain);
     if (!href) throw new Error("Unknown content plugin type");
     await queryClient.ensureQueryData(contentDetailQueryOptions({ href }));
+    return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading content" />,
   errorComponent: DetailRouteError,

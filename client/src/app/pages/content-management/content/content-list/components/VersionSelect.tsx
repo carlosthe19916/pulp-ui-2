@@ -1,17 +1,9 @@
 import type React from "react";
 import { useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
-
-import { getPlugin } from "@catalog";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { repositoryVersionsListQueryOptions } from "@app/queries/repositories";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 
 interface IVersionSelectProps {
   id: string;
@@ -40,16 +32,9 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
   value,
   onChange,
 }) => {
-  const domain = useSelectedDomain();
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebouncedValue({ value: term });
-
-  const pulpType = repositoryHref ? resolvePulpType(repositoryHref) : undefined;
-  const apiPath = pulpType
-    ? getPlugin(pulpType)?.entities.repository?.apiPath
-    : undefined;
-  const repositoryId = repositoryHref ? extractIdFromHref(repositoryHref) : "";
 
   // Version numbers are integers with an exact `number` filter (no substring), so a numeric
   // search term filters by exact number; non-numeric text falls back to the latest page.
@@ -59,14 +44,10 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
       ? parsed
       : undefined;
 
-  const { data, isFetching } = useQuery({
-    ...repositoryVersionsListQueryOptions({
-      apiPath,
-      id: repositoryId,
-      domain,
-      params: { limit: PAGE_SIZE, ordering: "-number", number: numberFilter },
-    }),
-    enabled: isOpen && !!apiPath && !!repositoryId,
+  const { data, isFetching } = useRepositoryVersionsListQuery({
+    repositoryHref,
+    params: { limit: PAGE_SIZE, ordering: "-number", number: numberFilter },
+    options: { enabled: isOpen },
   });
 
   const options = (data?.results ?? []).map((version) => ({

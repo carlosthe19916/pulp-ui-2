@@ -1,9 +1,9 @@
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
-import { pulpApiPath } from "@app/queries/utils/pulpApi";
+import { pulpHref } from "@app/queries/utils/pulpApi";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 
 export const buildTaskHref = (taskId: string, domain: IPulpDomain): string =>
-  pulpApiPath(`tasks/${taskId}/`, domain);
+  pulpHref(`tasks/${taskId}/`, domain);
 
 export const extractTaskId = (href: string): string => {
   const parts = href.split("/").filter(Boolean);

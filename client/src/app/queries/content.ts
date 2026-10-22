@@ -11,7 +11,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
@@ -120,5 +120,5 @@ export const buildContentHref = (
   domain: IPulpDomain,
 ): string | null => {
   const apiPath = getContentType(pulpType)?.apiPath;
-  return apiPath ? pulpApiPath(`content/${apiPath}/${id}/`, domain) : null;
+  return apiPath ? pulpHref(`content/${apiPath}/${id}/`, domain) : null;
 };

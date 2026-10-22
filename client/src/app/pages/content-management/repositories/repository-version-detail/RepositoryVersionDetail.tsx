@@ -11,31 +11,37 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { VersionContent } from "@app/components/VersionContent";
-import { useRepositoryDetailQuery } from "@app/queries/repositories";
-import { useSuspenseRepositoryVersionDetailQuery } from "@app/queries/repositories";
-import { buildRepositoryHref } from "@app/queries/repositories";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import {
+  useRepositoryDetailQuery,
+  useSuspenseRepositoryVersionDetailQuery,
+} from "@app/queries/repositories";
 
 interface IRepositoryVersionDetailProps {
   pulpDomain: string;
   pulpType: string;
   id: string;
   versionNumber: string;
+  repositoryHref: string;
+  versionHref: string;
 }
 
 export const RepositoryVersionDetail: React.FC<
   IRepositoryVersionDetailProps
-> = ({ pulpDomain, pulpType, id, versionNumber }) => {
-  const domain = useSelectedDomain();
+> = ({
+  pulpDomain,
+  pulpType,
+  id,
+  versionNumber,
+  repositoryHref,
+  versionHref,
+}) => {
   const { data: version } = useSuspenseRepositoryVersionDetailQuery({
-    pulpType,
-    id,
-    number: versionNumber,
+    href: versionHref,
   });
 
   // Repo name for the breadcrumb (cached from navigation; optional).
   const { data: repository } = useRepositoryDetailQuery({
-    href: buildRepositoryHref(pulpType, id, domain),
+    href: repositoryHref,
   });
   const repositoryName = repository?.name ?? "Repository";
 

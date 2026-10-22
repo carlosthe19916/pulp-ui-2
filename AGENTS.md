@@ -206,6 +206,29 @@ import tableStyles from "@patternfly/react-styles/css/components/Table/table";
   `apiPath`), which the content detail route `loader` throws on → `DetailRouteError`
   (`routes/_authenticated/content-management/$pulpDomain/content/$contentType/$contentId/index.tsx`).
 
+### Hrefs, ids and query keys
+
+- **Queries take hrefs, never ids.** Every `*QueryOptions` and `use*Query` hook
+  takes the resource's (or, for a nested list, its parent's) `pulp_href`. Nested
+  collections are read as `${toProxyHref(parentHref)}child/` (e.g. a repository's
+  `versions/`, a group's `users/`).
+- **Only routes turn ids into hrefs.** A detail route has only the URL's ids, so its
+  `loader` builds the href once with the family's `build*Href(…)`
+  (`buildRepositoryHref`, `buildRemoteHref`, `buildContentHref`, `buildGroupHref`,
+  `buildTaskHref`, …), primes the query, and **returns `{ href }`**. The page's
+  `*DetailRoute.tsx` adapter reads it with `routeApi.useLoaderData()` and passes
+  `href` down; entry hooks are `useSuspense<Family>DetailQuery({ href })`.
+- **`build*Href` returns the server form** (`pulpHref()` → `{API_ROOT}…`), the exact
+  string the API returns as `pulp_href`. That keeps key factories pure
+  (`<name>Keys.detail(href)` just appends the href): a rebuilt href and a response
+  href hit the same cache slot, so invalidations match without normalizing. Never
+  build a key from `pulpApiPath()` (that's a request URL, `/api/pulp/…`); requests
+  go through `toProxyHref(href)`.
+- **Sub-resources nest under their parent's `detail(href)`** in the key factory
+  (`repositoryKeys.versions(href)`, `groupKeys.users(href)`), so invalidating the
+  parent's detail refreshes them too — e.g. a settled sync task invalidates
+  `repositoryKeys.detail(href)` (detail page + versions).
+
 ### Content query file layout
 
 Content families split their query modules along a **plugin axis**. Keep the two
@@ -214,15 +237,15 @@ duplicate generic reads in the plugin file.
 
 - **`queries/<family>.ts`** (e.g. `distributions.ts`) is **plugin-neutral**. It
   owns the cross-type list over the un-typed aggregate collection
-  (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant, the
-  `*RootQueryOptions` anchor, and the `*Keys` factory. It also owns per-item
+  (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant and the `*Keys`
+  factory (`*Keys.all()` is the family's root key). It also owns per-item
   actions **and sub-resources that are uniform across plugins** — e.g. repository
   `sync` (`useRepositorySyncMutation`) and `versions`
-  (`useRepositoryVersionsListQuery`): one hook serves every plugin. Like
-  `useRepositoryCreateMutation`, these rebuild the endpoint client-side from parts
+  (`useRepositoryVersionsListQuery`): one hook serves every plugin. Sub-resource
+  **reads** take the parent's href (see "Hrefs, ids and query keys"); **actions**
+  like sync and create rebuild the endpoint client-side from parts
   (`pulpApiPath(`repositories/${apiPath}/${id}/<action>/`, domain)`, with
-  `apiPath` from the catalog) rather than appending to the server `pulp_href`. A
-  sub-resource counts as uniform when its response type is generic and its query
+  `apiPath` from the catalog). A sub-resource counts as uniform when its response type is generic and its query
   params are identical across plugins (the per-plugin generated type differs only
   in a `path` param, which `ListParams` drops). Per-plugin body/field shape is
   modelled in the catalog (e.g. `ISyncCapability.fields`), not by separate hooks.
@@ -231,8 +254,8 @@ duplicate generic reads in the plugin file.
   plugin-specific** queries: typed create/mutations against
   `<family>/<plugin>/<type>/`, and sub-resources that genuinely vary by plugin
   (e.g. content upload, or a typed list when the aggregate returns a union type).
-  Reuse the base's `*RootQueryOptions.queryKey` for invalidation so cache slots
-  stay unified.
+  Reuse the base's `*Keys` factory for keys and invalidation so cache slots stay
+  unified.
 - **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
   `toProxyHref(href)`. It lives in the **base family file** as that family's own
   `<family>DetailQueryOptions` + `use<Family>DetailQuery` /

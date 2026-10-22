@@ -20,6 +20,7 @@ export const Route = createFileRoute(
     const href = buildRepositoryHref(repositoryType, repositoryId, domain);
     if (!href) throw new Error("Unknown repository plugin type");
     await queryClient.ensureQueryData(repositoryDetailQueryOptions({ href }));
+    return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading repository" />,
   errorComponent: DetailRouteError,

@@ -162,7 +162,7 @@ export const useRoleUpdateMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(toProxyHref(variables.href)),
+        queryKey: roleKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },
@@ -182,7 +182,7 @@ export const useRoleDeleteMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: roleKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(toProxyHref(variables.href)),
+        queryKey: roleKeys.detail(variables.href),
       });
       options?.onSuccess?.(data, variables);
     },

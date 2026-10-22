@@ -23,22 +23,21 @@ import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryVersionsTabProps {
-  apiPath?: string;
+  repositoryHref: string;
   id: string;
   pulpType: string;
   pulpDomain: string;
 }
 
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
-  apiPath,
+  repositoryHref,
   id,
   pulpType,
   pulpDomain,
 }) => {
   const pagination = useDataViewPagination({ perPage: 10 });
   const { data, isLoading, error } = useRepositoryVersionsListQuery({
-    apiPath,
-    id,
+    repositoryHref,
     params: {
       ordering: "-number",
       limit: pagination.perPage,

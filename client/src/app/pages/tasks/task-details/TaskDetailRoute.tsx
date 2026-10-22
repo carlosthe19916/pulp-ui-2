@@ -7,6 +7,6 @@ const taskDetailRouteApi = getRouteApi(
 );
 
 export const TaskDetailRoute = () => {
-  const { taskId } = taskDetailRouteApi.useParams();
-  return <TaskDetail taskId={taskId} />;
+  const { href } = taskDetailRouteApi.useLoaderData();
+  return <TaskDetail taskHref={href} />;
 };

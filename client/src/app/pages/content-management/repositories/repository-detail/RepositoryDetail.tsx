@@ -3,6 +3,8 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,10 +23,12 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { withId } from "@app/models/models";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
+  repositoryKeys,
   useRepositoryDeleteMutation,
   useRepositoryVersionsListQuery,
   useSuspenseRepositoryDetailQuery,
@@ -43,30 +47,38 @@ interface IRepositoryDetailProps {
   pulpDomain: string;
   pulpType: string;
   id: string;
+  href: string;
 }
 
 export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   pulpDomain,
   pulpType,
   id,
+  href,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { addNotification } = useNotifications();
 
-  const { data: repository } = useSuspenseRepositoryDetailQuery({
-    pulpType,
-    id,
+  const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
+  // A settled task (e.g. sync) may have bumped the latest version: refresh the
+  // repository and everything nested under it (versions).
+  useResourceTasks({
+    entities: [repository],
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(href),
+      });
+    },
   });
-  const href = repository.pulp_href ?? "";
-  const apiPath = getPlugin(pulpType)?.entities.repository?.apiPath;
+
   const repoEntity = getPlugin(pulpType)?.entities.repository;
   const canSync = (repoEntity?.compatibleRemoteTypes.length ?? 0) > 0;
   const canPublish = (repoEntity?.compatiblePublicationTypes.length ?? 0) > 0;
 
   // Tab-title counts: one row each, read the paginated `count`.
   const { data: versionsCount } = useRepositoryVersionsListQuery({
-    apiPath,
-    id,
+    repositoryHref: href,
     params: { limit: 1 },
   });
   const { data: publicationsCount } = usePublicationsListQuery({
@@ -184,7 +196,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           >
             <TabContentBody hasPadding>
               <RepositoryVersionsTab
-                apiPath={apiPath}
+                repositoryHref={href}
                 id={id}
                 pulpType={pulpType}
                 pulpDomain={pulpDomain}

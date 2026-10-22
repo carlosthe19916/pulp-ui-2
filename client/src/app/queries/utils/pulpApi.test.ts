@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pulpApiPath } from "./pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./pulpApi";
 
 describe("pulpApiPath", () => {
   const enabled = { enabled: true, name: "default" };
@@ -27,6 +27,24 @@ describe("pulpApiPath", () => {
   it("preserves the trailing slash as-is", () => {
     expect(pulpApiPath("tasks/purge/", disabled)).toBe(
       "/api/pulp/api/v3/tasks/purge/",
+    );
+  });
+});
+
+describe("pulpHref", () => {
+  it("builds the server-form href under API_ROOT", () => {
+    expect(
+      pulpHref("repositories/file/file/abc/", { enabled: true, name: "d1" }),
+    ).toBe("/pulp/d1/api/v3/repositories/file/file/abc/");
+    expect(pulpHref("/tasks/abc/", { enabled: false, name: "default" })).toBe(
+      "/pulp/api/v3/tasks/abc/",
+    );
+  });
+
+  it("proxies to the same URL pulpApiPath builds", () => {
+    const domain = { enabled: true, name: "d1" };
+    expect(toProxyHref(pulpHref("remotes/rpm/rpm/x/", domain))).toBe(
+      pulpApiPath("remotes/rpm/rpm/x/", domain),
     );
   });
 });

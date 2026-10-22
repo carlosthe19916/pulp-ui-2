@@ -17,8 +17,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { buildContentHref, useContentDetailQuery } from "@app/queries/content";
+import { useContentDetailQuery } from "@app/queries/content";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
 import { ContentRepositoriesTab } from "./components/ContentRepositoriesTab";
@@ -27,15 +26,15 @@ interface IContentDetailProps {
   pulpDomain: string;
   pulpType: string;
   id: string;
+  href: string;
 }
 
 export const ContentDetail: React.FC<IContentDetailProps> = ({
   pulpDomain,
   pulpType,
   id,
+  href,
 }) => {
-  const domain = useSelectedDomain();
-  const href = buildContentHref(pulpType, id, domain) ?? "";
   const { data } = useContentDetailQuery({ href });
   const prn = data?.prn ?? id;
 

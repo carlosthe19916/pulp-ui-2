@@ -40,12 +40,12 @@ import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 
 interface ITaskDetailProps {
-  taskId: string;
+  taskHref: string;
 }
 
-export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskId }) => {
+export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { data: task } = useSuspenseTaskDetailQuery({ taskId });
+  const { data: task } = useSuspenseTaskDetailQuery({ taskHref });
   const taskError = (task as TaskWithError).error;
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();

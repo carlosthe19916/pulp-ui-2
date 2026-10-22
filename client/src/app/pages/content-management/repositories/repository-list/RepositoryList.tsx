@@ -136,8 +136,14 @@ export const RepositoryList: React.FC = () => {
   const STATUS_COLUMN_INDEX = 4;
   const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: repositories,
-    onSettled: () => {
+    onSettled: ({ entity }) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      // Covers the detail page and its versions (a sync adds a version).
+      if (entity.pulp_href) {
+        void queryClient.invalidateQueries({
+          queryKey: repositoryKeys.detail(entity.pulp_href),
+        });
+      }
     },
   });
 

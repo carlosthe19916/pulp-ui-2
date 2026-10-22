@@ -35,19 +35,18 @@ import { RemoteTasksTab } from "./components/RemoteTasksTab";
 interface IRemoteDetailProps {
   pulpDomain: string;
   pulpType: string;
-  id: string;
+  href: string;
 }
 
 export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
   pulpDomain,
   pulpType,
-  id,
+  href,
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
-  const { data: remote } = useSuspenseRemoteDetailQuery({ pulpType, id });
-  const href = remote.pulp_href ?? "";
+  const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const prn = remote.prn ?? "";
 
   // Tab-title count: one row, read the paginated `count`.

@@ -4,7 +4,7 @@ import {
 } from "@catalog";
 import type { EntityType } from "@catalog";
 
-import { pulpApiPath } from "./pulpApi";
+import { pulpHref } from "./pulpApi";
 import type { IPulpDomain } from "./pulpApi";
 
 /** URL collection family (first href segment) → catalog entity type (CRUD only). */
@@ -50,7 +50,7 @@ export const buildGroupHref = (
   groupId: string,
   domain: IPulpDomain,
 ): string => {
-  return pulpApiPath(`groups/${groupId}/`, domain);
+  return pulpHref(`groups/${groupId}/`, domain);
 };
 
 export const extractIdFromHref = (href: string): string => {

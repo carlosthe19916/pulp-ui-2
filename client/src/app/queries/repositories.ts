@@ -27,17 +27,22 @@ import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RepositoriesQueryKey = "repositories";
 
 export type IRepositoryListParams = ListParams<RepositoriesListData>;
 
-export const repositoriesRootQueryOptions = queryOptions({
-  queryKey: [RepositoriesQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
+/**
+ * Params for a repository's `versions/` list. The `versions` sub-resource is
+ * plugin-neutral: every plugin's generated `*VersionsListData` has the same
+ * `query` block (the only plugin-specific bit, the repository href, is a `path`
+ * param that `ListParams` drops), so the File variant stands in as the canonical
+ * spec source and stays in sync on `npm run generate`.
+ */
+export type IRepositoryVersionsListParams =
+  ListParams<RepositoriesFileFileVersionsListData>;
 
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede
@@ -49,10 +54,17 @@ export const repositoryKeys = {
   list: () => [...repositoryKeys.all(), "list"] as const,
   detail: (repoHref: string) =>
     [...repositoryKeys.all(), "detail", repoHref] as const,
+  versions: (repoHref: string) =>
+    [...repositoryKeys.detail(repoHref), "versions"] as const,
+  // Versions are immutable, so a version's detail is keyed by its own href alone.
+  versionDetail: (versionHref: string) =>
+    [...repositoryKeys.all(), "version", versionHref] as const,
 
   listQuery: (domain: IPulpDomain, params: IRepositoryListParams) =>
     [...repositoryKeys.list(), domain, params] as const,
   detailQuery: (repoHref: string) => repositoryKeys.detail(repoHref),
+  versionsQuery: (repoHref: string, params: IRepositoryVersionsListParams) =>
+    [...repositoryKeys.versions(repoHref), params] as const,
 };
 
 export const repositoriesListQueryOptions = ({
@@ -173,33 +185,13 @@ export const useRepositorySyncMutation = () => {
   });
 };
 
-/**
- * Params for a repository's `versions/` list. The `versions` sub-resource is
- * plugin-neutral: every plugin's generated `*VersionsListData` has the same
- * `query` block (the only plugin-specific bit, the repository href, is a `path`
- * param that `ListParams` drops), so the File variant stands in as the canonical
- * spec source and stays in sync on `npm run generate`.
- */
-export type IRepositoryVersionsListParams =
-  ListParams<RepositoriesFileFileVersionsListData>;
-
-const repositoryVersionsPath = (
-  apiPath: string,
-  id: string,
-  domain: IPulpDomain,
-) => pulpApiPath(`repositories/${apiPath}/${id}/versions/`, domain);
-
 export const repositoryVersionsListQueryOptions = ({
-  apiPath,
-  id,
+  repositoryHref,
   params,
-  domain,
   options,
 }: {
-  apiPath?: string;
-  id: string;
+  repositoryHref: string;
   params: IRepositoryVersionsListParams;
-  domain: IPulpDomain;
   options?: Omit<
     UseQueryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>,
     "queryKey" | "queryFn"
@@ -207,20 +199,11 @@ export const repositoryVersionsListQueryOptions = ({
 }) =>
   queryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>({
     ...options,
-    queryKey: [
-      ...repositoriesRootQueryOptions.queryKey,
-      "versions",
-      domain,
-      apiPath,
-      id,
-      params,
-    ],
+    queryKey: repositoryKeys.versionsQuery(repositoryHref, params),
     queryFn: async (): Promise<PaginatedRepositoryVersionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedRepositoryVersionResponseList>(
-          // The `use…Query` hook gates on `!!apiPath && !!id`, so `apiPath ?? ""`
-          // is never hit at runtime.
-          repositoryVersionsPath(apiPath ?? "", id, domain),
+          `${toProxyHref(repositoryHref)}versions/`,
           {
             params: {
               ...params,
@@ -233,25 +216,25 @@ export const repositoryVersionsListQueryOptions = ({
   });
 
 export const useRepositoryVersionsListQuery = ({
-  apiPath,
-  id,
+  repositoryHref,
   params,
+  options,
 }: {
-  apiPath?: string;
-  id: string;
+  repositoryHref: string;
   params: IRepositoryVersionsListParams;
-}) => {
-  const domain = useSelectedDomain();
-  return useQuery({
-    ...repositoryVersionsListQueryOptions({ apiPath, id, params, domain }),
-    enabled: !!apiPath && !!id,
+  options?: Omit<
+    UseQueryOptions<PaginatedRepositoryVersionResponseList, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
+  useQuery({
+    ...repositoryVersionsListQueryOptions({ repositoryHref, params, options }),
+    enabled: !!repositoryHref && options?.enabled !== false,
   });
-};
 
 /**
- * Detail-by-href for a repository, used to pre-fill the edit form and to resolve
- * a selected repository's label in resource pickers; keyed like the list detail
- * slot, with the `!!href` guard living in the hook.
+ * Detail-by-href for a repository (detail page, edit form, picker labels); the
+ * `!!href` guard lives in the hook.
  */
 export const repositoryDetailQueryOptions = ({
   href,
@@ -286,35 +269,11 @@ export const buildRepositoryHref = (
   domain: IPulpDomain,
 ): string | null => {
   const apiPath = repositoryApiPath(pulpType);
-  return apiPath ? pulpApiPath(`repositories/${apiPath}/${id}/`, domain) : null;
+  return apiPath ? pulpHref(`repositories/${apiPath}/${id}/`, domain) : null;
 };
 
-export const useSuspenseRepositoryDetailQuery = ({
-  pulpType,
-  id,
-}: {
-  pulpType: string;
-  id: string;
-}) => {
-  const domain = useSelectedDomain();
-  return useSuspenseQuery(
-    repositoryDetailQueryOptions({
-      href: buildRepositoryHref(pulpType, id, domain),
-    }),
-  );
-};
-
-export const buildRepositoryVersionHref = (
-  pulpType: string,
-  id: string,
-  number: string,
-  domain: IPulpDomain,
-): string | null => {
-  const apiPath = repositoryApiPath(pulpType);
-  return apiPath
-    ? pulpApiPath(`repositories/${apiPath}/${id}/versions/${number}/`, domain)
-    : null;
-};
+export const useSuspenseRepositoryDetailQuery = ({ href }: { href: string }) =>
+  useSuspenseQuery(repositoryDetailQueryOptions({ href }));
 
 export const repositoryVersionDetailQueryOptions = ({
   versionHref,
@@ -322,11 +281,7 @@ export const repositoryVersionDetailQueryOptions = ({
   versionHref: string | null;
 }) =>
   queryOptions<RepositoryVersionResponse, DrfAxiosError>({
-    queryKey: [
-      ...repositoriesRootQueryOptions.queryKey,
-      "version-detail",
-      versionHref ?? "",
-    ],
+    queryKey: repositoryKeys.versionDetail(versionHref ?? ""),
     queryFn: async (): Promise<RepositoryVersionResponse> =>
       (
         await axiosInstance.get<RepositoryVersionResponse>(
@@ -346,21 +301,11 @@ export const useRepositoryVersionDetailQuery = ({
   });
 
 export const useSuspenseRepositoryVersionDetailQuery = ({
-  pulpType,
-  id,
-  number,
+  href,
 }: {
-  pulpType: string;
-  id: string;
-  number: string;
-}) => {
-  const domain = useSelectedDomain();
-  return useSuspenseQuery(
-    repositoryVersionDetailQueryOptions({
-      versionHref: buildRepositoryVersionHref(pulpType, id, number, domain),
-    }),
-  );
-};
+  href: string;
+}) =>
+  useSuspenseQuery(repositoryVersionDetailQueryOptions({ versionHref: href }));
 
 /**
  * Creates a repository of the given plugin type: POSTs to `repositories/<apiPath>/`

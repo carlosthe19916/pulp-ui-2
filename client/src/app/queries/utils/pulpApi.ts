@@ -33,14 +33,25 @@ const stripLeadingSlash = (endpoint: string): string =>
 export const pulpApiPath = (endpoint: string, domain: IPulpDomain): string =>
   `/api/pulp${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
 
+const apiRoot = (): string => normalizePulpApiRoot(ENV.PULP_API_ROOT ?? "");
+
+/**
+ * Build a resource href in the server's own form (`{API_ROOT}…`), identical to the
+ * `pulp_href` the API returns — so an href rebuilt from a route id shares the cache
+ * slot (and invalidation) of one read from a response. A key, not a request URL:
+ * fetch it through `toProxyHref`.
+ */
+export const pulpHref = (endpoint: string, domain: IPulpDomain): string =>
+  `${apiRoot()}${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
+
 /**
  * Normalize any pulp_href to the fixed `/api/pulp` proxy marker (routed to the
- * backend's real `API_ROOT`). Idempotent: built hrefs pass through; raw hrefs
- * (`{API_ROOT}/...`) get their `API_ROOT` prefix swapped for `/api/pulp`.
+ * backend's real `API_ROOT`). Idempotent: `pulpApiPath` URLs pass through; server
+ * hrefs (`pulp_href`, `pulpHref`) get their `API_ROOT` prefix swapped for `/api/pulp`.
  */
 export const toProxyHref = (href: string): string => {
   if (href.startsWith("/api/pulp")) return href;
-  const root = normalizePulpApiRoot(ENV.PULP_API_ROOT ?? "");
+  const root = apiRoot();
   if (href === root || href.startsWith(`${root}/`)) {
     return `/api/pulp${href.slice(root.length)}`;
   }

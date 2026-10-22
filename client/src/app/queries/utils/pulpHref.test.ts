@@ -6,14 +6,12 @@ describe("pulpHref helpers", () => {
   const enabled = { enabled: true, name: "default" };
   const disabled = { enabled: false, name: "default" };
 
-  it("builds domain-scoped hrefs with the domain segment when enabled", () => {
-    expect(buildGroupHref("7", enabled)).toBe(
-      "/api/pulp/default/api/v3/groups/7/",
-    );
+  it("builds server-form hrefs with the domain segment when enabled", () => {
+    expect(buildGroupHref("7", enabled)).toBe("/pulp/default/api/v3/groups/7/");
   });
 
   it("omits the domain segment when the domain is disabled", () => {
-    expect(buildGroupHref("7", disabled)).toBe("/api/pulp/api/v3/groups/7/");
+    expect(buildGroupHref("7", disabled)).toBe("/pulp/api/v3/groups/7/");
   });
 
   it("extracts the trailing id from a pulp_href", () => {

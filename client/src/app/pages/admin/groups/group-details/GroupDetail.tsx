@@ -33,14 +33,17 @@ import { GroupUsersTab } from "./components/GroupUsersTab";
 
 interface IGroupDetailProps {
   groupId: string;
+  groupHref: string;
 }
 
-export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupId }) => {
+export const GroupDetail: React.FC<IGroupDetailProps> = ({
+  groupId,
+  groupHref,
+}) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
-  const { data: group } = useSuspenseGroupDetailQuery({ groupId });
-  const groupHref = group.pulp_href ?? "";
+  const { data: group } = useSuspenseGroupDetailQuery({ groupHref });
   // These fetches feed only the tab-title counts, so request a single row and
   // read the paginated `count` rather than pulling a page of results.
   const { data: usersData } = useGroupUsersListQuery({

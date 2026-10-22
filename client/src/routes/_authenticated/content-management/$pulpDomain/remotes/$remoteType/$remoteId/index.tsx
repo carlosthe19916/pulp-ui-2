@@ -20,6 +20,7 @@ export const Route = createFileRoute(
     const href = buildRemoteHref(remoteType, remoteId, domain);
     if (!href) throw new Error("Unknown remote plugin type");
     await queryClient.ensureQueryData(remoteDetailQueryOptions({ href }));
+    return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading remote" />,
   errorComponent: DetailRouteError,

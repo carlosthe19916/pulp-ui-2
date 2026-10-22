@@ -43,25 +43,20 @@ Object fields:
     publications, file-content.
   - `tasks.ts` uses **both** (mixed per query).
   - `artifacts.ts` uses neither (no domain).
-- **id vs href** — `*QueryOptions` always get the **already-built href**. Hooks
-  come in two kinds, chosen by what the caller already has:
-  - _entry detail-by-id_ hooks fetch an entity straight from a route param, when
-    no href exists yet — they take an **id** and build the href internally via
-    `build*Href` (`useSuspenseGroupDetailQuery`, `useSuspenseTaskDetailQuery`).
-    This is the only place id→href building lives.
-  - _href-passthrough_ hooks — every other read, **including nested sub-resource
-    lists** whose caller already holds the parent entity — take the resource's /
-    parent's **`pulp_href`** directly and build nothing (groups users+roles, users
-    roles, distributions, remotes, repositories, artifacts, signing-services). The
-    API addresses a nested collection as `{parent_href}child/`, so passing the
-    parent's own `pulp_href` matches the server contract — no `useDefaultDomain()`
-    rebuild, no "resource lives in the default domain" assumption.
-  - **Key factories stay pure** — `detail(href)` just appends the href, no
-    `toProxyHref`. A query and its invalidation match because both derive the href
-    from the **same source** (the entity's own `pulp_href`). The lone exception is
-    an _entry detail-by-id_ query, whose key is built from `buildGroupHref(id)`
-    (proxy form) while its update/delete carry the raw server `pulp_href` — there,
-    and only there, the **invalidation call site** wraps `toProxyHref(variables.href)`.
+- **href only** — every `*QueryOptions` and `use*Query` hook takes an **href**
+  (the resource's, or the parent's for a nested list — read as
+  `${toProxyHref(parentHref)}child/`), never an id. id→href building lives **only
+  in route loaders**: the loader calls `build*Href(…)`, primes the query and
+  returns `{ href }`; the `*DetailRoute.tsx` adapter passes it down
+  (`useSuspenseRepositoryDetailQuery({ href })`, `useSuspenseGroupDetailQuery({
+groupHref })`, …).
+  - **`build*Href` returns the server form** (`pulpHref()` → `{API_ROOT}…`),
+    identical to the API's `pulp_href`. So **key factories stay pure** —
+    `detail(href)` just appends the href — and a rebuilt href and a response href
+    share one cache slot. No `toProxyHref` in keys or at invalidation call sites;
+    `toProxyHref` is only for request URLs.
+  - Sub-resources nest under the parent's `detail(href)` key
+    (`repositoryKeys.versions(href)`, `groupKeys.users(href)`).
 - **`options`** — optional extra React Query config, typed
   `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">` (the two
   fields the module owns), **spread first** so the factory's `queryKey`/`queryFn`
@@ -172,13 +167,11 @@ changed `queries/` files.
 - [ ] Key factories, `use*Mutation` (and their call signatures), and private
       helpers (`build*Href`, `fetchAllPages`) stay **positional** — NOT converted
       to single-object.
-- [ ] `*QueryOptions` receive the **already-built href**. id→href building lives
-      **only** in _entry detail-by-id_ hooks (`useSuspense*DetailQuery`, where no
-      href exists yet); every other read — including nested sub-resource lists — is
-      **href-passthrough** (takes the parent/resource `pulp_href`, no
-      `build*Href`/`useDefaultDomain` rebuild). Key factories stay **pure** (no
-      `toProxyHref`); normalize at the invalidation **call site** only when a key's
-      two sides come from different href sources (the entry-detail case).
+- [ ] Every `*QueryOptions` / `use*Query` takes an **href**, never an id (nested
+      lists take the parent's href). id→href building (`build*Href`, server form via
+      `pulpHref`) happens **only in route loaders**, which return `{ href }`. Key
+      factories stay **pure**; no `toProxyHref` in keys or invalidation call sites.
+      Sub-resource keys nest under the parent's `detail(href)`.
 - [ ] `domain` is passed explicitly to `*QueryOptions`; the **hook** injects it via
       `useDefaultDomain()` / `useSelectedDomain()` — callers never pass `domain`.
 - [ ] `options` is typed `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">`

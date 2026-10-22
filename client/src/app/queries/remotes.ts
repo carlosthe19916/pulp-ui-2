@@ -20,7 +20,7 @@ import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RemotesQueryKey = "remotes";
@@ -111,9 +111,8 @@ export const useRemoteDeleteMutation = (
 };
 
 /**
- * Detail-by-href for a remote, used to pre-fill the edit wizard and to resolve a
- * selected remote's label in resource pickers; keyed like the list detail slot,
- * with the `!!href` guard living in the hook.
+ * Detail-by-href for a remote (detail page, edit wizard, picker labels); the
+ * `!!href` guard lives in the hook.
  */
 export const remoteDetailQueryOptions = ({
   href,
@@ -148,23 +147,11 @@ export const buildRemoteHref = (
   domain: IPulpDomain,
 ): string | null => {
   const apiPath = remoteApiPath(pulpType);
-  return apiPath ? pulpApiPath(`remotes/${apiPath}/${id}/`, domain) : null;
+  return apiPath ? pulpHref(`remotes/${apiPath}/${id}/`, domain) : null;
 };
 
-export const useSuspenseRemoteDetailQuery = ({
-  pulpType,
-  id,
-}: {
-  pulpType: string;
-  id: string;
-}) => {
-  const domain = useSelectedDomain();
-  return useSuspenseQuery(
-    remoteDetailQueryOptions({
-      href: buildRemoteHref(pulpType, id, domain),
-    }),
-  );
-};
+export const useSuspenseRemoteDetailQuery = ({ href }: { href: string }) =>
+  useSuspenseQuery(remoteDetailQueryOptions({ href }));
 
 /**
  * Creates a remote of the given plugin type: POSTs to the typed collection

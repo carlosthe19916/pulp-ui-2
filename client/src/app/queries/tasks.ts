@@ -18,7 +18,6 @@ import type {
 } from "@app/client";
 import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { buildTaskHref } from "@app/utils/taskHref";
 import { getTaskErrorMessage } from "@app/utils/utils";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -293,14 +292,16 @@ export const useTasksByPrnListQuery = ({
   });
 };
 
-export const useSuspenseTaskDetailQuery = ({ taskId }: { taskId: string }) => {
-  const domain = useSelectedDomain();
-  return useSuspenseQuery({
-    ...taskDetailQueryOptions({ taskHref: buildTaskHref(taskId, domain) }),
+export const useSuspenseTaskDetailQuery = ({
+  taskHref,
+}: {
+  taskHref: string;
+}) =>
+  useSuspenseQuery({
+    ...taskDetailQueryOptions({ taskHref }),
     refetchInterval: (query) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
-};
 
 export const useTaskCancelMutation = (
   options?: IMutationCallbacks<TaskResponse, string>,

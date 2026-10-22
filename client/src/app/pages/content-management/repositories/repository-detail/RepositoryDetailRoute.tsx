@@ -8,11 +8,13 @@ const routeApi = getRouteApi(
 
 export const RepositoryDetailRoute = () => {
   const { pulpDomain, repositoryType, repositoryId } = routeApi.useParams();
+  const { href } = routeApi.useLoaderData();
   return (
     <RepositoryDetail
       pulpDomain={pulpDomain}
       pulpType={repositoryType}
       id={repositoryId}
+      href={href}
     />
   );
 };

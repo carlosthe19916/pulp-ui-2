@@ -4,7 +4,7 @@ import { DetailRouteError } from "@app/components/DetailRouteError";
 import { DetailRoutePending } from "@app/components/DetailRoutePending";
 import { RepositoryVersionDetailRoute } from "@app/pages/content-management/repositories/repository-version-detail/RepositoryVersionDetailRoute";
 import {
-  buildRepositoryVersionHref,
+  buildRepositoryHref,
   repositoryVersionDetailQueryOptions,
 } from "@app/queries/repositories";
 import { ensureDomainFromParam } from "@app/queries/utils/loaderDomain";
@@ -17,16 +17,17 @@ export const Route = createFileRoute(
     params: { pulpDomain, repositoryType, repositoryId, versionNumber },
   }) => {
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
-    const versionHref = buildRepositoryVersionHref(
+    const repositoryHref = buildRepositoryHref(
       repositoryType,
       repositoryId,
-      versionNumber,
       domain,
     );
-    if (!versionHref) throw new Error("Unknown repository plugin type");
+    if (!repositoryHref) throw new Error("Unknown repository plugin type");
+    const versionHref = `${repositoryHref}versions/${versionNumber}/`;
     await queryClient.ensureQueryData(
       repositoryVersionDetailQueryOptions({ versionHref }),
     );
+    return { repositoryHref, versionHref };
   },
   pendingComponent: () => (
     <DetailRoutePending label="Loading repository version" />

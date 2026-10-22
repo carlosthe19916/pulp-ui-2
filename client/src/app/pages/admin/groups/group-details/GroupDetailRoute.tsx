@@ -6,5 +6,6 @@ const routeApi = getRouteApi("/_authenticated/admin/groups/$groupId");
 
 export const GroupDetailRoute = () => {
   const { groupId } = routeApi.useParams();
-  return <GroupDetail groupId={groupId} />;
+  const { href } = routeApi.useLoaderData();
+  return <GroupDetail groupId={groupId} groupHref={href} />;
 };

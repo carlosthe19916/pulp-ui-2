@@ -8,11 +8,13 @@ const routeApi = getRouteApi(
 
 export const ContentDetailRoute = () => {
   const { pulpDomain, contentType, contentId } = routeApi.useParams();
+  const { href } = routeApi.useLoaderData();
   return (
     <ContentDetail
       pulpDomain={pulpDomain}
       pulpType={contentType}
       id={contentId}
+      href={href}
     />
   );
 };

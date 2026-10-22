@@ -10,9 +10,11 @@ import { buildGroupHref } from "@app/queries/utils/pulpHref";
 export const Route = createFileRoute("/_authenticated/admin/groups/$groupId")({
   loader: async ({ context: { queryClient }, params: { groupId } }) => {
     const domain = await ensureDefaultDomain(queryClient);
+    const href = buildGroupHref(groupId, domain);
     await queryClient.ensureQueryData(
-      groupDetailQueryOptions({ groupHref: buildGroupHref(groupId, domain) }),
+      groupDetailQueryOptions({ groupHref: href }),
     );
+    return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading group" />,
   errorComponent: DetailRouteError,
