@@ -25,13 +25,15 @@ import { getPlugin } from "@catalog";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import type { WithId } from "@app/models/models";
 import { useRemotesListQuery } from "@app/queries/remotes";
 import {
   useRepositorySyncMutation,
   type RepositorySyncBody,
 } from "@app/queries/repositories";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -45,19 +47,19 @@ type SyncFormValues = yup.InferType<typeof syncSchema>;
 interface ISyncModalProps {
   isOpen: boolean;
   onClose: () => void;
-  repo: WithId<RepositoryResponse>;
+  repository: RepositoryResponse;
 }
 
 export const SyncModal: React.FC<ISyncModalProps> = ({
   isOpen,
   onClose,
-  repo,
+  repository,
 }) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const syncMutation = useRepositorySyncMutation();
 
-  const repoPulpType = resolvePulpType(repo.object.pulp_href);
+  const repoPulpType = resolvePulpType(repository.pulp_href);
 
   const repoPlugin = repoPulpType
     ? getPlugin(repoPulpType)?.entities.repository
@@ -105,7 +107,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
   } = useForm<SyncFormValues>({
     resolver: yupResolver(syncSchema),
     defaultValues: {
-      remote: repo.object.remote ?? "",
+      remote: repository.remote ?? "",
       mirror: false,
     },
   });
@@ -129,7 +131,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
     try {
       const result = await syncMutation.mutateAsync({
         apiPath,
-        id: repo.id,
+        id: extractIdFromHref(repository.pulp_href ?? ""),
         body,
       });
       const taskHref = result?.task;
@@ -163,7 +165,7 @@ export const SyncModal: React.FC<ISyncModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} variant="small">
-      <ModalHeader title={`Sync repository "${repo.object.name}"`} />
+      <ModalHeader title={`Sync repository "${repository.name}"`} />
       <ModalBody>
         <Form
           id="sync-form"

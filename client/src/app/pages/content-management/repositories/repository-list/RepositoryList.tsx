@@ -45,7 +45,6 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
-import { withId } from "@app/models/models";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
   repositoryKeys,
@@ -53,10 +52,7 @@ import {
   useRepositoryDeleteMutation,
 } from "@app/queries/repositories";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPlugin } from "@catalog";
@@ -376,10 +372,7 @@ export const RepositoryList: React.FC = () => {
           <SyncModal
             isOpen
             onClose={() => setSyncTarget(null)}
-            repo={withId(
-              extractIdFromHref(syncTarget.pulp_href ?? ""),
-              syncTarget,
-            )}
+            repository={syncTarget}
           />
         )}
 

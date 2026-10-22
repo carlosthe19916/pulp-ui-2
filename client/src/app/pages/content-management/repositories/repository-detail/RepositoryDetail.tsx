@@ -24,7 +24,6 @@ import { PublishModal } from "@app/components/PublishModal";
 import { SyncModal } from "@app/components/SyncModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
-import { withId } from "@app/models/models";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -240,7 +239,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         <SyncModal
           isOpen
           onClose={() => setIsSyncOpen(false)}
-          repo={withId(id, repository)}
+          repository={repository}
         />
       )}
 
