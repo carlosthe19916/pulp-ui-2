@@ -1,0 +1,108 @@
+/*
+ * Tailwind without preflight so it doesn't reset Infima's docs typography.
+ * Palette and fonts follow PatternFly 6 global tokens (patternfly.org).
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@source "../";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-display: "Red Hat Display", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Red Hat Text", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Red Hat Mono", "Liberation Mono", Consolas, monospace;
+
+  --color-brand-10: #e0f0ff;
+  --color-brand-20: #b9dafc;
+  --color-brand-30: #92c5f9;
+  --color-brand-40: #4394e5;
+  --color-brand-50: #0066cc;
+  --color-brand-60: #004d99;
+  --color-brand-70: #003366;
+
+  --color-gray-10: #f2f2f2;
+  --color-gray-20: #e0e0e0;
+  --color-gray-30: #c7c7c7;
+  --color-gray-40: #a3a3a3;
+  --color-gray-50: #707070;
+  --color-gray-60: #4d4d4d;
+  --color-gray-70: #383838;
+  --color-gray-80: #292929;
+  --color-gray-90: #1f1f1f;
+  --color-gray-95: #151515;
+
+  --color-purple-50: #5e40be;
+  --color-purple-30: #b6a6e9;
+  --color-teal-50: #37a3a3;
+  --color-teal-30: #9ad8d8;
+  --color-green-50: #3d7317;
+  --color-green-30: #afdc8f;
+}
+
+:root {
+  --ifm-color-primary: #0066cc;
+  --ifm-color-primary-dark: #005cb8;
+  --ifm-color-primary-darker: #0057ad;
+  --ifm-color-primary-darkest: #004d99;
+  --ifm-color-primary-light: #0070e0;
+  --ifm-color-primary-lighter: #0075eb;
+  --ifm-color-primary-lightest: #1a85f0;
+
+  --ifm-font-family-base: var(--font-sans);
+  --ifm-heading-font-family: var(--font-display);
+  --ifm-font-family-monospace: var(--font-mono);
+  --ifm-heading-font-weight: 500;
+  --ifm-font-color-base: #151515;
+  --ifm-background-color: #ffffff;
+
+  --ifm-global-radius: 6px;
+  --ifm-button-border-radius: 999px;
+  --ifm-code-font-size: 92%;
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-shadow: 0 1px 0 #e0e0e0;
+  --ifm-footer-background-color: #151515;
+  --ifm-footer-link-color: #c7c7c7;
+  --ifm-footer-link-hover-color: #ffffff;
+  --ifm-footer-title-color: #ffffff;
+
+  --docusaurus-highlighted-code-line-bg: rgba(0, 102, 204, 0.1);
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #92c5f9;
+  --ifm-color-primary-dark: #73b5f7;
+  --ifm-color-primary-darker: #63adf7;
+  --ifm-color-primary-darkest: #4394e5;
+  --ifm-color-primary-light: #b1d5fb;
+  --ifm-color-primary-lighter: #b9dafc;
+  --ifm-color-primary-lightest: #e0f0ff;
+
+  --ifm-font-color-base: #e0e0e0;
+  --ifm-background-color: #151515;
+  --ifm-background-surface-color: #1f1f1f;
+  --ifm-navbar-shadow: 0 1px 0 #383838;
+
+  --docusaurus-highlighted-code-line-bg: rgba(146, 197, 249, 0.15);
+}
+
+.navbar__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.navbar__logo {
+  height: 1.75rem;
+}
+
+.footer--dark {
+  --ifm-footer-background-color: #151515;
+  border-top: 1px solid #292929;
+}
+
+.button {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
