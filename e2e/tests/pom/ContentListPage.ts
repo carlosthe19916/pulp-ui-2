@@ -4,7 +4,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
  * Page object for the global Content page. Unlike the CRUD families (which use the shared
  * `DataViewList` table POM), the content list renders as a PatternFly `DataList` so rows can
  * vary by plugin type — it is a `role="list"` of `role="listitem"` rows, not an ARIA grid.
- * Read-only: no create/edit/delete.
+ * No create/edit/delete: content is uploaded or added to repositories.
  */
 export class ContentListPage {
   readonly heading: Locator;

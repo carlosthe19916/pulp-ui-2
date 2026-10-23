@@ -218,6 +218,43 @@ export class PulpApi {
       .filter(Boolean);
   }
 
+  /** The latest version number of a repository (0 for a new one). */
+  async latestVersionNumber(repositoryHref: string): Promise<number> {
+    const res = await this.ctx.get(repositoryHref);
+    const { latest_version_href } = (await res.json()) as {
+      latest_version_href?: string;
+    };
+    return Number(latest_version_href?.match(/versions\/(\d+)\/$/)?.[1] ?? 0);
+  }
+
+  /** Relative paths of the File content in a repository's latest version, sorted. */
+  async latestFilePaths(repositoryHref: string): Promise<string[]> {
+    const number = await this.latestVersionNumber(repositoryHref);
+    const res = await this.ctx.get(this.collectionUrl("content/file/files"), {
+      params: {
+        repository_version: `${repositoryHref}versions/${number}/`,
+        limit: 100,
+      },
+    });
+    const { results = [] } = (await res.json()) as {
+      results?: { relative_path?: string }[];
+    };
+    return results.map((content) => content.relative_path ?? "").sort();
+  }
+
+  /** Total content units in a repository's latest version. */
+  async latestContentCount(repositoryHref: string): Promise<number> {
+    const number = await this.latestVersionNumber(repositoryHref);
+    const res = await this.ctx.get(`${repositoryHref}versions/${number}/`);
+    const { content_summary } = (await res.json()) as {
+      content_summary?: { present?: Record<string, { count: number }> };
+    };
+    return Object.values(content_summary?.present ?? {}).reduce(
+      (total, { count }) => total + count,
+      0,
+    );
+  }
+
   // --- Direct REST creation returning the PRN (task-status fixtures) -------
   // These let a spec stand up exactly the resources it needs without driving the
   // (slow) create wizard, and return the `prn` so a test can assert/mock the

@@ -99,6 +99,8 @@ export const deb: IPluginDefinition = {
         "deb.apt-publication",
         "deb.verbatim-publication",
       ],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // APT remote (deb.apt-remote): release filters and sync toggles.
@@ -155,10 +157,32 @@ export const deb: IPluginDefinition = {
   },
 
   content: [
-    { pulpType: "deb.package", apiPath: "deb/packages" },
+    {
+      pulpType: "deb.package",
+      apiPath: "deb/packages",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          { key: "relative_path", label: "Relative path", type: "text" },
+          { key: "distribution", label: "Distribution", type: "text" },
+          { key: "component", label: "Component", type: "text" },
+        ],
+      },
+    },
     {
       pulpType: "deb.generic",
       apiPath: "deb/generic_contents",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          {
+            key: "relative_path",
+            label: "Relative path",
+            type: "text",
+            required: true,
+          },
+        ],
+      },
     },
     {
       pulpType: "deb.installer_file_index",
@@ -167,6 +191,12 @@ export const deb: IPluginDefinition = {
     {
       pulpType: "deb.installer_package",
       apiPath: "deb/installer_packages",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          { key: "relative_path", label: "Relative path", type: "text" },
+        ],
+      },
     },
     {
       pulpType: "deb.package_index",

@@ -41,6 +41,8 @@ export const npm: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["npm.npm"],
       compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // npm remote: no fields beyond the pulpcore remote base.
@@ -62,5 +64,18 @@ export const npm: IPluginDefinition = {
     },
   },
 
-  content: [{ pulpType: "npm.package", apiPath: "npm/packages" }],
+  content: [
+    {
+      pulpType: "npm.package",
+      apiPath: "npm/packages",
+      uploadable: {
+        mechanism: "upload",
+        fields: [
+          { key: "relative_path", label: "Relative path", type: "text" },
+          { key: "name", label: "Name", type: "text" },
+          { key: "version", label: "Version", type: "text" },
+        ],
+      },
+    },
+  ],
 };

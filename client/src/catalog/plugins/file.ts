@@ -74,6 +74,8 @@ export const file: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["file.file", "file.git"],
       compatiblePublicationTypes: ["file.file"],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // File remote (file.file) + Git remote (file.git) — two variants of the slot.
@@ -137,20 +139,13 @@ export const file: IPluginDefinition = {
       pulpType: "file.file",
       apiPath: "file/files",
       uploadable: {
-        mechanism: "file",
+        mechanism: "upload",
         fields: [
           {
             key: "relative_path",
             label: "Relative Path",
             type: "text",
             required: true,
-          },
-          { key: "file", label: "File", type: "file", required: true },
-          {
-            key: "repository",
-            label: "Repository",
-            type: "asyncResource",
-            resourceKind: "repository",
           },
         ],
       },

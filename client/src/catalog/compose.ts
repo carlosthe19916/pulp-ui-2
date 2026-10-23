@@ -104,6 +104,9 @@ export const buildCatalog = (
             ...resolved,
             compatibleRemoteTypes: [...repo.compatibleRemoteTypes],
             compatiblePublicationTypes: [...repo.compatiblePublicationTypes],
+            contentChanges: repo.contentChanges,
+            archiveImport: repo.archiveImport,
+            contentTypes: (def.content ?? []).map((ct) => ct.pulpType),
           };
           plugin.entities.repository = repoEntity;
         } else {

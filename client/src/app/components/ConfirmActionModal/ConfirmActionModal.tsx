@@ -1,12 +1,19 @@
 import type React from "react";
+import { useId, useState } from "react";
 
 import {
   Button,
   type ButtonProps,
+  Form,
+  FormGroup,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  type ModalHeaderProps,
+  Stack,
+  StackItem,
+  TextInput,
 } from "@patternfly/react-core";
 
 interface IConfirmActionModalProps {
@@ -19,6 +26,10 @@ interface IConfirmActionModalProps {
   cancelLabel?: string;
   /** Confirm button variant — `danger` for destructive actions (default). */
   confirmVariant?: ButtonProps["variant"];
+  /** Icon beside the title, e.g. `warning` for actions that are hard to undo. */
+  titleIconVariant?: ModalHeaderProps["titleIconVariant"];
+  /** Text the user must type to enable the confirm button. */
+  confirmText?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -29,29 +40,77 @@ interface IConfirmActionModalProps {
  */
 export const ConfirmActionModal: React.FC<IConfirmActionModalProps> = ({
   isOpen,
+  onCancel,
+  ...props
+}) => (
+  <Modal isOpen={isOpen} onClose={onCancel} variant="small">
+    <ConfirmActionModalContent onCancel={onCancel} {...props} />
+  </Modal>
+);
+
+/** Mounted only while open, so the typed confirmation resets on every open. */
+const ConfirmActionModalContent: React.FC<
+  Omit<IConfirmActionModalProps, "isOpen">
+> = ({
   title,
   body,
   isConfirming,
   confirmLabel = "Delete",
   cancelLabel = "Cancel",
   confirmVariant = "danger",
+  titleIconVariant,
+  confirmText,
   onConfirm,
   onCancel,
-}) => (
-  <Modal isOpen={isOpen} onClose={onCancel} variant="small">
-    <ModalHeader title={title} />
-    <ModalBody>{body}</ModalBody>
-    <ModalFooter>
-      <Button
-        variant={confirmVariant}
-        onClick={onConfirm}
-        isLoading={isConfirming}
-      >
-        {confirmLabel}
-      </Button>
-      <Button variant="link" onClick={onCancel}>
-        {cancelLabel}
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
+}) => {
+  const inputId = useId();
+  const [typed, setTyped] = useState("");
+  const isConfirmDisabled = !!confirmText && typed !== confirmText;
+
+  return (
+    <>
+      <ModalHeader title={title} titleIconVariant={titleIconVariant} />
+      <ModalBody>
+        {confirmText ? (
+          <Stack hasGutter>
+            <StackItem>{body}</StackItem>
+            <StackItem>
+              <Form onSubmit={(event) => event.preventDefault()}>
+                <FormGroup
+                  label={
+                    <>
+                      Type <strong>{confirmText}</strong> to confirm
+                    </>
+                  }
+                  fieldId={inputId}
+                >
+                  <TextInput
+                    id={inputId}
+                    value={typed}
+                    onChange={(_event, value) => setTyped(value)}
+                    autoComplete="off"
+                  />
+                </FormGroup>
+              </Form>
+            </StackItem>
+          </Stack>
+        ) : (
+          body
+        )}
+      </ModalBody>
+      <ModalFooter>
+        <Button
+          variant={confirmVariant}
+          onClick={onConfirm}
+          isLoading={isConfirming}
+          isDisabled={isConfirmDisabled}
+        >
+          {confirmLabel}
+        </Button>
+        <Button variant="link" onClick={onCancel}>
+          {cancelLabel}
+        </Button>
+      </ModalFooter>
+    </>
+  );
+};

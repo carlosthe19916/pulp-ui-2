@@ -57,6 +57,7 @@ export const FileFiles: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const [prefix, setPrefix] = useState("");
   const list = useBrowseListState({
@@ -107,6 +108,7 @@ export const FileFiles: React.FC<IBrowseContext> = ({
       rowHref={(file) => file.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Path",

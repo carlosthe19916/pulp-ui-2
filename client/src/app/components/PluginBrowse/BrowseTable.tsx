@@ -5,11 +5,21 @@ import { DataViewTable, type DataViewTr } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates, type DataViewTh } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import {
+  type IContentWrites,
+  useContentUnitSelection,
+} from "@app/hooks/useContentUnitSelection";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import { toUnitRefs } from "@app/utils/contentUnitLabel";
 
 import { groupStarts } from "./helpers";
 import { BrowseShell } from "./BrowseShell";
 import type { IBrowseListView } from "./useBrowseListState";
+
+/** A click on a row's checkbox, link or button shouldn't also open the drawer. */
+const isControlClick = (event?: React.SyntheticEvent) =>
+  event?.target instanceof Element &&
+  !!event.target.closest("input, label, a, button");
 
 export interface IBrowseColumn<T> {
   title: string;
@@ -41,6 +51,8 @@ interface IBrowseTableProps<T> {
   header?: React.ReactNode;
   selectedHref?: string;
   onSelect: (href: string) => void;
+  /** Bulk selection + Remove; only rows with a `rowHref` can be selected. */
+  writes?: IContentWrites;
 }
 
 /** A Browse list as a table: sortable columns, clickable rows that open the drawer. */
@@ -60,8 +72,11 @@ export const BrowseTable = <T,>({
   header,
   selectedHref,
   onSelect,
+  writes,
 }: IBrowseTableProps<T>) => {
   const starts = groupBy ? groupStarts({ rows, groupBy }) : [];
+  const selection = useContentUnitSelection();
+  const pageUnits = toUnitRefs({ rows, rowHref });
 
   const thead: DataViewTh[] = columns.map((column) => ({
     cell: column.title,
@@ -90,7 +105,9 @@ export const BrowseTable = <T,>({
         ? {
             isClickable: true,
             isRowSelected: href === selectedHref,
-            onRowClick: () => onSelect(href),
+            onRowClick: (event?: React.SyntheticEvent) => {
+              if (!isControlClick(event)) onSelect(href);
+            },
           }
         : onRowClick
           ? {
@@ -104,6 +121,7 @@ export const BrowseTable = <T,>({
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
+    hasSelectionColumn: !!writes,
     loadingRows: list.pagination.perPage,
     isLoading,
     error,
@@ -123,6 +141,9 @@ export const BrowseTable = <T,>({
       count={count}
       activeState={activeState}
       header={header}
+      writes={writes}
+      selection={selection}
+      pageUnits={pageUnits}
     >
       <DataViewTable
         aria-label={ariaLabel}

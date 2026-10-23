@@ -79,6 +79,8 @@ export const huggingFace: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["hugging_face.hugging-face"],
       compatiblePublicationTypes: ["hugging_face.hugging-face"],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // Hugging Face remote: hub URL and token.

@@ -21,6 +21,7 @@ export const RpmPackages: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -71,6 +72,7 @@ export const RpmPackages: React.FC<IBrowseContext> = ({
       rowHref={(pkg) => pkg.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Package",
@@ -103,6 +105,7 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -141,6 +144,7 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
       rowHref={(advisory) => advisory.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "ID",
@@ -185,6 +189,7 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -223,6 +228,7 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
       rowHref={(module) => module.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Module stream",
@@ -255,6 +261,7 @@ export const RpmPackageGroups: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState();
   const { data, isLoading, error } = useContentTypeListQuery({
@@ -285,6 +292,7 @@ export const RpmPackageGroups: React.FC<IBrowseContext> = ({
       rowHref={(group) => group.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "ID", cell: (g) => g.id },
         { title: "Name", cell: (g) => g.name || "—" },

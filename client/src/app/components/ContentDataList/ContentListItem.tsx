@@ -4,7 +4,9 @@ import {
   ClipboardCopy,
   Content,
   ContentVariants,
+  DataListAction,
   DataListCell,
+  DataListCheck,
   DataListContent,
   DataListItem,
   DataListItemCells,
@@ -20,6 +22,10 @@ import {
   LabelGroup,
 } from "@patternfly/react-core";
 
+import {
+  type PageHeaderAction,
+  PageHeaderActionsMenu,
+} from "@app/components/PageHeaderActionsMenu";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
@@ -78,6 +84,14 @@ interface IContentListItemProps {
   /** Clicking a label sets the label filter to its `key=value` (or `key`) selector. */
   onLabelClick?: (selector: string) => void;
   isSelectable?: boolean;
+  /** Bulk-selection checkbox; absent when the list isn't selectable. */
+  check?: {
+    isChecked: boolean;
+    isDisabled: boolean;
+    onChange: (checked: boolean) => void;
+  };
+  /** Row kebab actions. */
+  actions?: PageHeaderAction[];
 }
 
 /**
@@ -91,6 +105,8 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
   onToggle,
   onLabelClick,
   isSelectable,
+  check,
+  actions,
 }) => {
   const href = unit.pulp_href ?? "";
   const key = rowKey(href);
@@ -110,6 +126,15 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
           aria-controls={contentId}
           onClick={onToggle}
         />
+        {check && (
+          <DataListCheck
+            id={`${key}-check`}
+            aria-labelledby={labelId}
+            isChecked={check.isChecked}
+            isDisabled={check.isDisabled}
+            onChange={(_event, checked) => check.onChange(checked)}
+          />
+        )}
         <DataListItemCells
           dataListCells={[
             <DataListCell key="primary" isFilled>
@@ -188,6 +213,15 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
             </DataListCell>,
           ]}
         />
+        {actions?.length ? (
+          <DataListAction
+            id={`${key}-actions`}
+            aria-labelledby={`${labelId} ${key}-actions`}
+            aria-label="Actions"
+          >
+            <PageHeaderActionsMenu actions={actions} />
+          </DataListAction>
+        ) : null}
       </DataListItemRow>
       <DataListContent
         id={contentId}

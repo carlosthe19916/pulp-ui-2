@@ -47,6 +47,8 @@ export const ostree: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["ostree.ostree"],
       compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: true,
     },
 
     // OSTree remote: sync depth plus ref include/exclude filters.

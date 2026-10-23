@@ -14,7 +14,10 @@ import {
 
 import type { RepositoryResponse } from "@app/client";
 import { RepositoryContent } from "@app/components/RepositoryContent";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
 import { useRepositoryVersionDetailQuery } from "@app/queries/repositories";
+import { summaryTotal } from "@app/utils/contentSummary";
 
 import { RepositoryAbout } from "./RepositoryAbout";
 import { RepositoryUsage } from "./RepositoryUsage";
@@ -24,6 +27,8 @@ interface IRepositoryDetailsTabProps {
   pulpType: string;
   pulpDomain: string;
   onViewDistributions: () => void;
+  /** Content changes on the latest version; absent when the plugin can't change content. */
+  writes?: IContentWrites;
 }
 
 /** A PatternFly expandable card, open by default. */
@@ -58,6 +63,7 @@ export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
   pulpType,
   pulpDomain,
   onViewDistributions,
+  writes,
 }) => {
   const { data: latestVersion } = useRepositoryVersionDetailQuery({
     href: repository.latest_version_href ?? null,
@@ -92,12 +98,21 @@ export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
             <Title headingLevel="h2" size="lg">
               Latest version content
             </Title>
-            <RepositoryContent
-              repositoryHref={repository.pulp_href ?? ""}
-              repositoryType={pulpType}
-              versionHref={latestVersion.pulp_href}
-              summary={latestVersion.content_summary}
-            />
+            {summaryTotal(latestVersion.content_summary?.present) === 0 ? (
+              <TableEmptyState
+                title={`No content in "${repository.name}" yet`}
+              />
+            ) : (
+              <RepositoryContent
+                // A new latest version remounts the lists, clearing their selection.
+                key={latestVersion.pulp_href}
+                repositoryHref={repository.pulp_href ?? ""}
+                repositoryType={pulpType}
+                versionHref={latestVersion.pulp_href}
+                summary={latestVersion.content_summary}
+                writes={writes}
+              />
+            )}
           </Stack>
         </StackItem>
       )}

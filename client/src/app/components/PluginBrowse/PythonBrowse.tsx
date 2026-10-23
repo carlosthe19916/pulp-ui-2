@@ -20,6 +20,7 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     filters: [{ param: "name__contains", label: "Project" }] as const,
@@ -74,6 +75,7 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
       rowHref={(p) => p.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Project", width: 20, cell: (p) => p.name },
         { title: "Version", cell: (p) => p.version },

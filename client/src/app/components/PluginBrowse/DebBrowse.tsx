@@ -33,6 +33,7 @@ export const DebReleases: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     filters: [
@@ -103,6 +104,7 @@ export const DebReleases: React.FC<IBrowseContext> = ({
       rowHref={(release) => release.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Codename", cell: (r) => r.codename },
         { title: "Suite", cell: (r) => r.suite },
@@ -125,6 +127,7 @@ export const DebPackages: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -169,6 +172,7 @@ export const DebPackages: React.FC<IBrowseContext> = ({
       rowHref={(pkg) => pkg.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Package",
@@ -202,6 +206,7 @@ export const DebSourcePackages: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -240,6 +245,7 @@ export const DebSourcePackages: React.FC<IBrowseContext> = ({
       rowHref={(source) => source.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Source",

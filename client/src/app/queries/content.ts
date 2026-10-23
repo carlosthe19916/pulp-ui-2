@@ -1,9 +1,16 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { getContentType } from "@catalog";
+import type { ContentUploadMechanism } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AsyncOperationResponse,
   ContentListData,
   MultipleArtifactContentResponse,
   PaginatedMultipleArtifactContentResponseList,
@@ -16,8 +23,10 @@ import type {
   IContentTypeAllListParams,
   IContentTypeListParams,
 } from "./contentTypes";
+import { waitForTask } from "./tasks";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
+import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -240,4 +249,66 @@ export const buildContentHref = (
 ): string | null => {
   const apiPath = getContentType(pulpType)?.apiPath;
   return apiPath ? pulpHref(`content/${apiPath}/${id}/`, domain) : null;
+};
+
+/**
+ * One content upload: the type's `apiPath` and catalog upload `mechanism`, its
+ * upload fields, and the bytes — the `file` itself, or the href of a chunked `upload`.
+ */
+export interface IContentUploadVariables {
+  apiPath: string;
+  mechanism: ContentUploadMechanism;
+  fields: Record<string, string>;
+  file?: File;
+  upload?: string;
+  onProgress?: (fraction: number) => void;
+}
+
+/**
+ * Creates a content unit from a file and returns its href. `upload` posts to the
+ * synchronous `content/<apiPath>/upload/`; `create` posts to `content/<apiPath>/` and
+ * waits for the task. Not tied to a repository: callers add the hrefs with one
+ * `modify/` so a batch makes one version. Empty fields are not sent.
+ */
+export const useContentUploadMutation = (
+  options?: IMutationCallbacks<string, IContentUploadVariables>,
+) => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation<string, DrfAxiosError, IContentUploadVariables>({
+    mutationFn: async ({
+      apiPath,
+      mechanism,
+      fields,
+      file,
+      upload,
+      onProgress,
+    }: IContentUploadVariables) => {
+      const body = new FormData();
+      for (const [key, value] of Object.entries(fields)) {
+        if (value.trim()) body.append(key, value.trim());
+      }
+      if (file) body.append("file", file);
+      if (upload) body.append("upload", upload);
+      const path =
+        mechanism === "upload" ? `${apiPath}/upload/` : `${apiPath}/`;
+      const { data } = await axiosInstance.post<
+        MultipleArtifactContentResponse | AsyncOperationResponse
+      >(pulpApiPath(`content/${path}`, domain), body, {
+        adapter: "xhr",
+        onUploadProgress: (event) =>
+          onProgress?.(event.total ? event.loaded / event.total : 0),
+      });
+      if ("task" in data) {
+        const task = await waitForTask(data.task);
+        return task.created_resources?.[0] ?? "";
+      }
+      return data.pulp_href ?? "";
+    },
+    onSuccess: (data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: contentKeys.list() });
+      options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
 };

@@ -17,7 +17,12 @@ import {
 
 import type { ContentSummaryResponse } from "@app/client";
 import {
+  ContentBulkSelect,
+  RemoveSelectedButton,
+} from "@app/components/ContentBulkSelect";
+import {
   ContentDataList,
+  contentUnitRef,
   type IContentUnit,
 } from "@app/components/ContentDataList";
 import {
@@ -26,6 +31,10 @@ import {
   type IMultiSelectOption,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import {
+  type IContentWrites,
+  useContentUnitSelection,
+} from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
@@ -97,6 +106,8 @@ interface IVersionContentListProps {
   summary?: ContentSummaryResponse;
   selectedHref?: string;
   onSelect: (href: string) => void;
+  /** Bulk selection + Remove, offered on the "All content" bucket. */
+  writes?: IContentWrites;
 }
 
 /** A repository version's content, split into the `content_summary` buckets. */
@@ -105,8 +116,10 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
   summary,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const [bucket, setBucket] = useState(BUCKETS[0]);
+  const selection = useContentUnitSelection();
   const pagination = useDataViewPagination({ perPage: 10 });
 
   const { filters, onSetFilters, clearAllFilters } =
@@ -133,6 +146,9 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
   const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
   const isFiltered = Boolean(selectedTypes.length || debouncedLabel);
+  // Only the present content can be removed.
+  const bulkWrites = bucket.key === "present" ? writes : undefined;
+  const pageUnits = content.map(contentUnitRef);
 
   const applyFilters = (next: Partial<IVersionContentFilters>) => {
     onSetFilters(next);
@@ -143,6 +159,20 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
     <DataView>
       <DataViewToolbar
         clearAllFilters={clearAllFilters}
+        bulkSelect={
+          bulkWrites ? (
+            <ContentBulkSelect
+              pageUnits={pageUnits}
+              selection={selection}
+              isDisabled={bulkWrites.isLocked}
+            />
+          ) : undefined
+        }
+        actions={
+          bulkWrites ? (
+            <RemoveSelectedButton selection={selection} writes={bulkWrites} />
+          ) : undefined
+        }
         toggleGroup={
           <ToggleGroup aria-label="Version content">
             {BUCKETS.map((b) => (
@@ -152,6 +182,7 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
                 isSelected={bucket.key === b.key}
                 onChange={() => {
                   setBucket(b);
+                  selection.clear();
                   pagination.onSetPage(undefined, 1);
                 }}
               />
@@ -188,6 +219,11 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
         loadingRows={pagination.perPage}
         selectedHref={selectedHref}
         onSelect={onSelect}
+        bulk={
+          bulkWrites
+            ? { selection, isDisabled: bulkWrites.isLocked }
+            : undefined
+        }
         onLabelClick={(selector) =>
           applyFilters({ pulp_label_select: selector })
         }

@@ -15,6 +15,7 @@ export const GemGems: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     filters: [
@@ -46,6 +47,7 @@ export const GemGems: React.FC<IBrowseContext> = ({
       rowHref={(g) => g.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Gem", width: 25, cell: (g) => g.name },
         { title: "Version", cell: (g) => g.version },

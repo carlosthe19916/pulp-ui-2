@@ -41,6 +41,8 @@ export const maven: IPluginDefinition = {
       },
       compatibleRemoteTypes: [],
       compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // Maven remote: no fields beyond the pulpcore remote base.
@@ -66,10 +68,32 @@ export const maven: IPluginDefinition = {
     {
       pulpType: "maven.artifact",
       apiPath: "maven/artifact",
+      uploadable: {
+        mechanism: "upload",
+        fields: [
+          {
+            key: "relative_path",
+            label: "Relative path",
+            type: "text",
+            required: true,
+          },
+        ],
+      },
     },
     {
       pulpType: "maven.metadata",
       apiPath: "maven/metadata",
+      uploadable: {
+        mechanism: "upload",
+        fields: [
+          {
+            key: "relative_path",
+            label: "Relative path",
+            type: "text",
+            required: true,
+          },
+        ],
+      },
     },
     {
       pulpType: "maven.package",

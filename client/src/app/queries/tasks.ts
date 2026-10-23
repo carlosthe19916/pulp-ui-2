@@ -185,12 +185,31 @@ export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
     },
   });
 
+/**
+ * Polls a dispatched task until it ends and returns it; rejects with the task's
+ * failure detail. For a mutation that must hand back what the task created.
+ */
+export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
+  for (;;) {
+    const { data: task } = await axiosInstance.get<TaskResponse>(
+      toProxyHref(taskHref),
+    );
+    if (task.state === "completed") return task;
+    if (isTerminalTaskState(task.state)) {
+      throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+};
+
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {
   state?: string;
   notFound: boolean;
   /** The task's failure detail, when it ended in `failed` (see `getTaskErrorMessage`). */
   errorMessage?: string;
+  /** Hrefs the task created (e.g. a new repository version). */
+  createdResources: readonly string[];
 }
 
 /**
@@ -224,6 +243,7 @@ export const useTaskDetailQueries = ({
           state: result?.data?.state,
           notFound: result?.error?.response?.status === 404,
           errorMessage: getTaskErrorMessage(result?.data),
+          createdResources: result?.data?.created_resources ?? [],
         });
       });
       return byHref;

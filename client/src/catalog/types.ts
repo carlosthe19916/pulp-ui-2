@@ -36,8 +36,12 @@ export type PulpType = string;
 
 // --- Content types (immutable, many-per-plugin; NOT a CRUD entity) ---
 
-/** How a content unit is uploaded. Widen as the upload phase adds mechanisms. */
-export type ContentUploadMechanism = "file";
+/**
+ * How a content unit is uploaded: `upload` posts the file to the synchronous
+ * `<apiPath>/upload/` (201 + the content); `create` posts it to `<apiPath>/`
+ * (202 + a task whose `created_resources` holds the content).
+ */
+export type ContentUploadMechanism = "upload" | "create";
 
 /** Upload capability of an uploadable content type. Absent ⇒ read-only (sync/push only). */
 export interface IContentUpload {
@@ -93,11 +97,15 @@ export interface IPluginEntity {
 /**
  * A repository's resolved contribution additionally carries the pulp_types it can
  * sync from (`compatibleRemoteTypes`, the backend's `REMOTE_TYPES`) and publish to
- * (`compatiblePublicationTypes`). `[]` when it can't sync/publish.
+ * (`compatiblePublicationTypes`). `[]` when it can't sync/publish. `contentTypes`
+ * are the content pulp_types its plugin owns (also for variants).
  */
 export interface IPluginRepositoryEntity extends IPluginEntity {
   compatibleRemoteTypes: PulpType[];
   compatiblePublicationTypes: PulpType[];
+  contentChanges: IRepositoryContribution["contentChanges"];
+  archiveImport: boolean;
+  contentTypes: PulpType[];
 }
 
 /**
@@ -143,6 +151,13 @@ export interface IContributionBase {
 export interface IRepositoryContribution extends IContributionBase {
   compatibleRemoteTypes: PulpType[];
   compatiblePublicationTypes: PulpType[];
+  /**
+   * How content is added/removed: `modify` (one `modify/` call) or `addRemove`
+   * (container's `add/` and `remove/`); `null` when it can't be (container push).
+   */
+  contentChanges: "modify" | "addRemove" | null;
+  /** Imports an uploaded archive into a new version (OSTree `import_all/`). */
+  archiveImport: boolean;
 }
 
 /**

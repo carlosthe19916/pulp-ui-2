@@ -13,6 +13,8 @@ import type { EntityTaskKind } from "@app/hooks/useResourceTasks";
 const TASK_LABEL: Record<EntityTaskKind, string> = {
   delete: "Deleting",
   update: "Updating",
+  sync: "Syncing",
+  modify: "Changing content",
 };
 
 /** Inline spinner + label shown in a row while its entity's single task runs. */

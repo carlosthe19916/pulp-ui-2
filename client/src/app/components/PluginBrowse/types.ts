@@ -1,5 +1,7 @@
 import type React from "react";
 
+import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
+
 /** Where a repository is served, resolved by the shell; empty strings when it isn't. */
 export interface IServedAt {
   /** Content URL, as the "Use this repository" card shows it. */
@@ -17,6 +19,7 @@ export interface IBrowseContext {
   selectedHref?: string;
   /** Opens a content unit in the side drawer. */
   onSelect: (contentHref: string) => void;
+  writes?: IContentWrites;
 }
 
 /** One Browse sub-tab of a plugin, shown only when the version has its content types. */

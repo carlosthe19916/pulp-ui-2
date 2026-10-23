@@ -99,6 +99,34 @@ export const getContentTypes = ({
     !installed || plugin.isAvailable(installed) ? (plugin.content ?? []) : [],
   );
 
+/**
+ * The content types a repository pulp_type can hold (its plugin's, also for variants
+ * like `file.git`), or `[]` for an unmodelled repository type.
+ */
+export const getRepositoryContentTypes = (
+  repositoryType: PulpType,
+): IContentType[] =>
+  (getPlugin(repositoryType)?.entities.repository?.contentTypes ?? []).flatMap(
+    (pulpType) => getContentType(pulpType) ?? [],
+  );
+
+/**
+ * Repository pulp_types that can hold a content pulp_type and change their content
+ * (container push is excluded: it has no add/remove).
+ */
+export const getRepositoryTypesForContent = (
+  contentType: PulpType,
+): PulpType[] =>
+  Object.values(catalog)
+    .filter((plugin) => {
+      const repository = plugin.entities.repository;
+      return (
+        !!repository?.contentChanges &&
+        repository.contentTypes.includes(contentType)
+      );
+    })
+    .map((plugin) => plugin.pulpType);
+
 /** Resolve a content pulp_type from its `<app>/<slug>` collection apiPath. */
 export const resolveContentTypeByApiPath = ({
   apiPath,

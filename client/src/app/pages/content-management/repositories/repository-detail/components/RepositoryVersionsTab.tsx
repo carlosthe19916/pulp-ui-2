@@ -10,13 +10,16 @@ import {
   useDataViewPagination,
   type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
+import type { RepositoryVersionResponse } from "@app/client";
 import {
   dataViewBodyStates,
   ListPagination,
   type DataViewTh,
 } from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import type { VersionAction } from "@app/components/VersionActionModal";
 import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
@@ -27,6 +30,15 @@ interface IRepositoryVersionsTabProps {
   id: string;
   pulpType: string;
   pulpDomain: string;
+  /** Row actions; absent hides the kebab. */
+  onVersionAction?: (request: {
+    action: VersionAction;
+    version: RepositoryVersionResponse;
+  }) => void;
+  latestHref?: string;
+  canRestore?: boolean;
+  /** A task runs on the repository: actions are disabled. */
+  isLocked?: boolean;
 }
 
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
@@ -34,6 +46,10 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   id,
   pulpType,
   pulpDomain,
+  onVersionAction,
+  latestHref,
+  canRestore,
+  isLocked,
 }) => {
   const pagination = useDataViewPagination({ perPage: 10 });
   const { data, isLoading, error } = useRepositoryVersionsListQuery({
@@ -54,7 +70,24 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
     { cell: "Added" },
     { cell: "Removed" },
     { cell: "Created" },
+    ...(onVersionAction
+      ? [{ cell: "", props: { screenReaderText: "Actions" } }]
+      : []),
   ];
+
+  const actionsFor = (version: RepositoryVersionResponse) => {
+    const run = (action: VersionAction) => () =>
+      onVersionAction?.({ action, version });
+    const items = [];
+    if (canRestore && version.pulp_href !== latestHref) {
+      items.push({ title: "Restore as latest", onClick: run("restore") });
+    }
+    items.push({ title: "Repair", onClick: run("repair") });
+    if (version.number !== 0) {
+      items.push({ title: "Delete version", onClick: run("delete") });
+    }
+    return items;
+  };
 
   const rows: DataViewTr[] = versions.map((version) => {
     const number = String(
@@ -95,6 +128,19 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
           cell: formatDateTime(version.pulp_created) ?? "—",
           props: { dataLabel: "Created" },
         },
+        ...(onVersionAction
+          ? [
+              {
+                cell: (
+                  <ActionsColumn
+                    isDisabled={isLocked}
+                    items={actionsFor(version)}
+                  />
+                ),
+                props: { isActionCell: true },
+              },
+            ]
+          : []),
       ],
     };
   });

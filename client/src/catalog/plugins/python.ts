@@ -126,6 +126,8 @@ export const python: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["python.python"],
       compatiblePublicationTypes: ["python.pypi"],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // Python remote: PyPI sync filters.
@@ -169,10 +171,24 @@ export const python: IPluginDefinition = {
     {
       pulpType: "python.python",
       apiPath: "python/packages",
+      uploadable: { mechanism: "upload", fields: [] },
     },
     {
       pulpType: "python.provenance",
       apiPath: "python/provenance",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          {
+            key: "package",
+            label: "Package href",
+            type: "text",
+            required: true,
+            helpText:
+              "The pulp_href of the Python package this provenance is for.",
+          },
+        ],
+      },
     },
     {
       pulpType: "python.python_yank",

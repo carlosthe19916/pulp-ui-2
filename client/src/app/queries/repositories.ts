@@ -17,6 +17,7 @@ import type {
   PaginatedRepositoryVersionResponseList,
   RepositoriesFileFileVersionsListData,
   RepositoriesListData,
+  RepositoryAddRemoveContent,
   RepositoryResponse,
   RepositorySyncUrl,
   RepositoryVersionResponse,
@@ -28,6 +29,11 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  extractIdFromHref,
+  parseRepositoryVersionHref,
+  resolvePulpType,
+} from "./utils/pulpHref";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RepositoriesQueryKey = "repositories";
@@ -179,6 +185,133 @@ export const useRepositorySyncMutation = () => {
       // Surface the new sync task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
     },
+  });
+};
+
+/** The catalog's repository entity for a repository href. */
+const repositoryEntity = (href: string) =>
+  getPlugin(resolvePulpType(href) ?? "")?.entities.repository;
+
+/**
+ * Change a repository's content; every change creates a new version. Container
+ * (`addRemove`) takes either adds or removes per call.
+ */
+export const useRepositoryModifyMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { repository: RepositoryResponse; body: RepositoryAddRemoveContent }
+  >,
+) => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    { repository: RepositoryResponse; body: RepositoryAddRemoveContent }
+  >({
+    mutationFn: async ({
+      repository,
+      body,
+    }: {
+      repository: RepositoryResponse;
+      body: RepositoryAddRemoveContent;
+    }) => {
+      const href = repository.pulp_href ?? "";
+      const entity = repositoryEntity(href);
+      const base = `repositories/${entity?.apiPath}/${extractIdFromHref(href)}`;
+      if (entity?.contentChanges === "addRemove") {
+        const isRemove = !!body.remove_content_units?.length;
+        const response = await axiosInstance.post<AsyncOperationResponse>(
+          pulpApiPath(`${base}/${isRemove ? "remove" : "add"}/`, domain),
+          {
+            content_units: isRemove
+              ? body.remove_content_units
+              : body.add_content_units,
+          },
+        );
+        return response.data;
+      }
+      const response = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath(`${base}/modify/`, domain),
+        body,
+      );
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      // Surface the new task (banner, row status) without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** The repository a version belongs to (server-form href), for invalidation. */
+const parentRepositoryHref = (versionHref: string) =>
+  parseRepositoryVersionHref(versionHref)?.repositoryHref ?? "";
+
+/**
+ * Deletes a repository version, returning the Pulp 202 task. Deleting the latest
+ * makes the previous version the latest.
+ */
+export const useRepositoryVersionDeleteMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    RepositoryVersionResponse
+  >,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    RepositoryVersionResponse
+  >({
+    mutationFn: async (version: RepositoryVersionResponse) =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(version.pulp_href ?? ""),
+        )
+      ).data,
+    onSuccess: (data, version) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(
+          parentRepositoryHref(version.pulp_href ?? ""),
+        ),
+      });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, version);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Repairs a repository version (re-checks and re-downloads its artifacts). */
+export const useRepositoryVersionRepairMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    RepositoryVersionResponse
+  >,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    RepositoryVersionResponse
+  >({
+    mutationFn: async (version: RepositoryVersionResponse) =>
+      (
+        await axiosInstance.post<AsyncOperationResponse>(
+          `${toProxyHref(version.pulp_href ?? "")}repair/`,
+          { verify_checksums: true },
+        )
+      ).data,
+    onSuccess: (data, version) => {
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, version);
+    },
+    onError: options?.onError,
   });
 };
 

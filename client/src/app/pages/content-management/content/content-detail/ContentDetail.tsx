@@ -14,9 +14,15 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { getRepositoryTypesForContent } from "@catalog";
+import type { RepositoryResponse } from "@app/client";
+import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { RemoveContentModal } from "@app/components/RemoveContentModal";
+import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentDetailQuery } from "@app/queries/content";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
@@ -39,6 +45,14 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
   const prn = data?.prn ?? id;
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
+  const canAdd = getRepositoryTypesForContent(pulpType).length > 0;
+  const unit = { href, label: prn, pulpType };
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [removeFrom, setRemoveFrom] = useState<RepositoryResponse | null>(null);
+
+  // One change at a time: actions wait until the running one settles.
+  const contentChange = useContentChangeTask();
+  const isChanging = !!contentChange.task;
 
   return (
     <>
@@ -58,6 +72,20 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
             </BreadcrumbItem>
             <BreadcrumbItem isActive>{prn}</BreadcrumbItem>
           </Breadcrumb>
+        }
+        actionMenu={
+          <PageHeaderActionsMenu
+            actions={[
+              canAdd && {
+                key: "add",
+                dropdownItemProps: {
+                  children: "Add to repository…",
+                  onClick: () => setIsAddOpen(true),
+                  isDisabled: isChanging,
+                },
+              },
+            ]}
+          />
         }
       />
 
@@ -85,11 +113,32 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
             title={<TabTitleText>Repositories</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ContentRepositoriesTab href={href} />
+              <ContentRepositoriesTab
+                href={href}
+                onRemoveFromRepository={setRemoveFrom}
+                isLocked={isChanging}
+              />
             </TabContentBody>
           </Tab>
         </Tabs>
       </PageSection>
+
+      {isAddOpen && (
+        <AddToRepositoryModal
+          units={[unit]}
+          onClose={() => setIsAddOpen(false)}
+          onStarted={contentChange.watch}
+        />
+      )}
+
+      {removeFrom && (
+        <RemoveContentModal
+          repository={removeFrom}
+          units={[unit]}
+          onClose={() => setRemoveFrom(null)}
+          onStarted={contentChange.watch}
+        />
+      )}
     </>
   );
 };

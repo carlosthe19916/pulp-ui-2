@@ -9,6 +9,8 @@ import {
   getContentTypes,
   getPlugin,
   getRemoteEditFields,
+  getRepositoryContentTypes,
+  getRepositoryTypesForContent,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "./index";
@@ -276,6 +278,8 @@ describe("buildCatalog", () => {
             form: { isWizard: false, createFields: [], editFields: [] },
             compatibleRemoteTypes: [],
             compatiblePublicationTypes: [],
+            contentChanges: null,
+            archiveImport: false,
           },
         },
       },
@@ -313,11 +317,72 @@ describe("buildCatalog", () => {
   });
 });
 
+describe("repository content changes", () => {
+  it("carries how each repository's content is changed", () => {
+    expect(getPlugin("file.file")?.entities.repository?.contentChanges).toBe(
+      "modify",
+    );
+    expect(getPlugin("rpm.rpm")?.entities.repository?.contentChanges).toBe(
+      "modify",
+    );
+    // Container sync repositories use add/ and remove/; push repositories have neither.
+    expect(
+      getPlugin("container.container")?.entities.repository?.contentChanges,
+    ).toBe("addRemove");
+    expect(
+      getPlugin("container.container-push")?.entities.repository
+        ?.contentChanges,
+    ).toBeNull();
+  });
+
+  it("getRepositoryContentTypes lists the plugin's content types, also for variants", () => {
+    expect(
+      getRepositoryContentTypes("file.file").map((ct) => ct.pulpType),
+    ).toEqual(["file.file"]);
+    expect(
+      getRepositoryContentTypes("container.container-push").map(
+        (ct) => ct.pulpType,
+      ),
+    ).toContain("container.tag");
+    expect(getRepositoryContentTypes("nope.nope")).toEqual([]);
+  });
+
+  it("getRepositoryTypesForContent lists repositories that can take a content type", () => {
+    expect(getRepositoryTypesForContent("file.file")).toEqual(["file.file"]);
+    // Push repositories can't add content.
+    expect(getRepositoryTypesForContent("container.tag")).toEqual([
+      "container.container",
+    ]);
+    expect(getRepositoryTypesForContent("nope.nope")).toEqual([]);
+  });
+});
+
+describe("uploads", () => {
+  it("declares how each uploadable content type is uploaded", () => {
+    expect(getContentType("file.file")?.uploadable?.mechanism).toBe("upload");
+    expect(getContentType("rpm.package")?.uploadable?.mechanism).toBe("upload");
+    expect(getContentType("gem.gem")?.uploadable?.mechanism).toBe("create");
+    expect(
+      getContentType("maven.artifact")?.uploadable?.fields.map((f) => f.key),
+    ).toEqual(["relative_path"]);
+    // Pushed or synced only: no upload.
+    expect(getContentType("container.tag")?.uploadable).toBeUndefined();
+  });
+
+  it("marks OSTree repositories as importing archives", () => {
+    expect(getPlugin("ostree.ostree")?.entities.repository?.archiveImport).toBe(
+      true,
+    );
+    expect(getPlugin("file.file")?.entities.repository?.archiveImport).toBe(
+      false,
+    );
+  });
+});
+
 describe("content types", () => {
   it("getContentType resolves identity + capabilities", () => {
     expect(getContentType("rpm.package")?.apiPath).toBe("rpm/packages");
-    // file.file is the one type with a populated upload capability.
-    expect(getContentType("file.file")?.uploadable?.mechanism).toBe("file");
+    expect(getContentType("file.file")?.uploadable?.mechanism).toBe("upload");
     // A read-only type has no upload capability.
     expect(getContentType("rpm.packagegroup")?.uploadable).toBeUndefined();
     expect(getContentType("nope.nope")).toBeUndefined();

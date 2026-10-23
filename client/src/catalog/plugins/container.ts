@@ -85,6 +85,8 @@ export const container: IPluginDefinition = {
         },
         compatibleRemoteTypes: ["container.container"],
         compatiblePublicationTypes: [],
+        contentChanges: "addRemove",
+        archiveImport: false,
       },
       {
         rest: {
@@ -104,6 +106,8 @@ export const container: IPluginDefinition = {
         },
         compatibleRemoteTypes: [],
         compatiblePublicationTypes: [],
+        contentChanges: null,
+        archiveImport: false,
       },
     ],
 

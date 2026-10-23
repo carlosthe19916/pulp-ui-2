@@ -118,6 +118,8 @@ export const rpm: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["rpm.rpm", "rpm.uln"],
       compatiblePublicationTypes: ["rpm.rpm"],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // RPM remote (rpm.rpm) + ULN remote (rpm.uln) — two variants of the one slot.
@@ -201,13 +203,17 @@ export const rpm: IPluginDefinition = {
     },
   },
 
-  // RPM content types. Only identity is modelled now; `uploadable` fields are
-  // authored in the upload phase.
+  // RPM content types: packages upload synchronously; an advisory uploads its JSON.
   content: [
-    { pulpType: "rpm.package", apiPath: "rpm/packages" },
+    {
+      pulpType: "rpm.package",
+      apiPath: "rpm/packages",
+      uploadable: { mechanism: "upload", fields: [] },
+    },
     {
       pulpType: "rpm.advisory",
       apiPath: "rpm/advisories",
+      uploadable: { mechanism: "create", fields: [] },
     },
     { pulpType: "rpm.modulemd", apiPath: "rpm/modulemds" },
     {

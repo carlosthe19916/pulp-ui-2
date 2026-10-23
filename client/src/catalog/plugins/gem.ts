@@ -63,6 +63,8 @@ export const gem: IPluginDefinition = {
       },
       compatibleRemoteTypes: ["gem.gem"],
       compatiblePublicationTypes: ["gem.gem"],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // Gem remote: prerelease handling plus include/exclude filters.
@@ -100,5 +102,11 @@ export const gem: IPluginDefinition = {
     },
   },
 
-  content: [{ pulpType: "gem.gem", apiPath: "gem/gem" }],
+  content: [
+    {
+      pulpType: "gem.gem",
+      apiPath: "gem/gem",
+      uploadable: { mechanism: "create", fields: [] },
+    },
+  ],
 };

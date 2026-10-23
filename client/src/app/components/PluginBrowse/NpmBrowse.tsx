@@ -14,6 +14,7 @@ export const NpmPackages: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     filters: [
@@ -44,6 +45,7 @@ export const NpmPackages: React.FC<IBrowseContext> = ({
       rowHref={(p) => p.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Package", width: 30, cell: (p) => p.name },
         { title: "Version", cell: (p) => p.version },

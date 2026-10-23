@@ -10,13 +10,14 @@ import type { Page } from "@playwright/test";
  */
 const TASKS_BY_PRN_POLL = /\/api\/v3\/tasks\/\?.*reserved_resources=/;
 
-type MockTaskKind = "delete" | "update";
+type MockTaskKind = "delete" | "update" | "modify";
 
 // Pulp names its async generic operations `…ageneral_delete` / `…ageneral_update`;
 // the UI derives the row status ("Deleting…"/"Updating…") from these names.
 const TASK_NAME: Record<MockTaskKind, string> = {
   delete: "pulpcore.app.tasks.base.ageneral_delete",
   update: "pulpcore.app.tasks.base.ageneral_update",
+  modify: "pulpcore.app.tasks.repository.add_and_remove",
 };
 
 /**

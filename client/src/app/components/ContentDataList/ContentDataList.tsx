@@ -12,12 +12,15 @@ import {
 } from "@patternfly/react-core";
 import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
 
+import type { PageHeaderAction } from "@app/components/PageHeaderActionsMenu";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
+import type { IContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import { useSelectionState } from "@app/hooks/useSelectionState";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
 import { ContentListItem } from "./ContentListItem";
+import { contentUnitRef } from "./contentUnitRef";
 import type { IContentUnit } from "./types";
 
 /** Stable keys for skeleton rows (max page size is 20), so no array index is used as a key. */
@@ -38,6 +41,10 @@ interface IContentDataListProps {
   /** Makes whole rows clickable instead of linking the PRN. */
   onSelect?: (href: string) => void;
   selectedHref?: string;
+  /** Bulk-selection checkboxes; absent when the list isn't selectable. */
+  bulk?: { selection: IContentUnitSelection; isDisabled: boolean };
+  /** Row kebab actions for a unit. */
+  rowActions?: (unit: IContentUnit) => PageHeaderAction[];
 }
 
 /**
@@ -54,6 +61,8 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
   onLabelClick,
   onSelect,
   selectedHref,
+  bulk,
+  rowActions,
 }) => {
   // Row expansion is a selected-set over the rows' hrefs (same hook used for selection).
   const hrefs = useMemo(
@@ -119,6 +128,18 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
             onToggle={() => expansion.toggleItem(href)}
             onLabelClick={onLabelClick}
             isSelectable={onSelect != null}
+            actions={rowActions?.(unit)}
+            check={
+              bulk && {
+                isChecked: bulk.selection.isSelected(href),
+                isDisabled: bulk.isDisabled,
+                onChange: (checked) =>
+                  bulk.selection.setUnits({
+                    units: [contentUnitRef(unit)],
+                    isSelecting: checked,
+                  }),
+              }
+            }
           />
         );
       })}

@@ -3,15 +3,27 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTasksByPrnQueries } from "@app/queries/tasks";
 
 /** The async (202 + task) operations surfaced per list row. */
-export type EntityTaskKind = "delete" | "update";
+export type EntityTaskKind = "delete" | "update" | "sync" | "modify";
 
-/** Surfaced row op for a Pulp task name (`…ageneral_delete`/`…ageneral_update`), else null. */
-const entityTaskKindFromName = (
+/**
+ * Surfaced row op for a Pulp task name, else null: `…general_delete`/`…general_update`,
+ * any plugin's `…synchronize`, and a content change (`…add_and_remove`, container
+ * `…recursive_add_content`/`…recursive_remove_content`).
+ */
+export const entityTaskKindFromName = (
   name?: string | null,
 ): EntityTaskKind | null => {
   const taskName = name ?? "";
   if (taskName.includes("general_delete")) return "delete";
   if (taskName.includes("general_update")) return "update";
+  if (taskName.includes("synchroniz")) return "sync";
+  if (
+    taskName.includes("add_and_remove") ||
+    taskName.includes("recursive_add") ||
+    taskName.includes("recursive_remove")
+  ) {
+    return "modify";
+  }
   return null;
 };
 

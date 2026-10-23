@@ -13,6 +13,7 @@ export const OstreeBranches: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -48,6 +49,7 @@ export const OstreeBranches: React.FC<IBrowseContext> = ({
       rowHref={(ref) => ref.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Branch",

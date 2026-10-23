@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 
 import { PaginationVariant } from "@patternfly/react-core";
 import {
+  ActionsColumn,
   Caption,
   Table,
   Tbody,
@@ -14,6 +15,8 @@ import {
 } from "@patternfly/react-table";
 import { useDataViewPagination } from "@patternfly/react-data-view";
 
+import { getPlugin } from "@catalog";
+import type { RepositoryResponse } from "@app/client";
 import { dataViewBodyStates, ListPagination } from "@app/components/DataView";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -28,6 +31,10 @@ import { formatDateTime } from "@app/utils/utils";
 
 interface IContentRepositoriesTabProps {
   href: string;
+  /** Asks to remove the content from a repository (the page confirms and runs it). */
+  onRemoveFromRepository: (repository: RepositoryResponse) => void;
+  /** A content change is running: row actions wait for it. */
+  isLocked: boolean;
 }
 
 const COLUMNS = ["Repository", "Type", "Latest version", "Last updated"];
@@ -45,6 +52,8 @@ const locationAnswer = (count: number): string => {
  */
 export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   href,
+  onRemoveFromRepository,
+  isLocked,
 }) => {
   const { name: pulpDomain } = useSelectedDomain();
   const pagination = useDataViewPagination({ perPage: 10 });
@@ -61,7 +70,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   const totalCount = data?.count ?? 0;
 
   const { activeState, bodyStates } = dataViewBodyStates({
-    columnCount: COLUMNS.length,
+    columnCount: COLUMNS.length + 1,
     isLoading,
     error,
     isEmpty: repositories.length === 0,
@@ -88,6 +97,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
             {COLUMNS.map((column) => (
               <Th key={column}>{column}</Th>
             ))}
+            <Th screenReaderText="Actions" />
           </Tr>
         </Thead>
         {activeState ? (
@@ -133,6 +143,20 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                   </Td>
                   <Td dataLabel="Last updated">
                     {formatDateTime(repository.pulp_last_updated) ?? "—"}
+                  </Td>
+                  <Td isActionCell>
+                    {getPlugin(pulpType ?? "")?.entities.repository
+                      ?.contentChanges && (
+                      <ActionsColumn
+                        isDisabled={isLocked}
+                        items={[
+                          {
+                            title: "Remove from this repository",
+                            onClick: () => onRemoveFromRepository(repository),
+                          },
+                        ]}
+                      />
+                    )}
                   </Td>
                 </Tr>
               );

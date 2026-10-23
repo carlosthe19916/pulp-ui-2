@@ -16,6 +16,7 @@ const RepoTypeFiles: React.FC<IBrowseContext & { repoType: RepoTypeEnum }> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -53,6 +54,7 @@ const RepoTypeFiles: React.FC<IBrowseContext & { repoType: RepoTypeEnum }> = ({
       rowHref={(file) => file.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Repository",

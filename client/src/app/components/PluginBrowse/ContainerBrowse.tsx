@@ -42,6 +42,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
   served,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -117,6 +118,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
       rowHref={(tag) => tag.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Tag", sort: list.sortProps("name"), cell: (tag) => tag.name },
         {
@@ -159,6 +161,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -191,6 +194,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
       rowHref={(manifest) => manifest.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Digest",

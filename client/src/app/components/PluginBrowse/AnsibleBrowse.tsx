@@ -27,6 +27,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     filters: [
@@ -83,6 +84,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
       rowHref={(collection) => collection.pulp_href ?? ""}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       renderRow={(collection) => (
         <Flex
           direction={{ default: "column" }}
@@ -150,6 +152,7 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -179,6 +182,7 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
       rowHref={(namespace) => namespace.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         { title: "Name", sort: list.sortProps("name"), cell: (n) => n.name },
         {
@@ -202,6 +206,7 @@ export const AnsibleRoles: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
+  writes,
 }) => {
   const list = useBrowseListState({
     sort: {
@@ -234,6 +239,7 @@ export const AnsibleRoles: React.FC<IBrowseContext> = ({
       rowHref={(role) => role.pulp_href}
       selectedHref={selectedHref}
       onSelect={onSelect}
+      writes={writes}
       columns={[
         {
           title: "Role",

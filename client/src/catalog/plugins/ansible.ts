@@ -62,6 +62,8 @@ export const ansible: IPluginDefinition = {
         "ansible.git",
       ],
       compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: false,
     },
 
     // Three remote types: Collection (primary), Role, and Git.
@@ -112,6 +114,18 @@ export const ansible: IPluginDefinition = {
     {
       pulpType: "ansible.collection_version",
       apiPath: "ansible/collection_versions",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          {
+            key: "expected_namespace",
+            label: "Expected namespace",
+            type: "text",
+          },
+          { key: "expected_name", label: "Expected name", type: "text" },
+          { key: "expected_version", label: "Expected version", type: "text" },
+        ],
+      },
     },
     {
       pulpType: "ansible.collection_deprecation",
@@ -124,6 +138,19 @@ export const ansible: IPluginDefinition = {
     {
       pulpType: "ansible.collection_signature",
       apiPath: "ansible/collection_signatures",
+      uploadable: {
+        mechanism: "create",
+        fields: [
+          {
+            key: "signed_collection",
+            label: "Signed collection href",
+            type: "text",
+            required: true,
+            helpText:
+              "The pulp_href of the collection version this signature signs.",
+          },
+        ],
+      },
     },
     {
       pulpType: "ansible.namespace",

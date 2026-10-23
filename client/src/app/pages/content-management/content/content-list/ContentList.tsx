@@ -1,6 +1,8 @@
 import type React from "react";
+import { useState } from "react";
 
 import {
+  Button,
   Content,
   ContentVariants,
   PageSection,
@@ -16,8 +18,11 @@ import {
 } from "@patternfly/react-data-view";
 
 import { getContentTypes } from "@catalog";
+import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
+import { ContentBulkSelect } from "@app/components/ContentBulkSelect";
 import {
   ContentDataList,
+  contentUnitRef,
   type IContentUnit,
 } from "@app/components/ContentDataList";
 import {
@@ -28,7 +33,13 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { UploadContentModal } from "@app/components/UploadContentModal";
 import { useApiStatus } from "@app/hooks/useApiStatus";
+import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import {
+  type IContentUnitRef,
+  useContentUnitSelection,
+} from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
@@ -57,6 +68,12 @@ interface IContentFilters {
 
 export const ContentList: React.FC = () => {
   const pagination = useDataViewPagination({ perPage: 10 });
+  const selection = useContentUnitSelection();
+  const contentChange = useContentChangeTask();
+  const [addUnits, setAddUnits] = useState<IContentUnitRef[] | null>(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  // One change at a time: actions wait until the running one settles.
+  const isChanging = !!contentChange.task;
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IContentFilters>({ initialFilters: { pulp_type: [] } });
@@ -67,9 +84,9 @@ export const ContentList: React.FC = () => {
   const selectedTypes = filters.pulp_type ?? [];
 
   // Type options are the catalog's content types for installed plugins, grouped by owning app.
-  const typeOptions: IMultiSelectOption[] = getContentTypes({
-    installed: useApiStatus().plugins,
-  }).map((ct) => ({
+  const installedTypes = getContentTypes({ installed: useApiStatus().plugins });
+  const uploadableTypes = installedTypes.filter((ct) => ct.uploadable);
+  const typeOptions: IMultiSelectOption[] = installedTypes.map((ct) => ({
     label: ct.pulpType,
     value: ct.pulpType,
     group: ct.pulpType.split(".")[0],
@@ -135,6 +152,32 @@ export const ContentList: React.FC = () => {
         <DataView>
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
+            bulkSelect={
+              <ContentBulkSelect
+                pageUnits={content.map(contentUnitRef)}
+                selection={selection}
+              />
+            }
+            actions={
+              <>
+                {uploadableTypes.length > 0 && (
+                  <Button
+                    variant="primary"
+                    isDisabled={isChanging}
+                    onClick={() => setIsUploadOpen(true)}
+                  >
+                    Upload content
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  isDisabled={isChanging || selection.selected.length === 0}
+                  onClick={() => setAddUnits(selection.selected)}
+                >
+                  Add to repository
+                </Button>
+              </>
+            }
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
@@ -181,6 +224,17 @@ export const ContentList: React.FC = () => {
             isLoading={isLoading}
             error={error}
             loadingRows={pagination.perPage}
+            bulk={{ selection, isDisabled: false }}
+            rowActions={(unit) => [
+              {
+                key: "add",
+                dropdownItemProps: {
+                  children: "Add to repository…",
+                  onClick: () => setAddUnits([contentUnitRef(unit)]),
+                  isDisabled: isChanging,
+                },
+              },
+            ]}
             onLabelClick={(selector) => {
               onSetFilters({ ...filters, pulp_label_select: selector });
               pagination.onSetPage(undefined, 1);
@@ -205,6 +259,25 @@ export const ContentList: React.FC = () => {
           />
         </DataView>
       </PageSection>
+
+      {isUploadOpen && (
+        <UploadContentModal
+          contentTypes={uploadableTypes}
+          onClose={() => setIsUploadOpen(false)}
+          onStarted={contentChange.watch}
+        />
+      )}
+
+      {addUnits && (
+        <AddToRepositoryModal
+          units={addUnits}
+          onClose={() => setAddUnits(null)}
+          onStarted={(started) => {
+            selection.clear();
+            contentChange.watch(started);
+          }}
+        />
+      )}
     </>
   );
 };
