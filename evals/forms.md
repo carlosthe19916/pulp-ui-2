@@ -1,7 +1,8 @@
 ---
 name: forms
 description: Modal form submission errors shown in-form via FormSubmitError + useSubmitError (not a toast); modal closes on success only.
-globs: client/src/app/**/*Form.tsx, client/src/app/**/use*Form.tsx, client/src/app/**/use*Form.ts, client/src/app/components/PluginForm/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx, client/src/app/components/FormSubmitError.tsx, client/src/app/hooks/useSubmitError.ts
+globs: client/src/app/**/*Form.tsx, client/src/app/**/use*Form.tsx, client/src/app/**/use*Form.ts, client/src/app/**/*Modal.tsx, client/src/app/components/PluginForm/**, client/src/app/components/TaskActionModal/**, client/src/app/components/FormSubmitError.tsx, client/src/app/hooks/useSubmitError.ts
+implements: docs/adr/0008-async-task-feedback.md
 ---
 
 # Modal form submission-error conventions
@@ -72,9 +73,16 @@ return { onSubmit, isSubmitting, submitError };
 In the entity wizard, `FormSubmitError` renders only on the final (submitting)
 step (`EntityWizardBody` passes `isLast ? submitError : null` to `EntityWizardStep`).
 
-### `mutateAsync` modals (Sync / Publish)
+### Field-driven action modals (`TaskActionModal`)
 
-These catch in the component (not a mutation hook). `clearSubmitError()` at submit
+`TaskActionModal` renders the form and takes `submitError` as a prop; the caller
+owns `useSubmitError` and the mutation, exactly as above (`SyncModal`,
+`RepositoryActionModal`: `mutate(vars, { onSuccess: onClose })`).
+
+### `mutateAsync` modals
+
+`PublishModal`, `AddToRepositoryModal`, `OstreeImportModal` (allowed by
+`evals/toastr.md`). These catch in the component (not a mutation hook). `clearSubmitError()` at submit
 start; in `catch (error)` call `setSubmitError(getMutationErrorMessage({ error,
 fallback }))` **and `return`** so the modal does **not** close; convert guard-clause
 failures to `setSubmitError(...)`; clear the error in the close handler. (Why
@@ -91,12 +99,14 @@ Batch/selection modals with partial-success semantics (`AddGroupUserModal`,
 - Entity framework: `useRepositoryForm.ts` + `EntityFormBody.tsx` /
   `EntityWizardStep.tsx`.
 - Admin: `useUserForm.ts` + `UserForm.tsx`.
-- `mutateAsync` modal: `components/SyncModal.tsx`.
+- Action modal: `components/SyncModal.tsx` + `components/TaskActionModal/`.
+- `mutateAsync` modal: `components/PublishModal.tsx`.
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check modal create/update/action forms in changed
-`*Form.tsx`, `use*Form.ts(x)`, `PluginForm/**`, and the Sync/Publish modals.
+`*Form.tsx`, `use*Form.ts(x)`, `*Modal.tsx`, `PluginForm/**` and `TaskActionModal/**`
+(skip the out-of-scope batch and confirmation modals).
 
 - [ ] Modal form submission failures are shown in-form via `FormSubmitError` as the
       **first child of `<Form>`**, fed by `useSubmitError` — **not** a danger toast.

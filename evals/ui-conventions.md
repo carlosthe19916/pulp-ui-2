@@ -1,0 +1,74 @@
+---
+name: ui-conventions
+description: UI behaviour in components/pages — neutral (non-red) actions, empty states without actions, permission-disabled (not hidden) actions with tooltip, server-derived task status and repository write lock.
+globs: client/src/app/pages/**, client/src/app/components/**
+implements: docs/adr/0003-detail-pages-and-expandable-rows.md, docs/adr/0008-async-task-feedback.md, docs/adr/0011-permission-aware-actions.md, docs/adr/0012-visual-conventions.md
+---
+
+# UI conventions (`components/`, `pages/`)
+
+How the code realises the visual, permission and task-feedback ADRs. Read the ADR's
+`## Rules` when a case isn't covered here; the ADR wins.
+
+## Layout
+
+- Tables use `@patternfly/react-data-view` with the `@app/components/DataView` helpers
+  (`UserList` is the reference); paging, sorting and filtering are server-side.
+- Detail pages use tabs; a tab's content component never renders its own `<PageSection>`.
+
+## Colour
+
+- Row actions (`ActionsColumn` items), header kebab items (`dropdownItemProps`) and toolbar
+  buttons never set `isDanger: true` or `variant="danger"`.
+- `ConfirmActionModal` defaults `confirmVariant` to `"danger"`: keep it only for an
+  irreversible delete. Reversible or non-destructive confirmations (content removal, version
+  actions, task cancel, reset) pass `confirmVariant="primary"` — see `RemoveContentModal`,
+  `VersionActionModal`, `TasksTable`.
+- `variant: "danger"` on toasts and inline `Alert`s for errors is fine.
+
+## Empty states
+
+- Use `TableEmptyState` (or the shared DataView body states) for empty lists. It renders no
+  actions except **Clear filters** when the empty result comes from filters.
+- No `EmptyStateFooter` / `EmptyStateActions` with create/upload/sync buttons. The only
+  exception is the route error fallback (`RouteErrorFallback`: retry, go home).
+- Titles say what is empty, naming the object when known ("No content in my-files yet").
+
+## Permissions
+
+- Object actions read `useObjectPermissions({ href })`. Buttons and menu items spread
+  `disabledProps(verb)` (or set `isAriaDisabled` + a tooltip with the same message); they are
+  not conditionally rendered on `can(verb)`.
+- Inline micro-controls (a label's close button) may be omitted when `!can(verb)`.
+- Nothing is disabled while permissions are loading (`can` returns `true` without data) — don't
+  add a separate loading gate.
+
+## Tasks
+
+- A mutation answering `202` raises `notifyTaskStarted({ addNotification, taskHref, title })`
+  from its hook-level `onSuccess` (toast placement rules: `evals/toastr.md`).
+- Row/page task status comes from the server via `useResourceTasks` + `ResourceTaskStatus` /
+  `EntityTaskStatus`, never from local "pending" flags alone.
+- Repository content writes and header actions check `useRepositoryActivity`: while a task
+  runs on the repository they are disabled with its `lockedProps` tooltip.
+- Failure toasts/alerts use "Could not …" or "Failed to …" (via `getMutationErrorMessage`'s
+  `fallback`).
+
+## Checklist
+
+Pass/fail rubric for `/eval`. Check changed files under `pages/` and `components/`.
+
+- [ ] New tables use react-data-view with the DataView helpers and server-side paging,
+      sorting and filtering; tab content renders no `<PageSection>`.
+- [ ] No `isDanger: true` or `variant="danger"` on row actions, menu items or toolbar buttons.
+- [ ] `ConfirmActionModal` keeps the default danger confirm only for irreversible deletes;
+      every other confirmation passes `confirmVariant="primary"`.
+- [ ] Empty states carry no actions (only **Clear filters** for filtered results); no
+      `EmptyStateActions` outside the route error fallback.
+- [ ] Permission-gated buttons and menu items are disabled with a tooltip via
+      `useObjectPermissions` (`disabledProps`), not hidden; only inline micro-controls may be
+      omitted.
+- [ ] `202` mutations raise `notifyTaskStarted` from the hook-level `onSuccess`.
+- [ ] Task status shown on rows/pages is server-derived (`useResourceTasks`).
+- [ ] Repository write actions are disabled while `useRepositoryActivity` reports a running
+      task.

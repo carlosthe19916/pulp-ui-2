@@ -1,7 +1,8 @@
 ---
 name: toastr
 description: Mutation toast placement — raised at the page/feature layer via hook-level onSuccess/onError, hooks own invalidation only, mutate over mutateAsync, no useMutationAction wrapper.
-globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/SyncModal.tsx, client/src/app/components/PublishModal.tsx
+globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/**
+implements: docs/adr/0008-async-task-feedback.md
 ---
 
 # Notification / toast conventions
@@ -140,8 +141,11 @@ Delete/submit dialogs **close on success, stay open on error** — the error toa
 Keep `mutateAsync` + try/catch only when you need the promise to compose a side
 effect:
 
+- **Chained requests**, where one call's result feeds the next — `OstreeImportModal`
+  (artifact upload → `import_all/`), `useUploadQueue` (chunked upload → content
+  create).
 - One-off modals building the **success** message from the resolved result plus
-  local form state — `SyncModal`, `PublishModal`: raise
+  local form state — `PublishModal`, `AddToRepositoryModal`: raise
   `notifyTaskStarted` before `onClose`; a **failure is shown in-form** (`catch` →
   `setSubmitError`, see `evals/forms.md`), not toasted.
 - Detail-page cancel — `TaskDetail` (cancels then **closes the cancel modal**,
@@ -168,8 +172,8 @@ Pass/fail rubric for `/eval`.
       `onSuccess`/`onError` (survives unmount), not call-level.
 - [ ] Dialog close / local-state reset uses the **call-level** callback and closes
       **on success only** — never in `onError`.
-- [ ] Uses `mutate`, not `mutateAsync` — except the documented cases
-      (resolved-result-plus-form-state modals; detail-page cancel), which
+- [ ] Uses `mutate`, not `mutateAsync` — except the documented cases (chained
+      requests; resolved-result-plus-form-state modals; detail-page cancel), which
       raise the toast **before** the close.
 - [ ] Mutation variables carry only what the request needs — no display-only
       fields; delete takes the entity itself, update `{ href, body }`.

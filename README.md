@@ -57,7 +57,7 @@ npm workspaces: `common/` (env + branding), `client/` (React/Vite SPA), `server/
 Stack: React 19, TypeScript, Vite/Vitest, PatternFly 6, TanStack Query/Router/Table, Playwright, OpenAPI via
 `@hey-api/openapi-ts`.
 
-Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Developer docs and architecture decision records: [docs/](docs/README.md).
 
 ## Scripts
 
@@ -68,7 +68,3 @@ Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - `npm run test:e2e` — Playwright (needs Pulp; see CONTRIBUTING)
 - `npm run coverage -w client` — Vitest coverage
 - `npm run generate` — regenerate OpenAPI client
-
-## Accessibility & performance
-
-Deferred a11y/perf work: [docs/A11Y_PERF.md](docs/A11Y_PERF.md).

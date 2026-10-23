@@ -154,7 +154,46 @@ status/shape the app expects); a manual `throw` triggers RQ retry/backoff on a
 non-recoverable condition. There are **zero** `throw`s in any `queries/*.ts`
 queryFn. A non-HTTP "empty/not found" returns a **falsy sentinel** (`"" `/`null`,
 matching the field's `enabled: !!value`) and is handled where the throw belongs —
-the route `loader` (→ `errorComponent`) or the consumer.
+the route `loader` (→ `errorComponent`) or the consumer. Reference:
+`buildContentHref` (`queries/content.ts`) returns `null` for a `pulp_type` with no
+`apiPath`, and the content detail route `loader` throws on it → `DetailRouteError`.
+
+## Content query file layout (plugin axis)
+
+Content families split their query modules along a **plugin axis**. Keep the two
+sides distinct — don't let plugin specifics leak into the neutral base, and don't
+duplicate generic reads in the plugin file.
+
+- **`queries/<family>.ts`** (e.g. `distributions.ts`) is **plugin-neutral**. It
+  owns the cross-type list over the un-typed aggregate collection
+  (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant and the `*Keys`
+  factory (`*Keys.all()` is the family's root key). It also owns per-item
+  actions **and sub-resources that are uniform across plugins** — e.g. repository
+  `sync` (`useRepositorySyncMutation`) and `versions`
+  (`useRepositoryVersionsListQuery`): one hook serves every plugin. Sub-resource
+  **reads** take the parent's href (see "Hrefs, ids and query keys"); **actions**
+  like sync and create rebuild the endpoint client-side from parts
+  (`pulpApiPath(`repositories/${apiPath}/${id}/<action>/`, domain)`, with
+  `apiPath` from the catalog). A sub-resource counts as uniform when its response type is generic and its query
+  params are identical across plugins (the per-plugin generated type differs only
+  in a `path` param, which `ListParams` drops). Per-plugin body/field shape is
+  modelled in the catalog (`form.createFields`, `compatibleRemoteTypes`, …), not by
+  separate hooks. Create takes the catalog `apiPath` and update/delete take the
+  `href`, with a `Record<string, unknown>` body, so one hook serves every plugin.
+- **`queries/<plugin>-<family>.ts`** (none exist yet; content upload will likely be
+  the first) holds **only plugin-specific** queries: sub-resources that genuinely
+  vary by plugin, or a typed list when the aggregate returns a union type. Reuse the
+  base's `*Keys` factory for keys and invalidation so cache slots stay unified.
+- **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
+  `toProxyHref(href)`. It lives in the **base family file** as that family's own
+  `<family>DetailQueryOptions` + `use<Family>DetailQuery` /
+  `useSuspense<Family>DetailQuery` (e.g. `contentDetailQueryOptions` /
+  `useContentDetailQuery` in `queries/content.ts`; `repositoryDetailQueryOptions` /
+  `useSuspenseRepositoryDetailQuery` in `queries/repositories.ts`), keyed on the
+  family's `<name>Keys.detail(href)` so the slot is unified. Generic over the
+  response type — each caller passes the concrete generated type
+  (`useContentDetailQuery<FileFileContentResponse>`), never a union. Do **not** add a
+  `<plugin><Family>DetailQueryOptions` to the plugin file.
 
 ## Checklist
 
@@ -186,3 +225,7 @@ changed `queries/` files.
       `options`. (Caller-preference lists keep `options` on both and forward it.)
 - [ ] No `throw` inside a `queryFn` — errors propagate from the HTTP layer; non-HTTP
       empty results return a falsy sentinel handled in the loader/consumer.
+- [ ] Plugin-neutral reads, uniform sub-resources and generic actions live in
+      `queries/<family>.ts`; `queries/<plugin>-<family>.ts` holds only genuinely
+      plugin-specific queries and reuses the base `*Keys`; typed detail-by-href stays in
+      the base file (`<family>DetailQueryOptions`), generic over the response type.

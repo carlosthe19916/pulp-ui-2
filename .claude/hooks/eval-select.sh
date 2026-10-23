@@ -7,7 +7,7 @@
 # one per line; empty output means no spec applies to the current changes.
 #
 # Shared by the /eval command (to pick which specs to verify) and the Stop hook
-# eval-gate.sh (to decide whether verification is even required). Dropping in a
+# eval-gate.sh (to decide whether verification is required). Dropping in a
 # new evals/*.md with frontmatter is enough — no edits here.
 #
 # Usage: eval-select.sh [cwd]

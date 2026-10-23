@@ -2,14 +2,15 @@
 description: Verify changed code against the convention specs in evals/
 ---
 
-Verify that the code follows this repo's convention specs in `evals/`.
+Verify that the code follows this repo's convention specs in `evals/`, and through
+them the UI design decisions in `docs/adr/`.
 
 ## Scope
 
 Default target: the working-tree changes — `git status --short`, `git diff`, and
 untracked files. `$ARGUMENTS` can narrow or redirect the target:
 
-- a spec name (`queries`, `toastr`, `forms`, `signatures`) → check all relevant files against that spec
+- a spec name (see `grep -H '^name:' evals/*.md`) → check all relevant files against that spec
 - a path or glob → check those files
 - a PR number / branch / commit range → check that diff
 
@@ -36,10 +37,14 @@ Routing is **self-describing**: each `evals/*.md` declares its own `globs` and
   grep -H '^description:' evals/*.md  # what each one covers
   ```
 
-  A spec name (`queries` / `toastr` / `forms` / `signatures`) selects that spec; a
-  path / glob / PR / branch / commit range narrows the target as before.
+  A spec name selects that spec; a path / glob / PR / branch / commit range narrows
+  the target as before.
 
 Each spec ends with a `## Checklist` — use those items as the pass/fail rubric.
+
+A spec whose frontmatter has `implements:` realises those ADRs in code. Also give
+the subagent the `## Rules` of each listed ADR: when a change does something the
+spec's checklist doesn't cover, judge it against those rules (the ADR wins).
 
 ## How to run it
 
@@ -67,6 +72,6 @@ touch .claude/.eval-ran
 ```
 
 This records that the current `client/src/` changes were verified. The Stop hook
-(`.claude/hooks/eval-gate.sh`) reads this marker and will keep blocking the turn
-from ending until it is newer than the latest change, so this step is what lets
-the session finish.
+(`.claude/hooks/eval-gate.sh`) blocks a session that edited `client/src/` (recorded by
+`.claude/hooks/eval-track.sh`) from ending until this marker is newer than its last
+edit, so this step is what lets the session finish.

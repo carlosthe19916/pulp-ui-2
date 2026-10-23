@@ -38,27 +38,12 @@ pulp-ui-2/
   client/          # React SPA (Vite + PatternFly 6 + TanStack Router/Query/Table)
   server/          # Express proxy server
   e2e/             # Playwright E2E tests
-  docs/            # Contributor notes (a11y/perf tracking, …)
+  docs/            # Developer docs and architecture decision records
 ```
 
-## Adding a plugin descriptor
+## Adding a plugin
 
-Descriptors let the UI render new Pulp plugin types without new routes or pages. To add support for a new plugin (e.g., `rpm`):
-
-1. Create descriptor files under `client/src/app/descriptors/rpm/`:
-   - One file per resource kind: `rpm-repository.ts`, `rpm-remote.ts`, etc.
-   - Each exports a `ResourceDescriptor` with `pulpType`, `kind`, `label`, field definitions, and `isAvailable` check.
-
-2. Register them in `client/src/app/descriptors/index.ts`:
-
-   ```ts
-   import { rpmRepositoryDescriptor } from "./rpm/rpm-repository";
-   registerDescriptor(rpmRepositoryDescriptor);
-   ```
-
-3. Create typed query hooks under `client/src/app/queries/rpm-*.ts` for CRUD mutations.
-
-The generic list/detail shells will automatically pick up the new descriptors.
+See [docs/development/adding-a-plugin.md](docs/development/adding-a-plugin.md).
 
 ## Running tests
 
@@ -110,6 +95,5 @@ docs: update contributing guide
 
 ## Architecture
 
-- Living overview: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Full ADR / roadmap: [plan.md](plan.md)
-- A11y / perf backlog: [docs/A11Y_PERF.md](docs/A11Y_PERF.md)
+- Developer docs: [docs/development/](docs/development/)
+- Design decisions: [docs/adr/](docs/adr/)
