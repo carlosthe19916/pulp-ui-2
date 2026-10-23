@@ -1,2 +1,0 @@
-- the Forms should render the errors inside the form itself with an error at the top of the form
-- review how addNotification is being used in hooks, we should promote compositions and having it inside some hooks is not composition
