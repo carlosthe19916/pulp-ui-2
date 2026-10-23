@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { contentKeys } from "./content";
+import { distributionKeys } from "./distributions";
 import { domainKeys } from "./domains";
 import { groupKeys } from "./groups";
+import { publicationKeys } from "./publications";
+import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
 import { taskKeys } from "./tasks";
@@ -10,7 +13,7 @@ import { userKeys } from "./users";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 const domain: IPulpDomain = { enabled: false, name: "default" };
-const href = "/api/pulp/api/v3/groups/1/";
+const href = "/pulp/api/v3/groups/1/";
 
 /** True when `key` begins with every segment of `prefix` (TanStack prefix match). */
 const startsWith = (key: readonly unknown[], prefix: readonly unknown[]) =>
@@ -157,6 +160,84 @@ describe("query-key factories", () => {
         startsWith(
           repositoryKeys.subResourceQuery(repoHref, "packages/", {}),
           repositoryKeys.detail(repoHref),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe("remoteKeys", () => {
+    const remoteHref = "/pulp/api/v3/remotes/file/file/abc/";
+
+    it("keeps the list query under the list folder", () => {
+      expect(
+        startsWith(
+          remoteKeys.listQuery(domain, { limit: 10 }),
+          remoteKeys.list(),
+        ),
+      ).toBe(true);
+    });
+
+    it("keeps the detail query under the detail folder", () => {
+      expect(
+        startsWith(
+          remoteKeys.detailQuery(remoteHref),
+          remoteKeys.detail(remoteHref),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe("distributionKeys", () => {
+    const distHref = "/pulp/api/v3/distributions/file/file/abc/";
+
+    it("keeps typed and untyped list queries under the list folder", () => {
+      expect(
+        startsWith(
+          distributionKeys.listQuery(domain, { limit: 10 }),
+          distributionKeys.list(),
+        ),
+      ).toBe(true);
+      expect(
+        startsWith(
+          distributionKeys.listQuery(domain, { limit: 10 }, "file/file"),
+          distributionKeys.list(),
+        ),
+      ).toBe(true);
+    });
+
+    it("keeps the detail query under the detail folder", () => {
+      expect(
+        startsWith(
+          distributionKeys.detailQuery(distHref),
+          distributionKeys.detail(distHref),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe("publicationKeys", () => {
+    const pubHref = "/pulp/api/v3/publications/file/file/abc/";
+
+    it("keeps both list-query variants under the list folder", () => {
+      expect(
+        startsWith(
+          publicationKeys.listQuery(domain, { limit: 10 }),
+          publicationKeys.list(),
+        ),
+      ).toBe(true);
+      expect(
+        startsWith(
+          publicationKeys.allListQuery(domain, {}),
+          publicationKeys.list(),
+        ),
+      ).toBe(true);
+    });
+
+    it("keeps the detail query under the detail folder", () => {
+      expect(
+        startsWith(
+          publicationKeys.detailQuery(pubHref),
+          publicationKeys.detail(pubHref),
         ),
       ).toBe(true);
     });
