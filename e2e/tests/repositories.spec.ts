@@ -23,6 +23,7 @@ test.describe("Repositories", () => {
     for (const type of types) {
       const name = cleanup.repository(uniqueName("repo"));
       await repositoriesPage.create({ type, fields: { Name: name } });
+      await repositoriesPage.filterBy("Name", name);
       await repositoriesPage.expectRowVisible(name);
       await repositoriesPage.delete(name);
       await repositoriesPage.expectRowGone(name);
@@ -40,6 +41,7 @@ test.describe("Repositories", () => {
       type: "file.file",
       fields: { Name: name },
     });
+    await repositoriesPage.filterBy("Name", name);
     await repositoriesPage.expectRowVisible(name);
 
     await repositoriesPage.editField(name, { Description: "updated by e2e" });

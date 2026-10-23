@@ -16,6 +16,7 @@ test.describe("Remotes", () => {
       type: "file.file",
       fields: { Name: name, URL: FILE_URL },
     });
+    await remotesPage.filterBy("Name", name);
     await remotesPage.expectRowVisible(name);
     await expect(remotesPage.row(name)).toContainText(FILE_URL);
 
@@ -83,6 +84,7 @@ test.describe("Remotes", () => {
         "Upstream Name": "library/busybox",
       },
     });
+    await remotesPage.filterBy("Name", name);
     await remotesPage.expectRowVisible(name);
     await expect(remotesPage.row(name)).toContainText("container.container");
 

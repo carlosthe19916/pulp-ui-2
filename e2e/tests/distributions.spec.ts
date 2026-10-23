@@ -16,10 +16,12 @@ test.describe("Distributions", () => {
 
     // Distribution create is async (returns a task); reload to pick up the row.
     await distributionsPage.goto();
+    await distributionsPage.filterBy("Name", name);
     await distributionsPage.expectRowVisible(name);
 
     await distributionsPage.delete(name);
     await distributionsPage.goto();
+    await distributionsPage.filterBy("Name", name);
     await distributionsPage.expectRowGone(name);
   });
 
@@ -36,6 +38,7 @@ test.describe("Distributions", () => {
     });
 
     await distributionsPage.goto();
+    await distributionsPage.filterBy("Name", name);
     await distributionsPage.expectRowVisible(name);
 
     const newPath = `e2e/${name}-edited`;
