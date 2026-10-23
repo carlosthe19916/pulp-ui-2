@@ -9,9 +9,11 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   GroupRole,
+  GroupRoleResponse,
   PaginatedGroupRoleResponseList,
   PaginatedUserRoleResponseList,
   UserRole,
+  UserRoleResponse,
   UsersRolesListData,
 } from "@app/client";
 import { groupKeys } from "./groups";
@@ -98,8 +100,6 @@ export const useRoleAssignmentsListQuery = ({
 interface IRoleAssignmentsBatchCreateArgs {
   kind: "user" | "group";
   href: string;
-  /** Username or group name, for the caller's toast. */
-  name: string;
   roleNames: string[];
 }
 
@@ -137,12 +137,8 @@ interface IRoleAssignmentDeleteArgs {
   kind: "user" | "group";
   /** The user's or group's href, whose roles are invalidated. */
   href: string;
-  /** Username or group name, for the caller's toast. */
-  name: string;
-  /** The assignment's own nested `{href}roles/{id}/` href. */
-  assignmentHref: string;
-  /** For the caller's toast. */
-  roleName: string;
+  /** The assignment row; its `pulp_href` is the nested `{href}roles/{id}/`. */
+  assignment: UserRoleResponse | GroupRoleResponse;
 }
 
 export const useRoleAssignmentDeleteMutation = (
@@ -150,8 +146,8 @@ export const useRoleAssignmentDeleteMutation = (
 ) => {
   const queryClient = useQueryClient();
   return useMutation<void, DrfAxiosError, IRoleAssignmentDeleteArgs>({
-    mutationFn: async ({ assignmentHref }: IRoleAssignmentDeleteArgs) => {
-      await axiosInstance.delete<void>(toProxyHref(assignmentHref));
+    mutationFn: async ({ assignment }: IRoleAssignmentDeleteArgs) => {
+      await axiosInstance.delete<void>(toProxyHref(assignment.pulp_href ?? ""));
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({

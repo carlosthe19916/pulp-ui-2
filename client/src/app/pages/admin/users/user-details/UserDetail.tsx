@@ -46,16 +46,19 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
   });
 
   const deleteMutation = useUserDeleteMutation({
-    onSuccess: (_data, { name }) => {
-      addNotification({ title: `User "${name}" deleted`, variant: "success" });
+    onSuccess: (_data, { username }) => {
+      addNotification({
+        title: `User "${username}" deleted`,
+        variant: "success",
+      });
       // Returned so the hook drops the deleted record once the page has left.
       return navigate({ to: "/admin/users" });
     },
-    onError: (error, { name }) =>
+    onError: (error, { username }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: `Failed to delete user "${name}"`,
+          fallback: `Failed to delete user "${username}"`,
         }),
         variant: "danger",
       }),
@@ -145,7 +148,7 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
           // Success navigates away; on error the dialog stays open for a retry.
-          deleteMutation.mutate({ href: userHref, name: user.username })
+          deleteMutation.mutate(user)
         }
         onCancel={() => setIsDeleteOpen(false)}
       />

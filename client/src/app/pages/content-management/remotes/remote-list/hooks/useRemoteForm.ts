@@ -49,9 +49,9 @@ export const useRemoteForm = ({
       ),
   });
   const updateMutation = useRemoteUpdateMutation({
-    onSuccess: (_data, { name }) =>
+    onSuccess: () =>
       addNotification({
-        title: `Remote "${name}" updated`,
+        title: `Remote "${entity?.name}" updated`,
         variant: "success",
       }),
     onError: (error) =>
@@ -73,7 +73,6 @@ export const useRemoteForm = ({
       updateMutation.mutate(
         {
           href: entity.pulp_href,
-          name: entity.name ?? "",
           body: valuesToPatch(values),
         },
         { onSuccess: () => onClose() },

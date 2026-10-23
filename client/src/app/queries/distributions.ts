@@ -104,33 +104,30 @@ export const useDistributionsListQuery = ({
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
 export const useDistributionDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    { href: string; name: string }
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, DistributionResponse>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string }
+    DistributionResponse
   >({
-    mutationFn: async ({
-      href,
-    }: {
-      href: string;
-      name: string;
-    }): Promise<AsyncOperationResponse> =>
-      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
-        .data,
-    onSuccess: (data, variables) => {
+    mutationFn: async (
+      distribution: DistributionResponse,
+    ): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(distribution.pulp_href ?? ""),
+        )
+      ).data,
+    onSuccess: (data, distribution) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: distributionKeys.detail(variables.href),
+        queryKey: distributionKeys.detail(distribution.pulp_href ?? ""),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-      options?.onSuccess?.(data, variables);
+      options?.onSuccess?.(data, distribution);
     },
     onError: options?.onError,
   });
@@ -178,7 +175,7 @@ export const useDistributionDetailQuery = ({ href }: { href: string | null }) =>
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
     AsyncOperationResponse,
-    { apiPath: string; name: string; body: Record<string, unknown> }
+    { apiPath: string; body: Record<string, unknown> }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -186,14 +183,13 @@ export const useDistributionCreateMutation = (
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { apiPath: string; name: string; body: Record<string, unknown> }
+    { apiPath: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
       apiPath,
       body,
     }: {
       apiPath: string;
-      name: string;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
       (
@@ -214,21 +210,20 @@ export const useDistributionCreateMutation = (
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
     DistributionResponse | AsyncOperationResponse,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     DistributionResponse | AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
       href,
       body,
     }: {
       href: string;
-      name: string;
       body: Record<string, unknown>;
     }): Promise<DistributionResponse | AsyncOperationResponse> =>
       (

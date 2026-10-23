@@ -61,13 +61,16 @@ export const UserList: React.FC = () => {
 
   const { addNotification } = useNotifications();
   const deleteMutation = useUserDeleteMutation({
-    onSuccess: (_data, { name }) =>
-      addNotification({ title: `User "${name}" deleted`, variant: "success" }),
-    onError: (error, { name }) =>
+    onSuccess: (_data, { username }) =>
+      addNotification({
+        title: `User "${username}" deleted`,
+        variant: "success",
+      }),
+    onError: (error, { username }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: `Failed to delete user "${name}"`,
+          fallback: `Failed to delete user "${username}"`,
         }),
         variant: "danger",
       }),
@@ -177,10 +180,7 @@ export const UserList: React.FC = () => {
   const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    deleteMutation.mutate(
-      { href: target.pulp_href, name: target.username ?? "" },
-      { onSuccess: () => setDeleteTarget(null) },
-    );
+    deleteMutation.mutate(target, { onSuccess: () => setDeleteTarget(null) });
   };
 
   return (

@@ -37,20 +37,20 @@ Mutation hooks accept `IMutationCallbacks<TData, TVars>`
 
 ```ts
 export const useRemoteDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    { href: string; name: string }
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, GenericRemoteResponse>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ href }: { href: string; name: string }) =>
-      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
-        .data,
-    onSuccess: (data, variables) => {
+    mutationFn: async (remote: GenericRemoteResponse) =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(remote.pulp_href ?? ""),
+        )
+      ).data,
+    onSuccess: (data, remote) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       /* …other invalidations… */
-      options?.onSuccess?.(data, variables);
+      options?.onSuccess?.(data, remote);
     },
     onError: options?.onError,
   });
@@ -91,22 +91,40 @@ const deleteMutation = useRemoteDeleteMutation({
 const handleDelete = () => {
   if (!target?.pulp_href) return;
   deleteMutation.mutate(
-    { href: target.pulp_href, name: target.name ?? "" },
+    target,
     { onSuccess: () => setDeleteTarget(null) }, // close on success; stay open on error
   );
 };
 ```
 
-## Build the message from `variables` (and `data`)
+## Variables are the request's input — never a UI-only field
 
-Hook-level callbacks are defined at render, before the target is known, so it
-can't be closed over (stale risk) — it flows through mutation **variables**:
+A mutation hook's variables are **exactly what the request needs**, expressed as
+domain values. A hook never declares a field it doesn't use (no `name`/`roleName`
+"for the caller's toast"). The page builds the message from, in order:
 
-- **delete** vars `{ href, name }`; **update** `{ href, name, body }` — the extra
-  `name` is the display label. **Distribution create** also carries `name` (its
-  202 has no entity).
-- **create** callbacks may read the created entity from `data`
-  (`data.name`/`data.username`).
+1. **`data`** — the returned entity (create; sync update of users/groups/roles):
+   `data.name` / `data.username`.
+2. **`variables`** — when the call targets an entity the caller holds, the variable
+   **is that entity** and the hook reads `pulp_href` from it: delete takes the row
+   (`mutate(remote)`), membership remove takes `{ user, group }`, role-assignment
+   delete takes `{ kind, href, assignment }`. Request bodies count too
+   (distribution create / domain update read `body.name`).
+   The entity is typed with the generated `*Response` (`RepositoryResponse`,
+   `GroupResponse`, …): it is the only generated type for an _existing_ resource.
+   The non-Response types (`Repository`, `Group`) are write bodies without
+   `pulp_href`, and distributions/publications/remotes have no plugin-neutral
+   one at all.
+3. **Closure over values fixed for the component's lifetime** — the form hook's
+   `entity` prop (async 202 updates: remotes/repositories/distributions), a tab's
+   or modal's owner (`name` prop in `RoleAssignmentsTab`, `group` in
+   `AddGroupUserModal`).
+
+**Never close over per-call state** (`deleteTarget`, a selected row): while a
+mutation is pending, every re-render replaces its hook-level callbacks with the
+latest render's (`MutationObserver.setOptions`), so a target cleared mid-flight
+would be read as `null`. Per-call identity rides in `variables`.
+
 - **Error** toasts reuse `getMutationErrorMessage({ error, fallback })` spread into a
   `variant: "danger"` toast — **except** modal form submissions, which show the
   error in-form (`evals/forms.md`).
@@ -153,9 +171,10 @@ Pass/fail rubric for `/eval`.
 - [ ] Uses `mutate`, not `mutateAsync` — except the documented cases
       (resolved-result-plus-form-state modals; detail-page cancel), which
       raise the toast **before** the close.
-- [ ] Message is built from mutation **`variables`** (and `data` for create), not a
-      closed-over component value; delete vars `{ href, name }`, update
-      `{ href, name, body }`.
+- [ ] Mutation variables carry only what the request needs — no display-only
+      fields; delete takes the entity itself, update `{ href, body }`.
+- [ ] Message is built from `data`, the `variables` (entity/body), or a value fixed
+      for the component's lifetime — never closed-over per-call state.
 - [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**,
       shown in-form via `FormSubmitError` (see `evals/forms.md`).

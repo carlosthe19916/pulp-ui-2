@@ -66,16 +66,16 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
   >(null);
 
   const deleteMutation = useRoleAssignmentDeleteMutation({
-    onSuccess: (_data, { kind, name, roleName }) =>
+    onSuccess: (_data, { assignment }) =>
       addNotification({
-        title: `Role "${roleName}" removed from ${kind} "${name}"`,
+        title: `Role "${assignment.role}" removed from ${kind} "${name}"`,
         variant: "success",
       }),
-    onError: (error, { roleName }) =>
+    onError: (error, { assignment }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: `Failed to remove role "${roleName}"`,
+          fallback: `Failed to remove role "${assignment.role}"`,
         }),
         variant: "danger",
       }),
@@ -148,13 +148,7 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
   const handleRemove = () => {
     if (!removeTarget?.pulp_href) return;
     deleteMutation.mutate(
-      {
-        kind,
-        href,
-        name,
-        assignmentHref: removeTarget.pulp_href,
-        roleName: removeTarget.role,
-      },
+      { kind, href, assignment: removeTarget },
       { onSuccess: () => setRemoveTarget(null) },
     );
   };

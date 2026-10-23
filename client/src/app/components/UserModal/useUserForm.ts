@@ -107,8 +107,11 @@ export const useUserForm = ({
       ),
   });
   const updateMutation = useUserUpdateMutation({
-    onSuccess: (_data, { name }) =>
-      addNotification({ title: `User "${name}" updated`, variant: "success" }),
+    onSuccess: (data) =>
+      addNotification({
+        title: `User "${data.username}" updated`,
+        variant: "success",
+      }),
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({ error, fallback: "Failed to update user" }),
@@ -131,7 +134,6 @@ export const useUserForm = ({
       updateMutation.mutate(
         {
           href: user.pulp_href,
-          name: user.username ?? "",
           body: valuesToPatchedUser(values),
         },
         { onSuccess: () => onClose() },

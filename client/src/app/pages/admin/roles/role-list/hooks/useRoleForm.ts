@@ -80,8 +80,11 @@ export const useRoleForm = ({
       ),
   });
   const updateMutation = useRoleUpdateMutation({
-    onSuccess: (_data, { name }) =>
-      addNotification({ title: `Role "${name}" updated`, variant: "success" }),
+    onSuccess: (data) =>
+      addNotification({
+        title: `Role "${data.name}" updated`,
+        variant: "success",
+      }),
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({ error, fallback: "Failed to update role" }),
@@ -104,7 +107,6 @@ export const useRoleForm = ({
       updateMutation.mutate(
         {
           href: role.pulp_href,
-          name: role.name ?? "",
           body: valuesToPatchedRole(values),
         },
         { onSuccess: () => onClose() },

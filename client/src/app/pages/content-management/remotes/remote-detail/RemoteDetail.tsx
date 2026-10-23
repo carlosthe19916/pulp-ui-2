@@ -157,10 +157,9 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
         body={`Are you sure you want to delete remote "${remote.name}"? This action cannot be undone.`}
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
-          deleteMutation.mutate(
-            { href, name: remote.name ?? "" },
-            { onSuccess: () => setIsDeleteOpen(false) },
-          )
+          deleteMutation.mutate(remote, {
+            onSuccess: () => setIsDeleteOpen(false),
+          })
         }
         onCancel={() => setIsDeleteOpen(false)}
       />

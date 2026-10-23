@@ -104,7 +104,7 @@ const AddRoleAssignmentModalInner: React.FC<
 
   // Each request settles on its own, so failures arrive in `result`, not onError.
   const batchCreateMutation = useRoleAssignmentsBatchCreateMutation({
-    onSuccess: (result, { kind, name }) =>
+    onSuccess: (result) =>
       notifyBatchResult({
         addNotification,
         result,
@@ -166,7 +166,6 @@ const AddRoleAssignmentModalInner: React.FC<
       {
         kind,
         href,
-        name,
         roleNames: selection.selected.map((row) => row.roleName),
       },
       // Keep the selection for a retry when nothing went through.

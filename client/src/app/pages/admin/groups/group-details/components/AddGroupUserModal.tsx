@@ -84,12 +84,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
 
   // Each request settles on its own, so failures arrive in `result`, not onError.
   const batchAddMutation = useGroupUsersBatchAddMutation({
-    onSuccess: (result, { groupName }) =>
+    onSuccess: (result) =>
       notifyBatchResult({
         addNotification,
         result,
         item: "user",
-        target: `group "${groupName}"`,
+        target: `group "${group.name}"`,
       }),
   });
 
@@ -151,7 +151,6 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
     batchAddMutation.mutate(
       {
         groupHref,
-        groupName: group.name,
         usernames: selection.selected.map((row) => row.username),
       },
       // Keep the selection for a retry when nothing went through.

@@ -9,6 +9,9 @@ import type { PulpAxiosError } from "./openapiErrorTypes";
  * `mutate(vars, { onSuccess })` callbacks, which are dropped on unmount). The
  * hook keeps its own cache invalidation and appends the caller's `onSuccess`.
  *
+ * `TVariables` is only what the request needs; it never carries display-only
+ * fields for the caller's message (delete takes the entity itself).
+ *
  * `error` is typed `PulpAxiosError` (every hook hits an axios/DRF endpoint); it is
  * still assignable to `getMutationErrorMessage`'s `unknown` parameter, so call sites
  * can feed it straight through.

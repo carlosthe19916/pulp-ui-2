@@ -283,10 +283,7 @@ export const RepositoryList: React.FC = () => {
   const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    deleteMutation.mutate(
-      { href: target.pulp_href, name: target.name ?? "" },
-      { onSuccess: () => setDeleteTarget(null) },
-    );
+    deleteMutation.mutate(target, { onSuccess: () => setDeleteTarget(null) });
   };
 
   return (

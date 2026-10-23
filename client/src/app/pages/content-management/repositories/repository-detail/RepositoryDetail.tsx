@@ -257,10 +257,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         body={`Are you sure you want to delete repository "${repository.name}"? This action cannot be undone.`}
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
-          deleteMutation.mutate(
-            { href, name: repository.name ?? "" },
-            { onSuccess: () => setIsDeleteOpen(false) },
-          )
+          deleteMutation.mutate(repository, {
+            onSuccess: () => setIsDeleteOpen(false),
+          })
         }
         onCancel={() => setIsDeleteOpen(false)}
       />

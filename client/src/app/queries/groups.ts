@@ -236,21 +236,20 @@ export const useGroupCreateMutation = (
 export const useGroupUpdateMutation = (
   options?: IMutationCallbacks<
     GroupResponse,
-    { href: string; name: string; body: PatchedGroup }
+    { href: string; body: PatchedGroup }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     GroupResponse,
     DrfAxiosError,
-    { href: string; name: string; body: PatchedGroup }
+    { href: string; body: PatchedGroup }
   >({
     mutationFn: async ({
       href,
       body,
     }: {
       href: string;
-      name: string;
       body: PatchedGroup;
     }) => {
       const response = await axiosInstance.patch<GroupResponse>(
@@ -271,15 +270,17 @@ export const useGroupUpdateMutation = (
 };
 
 export const useGroupDeleteMutation = (
-  options?: IMutationCallbacks<void, { href: string; name: string }>,
+  options?: IMutationCallbacks<void, GroupResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
-    mutationFn: async ({ href }: { href: string; name: string }) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(href));
+  return useMutation<void, DrfAxiosError, GroupResponse>({
+    mutationFn: async (group: GroupResponse) => {
+      const response = await axiosInstance.delete<void>(
+        toProxyHref(group.pulp_href ?? ""),
+      );
       return response.data;
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data, group) => {
       void queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       // User records embed their groups (list column + detail Groups tab).
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
@@ -287,8 +288,10 @@ export const useGroupDeleteMutation = (
       // Drop the deleted record only once the caller's onSuccess (e.g. navigating
       // away from its detail page) settles; while that page is mounted, removing
       // or invalidating it would refetch a 404.
-      await options?.onSuccess?.(data, variables);
-      queryClient.removeQueries({ queryKey: groupKeys.detail(variables.href) });
+      await options?.onSuccess?.(data, group);
+      queryClient.removeQueries({
+        queryKey: groupKeys.detail(group.pulp_href ?? ""),
+      });
     },
     onError: options?.onError,
   });

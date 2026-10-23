@@ -103,36 +103,31 @@ export const useRepositoriesListQuery = ({
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRepositoryDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    { href: string; name: string }
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, RepositoryResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<
-    AsyncOperationResponse,
-    DrfAxiosError,
-    { href: string; name: string }
-  >({
-    mutationFn: async ({
-      href,
-    }: {
-      href: string;
-      name: string;
-    }): Promise<AsyncOperationResponse> =>
-      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
-        .data,
-    onSuccess: (data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-      void queryClient.invalidateQueries({
-        queryKey: repositoryKeys.detail(variables.href),
-      });
-      // Surface the new delete task on the row without waiting for the next poll.
-      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-      options?.onSuccess?.(data, variables);
+  return useMutation<AsyncOperationResponse, DrfAxiosError, RepositoryResponse>(
+    {
+      mutationFn: async (
+        repository: RepositoryResponse,
+      ): Promise<AsyncOperationResponse> =>
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(repository.pulp_href ?? ""),
+          )
+        ).data,
+      onSuccess: (data, repository) => {
+        void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+        void queryClient.invalidateQueries({
+          queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
+        });
+        // Surface the new delete task on the row without waiting for the next poll.
+        void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+        options?.onSuccess?.(data, repository);
+      },
+      onError: options?.onError,
     },
-    onError: options?.onError,
-  });
+  );
 };
 
 /**
@@ -403,21 +398,20 @@ export const useRepositoryCreateMutation = (
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
     RepositoryResponse | AsyncOperationResponse,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     RepositoryResponse | AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
       href,
       body,
     }: {
       href: string;
-      name: string;
       body: Record<string, unknown>;
     }): Promise<RepositoryResponse | AsyncOperationResponse> =>
       (

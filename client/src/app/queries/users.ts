@@ -117,23 +117,16 @@ export const useUserCreateMutation = (
 export const useUserUpdateMutation = (
   options?: IMutationCallbacks<
     UserResponse,
-    { href: string; name: string; body: PatchedUser }
+    { href: string; body: PatchedUser }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     UserResponse,
     DrfAxiosError,
-    { href: string; name: string; body: PatchedUser }
+    { href: string; body: PatchedUser }
   >({
-    mutationFn: async ({
-      href,
-      body,
-    }: {
-      href: string;
-      name: string;
-      body: PatchedUser;
-    }) => {
+    mutationFn: async ({ href, body }: { href: string; body: PatchedUser }) => {
       const response = await axiosInstance.patch<UserResponse>(
         toProxyHref(href),
         body,
@@ -154,23 +147,27 @@ export const useUserUpdateMutation = (
 };
 
 export const useUserDeleteMutation = (
-  options?: IMutationCallbacks<void, { href: string; name: string }>,
+  options?: IMutationCallbacks<void, UserResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
-    mutationFn: async ({ href }: { href: string; name: string }) => {
-      const response = await axiosInstance.delete<void>(toProxyHref(href));
+  return useMutation<void, DrfAxiosError, UserResponse>({
+    mutationFn: async (user: UserResponse) => {
+      const response = await axiosInstance.delete<void>(
+        toProxyHref(user.pulp_href ?? ""),
+      );
       return response.data;
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data, user) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
       // Group member lists may include the deleted user.
       void queryClient.invalidateQueries({ queryKey: groupKeys.details() });
       // Drop the deleted record only once the caller's onSuccess (e.g. navigating
       // away from its detail page) settles; while that page is mounted, removing
       // or invalidating it would refetch a 404.
-      await options?.onSuccess?.(data, variables);
-      queryClient.removeQueries({ queryKey: userKeys.detail(variables.href) });
+      await options?.onSuccess?.(data, user);
+      queryClient.removeQueries({
+        queryKey: userKeys.detail(user.pulp_href ?? ""),
+      });
     },
     onError: options?.onError,
   });

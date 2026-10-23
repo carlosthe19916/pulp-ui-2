@@ -69,8 +69,11 @@ export const useGroupForm = ({
       ),
   });
   const updateMutation = useGroupUpdateMutation({
-    onSuccess: (_data, { name }) =>
-      addNotification({ title: `Group "${name}" updated`, variant: "success" }),
+    onSuccess: (data) =>
+      addNotification({
+        title: `Group "${data.name}" updated`,
+        variant: "success",
+      }),
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({ error, fallback: "Failed to update group" }),
@@ -93,7 +96,6 @@ export const useGroupForm = ({
       updateMutation.mutate(
         {
           href: group.pulp_href,
-          name: group.name ?? "",
           body: valuesToPatchedGroup(values),
         },
         { onSuccess: () => onClose() },

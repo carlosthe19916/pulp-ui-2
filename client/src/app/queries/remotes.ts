@@ -78,33 +78,30 @@ export const useRemotesListQuery = ({
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRemoteDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    { href: string; name: string }
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, GenericRemoteResponse>,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string }
+    GenericRemoteResponse
   >({
-    mutationFn: async ({
-      href,
-    }: {
-      href: string;
-      name: string;
-    }): Promise<AsyncOperationResponse> =>
-      (await axiosInstance.delete<AsyncOperationResponse>(toProxyHref(href)))
-        .data,
-    onSuccess: (data, variables) => {
+    mutationFn: async (
+      remote: GenericRemoteResponse,
+    ): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(remote.pulp_href ?? ""),
+        )
+      ).data,
+    onSuccess: (data, remote) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: remoteKeys.detail(variables.href),
+        queryKey: remoteKeys.detail(remote.pulp_href ?? ""),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-      options?.onSuccess?.(data, variables);
+      options?.onSuccess?.(data, remote);
     },
     onError: options?.onError,
   });
@@ -195,21 +192,20 @@ export const useRemoteCreateMutation = (
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
     GenericRemoteResponse | AsyncOperationResponse,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     GenericRemoteResponse | AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
       href,
       body,
     }: {
       href: string;
-      name: string;
       body: Record<string, unknown>;
     }): Promise<GenericRemoteResponse | AsyncOperationResponse> =>
       (

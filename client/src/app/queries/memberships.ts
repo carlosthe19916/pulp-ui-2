@@ -2,7 +2,12 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
-import type { GroupResponse, GroupUser } from "@app/client";
+import type {
+  GroupResponse,
+  GroupUser,
+  GroupUserResponse,
+  UserResponse,
+} from "@app/client";
 import { groupKeys } from "./groups";
 import { userKeys } from "./users";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -38,8 +43,6 @@ const addMember = ({
 
 interface IGroupUsersBatchAddArgs {
   groupHref: string;
-  /** For the caller's toast. */
-  groupName: string;
   usernames: string[];
 }
 
@@ -90,11 +93,8 @@ export const useUserGroupsBatchAddMutation = (
 };
 
 interface IMembershipRemoveArgs {
-  userHref: string;
-  groupHref: string;
-  /** Both names, for the caller's toast. */
-  username: string;
-  groupName: string;
+  user: UserResponse | GroupUserResponse;
+  group: GroupResponse;
 }
 
 /**
@@ -106,9 +106,9 @@ export const useMembershipRemoveMutation = (
 ) => {
   const queryClient = useQueryClient();
   return useMutation<void, DrfAxiosError, IMembershipRemoveArgs>({
-    mutationFn: async ({ userHref, groupHref }: IMembershipRemoveArgs) => {
+    mutationFn: async ({ user, group }: IMembershipRemoveArgs) => {
       await axiosInstance.delete<void>(
-        `${toProxyHref(groupHref)}users/${extractIdFromHref(userHref)}/`,
+        `${toProxyHref(group.pulp_href ?? "")}users/${extractIdFromHref(user.pulp_href ?? "")}/`,
       );
     },
     onSuccess: (data, variables) => {

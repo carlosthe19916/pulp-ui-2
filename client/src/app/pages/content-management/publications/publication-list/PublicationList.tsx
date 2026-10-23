@@ -66,16 +66,16 @@ export const PublicationList: React.FC = () => {
   const { addNotification } = useNotifications();
   const canCreate = useCreatablePlugins("publication").length > 0;
   const deleteMutation = usePublicationDeleteMutation({
-    onSuccess: (_data, { name }) =>
+    onSuccess: (_data, { pulp_href }) =>
       addNotification({
-        title: `Publication "${name}" deleted`,
+        title: `Publication "${extractIdFromHref(pulp_href ?? "")}" deleted`,
         variant: "success",
       }),
-    onError: (error, { name }) =>
+    onError: (error, { pulp_href }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: `Failed to delete publication "${name}"`,
+          fallback: `Failed to delete publication "${extractIdFromHref(pulp_href ?? "")}"`,
         }),
         variant: "danger",
       }),
@@ -178,13 +178,7 @@ export const PublicationList: React.FC = () => {
   const handleDelete = () => {
     const target = deleteTarget;
     if (!target?.pulp_href) return;
-    deleteMutation.mutate(
-      {
-        href: target.pulp_href,
-        name: extractIdFromHref(target.pulp_href),
-      },
-      { onSuccess: () => setDeleteTarget(null) },
-    );
+    deleteMutation.mutate(target, { onSuccess: () => setDeleteTarget(null) });
   };
 
   return (

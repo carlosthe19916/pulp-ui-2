@@ -98,21 +98,20 @@ export const useDomainCreateMutation = (
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
     DomainResponse | AsyncOperationResponse,
-    { href: string; name: string; body: PatchedDomain }
+    { href: string; body: PatchedDomain }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     DomainResponse | AsyncOperationResponse,
     DrfAxiosError,
-    { href: string; name: string; body: PatchedDomain }
+    { href: string; body: PatchedDomain }
   >({
     mutationFn: async ({
       href,
       body,
     }: {
       href: string;
-      name: string;
       body: PatchedDomain;
     }) => {
       const response = await axiosInstance.patch<
@@ -134,31 +133,24 @@ export const useDomainUpdateMutation = (
 };
 
 export const useDomainDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    { href: string; name: string }
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, DomainResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<
-    AsyncOperationResponse,
-    DrfAxiosError,
-    { href: string; name: string }
-  >({
-    mutationFn: async ({ href }: { href: string; name: string }) => {
+  return useMutation<AsyncOperationResponse, DrfAxiosError, DomainResponse>({
+    mutationFn: async (domain: DomainResponse) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
-        toProxyHref(href),
+        toProxyHref(domain.pulp_href ?? ""),
       );
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, domain) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: domainKeys.detail(variables.href),
+        queryKey: domainKeys.detail(domain.pulp_href ?? ""),
       });
       // Surface the new delete task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-      options?.onSuccess?.(data, variables);
+      options?.onSuccess?.(data, domain);
     },
     onError: options?.onError,
   });

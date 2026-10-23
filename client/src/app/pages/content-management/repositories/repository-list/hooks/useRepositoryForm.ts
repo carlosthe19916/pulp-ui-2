@@ -53,9 +53,9 @@ export const useRepositoryForm = ({
       ),
   });
   const updateMutation = useRepositoryUpdateMutation({
-    onSuccess: (_data, { name }) =>
+    onSuccess: () =>
       addNotification({
-        title: `Repository "${name}" updated`,
+        title: `Repository "${entity?.name}" updated`,
         variant: "success",
       }),
     onError: (error) =>
@@ -80,7 +80,6 @@ export const useRepositoryForm = ({
       updateMutation.mutate(
         {
           href: entity.pulp_href,
-          name: entity.name ?? "",
           body: valuesToPatch(values),
         },
         { onSuccess: () => onClose() },

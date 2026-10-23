@@ -43,7 +43,8 @@ export const useDistributionForm = ({
   const entityPlugin = plugin?.entities.distribution;
 
   const createMutation = useDistributionCreateMutation({
-    onSuccess: (data, { name }) => {
+    onSuccess: (data, { body }) => {
+      const name = String(body.name ?? "");
       notifyTaskStarted({
         addNotification,
         taskHref: data.task,
@@ -60,9 +61,9 @@ export const useDistributionForm = ({
       ),
   });
   const updateMutation = useDistributionUpdateMutation({
-    onSuccess: (_data, { name }) =>
+    onSuccess: () =>
       addNotification({
-        title: `Distribution "${name}" updated`,
+        title: `Distribution "${entity?.name}" updated`,
         variant: "success",
       }),
     onError: (error) =>
@@ -81,14 +82,13 @@ export const useDistributionForm = ({
       if (!entityPlugin) return;
       const body = valuesToCreate(values);
       createMutation.mutate(
-        { apiPath: entityPlugin.apiPath, name: body.name ?? "", body },
+        { apiPath: entityPlugin.apiPath, body },
         { onSuccess: () => onClose() },
       );
     } else if (entity?.pulp_href) {
       updateMutation.mutate(
         {
           href: entity.pulp_href,
-          name: entity.name ?? "",
           body: valuesToPatch(values),
         },
         { onSuccess: () => onClose() },

@@ -260,10 +260,7 @@ export const RemoteList: React.FC = () => {
     if (!target?.pulp_href) return;
     // Toast fires from the hook-level callbacks (survives unmount); close the
     // dialog only on success so it stays open to retry on error.
-    deleteMutation.mutate(
-      { href: target.pulp_href, name: target.name ?? "" },
-      { onSuccess: () => setDeleteTarget(null) },
-    );
+    deleteMutation.mutate(target, { onSuccess: () => setDeleteTarget(null) });
   };
 
   return (

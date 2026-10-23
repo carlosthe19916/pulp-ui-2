@@ -136,18 +136,18 @@ export const useDomainForm = ({
       ),
   });
   const updateMutation = useDomainUpdateMutation({
-    onSuccess: (data, { name }) => {
+    onSuccess: (data, { body }) => {
       // Update may be sync (200) or async (202 + task) — branch on the response.
       const taskHref = (data as { task?: string | null }).task;
       if (taskHref) {
         notifyTaskStarted({
           addNotification,
           taskHref,
-          title: `Domain "${name}" update started`,
+          title: `Domain "${body.name}" update started`,
         });
       } else {
         addNotification({
-          title: `Domain "${name}" updated`,
+          title: `Domain "${body.name}" updated`,
           variant: "success",
         });
       }
@@ -193,7 +193,7 @@ export const useDomainForm = ({
       hide_guarded_distributions: values.hide_guarded_distributions,
     };
     updateMutation.mutate(
-      { href: domain.pulp_href, name: values.name, body },
+      { href: domain.pulp_href, body },
       { onSuccess: () => onClose() },
     );
   });

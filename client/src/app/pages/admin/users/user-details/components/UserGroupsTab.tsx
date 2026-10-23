@@ -57,16 +57,16 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
   const [removeTarget, setRemoveTarget] = useState<GroupResponse | null>(null);
 
   const removeMutation = useMembershipRemoveMutation({
-    onSuccess: (_data, { username, groupName }) =>
+    onSuccess: (_data, { user, group }) =>
       addNotification({
-        title: `User "${username}" removed from group "${groupName}"`,
+        title: `User "${user.username}" removed from group "${group.name}"`,
         variant: "success",
       }),
-    onError: (error, { username, groupName }) =>
+    onError: (error, { user, group }) =>
       addNotification({
         ...getMutationErrorMessage({
           error,
-          fallback: `Failed to remove user "${username}" from group "${groupName}"`,
+          fallback: `Failed to remove user "${user.username}" from group "${group.name}"`,
         }),
         variant: "danger",
       }),
@@ -137,12 +137,7 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
   const handleRemove = () => {
     if (!removeTarget?.pulp_href) return;
     removeMutation.mutate(
-      {
-        userHref,
-        groupHref: removeTarget.pulp_href,
-        username: user.username,
-        groupName: removeTarget.name,
-      },
+      { user, group: removeTarget },
       { onSuccess: () => setRemoveTarget(null) },
     );
   };

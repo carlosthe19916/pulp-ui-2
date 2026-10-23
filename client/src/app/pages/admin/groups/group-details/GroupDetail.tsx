@@ -151,7 +151,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
           // Success navigates away; on error the dialog stays open for a retry.
-          deleteMutation.mutate({ href: groupHref, name: group.name })
+          deleteMutation.mutate(group)
         }
         onCancel={() => setIsDeleteOpen(false)}
       />

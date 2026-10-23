@@ -122,24 +122,19 @@ export const usePublicationsListQuery = ({
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */
 export const usePublicationDeleteMutation = (
-  options?: IMutationCallbacks<void, { href: string; name: string }>,
+  options?: IMutationCallbacks<void, PublicationResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<void, DrfAxiosError, { href: string; name: string }>({
-    mutationFn: async ({
-      href,
-    }: {
-      href: string;
-      name: string;
-    }): Promise<void> => {
-      await axiosInstance.delete(toProxyHref(href));
+  return useMutation<void, DrfAxiosError, PublicationResponse>({
+    mutationFn: async (publication: PublicationResponse): Promise<void> => {
+      await axiosInstance.delete(toProxyHref(publication.pulp_href ?? ""));
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, publication) => {
       void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
       void queryClient.invalidateQueries({
-        queryKey: publicationKeys.detail(variables.href),
+        queryKey: publicationKeys.detail(publication.pulp_href ?? ""),
       });
-      options?.onSuccess?.(data, variables);
+      options?.onSuccess?.(data, publication);
     },
     onError: options?.onError,
   });
