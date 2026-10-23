@@ -50,6 +50,14 @@ const config: Config = {
 
   themeConfig: {
     image: "img/pulp_logo.png",
+    announcementBar: {
+      id: "work_in_progress",
+      content:
+        "⚠️ This website is a work in progress. Its content might not be accurate yet.",
+      backgroundColor: "var(--announcement-bar-background)",
+      textColor: "var(--announcement-bar-color)",
+      isCloseable: false,
+    },
     colorMode: {
       respectPrefersColorScheme: true,
     },

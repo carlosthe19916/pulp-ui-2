@@ -69,6 +69,10 @@
   --ifm-footer-title-color: #ffffff;
 
   --docusaurus-highlighted-code-line-bg: rgba(0, 102, 204, 0.1);
+
+  /* PatternFly 6 warning palette (yellow-10 / yellow-70) */
+  --announcement-bar-background: #fff4cc;
+  --announcement-bar-color: #73480b;
 }
 
 [data-theme="dark"] {
@@ -86,6 +90,9 @@
   --ifm-navbar-shadow: 0 1px 0 #383838;
 
   --docusaurus-highlighted-code-line-bg: rgba(146, 197, 249, 0.15);
+
+  --announcement-bar-background: #73480b;
+  --announcement-bar-color: #fff4cc;
 }
 
 .navbar__title {
