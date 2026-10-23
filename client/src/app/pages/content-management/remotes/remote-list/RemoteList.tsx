@@ -37,6 +37,7 @@ import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { BandersnatchRemoteModal } from "./components/BandersnatchRemoteModal";
 import { RemoteModal } from "./components/RemoteModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -79,7 +80,12 @@ export const RemoteList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] =
     useState<GenericRemoteResponse | null>(null);
 
-  const canCreate = useCreatablePlugins("remote").length > 0;
+  const creatablePlugins = useCreatablePlugins("remote");
+  const canCreate = creatablePlugins.length > 0;
+  const canCreatePython = creatablePlugins.some(
+    (plugin) => plugin.pulpType === "python.python",
+  );
+  const [isBandersnatchOpen, setIsBandersnatchOpen] = useState(false);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
       notifyTaskStarted({
@@ -292,12 +298,22 @@ export const RemoteList: React.FC = () => {
             }
             actions={
               canCreate ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setModalState("create")}
-                >
-                  Create remote
-                </Button>
+                <>
+                  <Button
+                    variant="primary"
+                    onClick={() => setModalState("create")}
+                  >
+                    Create remote
+                  </Button>
+                  {canCreatePython && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setIsBandersnatchOpen(true)}
+                    >
+                      From Bandersnatch config
+                    </Button>
+                  )}
+                </>
               ) : (
                 <Tooltip content="No remote plugin is available. Install a content plugin (e.g. pulp_file) to create remotes.">
                   <Button variant="primary" isAriaDisabled>
@@ -335,6 +351,12 @@ export const RemoteList: React.FC = () => {
             }
           />
         </DataView>
+
+        {isBandersnatchOpen && (
+          <BandersnatchRemoteModal
+            onClose={() => setIsBandersnatchOpen(false)}
+          />
+        )}
 
         <RemoteModal
           isOpen={modalState !== null}

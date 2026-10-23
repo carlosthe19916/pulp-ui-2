@@ -70,6 +70,7 @@ export const AnsibleRoleContent: React.FC<IPluginContentProps> = ({ href }) => {
       header={<ContentHeader title={name} version={data?.version} />}
       aside={
         <StorageFacts
+          href={href}
           artifactHref={data?.artifact}
           created={data?.pulp_created}
           labels={data?.pulp_labels}

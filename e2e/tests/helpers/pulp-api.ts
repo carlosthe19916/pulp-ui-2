@@ -117,6 +117,10 @@ export class PulpApi {
     return this.deleteByExactName("distributions", "name", name);
   }
 
+  deleteContentGuard(name: string): Promise<void> {
+    return this.deleteByExactName("contentguards", "name", name);
+  }
+
   /** Delete any resource by its `pulp_href` (used for records with no name filter). */
   async deleteByHref(href: string): Promise<void> {
     if (href) await this.ctx.delete(href);

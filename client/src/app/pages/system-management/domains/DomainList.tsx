@@ -49,6 +49,8 @@ import type { OrderingField } from "@app/queries/utils/listParams";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
+import { DomainLabelsModal } from "./components/DomainLabelsModal";
+import { DomainMigrateModal } from "./components/DomainMigrateModal";
 import { DomainModal } from "./components/DomainModal";
 import { storageClassLabel } from "./storageBackends";
 
@@ -76,6 +78,11 @@ export const DomainList: React.FC = () => {
   const [modalState, setModalState] = useState<
     "create" | DomainResponse | null
   >(null);
+  // By href, so the modal shows the list's fresh labels after each change.
+  const [labelsHref, setLabelsHref] = useState<string | null>(null);
+  const [migrateTarget, setMigrateTarget] = useState<DomainResponse | null>(
+    null,
+  );
   const domainToEdit =
     modalState === "create" ? undefined : (modalState ?? undefined);
   const [deleteTarget, setDeleteTarget] = useState<DomainResponse | null>(null);
@@ -197,6 +204,16 @@ export const DomainList: React.FC = () => {
                   ...(isDefault ? { tooltipProps: defaultTooltip } : {}),
                 },
                 {
+                  title: "Migrate storage…",
+                  onClick: () => setMigrateTarget(domain),
+                  isAriaDisabled: isDefault,
+                  ...(isDefault ? { tooltipProps: defaultTooltip } : {}),
+                },
+                {
+                  title: "Edit labels",
+                  onClick: () => setLabelsHref(domain.pulp_href ?? null),
+                },
+                {
                   title: "Delete",
                   onClick: () => setDeleteTarget(domain),
                   isAriaDisabled: isDefault,
@@ -230,6 +247,8 @@ export const DomainList: React.FC = () => {
       />
     ),
   });
+
+  const labelsDomain = domains.find((item) => item.pulp_href === labelsHref);
 
   const handleDelete = () => {
     const target = deleteTarget;
@@ -302,6 +321,20 @@ export const DomainList: React.FC = () => {
           domain={domainToEdit}
           onClose={() => setModalState(null)}
         />
+
+        {migrateTarget && (
+          <DomainMigrateModal
+            domain={migrateTarget}
+            onClose={() => setMigrateTarget(null)}
+          />
+        )}
+
+        {labelsDomain && (
+          <DomainLabelsModal
+            domain={labelsDomain}
+            onClose={() => setLabelsHref(null)}
+          />
+        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

@@ -28,6 +28,7 @@ export const FileContent: React.FC<IPluginContentProps> = ({ href }) => {
       }
       aside={
         <StorageFacts
+          href={href}
           artifactHref={data?.artifact}
           sha256={data?.sha256}
           created={data?.pulp_created}

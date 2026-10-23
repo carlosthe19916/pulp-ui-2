@@ -1,15 +1,20 @@
 import type React from "react";
+import { useState } from "react";
 
 import prettyBytes from "pretty-bytes";
 
-import { Content, ContentVariants } from "@patternfly/react-core";
+import { Button, Content, ContentVariants } from "@patternfly/react-core";
 
-import { Snippet } from "@app/components/Snippet";
+import { getPlugin } from "@catalog";
 import type { ContainerManifestResponse } from "@app/client";
+import { Snippet } from "@app/components/Snippet";
+import { RepositoryActionModal } from "@app/components/TaskActionModal";
 import {
   useContentTypeAllQuery,
   useContentTypeListQuery,
 } from "@app/queries/content";
+import { useRepositoryDetailQuery } from "@app/queries/repositories";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 import { isMultiArch, platformOf, pullCommand } from "./helpers";
 import { BrowseTable } from "./BrowseTable";
@@ -39,11 +44,22 @@ const useSignedManifests = (versionHref: string) => {
 /** Quay / Docker Hub "Tags": each tag with its image's digest, platforms, size and signature. */
 export const ContainerTags: React.FC<IBrowseContext> = ({
   versionHref,
+  repositoryHref,
   served,
   selectedHref,
   onSelect,
   writes,
 }) => {
+  // Untag is offered where content can be changed (the latest version).
+  const untag = writes
+    ? getPlugin(
+        resolvePulpType(repositoryHref) ?? "",
+      )?.entities.repository?.actions.find((action) => action.key === "untag")
+    : undefined;
+  const [untagName, setUntagName] = useState<string | null>(null);
+  const { data: repository } = useRepositoryDetailQuery({
+    href: untag ? repositoryHref : null,
+  });
   const list = useBrowseListState({
     sort: {
       keys: ["name"] as const,
@@ -102,57 +118,96 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
   const { registryPath } = served;
 
   return (
-    <BrowseTable
-      ariaLabel="Tags"
-      list={list}
-      rows={tags.data?.results ?? []}
-      count={tags.data?.count ?? 0}
-      isLoading={tags.isLoading}
-      error={tags.error}
-      emptyTitle="No tags"
-      header={
-        registryPath ? (
-          <Snippet code={pullCommand({ registryPath, tag: "<tag>" })} />
-        ) : undefined
-      }
-      rowHref={(tag) => tag.pulp_href}
-      selectedHref={selectedHref}
-      onSelect={onSelect}
-      writes={writes}
-      columns={[
-        { title: "Tag", sort: list.sortProps("name"), cell: (tag) => tag.name },
-        {
-          title: "Digest",
-          isTruncated: true,
-          cell: (tag) => byHref.get(tag.tagged_manifest)?.digest ?? "—",
-        },
-        {
-          title: "Platforms",
-          cell: (tag) => {
-            const manifest = byHref.get(tag.tagged_manifest);
-            return platformsOf(manifest).join(", ") || "—";
+    <>
+      <BrowseTable
+        ariaLabel="Tags"
+        list={list}
+        rows={tags.data?.results ?? []}
+        count={tags.data?.count ?? 0}
+        isLoading={tags.isLoading}
+        error={tags.error}
+        emptyTitle="No tags"
+        header={
+          registryPath ? (
+            <Snippet code={pullCommand({ registryPath, tag: "<tag>" })} />
+          ) : undefined
+        }
+        rowHref={(tag) => tag.pulp_href}
+        selectedHref={selectedHref}
+        onSelect={onSelect}
+        writes={writes}
+        columns={[
+          {
+            title: "Tag",
+            sort: list.sortProps("name"),
+            cell: (tag) => tag.name,
           },
-        },
-        {
-          title: "Size",
-          cell: (tag) => {
-            const size = byHref.get(tag.tagged_manifest)?.compressed_image_size;
-            return size ? prettyBytes(size) : "—";
+          {
+            title: "Digest",
+            isTruncated: true,
+            cell: (tag) => byHref.get(tag.tagged_manifest)?.digest ?? "—",
           },
-        },
-        {
-          title: "Status",
-          cell: (tag) => (
-            <StatusBadges
-              statuses={[
-                isMultiArch(byHref.get(tag.tagged_manifest)) && "multiArch",
-                signed.has(tag.tagged_manifest) && "signed",
-              ]}
-            />
-          ),
-        },
-      ]}
-    />
+          {
+            title: "Platforms",
+            cell: (tag) => {
+              const manifest = byHref.get(tag.tagged_manifest);
+              return platformsOf(manifest).join(", ") || "—";
+            },
+          },
+          {
+            title: "Size",
+            cell: (tag) => {
+              const size = byHref.get(
+                tag.tagged_manifest,
+              )?.compressed_image_size;
+              return size ? prettyBytes(size) : "—";
+            },
+          },
+          {
+            title: "Status",
+            cell: (tag) => (
+              <StatusBadges
+                statuses={[
+                  isMultiArch(byHref.get(tag.tagged_manifest)) && "multiArch",
+                  signed.has(tag.tagged_manifest) && "signed",
+                ]}
+              />
+            ),
+          },
+          ...(untag
+            ? [
+                {
+                  title: "",
+                  screenReaderText: "Untag",
+                  width: 10 as const,
+                  cell: (tag: { name: string }) => (
+                    <Button
+                      variant="link"
+                      isInline
+                      isDisabled={writes?.isLocked}
+                      onClick={(event: React.MouseEvent) => {
+                        event.stopPropagation();
+                        setUntagName(tag.name);
+                      }}
+                    >
+                      Untag
+                    </Button>
+                  ),
+                },
+              ]
+            : []),
+        ]}
+      />
+      {untag && repository && untagName && (
+        <RepositoryActionModal
+          action={untag}
+          repository={repository}
+          targetHref={repositoryHref}
+          initialValues={{ tag: untagName }}
+          onClose={() => setUntagName(null)}
+        />
+      )}
+    </>
   );
 };
 

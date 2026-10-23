@@ -1,7 +1,7 @@
 import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
 import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
-import type { IPluginDefinition } from "../types";
+import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 /** GitRemote has no `policy` field (always on-demand server-side), so drop it. */
 const withoutPolicy = (fields: IEntityField[]): IEntityField[] =>
@@ -45,6 +45,119 @@ const ansibleDistributionExtras: IEntityField[] = [
   { key: "repository_version", label: "Repository Version", type: "text" },
 ];
 
+const collectionVersions = (
+  key: string,
+  label = "Collection versions",
+): IEntityField => ({
+  key,
+  label,
+  type: "content",
+  pulpTypes: ["ansible.collection_version"],
+  required: true,
+});
+
+const copyMoveFields: IEntityField[] = [
+  collectionVersions("collection_versions"),
+  {
+    key: "destination_repositories",
+    label: "Destination repositories",
+    type: "asyncResource",
+    resourceKind: "repository",
+    multiple: true,
+    required: true,
+  },
+  {
+    key: "signing_service",
+    label: "Signing service",
+    type: "asyncResource",
+    resourceKind: "signingService",
+    helpText: "Signs the collection versions before adding them.",
+  },
+];
+
+const markFields: IEntityField[] = [
+  { key: "value", label: "Mark", type: "text", required: true },
+  collectionVersions("content_units"),
+];
+
+const ansibleActions: IRepositoryAction[] = [
+  {
+    key: "sign",
+    label: "Sign collections",
+    path: "sign/",
+    target: "repository",
+    fields: [
+      {
+        key: "signing_service",
+        label: "Signing service",
+        type: "asyncResource",
+        resourceKind: "signingService",
+        required: true,
+      },
+      collectionVersions("content_units"),
+    ],
+  },
+  {
+    key: "mark",
+    label: "Mark collections",
+    path: "mark/",
+    target: "repository",
+    fields: markFields,
+  },
+  {
+    key: "unmark",
+    label: "Unmark collections",
+    path: "unmark/",
+    target: "repository",
+    fields: markFields,
+  },
+  {
+    key: "copy-collection-version",
+    label: "Copy collection versions",
+    path: "copy_collection_version/",
+    target: "repository",
+    fields: copyMoveFields,
+  },
+  {
+    key: "move-collection-version",
+    label: "Move collection versions",
+    path: "move_collection_version/",
+    target: "repository",
+    fields: copyMoveFields,
+  },
+  {
+    key: "rebuild-metadata",
+    label: "Rebuild metadata",
+    path: "rebuild_metadata/",
+    target: "repository",
+    description:
+      "Rebuilds collection metadata; narrow it to a namespace, name or version.",
+    fields: [
+      { key: "namespace", label: "Namespace", type: "text" },
+      { key: "name", label: "Name", type: "text" },
+      { key: "version", label: "Version", type: "text" },
+    ],
+  },
+  {
+    key: "copy",
+    label: "Advanced copy",
+    path: "/ansible/copy/",
+    target: "repository",
+    description:
+      "Copies content between repositories as described by a config.",
+    fields: [
+      {
+        key: "config",
+        label: "Config",
+        type: "json",
+        required: true,
+        helpText:
+          'A list of {"source_repo_version", "dest_repo", "content"} entries.',
+      },
+    ],
+  },
+];
+
 export const ansible: IPluginDefinition = {
   app: { isAvailable: whenInstalled("ansible", "pulp-ansible") },
   rest: { pulpType: "ansible.ansible", apiPath: "ansible/ansible" },
@@ -64,6 +177,7 @@ export const ansible: IPluginDefinition = {
       compatiblePublicationTypes: [],
       contentChanges: "modify",
       archiveImport: false,
+      actions: ansibleActions,
     },
 
     // Three remote types: Collection (primary), Role, and Git.

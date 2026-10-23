@@ -24,6 +24,7 @@ export const NpmContent: React.FC<IPluginContentProps> = ({ href }) => {
       header={<ContentHeader title={data?.name} version={data?.version} />}
       aside={
         <StorageFacts
+          href={href}
           artifactHref={data?.artifact}
           created={data?.pulp_created}
           labels={data?.pulp_labels}

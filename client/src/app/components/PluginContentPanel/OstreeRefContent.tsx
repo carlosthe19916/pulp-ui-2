@@ -66,6 +66,7 @@ export const OstreeRefContent: React.FC<IPluginContentProps> = ({ href }) => {
       header={<ContentHeader title={data?.name} subtitle="Branch" />}
       aside={
         <StorageFacts
+          href={href}
           artifactHref={data?.artifact}
           created={data?.pulp_created}
           labels={data?.pulp_labels}

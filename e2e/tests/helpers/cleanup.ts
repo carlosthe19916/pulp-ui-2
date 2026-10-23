@@ -8,6 +8,7 @@ type Kind =
   | "remote"
   | "repository"
   | "distribution"
+  | "contentGuard"
   // A full pulp_href, for resources without a unique name (e.g. publications).
   | "href";
 
@@ -55,6 +56,11 @@ export class Cleanup {
     return name;
   }
 
+  contentGuard(name: string): string {
+    this.items.push({ kind: "contentGuard", name });
+    return name;
+  }
+
   /** Track a resource by its full `pulp_href` (e.g. a publication). */
   href(href: string): string {
     this.items.push({ kind: "href", name: href });
@@ -71,6 +77,7 @@ export class Cleanup {
       else if (kind === "remote") await api.deleteRemote(name);
       else if (kind === "repository") await api.deleteRepository(name);
       else if (kind === "distribution") await api.deleteDistribution(name);
+      else if (kind === "contentGuard") await api.deleteContentGuard(name);
       else if (kind === "href") await api.deleteByHref(name);
     }
   }

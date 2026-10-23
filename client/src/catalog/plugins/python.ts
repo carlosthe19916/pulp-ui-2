@@ -6,7 +6,7 @@ import {
 } from "../base-fields";
 import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
-import type { IPluginDefinition } from "../types";
+import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 /** Shared rest override for the PyPI variant (distribution + publication). */
 const pypi = {
@@ -110,6 +110,27 @@ const pythonDistributionExtras: IEntityField[] = [
   },
 ];
 
+const pythonActions: IRepositoryAction[] = [
+  {
+    key: "repair-metadata",
+    label: "Repair metadata",
+    path: "repair_metadata/",
+    target: "repository",
+    description:
+      "Repairs the metadata of every package without creating a new version.",
+    fields: [],
+  },
+  {
+    key: "scan",
+    label: "Scan for vulnerabilities",
+    path: "scan/",
+    target: "version",
+    description:
+      "Checks this version's packages against known vulnerabilities and stores a report.",
+    fields: [],
+  },
+];
+
 export const python: IPluginDefinition = {
   app: { isAvailable: whenInstalled("python", "pulp-python") },
   rest: { pulpType: "python.python", apiPath: "python/python" },
@@ -128,6 +149,7 @@ export const python: IPluginDefinition = {
       compatiblePublicationTypes: ["python.pypi"],
       contentChanges: "modify",
       archiveImport: false,
+      actions: pythonActions,
     },
 
     // Python remote: PyPI sync filters.

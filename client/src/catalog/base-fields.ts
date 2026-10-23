@@ -221,11 +221,25 @@ export const distributionBase: IBaseFields = {
     { key: "name", label: "Name", type: "text", required: true },
     { key: "base_path", label: "Base Path", type: "text", required: true },
     { key: "hidden", label: "Hidden", type: "boolean" },
+    {
+      key: "content_guard",
+      label: "Content Guard",
+      type: "asyncResource",
+      resourceKind: "contentGuard",
+      helpText: "Restricts who can download what this distribution serves.",
+    },
   ],
   edit: [
     { key: "name", label: "Name", type: "text" },
     { key: "base_path", label: "Base Path", type: "text" },
     { key: "hidden", label: "Hidden", type: "boolean" },
+    {
+      key: "content_guard",
+      label: "Content Guard",
+      type: "asyncResource",
+      resourceKind: "contentGuard",
+      helpText: "Restricts who can download what this distribution serves.",
+    },
   ],
 };
 

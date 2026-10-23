@@ -9,8 +9,10 @@ import {
 
 import type { DistributionResponse } from "@app/client";
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
+import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
+import { distributionKeys } from "@app/queries/distributions";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IDistributionDetailPanelProps {
@@ -72,6 +74,16 @@ export const DistributionDetailPanel: React.FC<
         <DescriptionListTerm>Publication</DescriptionListTerm>
         <DescriptionListDescription>
           {publication || "—"}
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Labels</DescriptionListTerm>
+        <DescriptionListDescription>
+          <EditablePulpLabels
+            href={distribution.pulp_href ?? ""}
+            labels={distribution.pulp_labels}
+            invalidateKey={distributionKeys.list()}
+          />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>

@@ -33,6 +33,7 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ObjectAccessModal } from "@app/components/ObjectAccess";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
 import { PublicationModal } from "./components/PublicationModal";
@@ -59,6 +60,9 @@ const SORTABLE_COLUMN_KEYS = [
 export const PublicationList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  const [accessTarget, setAccessTarget] = useState<PublicationResponse | null>(
+    null,
+  );
   const [deleteTarget, setDeleteTarget] = useState<PublicationResponse | null>(
     null,
   );
@@ -143,6 +147,10 @@ export const PublicationList: React.FC = () => {
           cell: (
             <ActionsColumn
               items={[
+                {
+                  title: "Manage access",
+                  onClick: () => setAccessTarget(pub),
+                },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(pub),
@@ -250,6 +258,14 @@ export const PublicationList: React.FC = () => {
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
         />
+
+        {accessTarget && (
+          <ObjectAccessModal
+            href={accessTarget.pulp_href ?? ""}
+            name={`Publication ${extractIdFromHref(accessTarget.pulp_href ?? "")}`}
+            onClose={() => setAccessTarget(null)}
+          />
+        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

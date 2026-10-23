@@ -26,9 +26,11 @@ import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer
 
 import { getRemoteEditFields } from "@catalog";
 import type { GenericRemoteResponse } from "@app/client";
+import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
-import { PulpLabels } from "@app/components/PulpLabels";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { remoteKeys } from "@app/queries/remotes";
 import { formatDateTime } from "@app/utils/utils";
 
 const DEFAULT_GROUP = "General";
@@ -75,46 +77,54 @@ const CopyableValue: React.FC<{ value?: string }> = ({ value }) =>
 const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
-}) => (
-  <DescriptionList columnModifier={COLUMNS}>
-    <DescriptionListGroup>
-      <DescriptionListTerm>Type</DescriptionListTerm>
-      <DescriptionListDescription>
-        <PulpTypeLabel pulpType={pulpType} />
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-    <DescriptionListGroup>
-      <DescriptionListTerm>Created</DescriptionListTerm>
-      <DescriptionListDescription>
-        {formatDateTime(remote.pulp_created) ?? "—"}
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-    <DescriptionListGroup>
-      <DescriptionListTerm>Last updated</DescriptionListTerm>
-      <DescriptionListDescription>
-        {formatDateTime(remote.pulp_last_updated) ?? "—"}
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-    <DescriptionListGroup>
-      <DescriptionListTerm>Labels</DescriptionListTerm>
-      <DescriptionListDescription>
-        <PulpLabels labels={remote.pulp_labels} />
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-    <DescriptionListGroup>
-      <DescriptionListTerm>PRN</DescriptionListTerm>
-      <DescriptionListDescription>
-        <CopyableValue value={remote.prn} />
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-    <DescriptionListGroup>
-      <DescriptionListTerm>HREF</DescriptionListTerm>
-      <DescriptionListDescription>
-        <CopyableValue value={remote.pulp_href} />
-      </DescriptionListDescription>
-    </DescriptionListGroup>
-  </DescriptionList>
-);
+}) => {
+  const { can } = useObjectPermissions({ href: remote.pulp_href ?? "" });
+  return (
+    <DescriptionList columnModifier={COLUMNS}>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Type</DescriptionListTerm>
+        <DescriptionListDescription>
+          <PulpTypeLabel pulpType={pulpType} />
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Created</DescriptionListTerm>
+        <DescriptionListDescription>
+          {formatDateTime(remote.pulp_created) ?? "—"}
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Last updated</DescriptionListTerm>
+        <DescriptionListDescription>
+          {formatDateTime(remote.pulp_last_updated) ?? "—"}
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>Labels</DescriptionListTerm>
+        <DescriptionListDescription>
+          <EditablePulpLabels
+            href={remote.pulp_href ?? ""}
+            labels={remote.pulp_labels}
+            invalidateKey={remoteKeys.detail(remote.pulp_href ?? "")}
+            isDisabled={!can("change")}
+          />
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>PRN</DescriptionListTerm>
+        <DescriptionListDescription>
+          <CopyableValue value={remote.prn} />
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+      <DescriptionListGroup>
+        <DescriptionListTerm>HREF</DescriptionListTerm>
+        <DescriptionListDescription>
+          <CopyableValue value={remote.pulp_href} />
+        </DescriptionListDescription>
+      </DescriptionListGroup>
+    </DescriptionList>
+  );
+};
 
 interface ISection {
   title: string;

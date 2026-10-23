@@ -14,16 +14,21 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { getPlugin } from "@catalog";
+import { getPlugin, type IRepositoryAction } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RepositoryContent } from "@app/components/RepositoryContent";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { RepositoryActionModal } from "@app/components/TaskActionModal";
 import {
   type VersionAction,
   VersionActionModal,
 } from "@app/components/VersionActionModal";
+import {
+  useObjectPermissions,
+  VERSION_ACTION_VERBS,
+} from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import {
   useRepositoryDetailQuery,
@@ -31,6 +36,8 @@ import {
 } from "@app/queries/repositories";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
+
+import { VersionVulnerabilityAlert } from "./components/VersionVulnerabilityAlert";
 
 interface IRepositoryVersionDetailProps {
   pulpDomain: string;
@@ -63,6 +70,10 @@ export const RepositoryVersionDetail: React.FC<
     repository,
   });
   const [action, setAction] = useState<VersionAction | null>(null);
+  const [versionAction, setVersionAction] = useState<IRepositoryAction | null>(
+    null,
+  );
+  const { disabledProps } = useObjectPermissions({ href: repositoryHref });
 
   const repositoryName = repository?.name ?? "Repository";
   const title = `Version ${version.number ?? versionNumber}`;
@@ -70,8 +81,11 @@ export const RepositoryVersionDetail: React.FC<
   const isOlder =
     !!repository?.latest_version_href &&
     repository.latest_version_href !== version.pulp_href;
-  const canRestore =
-    getPlugin(pulpType)?.entities.repository?.contentChanges === "modify";
+  const repoEntity = getPlugin(pulpType)?.entities.repository;
+  const canRestore = repoEntity?.contentChanges === "modify";
+  const versionActions = (repoEntity?.actions ?? []).filter(
+    (item) => item.target === "version",
+  );
 
   const repositoryParams = {
     pulpDomain,
@@ -90,6 +104,7 @@ export const RepositoryVersionDetail: React.FC<
       children: label,
       onClick: () => setAction(key),
       ...lockedProps,
+      ...disabledProps(VERSION_ACTION_VERBS[key]),
     },
   });
 
@@ -129,6 +144,16 @@ export const RepositoryVersionDetail: React.FC<
                 menuItem({ key: "repair", label: "Repair version" }),
                 version.number !== 0 &&
                   menuItem({ key: "delete", label: "Delete version" }),
+                ...versionActions.map((item) => ({
+                  key: `action-${item.key}`,
+                  dropdownItemProps: {
+                    children: `${item.label}…`,
+                    description: item.description,
+                    onClick: () => setVersionAction(item),
+                    ...lockedProps,
+                    ...disabledProps("modify"),
+                  },
+                })),
               ]}
             />
           )
@@ -144,6 +169,14 @@ export const RepositoryVersionDetail: React.FC<
                 running={running}
                 failure={contentChange.failure}
                 onCloseFailure={contentChange.clearFailure}
+              />
+            </StackItem>
+          )}
+          {versionActions.some((item) => item.key === "scan") && (
+            <StackItem>
+              <VersionVulnerabilityAlert
+                pulpDomain={pulpDomain}
+                versionHref={versionHref}
               />
             </StackItem>
           )}
@@ -177,6 +210,15 @@ export const RepositoryVersionDetail: React.FC<
           </StackItem>
         </Stack>
       </PageSection>
+
+      {versionAction && repository && (
+        <RepositoryActionModal
+          action={versionAction}
+          repository={repository}
+          targetHref={versionHref}
+          onClose={() => setVersionAction(null)}
+        />
+      )}
 
       {action && repository && (
         <VersionActionModal

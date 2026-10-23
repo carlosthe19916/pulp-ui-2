@@ -1,0 +1,283 @@
+import type React from "react";
+import { useState } from "react";
+
+import {
+  Button,
+  Content,
+  ContentVariants,
+  PageSection,
+  PaginationVariant,
+  ToggleGroup,
+  ToggleGroupItem,
+  ToolbarItem,
+} from "@patternfly/react-core";
+import { ActionsColumn } from "@patternfly/react-table";
+import {
+  DataView,
+  DataViewFilters,
+  DataViewTable,
+  DataViewTextFilter,
+  DataViewToolbar,
+  useDataViewFilters,
+  useDataViewPagination,
+  type DataViewTr,
+} from "@patternfly/react-data-view";
+
+import { getPlugin } from "@catalog";
+import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import {
+  dataViewBodyStates,
+  ListPagination,
+  type DataViewTh,
+} from "@app/components/DataView";
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useApiStatus } from "@app/hooks/useApiStatus";
+import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
+import {
+  type AlternateContentSource,
+  useAcsDeleteMutation,
+  useAcsListQuery,
+  useAcsRefreshMutation,
+} from "@app/queries/acs";
+import {
+  notifyTaskGroupStarted,
+  notifyTaskStarted,
+} from "@app/utils/taskNotify";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+
+import { ACS_TYPES } from "./acsTypes";
+import { AcsModal } from "./components/AcsModal";
+
+interface IAcsFilters {
+  name: string;
+}
+
+/**
+ * Alternate content sources: places (e.g. a local mirror) a sync fetches content
+ * from instead of the remote. One plugin at a time — they have no shared list.
+ */
+export const AcsList: React.FC = () => {
+  const { status } = useApiStatus();
+  const { addNotification } = useNotifications();
+  const types = ACS_TYPES.filter((type) =>
+    getPlugin(type.pluginType)?.isAvailable(status?.versions ?? []),
+  );
+  const [selectedPath, setSelectedPath] = useState<string>();
+  const acsType =
+    types.find((type) => type.apiPath === selectedPath) ?? types[0];
+  const [modalState, setModalState] = useState<
+    "create" | AlternateContentSource | null
+  >(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<AlternateContentSource | null>(null);
+
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { filters, onSetFilters, clearAllFilters } =
+    useDataViewFilters<IAcsFilters>({ initialFilters: { name: "" } });
+  const debouncedName = useDebouncedValue({ value: filters.name });
+  const { data, isLoading, error } = useAcsListQuery({
+    apiPath: acsType?.apiPath ?? "",
+    params: {
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+      ordering: "name",
+      name__icontains: debouncedName || undefined,
+    },
+  });
+  const refreshMutation = useAcsRefreshMutation({
+    onSuccess: (result, { name }) =>
+      notifyTaskGroupStarted({
+        addNotification,
+        taskGroupHref: result.task_group,
+        title: `Refresh of "${name}" started`,
+      }),
+    onError: (err, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error: err,
+          fallback: `Failed to refresh "${name}"`,
+        }),
+        variant: "danger",
+      }),
+  });
+  const deleteMutation = useAcsDeleteMutation({
+    onSuccess: (result, { name }) =>
+      notifyTaskStarted({
+        addNotification,
+        taskHref: result.task,
+        title: `Deletion of "${name}" started`,
+      }),
+    onError: (err, { name }) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error: err,
+          fallback: `Failed to delete "${name}"`,
+        }),
+        variant: "danger",
+      }),
+  });
+
+  const sources = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
+  const columns: DataViewTh[] = [
+    { cell: "Name" },
+    { cell: "Remote" },
+    { cell: "Paths" },
+    { cell: "Last refreshed" },
+    { cell: "", props: { screenReaderText: "Actions" } },
+  ];
+  const rows: DataViewTr[] = sources.map((acs) => ({
+    id: acs.pulp_href,
+    row: [
+      { cell: acs.name, props: { dataLabel: "Name" } },
+      {
+        cell: <NamedResourceHrefLink kind="remote" href={acs.remote} />,
+        props: { dataLabel: "Remote" },
+      },
+      {
+        cell: acs.paths?.length ? acs.paths.join(", ") : "—",
+        props: { dataLabel: "Paths" },
+      },
+      {
+        cell: formatDateTime(acs.last_refreshed) ?? "Never",
+        props: { dataLabel: "Last refreshed" },
+      },
+      {
+        cell: (
+          <ActionsColumn
+            items={[
+              { title: "Refresh", onClick: () => refreshMutation.mutate(acs) },
+              { title: "Edit", onClick: () => setModalState(acs) },
+              { title: "Delete", onClick: () => setDeleteTarget(acs) },
+            ]}
+          />
+        ),
+        props: { dataLabel: "Actions", isActionCell: true },
+      },
+    ],
+  }));
+  const { activeState, bodyStates } = dataViewBodyStates({
+    columnCount: columns.length,
+    isLoading: !!acsType && isLoading,
+    error,
+    isEmpty: sources.length === 0,
+    emptyState: (
+      <TableEmptyState
+        title={
+          acsType
+            ? "No alternate content sources"
+            : "No plugin with alternate content sources is installed"
+        }
+        isFiltered={!!debouncedName}
+        onClearFilters={clearAllFilters}
+      />
+    ),
+  });
+
+  return (
+    <>
+      <DocumentTitle title="Alternate content sources" />
+      <DomainContextSelector />
+      <PageSection>
+        <Content component={ContentVariants.h1}>
+          Alternate content sources
+        </Content>
+        <Content component={ContentVariants.p}>
+          Places a sync fetches content from before the remote, such as a nearby
+          mirror. Refresh a source after it changes.
+        </Content>
+      </PageSection>
+      <PageSection>
+        <DataView activeState={activeState}>
+          <DataViewToolbar
+            clearAllFilters={clearAllFilters}
+            filters={
+              <>
+                <ToolbarItem>
+                  <ToggleGroup aria-label="Plugin">
+                    {types.map((type) => (
+                      <ToggleGroupItem
+                        key={type.apiPath}
+                        text={type.label}
+                        isSelected={type.apiPath === acsType?.apiPath}
+                        onChange={() => {
+                          setSelectedPath(type.apiPath);
+                          pagination.onSetPage(undefined, 1);
+                        }}
+                      />
+                    ))}
+                  </ToggleGroup>
+                </ToolbarItem>
+                <DataViewFilters
+                  onChange={(_key, newFilters) => {
+                    onSetFilters(newFilters);
+                    pagination.onSetPage(undefined, 1);
+                  }}
+                  values={filters}
+                >
+                  <DataViewTextFilter filterId="name" title="Name" />
+                </DataViewFilters>
+              </>
+            }
+            actions={
+              <Button
+                variant="primary"
+                isDisabled={!acsType}
+                onClick={() => setModalState("create")}
+              >
+                Create source
+              </Button>
+            }
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.top}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
+          <DataViewTable
+            aria-label="Alternate content sources table"
+            columns={columns}
+            rows={rows}
+            bodyStates={bodyStates}
+          />
+          <DataViewToolbar
+            pagination={
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={totalCount}
+                pagination={pagination}
+              />
+            }
+          />
+        </DataView>
+      </PageSection>
+
+      {acsType && modalState && (
+        <AcsModal
+          acsType={acsType}
+          acs={modalState === "create" ? undefined : modalState}
+          onClose={() => setModalState(null)}
+        />
+      )}
+      <ConfirmActionModal
+        isOpen={!!deleteTarget}
+        title="Delete alternate content source"
+        body={`Delete "${deleteTarget?.name}"? Syncs go back to fetching from their remotes.`}
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() =>
+          deleteTarget &&
+          deleteMutation.mutate(deleteTarget, {
+            onSuccess: () => setDeleteTarget(null),
+          })
+        }
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </>
+  );
+};

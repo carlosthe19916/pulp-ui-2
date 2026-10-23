@@ -51,6 +51,7 @@ export const DebReleaseContent: React.FC<IPluginContentProps> = ({ href }) => {
             })}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />
@@ -112,6 +113,7 @@ export const DebSourcePackageContent: React.FC<IPluginContentProps> = ({
             })}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />

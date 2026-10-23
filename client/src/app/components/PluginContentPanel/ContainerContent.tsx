@@ -95,6 +95,7 @@ export const ContainerTagContent: React.FC<IPluginContentProps> = ({
       header={<ContentHeader title={tag.data?.name} subtitle="Tag" />}
       aside={
         <StorageFacts
+          href={href}
           created={tag.data?.pulp_created}
           labels={tag.data?.pulp_labels}
         />
@@ -123,7 +124,11 @@ export const ContainerManifestContent: React.FC<IPluginContentProps> = ({
         />
       }
       aside={
-        <StorageFacts created={data?.pulp_created} labels={data?.pulp_labels} />
+        <StorageFacts
+          href={href}
+          created={data?.pulp_created}
+          labels={data?.pulp_labels}
+        />
       }
     >
       <ManifestDetails manifest={data} />

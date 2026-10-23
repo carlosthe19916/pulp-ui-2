@@ -17,8 +17,10 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ObjectAccessPanel } from "@app/components/ObjectAccess";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
@@ -47,6 +49,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
   const { addNotification } = useNotifications();
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
+  const { disabledProps } = useObjectPermissions({ href });
   const prn = remote.prn ?? "";
 
   // Tab-title count: one row, read the paginated `count`.
@@ -107,6 +110,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
                 dropdownItemProps: {
                   children: "Edit",
                   onClick: () => setIsEditOpen(true),
+                  ...disabledProps("change"),
                 },
               },
               {
@@ -114,6 +118,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
                 dropdownItemProps: {
                   children: "Delete",
                   onClick: () => setIsDeleteOpen(true),
+                  ...disabledProps("delete"),
                 },
               },
             ]}
@@ -140,6 +145,11 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
           >
             <TabContentBody hasPadding>
               <RemoteTasksTab prn={prn} />
+            </TabContentBody>
+          </Tab>
+          <Tab eventKey="access" title={<TabTitleText>Access</TabTitleText>}>
+            <TabContentBody hasPadding>
+              <ObjectAccessPanel href={href} name={remote.name} />
             </TabContentBody>
           </Tab>
         </Tabs>

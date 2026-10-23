@@ -18,10 +18,12 @@ import type {
   RepositoryResponse,
   RepositoryVersionResponse,
 } from "@app/client";
+import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
-import { PulpLabels } from "@app/components/PulpLabels";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { repositoryKeys } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
@@ -56,6 +58,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   pulpType,
   pulpDomain,
 }) => {
+  const { can } = useObjectPermissions({ href: repository.pulp_href ?? "" });
   const data = repository as Record<string, unknown>;
   const settings = (
     getPlugin(pulpType)?.entities.repository?.form.editFields ?? []
@@ -114,11 +117,14 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
         <Fact term="Created">
           {formatDateTime(repository.pulp_created) ?? "—"}
         </Fact>
-        {!isEmptyValue(repository.pulp_labels) && (
-          <Fact term="Labels">
-            <PulpLabels labels={repository.pulp_labels} />
-          </Fact>
-        )}
+        <Fact term="Labels">
+          <EditablePulpLabels
+            href={repository.pulp_href ?? ""}
+            labels={repository.pulp_labels}
+            invalidateKey={repositoryKeys.detail(repository.pulp_href ?? "")}
+            isDisabled={!can("change")}
+          />
+        </Fact>
         {repository.prn && (
           <Fact term="PRN">
             <ClipboardCopy variant="inline-compact" isReadOnly>

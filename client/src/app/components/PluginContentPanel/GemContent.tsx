@@ -58,6 +58,7 @@ export const GemContent: React.FC<IPluginContentProps> = ({ href }) => {
             })}
           />
           <StorageFacts
+            href={href}
             sha256={data?.checksum}
             created={data?.pulp_created}
             labels={data?.pulp_labels}

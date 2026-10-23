@@ -25,6 +25,7 @@ import {
 
 import { getRepositoryContentTypes } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
+import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
@@ -37,8 +38,6 @@ import {
   useRepositoryVersionsListQuery,
 } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
-
-import { ContentPicker } from "./ContentPicker";
 
 interface IAddContentModalProps {
   repository: RepositoryResponse;

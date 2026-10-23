@@ -1,15 +1,23 @@
-import { useMutation } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   ArtifactResponse,
   AsyncOperationResponse,
   PaginatedArtifactResponseList,
+  PaginatedUploadResponseList,
   UploadResponse,
+  UploadsListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { waitForTask } from "./tasks";
 import { CHUNK_SIZE, contentRange, planChunks } from "./utils/chunks";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
@@ -128,6 +136,67 @@ export const useArtifactUploadMutation = (
       return task.created_resources?.[0] ?? "";
     },
     onSuccess: options?.onSuccess,
+    onError: options?.onError,
+  });
+};
+
+export const UploadsQueryKey = "uploads";
+
+export type IUploadListParams = ListParams<UploadsListData>;
+
+/** Chunked uploads in progress or abandoned (the Storage page). */
+export const uploadKeys = {
+  all: () => [UploadsQueryKey] as const,
+  list: () => [...uploadKeys.all(), "list"] as const,
+  listQuery: (domain: IPulpDomain, params: IUploadListParams) =>
+    [...uploadKeys.list(), domain, params] as const,
+};
+
+export const uploadsListQueryOptions = ({
+  domain,
+  params,
+}: {
+  domain: IPulpDomain;
+  params: IUploadListParams;
+}) =>
+  queryOptions<PaginatedUploadResponseList, DrfAxiosError>({
+    queryKey: uploadKeys.listQuery(domain, params),
+    queryFn: async () =>
+      (
+        await axiosInstance.get<PaginatedUploadResponseList>(
+          pulpApiPath("uploads/", domain),
+          {
+            params: {
+              ...params,
+              ordering: params.ordering ? [params.ordering] : undefined,
+            },
+          },
+        )
+      ).data,
+  });
+
+export const useUploadsListQuery = ({
+  params,
+}: {
+  params: IUploadListParams;
+}) => {
+  const domain = useSelectedDomain();
+  return useQuery(uploadsListQueryOptions({ domain, params }));
+};
+
+/** Deletes an upload and its chunks. */
+export const useUploadDeleteMutation = (
+  options?: IMutationCallbacks<void, UploadResponse>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<void, DrfAxiosError, UploadResponse>({
+    mutationFn: async (upload) => {
+      await axiosInstance.delete(toProxyHref(upload.pulp_href ?? ""));
+    },
+    onSuccess: (data, upload) => {
+      void queryClient.invalidateQueries({ queryKey: uploadKeys.list() });
+      options?.onSuccess?.(data, upload);
+    },
     onError: options?.onError,
   });
 };

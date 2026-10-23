@@ -1,7 +1,7 @@
 import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
 import { whenInstalled } from "../compose";
 import type { IEntityField } from "../field-types";
-import type { IPluginDefinition } from "../types";
+import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const mavenRepositoryExtras: IEntityField[] = [
   {
@@ -28,6 +28,50 @@ const mavenDistributionExtras: IEntityField[] = [
   },
 ];
 
+const mavenActions: IRepositoryAction[] = [
+  {
+    key: "repair-metadata",
+    label: "Repair metadata",
+    path: "repair_metadata/",
+    target: "repository",
+    description: "Regenerates every maven-metadata.xml file and its checksums.",
+    fields: [],
+  },
+  {
+    key: "repair-packages",
+    label: "Repair packages",
+    path: "repair_packages/",
+    target: "repository",
+    description:
+      "Reconciles the latest version's packages with the POMs it holds.",
+    fields: [],
+  },
+  {
+    key: "repair-index-pages",
+    label: "Repair index pages",
+    path: "repair_index_pages/",
+    target: "repository",
+    description: "Regenerates the HTML index page of every directory.",
+    fields: [],
+  },
+  {
+    key: "build-path-index",
+    label: "Build path index",
+    path: "build_path_index/",
+    target: "repository",
+    description: "Builds the initial path index.",
+    fields: [],
+  },
+  {
+    key: "compact-path-index",
+    label: "Compact path index",
+    path: "compact_path_index/",
+    target: "repository",
+    description: "Rebases the latest completed path index.",
+    fields: [],
+  },
+];
+
 export const maven: IPluginDefinition = {
   app: { isAvailable: whenInstalled("maven", "pulp-maven") },
   rest: { pulpType: "maven.maven", apiPath: "maven/maven" },
@@ -43,6 +87,7 @@ export const maven: IPluginDefinition = {
       compatiblePublicationTypes: [],
       contentChanges: "modify",
       archiveImport: false,
+      actions: mavenActions,
     },
 
     // Maven remote: no fields beyond the pulpcore remote base.

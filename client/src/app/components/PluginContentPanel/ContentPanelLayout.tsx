@@ -24,9 +24,11 @@ import {
 } from "@patternfly/react-core";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
+import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { Snippet } from "@app/components/Snippet";
 import { useArtifactDetailQuery } from "@app/queries/artifacts";
+import { contentKeys } from "@app/queries/content";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -203,18 +205,19 @@ export const Checksum: React.FC<{ value: string }> = ({ value }) => (
 );
 
 export const StorageFacts: React.FC<{
+  /** The content unit; its labels are editable. */
+  href: string;
   artifactHref?: string | null;
   sha256?: string | null;
   size?: number;
   created?: string;
   labels?: { [key: string]: string | null };
-}> = ({ artifactHref, sha256, size, created, labels }) => {
+}> = ({ href, artifactHref, sha256, size, created, labels }) => {
   const { data: artifact } = useArtifactDetailQuery({
     href: artifactHref ?? "",
   });
   const bytes = size ?? artifact?.size;
   const checksum = sha256 || artifact?.sha256;
-  const labelEntries = Object.entries(labels ?? {});
 
   return (
     <FactList
@@ -223,16 +226,13 @@ export const StorageFacts: React.FC<{
         Size: typeof bytes === "number" ? prettyBytes(bytes) : null,
         "SHA-256": checksum ? <Checksum value={checksum} /> : null,
         Added: formatDateTime(created),
-        Labels:
-          labelEntries.length > 0 ? (
-            <LabelGroup numLabels={8} isCompact>
-              {labelEntries.map(([key, value]) => (
-                <Label key={key} isCompact>
-                  {value == null ? key : `${key}=${value}`}
-                </Label>
-              ))}
-            </LabelGroup>
-          ) : null,
+        Labels: (
+          <EditablePulpLabels
+            href={href}
+            labels={labels}
+            invalidateKey={contentKeys.detail(href)}
+          />
+        ),
       })}
     />
   );

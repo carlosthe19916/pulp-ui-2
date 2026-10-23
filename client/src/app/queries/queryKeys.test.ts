@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
+import { accessKeys } from "./access";
+import { accessPolicyKeys } from "./access-policies";
+import { acsKeys } from "./acs";
+import { ansibleCollectionKeys } from "./ansible-collections";
+import { artifactKeys } from "./artifacts";
+import { containerNamespaceKeys } from "./container-namespaces";
 import { contentKeys } from "./content";
+import { contentGuardKeys } from "./content-guards";
+import { exporterKeys } from "./exporters";
+import { importerKeys } from "./importers";
 import { distributionKeys } from "./distributions";
 import { domainKeys } from "./domains";
 import { groupKeys } from "./groups";
@@ -8,8 +17,14 @@ import { publicationKeys } from "./publications";
 import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
+import { taskGroupKeys } from "./task-groups";
+import { taskScheduleKeys } from "./task-schedules";
 import { taskKeys } from "./tasks";
+import { uploadKeys } from "./uploads";
+import { upstreamPulpKeys } from "./upstream-pulps";
 import { userKeys } from "./users";
+import { vulnReportKeys } from "./vuln-reports";
+import { workerKeys } from "./workers";
 import type { IPulpDomain } from "./utils/pulpApi";
 
 const domain: IPulpDomain = { enabled: false, name: "default" };
@@ -238,6 +253,107 @@ describe("query-key factories", () => {
         startsWith(
           publicationKeys.detailQuery(pubHref),
           publicationKeys.detail(pubHref),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe("accessKeys", () => {
+    const objectHref = "/pulp/api/v3/repositories/file/file/abc/";
+
+    it("nests roles and the user's permissions under the object", () => {
+      const object = accessKeys.object(objectHref);
+      expect(startsWith(accessKeys.roles(objectHref), object)).toBe(true);
+      expect(startsWith(accessKeys.myPermissions(objectHref), object)).toBe(
+        true,
+      );
+    });
+  });
+
+  describe("exporterKeys and importerKeys", () => {
+    const exporterHref = "/pulp/api/v3/exporters/core/pulp/abc/";
+    const importerHref = "/pulp/api/v3/importers/core/pulp/abc/";
+
+    it("nests past runs under their exporter or importer", () => {
+      expect(
+        startsWith(
+          exporterKeys.exports(exporterHref),
+          exporterKeys.detail(exporterHref),
+        ),
+      ).toBe(true);
+      expect(
+        startsWith(
+          importerKeys.imports(importerHref),
+          importerKeys.detail(importerHref),
+        ),
+      ).toBe(true);
+    });
+
+    it("keeps each list query under its list folder", () => {
+      expect(
+        startsWith(
+          exporterKeys.listQuery(domain, "core/pulp", { limit: 10, offset: 0 }),
+          exporterKeys.list(),
+        ),
+      ).toBe(true);
+      expect(
+        startsWith(
+          importerKeys.listQuery(domain, { limit: 10 }),
+          importerKeys.list(),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe("new list factories", () => {
+    it("keep their list queries under their list folder", () => {
+      const pairs: [readonly unknown[], readonly unknown[]][] = [
+        [
+          contentGuardKeys.listQuery(domain, { limit: 10 }),
+          contentGuardKeys.list(),
+        ],
+        [
+          acsKeys.listQuery(domain, "file/file", { limit: 10, offset: 0 }),
+          acsKeys.list(),
+        ],
+        [
+          upstreamPulpKeys.listQuery(domain, { limit: 10 }),
+          upstreamPulpKeys.list(),
+        ],
+        [
+          accessPolicyKeys.listQuery(domain, { limit: 10 }),
+          accessPolicyKeys.list(),
+        ],
+        [
+          vulnReportKeys.listQuery(domain, { limit: 10 }),
+          vulnReportKeys.list(),
+        ],
+        [workerKeys.listQuery(domain, { limit: 10 }), workerKeys.list()],
+        [
+          taskScheduleKeys.listQuery(domain, { limit: 10 }),
+          taskScheduleKeys.list(),
+        ],
+        [
+          containerNamespaceKeys.listQuery(domain, { limit: 10 }),
+          containerNamespaceKeys.list(),
+        ],
+        [
+          ansibleCollectionKeys.listQuery(domain, { limit: 10 }),
+          ansibleCollectionKeys.list(),
+        ],
+        [artifactKeys.listQuery(domain, { limit: 10 }), artifactKeys.list()],
+        [uploadKeys.listQuery(domain, { limit: 10 }), uploadKeys.list()],
+      ];
+      for (const [key, folder] of pairs) {
+        expect(startsWith(key, folder)).toBe(true);
+      }
+    });
+
+    it("keeps a task group's detail under the family root", () => {
+      expect(
+        startsWith(
+          taskGroupKeys.detail("/pulp/api/v3/task-groups/abc/"),
+          taskGroupKeys.all(),
         ),
       ).toBe(true);
     });

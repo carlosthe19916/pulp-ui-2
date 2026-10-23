@@ -22,6 +22,7 @@ import type {
   RepositorySyncUrl,
   RepositoryVersionResponse,
   RpmRepositorySyncUrl,
+  TaskGroupOperationResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
@@ -157,7 +158,12 @@ export type RepositorySyncBody = RepositorySyncUrl &
  * explicit and typed at the call site. One mutation serves every plugin; the body
  * carries only the universal `remote`/`mirror`.
  */
-export const useRepositorySyncMutation = () => {
+export const useRepositorySyncMutation = (
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    { apiPath: string; id: string; body: RepositorySyncBody }
+  >,
+) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
@@ -180,11 +186,84 @@ export const useRepositorySyncMutation = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       // Surface the new sync task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, vars);
     },
+    onError: options?.onError,
+  });
+};
+
+/** A plugin action's 202: one task, or a task group (e.g. replicate). */
+export type ActionOperationResponse = Partial<AsyncOperationResponse> &
+  Partial<TaskGroupOperationResponse>;
+
+export interface IRepositoryActionVariables {
+  /** The repository or repository version the action runs on. */
+  targetHref: string;
+  /** Relative to `targetHref`, or a collection endpoint when it starts with `/`. */
+  path: string;
+  body: Record<string, unknown>;
+}
+
+/** The request body: multipart when it carries a file, JSON otherwise. */
+const toActionBody = (body: Record<string, unknown>) => {
+  const values = Object.values(body);
+  if (!values.some((value) => value instanceof File)) {
+    return body;
+  }
+  const form = new FormData();
+  for (const [key, value] of Object.entries(body)) {
+    if (value instanceof File) form.append(key, value);
+    else if (typeof value === "object") form.append(key, JSON.stringify(value));
+    else form.append(key, String(value));
+  }
+  return form;
+};
+
+/**
+ * Runs a catalog repository action (sign, tag, copy, scan…): one POST that
+ * starts a task. Invalidates the repository so its versions and running task
+ * refresh.
+ */
+export const useRepositoryActionMutation = (
+  options?: IMutationCallbacks<
+    ActionOperationResponse,
+    IRepositoryActionVariables
+  >,
+) => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return useMutation<
+    ActionOperationResponse,
+    DrfAxiosError,
+    IRepositoryActionVariables
+  >({
+    mutationFn: async ({ targetHref, path, body }) => {
+      const url = path.startsWith("/")
+        ? pulpApiPath(path.slice(1), domain)
+        : `${toProxyHref(targetHref)}${path}`;
+      return (
+        await axiosInstance.post<ActionOperationResponse>(
+          url,
+          toActionBody(body),
+        )
+      ).data;
+    },
+    onSuccess: (data, vars) => {
+      const repositoryHref =
+        parseRepositoryVersionHref(vars.targetHref)?.repositoryHref ??
+        vars.targetHref;
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(repositoryHref),
+      });
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, vars);
+    },
+    onError: options?.onError,
   });
 };
 

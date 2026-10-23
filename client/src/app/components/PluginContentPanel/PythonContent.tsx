@@ -75,6 +75,7 @@ export const PythonContent: React.FC<IPluginContentProps> = ({ href }) => {
             })}
           />
           <StorageFacts
+            href={href}
             artifactHref={data?.artifact}
             sha256={data?.sha256}
             size={data?.size}

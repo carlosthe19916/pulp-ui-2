@@ -63,9 +63,14 @@ const renderValue = ({
   const value = data[field.key];
 
   if (field.type === "asyncResource") {
+    const kind = field.resourceKind;
+    // Supporting resources have no detail page to link.
+    if (kind === "signingService" || kind === "contentGuard") {
+      return typeof value === "string" && value ? value : "—";
+    }
     return (
       <NamedResourceHrefLink
-        kind={field.resourceKind}
+        kind={kind}
         href={typeof value === "string" ? value : null}
       />
     );

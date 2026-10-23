@@ -16,15 +16,21 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { getPlugin, getRepositoryContentTypes } from "@catalog";
+import {
+  getPlugin,
+  getRepositoryContentTypes,
+  type IRepositoryAction,
+} from "@catalog";
 import type { RepositoryVersionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ObjectAccessPanel } from "@app/components/ObjectAccess";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
+import { RepositoryActionModal } from "@app/components/TaskActionModal";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import {
   type VersionAction,
@@ -32,6 +38,10 @@ import {
 } from "@app/components/VersionActionModal";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
+import {
+  useObjectPermissions,
+  VERSION_ACTION_VERBS,
+} from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
@@ -49,6 +59,7 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 import { RepositoryModal } from "../repository-list/components/RepositoryModal";
 import { AddContentModal } from "./components/AddContentModal";
 import { OstreeImportModal } from "./components/OstreeImportModal";
+import { TAB_BY_REPOSITORY_TYPE } from "./components/pluginTabs";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
@@ -79,7 +90,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const isLatestEmpty =
     summaryTotal(latestVersion?.content_summary?.present) === 0;
 
+  const { disabledProps } = useObjectPermissions({ href });
   const repoEntity = getPlugin(pulpType)?.entities.repository;
+  const pluginTab = TAB_BY_REPOSITORY_TYPE[pulpType];
+  const repositoryActions = (repoEntity?.actions ?? []).filter(
+    (action) => action.target === "repository",
+  );
   const canSync = (repoEntity?.compatibleRemoteTypes.length ?? 0) > 0;
   const canPublish = (repoEntity?.compatiblePublicationTypes.length ?? 0) > 0;
   const canChangeContent = !!repoEntity?.contentChanges;
@@ -129,6 +145,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [repoAction, setRepoAction] = useState<IRepositoryAction | null>(null);
   // Units to remove; "all" removes every unit.
   const [removeUnits, setRemoveUnits] = useState<
     IContentUnitRef[] | "all" | null
@@ -164,6 +181,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Edit",
                   onClick: () => setIsEditOpen(true),
+                  ...disabledProps("change"),
                 },
               },
               canSync && {
@@ -171,6 +189,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Sync",
                   onClick: () => setIsSyncOpen(true),
+                  ...disabledProps("sync"),
                 },
               },
               uploadableTypes.length > 0 && {
@@ -179,6 +198,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   children: "Upload content…",
                   onClick: () => setIsUploadOpen(true),
                   ...lockedProps,
+                  ...disabledProps("modify"),
                 },
               },
               repoEntity?.archiveImport && {
@@ -187,6 +207,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   children: "Import archive…",
                   onClick: () => setIsImportOpen(true),
                   ...lockedProps,
+                  ...disabledProps("modify"),
                 },
               },
               canChangeContent && {
@@ -195,6 +216,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   children: "Add content…",
                   onClick: () => setIsAddContentOpen(true),
                   ...lockedProps,
+                  ...disabledProps("modify"),
                 },
               },
               canChangeContent && {
@@ -203,8 +225,19 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   children: "Remove all content…",
                   onClick: () => setRemoveUnits("all"),
                   ...(isLatestEmpty ? { isDisabled: true } : lockedProps),
+                  ...disabledProps("modify"),
                 },
               },
+              ...repositoryActions.map((action) => ({
+                key: `action-${action.key}`,
+                dropdownItemProps: {
+                  children: `${action.label}…`,
+                  description: action.description,
+                  onClick: () => setRepoAction(action),
+                  ...lockedProps,
+                  ...disabledProps("modify"),
+                },
+              })),
               canPublish && {
                 key: "publish",
                 dropdownItemProps: {
@@ -217,6 +250,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Delete",
                   onClick: () => setIsDeleteOpen(true),
+                  ...disabledProps("delete"),
                 },
               },
             ]}
@@ -274,6 +308,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                     latestHref={repository.latest_version_href ?? undefined}
                     canRestore={repoEntity?.contentChanges === "modify"}
                     isLocked={isRunning}
+                    actionProps={(action) =>
+                      disabledProps(VERSION_ACTION_VERBS[action])
+                    }
                     repositoryHref={href}
                     id={id}
                     pulpType={pulpType}
@@ -303,6 +340,24 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               >
                 <TabContentBody hasPadding>
                   <RepositoryDistributionsTab repositoryHref={href} />
+                </TabContentBody>
+              </Tab>
+              {pluginTab && (
+                <Tab
+                  eventKey={pluginTab.key}
+                  title={<TabTitleText>{pluginTab.title}</TabTitleText>}
+                >
+                  <TabContentBody hasPadding>
+                    <pluginTab.Tab repository={repository} />
+                  </TabContentBody>
+                </Tab>
+              )}
+              <Tab
+                eventKey="access"
+                title={<TabTitleText>Access</TabTitleText>}
+              >
+                <TabContentBody hasPadding>
+                  <ObjectAccessPanel href={href} name={repository.name} />
                 </TabContentBody>
               </Tab>
             </Tabs>
@@ -338,6 +393,15 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           repository={repository}
           onClose={() => setVersionAction(null)}
           onRestoreStarted={contentChange.watch}
+        />
+      )}
+
+      {repoAction && (
+        <RepositoryActionModal
+          action={repoAction}
+          repository={repository}
+          targetHref={href}
+          onClose={() => setRepoAction(null)}
         />
       )}
 

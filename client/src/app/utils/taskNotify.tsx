@@ -43,6 +43,38 @@ export const notifyTaskStarted = ({
   });
 };
 
+export interface INotifyTaskGroupStartedOptions {
+  addNotification: INotifyFn;
+  taskGroupHref: string;
+  title?: string;
+}
+
+/** Toast helper for operations that start a task group (replicate, ACS refresh). */
+export const notifyTaskGroupStarted = ({
+  addNotification,
+  taskGroupHref,
+  title = "Tasks started",
+}: INotifyTaskGroupStartedOptions) => {
+  const taskGroupId = extractTaskId(taskGroupHref);
+  const pulpDomain = extractTaskDomain(taskGroupHref);
+  addNotification({
+    title,
+    variant: "info",
+    description: (
+      <>
+        Track progress on the{" "}
+        <Link
+          to="/monitoring/$pulpDomain/task-groups/$taskGroupId"
+          params={{ pulpDomain, taskGroupId }}
+        >
+          task group
+        </Link>{" "}
+        page.
+      </>
+    ),
+  });
+};
+
 export interface INotifyTaskFailedOptions {
   addNotification: INotifyFn;
   taskHref: string;

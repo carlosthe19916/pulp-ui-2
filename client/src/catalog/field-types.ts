@@ -13,7 +13,10 @@ export type FieldType =
   | "boolean"
   | "select"
   | "file"
-  | "asyncResource";
+  | "asyncResource"
+  | "stringList"
+  | "json"
+  | "content";
 
 /** A single choice in a `select` field. */
 export interface IFieldOption {
@@ -33,9 +36,12 @@ interface IFieldBase {
   helpText?: string;
 }
 
-/** Plain input fields — no options, no resource picker. */
+/**
+ * Plain input fields — no options, no resource picker. `stringList` is a list of
+ * strings (one per line); `json` is a JSON document, parsed on submit.
+ */
 interface IBasicField extends IFieldBase {
-  type: Exclude<FieldType, "select" | "asyncResource">;
+  type: Exclude<FieldType, "select" | "asyncResource" | "content">;
 }
 
 /** A dropdown — `options` is required. */
@@ -51,8 +57,23 @@ interface ISelectField extends IFieldBase {
  */
 interface IAsyncResourceField extends IFieldBase {
   type: "asyncResource";
-  resourceKind: EntityType;
+  resourceKind: ResourceKind;
+  /** The value is a list of hrefs instead of one. */
+  multiple?: boolean;
+}
+
+/** What an `asyncResource` field picks: a catalog entity or a supporting resource. */
+export type ResourceKind = EntityType | "signingService" | "contentGuard";
+
+/**
+ * Content units picked from the current repository's latest version; the value is
+ * a list of content hrefs.
+ */
+interface IContentField extends IFieldBase {
+  type: "content";
+  pulpTypes: string[];
 }
 
 /** A single form/page field. */
-export type IEntityField = IBasicField | ISelectField | IAsyncResourceField;
+export type IEntityField =
+  IBasicField | ISelectField | IAsyncResourceField | IContentField;

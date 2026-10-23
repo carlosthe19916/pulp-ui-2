@@ -44,6 +44,7 @@ export const HuggingFaceContent: React.FC<IPluginContentProps> = ({ href }) => {
             })}
           />
           <StorageFacts
+            href={href}
             artifactHref={data?.artifact}
             created={data?.pulp_created}
             labels={data?.pulp_labels}

@@ -22,7 +22,11 @@ export const BaseContent: React.FC<IPluginContentProps> = ({ href }) => {
       error={error}
       header={<ContentHeader title={resolvePulpType(href)} />}
       aside={
-        <StorageFacts created={data?.pulp_created} labels={data?.pulp_labels} />
+        <StorageFacts
+          href={href}
+          created={data?.pulp_created}
+          labels={data?.pulp_labels}
+        />
       }
     />
   );

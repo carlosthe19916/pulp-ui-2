@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import {
@@ -26,11 +26,15 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   isCancelable,
+  isTerminalTaskState,
   useSuspenseTaskDetailQuery,
   useTaskCancelMutation,
+  useTaskDeleteMutation,
+  useTaskProfileArtifactsQuery,
 } from "@app/queries/tasks";
 import type { TaskWithError } from "@app/queries/utils/openapiErrorTypes";
 import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
@@ -50,6 +54,28 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const navigate = useNavigate();
+  const { disabledProps } = useObjectPermissions({ href: taskHref });
+  const { data: profile } = useTaskProfileArtifactsQuery({ taskHref });
+  const profileUrls = Object.entries(profile?.urls ?? {});
+  const deleteMutation = useTaskDeleteMutation({
+    onSuccess: async () => {
+      addNotification({ title: "Task deleted", variant: "success" });
+      await navigate({
+        to: "/monitoring/$pulpDomain/tasks",
+        params: { pulpDomain },
+      });
+    },
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to delete task",
+        }),
+        variant: "danger",
+      }),
+  });
 
   const handleCancel = async () => {
     try {
@@ -96,6 +122,15 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
                 dropdownItemProps: {
                   children: "Cancel Task",
                   onClick: () => setIsCancelModalOpen(true),
+                  ...disabledProps("change"),
+                },
+              },
+              isTerminalTaskState(task.state) && {
+                key: "delete",
+                dropdownItemProps: {
+                  children: "Delete task",
+                  onClick: () => setIsDeleteOpen(true),
+                  ...disabledProps("delete"),
                 },
               },
             ]}
@@ -155,6 +190,22 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
                   )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
+              {task.task_group && (
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Task group</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <Link
+                      to="/monitoring/$pulpDomain/task-groups/$taskGroupId"
+                      params={{
+                        pulpDomain,
+                        taskGroupId: extractTaskId(task.task_group),
+                      }}
+                    >
+                      {extractTaskId(task.task_group)}
+                    </Link>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              )}
               <DescriptionListGroup>
                 <DescriptionListTerm>Logging CID</DescriptionListTerm>
                 <DescriptionListDescription>
@@ -225,6 +276,23 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
             </StackItem>
           )}
 
+          {profileUrls.length > 0 && (
+            <StackItem>
+              <Content component={ContentVariants.h2}>
+                Profile artifacts
+              </Content>
+              <Content component="ul">
+                {profileUrls.map(([name, url]) => (
+                  <Content component="li" key={name}>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {name}
+                    </a>
+                  </Content>
+                ))}
+              </Content>
+            </StackItem>
+          )}
+
           {task.child_tasks && task.child_tasks.length > 0 && (
             <StackItem>
               <Content component={ContentVariants.h2}>Child Tasks</Content>
@@ -258,6 +326,18 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
         confirmVariant="danger"
         onConfirm={() => void handleCancel()}
         onCancel={() => setIsCancelModalOpen(false)}
+      />
+      <ConfirmActionModal
+        isOpen={isDeleteOpen}
+        title="Delete task"
+        body="Delete this task's record? This action cannot be undone."
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() =>
+          deleteMutation.mutate(taskHref, {
+            onSuccess: () => setIsDeleteOpen(false),
+          })
+        }
+        onCancel={() => setIsDeleteOpen(false)}
       />
     </>
   );

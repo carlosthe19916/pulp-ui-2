@@ -416,3 +416,83 @@ describe("content types", () => {
     expect(resolveContentTypeByApiPath({ apiPath: "" })).toBeUndefined();
   });
 });
+
+describe("repository actions", () => {
+  const actionKeys = (pulpType: string, target = "repository") =>
+    (getPlugin(pulpType)?.entities.repository?.actions ?? [])
+      .filter((action) => action.target === target)
+      .map((action) => action.key);
+
+  it("defaults to no actions", () => {
+    expect(actionKeys("file.file")).toEqual([]);
+  });
+
+  it("models ansible's signing, marking and copy actions", () => {
+    expect(actionKeys("ansible.ansible")).toEqual([
+      "sign",
+      "mark",
+      "unmark",
+      "copy-collection-version",
+      "move-collection-version",
+      "rebuild-metadata",
+      "copy",
+    ]);
+  });
+
+  it("models container and push-repository actions", () => {
+    expect(actionKeys("container.container")).toContain("build-image");
+    expect(actionKeys("container.container-push")).toEqual(
+      expect.arrayContaining(["remove-image", "remove-signatures", "migrate"]),
+    );
+  });
+
+  it("models rpm, deb, python and maven actions", () => {
+    expect(actionKeys("rpm.rpm")).toEqual(["copy", "comps", "prune"]);
+    expect(actionKeys("deb.deb")).toEqual(["copy"]);
+    expect(actionKeys("python.python")).toEqual(["repair-metadata"]);
+    expect(actionKeys("maven.maven")).toHaveLength(5);
+  });
+
+  it("scans rpm and python versions", () => {
+    expect(actionKeys("rpm.rpm", "version")).toEqual(["scan"]);
+    expect(actionKeys("python.python", "version")).toEqual(["scan"]);
+  });
+
+  it("fills collection endpoints' repository parameter", () => {
+    const prune = getPlugin("rpm.rpm")?.entities.repository?.actions.find(
+      (action) => action.key === "prune",
+    );
+    expect(prune?.path).toBe("/rpm/prune/");
+    expect(prune?.repositoryParam).toEqual({ key: "repo_hrefs", list: true });
+  });
+});
+
+describe("OpenPGP keyrings", () => {
+  it("models the keyring and its distribution under core.openpgp", () => {
+    const plugin = getPlugin("core.openpgp");
+    expect(plugin?.entities.repository?.apiPath).toBe("core/openpgp_keyring");
+    expect(plugin?.entities.distribution?.apiPath).toBe("core/openpgp");
+    expect(plugin?.entities.repository?.contentChanges).toBe("modify");
+  });
+
+  it("holds the OpenPGP content types", () => {
+    expect(
+      getRepositoryContentTypes("core.openpgp").map((type) => type.pulpType),
+    ).toContain("core.openpgp_publickey");
+  });
+
+  it("resolves both apiPaths back to the shared pulp_type", () => {
+    expect(
+      resolvePulpTypeByApiPath({
+        entity: "repository",
+        apiPath: "core/openpgp_keyring",
+      }),
+    ).toBe("core.openpgp");
+    expect(
+      resolvePulpTypeByApiPath({
+        entity: "distribution",
+        apiPath: "core/openpgp",
+      }),
+    ).toBe("core.openpgp");
+  });
+});

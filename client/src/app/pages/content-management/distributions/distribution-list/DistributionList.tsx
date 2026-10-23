@@ -38,6 +38,7 @@ import {
 } from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ObjectAccessModal } from "@app/components/ObjectAccess";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -81,6 +82,9 @@ export const DistributionList: React.FC = () => {
   const distributionToEdit =
     modalState === "create" ? undefined : (modalState ?? undefined);
 
+  const [accessTarget, setAccessTarget] = useState<DistributionResponse | null>(
+    null,
+  );
   const [deleteTarget, setDeleteTarget] = useState<DistributionResponse | null>(
     null,
   );
@@ -197,6 +201,10 @@ export const DistributionList: React.FC = () => {
                           "This distribution's plugin type isn't available in the UI.",
                       },
                   onClick: () => setModalState(distribution),
+                },
+                {
+                  title: "Manage access",
+                  onClick: () => setAccessTarget(distribution),
                 },
                 {
                   title: "Delete",
@@ -337,6 +345,14 @@ export const DistributionList: React.FC = () => {
           entity={distributionToEdit}
           onClose={() => setModalState(null)}
         />
+
+        {accessTarget && (
+          <ObjectAccessModal
+            href={accessTarget.pulp_href ?? ""}
+            name={accessTarget.name}
+            onClose={() => setAccessTarget(null)}
+          />
+        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

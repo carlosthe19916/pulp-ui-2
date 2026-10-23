@@ -67,6 +67,7 @@ export const DebContent: React.FC<IPluginContentProps> = ({ href }) => {
             })}
           />
           <StorageFacts
+            href={href}
             artifactHref={data?.artifact}
             sha256={data?.sha256}
             created={data?.pulp_created}

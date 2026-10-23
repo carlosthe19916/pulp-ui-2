@@ -20,9 +20,16 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
+import { getPlugin } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
+import { VulnerabilitiesCard } from "./components/VulnerabilitiesCard";
+import { WorkersCard } from "./components/WorkersCard";
+
+/** Repository types whose versions can be scanned for vulnerabilities. */
+const SCANNABLE_REPOSITORY_TYPES = ["rpm.rpm", "python.python"];
 
 export const Dashboard: React.FC = () => {
   const { status, isLoading, error } = useApiStatus();
@@ -67,32 +74,16 @@ export const Dashboard: React.FC = () => {
             </GalleryItem>
 
             <GalleryItem>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Workers</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {status.online_workers.length === 0 ? (
-                    <Content component={ContentVariants.p}>
-                      No online workers
-                    </Content>
-                  ) : (
-                    <DescriptionList isCompact>
-                      {status.online_workers.map((w) => (
-                        <DescriptionListGroup key={w.name}>
-                          <DescriptionListTerm>{w.name}</DescriptionListTerm>
-                          <DescriptionListDescription>
-                            <Label color="green" isCompact>
-                              Online
-                            </Label>
-                          </DescriptionListDescription>
-                        </DescriptionListGroup>
-                      ))}
-                    </DescriptionList>
-                  )}
-                </CardBody>
-              </Card>
+              <WorkersCard />
             </GalleryItem>
+
+            {SCANNABLE_REPOSITORY_TYPES.some((type) =>
+              getPlugin(type)?.isAvailable(status.versions),
+            ) && (
+              <GalleryItem>
+                <VulnerabilitiesCard pulpDomain={pulpDomain} />
+              </GalleryItem>
+            )}
 
             {status.storage && (
               <GalleryItem>

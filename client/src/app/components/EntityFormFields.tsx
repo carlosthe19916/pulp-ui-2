@@ -19,7 +19,10 @@ import {
 
 import type { IEntityField } from "@catalog";
 
-import { AsyncResourceSelect } from "./AsyncResourceSelect";
+import {
+  AsyncResourceMultiSelect,
+  AsyncResourceSelect,
+} from "./AsyncResourceSelect";
 import type { ResourceFilterMap } from "./PluginForm/resourceFilter";
 
 const isFile = (value: unknown): value is File => {
@@ -40,7 +43,10 @@ interface IEntityFormFieldsProps<
   resourceFilter?: ResourceFilterMap;
 }
 
-/** Renders entity fields bound to a react-hook-form `control`. */
+/**
+ * Renders entity fields bound to a react-hook-form `control`. `content` fields need
+ * a repository to pick from, so the caller renders them (see `TaskActionModal`).
+ */
 export const EntityFormFields = <
   TFieldValues extends FieldValues = Record<string, unknown>,
 >({
@@ -52,6 +58,9 @@ export const EntityFormFields = <
   return (
     <>
       {fields.map((field) => {
+        if (field.type === "content") {
+          return null;
+        }
         const fieldId = `${idPrefix}-${field.key}`;
         const name = field.key as Path<TFieldValues>;
 
@@ -104,6 +113,37 @@ export const EntityFormFields = <
                       isChecked={Boolean(rhfField.value)}
                       onChange={(_e, checked) => rhfField.onChange(checked)}
                     />
+                  </FormGroup>
+                );
+              }
+
+              if (field.type === "stringList" || field.type === "json") {
+                return (
+                  <FormGroup
+                    label={field.label}
+                    fieldId={fieldId}
+                    isRequired={field.required}
+                    labelHelp={labelHelp}
+                  >
+                    <TextArea
+                      id={fieldId}
+                      value={(rhfField.value as string) ?? ""}
+                      onChange={(_e, value) => rhfField.onChange(value)}
+                      validated={validated}
+                      resizeOrientation="vertical"
+                      rows={field.type === "json" ? 8 : 3}
+                    />
+                    {helper ?? (
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem>
+                            {field.type === "json"
+                              ? "A JSON document."
+                              : "One per line."}
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    )}
                   </FormGroup>
                 );
               }
@@ -179,6 +219,27 @@ export const EntityFormFields = <
                         />
                       ))}
                     </FormSelect>
+                    {helper}
+                  </FormGroup>
+                );
+              }
+
+              if (field.type === "asyncResource" && field.multiple) {
+                return (
+                  <FormGroup
+                    label={field.label}
+                    fieldId={fieldId}
+                    isRequired={field.required}
+                    labelHelp={labelHelp}
+                  >
+                    <AsyncResourceMultiSelect
+                      id={fieldId}
+                      label={field.label}
+                      resourceKind={field.resourceKind}
+                      value={(rhfField.value as string[]) ?? []}
+                      onChange={(value) => rhfField.onChange(value)}
+                      filter={resourceFilter?.[field.resourceKind]}
+                    />
                     {helper}
                   </FormGroup>
                 );

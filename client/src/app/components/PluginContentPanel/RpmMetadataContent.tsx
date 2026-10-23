@@ -73,6 +73,7 @@ export const RpmAdvisoryContent: React.FC<IPluginContentProps> = ({ href }) => {
             )}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />
@@ -118,6 +119,7 @@ export const RpmModulemdContent: React.FC<IPluginContentProps> = ({ href }) => {
             items={facts({ Context: data?.context, Arch: data?.arch })}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />
@@ -172,6 +174,7 @@ export const RpmPackageGroupContent: React.FC<IPluginContentProps> = ({
             })}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />

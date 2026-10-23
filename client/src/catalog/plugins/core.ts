@@ -1,16 +1,55 @@
+import { distributionBase, repositoryBase } from "../base-fields";
 import { whenInstalled } from "../compose";
+import type { IEntityField } from "../field-types";
 import type { IPluginDefinition } from "../types";
 
+/** OpenPGP keyrings (repository) and their distributions share one pulp_type. */
+const openpgp = { pulpType: "core.openpgp" };
+
+const keyringDistributionExtras: IEntityField[] = [
+  {
+    key: "repository",
+    label: "Keyring",
+    type: "asyncResource",
+    resourceKind: "repository",
+  },
+  { key: "repository_version", label: "Keyring version", type: "text" },
+];
+
 /**
- * pulpcore — the platform. It has no CRUD entities of its own, but it owns the
- * OpenPGP content types (and the internal `core.publishedmetadata`). `rest.pulpType`
- * is the synthetic key `"core"` (never a real content pulp_type, so it can't collide
- * with a content type); the plugin carries only `content`, no `entities`.
+ * pulpcore — the platform. It owns the OpenPGP content types (and the internal
+ * `core.publishedmetadata`) and the OpenPGP keyring, a repository of keys served
+ * by an OpenPGP distribution (both pulp_type `core.openpgp`). `rest.pulpType` is
+ * the synthetic key `"core"` (never a real pulp_type, so it can't collide).
  */
 export const core: IPluginDefinition = {
   app: { isAvailable: whenInstalled("core", "pulpcore") },
   rest: { pulpType: "core", apiPath: "core" },
-  entities: {},
+  entities: {
+    repository: {
+      rest: { ...openpgp, apiPath: "core/openpgp_keyring" },
+      form: {
+        isWizard: false,
+        createFields: repositoryBase.create,
+        editFields: repositoryBase.edit,
+      },
+      compatibleRemoteTypes: [],
+      compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: false,
+    },
+    distribution: {
+      rest: { ...openpgp, apiPath: "core/openpgp" },
+      form: {
+        isWizard: false,
+        createFields: [
+          ...distributionBase.create,
+          ...keyringDistributionExtras,
+        ],
+        editFields: [...distributionBase.edit, ...keyringDistributionExtras],
+      },
+    },
+  },
   content: [
     {
       pulpType: "core.openpgp_publickey",

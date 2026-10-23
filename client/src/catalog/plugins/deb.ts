@@ -6,7 +6,7 @@ import {
 } from "../base-fields";
 import { whenInstalled } from "../compose";
 import type { IEntityField, IFieldOption } from "../field-types";
-import type { IPluginDefinition } from "../types";
+import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const LAYOUT_OPTIONS: IFieldOption[] = [
   { value: "by_hash", label: "By hash" },
@@ -81,6 +81,27 @@ const debDistributionExtras: IEntityField[] = [
   { key: "checkpoint", label: "Checkpoint", type: "boolean" },
 ];
 
+const debActions: IRepositoryAction[] = [
+  {
+    key: "copy",
+    label: "Advanced copy",
+    path: "/deb/copy/",
+    target: "repository",
+    description:
+      "Copies content between repositories as described by a config.",
+    fields: [
+      {
+        key: "config",
+        label: "Config",
+        type: "json",
+        required: true,
+        helpText:
+          'A list of {"source_repo_version", "dest_repo", "content"} entries.',
+      },
+    ],
+  },
+];
+
 export const deb: IPluginDefinition = {
   app: { isAvailable: whenInstalled("deb", "pulp-deb") },
   // Repository is `deb.deb`; its remote/distribution/publication use distinct
@@ -101,6 +122,7 @@ export const deb: IPluginDefinition = {
       ],
       contentChanges: "modify",
       archiveImport: false,
+      actions: debActions,
     },
 
     // APT remote (deb.apt-remote): release filters and sync toggles.

@@ -12,6 +12,7 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
   PaginatedTaskResponseList,
+  ProfileArtifactResponse,
   Purge,
   TaskResponse,
   TasksListData,
@@ -342,6 +343,50 @@ export const useTaskCancelMutation = (
     onError: options?.onError,
   });
 };
+
+/** Deletes a finished task record (204). */
+export const useTaskDeleteMutation = (
+  options?: IMutationCallbacks<void, string>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<void, DrfAxiosError, string>({
+    mutationFn: async (href: string) => {
+      await axiosInstance.delete(toProxyHref(href));
+    },
+    onSuccess: async (data, href) => {
+      void queryClient.invalidateQueries({ queryKey: taskKeys.list() });
+      await options?.onSuccess?.(data, href);
+      queryClient.removeQueries({ queryKey: taskKeys.detail(href) });
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Download links for the profiling data a task recorded (when profiling was on). */
+export const taskProfileArtifactsQueryOptions = ({
+  taskHref,
+}: {
+  taskHref: string;
+}) =>
+  queryOptions<ProfileArtifactResponse, DrfAxiosError>({
+    queryKey: [...taskKeys.detail(taskHref), "profile-artifacts"] as const,
+    queryFn: async () =>
+      (
+        await axiosInstance.get<ProfileArtifactResponse>(
+          `${toProxyHref(taskHref)}profile_artifacts/`,
+        )
+      ).data,
+  });
+
+export const useTaskProfileArtifactsQuery = ({
+  taskHref,
+}: {
+  taskHref: string;
+}) =>
+  useQuery({
+    ...taskProfileArtifactsQueryOptions({ taskHref }),
+    enabled: !!taskHref,
+  });
 
 export const useTaskPurgeMutation = (
   options?: IMutationCallbacks<AsyncOperationResponse, Purge>,

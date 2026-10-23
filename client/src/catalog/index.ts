@@ -180,6 +180,7 @@ export type {
   IPluginEntity,
   IPluginForm,
   IPluginRepositoryEntity,
+  IRepositoryAction,
   PulpType,
 } from "./types";
-export type { IEntityField } from "./field-types";
+export type { IEntityField, ResourceKind } from "./field-types";

@@ -106,6 +106,7 @@ export const buildCatalog = (
             compatiblePublicationTypes: [...repo.compatiblePublicationTypes],
             contentChanges: repo.contentChanges,
             archiveImport: repo.archiveImport,
+            actions: [...(repo.actions ?? [])],
             contentTypes: (def.content ?? []).map((ct) => ct.pulpType),
           };
           plugin.entities.repository = repoEntity;

@@ -1,9 +1,14 @@
-import { type EntityType, getPlugin, type IPlugin } from "@catalog";
+import {
+  type EntityType,
+  getPlugin,
+  type IPlugin,
+  type ResourceKind,
+} from "@catalog";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 /** Per-resource-kind predicate limiting which hrefs an `asyncResource` field offers. */
 export type ResourceFilterMap = Partial<
-  Record<EntityType, (href: string) => boolean>
+  Record<ResourceKind, (href: string) => boolean>
 >;
 
 /**

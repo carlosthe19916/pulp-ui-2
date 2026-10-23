@@ -39,6 +39,8 @@ interface IRepositoryVersionsTabProps {
   canRestore?: boolean;
   /** A task runs on the repository: actions are disabled. */
   isLocked?: boolean;
+  /** Per-action disabled props (permissions), merged into each row item. */
+  actionProps?: (action: VersionAction) => object;
 }
 
 export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
@@ -50,6 +52,7 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   latestHref,
   canRestore,
   isLocked,
+  actionProps,
 }) => {
   const pagination = useDataViewPagination({ perPage: 10 });
   const { data, isLoading, error } = useRepositoryVersionsListQuery({
@@ -76,15 +79,18 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   ];
 
   const actionsFor = (version: RepositoryVersionResponse) => {
-    const run = (action: VersionAction) => () =>
-      onVersionAction?.({ action, version });
+    const item = (action: VersionAction, title: string) => ({
+      title,
+      onClick: () => onVersionAction?.({ action, version }),
+      ...actionProps?.(action),
+    });
     const items = [];
     if (canRestore && version.pulp_href !== latestHref) {
-      items.push({ title: "Restore as latest", onClick: run("restore") });
+      items.push(item("restore", "Restore as latest"));
     }
-    items.push({ title: "Repair", onClick: run("repair") });
+    items.push(item("repair", "Repair"));
     if (version.number !== 0) {
-      items.push({ title: "Delete version", onClick: run("delete") });
+      items.push(item("delete", "Delete version"));
     }
     return items;
   };

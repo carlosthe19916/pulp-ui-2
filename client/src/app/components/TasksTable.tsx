@@ -39,8 +39,10 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
   isCancelable,
+  isTerminalTaskState,
   type TaskState,
   useTaskCancelMutation,
+  useTaskDeleteMutation,
   useTaskPurgeMutation,
   useTasksListQuery,
 } from "@app/queries/tasks";
@@ -100,6 +102,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   const [isStateOpen, setIsStateOpen] = useState(false);
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
   const [cancelTaskHref, setCancelTaskHref] = useState<string | null>(null);
+  const [deleteTaskHref, setDeleteTaskHref] = useState<string | null>(null);
 
   const { addNotification } = useNotifications();
   const cancelMutation = useTaskCancelMutation({
@@ -110,6 +113,18 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
         ...getMutationErrorMessage({
           error,
           fallback: "Failed to cancel task",
+        }),
+        variant: "danger",
+      }),
+  });
+  const deleteMutation = useTaskDeleteMutation({
+    onSuccess: () =>
+      addNotification({ title: "Task deleted", variant: "success" }),
+    onError: (error) =>
+      addNotification({
+        ...getMutationErrorMessage({
+          error,
+          fallback: "Failed to delete task",
         }),
         variant: "danger",
       }),
@@ -207,6 +222,15 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
                 {
                   title: "Cancel",
                   onClick: () => setCancelTaskHref(task.pulp_href ?? null),
+                },
+              ]}
+            />
+          ) : isTerminalTaskState(task.state) ? (
+            <ActionsColumn
+              items={[
+                {
+                  title: "Delete",
+                  onClick: () => setDeleteTaskHref(task.pulp_href ?? null),
                 },
               ]}
             />
@@ -342,6 +366,20 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
         confirmVariant="primary"
         onConfirm={handleCancel}
         onCancel={() => setCancelTaskHref(null)}
+      />
+
+      <ConfirmActionModal
+        isOpen={!!deleteTaskHref}
+        title="Delete task"
+        body="Delete this task's record? This action cannot be undone."
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() =>
+          deleteTaskHref &&
+          deleteMutation.mutate(deleteTaskHref, {
+            onSettled: () => setDeleteTaskHref(null),
+          })
+        }
+        onCancel={() => setDeleteTaskHref(null)}
       />
 
       {showPurge && (

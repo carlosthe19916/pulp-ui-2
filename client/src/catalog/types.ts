@@ -105,6 +105,7 @@ export interface IPluginRepositoryEntity extends IPluginEntity {
   compatiblePublicationTypes: PulpType[];
   contentChanges: IRepositoryContribution["contentChanges"];
   archiveImport: boolean;
+  actions: IRepositoryAction[];
   contentTypes: PulpType[];
 }
 
@@ -158,6 +159,25 @@ export interface IRepositoryContribution extends IContributionBase {
   contentChanges: "modify" | "addRemove" | null;
   /** Imports an uploaded archive into a new version (OSTree `import_all/`). */
   archiveImport: boolean;
+  /** Plugin-specific actions (sign, tag, copy…); none when absent. */
+  actions?: IRepositoryAction[];
+}
+
+/**
+ * A plugin action: a POST that starts a task, with a form built from `fields`.
+ * `path` is relative to the target's href (`sign/`), or, starting with `/`, a
+ * collection endpoint (`/rpm/copy/`). `target` is the repository or one of its
+ * versions. `repositoryParam` names the body field the repository href fills in
+ * (`list` sends it as a one-item list), for collection endpoints that need it.
+ */
+export interface IRepositoryAction {
+  key: string;
+  label: string;
+  path: string;
+  target: "repository" | "version";
+  fields: IEntityField[];
+  description?: string;
+  repositoryParam?: { key: string; list?: boolean };
 }
 
 /**

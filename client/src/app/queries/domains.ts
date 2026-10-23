@@ -155,3 +155,38 @@ export const useDomainDeleteMutation = (
     onError: options?.onError,
   });
 };
+
+export interface IDomainMigrateVariables {
+  /** The domain whose artifacts move to the new storage. */
+  domainName: string;
+  body: { storage_class: string; storage_settings: Record<string, unknown> };
+}
+
+/**
+ * Moves a domain's artifacts to a new storage backend, then switches the domain
+ * to it (the old files stay). Runs in that domain's URL; starts a task.
+ */
+export const useDomainMigrateMutation = (
+  options?: IMutationCallbacks<AsyncOperationResponse, IDomainMigrateVariables>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    IDomainMigrateVariables
+  >({
+    mutationFn: async ({ domainName, body }) =>
+      (
+        await axiosInstance.post<AsyncOperationResponse>(
+          pulpApiPath("domains/migrate/", { enabled: true, name: domainName }),
+          body,
+        )
+      ).data,
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, vars);
+    },
+    onError: options?.onError,
+  });
+};

@@ -9,6 +9,8 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 
+import { getPlugin } from "@catalog";
+import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
@@ -20,6 +22,11 @@ export const SidebarApp: React.FC = () => {
   // Content routes are scoped by the `$pulpDomain` path param; carry the current
   // (or default) domain into the nav links.
   const { name: pulpDomain } = useSelectedDomain();
+  // Plugin-specific pages show only when the plugin is installed.
+  const { status } = useApiStatus();
+  const isInstalled = (pulpType: string) =>
+    !!getPlugin(pulpType)?.isAvailable(status?.versions ?? []);
+  const hasAcs = ["file.file", "rpm.rpm", "deb.deb"].some(isInstalled);
 
   return (
     <PageSidebar>
@@ -54,6 +61,104 @@ export const SidebarApp: React.FC = () => {
             >
               <Link to="/system-management/signing-services">
                 Signing Services
+              </Link>
+            </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/system-management/$pulpDomain/content-guards",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/system-management/$pulpDomain/content-guards"
+                params={{ pulpDomain }}
+              >
+                Content Guards
+              </Link>
+            </NavItem>
+            {hasAcs && (
+              <NavItem
+                isActive={
+                  !!matchRoute({
+                    to: "/system-management/$pulpDomain/alternate-content-sources",
+                    params: { pulpDomain },
+                    fuzzy: true,
+                  })
+                }
+              >
+                <Link
+                  to="/system-management/$pulpDomain/alternate-content-sources"
+                  params={{ pulpDomain }}
+                >
+                  Alternate Content Sources
+                </Link>
+              </NavItem>
+            )}
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/system-management/$pulpDomain/export-import",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/system-management/$pulpDomain/export-import"
+                params={{ pulpDomain }}
+              >
+                Export &amp; Import
+              </Link>
+            </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/system-management/$pulpDomain/upstream-pulps",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/system-management/$pulpDomain/upstream-pulps"
+                params={{ pulpDomain }}
+              >
+                Upstream Pulps
+              </Link>
+            </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/system-management/$pulpDomain/storage",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/system-management/$pulpDomain/storage"
+                params={{ pulpDomain }}
+              >
+                Storage
+              </Link>
+            </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/system-management/$pulpDomain/maintenance",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/system-management/$pulpDomain/maintenance"
+                params={{ pulpDomain }}
+              >
+                Maintenance
               </Link>
             </NavItem>
           </NavGroup>
@@ -142,6 +247,42 @@ export const SidebarApp: React.FC = () => {
                 Content
               </Link>
             </NavItem>
+            {isInstalled("ansible.ansible") && (
+              <NavItem
+                isActive={
+                  !!matchRoute({
+                    to: "/content-management/$pulpDomain/ansible-collections",
+                    params: { pulpDomain },
+                    fuzzy: true,
+                  })
+                }
+              >
+                <Link
+                  to="/content-management/$pulpDomain/ansible-collections"
+                  params={{ pulpDomain }}
+                >
+                  Ansible Collections
+                </Link>
+              </NavItem>
+            )}
+            {isInstalled("container.container") && (
+              <NavItem
+                isActive={
+                  !!matchRoute({
+                    to: "/content-management/$pulpDomain/container-namespaces",
+                    params: { pulpDomain },
+                    fuzzy: true,
+                  })
+                }
+              >
+                <Link
+                  to="/content-management/$pulpDomain/container-namespaces"
+                  params={{ pulpDomain }}
+                >
+                  Container Namespaces
+                </Link>
+              </NavItem>
+            )}
           </NavGroup>
 
           <NavGroup title="Monitoring">
@@ -158,6 +299,40 @@ export const SidebarApp: React.FC = () => {
                 Tasks
               </Link>
             </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({
+                  to: "/monitoring/$pulpDomain/task-schedules",
+                  params: { pulpDomain },
+                  fuzzy: true,
+                })
+              }
+            >
+              <Link
+                to="/monitoring/$pulpDomain/task-schedules"
+                params={{ pulpDomain }}
+              >
+                Task Schedules
+              </Link>
+            </NavItem>
+            {(isInstalled("rpm.rpm") || isInstalled("python.python")) && (
+              <NavItem
+                isActive={
+                  !!matchRoute({
+                    to: "/monitoring/$pulpDomain/vulnerability-reports",
+                    params: { pulpDomain },
+                    fuzzy: true,
+                  })
+                }
+              >
+                <Link
+                  to="/monitoring/$pulpDomain/vulnerability-reports"
+                  params={{ pulpDomain }}
+                >
+                  Vulnerability Reports
+                </Link>
+              </NavItem>
+            )}
           </NavGroup>
 
           <NavGroup title="Administration">
@@ -175,6 +350,13 @@ export const SidebarApp: React.FC = () => {
               isActive={!!matchRoute({ to: "/admin/roles", fuzzy: true })}
             >
               <Link to="/admin/roles">Roles</Link>
+            </NavItem>
+            <NavItem
+              isActive={
+                !!matchRoute({ to: "/admin/access-policies", fuzzy: true })
+              }
+            >
+              <Link to="/admin/access-policies">Access Policies</Link>
             </NavItem>
           </NavGroup>
         </Nav>

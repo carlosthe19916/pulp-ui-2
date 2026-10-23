@@ -6,6 +6,7 @@ import {
   buildDefaultValues,
   buildFieldSchema,
   cleanFormValues,
+  fieldsToBody,
 } from "./formSchema";
 
 const fields: IEntityField[] = [
@@ -52,5 +53,67 @@ describe("formSchema helpers", () => {
         remote: null,
       }),
     ).toEqual({ name: "repo", autopublish: false });
+  });
+});
+
+describe("fieldsToBody", () => {
+  const fields: IEntityField[] = [
+    { key: "tags", label: "Tags", type: "stringList" },
+    { key: "config", label: "Config", type: "json" },
+    { key: "units", label: "Units", type: "content", pulpTypes: ["file.file"] },
+    {
+      key: "repos",
+      label: "Repositories",
+      type: "asyncResource",
+      resourceKind: "repository",
+      multiple: true,
+    },
+  ];
+
+  it("turns lines, JSON and picked content into request values", () => {
+    expect(
+      fieldsToBody({
+        fields,
+        values: {
+          tags: " latest \n\nv1\n",
+          config: '{"a": 1}',
+          units: [{ href: "/c/1/", label: "one" }],
+          repos: ["/r/1/"],
+        },
+      }),
+    ).toEqual({
+      tags: ["latest", "v1"],
+      config: { a: 1 },
+      units: ["/c/1/"],
+      repos: ["/r/1/"],
+    });
+  });
+
+  it("drops empty lists and blank text", () => {
+    expect(
+      fieldsToBody({
+        fields,
+        values: { tags: "\n", config: "", units: [], repos: [] },
+      }),
+    ).toEqual({});
+  });
+});
+
+describe("buildDefaultValues for list fields", () => {
+  it("shows a record's lists as lines and JSON as text", () => {
+    expect(
+      buildDefaultValues({
+        fields: [
+          { key: "paths", label: "Paths", type: "stringList" },
+          { key: "mapping", label: "Mapping", type: "json" },
+          { key: "units", label: "Units", type: "content", pulpTypes: [] },
+        ],
+        source: { paths: ["a/", "b/"], mapping: { x: "y" } },
+      }),
+    ).toEqual({
+      paths: "a/\nb/",
+      mapping: JSON.stringify({ x: "y" }, null, 2),
+      units: [],
+    });
   });
 });

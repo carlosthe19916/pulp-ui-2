@@ -6,7 +6,7 @@ import {
 } from "../base-fields";
 import { whenInstalled } from "../compose";
 import type { IEntityField, IFieldOption } from "../field-types";
-import type { IPluginDefinition } from "../types";
+import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const CHECKSUM_TYPE_OPTIONS: IFieldOption[] = [
   { value: "unknown", label: "unknown" },
@@ -96,13 +96,77 @@ const rpmDistributionExtras: IEntityField[] = [
     type: "asyncResource",
     resourceKind: "publication",
   },
-  { key: "content_guard", label: "Content Guard", type: "text" },
   {
     key: "generate_repo_config",
     label: "Generate Repo Config",
     type: "boolean",
   },
   { key: "checkpoint", label: "Checkpoint", type: "boolean" },
+];
+
+const copyConfigHelp =
+  'A list of {"source_repo_version", "dest_repo", "content"} entries.';
+
+const rpmActions: IRepositoryAction[] = [
+  {
+    key: "copy",
+    label: "Advanced copy",
+    path: "/rpm/copy/",
+    target: "repository",
+    description:
+      "Copies content and its dependencies between repositories as described by a config.",
+    fields: [
+      {
+        key: "config",
+        label: "Config",
+        type: "json",
+        required: true,
+        helpText: copyConfigHelp,
+      },
+    ],
+  },
+  {
+    key: "comps",
+    label: "Upload comps.xml",
+    path: "/rpm/comps/",
+    target: "repository",
+    repositoryParam: { key: "repository" },
+    fields: [
+      { key: "file", label: "comps.xml", type: "file", required: true },
+      {
+        key: "replace",
+        label: "Replace existing comps content",
+        type: "boolean",
+      },
+    ],
+  },
+  {
+    key: "prune",
+    label: "Prune packages",
+    path: "/rpm/prune/",
+    target: "repository",
+    repositoryParam: { key: "repo_hrefs", list: true },
+    description: "Removes all but the newest version of each package.",
+    fields: [
+      {
+        key: "keep_days",
+        label: "Keep days",
+        type: "number",
+        defaultValue: 14,
+        helpText: "Prune packages introduced before this many days ago.",
+      },
+      { key: "dry_run", label: "Dry run", type: "boolean" },
+    ],
+  },
+  {
+    key: "scan",
+    label: "Scan for vulnerabilities",
+    path: "scan/",
+    target: "version",
+    description:
+      "Checks this version's packages against known vulnerabilities and stores a report.",
+    fields: [],
+  },
 ];
 
 export const rpm: IPluginDefinition = {
@@ -120,6 +184,7 @@ export const rpm: IPluginDefinition = {
       compatiblePublicationTypes: ["rpm.rpm"],
       contentChanges: "modify",
       archiveImport: false,
+      actions: rpmActions,
     },
 
     // RPM remote (rpm.rpm) + ULN remote (rpm.uln) — two variants of the one slot.

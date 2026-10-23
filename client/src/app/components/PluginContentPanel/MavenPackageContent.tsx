@@ -78,6 +78,7 @@ export const MavenPackageContent: React.FC<IPluginContentProps> = ({
             })}
           />
           <StorageFacts
+            href={href}
             created={data?.pulp_created}
             labels={data?.pulp_labels}
           />
