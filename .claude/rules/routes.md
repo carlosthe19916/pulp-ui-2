@@ -7,81 +7,44 @@ paths:
 
 # Route conventions (`client/src/routes/`)
 
-Routes are file-based (`routeTree.gen.ts` is generated, never edited) and code-split
-automatically (`autoCodeSplitting` in `vite.config.ts`), so don't add `lazy()`.
+## Route files
 
-## Route files stay thin
+- A route file only wires `createFileRoute` options (`validateSearch`, `beforeLoad`, `loader`,
+  `pendingComponent`, `errorComponent`, `component`) to a page from `@app/pages/...`. No page
+  JSX, hooks or queries; no `lazy()` (routes are auto code-split).
+- A pathless layout (`_authenticated.tsx`) has no `component`; the router renders `<Outlet />`.
 
-A route file calls `createFileRoute(...)` and wires a component from `@app/pages/...`. No
-page JSX, hooks or queries in it; the only inline JSX is `pendingComponent`.
+## Detail routes
 
-```tsx
-// routes/_authenticated/admin/users/index.ts — list routes have no loader
-export const Route = createFileRoute("/_authenticated/admin/users/")({
-  component: UserList,
-});
-```
+Reference: `routes/_authenticated/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/index.tsx`.
 
-## Detail-loader template
+- The loader is the only place an href is built: `ensureDomainFromParam` (or
+  `ensureDefaultDomain` for global objects) → `build*Href` from `@app/queries/…` (throw if it
+  returns nothing) → `queryClient.ensureQueryData(…)` → return the href(s).
+- `pendingComponent` is `DetailRoutePending` labelled `Loading <object>`, no ellipsis;
+  `errorComponent` is `DetailRouteError`. The page uses `useSuspense*DetailQuery` and has no
+  loading or not-found guards.
+- `component` is a `*DetailRoute.tsx` adapter next to the page: it reads loader data and path
+  params with `getRouteApi("<exact route id>")` and passes them as props.
 
-Every detail route loads its object before rendering. The loader is the only place an
-href is built (see `queries.md`, "href only"):
+## Params, search and links
 
-```tsx
-// routes/_authenticated/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/index.tsx
-loader: async ({ context: { queryClient }, params: { pulpDomain, repositoryType, repositoryId } }) => {
-  const domain = await ensureDomainFromParam(queryClient, pulpDomain); // ensureDefaultDomain for global objects
-  const href = buildRepositoryHref(repositoryType, repositoryId, domain);
-  if (!href) throw new Error("Unknown repository plugin type");
-  await queryClient.ensureQueryData(repositoryDetailQueryOptions({ href }));
-  return { href };
-},
-pendingComponent: () => <DetailRoutePending label="Loading repository" />,
-errorComponent: DetailRouteError,
-component: RepositoryDetailRoute,
-```
-
-- The pending label is `Loading <object>`, without an ellipsis.
-- Loading, 403, 404 and error states belong to the route (`DetailRoutePending`,
-  `DetailRouteError`). The page reads its data with `useSuspense*DetailQuery({ href })`
-  and has no `entity ? … : null` guards.
-
-## `*DetailRoute.tsx` adapters
-
-The route's `component` is an adapter next to the page (`pages/<area>/<entity>-detail/`).
-It reads the loader data or params through `getRouteApi` and passes plain props to the
-page:
-
-```tsx
-const routeApi = getRouteApi("/_authenticated/admin/users/$userId");
-
-export const UserDetailRoute: React.FC = () => {
-  const { href } = routeApi.useLoaderData();
-  return <UserDetail userHref={href} />;
-};
-```
-
-Pages and components never read route params themselves. The one exception is the
-selected domain, read via `useSelectedDomain()`.
-
-## Search params and navigation
-
-- `validateSearch` returns a typed object with a fallback for each key, never throws:
-  `redirect: typeof search.redirect === "string" ? search.redirect : undefined` (`routes/login.ts`).
-- Internal links are typed: `<Link to="/monitoring/$pulpDomain/tasks/$taskId" params={{ … }}>`
-  and `void navigate({ to, params })`. Never build an internal URL with a template string.
+- Pages and components never read path params; the one exception is `useSelectedDomain()`.
+- A page may read and update its own route's search params only through
+  `getRouteApi("<its route id>").useSearch()` / `.useNavigate()`.
+- `validateSearch` returns a typed fallback for each key and never throws.
+- Internal links use typed `to` + `params` (`<Link>`, `navigate`), never a template-string URL.
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check changed files under `client/src/routes/`,
-`router.ts` and `*DetailRoute.tsx`.
+Pass/fail rubric for `/eval`. Check changed files under `client/src/routes/`, `router.ts`,
+`*DetailRoute.tsx`, and pages that read search params.
 
-- [ ] Route files only wire `createFileRoute` to a page component (plus loader,
-      `validateSearch`, `beforeLoad`, `pendingComponent`, `errorComponent`); no page logic.
-- [ ] Detail loaders follow the template: resolve the domain, build the href, throw on an
-      unknown type, `ensureQueryData`, `return { href }`; `DetailRoutePending` with
-      `Loading <object>` and `DetailRouteError`.
-- [ ] `*DetailRoute.tsx` adapters use `getRouteApi(...)` and pass props; pages don't read
-      route params (except `useSelectedDomain`).
-- [ ] `validateSearch` returns typed fallbacks; internal links use typed `to` + `params`.
-- [ ] No `lazy()`, no edits to `routeTree.gen.ts`.
+- [ ] Route files only wire options to a page; pathless layouts have no `component`.
+- [ ] Detail loaders resolve the domain, build the href with a `@app/queries` builder, throw on
+      no href, `ensureQueryData`, and return the href(s).
+- [ ] `DetailRoutePending` with `Loading <object>` (no ellipsis) and `DetailRouteError`.
+- [ ] Adapters read through `getRouteApi` with the exact route id and pass props.
+- [ ] Pages read no path params (except `useSelectedDomain`) and read search only for their own
+      route via `getRouteApi`.
+- [ ] `validateSearch` has typed fallbacks; internal links are typed.
