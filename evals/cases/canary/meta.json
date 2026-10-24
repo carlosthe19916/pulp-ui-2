@@ -1,0 +1,6 @@
+{
+  "id": "canary",
+  "description": "Proves AGENTS.md loaded: regenerating rules from .rulesync/rules",
+  "targets": ["AGENTS.md"],
+  "must_pass": true
+}

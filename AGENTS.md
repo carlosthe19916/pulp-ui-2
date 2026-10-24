@@ -119,7 +119,8 @@ Before creating or changing a file, read the rules whose `globs` match it:
 Before finishing a change, check it against every rule whose `globs` match the changed files
 (its `## Checklist` is the rubric) and the `## Rules` of each ADR its `implements:` lists; the
 generated rules drop `implements:`, so read it from `.rulesync/rules/`. In Claude Code, `/eval`
-does this.
+does this (code vs rules). To test whether the rules/`AGENTS.md` themselves still steer the
+agent, use `npm run eval:harness` ([evals/README.md](evals/README.md)).
 
 ### API endpoints
 
