@@ -98,8 +98,8 @@ export const LoginPage: React.FC = () => {
     try {
       const response = await fetch(
         apiStatus.status?.domain_enabled
-          ? `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/groups/?limit=0&offset=0`
-          : `/api/pulp/api/v3/groups/?limit=0&offset=0`,
+          ? `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/groups/?limit=1&offset=0`
+          : `/api/pulp/api/v3/groups/?limit=1&offset=0`,
         {
           headers: {
             Authorization: encodeBasicAuthHeader({ username, password }),

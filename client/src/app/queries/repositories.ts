@@ -32,11 +32,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
-import {
-  extractIdFromHref,
-  parseRepositoryVersionHref,
-  resolvePulpType,
-} from "./utils/pulpHref";
+import { parseRepositoryVersionHref, resolvePulpType } from "./utils/pulpHref";
 
 export const RepositoriesQueryKey = "repositories";
 
@@ -269,7 +265,6 @@ export const useRepositoryModifyMutation = (
     { repository: RepositoryResponse; body: RepositoryAddRemoveContent }
   >,
 ) => {
-  const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
     AsyncOperationResponse,
@@ -285,11 +280,11 @@ export const useRepositoryModifyMutation = (
     }) => {
       const href = repository.pulp_href ?? "";
       const entity = repositoryEntity(href);
-      const base = `repositories/${entity?.apiPath}/${extractIdFromHref(href)}`;
+      const base = toProxyHref(href);
       if (entity?.contentChanges === "addRemove") {
         const isRemove = !!body.remove_content_units?.length;
         const response = await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`${base}/${isRemove ? "remove" : "add"}/`, domain),
+          `${base}${isRemove ? "remove" : "add"}/`,
           {
             content_units: isRemove
               ? body.remove_content_units
@@ -299,7 +294,7 @@ export const useRepositoryModifyMutation = (
         return response.data;
       }
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath(`${base}/modify/`, domain),
+        `${base}modify/`,
         body,
       );
       return response.data;
@@ -529,16 +524,22 @@ export const useSuspenseRepositoryDetailQuery = ({ href }: { href: string }) =>
   useSuspenseQuery(repositoryDetailQueryOptions({ href }));
 
 export const repositoryVersionDetailQueryOptions = ({
-  versionHref,
+  href,
+  options,
 }: {
-  versionHref: string | null;
+  href: string | null;
+  options?: Omit<
+    UseQueryOptions<RepositoryVersionResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
   queryOptions<RepositoryVersionResponse, DrfAxiosError>({
-    queryKey: repositoryKeys.versionDetail(versionHref ?? ""),
+    ...options,
+    queryKey: repositoryKeys.versionDetail(href ?? ""),
     queryFn: async (): Promise<RepositoryVersionResponse> =>
       (
         await axiosInstance.get<RepositoryVersionResponse>(
-          toProxyHref(versionHref ?? ""),
+          toProxyHref(href ?? ""),
         )
       ).data,
   });
@@ -549,7 +550,7 @@ export const useRepositoryVersionDetailQuery = ({
   href: string | null;
 }) =>
   useQuery({
-    ...repositoryVersionDetailQueryOptions({ versionHref: href }),
+    ...repositoryVersionDetailQueryOptions({ href }),
     enabled: !!href,
   });
 
@@ -557,8 +558,7 @@ export const useSuspenseRepositoryVersionDetailQuery = ({
   href,
 }: {
   href: string;
-}) =>
-  useSuspenseQuery(repositoryVersionDetailQueryOptions({ versionHref: href }));
+}) => useSuspenseQuery(repositoryVersionDetailQueryOptions({ href }));
 
 /**
  * Creates a repository of the given plugin type: POSTs to `repositories/<apiPath>/`

@@ -92,10 +92,10 @@ export const groupsListQueryOptions = ({
   });
 
 export const groupDetailQueryOptions = ({
-  groupHref,
+  href,
   options,
 }: {
-  groupHref: string;
+  href: string;
   options?: Omit<
     UseQueryOptions<GroupResponse, DrfAxiosError>,
     "queryKey" | "queryFn"
@@ -103,10 +103,10 @@ export const groupDetailQueryOptions = ({
 }) =>
   queryOptions<GroupResponse, DrfAxiosError>({
     ...options,
-    queryKey: groupKeys.detailQuery(groupHref),
+    queryKey: groupKeys.detailQuery(href),
     queryFn: async (): Promise<GroupResponse> => {
       const response = await axiosInstance.get<GroupResponse>(
-        toProxyHref(groupHref),
+        toProxyHref(href),
       );
       return response.data;
     },
@@ -184,11 +184,8 @@ export const useGroupsListQuery = ({
   return useQuery(groupsListQueryOptions({ domain, params, options }));
 };
 
-export const useSuspenseGroupDetailQuery = ({
-  groupHref,
-}: {
-  groupHref: string;
-}) => useSuspenseQuery(groupDetailQueryOptions({ groupHref }));
+export const useSuspenseGroupDetailQuery = ({ href }: { href: string }) =>
+  useSuspenseQuery(groupDetailQueryOptions({ href }));
 
 export const useGroupUsersListQuery = ({
   groupHref,

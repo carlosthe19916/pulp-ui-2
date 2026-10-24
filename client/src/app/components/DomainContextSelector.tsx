@@ -6,15 +6,13 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { Divider, PageSection } from "@patternfly/react-core";
 
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { domainsListQueryOptions } from "@app/queries/domains";
 
 import { TypeaheadSelect } from "./TypeaheadSelect";
-
-/** One page of options per keystroke — the picker is a search, not a full list. */
-const PAGE_SIZE = 10;
 
 /**
  * Page-level selector for the active Pulp domain, kept in the URL (`$pulpDomain`) so
@@ -34,7 +32,7 @@ export const DomainContextSelector: React.FC = () => {
     ...domainsListQueryOptions({
       apiDomain,
       params: {
-        limit: PAGE_SIZE,
+        limit: DROPDOWN_PAGE_SIZE,
         offset: 0,
         ordering: "name",
         name__icontains: debouncedTerm || undefined,

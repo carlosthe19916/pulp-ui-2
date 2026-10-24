@@ -11,9 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/groups/$groupId")({
   loader: async ({ context: { queryClient }, params: { groupId } }) => {
     const domain = await ensureDefaultDomain(queryClient);
     const href = buildGroupHref(groupId, domain);
-    await queryClient.ensureQueryData(
-      groupDetailQueryOptions({ groupHref: href }),
-    );
+    await queryClient.ensureQueryData(groupDetailQueryOptions({ href }));
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading group" />,

@@ -23,7 +23,10 @@ import {
 } from "@app/queries/signing-services";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
-/** One page of options per keystroke — the picker is a search, not a full list. */
+/**
+ * One page of options per keystroke. Larger than `DROPDOWN_PAGE_SIZE` because `filter`
+ * (type compatibility) runs client-side over the page; shrink it once that is a server filter.
+ */
 const PAGE_SIZE = 20;
 
 export interface IResourceSearch {

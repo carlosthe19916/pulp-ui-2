@@ -5,9 +5,11 @@ import type {
   PaginatedpythonPythonBlocklistEntryResponseList,
   PythonPythonBlocklistEntry,
   PythonPythonBlocklistEntryResponse,
+  RepositoriesPythonPythonBlocklistEntriesListData,
 } from "@app/client";
 
 import { repositoryKeys, useRepositorySubResourceQuery } from "./repositories";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
@@ -18,16 +20,19 @@ const BLOCKLIST_PATH = "blocklist_entries/";
 const blocklistKey = (repositoryHref: string) =>
   [...repositoryKeys.detail(repositoryHref), BLOCKLIST_PATH] as const;
 
+export type IPythonBlocklistListParams =
+  ListParams<RepositoriesPythonPythonBlocklistEntriesListData>;
+
 export const usePythonBlocklistQuery = ({
   repositoryHref,
   params,
 }: {
   repositoryHref: string;
-  params: { limit: number; offset: number };
+  params: IPythonBlocklistListParams;
 }) =>
   useRepositorySubResourceQuery<
     PaginatedpythonPythonBlocklistEntryResponseList,
-    { limit: number; offset: number }
+    IPythonBlocklistListParams
   >({ repositoryHref, path: BLOCKLIST_PATH, params });
 
 export const usePythonBlocklistCreateMutation = (

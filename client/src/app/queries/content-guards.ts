@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -69,8 +70,18 @@ export const useContentGuardsListQuery = ({
   return useQuery(contentGuardsListQueryOptions({ domain, params }));
 };
 
-export const contentGuardDetailQueryOptions = ({ href }: { href: string }) =>
+export const contentGuardDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<ContentGuard, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<ContentGuard, DrfAxiosError>({
+    ...options,
     queryKey: contentGuardKeys.detail(href),
     queryFn: async () =>
       (await axiosInstance.get<ContentGuard>(toProxyHref(href))).data,

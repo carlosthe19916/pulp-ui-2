@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -31,8 +32,18 @@ export const accessKeys = {
     [...accessKeys.object(href), "my-permissions"] as const,
 };
 
-export const objectRolesQueryOptions = ({ href }: { href: string }) =>
+export const objectRolesQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<ObjectRolesResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<ObjectRolesResponse, DrfAxiosError>({
+    ...options,
     queryKey: accessKeys.roles(href),
     queryFn: async () =>
       (
@@ -45,8 +56,18 @@ export const objectRolesQueryOptions = ({ href }: { href: string }) =>
 export const useObjectRolesQuery = ({ href }: { href: string }) =>
   useQuery({ ...objectRolesQueryOptions({ href }), enabled: !!href });
 
-export const myPermissionsQueryOptions = ({ href }: { href: string }) =>
+export const myPermissionsQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<MyPermissionsResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<MyPermissionsResponse, DrfAxiosError>({
+    ...options,
     queryKey: accessKeys.myPermissions(href),
     queryFn: async () =>
       (

@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -71,13 +72,21 @@ export const usersListQueryOptions = ({
     },
   });
 
-export const userDetailQueryOptions = ({ userHref }: { userHref: string }) =>
+export const userDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<UserResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<UserResponse, DrfAxiosError>({
-    queryKey: userKeys.detailQuery(userHref),
+    ...options,
+    queryKey: userKeys.detailQuery(href),
     queryFn: async (): Promise<UserResponse> => {
-      const response = await axiosInstance.get<UserResponse>(
-        toProxyHref(userHref),
-      );
+      const response = await axiosInstance.get<UserResponse>(toProxyHref(href));
       return response.data;
     },
   });
@@ -87,11 +96,8 @@ export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
   return useQuery(usersListQueryOptions({ domain, params }));
 };
 
-export const useSuspenseUserDetailQuery = ({
-  userHref,
-}: {
-  userHref: string;
-}) => useSuspenseQuery(userDetailQueryOptions({ userHref }));
+export const useSuspenseUserDetailQuery = ({ href }: { href: string }) =>
+  useSuspenseQuery(userDetailQueryOptions({ href }));
 
 export const useUserCreateMutation = (
   options?: IMutationCallbacks<UserResponse, UserWritable>,

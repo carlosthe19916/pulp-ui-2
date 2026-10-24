@@ -55,7 +55,7 @@ const AddUserGroupModalInner: React.FC<IAddUserGroupModalInnerProps> = ({
   userHref,
   onClose,
 }) => {
-  const { data: user } = useSuspenseUserDetailQuery({ userHref });
+  const { data: user } = useSuspenseUserDetailQuery({ href: userHref });
   const { addNotification } = useNotifications();
 
   const pagination = useDataViewPagination({ perPage: 10 });

@@ -48,7 +48,7 @@ interface ITaskDetailProps {
 
 export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
   const { name: pulpDomain } = useSelectedDomain();
-  const { data: task } = useSuspenseTaskDetailQuery({ taskHref });
+  const { data: task } = useSuspenseTaskDetailQuery({ href: taskHref });
   const taskError = (task as TaskWithError).error;
   const cancelMutation = useTaskCancelMutation();
   const { addNotification } = useNotifications();
@@ -56,7 +56,7 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const navigate = useNavigate();
   const { disabledProps } = useObjectPermissions({ href: taskHref });
-  const { data: profile } = useTaskProfileArtifactsQuery({ taskHref });
+  const { data: profile } = useTaskProfileArtifactsQuery({ href: taskHref });
   const profileUrls = Object.entries(profile?.urls ?? {});
   const deleteMutation = useTaskDeleteMutation({
     onSuccess: async () => {

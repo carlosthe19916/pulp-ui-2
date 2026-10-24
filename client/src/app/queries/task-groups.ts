@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -26,8 +27,18 @@ export const buildTaskGroupHref = (id: string, domain: IPulpDomain): string =>
   pulpHref(`task-groups/${id}/`, domain);
 
 /** A task group's counts, polled while any of its tasks is unfinished. */
-export const taskGroupDetailQueryOptions = ({ href }: { href: string }) =>
+export const taskGroupDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<TaskGroupResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<TaskGroupResponse, DrfAxiosError>({
+    ...options,
     queryKey: taskGroupKeys.detail(href),
     queryFn: async () =>
       (await axiosInstance.get<TaskGroupResponse>(toProxyHref(href))).data,

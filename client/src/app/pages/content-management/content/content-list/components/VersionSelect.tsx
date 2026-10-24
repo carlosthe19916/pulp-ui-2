@@ -2,6 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 
@@ -15,9 +16,6 @@ interface IVersionSelectProps {
   value: string;
   onChange: (versionHref: string) => void;
 }
-
-/** One page of versions per keystroke — the picker is a search, not a full list. */
-const PAGE_SIZE = 10;
 
 /**
  * Async typeahead over a repository's versions (latest first, exact `number` search);
@@ -44,7 +42,12 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
 
   const { data, isFetching } = useRepositoryVersionsListQuery({
     repositoryHref,
-    params: { limit: PAGE_SIZE, ordering: "-number", number: numberFilter },
+    params: {
+      limit: DROPDOWN_PAGE_SIZE,
+      offset: 0,
+      ordering: "-number",
+      number: numberFilter,
+    },
     options: { enabled: isOpen },
   });
 

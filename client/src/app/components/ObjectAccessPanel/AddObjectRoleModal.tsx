@@ -13,6 +13,7 @@ import {
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
@@ -24,8 +25,6 @@ import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { NameMultiSelect } from "./NameMultiSelect";
-
-const PAGE_SIZE = 20;
 
 interface IAddObjectRoleModalProps {
   href: string;
@@ -55,7 +54,7 @@ export const AddObjectRoleModal: React.FC<IAddObjectRoleModalProps> = ({
   const app = resolvePulpType(href)?.split(".")[0] ?? "core";
   const roles = useRolesListQuery({
     params: {
-      limit: PAGE_SIZE,
+      limit: DROPDOWN_PAGE_SIZE,
       offset: 0,
       ordering: "name",
       name__startswith: `${app}.`,
@@ -64,7 +63,7 @@ export const AddObjectRoleModal: React.FC<IAddObjectRoleModalProps> = ({
   });
   const userQuery = useUsersListQuery({
     params: {
-      limit: PAGE_SIZE,
+      limit: DROPDOWN_PAGE_SIZE,
       offset: 0,
       ordering: "username",
       username__icontains: debouncedUser || undefined,
@@ -72,7 +71,7 @@ export const AddObjectRoleModal: React.FC<IAddObjectRoleModalProps> = ({
   });
   const groupQuery = useGroupsListQuery({
     params: {
-      limit: PAGE_SIZE,
+      limit: DROPDOWN_PAGE_SIZE,
       offset: 0,
       ordering: "name",
       name__icontains: debouncedGroup || undefined,

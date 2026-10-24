@@ -17,6 +17,7 @@ import { publicationKeys } from "./publications";
 import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
+import { signingServiceKeys } from "./signing-services";
 import { taskGroupKeys } from "./task-groups";
 import { taskScheduleKeys } from "./task-schedules";
 import { taskKeys } from "./tasks";
@@ -274,16 +275,10 @@ describe("query-key factories", () => {
   describe("publicationKeys", () => {
     const pubHref = "/pulp/api/v3/publications/file/file/abc/";
 
-    it("keeps both list-query variants under the list folder", () => {
+    it("keeps the list query under the list folder", () => {
       expect(
         startsWith({
           key: publicationKeys.listQuery(domain, { limit: 10 }),
-          prefix: publicationKeys.list(),
-        }),
-      ).toBe(true);
-      expect(
-        startsWith({
-          key: publicationKeys.allListQuery(domain, {}),
           prefix: publicationKeys.list(),
         }),
       ).toBe(true);
@@ -392,6 +387,10 @@ describe("query-key factories", () => {
         ],
         [artifactKeys.listQuery(domain, { limit: 10 }), artifactKeys.list()],
         [uploadKeys.listQuery(domain, { limit: 10 }), uploadKeys.list()],
+        [
+          signingServiceKeys.listQuery(domain, { limit: 10 }),
+          signingServiceKeys.list(),
+        ],
       ];
       for (const [key, folder] of pairs) {
         expect(startsWith({ key, prefix: folder })).toBe(true);

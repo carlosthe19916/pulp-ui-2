@@ -21,6 +21,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   type IRepositoryListParams,
@@ -62,7 +63,8 @@ export const UploadFilesForm: React.FC<IUploadFilesFormProps> = ({
   const debouncedSearch = useDebouncedValue({ value: search });
   const { data, isLoading } = useRepositoriesListQuery({
     params: {
-      limit: 20,
+      limit: DROPDOWN_PAGE_SIZE,
+      offset: 0,
       name__icontains: debouncedSearch || undefined,
       pulp_type__in: getRepositoryTypesForContent(
         pulpType,

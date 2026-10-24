@@ -15,8 +15,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-import { fetchAllPages } from "./utils/fetchAllPages";
-import type { AllListParams, ListParams } from "./utils/listParams";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -25,8 +24,6 @@ import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 export const PublicationsQueryKey = "publications";
 
 export type IPublicationListParams = ListParams<PublicationsListData>;
-
-export type IAllPublicationListParams = AllListParams<PublicationsListData>;
 
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede params so a
@@ -40,8 +37,6 @@ export const publicationKeys = {
 
   listQuery: (domain: IPulpDomain, params: IPublicationListParams) =>
     [...publicationKeys.list(), domain, params] as const,
-  allListQuery: (domain: IPulpDomain, params: IAllPublicationListParams) =>
-    [...publicationKeys.list(), "all", domain, params] as const,
   detailQuery: (pubHref: string) => publicationKeys.detail(pubHref),
 };
 
@@ -77,38 +72,6 @@ export const publicationsListQueryOptions = ({
     },
   });
 
-/** Publications have no server-side name filter, so fetch all for the static picker select. */
-export const allPublicationsListQueryOptions = ({
-  domain,
-  params = {},
-}: {
-  domain: IPulpDomain;
-  params?: IAllPublicationListParams;
-}) =>
-  queryOptions<PaginatedPublicationResponseList, DrfAxiosError>({
-    queryKey: publicationKeys.allListQuery(domain, params),
-    queryFn: async (): Promise<PaginatedPublicationResponseList> => {
-      const { results, count } = await fetchAllPages<PublicationResponse>(
-        async (offset, limit) => {
-          const response =
-            await axiosInstance.get<PaginatedPublicationResponseList>(
-              pulpApiPath("publications/", domain),
-              {
-                params: {
-                  ...params,
-                  offset,
-                  limit,
-                  ordering: params.ordering ? [params.ordering] : undefined,
-                },
-              },
-            );
-          return response.data;
-        },
-      );
-      return { count, next: null, previous: null, results };
-    },
-  });
-
 export const usePublicationsListQuery = ({
   params,
   options,
@@ -138,15 +101,6 @@ export const usePublicationDeleteMutation = (
     },
     onError: options?.onError,
   });
-};
-
-export const useAllPublicationsListQuery = ({
-  params = {},
-}: {
-  params?: IAllPublicationListParams;
-} = {}) => {
-  const domain = useSelectedDomain();
-  return useQuery(allPublicationsListQueryOptions({ domain, params }));
 };
 
 /**

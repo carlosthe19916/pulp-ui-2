@@ -29,7 +29,7 @@ export const Route = createFileRoute(
       versionNumber,
     );
     await queryClient.ensureQueryData(
-      repositoryVersionDetailQueryOptions({ versionHref }),
+      repositoryVersionDetailQueryOptions({ href: versionHref }),
     );
     return { repositoryHref, versionHref };
   },

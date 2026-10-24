@@ -21,6 +21,7 @@ import {
   type ITypeaheadOption,
   TypeaheadSelect,
 } from "@app/components/TypeaheadSelect";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
@@ -65,7 +66,8 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   const { data: repositoriesData, isLoading: isReposLoading } =
     useRepositoriesListQuery({
       params: {
-        limit: 20,
+        limit: DROPDOWN_PAGE_SIZE,
+        offset: 0,
         name__icontains: debouncedRepoSearch || undefined,
       },
     });

@@ -48,7 +48,7 @@ interface IGroupUsersTabProps {
 }
 
 export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
-  const { data: group } = useSuspenseGroupDetailQuery({ groupHref });
+  const { data: group } = useSuspenseGroupDetailQuery({ href: groupHref });
   const { addNotification } = useNotifications();
 
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);

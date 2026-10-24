@@ -105,7 +105,7 @@ export const useArtifactUploadMutation = (
       const { data: existing } =
         await axiosInstance.get<PaginatedArtifactResponseList>(
           pulpApiPath("artifacts/", domain),
-          { params: { sha256, limit: 1 } },
+          { params: { sha256 } },
         );
       const reused = existing.results[0]?.pulp_href;
       if (reused) return reused;

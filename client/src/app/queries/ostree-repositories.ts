@@ -6,14 +6,12 @@ import type {
   OstreeImportAll,
   RepositoryResponse,
 } from "@app/client";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { repositoryKeys } from "./repositories";
 import { taskKeys } from "./tasks";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath } from "./utils/pulpApi";
-import { extractIdFromHref } from "./utils/pulpHref";
+import { toProxyHref } from "./utils/pulpApi";
 
 /**
  * Imports an uploaded OSTree archive (an artifact) into a new repository version:
@@ -25,7 +23,6 @@ export const useOstreeImportMutation = (
     { repository: RepositoryResponse; body: OstreeImportAll & { ref?: string } }
   >,
 ) => {
-  const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
     AsyncOperationResponse,
@@ -33,10 +30,9 @@ export const useOstreeImportMutation = (
     { repository: RepositoryResponse; body: OstreeImportAll & { ref?: string } }
   >({
     mutationFn: async ({ repository, body }) => {
-      const id = extractIdFromHref(repository.pulp_href ?? "");
       const action = body.ref ? "import_commits" : "import_all";
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath(`repositories/ostree/ostree/${id}/${action}/`, domain),
+        `${toProxyHref(repository.pulp_href ?? "")}${action}/`,
         body,
       );
       return response.data;

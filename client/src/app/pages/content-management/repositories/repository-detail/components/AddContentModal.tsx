@@ -26,6 +26,7 @@ import {
 import type { RepositoryResponse } from "@app/client";
 import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -64,7 +65,8 @@ const SourcePicker: React.FC<ISourcePickerProps> = ({
   const [versionHref, setVersionHref] = useState("");
   const { data, isLoading } = useRepositoriesListQuery({
     params: {
-      limit: 20,
+      limit: DROPDOWN_PAGE_SIZE,
+      offset: 0,
       name__icontains: debouncedSearch || undefined,
       pulp_type__in: [repositoryType] as IRepositoryListParams["pulp_type__in"],
     },

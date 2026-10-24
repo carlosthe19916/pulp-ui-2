@@ -37,7 +37,7 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
-  const { data: user } = useSuspenseUserDetailQuery({ userHref });
+  const { data: user } = useSuspenseUserDetailQuery({ href: userHref });
   // Feeds only the tab-title count, so request a single row and read `count`.
   const { data: rolesData } = useRoleAssignmentsListQuery({
     kind: "user",

@@ -6,6 +6,7 @@ import {
   useQueries,
   useQuery,
   useQueryClient,
+  type UseQueryOptions,
   type UseQueryResult,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -185,13 +186,21 @@ export const tasksListQueryOptions = ({
 export const buildTaskHref = (taskId: string, domain: IPulpDomain): string =>
   pulpHref(`tasks/${taskId}/`, domain);
 
-export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
+export const taskDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: Omit<
+    UseQueryOptions<TaskResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<TaskResponse, DrfAxiosError>({
-    queryKey: taskKeys.detailQuery(taskHref),
+    ...options,
+    queryKey: taskKeys.detailQuery(href),
     queryFn: async (): Promise<TaskResponse> => {
-      const response = await axiosInstance.get<TaskResponse>(
-        toProxyHref(taskHref),
-      );
+      const response = await axiosInstance.get<TaskResponse>(toProxyHref(href));
       return response.data;
     },
   });
@@ -235,7 +244,7 @@ export const useTaskDetailQueries = ({
   useQueries({
     queries: taskHrefs.map((taskHref) =>
       queryOptions<TaskResponse, DrfAxiosError>({
-        ...taskDetailQueryOptions({ taskHref }),
+        ...taskDetailQueryOptions({ href: taskHref }),
         refetchInterval: (query) =>
           isTerminalTaskState(query.state.data?.state) ||
           query.state.error?.response?.status === 404
@@ -322,13 +331,9 @@ export const useTasksByPrnListQuery = ({
   });
 };
 
-export const useSuspenseTaskDetailQuery = ({
-  taskHref,
-}: {
-  taskHref: string;
-}) =>
+export const useSuspenseTaskDetailQuery = ({ href }: { href: string }) =>
   useSuspenseQuery({
-    ...taskDetailQueryOptions({ taskHref }),
+    ...taskDetailQueryOptions({ href }),
     refetchInterval: (query) =>
       isActiveTask(query.state.data?.state) ? DEFAULT_REFETCH_INTERVAL : false,
   });
@@ -373,28 +378,30 @@ export const useTaskDeleteMutation = (
 
 /** Download links for the profiling data a task recorded (when profiling was on). */
 export const taskProfileArtifactsQueryOptions = ({
-  taskHref,
+  href,
+  options,
 }: {
-  taskHref: string;
+  href: string;
+  options?: Omit<
+    UseQueryOptions<ProfileArtifactResponse, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
 }) =>
   queryOptions<ProfileArtifactResponse, DrfAxiosError>({
-    queryKey: [...taskKeys.detail(taskHref), "profile-artifacts"] as const,
+    ...options,
+    queryKey: [...taskKeys.detail(href), "profile-artifacts"] as const,
     queryFn: async () =>
       (
         await axiosInstance.get<ProfileArtifactResponse>(
-          `${toProxyHref(taskHref)}profile_artifacts/`,
+          `${toProxyHref(href)}profile_artifacts/`,
         )
       ).data,
   });
 
-export const useTaskProfileArtifactsQuery = ({
-  taskHref,
-}: {
-  taskHref: string;
-}) =>
+export const useTaskProfileArtifactsQuery = ({ href }: { href: string }) =>
   useQuery({
-    ...taskProfileArtifactsQueryOptions({ taskHref }),
-    enabled: !!taskHref,
+    ...taskProfileArtifactsQueryOptions({ href }),
+    enabled: !!href,
   });
 
 export const useTaskPurgeMutation = (

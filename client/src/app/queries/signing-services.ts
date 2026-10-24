@@ -18,10 +18,19 @@ export const SigningServicesQueryKey = "signing-services";
 
 export type ISigningServiceListParams = ListParams<SigningServicesListData>;
 
-export const signingServicesRootQueryOptions = queryOptions({
-  queryKey: [SigningServicesQueryKey],
-  queryFn: async (): Promise<null> => null,
-});
+/**
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
+ */
+export const signingServiceKeys = {
+  all: () => [SigningServicesQueryKey] as const,
+  list: () => [...signingServiceKeys.all(), "list"] as const,
+  detail: (href: string) =>
+    [...signingServiceKeys.all(), "detail", href] as const,
+
+  listQuery: (domain: IPulpDomain, params: ISigningServiceListParams) =>
+    [...signingServiceKeys.list(), domain, params] as const,
+};
 
 export const signingServicesListQueryOptions = ({
   domain,
@@ -31,12 +40,7 @@ export const signingServicesListQueryOptions = ({
   params: ISigningServiceListParams;
 }) =>
   queryOptions<PaginatedSigningServiceResponseList, DrfAxiosError>({
-    queryKey: [
-      ...signingServicesRootQueryOptions.queryKey,
-      "list",
-      domain,
-      params,
-    ],
+    queryKey: signingServiceKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedSigningServiceResponseList> => {
       const response =
         await axiosInstance.get<PaginatedSigningServiceResponseList>(
@@ -64,7 +68,7 @@ export const signingServiceDetailQueryOptions = ({
 }) =>
   queryOptions<SigningServiceResponse, DrfAxiosError>({
     ...options,
-    queryKey: [...signingServicesRootQueryOptions.queryKey, "detail", href],
+    queryKey: signingServiceKeys.detail(href),
     queryFn: async (): Promise<SigningServiceResponse> => {
       const response = await axiosInstance.get<SigningServiceResponse>(
         toProxyHref(href),
