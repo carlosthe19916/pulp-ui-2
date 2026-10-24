@@ -1,51 +1,44 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { Agent } from "@cursor/sdk";
 
-import type { IVendor } from "../types.ts";
+import type { IVendor, ToolAccess } from "../types.ts";
 
-// Cursor can't run claude-opus-4-8; this is the closest model it offers.
-const MODEL = "claude-4.6-opus-high";
+// Its default variant (256k context, xhigh reasoning effort, not fast).
+const MODEL = { id: "grok-4.7" };
 
-// The Cursor CLI (`cursor-agent`), headless. Ask mode keeps it read-only, but it can't turn its
-// read tools off (a project cli.json deny on Read is ignored), so a "none" case fails the run
-// if the agent used any tool. User rules from the Cursor account still apply.
+const TOOLS_BY_ACCESS: Record<ToolAccess, string[]> = {
+  none: [],
+  read: ["read", "grep", "glob", "ls"],
+};
+
+// A local Cursor agent via the Cursor SDK, which authenticates with `CURSOR_API_KEY` or a stored
+// login. Only project settings load (none without guidance), so user rules from the Cursor
+// account don't steer it. No cost: the SDK's getUsage() isn't available on our account.
 export const cursor: IVendor = {
-  guidance: [".cursor/"],
-  async run({ prompt, cwd, tools, signal }) {
-    const { stdout } = await promisify(execFile)(
-      "cursor-agent",
-      [
-        ...["--print", "--output-format", "stream-json", "--mode", "ask"],
-        ...["--trust", "--model", MODEL, "--workspace", cwd],
-        ...["--", prompt],
-      ],
-      { cwd, signal, maxBuffer: 64 * 1024 * 1024 },
-    ).catch((err) => {
-      if (err.code === "ENOENT") {
+  guidancePaths: [".cursor/"],
+  async run({ prompt, cwd, tools, withGuidance, signal }) {
+    const agent = await Agent.create({
+      model: MODEL,
+      tools: TOOLS_BY_ACCESS[tools],
+      local: { cwd, settingSources: withGuidance ? ["project"] : [] },
+    });
+    let cancel = () => {};
+    try {
+      // An already-aborted signal never fires "abort", so check before starting.
+      signal.throwIfAborted();
+      const cursorRun = await agent.send(prompt);
+      cancel = () => void cursorRun.cancel().catch(() => {});
+      signal.addEventListener("abort", cancel, { once: true });
+
+      const runResult = await cursorRun.wait();
+      if (runResult.status !== "finished") {
         throw new Error(
-          "cursor-agent not found: install the Cursor CLI and run `cursor-agent login`",
+          `agent run failed: ${runResult.status} ${runResult.error?.message ?? ""}`,
         );
       }
-      throw err;
-    });
-
-    // One JSON event per line: tool calls as they start, then a single result.
-    const events = stdout
-      .split("\n")
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
-    const used = events
-      .filter((e) => e.type === "tool_call" && e.subtype === "started")
-      .map((e) => Object.keys(e.tool_call)[0]);
-    if (tools === "none" && used.length) {
-      throw new Error(`agent used tools the case doesn't allow: ${used}`);
+      return { answer: (runResult.result ?? "").trim() };
+    } finally {
+      signal.removeEventListener("abort", cancel);
+      agent.close();
     }
-
-    const result = events.find((e) => e.type === "result");
-    if (!result) throw new Error("agent run ended without a result");
-    if (result.subtype !== "success" || result.is_error) {
-      throw new Error(`agent run failed: ${result.subtype} ${result.result}`);
-    }
-    return { answer: result.result.trim() };
   },
 };

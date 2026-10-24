@@ -8,6 +8,8 @@ const MODEL = "claude-opus-4-8";
 
 export const PASS_SCORE = 4;
 
+const TIMEOUT_MS = 2 * 60_000;
+
 // claude-opus-4-8 list prices in USD per token, for a cost estimate.
 const USD_PER_INPUT_TOKEN = 5 / 1e6;
 const USD_PER_OUTPUT_TOKEN = 25 / 1e6;
@@ -38,7 +40,7 @@ export async function judge({
     comment: z.string(),
   });
 
-  const resp = await client.messages.parse(
+  const response = await client.messages.parse(
     {
       model: MODEL,
       max_tokens: 16000,
@@ -67,18 +69,18 @@ ${answer}
       ],
       output_config: { format: zodOutputFormat(Verdict) },
     },
-    { timeout: 2 * 60_000 },
+    { timeout: TIMEOUT_MS },
   );
 
-  if (!resp.parsed_output) {
+  if (!response.parsed_output) {
     throw new Error(
-      `judge returned no verdict (stop_reason: ${resp.stop_reason})`,
+      `judge returned no verdict (stop_reason: ${response.stop_reason})`,
     );
   }
 
   const costUsd =
-    resp.usage.input_tokens * USD_PER_INPUT_TOKEN +
-    resp.usage.output_tokens * USD_PER_OUTPUT_TOKEN;
+    response.usage.input_tokens * USD_PER_INPUT_TOKEN +
+    response.usage.output_tokens * USD_PER_OUTPUT_TOKEN;
 
-  return { ...resp.parsed_output, costUsd };
+  return { ...response.parsed_output, costUsd };
 }
