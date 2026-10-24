@@ -1,7 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 
 import pfBackground from "@patternfly/patternfly/assets/images/pf-background.svg";
 import {
@@ -28,11 +28,13 @@ const SERVER_ERROR = "Server error. Please come back later.";
 const storageWarning =
   "Pulp UI is currently using HTTP Basic Authentication. Your credentials will be stored in your browser's sessionStorage or localStorage, in plain text.";
 
+const routeApi = getRouteApi("/login");
+
 export const LoginPage: React.FC = () => {
   const apiStatus = useApiStatus();
 
   const navigate = useNavigate();
-  const { redirect } = useSearch({ from: "/login" });
+  const { redirect } = routeApi.useSearch();
   const branding = getBranding();
   const { isGlass } = useTheme();
 

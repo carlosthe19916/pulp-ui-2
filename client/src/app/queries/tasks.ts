@@ -27,7 +27,7 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 
 export const TasksQueryKey = "tasks";
 
@@ -181,6 +181,9 @@ export const tasksListQueryOptions = ({
     queryKey: taskKeys.listQuery(domain, params),
     queryFn: () => fetchTasksPage(domain, params),
   });
+
+export const buildTaskHref = (taskId: string, domain: IPulpDomain): string =>
+  pulpHref(`tasks/${taskId}/`, domain);
 
 export const taskDetailQueryOptions = ({ taskHref }: { taskHref: string }) =>
   queryOptions<TaskResponse, DrfAxiosError>({

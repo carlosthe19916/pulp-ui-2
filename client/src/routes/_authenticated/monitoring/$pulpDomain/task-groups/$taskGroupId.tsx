@@ -21,7 +21,7 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(taskGroupDetailQueryOptions({ href }));
     return { href };
   },
-  pendingComponent: () => <DetailRoutePending label="Loading task group..." />,
+  pendingComponent: () => <DetailRoutePending label="Loading task group" />,
   errorComponent: DetailRouteError,
   component: TaskGroupDetailRoute,
 });

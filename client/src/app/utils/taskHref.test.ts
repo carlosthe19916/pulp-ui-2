@@ -1,26 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTaskHref, extractTaskDomain, extractTaskId } from "./taskHref";
+import { extractTaskDomain, extractTaskId } from "./taskHref";
 
 describe("taskHref helpers", () => {
-  it("builds a domain-scoped task href when domains are enabled", () => {
-    expect(
-      buildTaskHref({
-        taskId: "abc-123",
-        domain: { enabled: true, name: "myd" },
-      }),
-    ).toBe("/pulp/myd/api/v3/tasks/abc-123/");
-  });
-
-  it("omits the domain segment when domains are disabled", () => {
-    expect(
-      buildTaskHref({
-        taskId: "abc-123",
-        domain: { enabled: false, name: "default" },
-      }),
-    ).toBe("/pulp/api/v3/tasks/abc-123/");
-  });
-
   it("extracts the trailing task id from a pulp_href", () => {
     expect(
       extractTaskId(

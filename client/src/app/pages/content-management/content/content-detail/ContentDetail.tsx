@@ -22,7 +22,7 @@ import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
-import { useContentDetailQuery } from "@app/queries/content";
+import { useSuspenseContentDetailQuery } from "@app/queries/content";
 import { getRepositoryTypesForContent } from "@catalog";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
@@ -41,8 +41,8 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
   id,
   href,
 }) => {
-  const { data } = useContentDetailQuery({ href });
-  const prn = data?.prn ?? id;
+  const { data } = useSuspenseContentDetailQuery({ href });
+  const prn = data.prn ?? id;
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
   const canAdd = getRepositoryTypesForContent(pulpType).length > 0;

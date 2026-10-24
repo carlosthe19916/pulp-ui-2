@@ -5,6 +5,7 @@ import { DetailRoutePending } from "@app/components/DetailRoutePending";
 import { RepositoryVersionDetailRoute } from "@app/pages/content-management/repositories/repository-version-detail/RepositoryVersionDetailRoute";
 import {
   buildRepositoryHref,
+  buildRepositoryVersionHref,
   repositoryVersionDetailQueryOptions,
 } from "@app/queries/repositories";
 import { ensureDomainFromParam } from "@app/queries/utils/loaderDomain";
@@ -23,7 +24,10 @@ export const Route = createFileRoute(
       domain,
     );
     if (!repositoryHref) throw new Error("Unknown repository plugin type");
-    const versionHref = `${repositoryHref}versions/${versionNumber}/`;
+    const versionHref = buildRepositoryVersionHref(
+      repositoryHref,
+      versionNumber,
+    );
     await queryClient.ensureQueryData(
       repositoryVersionDetailQueryOptions({ versionHref }),
     );

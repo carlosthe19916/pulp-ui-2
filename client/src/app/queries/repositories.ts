@@ -520,6 +520,11 @@ export const buildRepositoryHref = (
   return apiPath ? pulpHref(`repositories/${apiPath}/${id}/`, domain) : null;
 };
 
+export const buildRepositoryVersionHref = (
+  repositoryHref: string,
+  versionNumber: string,
+): string => `${repositoryHref}versions/${versionNumber}/`;
+
 export const useSuspenseRepositoryDetailQuery = ({ href }: { href: string }) =>
   useSuspenseQuery(repositoryDetailQueryOptions({ href }));
 

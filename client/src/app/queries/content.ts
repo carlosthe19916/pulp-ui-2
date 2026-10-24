@@ -5,6 +5,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -235,6 +236,14 @@ export const useContentDetailQuery = <T = MultipleArtifactContentResponse>({
 }: {
   href: string | null;
 }) => useQuery({ ...contentDetailQueryOptions<T>({ href }), enabled: !!href });
+
+export const useSuspenseContentDetailQuery = <
+  T = MultipleArtifactContentResponse,
+>({
+  href,
+}: {
+  href: string;
+}) => useSuspenseQuery(contentDetailQueryOptions<T>({ href }));
 
 /**
  * Rebuild a content unit's `pulp_href` from its route's `pulp_type` + pk; `null` for
