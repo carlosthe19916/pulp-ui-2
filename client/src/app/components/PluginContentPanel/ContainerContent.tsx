@@ -6,11 +6,11 @@ import type {
   ContainerManifestResponse,
   ContainerTagResponse,
 } from "@app/client";
-import { platformOf } from "@app/components/PluginBrowse/helpers";
 import {
   useContentDetailQuery,
   useContentTypeListQuery,
 } from "@app/queries/content";
+import { platformOf } from "@app/utils/pluginContentFormat";
 
 import {
   Checksum,

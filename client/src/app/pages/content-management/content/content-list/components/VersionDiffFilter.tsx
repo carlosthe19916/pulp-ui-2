@@ -16,7 +16,7 @@ import {
   decodeVersionDiff,
   encodeVersionDiff,
   type DiffRelation,
-} from "./versionFilterCodec";
+} from "../utils/versionFilterCodec";
 import { VersionSelect } from "./VersionSelect";
 
 const RELATION_LABEL: Record<DiffRelation, string> = {

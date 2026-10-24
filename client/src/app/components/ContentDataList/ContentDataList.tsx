@@ -15,13 +15,13 @@ import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorSta
 import type { PageHeaderAction } from "@app/components/PageHeaderActionsMenu";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import type { IContentUnitSelection } from "@app/hooks/useContentUnitSelection";
-import { useSelectionState } from "@app/hooks/useSelectionState";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import type { IContentUnit } from "@app/utils/contentUnit";
+import { contentUnitRef } from "@app/utils/contentUnitRef";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
 import { ContentListItem } from "./ContentListItem";
-import { contentUnitRef } from "./contentUnitRef";
-import type { IContentUnit } from "./types";
+import { useSelectionState } from "./useSelectionState";
 
 /** Stable keys for skeleton rows (max page size is 20), so no array index is used as a key. */
 const SKELETON_KEYS = Array.from(

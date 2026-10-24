@@ -23,17 +23,14 @@ import {
 
 import type { ContentGuardResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  MultiSelectFilter,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { ObjectAccessModal } from "@app/components/ObjectAccess";
+import { ListPagination } from "@app/components/ListPagination";
+import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -43,10 +40,11 @@ import {
   useContentGuardsListQuery,
 } from "@app/queries/content-guards";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { ContentGuardModal } from "./components/ContentGuardModal";
-import { GUARD_TYPES, guardTypeOf } from "./guardTypes";
+import { GUARD_TYPES, guardTypeOf } from "./utils/guardTypes";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

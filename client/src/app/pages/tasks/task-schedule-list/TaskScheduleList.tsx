@@ -19,21 +19,19 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  dataViewBodyStates,
-  ListPagination,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   type ITaskScheduleListParams,
   useTaskSchedulesListQuery,
 } from "@app/queries/task-schedules";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import {
   extractTaskDomain,
   extractTaskId,

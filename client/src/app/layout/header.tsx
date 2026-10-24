@@ -24,14 +24,13 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
-
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
 import HelpIcon from "@patternfly/react-icons/dist/esm/icons/help-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
-import { ThemeSelector } from "@app/components/Theme";
+import { ThemeSelector } from "@app/components/ThemeSelector";
 import ENV from "@app/env";
 import { useAuth } from "@app/hooks/useAuth";
 import useBranding from "@app/hooks/useBranding";

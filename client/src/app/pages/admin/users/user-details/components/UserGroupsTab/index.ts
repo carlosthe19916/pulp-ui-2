@@ -1,0 +1,1 @@
+export { UserGroupsTab } from "./UserGroupsTab";

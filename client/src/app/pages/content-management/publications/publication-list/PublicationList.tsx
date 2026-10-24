@@ -22,21 +22,16 @@ import {
 import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PublicationResponse } from "@app/client";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  RevealCellOnExpand,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { ObjectAccessModal } from "@app/components/ObjectAccess";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
-import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
-import { PublicationModal } from "./components/PublicationModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -51,7 +46,11 @@ import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+
+import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
+import { PublicationModal } from "./components/PublicationModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "pulp_created",

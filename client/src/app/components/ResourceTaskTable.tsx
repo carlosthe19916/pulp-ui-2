@@ -19,7 +19,7 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import { dataViewBodyStates, type DataViewTh } from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -27,6 +27,7 @@ import {
   useTaskCancelMutation,
   useTasksByPrnListQuery,
 } from "@app/queries/tasks";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 

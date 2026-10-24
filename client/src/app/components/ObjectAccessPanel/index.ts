@@ -1,0 +1,1 @@
+export { ObjectAccessPanel } from "./ObjectAccessPanel";

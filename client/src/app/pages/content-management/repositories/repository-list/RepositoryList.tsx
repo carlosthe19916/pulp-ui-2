@@ -25,22 +25,19 @@ import { ActionsColumn, type IAction } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { RepositoryModal } from "@app/components/RepositoryModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { RepositoryModal } from "./components/RepositoryModal";
 import { PublishModal } from "@app/components/PublishModal";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -53,6 +50,7 @@ import {
 } from "@app/queries/repositories";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPlugin } from "@catalog";

@@ -22,7 +22,7 @@ its shape and [adding-a-plugin.md](../../docs/development/adding-a-plugin.md) fo
 ## Per-type presentation
 
 - Lives in UI registries keyed by `pulp_type`: `PANEL_BY_TYPE` (`PluginContentPanel`),
-  `PluginBrowse/registry.ts`, `repository-detail/components/pluginTabs.ts`.
+  `RepositoryContent/browseRegistry.ts`, `repository-detail/components/pluginTabs.ts`.
 - Each registry has a generic fallback (`BaseContent`, All content only, no extra tabs).
 
 ## Generic pages

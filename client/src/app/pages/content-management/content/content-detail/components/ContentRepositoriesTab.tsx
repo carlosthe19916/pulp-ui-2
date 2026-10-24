@@ -15,9 +15,10 @@ import {
 } from "@patternfly/react-table";
 import { useDataViewPagination } from "@patternfly/react-data-view";
 
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { getPlugin } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
-import { dataViewBodyStates, ListPagination } from "@app/components/DataView";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";

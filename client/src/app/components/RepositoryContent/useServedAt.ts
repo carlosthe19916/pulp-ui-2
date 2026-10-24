@@ -1,6 +1,7 @@
-import type { IServedAt } from "@app/components/PluginBrowse";
 import { useServingDistributions } from "@app/hooks/useServingDistributions";
 import { useDistributionDetailQuery } from "@app/queries/distributions";
+
+import type { IServedAt } from "./browseTypes";
 
 const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";

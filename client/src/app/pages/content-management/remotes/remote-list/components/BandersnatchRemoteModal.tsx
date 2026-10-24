@@ -1,7 +1,7 @@
 import type React from "react";
 
-import type { IEntityField } from "@catalog";
 import { TaskActionModal } from "@app/components/TaskActionModal";
+import type { IEntityField } from "@catalog";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useBandersnatchRemoteCreateMutation } from "@app/queries/python-remotes";

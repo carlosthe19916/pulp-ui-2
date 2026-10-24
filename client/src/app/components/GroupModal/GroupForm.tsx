@@ -4,7 +4,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Form } from "@patternfly/react-core";
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
-import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
+import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import type { GroupFormValues } from "./useGroupForm";

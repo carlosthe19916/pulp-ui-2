@@ -25,15 +25,11 @@ import {
 
 import type { UpstreamPulpResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { ObjectAccessModal } from "@app/components/ObjectAccess";
-import { buildDefaultValues } from "@app/components/PluginForm/formSchema";
+import { ListPagination } from "@app/components/ListPagination";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -46,10 +42,12 @@ import {
   useUpstreamPulpsListQuery,
   useUpstreamPulpUpdateMutation,
 } from "@app/queries/upstream-pulps";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { REPLICATE_FIELDS, UPSTREAM_FIELDS } from "./upstreamFields";
+import { REPLICATE_FIELDS, UPSTREAM_FIELDS } from "./utils/upstreamFields";
 
 type Modal =
   | { kind: "create" }

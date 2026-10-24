@@ -24,14 +24,11 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { UserResponse } from "@app/client";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { UserModal } from "@app/components/UserModal";
@@ -40,6 +37,7 @@ import type { IUserListParams } from "@app/queries/users";
 import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [

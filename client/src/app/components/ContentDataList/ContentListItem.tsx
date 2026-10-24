@@ -28,9 +28,8 @@ import {
 } from "@app/components/PageHeaderActionsMenu";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { IContentUnit } from "@app/utils/contentUnit";
 import { formatDateTime } from "@app/utils/utils";
-
-import type { IContentUnit } from "./types";
 
 /** Max rendered width of a label chip before it truncates (with a tooltip). */
 const LABEL_MAX_WIDTH = "20ch";

@@ -9,7 +9,7 @@ vi.mock("@app/hooks/useDefaultDomain", () => ({ useDefaultDomain: vi.fn() }));
 vi.mock("./DomainList", () => ({
   DomainList: () => <div>DOMAIN_LIST</div>,
 }));
-vi.mock("./DomainsDisabledEmptyState", () => ({
+vi.mock("./components/DomainsDisabledEmptyState", () => ({
   DomainsDisabledEmptyState: () => <div>DISABLED_STATE</div>,
 }));
 

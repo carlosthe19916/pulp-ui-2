@@ -15,7 +15,7 @@ entries.
 2. **Check the catalog test** (`catalog.test.ts`) still passes: `npm test`.
 3. **Optional presentation**, each a UI registry keyed by `pulp_type`:
    - a content detail panel in `PluginContentPanel`;
-   - Browse sections in `PluginBrowse/registry.ts`;
+   - Browse sections in `RepositoryContent/browseRegistry.ts`;
    - extra repository tabs in `repository-detail/components/pluginTabs.ts`.
 
    Without these, content renders with the generic panel and the repository shows only

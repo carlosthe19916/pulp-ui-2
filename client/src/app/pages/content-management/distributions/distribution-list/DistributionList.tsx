@@ -26,19 +26,17 @@ import {
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
+import { useColumnSort } from "@app/hooks/useColumnSort";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  RevealCellOnExpand,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { ObjectAccessModal } from "@app/components/ObjectAccess";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";

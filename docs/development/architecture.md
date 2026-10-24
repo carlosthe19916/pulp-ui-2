@@ -39,7 +39,7 @@ Per-type **presentation** lives in UI registries keyed by `pulp_type`, never in 
 | Registry                                          | Maps                                |
 | ------------------------------------------------- | ----------------------------------- |
 | `components/PluginContentPanel` (`PANEL_BY_TYPE`) | content type → detail panel         |
-| `components/PluginBrowse/registry.ts`             | repository type → Browse sections   |
+| `components/RepositoryContent/browseRegistry.ts`  | repository type → Browse sections   |
 | `repository-detail/components/pluginTabs.ts`      | repository type → extra detail tabs |
 
 ## Data flow
@@ -66,12 +66,12 @@ File-based routes in `client/src/routes/`. Domain-scoped areas carry `$pulpDomai
 
 ## Code map
 
-| Path                           | What                                                      |
-| ------------------------------ | --------------------------------------------------------- |
-| `client/src/catalog/`          | plugin catalog (data only)                                |
-| `client/src/routes/`           | routes; loaders build hrefs                               |
-| `client/src/app/pages/<area>/` | pages, grouped by nav area                                |
-| `client/src/app/components/`   | shared UI (DataView helpers, PluginForm, PluginBrowse, …) |
-| `client/src/app/queries/`      | query and mutation hooks                                  |
-| `client/src/app/context/`      | ApiStatus (installed plugins), Auth, Notifications, Theme |
-| `client/src/app/client/`       | generated OpenAPI client (do not edit)                    |
+| Path                           | What                                                                 |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `client/src/catalog/`          | plugin catalog (data only)                                           |
+| `client/src/routes/`           | routes; loaders build hrefs                                          |
+| `client/src/app/pages/<area>/` | pages, grouped by nav area                                           |
+| `client/src/app/components/`   | shared UI (data-view helpers, EntityModalBody, RepositoryContent, …) |
+| `client/src/app/queries/`      | query and mutation hooks                                             |
+| `client/src/app/context/`      | ApiStatus (installed plugins), Auth, Notifications, Theme            |
+| `client/src/app/client/`       | generated OpenAPI client (do not edit)                               |

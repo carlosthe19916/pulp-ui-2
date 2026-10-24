@@ -9,16 +9,14 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  dataViewBodyStates,
-  ListPagination,
-  type DataViewTh,
-} from "@app/components/DataView";
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 
 interface IRepositoryDistributionsTabProps {
   repositoryHref: string;

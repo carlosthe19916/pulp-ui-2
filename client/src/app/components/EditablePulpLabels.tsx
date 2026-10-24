@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+
 import type { QueryKey } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -17,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
-import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
+import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {

@@ -23,9 +23,9 @@ import {
   Tabs,
 } from "@patternfly/react-core";
 
+import { ContentPicker } from "@app/components/ContentPicker";
 import { getRepositoryContentTypes } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
-import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";

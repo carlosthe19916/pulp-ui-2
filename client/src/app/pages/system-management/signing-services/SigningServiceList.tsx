@@ -17,18 +17,16 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { ISigningServiceListParams } from "@app/queries/signing-services";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

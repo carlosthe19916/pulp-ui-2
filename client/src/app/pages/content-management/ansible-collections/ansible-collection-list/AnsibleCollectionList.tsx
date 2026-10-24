@@ -17,17 +17,14 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
-import {
-  dataViewBodyStates,
-  ListPagination,
-  MultiSelectFilter,
-  RevealCellOnExpand,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ListPagination } from "@app/components/ListPagination";
+import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   type IAnsibleCollectionListParams,
@@ -35,6 +32,7 @@ import {
   useAnsibleTagsQuery,
 } from "@app/queries/ansible-collections";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 
 import { CollectionVersions } from "./components/CollectionVersions";
 

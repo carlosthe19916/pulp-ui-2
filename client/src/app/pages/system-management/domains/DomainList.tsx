@@ -24,18 +24,15 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { DomainResponse } from "@app/client";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
@@ -46,13 +43,14 @@ import {
   useDomainsListQuery,
 } from "@app/queries/domains";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainLabelsModal } from "./components/DomainLabelsModal";
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
 import { DomainModal } from "./components/DomainModal";
-import { storageClassLabel } from "./storageBackends";
+import { storageClassLabel } from "./utils/storageBackends";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

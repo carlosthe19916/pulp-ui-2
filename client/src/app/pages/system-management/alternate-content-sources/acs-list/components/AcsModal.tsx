@@ -1,6 +1,5 @@
 import type React from "react";
 
-import { buildDefaultValues } from "@app/components/PluginForm/formSchema";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
@@ -10,10 +9,11 @@ import {
   useAcsUpdateMutation,
 } from "@app/queries/acs";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { ACS_FIELDS, type IAcsType } from "../acsTypes";
+import { ACS_FIELDS, type IAcsType } from "../utils/acsTypes";
 
 /** Creates an ACS of the selected plugin, or edits one. */
 export const AcsModal: React.FC<{

@@ -22,8 +22,9 @@ import {
 } from "@patternfly/react-data-view";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import type { IContentType } from "@catalog";
-import { dataViewBodyStates, ListPagination } from "@app/components/DataView";
 import {
   dataViewSelection,
   type IContentUnitSelection,

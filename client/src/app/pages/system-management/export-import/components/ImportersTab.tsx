@@ -13,13 +13,9 @@ import {
 
 import type { PulpImporterResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  RevealCellOnExpand,
-  type DataViewTh,
-} from "@app/components/DataView";
-import { buildDefaultValues } from "@app/components/PluginForm/formSchema";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -33,6 +29,8 @@ import {
   useImportMutation,
   useImportsListQuery,
 } from "@app/queries/importers";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -40,7 +38,7 @@ import {
   IMPORT_CHECK_FIELDS,
   IMPORT_FIELDS,
   IMPORTER_FIELDS,
-} from "../exporterTypes";
+} from "../utils/exporterTypes";
 import { RunsTable } from "./RunsTable";
 
 const ImportRuns: React.FC<{ href: string }> = ({ href }) => {

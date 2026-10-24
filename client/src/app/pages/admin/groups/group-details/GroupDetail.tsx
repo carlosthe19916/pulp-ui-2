@@ -18,7 +18,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { GroupModal } from "@app/components/GroupModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
-import { RoleAssignmentsTab } from "@app/components/RoleAssignments";
+import { RoleAssignmentsTab } from "@app/components/RoleAssignmentsTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
   useGroupDeleteMutation,

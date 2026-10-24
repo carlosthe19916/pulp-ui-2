@@ -7,7 +7,6 @@ import {
   FormSelectOption,
 } from "@patternfly/react-core";
 
-import { buildDefaultValues } from "@app/components/PluginForm/formSchema";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -17,9 +16,10 @@ import {
   useContentGuardCreateMutation,
   useContentGuardUpdateMutation,
 } from "@app/queries/content-guards";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { GUARD_TYPES, guardTypeOf } from "../guardTypes";
+import { GUARD_TYPES, guardTypeOf } from "../utils/guardTypes";
 
 /** Creates a guard of a chosen type, or edits one (its type is fixed). */
 export const ContentGuardModal: React.FC<{

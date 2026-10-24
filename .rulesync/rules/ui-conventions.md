@@ -14,8 +14,9 @@ How the code realises the visual, permission and task-feedback ADRs. Read the AD
 
 ## Layout
 
-- Tables use `@patternfly/react-data-view` with the `@app/components/DataView` helpers
-  (`UserList` is the reference); paging, sorting and filtering are server-side.
+- Tables use `@patternfly/react-data-view` with the shared helpers (`dataViewBodyStates`,
+  `ListPagination`, `useColumnSort`, `buildThSort`; `UserList` is the reference); paging,
+  sorting and filtering are server-side.
 - Detail pages use tabs; a tab's content component never renders its own `<PageSection>`.
   `Tabs` set `mountOnEnter` so an inactive tab's queries don't run.
 - List pages put the page header (title, description) in its own `<PageSection>` above the

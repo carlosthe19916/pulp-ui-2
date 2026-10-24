@@ -3,11 +3,9 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { Checkbox, Form } from "@patternfly/react-core";
 
-import {
-  HookFormPFGroupController,
-  HookFormPFTextInput,
-} from "@app/components/HookFormPFFields";
 import { FormSubmitError } from "@app/components/FormSubmitError";
+import { HookFormPFGroupController } from "@app/components/HookFormPFGroupController";
+import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import type { UserFormValues } from "./useUserForm";

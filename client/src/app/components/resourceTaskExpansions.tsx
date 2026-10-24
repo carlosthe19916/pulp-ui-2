@@ -1,7 +1,7 @@
 import type { ExpandableContent } from "@patternfly/react-data-view";
 
-import { RevealCellOnExpand } from "@app/components/DataView";
 import { ResourceTaskTable } from "@app/components/ResourceTaskTable";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import type { IResourceEntity } from "@app/hooks/useResourceTasks";
 
 /**

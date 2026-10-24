@@ -4,8 +4,11 @@ paths:
   - client/src/app/**/use*Form.tsx
   - client/src/app/**/use*Form.ts
   - client/src/app/**/*Modal.tsx
-  - client/src/app/components/PluginForm/**
-  - client/src/app/components/TaskActionModal/**
+  - client/src/app/components/EntityModalBody/**
+  - client/src/app/components/EntityModalShell.tsx
+  - client/src/app/components/PluginTypeSelector.tsx
+  - client/src/app/utils/formSchema.ts
+  - client/src/app/utils/resourceFilter.ts
   - client/src/app/components/FormSubmitError.tsx
   - client/src/app/hooks/useSubmitError.ts
 ---
@@ -112,13 +115,13 @@ Batch/selection modals with partial-success semantics (`AddGroupUserModal`,
 - Entity framework: `useRepositoryForm.ts` + `EntityFormBody.tsx` /
   `EntityWizardStep.tsx`.
 - Admin: `useUserForm.ts` + `UserForm.tsx`.
-- Action modal: `components/SyncModal.tsx` + `components/TaskActionModal/`.
+- Action modal: `components/SyncModal.tsx` + `components/TaskActionModal.tsx`.
 - `mutateAsync` modal: `components/PublishModal.tsx`.
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check modal create/update/action forms in changed
-`*Form.tsx`, `use*Form.ts(x)`, `*Modal.tsx`, `PluginForm/**` and `TaskActionModal/**`
+`*Form.tsx`, `use*Form.ts(x)`, `*Modal.tsx` and `EntityModalBody/**`
 (skip the out-of-scope batch and confirmation modals).
 
 - [ ] Modal form submission failures are shown in-form via `FormSubmitError` as the

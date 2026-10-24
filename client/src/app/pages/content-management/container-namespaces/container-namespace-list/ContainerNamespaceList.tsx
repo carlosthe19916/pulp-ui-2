@@ -20,21 +20,18 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
+import { TaskActionModal } from "@app/components/TaskActionModal";
+import { useColumnSort } from "@app/hooks/useColumnSort";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@catalog";
 import type { ContainerContainerNamespaceResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { ObjectAccessModal } from "@app/components/ObjectAccess";
-import { PulpLabels } from "@app/components/PulpLabels";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
@@ -47,6 +44,8 @@ import {
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+
+import { PulpLabels } from "./components/PulpLabels";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

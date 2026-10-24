@@ -28,20 +28,18 @@ import {
 } from "@patternfly/react-data-view";
 
 import type { RoleResponse } from "@app/client";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IRoleListParams } from "@app/queries/roles";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { RoleModal } from "./components/RoleModal";

@@ -1,15 +1,15 @@
 import type React from "react";
 
+import { TaskActionModal } from "@app/components/TaskActionModal";
 import type { IEntityField } from "@catalog";
 import type { DomainResponse } from "@app/client";
-import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useDomainMigrateMutation } from "@app/queries/domains";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { STORAGE_BACKENDS } from "../storageBackends";
+import { STORAGE_BACKENDS } from "../utils/storageBackends";
 
 const MIGRATE_FIELDS: IEntityField[] = [
   {

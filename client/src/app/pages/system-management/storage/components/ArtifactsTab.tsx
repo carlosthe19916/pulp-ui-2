@@ -18,13 +18,10 @@ import {
 
 import type { ArtifactResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -33,6 +30,7 @@ import {
   useArtifactsListQuery,
 } from "@app/queries/artifacts";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [

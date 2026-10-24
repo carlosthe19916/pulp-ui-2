@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -27,9 +28,10 @@ import type {
   RepositoryResponse,
 } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { dataViewBodyStates, ListPagination } from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { FormSubmitError } from "@app/components/FormSubmitError";
-import { HookFormPFTextInput } from "@app/components/HookFormPFFields";
+import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";

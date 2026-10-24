@@ -26,14 +26,11 @@ import {
 import { ActionsColumn } from "@patternfly/react-table";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  useColumnSort,
-  type DataViewTh,
-  ListPagination,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import type { ITaskListParams } from "@app/queries/tasks";
@@ -47,6 +44,7 @@ import {
   useTasksListQuery,
 } from "@app/queries/tasks";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import {
   extractTaskDomain,
   extractTaskId,

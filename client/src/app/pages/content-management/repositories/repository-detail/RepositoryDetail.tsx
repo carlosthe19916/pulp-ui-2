@@ -16,6 +16,9 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
+import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
+import { RepositoryModal } from "@app/components/RepositoryModal";
 import {
   getPlugin,
   getRepositoryContentTypes,
@@ -24,13 +27,11 @@ import {
 import type { RepositoryVersionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { ObjectAccessPanel } from "@app/components/ObjectAccess";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
-import { RepositoryActionModal } from "@app/components/TaskActionModal";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import {
   type VersionAction,
@@ -56,7 +57,6 @@ import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { RepositoryModal } from "../repository-list/components/RepositoryModal";
 import { AddContentModal } from "./components/AddContentModal";
 import { OstreeImportModal } from "./components/OstreeImportModal";
 import { TAB_BY_REPOSITORY_TYPE } from "./components/pluginTabs";

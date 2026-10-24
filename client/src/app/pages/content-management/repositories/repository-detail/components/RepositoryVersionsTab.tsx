@@ -13,16 +13,14 @@ import {
 import { ActionsColumn } from "@patternfly/react-table";
 
 import type { RepositoryVersionResponse } from "@app/client";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import type { VersionAction } from "@app/components/VersionActionModal";
 import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryVersionsTabProps {

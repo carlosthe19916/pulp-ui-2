@@ -17,13 +17,12 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { IEntityField } from "@catalog";
-
 import {
   AsyncResourceMultiSelect,
   AsyncResourceSelect,
-} from "./AsyncResourceSelect";
-import type { ResourceFilterMap } from "./PluginForm/resourceFilter";
+} from "@app/components/AsyncResourceSelect";
+import type { ResourceFilterMap } from "@app/utils/resourceFilter";
+import type { IEntityField } from "@catalog";
 
 const isFile = (value: unknown): value is File => {
   return typeof File !== "undefined" && value instanceof File;

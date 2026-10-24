@@ -10,11 +10,13 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
-import { getPluginBrowse, PluginBrowse } from "@app/components/PluginBrowse";
-import { ContentDrawer, VersionContent } from "@app/components/VersionContent";
 import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
 
+import { getPluginBrowse } from "./browseRegistry";
+import { ContentDrawer } from "./ContentDrawer";
+import { PluginBrowse } from "./PluginBrowse";
 import { useServedAt } from "./useServedAt";
+import { VersionContent } from "./VersionContent";
 
 interface IRepositoryContentProps {
   repositoryHref: string;

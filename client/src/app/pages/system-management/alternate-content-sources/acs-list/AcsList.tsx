@@ -23,13 +23,11 @@ import {
   type DataViewTr,
 } from "@patternfly/react-data-view";
 
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { getPlugin } from "@catalog";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  type DataViewTh,
-} from "@app/components/DataView";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
@@ -49,8 +47,8 @@ import {
 } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { ACS_TYPES } from "./acsTypes";
 import { AcsModal } from "./components/AcsModal";
+import { ACS_TYPES } from "./utils/acsTypes";
 
 interface IAcsFilters {
   name: string;

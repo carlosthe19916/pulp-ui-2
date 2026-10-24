@@ -14,13 +14,13 @@ import {
 } from "@patternfly/react-core";
 import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
+import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { getPlugin, type IRepositoryAction } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RepositoryContent } from "@app/components/RepositoryContent";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { RepositoryActionModal } from "@app/components/TaskActionModal";
 import {
   type VersionAction,
   VersionActionModal,

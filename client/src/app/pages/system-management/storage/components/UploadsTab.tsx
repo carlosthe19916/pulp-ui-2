@@ -15,13 +15,10 @@ import {
 
 import type { UploadResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  useColumnSort,
-  type DataViewTh,
-} from "@app/components/DataView";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
   type IUploadListParams,
@@ -29,6 +26,7 @@ import {
   useUploadsListQuery,
 } from "@app/queries/uploads";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [

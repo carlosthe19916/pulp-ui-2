@@ -1,11 +1,9 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 
+import { buildDefaultValues, buildFieldSchema } from "@app/utils/formSchema";
 import type { EntityType, IEntityField, IPlugin } from "@catalog";
-import {
-  buildDefaultValues,
-  buildFieldSchema,
-} from "@app/components/PluginForm/formSchema";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 type EntityFormValues = Record<string, unknown>;

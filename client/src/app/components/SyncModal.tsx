@@ -1,9 +1,9 @@
 import type React from "react";
 
+import { TaskActionModal } from "@app/components/TaskActionModal";
+import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { getPlugin, type IEntityField } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
-import { buildResourceFilter } from "@app/components/PluginForm/resourceFilter";
-import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositorySyncMutation } from "@app/queries/repositories";

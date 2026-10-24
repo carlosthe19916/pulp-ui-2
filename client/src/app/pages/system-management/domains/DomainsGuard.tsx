@@ -2,8 +2,8 @@ import type React from "react";
 
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
+import { DomainsDisabledEmptyState } from "./components/DomainsDisabledEmptyState";
 import { DomainList } from "./DomainList";
-import { DomainsDisabledEmptyState } from "./DomainsDisabledEmptyState";
 
 /** Mounts the list only when domains are enabled, so its queries don't run otherwise. */
 export const DomainsGuard: React.FC = () => {

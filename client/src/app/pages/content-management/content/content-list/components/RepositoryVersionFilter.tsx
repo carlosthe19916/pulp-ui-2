@@ -16,7 +16,7 @@ import {
   decodeRepositoryVersion,
   encodeRepositoryVersion,
   type VersionRelation,
-} from "./versionFilterCodec";
+} from "../utils/versionFilterCodec";
 import { VersionSelect } from "./VersionSelect";
 
 const RELATION_LABEL: Record<VersionRelation, string> = {

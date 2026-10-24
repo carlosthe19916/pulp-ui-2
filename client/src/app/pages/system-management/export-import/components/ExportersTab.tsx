@@ -18,13 +18,9 @@ import {
 } from "@patternfly/react-data-view";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import {
-  dataViewBodyStates,
-  ListPagination,
-  RevealCellOnExpand,
-  type DataViewTh,
-} from "@app/components/DataView";
-import { buildDefaultValues } from "@app/components/PluginForm/formSchema";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { ListPagination } from "@app/components/ListPagination";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -38,10 +34,12 @@ import {
   useExporterUpdateMutation,
   useExportsListQuery,
 } from "@app/queries/exporters";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EXPORTER_TYPES, type IExporterType } from "../exporterTypes";
+import { EXPORTER_TYPES, type IExporterType } from "../utils/exporterTypes";
 import { RunsTable } from "./RunsTable";
 
 const ExportRuns: React.FC<{ href: string }> = ({ href }) => {

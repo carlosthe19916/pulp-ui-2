@@ -12,7 +12,7 @@ import {
 import RhUiErrorFillIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-error-fill-icon";
 import pfBackground from "@patternfly/patternfly/assets/images/pf-background.svg";
 
-import { ThemeSelector } from "@app/components/Theme";
+import { ThemeSelector } from "@app/components/ThemeSelector";
 import {
   encodeBasicAuthHeader,
   saveCredentials,

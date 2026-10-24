@@ -7,8 +7,8 @@ import type {
   RpmPackageGroupResponse,
   RpmUpdateRecordResponse,
 } from "@app/client";
-import { type INevraParams, nevra } from "@app/components/PluginBrowse/helpers";
 import { useContentDetailQuery } from "@app/queries/content";
+import { type INevraParams, nevra } from "@app/utils/pluginContentFormat";
 import { formatDateTime } from "@app/utils/utils";
 
 import {
