@@ -1,7 +1,7 @@
 ---
-name: placement
-description: File placement by scope (shared → app root, single page → page sub-dir, no area-level dirs), context file layout, typed PatternFly class names, import block order.
-globs: client/src/app/**, client/src/catalog/**
+paths:
+  - client/src/app/**
+  - client/src/catalog/**
 ---
 
 # Placement and module conventions (`client/src/app/`)

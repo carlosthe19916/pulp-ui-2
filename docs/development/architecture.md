@@ -50,7 +50,7 @@ row or page, and when the task settles the affected queries are invalidated. Plu
 (and sync) go through one shared action form, and object pages read `my_permissions/` to
 disable what the user can't run.
 
-The rules for this layer are in [evals/](../../evals/) (`queries`, `toastr`, `forms`,
+The rules for this layer are in [.rulesync/rules/](../../.rulesync/rules/) (`queries`, `toastr`, `forms`,
 `ui-conventions`); the design behind them is in [docs/adr/](../adr/).
 
 ## Routing

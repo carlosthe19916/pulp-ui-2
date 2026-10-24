@@ -25,8 +25,8 @@ interface IUseRepositoryFormArgs {
  * Repository create/edit form: maps form values to a repository write body
  * (`RepositoryForm`) and runs the family's create/update mutations. The success
  * toast is raised from the mutations' hook-level callbacks and the call-level
- * `onSuccess` closes the modal (see `evals/toastr.md`); a submission failure is
- * shown in-form via `submitError`, not a toast (see `evals/forms.md`).
+ * `onSuccess` closes the modal (see `.rulesync/rules/toastr.md`); a submission failure is
+ * shown in-form via `submitError`, not a toast (see `.rulesync/rules/forms.md`).
  */
 export const useRepositoryForm = ({
   plugin,

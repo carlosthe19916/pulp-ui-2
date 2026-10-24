@@ -19,8 +19,8 @@ interface IUsePublicationFormArgs {
  * values to a publication write body (`PublicationForm`) and runs the create
  * mutation. Create is async (202 + task). The success toast is raised from the
  * mutation's hook-level callbacks and the call-level `onSuccess` closes the modal
- * (see `evals/toastr.md`); a submission failure is shown in-form via `submitError`,
- * not a toast (see `evals/forms.md`).
+ * (see `.rulesync/rules/toastr.md`); a submission failure is shown in-form via `submitError`,
+ * not a toast (see `.rulesync/rules/forms.md`).
  */
 export const usePublicationForm = ({
   plugin,

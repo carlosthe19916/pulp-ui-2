@@ -1,15 +1,15 @@
 ---
-name: catalog
-description: "@catalog is data only (no React, no presentation); per-type UI lives in pulp_type-keyed registries; pages read plugin capabilities from the catalog instead of branching on pulp_type."
-globs: client/src/catalog/**, client/src/app/pages/**, client/src/app/components/**
-implements: docs/adr/0001-plugin-agnostic-generic-pages.md, docs/adr/0009-plugin-actions.md
+paths:
+  - client/src/catalog/**
+  - client/src/app/pages/**
+  - client/src/app/components/**
 ---
 
 # Catalog and per-plugin UI
 
 The catalog (`client/src/catalog`, `@catalog`) is the single place plugin differences are
-declared. See [docs/development/architecture.md](../docs/development/architecture.md) for
-its shape and [adding-a-plugin.md](../docs/development/adding-a-plugin.md) for the steps.
+declared. See [docs/development/architecture.md](../../docs/development/architecture.md) for
+its shape and [adding-a-plugin.md](../../docs/development/adding-a-plugin.md) for the steps.
 
 ## Data only
 

@@ -25,8 +25,9 @@ backend. Paths drop the `/api/pulp/{domain}/api/v3/` prefix.
 
 ## Writes
 
-- Remote, repository and distribution create/update/delete return `202` + task. Publication
-  delete is a synchronous `204`.
+- Repository and remote create are synchronous (`201` + object); distribution and
+  publication create return `202` + task. Updates declare `200 | 202`, deletes `202`, except
+  publication delete, a synchronous `204`.
 - `modify/` creates a new version. With only `base_version` it restores that version's
   content; `remove_content_units: ["*"]` empties the repository. A no-op finishes with empty
   `created_resources`; otherwise `created_resources[0]` is the new version.
@@ -40,6 +41,32 @@ backend. Paths drop the `/api/pulp/{domain}/api/v3/` prefix.
   `artifacts/?sha256=` first. OSTree `import_all/` takes `{artifact, repository_name}`.
 - About a third of content types have no create endpoint (sync/push only). All `container.*`
   is push-only.
+
+## Tasks
+
+- States: `waiting`, `running`, `canceling`, and the final `completed`, `failed`, `canceled`,
+  `skipped`.
+- Cancel is `PATCH {task_href}` with `{"state": "canceled"}` (`409` if it can't be canceled).
+  `DELETE {task_href}` deletes the task record.
+- `tasks/?reserved_resources=<prn>` lists the tasks holding a lock on an object.
+- `error.description` can be a generic message when the server redacts unsafe exceptions.
+
+## Errors and permissions
+
+- The spec declares no error bodies. They are DRF defaults: `400 {"field": ["msg"],
+"non_field_errors": [...]}`, `403` / `404 {"detail": "..."}`.
+- RBAC scopes querysets, so an object the user can't see answers `404`, not `403`.
+- `{href}my_permissions/` returns the user's codenames on one object
+  (`file.change_filerepository`), including those from domain- and model-level roles. No
+  endpoint answers "may I create?".
+
+## Filters
+
+- `q` takes `NOT` / `AND` / `OR` / parentheses over the endpoint's other filters, with quoted
+  values, up to a complexity of 8 (each filter, `NOT` and `AND`/`OR` chain counts one).
+  `ordering` can't go inside it.
+- `pulp_label_select`: `k=v`, `k!=v`, `k~substr` (case-insensitive), `k`, `!k`; commas AND
+  the terms. Labels change through `set_label/` (`{key, value}`) and `unset_label/` (`{key}`).
 
 ## Outside the REST API
 

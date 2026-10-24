@@ -1,8 +1,8 @@
 ---
-name: toastr
-description: Mutation toast placement — raised at the page/feature layer via hook-level onSuccess/onError, hooks own invalidation only, mutate over mutateAsync, no useMutationAction wrapper.
-globs: client/src/app/queries/**, client/src/app/pages/**, client/src/app/components/**
-implements: docs/adr/0008-async-task-feedback.md
+paths:
+  - client/src/app/queries/**
+  - client/src/app/pages/**
+  - client/src/app/components/**
 ---
 
 # Notification / toast conventions
@@ -66,7 +66,7 @@ export const useRemoteDeleteMutation = (
   mutations; `onSubmit` fires `mutate(vars, { onSuccess: onClose })`;
   `isSubmitting = createMutation.isPending || updateMutation.isPending`. Success
   toasts from the hook-level `onSuccess`; **failure is shown in-form, not toasted**
-  — see `evals/forms.md`.
+  — see `.rulesync/rules/forms.md`.
 - **one-off actions** (cancel, purge) → the handler fires
   `mutate(vars, { onSettled: closeDialog })`.
 
@@ -128,7 +128,7 @@ would be read as `null`. Per-call identity rides in `variables`.
 
 - **Error** toasts reuse `getMutationErrorMessage({ error, fallback })` spread into a
   `variant: "danger"` toast — **except** modal form submissions, which show the
-  error in-form (`evals/forms.md`).
+  error in-form (`.rulesync/rules/forms.md`).
 
 ## Dialog behaviour (canonical home)
 
@@ -147,7 +147,7 @@ effect:
 - One-off modals building the **success** message from the resolved result plus
   local form state — `PublishModal`, `AddToRepositoryModal`: raise
   `notifyTaskStarted` before `onClose`; a **failure is shown in-form** (`catch` →
-  `setSubmitError`, see `evals/forms.md`), not toasted.
+  `setSubmitError`, see `.rulesync/rules/forms.md`), not toasted.
 - Detail-page cancel — `TaskDetail` (cancels then **closes the cancel modal**,
   stays on page), raising the toast **before** the close.
 
@@ -181,6 +181,6 @@ Pass/fail rubric for `/eval`.
       for the component's lifetime — never closed-over per-call state.
 - [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**,
-      shown in-form via `FormSubmitError` (see `evals/forms.md`).
+      shown in-form via `FormSubmitError` (see `.rulesync/rules/forms.md`).
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature
       `useXActions` toast-hub reintroduced (batch/selection modals excepted).

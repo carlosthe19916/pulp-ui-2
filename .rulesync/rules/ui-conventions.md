@@ -1,8 +1,10 @@
 ---
 name: ui-conventions
 description: UI behaviour in components/pages — neutral (non-red) actions, empty states without actions, permission-disabled (not hidden) actions with tooltip, server-derived task status and repository write lock.
-globs: client/src/app/pages/**, client/src/app/components/**
 implements: docs/adr/0003-detail-pages-and-expandable-rows.md, docs/adr/0008-async-task-feedback.md, docs/adr/0011-permission-aware-actions.md, docs/adr/0012-visual-conventions.md
+root: false
+targets: ["claudecode", "cursor"]
+globs: ["client/src/app/pages/**", "client/src/app/components/**"]
 ---
 
 # UI conventions (`components/`, `pages/`)
@@ -15,6 +17,19 @@ How the code realises the visual, permission and task-feedback ADRs. Read the AD
 - Tables use `@patternfly/react-data-view` with the `@app/components/DataView` helpers
   (`UserList` is the reference); paging, sorting and filtering are server-side.
 - Detail pages use tabs; a tab's content component never renders its own `<PageSection>`.
+  `Tabs` set `mountOnEnter` so an inactive tab's queries don't run.
+- List pages put the page header (title, description) in its own `<PageSection>` above the
+  table's `<PageSection>`, and render `<DocumentTitle>`; so do detail pages.
+- Paging uses `useDataViewPagination({ perPage: 10 })` + `ListPagination`, which owns the
+  per-page menu (10/20, capped to bound per-row task probes). Don't pass other options.
+- Server-side text filters go through `useDebouncedValue` so typing doesn't fire a request
+  per keystroke; non-text filters stay instant.
+- Long cell values use the column's PatternFly `modifier: "truncate"`, never hand-rolled
+  slicing. Data columns carry `width`s that sum to 100; action columns stay unsized.
+- Expanded-row content is wrapped in `RevealCellOnExpand`, so it (and its queries) mounts on
+  first expand.
+- Entity detail fields render through `EntityDetailFields` (stacked: term above value).
+- Confirmations use `ConfirmActionModal`, never a hand-rolled `Modal`.
 
 ## Colour
 
@@ -46,7 +61,7 @@ How the code realises the visual, permission and task-feedback ADRs. Read the AD
 ## Tasks
 
 - A mutation answering `202` raises `notifyTaskStarted({ addNotification, taskHref, title })`
-  from its hook-level `onSuccess` (toast placement rules: `evals/toastr.md`).
+  from its hook-level `onSuccess` (toast placement rules: `.rulesync/rules/toastr.md`).
 - Row/page task status comes from the server via `useResourceTasks` + `ResourceTaskStatus` /
   `EntityTaskStatus`, never from local "pending" flags alone.
 - Repository content writes and header actions check `useRepositoryActivity`: while a task
@@ -59,7 +74,12 @@ How the code realises the visual, permission and task-feedback ADRs. Read the AD
 Pass/fail rubric for `/eval`. Check changed files under `pages/` and `components/`.
 
 - [ ] New tables use react-data-view with the DataView helpers and server-side paging,
-      sorting and filtering; tab content renders no `<PageSection>`.
+      sorting and filtering; tab content renders no `<PageSection>`; `Tabs` use
+      `mountOnEnter`.
+- [ ] List pages: header in its own `<PageSection>`, `<DocumentTitle>`, `ListPagination`
+      with `perPage: 10`, debounced text filters, PatternFly truncation, column widths
+      summing to 100, expanded rows in `RevealCellOnExpand`.
+- [ ] Confirmations use `ConfirmActionModal`.
 - [ ] No `isDanger: true` or `variant="danger"` on row actions, menu items or toolbar buttons.
 - [ ] `ConfirmActionModal` keeps the default danger confirm only for irreversible deletes;
       every other confirmation passes `confirmVariant="primary"`.

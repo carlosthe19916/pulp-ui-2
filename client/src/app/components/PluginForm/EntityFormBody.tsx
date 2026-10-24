@@ -22,7 +22,7 @@ interface IEntityFormBodyProps {
   onClose: () => void;
   typeSelector?: ReactNode;
   resourceFilter: ResourceFilterMap;
-  /** Submission failure shown at the top of the form (see `evals/forms.md`). */
+  /** Submission failure shown at the top of the form (see `.rulesync/rules/forms.md`). */
   submitError: IMutationErrorMessage | null;
 }
 

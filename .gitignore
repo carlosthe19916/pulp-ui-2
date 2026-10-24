@@ -33,9 +33,6 @@ npm-debug.log*
 # Intellij IDEA
 .idea/
 
-# Cursor
-.cursor/
-
 # Playwright / test artifacts
 test-results/
 e2e/test-results/
@@ -57,10 +54,9 @@ test_suite_analysis/
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 
-# eval-gate marker (local, not shared)
-.claude/.eval-ran
-# eval-gate per-session edit records (local, not shared)
-.claude/.eval-state/
 
 # Playwright saved auth state (contains credentials)
 .auth/
+
+# Agent harness eval runs (answers, worktrees, summaries)
+.build/

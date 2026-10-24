@@ -24,7 +24,7 @@ interface IEntityWizardBodyProps {
   /** Family-supplied submit for the merged step values (create or edit). */
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   isSubmitting: boolean;
-  /** Submission failure shown on the final (submitting) step (see `evals/forms.md`). */
+  /** Submission failure shown on the final (submitting) step (see `.rulesync/rules/forms.md`). */
   submitError: IMutationErrorMessage | null;
 }
 

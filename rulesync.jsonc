@@ -1,0 +1,6 @@
+{
+  "targets": {
+    "claudecode": { "rules": { "includeRoot": false } },
+    "cursor": ["rules"]
+  }
+}

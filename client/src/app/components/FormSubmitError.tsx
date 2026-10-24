@@ -10,7 +10,7 @@ interface IFormSubmitErrorProps {
 /**
  * Top-of-form submission-error alert. Rendered as the first child of a `<Form>`, it
  * shows a modal form's create/update/action failure inline (PatternFly Form error
- * guidelines) instead of a detached toast. See `evals/forms.md`.
+ * guidelines) instead of a detached toast. See `.rulesync/rules/forms.md`.
  */
 export const FormSubmitError = ({ error }: IFormSubmitErrorProps) => {
   if (!error) return null;

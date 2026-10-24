@@ -1,0 +1,75 @@
+---
+paths:
+  - client/src/**/*.test.ts
+  - client/src/**/*.test.tsx
+---
+
+# Unit test conventions (Vitest)
+
+Run with `npm test`. Config: the `test` block in `client/vite.config.ts` (jsdom,
+`client/test-setup.ts` registers the `@testing-library/jest-dom` matchers).
+
+## Shape
+
+- Colocated next to the code: `Foo.tsx` → `Foo.test.tsx`, `utils.ts` → `utils.test.ts`.
+- Import from vitest explicitly, don't rely on globals:
+  `import { describe, expect, it, vi } from "vitest";`
+- `describe` per unit, `it` per behaviour, named as a sentence ("renders nothing when there
+  is no error"). Use `it`, not `test`.
+- Test pure logic directly: helpers, key factories, and the exported value-mapping functions
+  of form hooks (`valuesToNewUser` in `useUserForm.test.ts`).
+
+## Components and hooks: React Testing Library
+
+New component and hook tests use `@testing-library/react` and `@testing-library/user-event`,
+and test what the user sees, not implementation details:
+
+```tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+
+it("submits on Enter", async () => {
+  const user = userEvent.setup();
+  const onSubmit = vi.fn();
+  render(<UserForm onSubmit={onSubmit} />);
+
+  await user.type(
+    screen.getByRole("textbox", { name: "Username" }),
+    "alice{Enter}",
+  );
+
+  expect(onSubmit).toHaveBeenCalledOnce();
+  expect(screen.getByRole("button", { name: "Create" })).toBeEnabled();
+});
+```
+
+- Queries: `getByRole(role, { name })` first, then `getByLabelText`, then `getByText`.
+  No `container.querySelector`, no class-name selectors, no test ids unless nothing else
+  works.
+- Use `screen`, not the destructured `render` result.
+- Interact with `userEvent.setup()`, not `fireEvent`.
+- Wait with `findBy*`, not `waitFor` + `getBy*`. Assert absence with `queryBy*`.
+- Use jest-dom matchers (`toBeInTheDocument`, `toBeDisabled`, `toHaveAccessibleName`).
+- No manual `act()`: an act warning means a missing `await`.
+- Hooks: `renderHook` from `@testing-library/react`, wrapped in the providers they need
+  (e.g. a `QueryClientProvider` with a fresh `QueryClient` per test).
+
+Existing tests that use `renderToStaticMarkup` or a `Probe` component stay as they are; don't
+rewrite them unless you're changing them anyway.
+
+## Mocks
+
+- Module mocks: `vi.mock("@app/hooks/useAuth", () => ({ useAuth: vi.fn() }))`, then
+  `vi.mocked(useAuth).mockReturnValue(…)` per test (`DomainsGuard.test.tsx`).
+- Mock at the module boundary (query hooks, context hooks). Don't mock PatternFly or React.
+
+## Checklist
+
+Pass/fail rubric for `/eval`. Check changed `*.test.ts` / `*.test.tsx` files.
+
+- [ ] Colocated; explicit `vitest` imports; `describe` / `it`.
+- [ ] New component and hook tests use RTL (`render` / `renderHook`, `screen`) and
+      `userEvent.setup()`; queries prefer role + name; no `container.querySelector`.
+- [ ] Async waits use `findBy*`; no manual `act()`; jest-dom matchers for DOM assertions.
+- [ ] Mocks use `vi.mock` + `vi.mocked` at module boundaries.

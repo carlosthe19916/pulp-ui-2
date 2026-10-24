@@ -8,10 +8,13 @@
     "clean": "rimraf ./dist && npm run clean -ws --if-present",
     "clean:all": "npm run clean:all -ws --if-present && rimraf ./dist ./node_modules",
     "dist": "rimraf ./dist && copyfiles -e 'node_modules/**' entrypoint.sh '**/package.json' '*/dist/**/*' ./dist",
-    "lint": "npm run lint -ws --if-present",
+    "lint": "npm run rules:check && npm run lint -ws --if-present",
     "lint:fix": "npm run lint:fix -ws --if-present",
     "format": "npm run format -ws --if-present",
     "format:fix": "npm run format:fix -ws --if-present",
+    "rules": "rulesync generate",
+    "rules:check": "rulesync generate --check",
+    "eval:harness": "bash evals/harness/run.sh",
     "build": "npm run build -ws --if-present",
     "prepare": "npm run generate && husky",
     "start:dev:common": "npm run start:dev -w common",
@@ -63,6 +66,7 @@
     "rimraf": "^6.0.1",
     "rollup": "^4.54.0",
     "rollup-plugin-copy": "^3.5.0",
+    "rulesync": "40.2.0",
     "typescript-eslint": "^8.65.0"
   },
   "lint-staged": {

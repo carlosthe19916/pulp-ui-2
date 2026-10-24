@@ -72,8 +72,8 @@ export const useEntityFormBase = ({
  */
 export interface IUseEntityFormResult {
   // Submit the (create or edit) values. The success toast + call-level onSuccess
-  // close the modal (see `evals/toastr.md`); a submission failure is surfaced
-  // in-form via `submitError`, not a toast (see `evals/forms.md`).
+  // close the modal (see `.rulesync/rules/toastr.md`); a submission failure is surfaced
+  // in-form via `submitError`, not a toast (see `.rulesync/rules/forms.md`).
   onSubmit: (values: Record<string, unknown>) => void;
   isSubmitting: boolean;
   /** Submission failure to render at the top of the form; null when none. */

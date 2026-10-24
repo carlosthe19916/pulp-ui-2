@@ -25,7 +25,7 @@ interface IEntityModalBodyProps {
   /** Family-supplied, mode-agnostic submit for the (create or edit) values. */
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   isSubmitting: boolean;
-  /** Submission failure shown at the top of the form (see `evals/forms.md`). */
+  /** Submission failure shown at the top of the form (see `.rulesync/rules/forms.md`). */
   submitError: IMutationErrorMessage | null;
 }
 

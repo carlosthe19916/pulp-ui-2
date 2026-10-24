@@ -2,19 +2,18 @@
 
 Repository-specific guidance for AI coding agents working in the **Pulp UI** repository (`@pulp-ui`).
 
-## How intent is recorded
+## Where guidance lives
 
 Three layers, each with one job. Don't restate one layer's rules in another; link to them.
 
-| Layer                                  | Answers                                                                                | Use it                                                                                    |
-| -------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [docs/adr/](docs/adr/)                 | **What** the UI does and why (code-free)                                               | Before changing a screen or flow, match ADRs by `description` and follow their `## Rules` |
-| [evals/](evals/)                       | **How** code must be written; specs with `implements:` turn ADR rules into code checks | Read the specs whose `globs` match the files you touch; `/eval` checks them               |
-| [docs/development/](docs/development/) | How the code works (catalog, data flow, API quirks)                                    | Orientation; it explains, it doesn't set rules                                            |
+| Layer                                  | Answers                                                                          | Use it                                                                                    |
+| -------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [docs/adr/](docs/adr/)                 | **What** the UI does and why (code-free)                                         | Before changing a screen or flow, match ADRs by `description` and follow their `## Rules` |
+| [.rulesync/rules/](.rulesync/rules/)   | **How** code must be written; rules with `implements:` realise ADR rules in code | Loaded when you read a matching file; see [Coding Standards](#coding-standards)           |
+| [docs/development/](docs/development/) | How the code works (data flow, API quirks)                                       | Orientation; it explains, it doesn't set rules                                            |
 
-`/eval` runs automatically: a Stop hook (`.claude/hooks/eval-gate.sh`) keeps a session that
-edited `client/src/` from ending until `/eval` has run since its last edit. A design change
-needs a new or superseding ADR, and the evals that `implements:` it updated in the same change.
+A design change needs a new or superseding ADR, and the rules that `implements:` it updated in
+the same change.
 
 ## Repository Architecture
 
@@ -79,9 +78,18 @@ npm run test:ui -w e2e   # Playwright UI mode
 # Regenerate OpenAPI client from spec
 npm run generate
 
+# Regenerate .claude/rules and .cursor/rules from .rulesync/rules
+npm run rules
+
+# Regression-test AGENTS.md / rules / skills (not code) — see evals/README.md
+npm run eval:harness -- --validate
+npm run eval:harness -- --arms current,baseline
+
 # Production builds
 npm run build
 ```
+
+Claude Code loads project guidance via `CLAUDE.md` (symlink to `AGENTS.md` in this repo).
 
 `npm run lint` is the real type check (ESLint + `tsc -p tsconfig.app.json` per workspace); a
 bare `tsc --noEmit` at the root checks nothing.
@@ -97,30 +105,21 @@ npm workspaces.
 
 ## Coding Standards
 
-Summaries only; the linked eval holds the full rule, examples and checklist.
+Rules are written once in `.rulesync/rules/<name>.md` (frontmatter `globs` lists the files a
+rule covers) and `npm run rules` ([rulesync](https://github.com/dyoshikawa/rulesync)) generates
+`.claude/rules/` (Claude Code, `paths:`) and `.cursor/rules/` (Cursor, `globs:`) from them, so
+each tool loads a rule when it reads a matching file (a file you only create may not trigger
+it). Never edit the generated folders: change the source and run `npm run rules`;
+`npm run lint` fails while they are stale. When you rename or remove a rule, delete its
+generated `.claude/rules/` and `.cursor/rules/` files by hand.
 
-- **Placement by scope** ([evals/placement.md](evals/placement.md)): shared by more than one
-  page → app root (`@app/components`, `@app/hooks`, …); used by one page → that page's
-  sub-directory. Area directories under `pages/` only group pages.
-- **Contexts** ([evals/placement.md](evals/placement.md)): `context/<Name>/<Name>Context.tsx` +
-  `<Name>Provider.tsx`.
-- **PatternFly** ([evals/ui-conventions.md](evals/ui-conventions.md)): PatternFly components for
-  all UI; tables with `@patternfly/react-data-view` + `@app/components/DataView` (`UserList` is
-  the reference), server-side paging/sorting/filtering; detail pages use tabs and tab content
-  has no `<PageSection>`; typed class constants from `@patternfly/react-styles`, never `pf-*`
-  strings ([evals/placement.md](evals/placement.md)).
-- **Imports** ([evals/placement.md](evals/placement.md)): React → packages → `@patternfly/*` →
-  `@app/*` → relative, blank line between blocks.
-- **Catalog** ([evals/catalog.md](evals/catalog.md)): `@catalog` is data only; per-type UI goes
-  in `pulp_type`-keyed registries; pages read capabilities from the catalog.
-- **Queries** ([evals/queries.md](evals/queries.md)): one inline object arg; queries take hrefs
-  and only route loaders build them; no `throw` in a `queryFn`; neutral vs plugin query files.
-- **Mutations and toasts** ([evals/toastr.md](evals/toastr.md)): hooks own invalidation, pages
-  own toasts via hook-level callbacks; `mutate` over `mutateAsync`.
-- **Forms** ([evals/forms.md](evals/forms.md)): react-hook-form + yup; submission errors shown
-  in-form; close on success only.
-- **Signatures** ([evals/signatures.md](evals/signatures.md)): a named-object parameter for 2+
-  arguments.
+Before creating or changing a file, read the rules whose `globs` match it:
+`grep -H '^globs:' .rulesync/rules/*.md` (each rule's `description` says what it covers).
+
+Before finishing a change, check it against every rule whose `globs` match the changed files
+(its `## Checklist` is the rubric) and the `## Rules` of each ADR its `implements:` lists; the
+generated rules drop `implements:`, so read it from `.rulesync/rules/`. In Claude Code, `/eval`
+does this.
 
 ### API endpoints
 
@@ -164,13 +163,15 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 - Run with `npm test`
 - Test files colocated with source code (`.test.ts`, `.test.tsx`)
 - Config in `client/vite.config.ts` (test block)
-- Mock API calls and use React Testing Library for component tests
+- New component and hook tests use React Testing Library + user-event; see
+  [.rulesync/rules/unit-tests.md](.rulesync/rules/unit-tests.md)
 
 ### E2E Tests (Playwright)
 
 - Plain Playwright `.spec.ts` files in `e2e/tests/`, one per area (`remotes`, `repositories`, `publications`, `distributions`, `content`, `domains`, `users`, `groups`, `roles`, `task-status`, …).
 - `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/tests/helpers/`, `fixtures.ts` and the page objects in `pom/`.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
+- Conventions: [.rulesync/rules/e2e.md](.rulesync/rules/e2e.md).
 
 ## Branding
 

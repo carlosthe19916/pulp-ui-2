@@ -1,7 +1,7 @@
 import type { PulpAxiosError } from "./openapiErrorTypes";
 
 /**
- * Caller-provided, **hook-level** mutation callbacks (see `evals/toastr.md`).
+ * Caller-provided, **hook-level** mutation callbacks (see `.rulesync/rules/toastr.md`).
  *
  * Mutation hooks accept this so the triggering page/feature can own the toast
  * message while the callback is wired into `useMutation({ onSuccess, onError })`

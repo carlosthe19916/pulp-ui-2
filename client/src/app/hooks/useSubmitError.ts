@@ -15,7 +15,7 @@ export interface IUseSubmitErrorResult {
  * Standard state seam for a modal form's submission error. The form hook sets the
  * error in its mutation `onError` (or `catch` for `mutateAsync` modals) and clears
  * it when a new submit starts; the form renders it in a top-of-form `FormSubmitError`
- * (see `evals/forms.md`) instead of a danger toast.
+ * (see `.rulesync/rules/forms.md`) instead of a danger toast.
  */
 export const useSubmitError = (): IUseSubmitErrorResult => {
   const [submitError, setSubmitError] = useState<IMutationErrorMessage | null>(

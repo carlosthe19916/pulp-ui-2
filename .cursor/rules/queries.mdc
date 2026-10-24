@@ -1,5 +1,4 @@
 ---
-name: queries
 description: Public query-reading surface in client/src/app/queries — single inline-object args, explicit domain + hook injection, precondition-guard detail queries, explicit TError/TData, no throw in queryFn.
 globs: client/src/app/queries/**
 ---
@@ -8,7 +7,7 @@ globs: client/src/app/queries/**
 
 Scope: the **public query-reading surface** only — `*QueryOptions` factories and
 `use*Query` / `use*Queries` hooks. Mutation signatures/toasts live in
-`evals/toastr.md`; this spec only requires their `TError`/`TData` typing (below).
+`.rulesync/rules/toastr.md`; this spec only requires their `TError`/`TData` typing (below).
 
 ## One inline-object arg
 
@@ -35,7 +34,13 @@ export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
 Object fields:
 
 - **`params`** — list/filter/ordering (`ListParams<…>` / `AllListParams<…>`);
-  optional with `= {}` when all fields are optional.
+  optional with `= {}` when all fields are optional. Param aliases derive from the
+  generated types (`type IUserListParams = ListParams<UsersListData>`), so every spec
+  filter is available and stays in sync on regeneration.
+  - `ListParams` makes `limit` required: a paged list always states its page size,
+    never relies on a default that silently truncates. A count-only read is
+    `limit: 1` + `.count`. A list rendered in full with no pager uses a
+    `useAll*` query over `fetchAllPages` with `AllListParams`.
 - **`domain`** — passed explicitly to the pure `*QueryOptions`; the **hook**
   injects it so callers never pass it. Injectors:
   - `useDefaultDomain()` — users, groups, roles, signing-services, domains.
@@ -210,6 +215,9 @@ changed `queries/` files.
       `pulpHref`) happens **only in route loaders**, which return `{ href }`. Key
       factories stay **pure**; no `toProxyHref` in keys or invalidation call sites.
       Sub-resource keys nest under the parent's `detail(href)`.
+- [ ] List params derive from the generated `*ListData` via `ListParams` /
+      `AllListParams`; paged reads pass an explicit `limit` (`1` for counts);
+      unpaged full lists use `fetchAllPages`.
 - [ ] `domain` is passed explicitly to `*QueryOptions`; the **hook** injects it via
       `useDefaultDomain()` / `useSelectedDomain()` — callers never pass `domain`.
 - [ ] `options` is typed `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">`

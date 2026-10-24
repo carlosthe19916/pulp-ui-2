@@ -25,9 +25,9 @@ interface IUseDistributionFormArgs {
  * Distribution create/edit form: maps form values to a distribution write body
  * (`DistributionForm`) and runs the family's create/update mutations. Create is
  * async (202 + task). The success toast is raised from the mutations' hook-level
- * callbacks and the call-level `onSuccess` closes the modal (see `evals/toastr.md`);
+ * callbacks and the call-level `onSuccess` closes the modal (see `.rulesync/rules/toastr.md`);
  * a submission failure is shown in-form via `submitError`, not a toast (see
- * `evals/forms.md`).
+ * `.rulesync/rules/forms.md`).
  */
 export const useDistributionForm = ({
   plugin,
