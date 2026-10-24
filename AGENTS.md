@@ -81,10 +81,6 @@ npm run generate
 # Regenerate .claude/rules and .cursor/rules from .rulesync/rules
 npm run rules
 
-# Regression-test AGENTS.md / rules / skills (not code) — see evals/README.md
-npm run eval:harness -- --validate
-npm run eval:harness -- --arms current,baseline
-
 # Production builds
 npm run build
 ```
@@ -119,8 +115,7 @@ Before creating or changing a file, read the rules whose `globs` match it:
 Before finishing a change, check it against every rule whose `globs` match the changed files
 (its `## Checklist` is the rubric) and the `## Rules` of each ADR its `implements:` lists; the
 generated rules drop `implements:`, so read it from `.rulesync/rules/`. In Claude Code, `/eval`
-does this (code vs rules). To test whether the rules/`AGENTS.md` themselves still steer the
-agent, use `npm run eval:harness` ([evals/README.md](evals/README.md)).
+does this.
 
 ### API endpoints
 

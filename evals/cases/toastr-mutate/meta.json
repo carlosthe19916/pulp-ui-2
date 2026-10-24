@@ -1,6 +1,0 @@
-{
-  "id": "toastr-mutate",
-  "description": "toastr rule: query hooks must not own toast text; use mutate",
-  "targets": ["toastr", "docs/adr/0008-async-task-feedback.md"],
-  "must_pass": false
-}

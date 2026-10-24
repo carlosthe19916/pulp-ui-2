@@ -1,6 +1,0 @@
-{
-  "id": "forms-submit-error",
-  "description": "forms rule: modal submit errors are in-form only (no danger toast)",
-  "targets": ["forms", "docs/adr/0008-async-task-feedback.md"],
-  "must_pass": false
-}

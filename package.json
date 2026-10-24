@@ -14,7 +14,6 @@
     "format:fix": "npm run format:fix -ws --if-present",
     "rules": "rulesync generate",
     "rules:check": "rulesync generate --check",
-    "eval:harness": "bash evals/harness/run.sh",
     "build": "npm run build -ws --if-present",
     "prepare": "npm run generate && husky",
     "start:dev:common": "npm run start:dev -w common",

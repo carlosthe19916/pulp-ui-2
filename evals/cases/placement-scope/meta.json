@@ -1,6 +1,0 @@
-{
-  "id": "placement-scope",
-  "description": "placement rule: no hooks/ under area dirs; shared → app root",
-  "targets": ["placement"],
-  "must_pass": false
-}
