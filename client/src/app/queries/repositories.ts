@@ -14,6 +14,7 @@ import type {
   FileRepositorySyncUrl,
   PaginatedRepositoryResponseList,
   PaginatedRepositoryVersionResponseList,
+  RemoveSignaturesResponse,
   RepositoriesFileFileVersionsListData,
   RepositoriesListData,
   RepositoryAddRemoveContent,
@@ -181,9 +182,14 @@ export const useRepositorySyncMutation = (
   });
 };
 
-/** A plugin action's 202: one task, or a task group (e.g. replicate). */
-export type ActionOperationResponse = Partial<AsyncOperationResponse> &
-  Partial<TaskGroupOperationResponse>;
+/**
+ * A plugin action's 2xx: one task (most actions), a task group (`/rpm/prune/`), or a
+ * synchronous result (container `remove_signatures/` answers `200`).
+ */
+export type ActionOperationResponse =
+  | AsyncOperationResponse
+  | TaskGroupOperationResponse
+  | RemoveSignaturesResponse;
 
 export interface IRepositoryActionVariables {
   /** The repository or repository version the action runs on. */

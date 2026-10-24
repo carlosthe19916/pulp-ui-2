@@ -28,13 +28,10 @@ export interface IUnsetLabelVariables extends UnsetLabel {
  * Sets one label on any labelled resource (`{href}set_label/`, synchronous);
  * `invalidateKey` is its family's detail key.
  */
-export const useSetLabelMutation = ({
-  invalidateKey,
-  ...options
-}: { invalidateKey: QueryKey } & IMutationCallbacks<
-  SetLabelResponse,
-  ISetLabelVariables
->) => {
+export const useSetLabelMutation = (
+  invalidateKey: QueryKey,
+  options?: IMutationCallbacks<SetLabelResponse, ISetLabelVariables>,
+) => {
   const queryClient = useQueryClient();
   return useMutation<SetLabelResponse, DrfAxiosError, ISetLabelVariables>({
     mutationFn: async ({ href, key, value }) =>
@@ -46,20 +43,17 @@ export const useSetLabelMutation = ({
       ).data,
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: invalidateKey });
-      options.onSuccess?.(data, vars);
+      options?.onSuccess?.(data, vars);
     },
-    onError: options.onError,
+    onError: options?.onError,
   });
 };
 
 /** Removes one label (`{href}unset_label/`, synchronous). */
-export const useUnsetLabelMutation = ({
-  invalidateKey,
-  ...options
-}: { invalidateKey: QueryKey } & IMutationCallbacks<
-  UnsetLabelResponse,
-  IUnsetLabelVariables
->) => {
+export const useUnsetLabelMutation = (
+  invalidateKey: QueryKey,
+  options?: IMutationCallbacks<UnsetLabelResponse, IUnsetLabelVariables>,
+) => {
   const queryClient = useQueryClient();
   return useMutation<UnsetLabelResponse, DrfAxiosError, IUnsetLabelVariables>({
     mutationFn: async ({ href, key }) =>
@@ -71,8 +65,8 @@ export const useUnsetLabelMutation = ({
       ).data,
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: invalidateKey });
-      options.onSuccess?.(data, vars);
+      options?.onSuccess?.(data, vars);
     },
-    onError: options.onError,
+    onError: options?.onError,
   });
 };

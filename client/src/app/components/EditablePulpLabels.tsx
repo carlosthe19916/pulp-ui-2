@@ -50,8 +50,7 @@ export const EditablePulpLabels: React.FC<IEditablePulpLabelsProps> = ({
   const { addNotification } = useNotifications();
   // `null` closed, `""` adding, otherwise the key being edited.
   const [editing, setEditing] = useState<string | null>(null);
-  const unsetMutation = useUnsetLabelMutation({
-    invalidateKey,
+  const unsetMutation = useUnsetLabelMutation(invalidateKey, {
     onSuccess: (_data, { key }) =>
       addNotification({ title: `Label "${key}" removed`, variant: "success" }),
     onError: (error) =>
@@ -138,8 +137,7 @@ const LabelModal: React.FC<ILabelModalProps> = ({
     resolver: yupResolver(labelSchema),
     defaultValues: { key: labelKey, value },
   });
-  const setMutation = useSetLabelMutation({
-    invalidateKey,
+  const setMutation = useSetLabelMutation(invalidateKey, {
     onSuccess: (_data, vars) =>
       addNotification({
         title: `Label "${vars.key}" saved`,

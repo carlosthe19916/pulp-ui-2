@@ -8,11 +8,11 @@ import {
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   ImportersCorePulpListData,
-  ImportResponse,
   PaginatedImportResponseList,
   PaginatedPulpImporterResponseList,
   PulpImportCheckResponse,
   PulpImporterResponse,
+  TaskGroupOperationResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
@@ -148,22 +148,22 @@ export const useImporterDeleteMutation = (
   });
 };
 
-/** Runs an import (`{importer}imports/`); starts a task. */
+/** Runs an import (`{importer}imports/`); starts a task group. */
 export const useImportMutation = (
   options?: IMutationCallbacks<
-    ImportResponse,
+    TaskGroupOperationResponse,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ImportResponse,
+    TaskGroupOperationResponse,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
       (
-        await axiosInstance.post<ImportResponse>(
+        await axiosInstance.post<TaskGroupOperationResponse>(
           `${toProxyHref(href)}imports/`,
           body,
         )

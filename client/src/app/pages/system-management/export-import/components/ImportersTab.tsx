@@ -31,7 +31,7 @@ import {
 } from "@app/queries/importers";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { buildDefaultValues } from "@app/utils/formSchema";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import {
@@ -102,9 +102,9 @@ export const ImportersTab: React.FC = () => {
   });
   const importMutation = useImportMutation({
     onSuccess: (result) =>
-      notifyTaskStarted({
+      notifyTaskGroupStarted({
         addNotification,
-        taskHref: result.task,
+        taskGroupHref: result.task_group,
         title: "Import started",
       }),
     onError: onFormError("Failed to start import"),

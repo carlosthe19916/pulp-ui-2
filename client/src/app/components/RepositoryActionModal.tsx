@@ -31,7 +31,7 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useRepositoryActionMutation({
     onSuccess: (data) => {
-      if (data.task) {
+      if ("task" in data) {
         notifyTaskStarted({
           addNotification,
           taskHref: data.task,
