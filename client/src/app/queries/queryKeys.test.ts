@@ -13,7 +13,9 @@ import { domainKeys } from "./domains";
 import { exporterKeys } from "./exporters";
 import { groupKeys } from "./groups";
 import { importerKeys } from "./importers";
+import { mavenRepositoryKeys } from "./maven-repositories";
 import { publicationKeys } from "./publications";
+import { pythonRepositoryKeys } from "./python-repositories";
 import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
@@ -215,7 +217,13 @@ describe("query-key factories", () => {
     it("nests plugin sub-resources under the repository detail folder", () => {
       expect(
         startsWith({
-          key: repositoryKeys.subResourceQuery(repoHref, "packages/", {}),
+          key: mavenRepositoryKeys.packagesQuery(repoHref, { limit: 1 }),
+          prefix: repositoryKeys.detail(repoHref),
+        }),
+      ).toBe(true);
+      expect(
+        startsWith({
+          key: pythonRepositoryKeys.blocklistQuery(repoHref, { limit: 1 }),
           prefix: repositoryKeys.detail(repoHref),
         }),
       ).toBe(true);

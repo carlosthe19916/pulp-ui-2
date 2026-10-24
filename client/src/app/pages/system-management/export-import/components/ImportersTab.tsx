@@ -46,11 +46,20 @@ interface IImportRunsProps {
 }
 
 const ImportRuns: React.FC<IImportRunsProps> = ({ href }) => {
-  const { data, isLoading } = useImportsListQuery({ href });
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { data, isLoading } = useImportsListQuery({
+    href,
+    params: {
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
+  });
   return (
     <RunsTable
       label="Imports"
       runs={data?.results ?? []}
+      count={data?.count ?? 0}
+      pagination={pagination}
       isLoading={isLoading}
     />
   );

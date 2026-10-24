@@ -38,14 +38,22 @@ export const contentGuardKeys = {
 };
 
 /** The cross-type list over the aggregate `contentguards/` collection. */
+type ContentGuardListOptions = Omit<
+  UseQueryOptions<PaginatedContentGuardResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const contentGuardsListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IContentGuardListParams;
+  options?: ContentGuardListOptions;
 }) =>
   queryOptions<PaginatedContentGuardResponseList, DrfAxiosError>({
+    ...options,
     queryKey: contentGuardKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedContentGuardResponseList> =>
       (
@@ -63,11 +71,13 @@ export const contentGuardsListQueryOptions = ({
 
 export const useContentGuardsListQuery = ({
   params,
+  options,
 }: {
   params: IContentGuardListParams;
+  options?: ContentGuardListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(contentGuardsListQueryOptions({ domain, params }));
+  return useQuery(contentGuardsListQueryOptions({ domain, params, options }));
 };
 
 export const contentGuardDetailQueryOptions = ({

@@ -43,14 +43,22 @@ export const remoteKeys = {
   detailQuery: (remoteHref: string) => remoteKeys.detail(remoteHref),
 };
 
+type RemoteListOptions = Omit<
+  UseQueryOptions<PaginatedGenericRemoteResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const remotesListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IRemoteListParams;
+  options?: RemoteListOptions;
 }) =>
   queryOptions<PaginatedGenericRemoteResponseList, DrfAxiosError>({
+    ...options,
     queryKey: remoteKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGenericRemoteResponseList> => {
       const response =
@@ -69,11 +77,13 @@ export const remotesListQueryOptions = ({
 
 export const useRemotesListQuery = ({
   params,
+  options,
 }: {
   params: IRemoteListParams;
+  options?: RemoteListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(remotesListQueryOptions({ domain, params }));
+  return useQuery(remotesListQueryOptions({ domain, params, options }));
 };
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */

@@ -66,18 +66,24 @@ export const repositoryKeys = {
   detailQuery: (repoHref: string) => repositoryKeys.detail(repoHref),
   versionsQuery: (repoHref: string, params: IRepositoryVersionsListParams) =>
     [...repositoryKeys.versions(repoHref), params] as const,
-  subResourceQuery: (repoHref: string, path: string, params: object) =>
-    [...repositoryKeys.detail(repoHref), path, params] as const,
 };
+
+type RepositoryListOptions = Omit<
+  UseQueryOptions<PaginatedRepositoryResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
 
 export const repositoriesListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IRepositoryListParams;
+  options?: RepositoryListOptions;
 }) =>
   queryOptions<PaginatedRepositoryResponseList, DrfAxiosError>({
+    ...options,
     queryKey: repositoryKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRepositoryResponseList> => {
       const response = await axiosInstance.get<PaginatedRepositoryResponseList>(
@@ -95,11 +101,13 @@ export const repositoriesListQueryOptions = ({
 
 export const useRepositoriesListQuery = ({
   params,
+  options,
 }: {
   params: IRepositoryListParams;
+  options?: RepositoryListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(repositoriesListQueryOptions({ domain, params }));
+  return useQuery(repositoriesListQueryOptions({ domain, params, options }));
 };
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
@@ -141,33 +149,30 @@ export type RepositorySyncBody = RepositorySyncUrl &
   Partial<RpmRepositorySyncUrl>;
 
 /**
- * Sync any repository. The endpoint is rebuilt from the catalog `apiPath`, id and domain
- * (like create); the body carries `remote`/`mirror`.
+ * Sync any repository: POSTs to its `sync/` action (202, one task); the body carries
+ * `remote`/`mirror`.
  */
 export const useRepositorySyncMutation = (
   options?: IMutationCallbacks<
     AsyncOperationResponse,
-    { apiPath: string; id: string; body: RepositorySyncBody }
+    { href: string; body: RepositorySyncBody }
   >,
 ) => {
-  const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { apiPath: string; id: string; body: RepositorySyncBody }
+    { href: string; body: RepositorySyncBody }
   >({
     mutationFn: async ({
-      apiPath,
-      id,
+      href,
       body,
     }: {
-      apiPath: string;
-      id: string;
+      href: string;
       body: RepositorySyncBody;
     }) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath(`repositories/${apiPath}/${id}/sync/`, domain),
+        `${toProxyHref(href)}sync/`,
         body,
       );
       return response.data;
@@ -427,57 +432,6 @@ export const useRepositoryVersionsListQuery = ({
 }) =>
   useQuery({
     ...repositoryVersionsListQueryOptions({ repositoryHref, params, options }),
-    enabled: !!repositoryHref && options?.enabled !== false,
-  });
-
-/**
- * A plugin's read-only repository sub-resource (`{href}<path>`, e.g. Maven `packages/`),
- * keyed under the repository's detail so a sync refreshes it.
- */
-export const repositorySubResourceQueryOptions = <
-  TData,
-  TParams extends object,
->({
-  repositoryHref,
-  path,
-  params,
-  options,
-}: {
-  repositoryHref: string;
-  path: string;
-  params: TParams;
-  options?: Omit<UseQueryOptions<TData, DrfAxiosError>, "queryKey" | "queryFn">;
-}) =>
-  queryOptions<TData, DrfAxiosError>({
-    ...options,
-    queryKey: repositoryKeys.subResourceQuery(repositoryHref, path, params),
-    queryFn: async (): Promise<TData> =>
-      (
-        await axiosInstance.get<TData>(
-          `${toProxyHref(repositoryHref)}${path}`,
-          { params },
-        )
-      ).data,
-  });
-
-export const useRepositorySubResourceQuery = <TData, TParams extends object>({
-  repositoryHref,
-  path,
-  params,
-  options,
-}: {
-  repositoryHref: string;
-  path: string;
-  params: TParams;
-  options?: Omit<UseQueryOptions<TData, DrfAxiosError>, "queryKey" | "queryFn">;
-}) =>
-  useQuery({
-    ...repositorySubResourceQueryOptions<TData, TParams>({
-      repositoryHref,
-      path,
-      params,
-      options,
-    }),
     enabled: !!repositoryHref && options?.enabled !== false,
   });
 

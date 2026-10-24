@@ -24,8 +24,9 @@ import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
   isTerminalTaskState,
+  PRN_TASK_STATES,
   useTaskCancelMutation,
-  useTasksByPrnListQuery,
+  useTasksListQuery,
 } from "@app/queries/tasks";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
@@ -54,10 +55,22 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 5,
   });
-  const { data, isLoading, error } = useTasksByPrnListQuery({
-    prn,
-    limit: perPage,
-    offset: (page - 1) * perPage,
+  const { data, isLoading, error } = useTasksListQuery({
+    params: {
+      reserved_resources: prn,
+      state__in: [...PRN_TASK_STATES],
+      fields: [
+        "pulp_href",
+        "name",
+        "state",
+        "pulp_created",
+        "reserved_resources_record",
+      ],
+      ordering: "-pulp_created",
+      limit: perPage,
+      offset: (page - 1) * perPage,
+    },
+    options: { enabled: !!prn },
   });
   const cancelMutation = useTaskCancelMutation({
     onSuccess: () =>

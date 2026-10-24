@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -43,18 +44,27 @@ export const domainKeys = {
   detailQuery: (domainHref: string) => domainKeys.detail(domainHref),
 };
 
+type DomainListOptions = Omit<
+  UseQueryOptions<PaginatedDomainResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
+/** `domain` is the deployment domain the request runs in, not a listed Domain. */
 export const domainsListQueryOptions = ({
-  apiDomain,
+  domain,
   params,
+  options,
 }: {
-  apiDomain: IPulpDomain;
+  domain: IPulpDomain;
   params: IDomainListParams;
+  options?: DomainListOptions;
 }) =>
   queryOptions<PaginatedDomainResponseList, DrfAxiosError>({
-    queryKey: domainKeys.listQuery(apiDomain, params),
+    ...options,
+    queryKey: domainKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedDomainResponseList> => {
       const response = await axiosInstance.get<PaginatedDomainResponseList>(
-        pulpApiPath("domains/", apiDomain),
+        pulpApiPath("domains/", domain),
         {
           params: {
             ...params,
@@ -68,11 +78,13 @@ export const domainsListQueryOptions = ({
 
 export const useDomainsListQuery = ({
   params,
+  options,
 }: {
   params: IDomainListParams;
+  options?: DomainListOptions;
 }) => {
-  const apiDomain = useDefaultDomain();
-  return useQuery(domainsListQueryOptions({ apiDomain, params }));
+  const domain = useDefaultDomain();
+  return useQuery(domainsListQueryOptions({ domain, params, options }));
 };
 
 export const useDomainCreateMutation = (

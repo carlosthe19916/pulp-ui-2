@@ -10,16 +10,13 @@ import {
   LabelGroup,
 } from "@patternfly/react-core";
 
-import type {
-  MavenRepositoryMetricsResponse,
-  MavenRepositoryPackageResponse,
-  PaginatedMavenRepositoryPackageListResponse,
-  RepositoriesMavenMavenMetricsData,
-  RepositoriesMavenMavenPackagesData,
-} from "@app/client";
+import type { MavenRepositoryPackageResponse } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { contentTypeListQueryOptions } from "@app/queries/content";
-import { useRepositorySubResourceQuery } from "@app/queries/repositories";
+import {
+  useMavenMetricsQuery,
+  useMavenPackagesListQuery,
+} from "@app/queries/maven-repositories";
 import { formatDateTime } from "@app/utils/utils";
 
 import { snapshotBuild } from "./browseHelpers";
@@ -58,20 +55,12 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
       },
     ] as const,
   });
-  const packages = useRepositorySubResourceQuery<
-    PaginatedMavenRepositoryPackageListResponse,
-    NonNullable<RepositoriesMavenMavenPackagesData["query"]>
-  >({
+  const packages = useMavenPackagesListQuery({
     repositoryHref,
-    path: "packages/",
     params: { ...list.params, repository_version: versionHref },
   });
-  const metrics = useRepositorySubResourceQuery<
-    MavenRepositoryMetricsResponse,
-    NonNullable<RepositoriesMavenMavenMetricsData["query"]>
-  >({
+  const metrics = useMavenMetricsQuery({
     repositoryHref,
-    path: "metrics/",
     params: { repository_version: versionHref },
   });
 

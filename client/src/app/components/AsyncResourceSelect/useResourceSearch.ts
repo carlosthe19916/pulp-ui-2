@@ -1,25 +1,22 @@
 import type { ResourceKind } from "@catalog";
-import { useQuery } from "@tanstack/react-query";
 
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
-import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
-  contentGuardsListQueryOptions,
   useContentGuardDetailQuery,
+  useContentGuardsListQuery,
 } from "@app/queries/content-guards";
-import { publicationsListQueryOptions } from "@app/queries/publications";
+import { usePublicationsListQuery } from "@app/queries/publications";
 import {
-  remotesListQueryOptions,
   useRemoteDetailQuery,
+  useRemotesListQuery,
 } from "@app/queries/remotes";
 import {
-  repositoriesListQueryOptions,
+  useRepositoriesListQuery,
   useRepositoryDetailQuery,
 } from "@app/queries/repositories";
 import {
-  signingServicesListQueryOptions,
   useSigningServiceDetailQuery,
+  useSigningServicesListQuery,
 } from "@app/queries/signing-services";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 
@@ -59,9 +56,6 @@ export const useResourceSearch = ({
   enabled,
   filter,
 }: IUseResourceSearchOptions): IResourceSearch => {
-  const domain = useSelectedDomain();
-  const defaultDomain = useDefaultDomain();
-
   const isRepository = resourceKind === "repository";
   const isRemote = resourceKind === "remote";
   const isPublication = resourceKind === "publication";
@@ -70,58 +64,43 @@ export const useResourceSearch = ({
 
   // Every kind's query is declared (rules of hooks); `enabled` keeps the inactive
   // ones from firing.
-  const repositoryQuery = useQuery({
-    ...repositoriesListQueryOptions({
-      domain,
-      params: {
-        limit: PAGE_SIZE,
-        offset: 0,
-        ordering: "name",
-        name__icontains: term || undefined,
-      },
-    }),
-    enabled: enabled && isRepository,
+  const repositoryQuery = useRepositoriesListQuery({
+    params: {
+      limit: PAGE_SIZE,
+      offset: 0,
+      ordering: "name",
+      name__icontains: term || undefined,
+    },
+    options: { enabled: enabled && isRepository },
   });
-  const remoteQuery = useQuery({
-    ...remotesListQueryOptions({
-      domain,
-      params: {
-        limit: PAGE_SIZE,
-        offset: 0,
-        ordering: "name",
-        name__icontains: term || undefined,
-      },
-    }),
-    enabled: enabled && isRemote,
+  const remoteQuery = useRemotesListQuery({
+    params: {
+      limit: PAGE_SIZE,
+      offset: 0,
+      ordering: "name",
+      name__icontains: term || undefined,
+    },
+    options: { enabled: enabled && isRemote },
   });
   // Publications have no name filter: fetch a page and match the label client-side.
-  const publicationQuery = useQuery({
-    ...publicationsListQueryOptions({
-      domain,
-      params: { limit: PAGE_SIZE, offset: 0 },
-    }),
-    enabled: enabled && isPublication,
+  const publicationQuery = usePublicationsListQuery({
+    params: { limit: PAGE_SIZE, offset: 0 },
+    options: { enabled: enabled && isPublication },
   });
 
-  const signingServiceQuery = useQuery({
-    ...signingServicesListQueryOptions({
-      domain: defaultDomain,
-      // Few exist and the list has no "contains" filter: search client-side.
-      params: { limit: 100, offset: 0, ordering: "name" },
-    }),
-    enabled: enabled && isSigningService,
+  const signingServiceQuery = useSigningServicesListQuery({
+    // Few exist and the list has no "contains" filter: search client-side.
+    params: { limit: 100, offset: 0, ordering: "name" },
+    options: { enabled: enabled && isSigningService },
   });
-  const contentGuardQuery = useQuery({
-    ...contentGuardsListQueryOptions({
-      domain,
-      params: {
-        limit: PAGE_SIZE,
-        offset: 0,
-        ordering: "name",
-        name__icontains: term || undefined,
-      },
-    }),
-    enabled: enabled && isContentGuard,
+  const contentGuardQuery = useContentGuardsListQuery({
+    params: {
+      limit: PAGE_SIZE,
+      offset: 0,
+      ordering: "name",
+      name__icontains: term || undefined,
+    },
+    options: { enabled: enabled && isContentGuard },
   });
 
   // Resolve the selected item's label (edit mode): it may be outside the current

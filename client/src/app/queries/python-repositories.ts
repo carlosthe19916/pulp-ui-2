@@ -1,4 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -8,7 +14,7 @@ import type {
   RepositoriesPythonPythonBlocklistEntriesListData,
 } from "@app/client";
 
-import { repositoryKeys, useRepositorySubResourceQuery } from "./repositories";
+import { repositoryKeys } from "./repositories";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -16,12 +22,52 @@ import { toProxyHref } from "./utils/pulpApi";
 
 const BLOCKLIST_PATH = "blocklist_entries/";
 
-/** A Python repository's blocklist; nested under its detail key. */
-const blocklistKey = (repositoryHref: string) =>
-  [...repositoryKeys.detail(repositoryHref), BLOCKLIST_PATH] as const;
-
 export type IPythonBlocklistListParams =
   ListParams<RepositoriesPythonPythonBlocklistEntriesListData>;
+
+/** A Python repository's blocklist, nested under the repository's detail key. */
+export const pythonRepositoryKeys = {
+  blocklist: (repositoryHref: string) =>
+    [...repositoryKeys.detail(repositoryHref), "blocklist_entries"] as const,
+
+  blocklistQuery: (
+    repositoryHref: string,
+    params: IPythonBlocklistListParams,
+  ) => [...pythonRepositoryKeys.blocklist(repositoryHref), params] as const,
+};
+
+export const pythonBlocklistQueryOptions = ({
+  repositoryHref,
+  params,
+  options,
+}: {
+  repositoryHref: string;
+  params: IPythonBlocklistListParams;
+  options?: Omit<
+    UseQueryOptions<
+      PaginatedpythonPythonBlocklistEntryResponseList,
+      DrfAxiosError
+    >,
+    "queryKey" | "queryFn"
+  >;
+}) =>
+  queryOptions<PaginatedpythonPythonBlocklistEntryResponseList, DrfAxiosError>({
+    ...options,
+    queryKey: pythonRepositoryKeys.blocklistQuery(repositoryHref, params),
+    queryFn:
+      async (): Promise<PaginatedpythonPythonBlocklistEntryResponseList> =>
+        (
+          await axiosInstance.get<PaginatedpythonPythonBlocklistEntryResponseList>(
+            `${toProxyHref(repositoryHref)}${BLOCKLIST_PATH}`,
+            {
+              params: {
+                ...params,
+                ordering: params.ordering ? [params.ordering] : undefined,
+              },
+            },
+          )
+        ).data,
+  });
 
 export const usePythonBlocklistQuery = ({
   repositoryHref,
@@ -30,10 +76,10 @@ export const usePythonBlocklistQuery = ({
   repositoryHref: string;
   params: IPythonBlocklistListParams;
 }) =>
-  useRepositorySubResourceQuery<
-    PaginatedpythonPythonBlocklistEntryResponseList,
-    IPythonBlocklistListParams
-  >({ repositoryHref, path: BLOCKLIST_PATH, params });
+  useQuery({
+    ...pythonBlocklistQueryOptions({ repositoryHref, params }),
+    enabled: !!repositoryHref,
+  });
 
 export const usePythonBlocklistCreateMutation = (
   options?: IMutationCallbacks<
@@ -56,7 +102,7 @@ export const usePythonBlocklistCreateMutation = (
       ).data,
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({
-        queryKey: blocklistKey(vars.repositoryHref),
+        queryKey: pythonRepositoryKeys.blocklist(vars.repositoryHref),
       });
       options?.onSuccess?.(data, vars);
     },
@@ -74,7 +120,7 @@ export const usePythonBlocklistDeleteMutation = (
     },
     onSuccess: (data, entry) => {
       void queryClient.invalidateQueries({
-        queryKey: blocklistKey(entry.repository ?? ""),
+        queryKey: pythonRepositoryKeys.blocklist(entry.repository ?? ""),
       });
       options?.onSuccess?.(data, entry);
     },

@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -7,6 +8,7 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  ImportersCorePulpImportsListData,
   ImportersCorePulpListData,
   PaginatedImportResponseList,
   PaginatedPulpImporterResponseList,
@@ -27,6 +29,8 @@ export const ImportersQueryKey = "importers";
 
 export type IImporterListParams = ListParams<ImportersCorePulpListData>;
 
+export type IImportListParams = ListParams<ImportersCorePulpImportsListData>;
+
 export const importerKeys = {
   all: () => [ImportersQueryKey] as const,
   list: () => [...importerKeys.all(), "list"] as const,
@@ -34,6 +38,8 @@ export const importerKeys = {
   imports: (href: string) => [...importerKeys.detail(href), "imports"] as const,
   listQuery: (domain: IPulpDomain, params: IImporterListParams) =>
     [...importerKeys.list(), domain, params] as const,
+  importsQuery: (href: string, params: IImportListParams) =>
+    [...importerKeys.imports(href), params] as const,
 };
 
 export const importersListQueryOptions = ({
@@ -69,20 +75,41 @@ export const useImportersListQuery = ({
 };
 
 /** An importer's past imports. */
-export const importsListQueryOptions = ({ href }: { href: string }) =>
+export const importsListQueryOptions = ({
+  href,
+  params,
+  options,
+}: {
+  href: string;
+  params: IImportListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedImportResponseList, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<PaginatedImportResponseList, DrfAxiosError>({
-    queryKey: importerKeys.imports(href),
+    ...options,
+    queryKey: importerKeys.importsQuery(href, params),
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedImportResponseList>(
           `${toProxyHref(href)}imports/`,
-          { params: { limit: 20 } },
+          { params },
         )
       ).data,
   });
 
-export const useImportsListQuery = ({ href }: { href: string }) =>
-  useQuery(importsListQueryOptions({ href }));
+export const useImportsListQuery = ({
+  href,
+  params,
+}: {
+  href: string;
+  params: IImportListParams;
+}) =>
+  useQuery({
+    ...importsListQueryOptions({ href, params }),
+    enabled: !!href,
+  });
 
 export const useImporterCreateMutation = (
   options?: IMutationCallbacks<PulpImporterResponse, Record<string, unknown>>,

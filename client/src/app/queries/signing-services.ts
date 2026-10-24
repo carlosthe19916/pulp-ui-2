@@ -32,14 +32,22 @@ export const signingServiceKeys = {
     [...signingServiceKeys.list(), domain, params] as const,
 };
 
+type SigningServiceListOptions = Omit<
+  UseQueryOptions<PaginatedSigningServiceResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const signingServicesListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: ISigningServiceListParams;
+  options?: SigningServiceListOptions;
 }) =>
   queryOptions<PaginatedSigningServiceResponseList, DrfAxiosError>({
+    ...options,
     queryKey: signingServiceKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedSigningServiceResponseList> => {
       const response =
@@ -79,11 +87,13 @@ export const signingServiceDetailQueryOptions = ({
 
 export const useSigningServicesListQuery = ({
   params,
+  options,
 }: {
   params: ISigningServiceListParams;
+  options?: SigningServiceListOptions;
 }) => {
   const domain = useDefaultDomain();
-  return useQuery(signingServicesListQueryOptions({ domain, params }));
+  return useQuery(signingServicesListQueryOptions({ domain, params, options }));
 };
 
 export const useSigningServiceDetailQuery = ({ href }: { href: string }) =>

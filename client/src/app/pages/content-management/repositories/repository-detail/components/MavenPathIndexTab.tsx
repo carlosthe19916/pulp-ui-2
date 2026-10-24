@@ -8,12 +8,9 @@ import {
   Label,
 } from "@patternfly/react-core";
 
-import type {
-  MavenPathIndexStatusResponse,
-  RepositoryResponse,
-} from "@app/client";
+import type { RepositoryResponse } from "@app/client";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
-import { useRepositorySubResourceQuery } from "@app/queries/repositories";
+import { useMavenPathIndexStatusQuery } from "@app/queries/maven-repositories";
 
 interface IMavenPathIndexTabProps {
   repository: RepositoryResponse;
@@ -23,13 +20,8 @@ interface IMavenPathIndexTabProps {
 export const MavenPathIndexTab: React.FC<IMavenPathIndexTabProps> = ({
   repository,
 }) => {
-  const { data, isLoading, error } = useRepositorySubResourceQuery<
-    MavenPathIndexStatusResponse,
-    Record<string, never>
-  >({
+  const { data, isLoading, error } = useMavenPathIndexStatusQuery({
     repositoryHref: repository.pulp_href ?? "",
-    path: "path_index_status/",
-    params: {},
   });
 
   return (

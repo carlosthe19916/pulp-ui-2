@@ -63,23 +63,19 @@ export const taskKeys = {
     [...taskKeys.all(), "detail", taskHref] as const,
   // Per-row delete/update status probe, one query per on-screen resource PRN.
   byPrn: () => [...taskKeys.all(), "byPrn"] as const,
-  // Paginated task list scoped to a single resource PRN (the expanded row table).
-  byPrnList: () => [...taskKeys.all(), "byPrnList"] as const,
 
   listQuery: (domain: IPulpDomain, params: ITaskListParams) =>
     [...taskKeys.list(), domain, params] as const,
   detailQuery: (taskHref: string) => taskKeys.detail(taskHref),
   byPrnQuery: (domain: IPulpDomain, prn: string) =>
     [...taskKeys.byPrn(), domain, prn] as const,
-  byPrnListQuery: (
-    domain: IPulpDomain,
-    prn: string,
-    params: { limit: number; offset: number },
-  ) => [...taskKeys.byPrnList(), domain, prn, params] as const,
 };
 
-/** Active states plus recent failures — for the expanded per-PRN task table. */
-const PRN_TASK_STATES = [
+/**
+ * Active states plus recent failures — the expanded per-PRN task table spreads them
+ * into `state__in`.
+ */
+export const PRN_TASK_STATES = [
   "running",
   "waiting",
   "canceling",
@@ -96,7 +92,7 @@ const PRN_ACTIVE_STATES = [
 
 /**
  * Shared `GET tasks/`, re-wrapping the single `ordering` to the spec's array
- * form. The list and per-PRN queries share it but keep their own keys/shapes.
+ * form. The list and the per-PRN probe share it but keep their own keys/shapes.
  */
 const fetchTasksPage = async (
   domain: IPulpDomain,
@@ -171,14 +167,22 @@ export const useTasksByPrnQueries = ({
   });
 };
 
+type TaskListOptions = Omit<
+  UseQueryOptions<PaginatedTaskResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const tasksListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: ITaskListParams;
+  options?: TaskListOptions;
 }) =>
   queryOptions<PaginatedTaskResponseList, DrfAxiosError>({
+    ...options,
     queryKey: taskKeys.listQuery(domain, params),
     queryFn: () => fetchTasksPage(domain, params),
   });
@@ -269,61 +273,17 @@ export const useTaskDetailQueries = ({
     },
   });
 
-export const useTasksListQuery = ({ params }: { params: ITaskListParams }) => {
-  const domain = useSelectedDomain();
-  return useQuery({
-    ...tasksListQueryOptions({ domain, params }),
-    refetchInterval: (query) =>
-      query.state.data?.results?.some((task) => isActiveTask(task.state))
-        ? DEFAULT_REFETCH_INTERVAL
-        : false,
-  });
-};
-
-export const tasksByPrnListQueryOptions = ({
-  domain,
-  prn,
-  limit,
-  offset,
+/** Polls while any task on the page is still active. */
+export const useTasksListQuery = ({
+  params,
+  options,
 }: {
-  domain: IPulpDomain;
-  prn: string;
-  limit: number;
-  offset: number;
-}) =>
-  queryOptions<PaginatedTaskResponseList, DrfAxiosError>({
-    queryKey: taskKeys.byPrnListQuery(domain, prn, { limit, offset }),
-    queryFn: () =>
-      fetchTasksPage(domain, {
-        reserved_resources: prn,
-        state__in: [...PRN_TASK_STATES],
-        fields: [
-          "pulp_href",
-          "name",
-          "state",
-          "pulp_created",
-          "reserved_resources_record",
-        ],
-        ordering: "-pulp_created",
-        limit,
-        offset,
-      }),
-  });
-
-/** Paginated task list for one PRN — the row's expanded table; polls while active. */
-export const useTasksByPrnListQuery = ({
-  prn,
-  limit,
-  offset,
-}: {
-  prn: string;
-  limit: number;
-  offset: number;
+  params: ITaskListParams;
+  options?: TaskListOptions;
 }) => {
   const domain = useSelectedDomain();
   return useQuery({
-    ...tasksByPrnListQueryOptions({ domain, prn, limit, offset }),
-    enabled: !!prn,
+    ...tasksListQueryOptions({ domain, params, options }),
     refetchInterval: (query) =>
       query.state.data?.results?.some((task) => isActiveTask(task.state))
         ? DEFAULT_REFETCH_INTERVAL

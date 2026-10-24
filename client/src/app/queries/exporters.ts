@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -8,6 +9,7 @@ import {
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
+  ExportersCorePulpExportsListData,
   ExportersCorePulpListData,
   PaginatedPulpExporterResponseList,
   PaginatedPulpExportResponseList,
@@ -33,6 +35,12 @@ export type Exporter = Pick<
 
 export type IExporterListParams = ListParams<ExportersCorePulpListData>;
 
+/**
+ * Params for an exporter's `exports/`. Pulp and filesystem exporters share the same
+ * `query` block, so the Pulp one stands in.
+ */
+export type IExportListParams = ListParams<ExportersCorePulpExportsListData>;
+
 export const exporterKeys = {
   all: () => [ExportersQueryKey] as const,
   list: () => [...exporterKeys.all(), "list"] as const,
@@ -43,6 +51,8 @@ export const exporterKeys = {
     apiPath: string,
     params: IExporterListParams,
   ) => [...exporterKeys.list(), domain, apiPath, params] as const,
+  exportsQuery: (href: string, params: IExportListParams) =>
+    [...exporterKeys.exports(href), params] as const,
 };
 
 /** One exporter type's list (`exporters/<apiPath>/`; there is no aggregate). */
@@ -83,20 +93,41 @@ export const useExportersListQuery = ({
 };
 
 /** An exporter's past exports, newest first. */
-export const exportsListQueryOptions = ({ href }: { href: string }) =>
+export const exportsListQueryOptions = ({
+  href,
+  params,
+  options,
+}: {
+  href: string;
+  params: IExportListParams;
+  options?: Omit<
+    UseQueryOptions<PaginatedPulpExportResponseList, DrfAxiosError>,
+    "queryKey" | "queryFn"
+  >;
+}) =>
   queryOptions<PaginatedPulpExportResponseList, DrfAxiosError>({
-    queryKey: exporterKeys.exports(href),
+    ...options,
+    queryKey: exporterKeys.exportsQuery(href, params),
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedPulpExportResponseList>(
           `${toProxyHref(href)}exports/`,
-          { params: { limit: 20 } },
+          { params },
         )
       ).data,
   });
 
-export const useExportsListQuery = ({ href }: { href: string }) =>
-  useQuery(exportsListQueryOptions({ href }));
+export const useExportsListQuery = ({
+  href,
+  params,
+}: {
+  href: string;
+  params: IExportListParams;
+}) =>
+  useQuery({
+    ...exportsListQueryOptions({ href, params }),
+    enabled: !!href,
+  });
 
 export const useExporterCreateMutation = (
   options?: IMutationCallbacks<

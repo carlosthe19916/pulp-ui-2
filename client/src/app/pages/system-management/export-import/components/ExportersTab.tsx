@@ -47,11 +47,20 @@ interface IExportRunsProps {
 }
 
 const ExportRuns: React.FC<IExportRunsProps> = ({ href }) => {
-  const { data, isLoading } = useExportsListQuery({ href });
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { data, isLoading } = useExportsListQuery({
+    href,
+    params: {
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
+  });
   return (
     <RunsTable
       label="Exports"
       runs={data?.results ?? []}
+      count={data?.count ?? 0}
+      pagination={pagination}
       isLoading={isLoading}
     />
   );

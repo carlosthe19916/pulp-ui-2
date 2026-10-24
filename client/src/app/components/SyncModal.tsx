@@ -5,10 +5,7 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositorySyncMutation } from "@app/queries/repositories";
-import {
-  extractIdFromHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -47,8 +44,6 @@ const SyncForm: React.FC<Omit<ISyncModalProps, "isOpen">> = ({
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const plugin = getPlugin(resolvePulpType(repository.pulp_href) ?? "");
-  // Collection sub-path used to rebuild the sync endpoint client-side.
-  const apiPath = plugin?.entities.repository?.apiPath;
 
   const syncMutation = useRepositorySyncMutation({
     onSuccess: (data) =>
@@ -74,17 +69,9 @@ const SyncForm: React.FC<Omit<ISyncModalProps, "isOpen">> = ({
       submitError={submitError}
       onSubmit={(body) => {
         clearSubmitError();
-        if (!apiPath) {
-          setSubmitError({
-            title: "Failed to start sync",
-            description: "This repository type does not support syncing.",
-          });
-          return;
-        }
         syncMutation.mutate(
           {
-            apiPath,
-            id: extractIdFromHref(repository.pulp_href ?? ""),
+            href: repository.pulp_href ?? "",
             body: { mirror: false, ...body },
           },
           { onSuccess: onClose },
