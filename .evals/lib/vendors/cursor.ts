@@ -12,9 +12,12 @@ const TOOLS_BY_ACCESS: Record<ToolAccess, string[]> = {
 
 // A local Cursor agent via the Cursor SDK, which authenticates with `CURSOR_API_KEY` or a stored
 // login. Only project settings load (none without guidance), so user rules from the Cursor
-// account don't steer it. No cost: the SDK's getUsage() isn't available on our account.
+// account don't steer it. No cost: the SDK's getUsage() isn't available on our account. No
+// loaded guidance either: the SDK reports no event when a rule loads. No skillPath: the repo has
+// no .cursor/skills/, so a skill reaches Cursor only through the other copies a target keeps.
 export const cursor: IVendor = {
   guidancePaths: [".cursor/"],
+  rulePath: (name) => `.cursor/rules/${name}.mdc`,
   async run({ prompt, cwd, tools, withGuidance, signal }) {
     const agent = await Agent.create({
       model: MODEL,

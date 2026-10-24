@@ -76,25 +76,40 @@ function formatVerdict(
 
 async function runCase(vendor: IVendor, evalCase: ICase) {
   const runAndJudge = async (withGuidance: boolean) => {
-    const label = withGuidance ? "with guidance" : "without guidance";
-    const { answer } = await timed(`agent ${label}`, () =>
+    const label = withGuidance ? "target guidance only" : "without guidance";
+    const { answer, loadedGuidance } = await timed(`agent ${label}`, () =>
       runAgent({
         vendor,
         prompt: evalCase.prompt,
         tools: evalCase.tools ?? "none",
-        withGuidance,
+        target: withGuidance ? evalCase.target : undefined,
       }),
     );
     const { scores, comment } = await timed(`judge ${label}`, () =>
       judge({ criteria: evalCase.expect, task: evalCase.prompt, answer }),
     );
+    // A target rule or skill that never loaded can't be what taught the answer. Only checked
+    // when the vendor reports what loaded.
+    const { rules = [], skills = [] } = evalCase.target;
+    const unloaded =
+      withGuidance && loadedGuidance
+        ? [
+            ...rules.map((name) => vendor.rulePath(name)),
+            ...skills.flatMap((name) => vendor.skillPath?.(name) ?? []),
+          ].filter((path) => !loadedGuidance.includes(path))
+        : [];
+    const verdict = formatVerdict(
+      `${label} (must ${withGuidance ? "pass" : "fail"})`,
+      scores,
+      comment,
+    );
     return {
-      pass: Object.values(scores).every((score) => score >= PASS_SCORE),
-      detail: formatVerdict(
-        `${label} (must ${withGuidance ? "pass" : "fail"})`,
-        scores,
-        comment,
-      ),
+      pass:
+        Object.values(scores).every((score) => score >= PASS_SCORE) &&
+        !unloaded.length,
+      detail: unloaded.length
+        ? `${verdict}\n\n    never loaded: ${unloaded.join(", ")}`
+        : verdict,
     };
   };
   const withGuidance = await runAndJudge(true);

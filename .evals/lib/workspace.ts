@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+export const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 // Copies still on disk, removed on exit too so Ctrl+C doesn't leave them behind.
 const liveCopies = new Set<string>();
@@ -18,10 +18,11 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
 }
 
 // Runs `work` in a throwaway copy of the working tree (uncommitted edits included, ignored files
-// and `excludedPaths` left out), so the agent can't read what's left out and can't touch the real
-// checkout.
+// and `excludedPaths` left out unless under `keptPaths`), so the agent can't read what's left out
+// and can't touch the real checkout.
 export async function withRepoCopy<T>(
   excludedPaths: string[],
+  keptPaths: string[],
   work: (dir: string) => Promise<T>,
 ) {
   const dir = mkdtempSync(join(tmpdir(), "pulp-ui-evals-"));
@@ -36,7 +37,11 @@ export async function withRepoCopy<T>(
       },
     ).split("\0");
     for (const file of files) {
-      if (!file || excludedPaths.some((prefix) => file.startsWith(prefix))) {
+      if (
+        !file ||
+        (excludedPaths.some((prefix) => file.startsWith(prefix)) &&
+          !keptPaths.some((prefix) => file.startsWith(prefix)))
+      ) {
         continue;
       }
       // ls-files still lists tracked files deleted from the working tree.

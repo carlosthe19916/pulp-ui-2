@@ -21,10 +21,19 @@ login.
 Every case runs twice, each time in a throwaway copy of the working tree (uncommitted edits
 included, `.evals/` excluded so the agent can't see the expected answers):
 
-- **with guidance**: the copy keeps the repo's AI guidance; it must pass.
+- **target guidance only**: the copy keeps only the guidance the case's `target` names and
+  removes the rest; it must pass. A pass means that guidance alone teaches the behaviour, not
+  another guidance file. For a rule, the target keeps its source in `.rulesync/rules/` and every
+  vendor's generated copy; for a skill, its source in `.agents/skills/` and every vendor's link
+  to it. Vendors that report what loaded (Claude) must also have loaded each target rule and
+  skill.
 - **without guidance**: `AGENTS.md`, `docs/adr/`, `.rulesync/`, `.agents/` and every vendor's
   own guidance (`.claude/`, `.cursor/`) are removed; it must fail. If it passes, the existing
   code or the base model teaches the behaviour, not the guidance.
+
+The application code stays in both copies: a rule loads only when the agent reads a file its
+`globs` match. Neither run checks that the target works alongside the rest of the guidance, so
+a conflict with another guidance file goes unnoticed.
 
 ## Layout
 
@@ -41,7 +50,8 @@ lib/vendors/
 cases/
   agents-md.ts       AGENTS.md loads; if not, that vendor's other cases are skipped
   <kind>/<name>.ts   one folder per kind of guidance, one file per thing it tests,
-                     e.g. rules/placement.ts for .rulesync/rules/placement.md
+                     e.g. rules/placement.ts for .rulesync/rules/placement.md,
+                     skills/vercel-composition-patterns.ts for .agents/skills/<name>/
 ```
 
 The judge always uses `claude-opus-4-8` (`MODEL` in `lib/judge.ts`), whichever vendor answered.
@@ -54,7 +64,8 @@ org policy blocks them on `claude-opus-5-5`, so check that before switching mode
 
 A vendor is an object (`IVendor` in `lib/types.ts`), not a subclass: it holds only what is locked
 to that agent, namely how to run it on a prompt in a directory, how the neutral `tools` level
-(`"none"` or `"read"`) maps to its own tools, and which guidance paths are its own. The repo
+(`"none"` or `"read"`) maps to its own tools, which guidance paths are its own, where its copy
+of a rule lives, and, if it can tell, which guidance files loaded. The repo
 copy, timeout, judge and report are shared and compose around it.
 
 ## Adding a vendor
@@ -66,7 +77,11 @@ copy, timeout, judge and report are shared and compose around it.
 ## Adding a case
 
 1. Create `cases/<kind>/<name>.ts` (copy `cases/rules/placement.ts`).
-2. Write a task that needs the guidance but doesn't name it, so it loads the way it does in real
+2. Set `target` to the guidance it tests: `rules` and `skills` by name, `paths` for anything else. Add the
+   ADRs a rule `implements:` only when the rule depends on them.
+3. Write a task that needs the guidance but doesn't name it, so it loads the way it does in real
    use (a rule loads when the agent reads a file its `globs` match).
-3. Take the `expect` criteria from the guidance itself; for a rule, its `## Checklist`.
-4. Run it. If it fails only because the run without guidance passes, tighten the task.
+4. Take the `expect` criteria from the guidance itself; for a rule, its `## Checklist`.
+5. Run it. If the run with only the target fails, the target is missing something another file
+   supplies: add it to the target, or list that file in `paths`. If it fails only because the
+   run without guidance passes, tighten the task.

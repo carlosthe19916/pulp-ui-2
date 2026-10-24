@@ -4,6 +4,7 @@ import type { ICase } from "../../lib/types.ts";
 
 // Rule: .rulesync/rules/placement.md. Criteria come from its `## Checklist`.
 export default {
+  target: { rules: ["placement"] },
   prompt: dedent`
     We're adding a role detail page next to the role list page. It needs PermissionMultiSelect,
     which today only the role list page uses.
