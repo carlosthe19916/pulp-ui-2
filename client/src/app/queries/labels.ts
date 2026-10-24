@@ -5,26 +5,28 @@ import {
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
-import type { SetLabelResponse, UnsetLabelResponse } from "@app/client";
+import type {
+  SetLabel,
+  SetLabelResponse,
+  UnsetLabel,
+  UnsetLabelResponse,
+} from "@app/client";
+
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
 
-export interface ISetLabelVariables {
+export interface ISetLabelVariables extends SetLabel {
   href: string;
-  key: string;
-  value: string | null;
 }
 
-export interface IUnsetLabelVariables {
+export interface IUnsetLabelVariables extends UnsetLabel {
   href: string;
-  key: string;
 }
 
 /**
- * Sets one label on any labelled resource (`{href}set_label/`, synchronous).
- * Labels live on the resource itself, so `invalidateKey` is its family's
- * detail key (each family has its own key factory).
+ * Sets one label on any labelled resource (`{href}set_label/`, synchronous);
+ * `invalidateKey` is its family's detail key.
  */
 export const useSetLabelMutation = ({
   invalidateKey,

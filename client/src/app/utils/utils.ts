@@ -1,17 +1,21 @@
 import axios from "axios";
 import dayjs from "dayjs";
 
-import { RENDER_DATETIME_FORMAT, RENDER_DATE_FORMAT } from "@app/Constants";
+import type { ToolbarLabel } from "@patternfly/react-core";
+
 import type { TaskResponse } from "@app/client";
+import { RENDER_DATE_FORMAT, RENDER_DATETIME_FORMAT } from "@app/constants";
 import type {
   IErrorsEnvelopeData,
   PulpErrorData,
   TaskWithError,
 } from "@app/queries/utils/openapiErrorTypes";
-import type { ToolbarLabel } from "@patternfly/react-core";
 
 /** A user-facing mutation failure message: an Alert/toast title plus optional detail. */
-export type IMutationErrorMessage = { title: string; description?: string };
+export interface IMutationErrorMessage {
+  title: string;
+  description?: string;
+}
 
 const PERMISSION_DENIED_DESCRIPTION =
   "You do not have permission to perform this action. Ask an administrator to grant the required role.";
@@ -139,10 +143,8 @@ export const getMutationErrorMessage = ({
 };
 
 /**
- * Extract a human-readable failure message from a terminal task, reading the
- * `error` object the generated client drops (see `TaskWithError`). Prefers the
- * crash `description`, then a cancellation `reason`, then the raw `error`/`result`
- * payload. Returns `undefined` when the task carries no failure detail.
+ * Failure message from a terminal task's `error`, which the generated client drops (see
+ * `TaskWithError`); `undefined` when it has none.
  */
 export const getTaskErrorMessage = (
   task: TaskResponse | undefined,
@@ -250,12 +252,6 @@ export const getValidatedFromError = (error: unknown | undefined) => {
   return error ? "error" : "default";
 };
 
-export const localeNumericCompare = (
-  a: string,
-  b: string,
-  locale: string,
-): number => a.localeCompare(b, locale ?? "en", { numeric: true });
-
 export const getString = (input: string | (() => string)) =>
   typeof input === "function" ? input() : input;
 
@@ -264,21 +260,6 @@ export const getFilenameFromContentDisposition = (
 ): string | null => {
   const match = contentDisposition.match(/filename="?([^"]+)"?/);
   return match ? match[1] : null;
-};
-
-/**
- * Compare any values by converting to string (nullish → empty string).
- * @see localeNumericCompare
- */
-export const universalComparator = (
-  a: string | number | null | undefined,
-  b: string | number | null | undefined,
-  locale: string,
-) => {
-  if (typeof a === "number" && typeof b === "number") {
-    return a - b;
-  }
-  return localeNumericCompare(String(a ?? ""), String(b ?? ""), locale);
 };
 
 export const parseBooleanIfPossible = (value?: string): boolean => {

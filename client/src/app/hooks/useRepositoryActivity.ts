@@ -6,9 +6,8 @@ import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { repositoryKeys } from "@app/queries/repositories";
 
 /**
- * What runs on a repository: its active task (ours or anyone's, e.g. a sync) and the
- * content change this page dispatched. While anything runs, content changes are
- * paused; `lockedProps` disables a header menu item with the reason as a tooltip.
+ * What runs on a repository (its active task or this page's content change); while
+ * anything runs, content changes are paused and `lockedProps` says why.
  */
 export const useRepositoryActivity = ({
   repository,

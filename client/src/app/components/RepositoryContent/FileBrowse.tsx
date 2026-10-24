@@ -12,12 +12,14 @@ import type { IBrowseContext } from "./browseTypes";
 import { PathBreadcrumb } from "./PathBreadcrumb";
 import { useBrowseListState } from "./useBrowseListState";
 
-/** A file's path below the current folder, with each sub-folder clickable. */
-const PathCell: React.FC<{
+interface IPathCellProps {
   path: string;
   prefix: string;
   onNavigate: (prefix: string) => void;
-}> = ({ path, prefix, onNavigate }) => {
+}
+
+/** A file's path below the current folder, with each sub-folder clickable. */
+const PathCell: React.FC<IPathCellProps> = ({ path, prefix, onNavigate }) => {
   const segments = pathSegments(path.slice(prefix.length));
   return (
     <Flex

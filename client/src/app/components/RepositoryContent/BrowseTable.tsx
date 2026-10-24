@@ -1,7 +1,7 @@
 import type React from "react";
 
-import type { ThProps } from "@patternfly/react-table";
 import { DataViewTable, type DataViewTr } from "@patternfly/react-data-view";
+import type { ThProps } from "@patternfly/react-table";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { TableEmptyState } from "@app/components/TableEmptyState";

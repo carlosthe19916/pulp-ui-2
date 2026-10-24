@@ -12,6 +12,8 @@ import {
 } from "@app/queries/content";
 import { platformOf } from "@app/utils/pluginContentFormat";
 
+import type { IPluginContentProps } from "./contentFields";
+import { asStringRecord, facts } from "./contentFields";
 import {
   Checksum,
   ContentHeader,
@@ -21,13 +23,13 @@ import {
   LabelList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { asStringRecord, facts } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
+
+interface IManifestDetailsProps {
+  manifest?: ContainerManifestResponse;
+}
 
 /** Image facts, platforms of a multi-arch index, and image labels. */
-const ManifestDetails: React.FC<{ manifest?: ContainerManifestResponse }> = ({
-  manifest,
-}) => {
+const ManifestDetails: React.FC<IManifestDetailsProps> = ({ manifest }) => {
   const listed = manifest?.listed_manifests ?? [];
   const children = useContentTypeListQuery({
     pulpType: "container.manifest",

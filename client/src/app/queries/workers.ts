@@ -3,10 +3,11 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { PaginatedWorkerResponseList, WorkersListData } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath } from "./utils/pulpApi";
 
 export const WorkersQueryKey = "workers";
 

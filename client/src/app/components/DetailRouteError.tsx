@@ -1,3 +1,5 @@
+import type React from "react";
+
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
 import {
@@ -12,7 +14,7 @@ import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError, isNotFoundError } from "@app/utils/isHttpError";
 
 /** Shared route `errorComponent` for detail pages: 403 / 404 / generic states. */
-export const DetailRouteError = ({ error }: ErrorComponentProps) => {
+export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
   if (isForbiddenError(error)) {
     return (
       <PageSection>

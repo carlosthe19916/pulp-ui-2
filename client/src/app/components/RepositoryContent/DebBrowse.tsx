@@ -14,7 +14,11 @@ import { BrowseTable } from "./BrowseTable";
 import type { IBrowseContext } from "./browseTypes";
 import { useBrowseListState } from "./useBrowseListState";
 
-const Labels: React.FC<{ items?: string[] }> = ({ items }) =>
+interface ILabelsProps {
+  items?: string[];
+}
+
+const Labels: React.FC<ILabelsProps> = ({ items }) =>
   items?.length ? (
     <LabelGroup numLabels={6}>
       {items.map((item) => (

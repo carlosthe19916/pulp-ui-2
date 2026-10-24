@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import {
   Alert,
@@ -7,20 +8,24 @@ import {
 } from "@patternfly/react-core";
 
 import {
-  NotificationsContext,
   type INotification,
+  NotificationsContext,
 } from "./NotificationsContext";
 
 let notificationId = 0;
 
-export const NotificationsProvider: React.FC<{
+interface INotificationsProviderProps {
   children: React.ReactNode;
-}> = ({ children }) => {
+}
+
+export const NotificationsProvider: React.FC<INotificationsProviderProps> = ({
+  children,
+}) => {
   const [notifications, setNotifications] = useState<INotification[]>([]);
 
-  const removeNotification = useCallback((id: number) => {
+  const removeNotification = (id: number) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+  };
 
   const addNotification = useCallback(
     (notification: Omit<INotification, "id">) => {

@@ -5,6 +5,8 @@ import { Label } from "@patternfly/react-core";
 import type { PythonPythonPackageContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { asStringRecord, asStrings, facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -15,8 +17,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { asStringRecord, asStrings, facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 const PACKAGE_TYPES: Record<string, string> = {
   sdist: "Source",

@@ -6,6 +6,8 @@ import {
   useContentTypeListQuery,
 } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { asArray, facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -15,8 +17,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { asArray, facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 import { MavenInstall } from "./MavenContent";
 
 interface IMavenLicense {

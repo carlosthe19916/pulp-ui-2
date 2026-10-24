@@ -5,6 +5,8 @@ import { Label, LabelGroup } from "@patternfly/react-core";
 import type { GemGemContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -14,8 +16,6 @@ import {
   LabelList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 /** rubygems.org style: gem install + Gemfile line, runtime dependencies. */
 export const GemContent: React.FC<IPluginContentProps> = ({ href }) => {

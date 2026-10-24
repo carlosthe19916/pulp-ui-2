@@ -1,12 +1,12 @@
 import type React from "react";
 
-import { Pagination } from "@patternfly/react-core";
 import type {
-  OnSetPage,
   OnPerPageSelect,
+  OnSetPage,
   PaginationVariant,
   PerPageOptions,
 } from "@patternfly/react-core";
+import { Pagination } from "@patternfly/react-core";
 
 /**
  * Per-page choices for every list built on `ListPagination`. Capping at 20 bounds

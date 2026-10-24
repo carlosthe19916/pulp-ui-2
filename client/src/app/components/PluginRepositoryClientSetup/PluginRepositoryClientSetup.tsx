@@ -79,13 +79,17 @@ const CLIENT_SETUP_BY_PLUGIN: Record<
 const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";
 
+interface IPluginRepositoryClientSetupProps {
+  distribution: DistributionResponse;
+}
+
 /**
  * Plugin-specific client configuration for one distribution. Unknown plugins fall back
  * to the copyable serving URL.
  */
-export const PluginRepositoryClientSetup: React.FC<{
-  distribution: DistributionResponse;
-}> = ({ distribution }) => {
+export const PluginRepositoryClientSetup: React.FC<
+  IPluginRepositoryClientSetupProps
+> = ({ distribution }) => {
   const record = distribution as Record<string, unknown>;
   const served: IServedAt = {
     name: distribution.name,

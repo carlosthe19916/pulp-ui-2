@@ -1,6 +1,5 @@
 import type React from "react";
 
-import { getPlugin } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
@@ -9,6 +8,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getPlugin } from "@catalog";
 
 import { RemoveContentBody } from "./RemoveContentBody";
 

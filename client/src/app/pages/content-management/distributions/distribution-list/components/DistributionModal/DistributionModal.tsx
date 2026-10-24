@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { EntityModalBody } from "@app/components/EntityModalBody";
 import { EntityModalShell } from "@app/components/EntityModalShell";
 import { PluginTypeSelector } from "@app/components/PluginTypeSelector";
@@ -12,10 +14,10 @@ interface IDistributionModalInnerProps {
   onClose: () => void;
 }
 
-const DistributionModalInner = ({
+const DistributionModalInner: React.FC<IDistributionModalInnerProps> = ({
   entity,
   onClose,
-}: IDistributionModalInnerProps) => {
+}) => {
   const { data: full, isLoading } = useDistributionDetailQuery({
     href: entity?.pulp_href ?? null,
   });
@@ -79,9 +81,9 @@ interface IDistributionModalProps {
 }
 
 /** Create/edit modal for distributions; wizard vs plain follows the catalog. */
-export const DistributionModal = ({
+export const DistributionModal: React.FC<IDistributionModalProps> = ({
   isOpen,
   entity,
   onClose,
-}: IDistributionModalProps) =>
+}) =>
   isOpen ? <DistributionModalInner entity={entity} onClose={onClose} /> : null;

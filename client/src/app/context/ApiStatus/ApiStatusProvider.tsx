@@ -3,10 +3,14 @@ import { useMemo } from "react";
 
 import { useStatusQuery } from "@app/queries/status";
 
-import { ApiStatusContext } from "./ApiStatusContext";
 import type { IApiStatusContext } from "./ApiStatusContext";
+import { ApiStatusContext } from "./ApiStatusContext";
 
-export const ApiStatusProvider: React.FC<{ children: React.ReactNode }> = ({
+interface IApiStatusProviderProps {
+  children: React.ReactNode;
+}
+
+export const ApiStatusProvider: React.FC<IApiStatusProviderProps> = ({
   children,
 }) => {
   const { data: status, isLoading, error } = useStatusQuery();

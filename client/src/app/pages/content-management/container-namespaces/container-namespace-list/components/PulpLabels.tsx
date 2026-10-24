@@ -2,9 +2,11 @@ import type React from "react";
 
 import { Label, LabelGroup } from "@patternfly/react-core";
 
-export const PulpLabels: React.FC<{
+interface IPulpLabelsProps {
   labels?: Record<string, string | null>;
-}> = ({ labels }) => {
+}
+
+export const PulpLabels: React.FC<IPulpLabelsProps> = ({ labels }) => {
   const entries = Object.entries(labels ?? {});
   if (entries.length === 0) {
     return <>—</>;

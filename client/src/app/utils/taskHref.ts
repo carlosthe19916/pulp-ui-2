@@ -1,9 +1,14 @@
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
-import { pulpHref } from "@app/queries/utils/pulpApi";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
+import { pulpHref } from "@app/queries/utils/pulpApi";
 
-export const buildTaskHref = (taskId: string, domain: IPulpDomain): string =>
-  pulpHref(`tasks/${taskId}/`, domain);
+export const buildTaskHref = ({
+  taskId,
+  domain,
+}: {
+  taskId: string;
+  domain: IPulpDomain;
+}): string => pulpHref(`tasks/${taskId}/`, domain);
 
 export const extractTaskId = (href: string): string => {
   const parts = href.split("/").filter(Boolean);
@@ -11,10 +16,8 @@ export const extractTaskId = (href: string): string => {
 };
 
 /**
- * Pulp domain slug parsed from a task href (`…/<domain>/api/v3/tasks/<id>/`).
- * Falls back to the default domain for the domains-disabled form
- * (`…/pulp/api/v3/tasks/<id>/`), so link/notification builders can resolve the
- * `$pulpDomain` route param straight from the task's own href.
+ * Pulp domain slug from a task href (`…/<domain>/api/v3/tasks/<id>/`); the default domain
+ * for the domains-disabled form.
  */
 export const extractTaskDomain = (href: string): string => {
   const parts = href.split("/").filter(Boolean);

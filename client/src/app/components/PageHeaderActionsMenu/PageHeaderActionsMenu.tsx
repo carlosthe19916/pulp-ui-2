@@ -11,16 +11,16 @@ import {
 } from "@patternfly/react-core";
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
 
-export type PageHeaderAction = {
+export interface IPageHeaderAction {
   /** Stable identifier for the item (React key). */
   key: string;
   /** Props forwarded to PatternFly's DropdownItem; use `children` for the label. */
   dropdownItemProps: DropdownItemProps;
-};
+}
 
 interface IPageHeaderActionsMenuProps {
   /** Actions to render; falsy entries are ignored so callers can inline conditions. */
-  actions: (PageHeaderAction | false | null | undefined)[];
+  actions: (IPageHeaderAction | false | null | undefined)[];
   ouiaId?: string;
 }
 
@@ -35,7 +35,7 @@ export const PageHeaderActionsMenu: React.FC<IPageHeaderActionsMenuProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const items = actions.filter(
-    (action): action is PageHeaderAction => !!action,
+    (action): action is IPageHeaderAction => !!action,
   );
   if (items.length === 0) return null;
 

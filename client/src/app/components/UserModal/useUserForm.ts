@@ -1,4 +1,5 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -14,7 +15,7 @@ import {
   type IMutationErrorMessage,
 } from "@app/utils/utils";
 
-export type UserFormValues = {
+export interface IUserFormValues {
   username: string;
   password: string;
   email: string;
@@ -22,7 +23,7 @@ export type UserFormValues = {
   last_name: string;
   is_active: boolean;
   is_staff: boolean;
-};
+}
 
 /** Username and password are required (and shown) only when creating a user. */
 const buildUserSchema = ({ isCreate }: { isCreate: boolean }) =>
@@ -44,7 +45,7 @@ const buildUserSchema = ({ isCreate }: { isCreate: boolean }) =>
     is_staff: yup.boolean().default(false),
   });
 
-const toDefaults = (user?: UserResponse): UserFormValues => ({
+const toDefaults = (user?: UserResponse): IUserFormValues => ({
   username: user?.username ?? "",
   password: "",
   email: user?.email ?? "",
@@ -56,7 +57,7 @@ const toDefaults = (user?: UserResponse): UserFormValues => ({
 
 const emptyToUndefined = (value: string) => value || undefined;
 
-export const valuesToNewUser = (values: UserFormValues): UserWritable => ({
+export const valuesToNewUser = (values: IUserFormValues): UserWritable => ({
   username: values.username,
   password: values.password,
   email: emptyToUndefined(values.email),
@@ -66,7 +67,7 @@ export const valuesToNewUser = (values: UserFormValues): UserWritable => ({
   is_staff: values.is_staff,
 });
 
-export const valuesToPatchedUser = (values: UserFormValues): PatchedUser => ({
+export const valuesToPatchedUser = (values: IUserFormValues): PatchedUser => ({
   email: emptyToUndefined(values.email),
   first_name: emptyToUndefined(values.first_name),
   last_name: emptyToUndefined(values.last_name),
@@ -74,13 +75,13 @@ export const valuesToPatchedUser = (values: UserFormValues): PatchedUser => ({
   is_staff: values.is_staff,
 });
 
-interface IUseUserFormArgs {
+interface IUseUserFormOptions {
   user?: UserResponse;
   onClose: () => void;
 }
 
 interface IUseUserFormResult {
-  form: UseFormReturn<UserFormValues>;
+  form: UseFormReturn<IUserFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -90,7 +91,7 @@ interface IUseUserFormResult {
 export const useUserForm = ({
   user,
   onClose,
-}: IUseUserFormArgs): IUseUserFormResult => {
+}: IUseUserFormOptions): IUseUserFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !user;
@@ -118,7 +119,7 @@ export const useUserForm = ({
       ),
   });
 
-  const form = useForm<UserFormValues>({
+  const form = useForm<IUserFormValues>({
     resolver: yupResolver(buildUserSchema({ isCreate })),
     defaultValues: toDefaults(user),
     mode: "onChange",

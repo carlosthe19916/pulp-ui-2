@@ -20,10 +20,8 @@ interface IVersionSelectProps {
 const PAGE_SIZE = 10;
 
 /**
- * Async typeahead over a repository's versions (there can be far more than a page). Lists the
- * latest versions (highest number first) and, as the user types a version number, filters
- * server-side by exact `number`. Fetches only while open and only once a repository is chosen.
- * Mirrors `AsyncResourceSelect` / `useResourceSearch`, keyed by version href.
+ * Async typeahead over a repository's versions (latest first, exact `number` search);
+ * fetches only while open and once a repository is chosen.
  */
 export const VersionSelect: React.FC<IVersionSelectProps> = ({
   id,

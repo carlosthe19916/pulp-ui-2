@@ -1,11 +1,12 @@
+import type { EntityType } from "@catalog";
+
 import {
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "@catalog";
-import type { EntityType } from "@catalog";
 
-import { pulpHref } from "./pulpApi";
 import type { IPulpDomain } from "./pulpApi";
+import { pulpHref } from "./pulpApi";
 
 /** URL collection family (first href segment) → catalog entity type (CRUD only). */
 const FAMILY_TO_ENTITY: Record<string, EntityType> = {
@@ -16,17 +17,8 @@ const FAMILY_TO_ENTITY: Record<string, EntityType> = {
 };
 
 /**
- * Resolve a resource's catalog pulp_type from its `pulp_href` alone. A typed href
- * is `.../<family>/<app>/<slug>/<pk>/`; `<app>/<slug>` is the catalog `apiPath`,
- * reverse-mapped per family to the pulp_type the app keys on (`getPlugin`).
- *
- * @example
- * resolvePulpType("/api/pulp/default/api/v3/repositories/rpm/rpm/0190.../") // "rpm.rpm"
- * resolvePulpType("/distributions/python/pypi/0190.../") // "python.pypi"
- * resolvePulpType("/content/file/files/0190.../") // "file.file" (not "file.files")
- * resolvePulpType("/repositories/") // undefined — aggregate, no <app>/<slug>
- * resolvePulpType("/repositories/mystery/x/") // undefined — plugin not in catalog
- * resolvePulpType(undefined) // undefined
+ * Resolve a resource's catalog pulp_type from its `pulp_href`
+ * (`…/<family>/<app>/<slug>/<pk>/`); undefined for aggregate or uncatalogued hrefs.
  */
 export const resolvePulpType = (
   href: string | null | undefined,
@@ -36,6 +28,7 @@ export const resolvePulpType = (
     /\/(repositories|remotes|distributions|publications|content)\/([^/]+)\/([^/]+)\//,
   );
   if (!match) return undefined;
+  // `<app>/<slug>` maps back to the pulp_type, e.g. `file/files` to `file.file`.
   const apiPath = `${match[2]}/${match[3]}`;
   // Content is its own axis (a plugin owns many content types); CRUD entities use
   // the per-entity apiPath index.
@@ -63,13 +56,8 @@ export const extractIdFromHref = (href: string): string => {
 };
 
 /**
- * Split a repository-version href into its parent repository href and version
- * number. The repository href keeps the server form, so it hits the same
- * `repositoryKeys.detail(href)` slot as the repository's own `pulp_href`.
- *
- * @example
- * parseRepositoryVersionHref("/pulp/api/v3/repositories/rpm/rpm/0190.../versions/3/")
- * // { repositoryHref: "/pulp/api/v3/repositories/rpm/rpm/0190.../", number: "3" }
+ * Split a repository-version href into its repository href (server form, so it shares
+ * `repositoryKeys.detail`'s slot) and version number.
  */
 export const parseRepositoryVersionHref = (
   href: string,

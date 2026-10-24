@@ -3,7 +3,7 @@ import type { ISortBy } from "@patternfly/react-table";
 
 import { buildThSort, toOrderingParam } from "@app/utils/sortHelpers";
 
-interface IUseColumnSortArgs<K extends string> {
+interface IUseColumnSortOptions<K extends string> {
   /** Sortable column keys; each key's array index is its logical sort id. */
   columnKeys: readonly K[];
   /** Default sort; `sortBy` must be a member of `columnKeys`. */
@@ -13,24 +13,14 @@ interface IUseColumnSortArgs<K extends string> {
 }
 
 /**
- * Typed wrapper around react-data-view's `useDataViewSort` (which is not generic
- * and works in plain `string`s). Binding the sortable `columnKeys` constrains
- * `initialSort.sortBy` to a valid key and yields a cast-free `ordering` query
- * param plus a per-column `sortProps` builder. The single `string`→key assertion
- * is contained here and validated against `columnKeys`, so a stale or
- * URL-supplied value self-heals to "unsorted" instead of reaching the API.
- *
- * @param args.columnKeys - Sortable keys; each key's index is its sort id.
- * @param args.initialSort - Default `{ sortBy, direction }`.
- * @param args.onSortChange - Run after each sort change (e.g. reset the page).
- * @returns `{ sortBy, direction, onSort, ordering, sortProps }` — `ordering` for
- *   the list query and `sortProps(key)` for each sortable `<Th>`.
+ * Typed wrapper around react-data-view's `useDataViewSort`: a typed `ordering` param plus
+ * a `sortProps(key)` builder for each sortable `<Th>`.
  */
 export const useColumnSort = <K extends string>({
   columnKeys,
   initialSort,
   onSortChange,
-}: IUseColumnSortArgs<K>) => {
+}: IUseColumnSortOptions<K>) => {
   const { sortBy, direction, onSort } = useDataViewSort({ initialSort });
   // useDataViewSort is not generic and hands back `string`; re-narrow to our
   // key union once, here at the library boundary, so consumers stay cast-free.

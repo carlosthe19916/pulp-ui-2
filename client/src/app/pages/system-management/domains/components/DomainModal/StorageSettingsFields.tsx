@@ -4,10 +4,10 @@ import type { Control, Path } from "react-hook-form";
 import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 
 import type { IStorageBackend } from "../../utils/storageBackends";
-import type { DomainFormValues } from "./useDomainForm";
+import type { IDomainFormValues } from "./useDomainForm";
 
 interface IStorageSettingsFieldsProps {
-  control: Control<DomainFormValues>;
+  control: Control<IDomainFormValues>;
   backend?: IStorageBackend;
 }
 
@@ -21,7 +21,7 @@ export const StorageSettingsFields: React.FC<IStorageSettingsFieldsProps> = ({
       <HookFormPFTextInput
         key={field.key}
         control={control}
-        name={`storage_settings.${field.key}` as Path<DomainFormValues>}
+        name={`storage_settings.${field.key}` as Path<IDomainFormValues>}
         fieldId={`domain-storage_settings-${field.key}`}
         label={field.label}
         type={field.isPassword ? "password" : "text"}

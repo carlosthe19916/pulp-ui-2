@@ -1,24 +1,22 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
-import type { GenericRemoteResponse } from "@app/client";
+import type {
+  GenericRemoteResponse,
+  PythonBanderRemoteWritable,
+} from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { remoteKeys } from "./remotes";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath } from "./utils/pulpApi";
 
-export interface IBandersnatchRemoteVariables {
-  name: string;
-  config: File;
-  policy?: string;
-}
-
 /** Creates a Python remote from a Bandersnatch config file (synchronous). */
 export const useBandersnatchRemoteCreateMutation = (
   options?: IMutationCallbacks<
     GenericRemoteResponse,
-    IBandersnatchRemoteVariables
+    PythonBanderRemoteWritable
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -26,7 +24,7 @@ export const useBandersnatchRemoteCreateMutation = (
   return useMutation<
     GenericRemoteResponse,
     DrfAxiosError,
-    IBandersnatchRemoteVariables
+    PythonBanderRemoteWritable
   >({
     mutationFn: async ({ name, config, policy }) => {
       const form = new FormData();

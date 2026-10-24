@@ -1,5 +1,7 @@
 import type React from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import {
   Button,
   EmptyState,
@@ -9,8 +11,6 @@ import {
   PageSection,
 } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
-
-import { useNavigate } from "@tanstack/react-router";
 
 interface IRouteErrorFallbackProps {
   error: unknown;

@@ -1,12 +1,14 @@
 import type React from "react";
 import { useState } from "react";
 
-import { Tab, TabTitleText, Tabs } from "@patternfly/react-core";
+import { Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 
 import type { MavenMavenArtifactResponse } from "@app/client";
 import { Snippet } from "@app/components/Snippet";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -14,15 +16,19 @@ import {
   FactList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
-/** Maven / Gradle dependency snippets for one GAV, as Maven Central shows them. */
-export const MavenInstall: React.FC<{
+interface IMavenInstallProps {
   groupId: string;
   artifactId: string;
   version: string;
-}> = ({ groupId, artifactId, version }) => {
+}
+
+/** Maven / Gradle dependency snippets for one GAV, as Maven Central shows them. */
+export const MavenInstall: React.FC<IMavenInstallProps> = ({
+  groupId,
+  artifactId,
+  version,
+}) => {
   const [tool, setTool] = useState<string | number>("maven");
   return (
     <ContentSection title="Install">

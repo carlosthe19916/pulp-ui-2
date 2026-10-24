@@ -1,11 +1,16 @@
-import ENV from "@app/env";
+import type React from "react";
+
+import { ENV } from "@app/env";
+
 import { BasicAuthProvider } from "./BasicAuthProvider";
 import { NoAuthProvider } from "./NoAuthProvider";
 import { OidcAuthProvider } from "./OidcAuthProvider";
 
-export const AuthProvider: React.FC<{
+interface IAuthProviderProps {
   children: React.ReactNode;
-}> = ({ children }) => {
+}
+
+export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   if (ENV.AUTH === "oidc")
     return <OidcAuthProvider>{children}</OidcAuthProvider>;
   if (ENV.AUTH === "basic")

@@ -1,3 +1,4 @@
+import type React from "react";
 import { type ReactNode, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
@@ -36,14 +37,14 @@ interface IEntityWizardStepProps {
  * One wizard step: a react-hook-form over just this group's fields that validates
  * on change/blur and lifts its validity to the parent, which gates navigation.
  */
-export const EntityWizardStep = ({
+export const EntityWizardStep: React.FC<IEntityWizardStepProps> = ({
   step,
   initialValues,
   onStateChanged,
   resourceFilter,
   typeSelector,
   submitError = null,
-}: IEntityWizardStepProps) => {
+}) => {
   const form = useForm<StepFormValues>({
     mode: "all",
     resolver: yupResolver(buildFieldSchema(step.fields)),

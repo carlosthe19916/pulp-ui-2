@@ -1,11 +1,11 @@
 import type React from "react";
 import { useId } from "react";
 
-import { Button } from "@patternfly/react-core";
 import {
   BulkSelect,
   BulkSelectValue,
 } from "@patternfly/react-component-groups/dist/dynamic/BulkSelect";
+import { Button } from "@patternfly/react-core";
 
 import type {
   IContentUnitRef,
@@ -59,11 +59,16 @@ export const ContentBulkSelect: React.FC<IContentBulkSelectProps> = ({
   );
 };
 
-/** The toolbar's Remove button for the selected units. */
-export const RemoveSelectedButton: React.FC<{
+interface IRemoveSelectedButtonProps {
   selection: IContentUnitSelection;
   writes: IContentWrites;
-}> = ({ selection, writes }) => (
+}
+
+/** The toolbar's Remove button for the selected units. */
+export const RemoveSelectedButton: React.FC<IRemoveSelectedButtonProps> = ({
+  selection,
+  writes,
+}) => (
   <Button
     variant="secondary"
     isDisabled={writes.isLocked || selection.selected.length === 0}

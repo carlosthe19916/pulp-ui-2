@@ -1,10 +1,8 @@
 import { cleanFormValues } from "@app/utils/formSchema";
 
 /**
- * Typed shared base of every remote write body (the pulpcore RemoteSerializer
- * identity fields). The remote form is large and mostly optional (auth, TLS,
- * timeouts, limits) — those ride the open index signature. Number inputs already
- * arrive coerced and empty values are stripped, so `cleanFormValues` is enough.
+ * Typed base of every remote write body (pulpcore RemoteSerializer identity fields); the
+ * many optional plugin fields ride the index signature.
  */
 export interface IRemoteWriteBase {
   name?: string;
@@ -21,7 +19,9 @@ export type RemoteWriteBody = IRemoteWriteBase & Record<string, unknown>;
 /** Build the POST body for creating a remote of the selected plugin type. */
 export const valuesToCreate = (
   values: Record<string, unknown>,
-): RemoteWriteBody => cleanFormValues<RemoteWriteBody>(values);
+): RemoteWriteBody =>
+  // Number inputs arrive coerced and empty values are stripped already.
+  cleanFormValues<RemoteWriteBody>(values);
 
 /** Build the PATCH body for editing a remote. */
 export const valuesToPatch = (

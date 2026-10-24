@@ -8,6 +8,8 @@ import { Label } from "@patternfly/react-core";
 import type { RpmPackageResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -18,8 +20,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 const FLAGS: Record<string, string> = {
   EQ: "=",
@@ -29,11 +29,13 @@ const FLAGS: Record<string, string> = {
   GE: ">=",
 };
 
-const formatEvr = (
-  epoch?: string | null,
-  version?: string | null,
-  release?: string | null,
-) =>
+interface IFormatEvrParams {
+  epoch?: string | null;
+  version?: string | null;
+  release?: string | null;
+}
+
+const formatEvr = ({ epoch, version, release }: IFormatEvrParams) =>
   `${epoch && epoch !== "0" ? `${epoch}:` : ""}${version}${release ? `-${release}` : ""}`;
 
 /** Entries are `[name, flags, epoch, version, release, pre]`; `rpmlib(...)` are rpm internals. */
@@ -48,7 +50,7 @@ const formatRequires = (value: unknown): string[] =>
       if (!flags || !version) {
         return name ?? "";
       }
-      return `${name} ${FLAGS[flags] ?? flags} ${formatEvr(epoch, version, release)}`;
+      return `${name} ${FLAGS[flags] ?? flags} ${formatEvr({ epoch, version, release })}`;
     });
 
 const unixDate = (seconds?: number) =>
@@ -70,7 +72,11 @@ export const RpmContent: React.FC<IPluginContentProps> = ({ href }) => {
       header={
         <ContentHeader
           title={data?.name}
-          version={formatEvr(data?.epoch, data?.version, data?.release)}
+          version={formatEvr({
+            epoch: data?.epoch,
+            version: data?.version,
+            release: data?.release,
+          })}
           summary={data?.summary}
           labels={data?.arch && <Label variant="outline">{data.arch}</Label>}
         />

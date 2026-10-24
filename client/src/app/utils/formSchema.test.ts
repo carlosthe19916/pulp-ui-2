@@ -1,3 +1,4 @@
+import type { IEntityField } from "@catalog";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,7 +7,6 @@ import {
   cleanFormValues,
   fieldsToBody,
 } from "@app/utils/formSchema";
-import type { IEntityField } from "@catalog";
 
 const fields: IEntityField[] = [
   { key: "name", label: "Name", type: "text", required: true },

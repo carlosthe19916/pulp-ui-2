@@ -7,8 +7,8 @@ import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -77,18 +77,24 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   ];
 
   const actionsFor = (version: RepositoryVersionResponse) => {
-    const item = (action: VersionAction, title: string) => ({
+    const item = ({
+      action,
+      title,
+    }: {
+      action: VersionAction;
+      title: string;
+    }) => ({
       title,
       onClick: () => onVersionAction?.({ action, version }),
       ...actionProps?.(action),
     });
     const items = [];
     if (canRestore && version.pulp_href !== latestHref) {
-      items.push(item("restore", "Restore as latest"));
+      items.push(item({ action: "restore", title: "Restore as latest" }));
     }
-    items.push(item("repair", "Repair"));
+    items.push(item({ action: "repair", title: "Repair" }));
     if (version.number !== 0) {
-      items.push(item("delete", "Delete version"));
+      items.push(item({ action: "delete", title: "Delete version" }));
     }
     return items;
   };

@@ -1,7 +1,7 @@
 import type React from "react";
 
-import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import type { ResourceHrefKind } from "@app/components/ResourceHrefLink";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useRemoteDetailQuery } from "@app/queries/remotes";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { parseRepositoryVersionHref } from "@app/queries/utils/pulpHref";
@@ -12,10 +12,8 @@ interface INamedResourceHrefLinkProps {
 }
 
 /**
- * `ResourceHrefLink` labelled with the target's name, fetched through the family's
- * detail query (one request, shared cache slot). A repository version is labelled
- * "<repository> · Version N". Meant for single references (detail pages, expanded
- * rows) — not list columns, where it would cost one request per row.
+ * `ResourceHrefLink` labelled with the target's name via the family's detail query. For
+ * single references, not list columns (one request per row).
  */
 export const NamedResourceHrefLink: React.FC<INamedResourceHrefLinkProps> = ({
   kind,

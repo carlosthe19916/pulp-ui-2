@@ -1,12 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 
 /**
- * Generic "set of selected items" state, decoupled from any one widget — use it for row
- * selection, row expansion, or any multi-toggle over a list. Adapted from the Konveyor/Tackle
- * `useSelectionState` pattern (also used in trustify-ui). Items are compared with `isEqual`
- * (referential by default), so it works with object rows or plain id strings.
+ * Generic selected-set state (row selection, expansion, any multi-toggle), after
+ * Konveyor's `useSelectionState`. Items compare with `isEqual` (referential by default).
  */
-export interface ISelectionStateArgs<T> {
+export interface IUseSelectionStateOptions<T> {
   items: T[];
   initialSelected?: T[];
   isEqual?: (a: T, b: T) => boolean;
@@ -17,13 +15,19 @@ export interface ISelectionState<T> {
   isItemSelected: (item: T) => boolean;
   areAllSelected: boolean;
   /** Add or remove a subset from the selection. */
-  selectItems: (items: T[], isSelected: boolean) => void;
+  selectItems: (params: { items: T[]; isSelecting: boolean }) => void;
   /** Toggle a single item's membership. */
   toggleItem: (item: T) => void;
   /** Replace the whole selection with exactly these items. */
   selectOnly: (items: T[]) => void;
   /** Select all current items, or clear the selection. */
-  selectAll: (isSelected: boolean) => void;
+  selectAll: (params?: { isSelecting?: boolean }) => void;
+}
+
+interface IDoSelectParams<T> {
+  isEqual: (a: T, b: T) => boolean;
+  fullSet: T[];
+  selections: T[];
 }
 
 /** Narrow `selections` to the members actually present in `fullSet` (by `isEqual`). */
@@ -31,69 +35,54 @@ const doSelect = <T>({
   isEqual,
   fullSet,
   selections,
-}: {
-  isEqual: (a: T, b: T) => boolean;
-  fullSet: T[];
-  selections: T[];
-}): T[] =>
+}: IDoSelectParams<T>): T[] =>
   selections.length === 0
     ? []
     : fullSet.filter((item) => selections.some((test) => isEqual(item, test)));
 
+const referenceEquals = <T>(a: T, b: T) => a === b;
+
 export const useSelectionState = <T>({
   items,
   initialSelected = [],
-  isEqual = (a, b) => a === b,
-}: ISelectionStateArgs<T>): ISelectionState<T> => {
+  isEqual = referenceEquals,
+}: IUseSelectionStateOptions<T>): ISelectionState<T> => {
   const [selectedSet, setSelectedSet] = useState<T[]>(() =>
     doSelect({ isEqual, fullSet: items, selections: initialSelected }),
   );
 
-  const isItemSelected = useCallback(
-    (item: T) => selectedSet.some((i) => isEqual(item, i)),
-    [isEqual, selectedSet],
-  );
+  const isItemSelected = (item: T) => selectedSet.some((i) => isEqual(item, i));
 
-  const selectItems = useCallback(
-    (itemsSubset: T[], isSelecting: boolean) => {
-      setSelectedSet((prev) => {
-        const kept = prev.filter(
-          (selected) => !itemsSubset.some((item) => isEqual(selected, item)),
-        );
-        return isSelecting ? [...kept, ...itemsSubset] : kept;
-      });
-    },
-    [isEqual],
-  );
+  const selectItems = ({
+    items: itemsSubset,
+    isSelecting,
+  }: {
+    items: T[];
+    isSelecting: boolean;
+  }) => {
+    setSelectedSet((prev) => {
+      const kept = prev.filter(
+        (selected) => !itemsSubset.some((item) => isEqual(selected, item)),
+      );
+      return isSelecting ? [...kept, ...itemsSubset] : kept;
+    });
+  };
 
-  const toggleItem = useCallback(
-    (item: T) => selectItems([item], !isItemSelected(item)),
-    [selectItems, isItemSelected],
-  );
+  const toggleItem = (item: T) =>
+    selectItems({ items: [item], isSelecting: !isItemSelected(item) });
 
-  const selectOnly = useCallback(
-    (toSelect: T[]) =>
-      setSelectedSet(
-        doSelect({ isEqual, fullSet: items, selections: toSelect }),
-      ),
-    [isEqual, items],
-  );
+  const selectOnly = (toSelect: T[]) =>
+    setSelectedSet(doSelect({ isEqual, fullSet: items, selections: toSelect }));
 
-  const selectAll = useCallback(
-    (isSelecting = true) => setSelectedSet(isSelecting ? items : []),
-    [items],
-  );
+  const selectAll = ({ isSelecting = true }: { isSelecting?: boolean } = {}) =>
+    setSelectedSet(isSelecting ? items : []);
 
-  const areAllSelected = useMemo(
-    () =>
-      items.length > 0 &&
-      items.every((i) => selectedSet.some((si) => isEqual(si, i))),
-    [selectedSet, items, isEqual],
-  );
+  const areAllSelected =
+    items.length > 0 &&
+    items.every((i) => selectedSet.some((si) => isEqual(si, i)));
 
-  const selectedItems = useMemo(
-    () => items.filter((i) => selectedSet.some((si) => isEqual(si, i))),
-    [items, selectedSet, isEqual],
+  const selectedItems = items.filter((i) =>
+    selectedSet.some((si) => isEqual(si, i)),
   );
 
   return {

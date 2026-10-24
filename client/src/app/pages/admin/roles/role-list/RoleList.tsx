@@ -15,27 +15,27 @@ import {
   SelectOption,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { RoleResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/dataViewStates";
-import { ListPagination } from "@app/components/ListPagination";
-import { useColumnSort } from "@app/hooks/useColumnSort";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { TableEmptyState } from "@app/components/TableEmptyState";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ListPagination } from "@app/components/ListPagination";
+import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
 import type { IRoleListParams } from "@app/queries/roles";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
 import type { OrderingField } from "@app/queries/utils/listParams";

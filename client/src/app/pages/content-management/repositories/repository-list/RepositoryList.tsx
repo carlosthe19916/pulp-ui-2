@@ -17,30 +17,30 @@ import {
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn, type IAction } from "@patternfly/react-table";
 
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { DocumentTitle } from "@app/components/DocumentTitle";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
+import { PublishModal } from "@app/components/PublishModal";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RepositoryModal } from "@app/components/RepositoryModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
-import { DocumentTitle } from "@app/components/DocumentTitle";
-import { DomainContextSelector } from "@app/components/DomainContextSelector";
-import { PublishModal } from "@app/components/PublishModal";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {

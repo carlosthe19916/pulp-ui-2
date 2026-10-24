@@ -37,21 +37,28 @@ interface IContentArtifactsTabProps {
   href: string;
 }
 
-const DetailRow: React.FC<{ term: string; children: React.ReactNode }> = ({
-  term,
-  children,
-}) => (
+interface IDetailRowProps {
+  term: string;
+  children: React.ReactNode;
+}
+
+const DetailRow: React.FC<IDetailRowProps> = ({ term, children }) => (
   <DescriptionListGroup>
     <DescriptionListTerm>{term}</DescriptionListTerm>
     <DescriptionListDescription>{children}</DescriptionListDescription>
   </DescriptionListGroup>
 );
 
-/** One artifact: its size/checksum come from the artifact read-model (if downloaded). */
-const ArtifactCard: React.FC<{
+interface IArtifactCardProps {
   relativePath: string;
   artifactHref: string | null;
-}> = ({ relativePath, artifactHref }) => {
+}
+
+/** One artifact: its size/checksum come from the artifact read-model (if downloaded). */
+const ArtifactCard: React.FC<IArtifactCardProps> = ({
+  relativePath,
+  artifactHref,
+}) => {
   const { data: artifact } = useArtifactDetailQuery({
     href: artifactHref ?? "",
   });

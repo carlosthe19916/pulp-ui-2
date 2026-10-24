@@ -1,10 +1,10 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -14,21 +14,21 @@ import type {
   PaginatedDistributionResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const DistributionsQueryKey = "distributions";
 
 export type IDistributionListParams = ListParams<DistributionsListData>;
 
 /**
- * Query-key factory mirroring the REST paths; identifying segments precede
- * params so a prefix invalidates all variants. Shared by the query options and
- * the generic CRUD mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
  */
 export const distributionKeys = {
   all: () => [DistributionsQueryKey] as const,
@@ -45,9 +45,8 @@ export const distributionKeys = {
 };
 
 /**
- * Lists distributions: the cross-type aggregate by default, or one plugin's typed
- * collection when `apiPath` is given (the aggregate omits plugin fields like
- * `publication`).
+ * Lists distributions: the cross-type aggregate, or one plugin's typed collection when
+ * `apiPath` is given (the aggregate omits fields like `publication`).
  */
 export const distributionsListQueryOptions = ({
   domain,
@@ -168,9 +167,8 @@ export const useDistributionDetailQuery = ({ href }: { href: string | null }) =>
   });
 
 /**
- * Creates a distribution of the given plugin type: POSTs to `distributions/<apiPath>/`
- * (apiPath from the catalog). Distribution creation is asynchronous, so it returns the
- * Pulp 202 task.
+ * Creates a distribution of the given plugin type (`distributions/<apiPath>/`); creation
+ * is async, so it returns the 202 task.
  */
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<

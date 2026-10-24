@@ -18,10 +18,10 @@ import {
   STORAGE_BACKENDS,
 } from "../../utils/storageBackends";
 import { StorageSettingsFields } from "./StorageSettingsFields";
-import type { DomainFormValues } from "./useDomainForm";
+import type { IDomainFormValues } from "./useDomainForm";
 
 interface IDomainFormProps {
-  form: UseFormReturn<DomainFormValues>;
+  form: UseFormReturn<IDomainFormValues>;
   onSubmit: () => void;
   formId: string;
   submitError: IMutationErrorMessage | null;

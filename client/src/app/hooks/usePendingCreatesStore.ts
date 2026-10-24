@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback } from "react";
 
 import type { EntityType } from "@catalog";
+
 import { useLocalStorage } from "@app/hooks/useStorage";
 
 /** The async-create entity types this feature covers (both return 202 + task). */
@@ -21,6 +22,11 @@ export interface IPendingCreate {
 const PENDING_CREATES_KEY = "pulp-ui/pending-creates";
 /** Safety net: drop entries whose task never settled within a day. */
 const PENDING_CREATE_TTL_MS = 24 * 60 * 60 * 1000;
+// Module-level so `useLocalStorage`'s setter (keyed on defaultValue) stays stable.
+const NO_PENDING: IPendingCreate[] = [];
+
+const isFresh = (entry: IPendingCreate) =>
+  Date.now() - entry.createdAt < PENDING_CREATE_TTL_MS;
 
 export interface IUsePendingCreatesStore {
   entries: IPendingCreate[];
@@ -29,38 +35,28 @@ export interface IUsePendingCreatesStore {
 }
 
 /**
- * localStorage-backed list of pending async creates. Survives a full reload and
- * syncs across tabs (via `useLocalStorage`). Reads are pruned by a TTL so a
- * never-completing task can't accumulate forever.
+ * localStorage-backed list of pending async creates; survives a reload and syncs across
+ * tabs.
  */
 export const usePendingCreatesStore = (): IUsePendingCreatesStore => {
   const [stored, setStored] = useLocalStorage<IPendingCreate[]>({
     key: PENDING_CREATES_KEY,
-    defaultValue: [],
+    defaultValue: NO_PENDING,
   });
 
-  const entries = useMemo(
-    () =>
-      stored.filter(
-        (entry) => Date.now() - entry.createdAt < PENDING_CREATE_TTL_MS,
-      ),
-    [stored],
-  );
+  // TTL-pruned so a never-completing task can't accumulate forever.
+  const entries = stored.filter(isFresh);
 
-  // Persist the prune so stale rows don't linger in storage across reloads.
-  useEffect(() => {
-    if (entries.length !== stored.length) {
-      setStored(entries);
-    }
-  }, [entries, stored.length, setStored]);
-
+  // Stable identities: `usePendingCreates` lists `remove` as an effect dependency.
+  // Each write also prunes expired entries from storage.
   const add = useCallback(
     (entry: Omit<IPendingCreate, "createdAt">) => {
-      setStored((prev) =>
-        prev.some((existing) => existing.taskHref === entry.taskHref)
-          ? prev
-          : [...prev, { ...entry, createdAt: Date.now() }],
-      );
+      setStored((prev) => {
+        const fresh = prev.filter(isFresh);
+        return fresh.some((existing) => existing.taskHref === entry.taskHref)
+          ? fresh
+          : [...fresh, { ...entry, createdAt: Date.now() }];
+      });
     },
     [setStored],
   );
@@ -68,7 +64,9 @@ export const usePendingCreatesStore = (): IUsePendingCreatesStore => {
   const remove = useCallback(
     (taskHref: string) => {
       setStored((prev) =>
-        prev.filter((existing) => existing.taskHref !== taskHref),
+        prev.filter(
+          (existing) => existing.taskHref !== taskHref && isFresh(existing),
+        ),
       );
     },
     [setStored],

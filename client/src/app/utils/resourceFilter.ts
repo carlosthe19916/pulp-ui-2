@@ -1,10 +1,10 @@
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import {
   type EntityType,
   getPlugin,
   type IPlugin,
   type ResourceKind,
 } from "@catalog";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 /** Per-resource-kind predicate limiting which hrefs an `asyncResource` field offers. */
 export type ResourceFilterMap = Partial<
@@ -12,11 +12,8 @@ export type ResourceFilterMap = Partial<
 >;
 
 /**
- * Compatibility predicates for a modal's `asyncResource` pickers, mirroring the
- * backend — a Repository's Remote picker to its `compatibleRemoteTypes`, and a
- * Publication's Repository picker to repos whose `compatiblePublicationTypes`
- * include its type. Pure (no queries): the predicates run client-side against each
- * fetched search page. Kinds without a restriction are absent (picker shows all).
+ * Client-side compatibility predicates for a modal's `asyncResource` pickers, mirroring
+ * the backend; kinds without a restriction are absent.
  */
 export const buildResourceFilter = ({
   kind,

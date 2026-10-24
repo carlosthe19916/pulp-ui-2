@@ -11,20 +11,19 @@ export interface IFormStepState<TValues extends FieldValues = FieldValues> {
   isDirty: boolean;
 }
 
-interface IUseFormChangeHandlerArgs<TValues extends FieldValues> {
+interface IUseFormChangeHandlerOptions<TValues extends FieldValues> {
   form: UseFormReturn<TValues>;
   onStateChanged: (state: IFormStepState<TValues>) => void;
 }
 
 /**
- * Lifts a form's live `{ values, isValid, isDirty }` to a parent. `onStateChanged`
- * is held in a ref so callers needn't memoize it, and the effect fires only when
- * the derived state changes, so wiring it into a parent `setState` won't loop.
+ * Lifts a form's live `{ values, isValid, isDirty }` to a parent; fires only when that
+ * state changes, so a parent `setState` won't loop.
  */
 export const useFormChangeHandler = <TValues extends FieldValues>({
   form,
   onStateChanged,
-}: IUseFormChangeHandlerArgs<TValues>) => {
+}: IUseFormChangeHandlerOptions<TValues>) => {
   const {
     control,
     formState: { isValid, isDirty },

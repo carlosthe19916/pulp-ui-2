@@ -1,4 +1,5 @@
 import type React from "react";
+
 import { Link, useMatchRoute } from "@tanstack/react-router";
 
 import {
@@ -9,10 +10,10 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPlugin } from "@catalog";
 
 export const SidebarApp: React.FC = () => {
   // `matchRoute` matches against the route tree (param segments included) with

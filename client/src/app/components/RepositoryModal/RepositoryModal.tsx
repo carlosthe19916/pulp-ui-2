@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { EntityModalBody } from "@app/components/EntityModalBody";
 import { EntityModalShell } from "@app/components/EntityModalShell";
 import { PluginTypeSelector } from "@app/components/PluginTypeSelector";
@@ -12,10 +14,10 @@ interface IRepositoryModalInnerProps {
   onClose: () => void;
 }
 
-const RepositoryModalInner = ({
+const RepositoryModalInner: React.FC<IRepositoryModalInnerProps> = ({
   entity,
   onClose,
-}: IRepositoryModalInnerProps) => {
+}) => {
   const { data: full, isLoading } = useRepositoryDetailQuery({
     href: entity?.pulp_href ?? "",
   });
@@ -79,13 +81,12 @@ interface IRepositoryModalProps {
 }
 
 /**
- * Create/edit modal for repositories; wizard vs plain follows the catalog. Passing an
- * `entity` selects edit mode; omitting it selects create mode. Only mounted while open
- * so the form re-initializes on each open (mirrors `UserModal`).
+ * Create/edit modal for repositories (edit when `entity` is passed). Mount only while
+ * open so the form re-initializes on each open.
  */
-export const RepositoryModal = ({
+export const RepositoryModal: React.FC<IRepositoryModalProps> = ({
   isOpen,
   entity,
   onClose,
-}: IRepositoryModalProps) =>
+}) =>
   isOpen ? <RepositoryModalInner entity={entity} onClose={onClose} /> : null;

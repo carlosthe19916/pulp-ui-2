@@ -1,8 +1,10 @@
+import type React from "react";
 import { useState } from "react";
 
-import { Divider, PageSection } from "@patternfly/react-core";
-import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+
+import { Divider, PageSection } from "@patternfly/react-core";
 
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
@@ -15,19 +17,10 @@ import { TypeaheadSelect } from "./TypeaheadSelect";
 const PAGE_SIZE = 10;
 
 /**
- * OpenShift-style page-level context selector for the active Pulp domain,
- * rendered as the page's first section above a divider. The selection lives in
- * the URL (`$pulpDomain` path param) — switching navigates to the same route
- * with the new domain, re-scoping every content query. Hidden when the backend
- * has domains disabled.
- *
- * Deployments can have hundreds of domains, so options are searched server-side:
- * nothing is fetched until the dropdown opens, then a page of at most
- * {@link PAGE_SIZE} matches is loaded and refined (debounced) as the user types.
- * The selected value is the domain name itself, so it renders correctly even when
- * it falls outside the current search page.
+ * Page-level selector for the active Pulp domain, kept in the URL (`$pulpDomain`) so
+ * switching re-scopes every content query. Hidden when domains are disabled.
  */
-export const DomainContextSelector = () => {
+export const DomainContextSelector: React.FC = () => {
   const { enabled, name } = useSelectedDomain();
   const navigate = useNavigate();
   const apiDomain = useDefaultDomain();
@@ -36,6 +29,7 @@ export const DomainContextSelector = () => {
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebouncedValue({ value: term });
 
+  // Deployments can have hundreds of domains: search server-side, only while open.
   const { data, isFetching } = useQuery({
     ...domainsListQueryOptions({
       apiDomain,
@@ -76,6 +70,7 @@ export const DomainContextSelector = () => {
           onFilterChange={setTerm}
           onOpenChange={setIsOpen}
           isLoading={isFetching}
+          // The value is the name itself, so it shows even outside the search page.
           selectedLabel={name}
           isToggleFullWidth={false}
         />

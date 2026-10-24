@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 /** Shared rest override for the PyPI variant (distribution + publication). */
@@ -135,7 +135,6 @@ export const python: IPluginDefinition = {
   app: { isAvailable: whenInstalled("python", "pulp-python") },
   rest: { pulpType: "python.python", apiPath: "python/python" },
   entities: {
-    // Python repository: remote, auto-publish and package-substitution controls.
     repository: {
       form: {
         isWizard: false,
@@ -152,7 +151,6 @@ export const python: IPluginDefinition = {
       actions: pythonActions,
     },
 
-    // Python remote: PyPI sync filters.
     remote: {
       form: {
         isWizard: true,
@@ -161,7 +159,6 @@ export const python: IPluginDefinition = {
       },
     },
 
-    // Python (PyPI) distribution: can also pull through an upstream via a remote.
     distribution: {
       ...pypi,
       form: {
@@ -171,7 +168,6 @@ export const python: IPluginDefinition = {
       },
     },
 
-    // Python (PyPI) publication: base supplies the repository; adds repository_version.
     publication: {
       ...pypi,
       form: {

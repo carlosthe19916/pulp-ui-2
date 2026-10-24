@@ -10,9 +10,9 @@ import {
   ToolbarItem,
   Tooltip,
 } from "@patternfly/react-core";
+import { DataView, DataViewTable } from "@patternfly/react-data-view";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 import UsersIcon from "@patternfly/react-icons/dist/esm/icons/users-icon";
-import { DataView, DataViewTable } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { TableEmptyState } from "@app/components/TableEmptyState";

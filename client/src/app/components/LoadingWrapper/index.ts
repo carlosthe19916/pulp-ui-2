@@ -1,1 +1,1 @@
-export * from "./LoadingWrapper";
+export { LoadingWrapper } from "./LoadingWrapper";

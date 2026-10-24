@@ -1,14 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import { statusQueryOptions } from "@app/queries/status";
-import { defaultDomainFromStatus } from "@app/queries/utils/pulpApi";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
+import { defaultDomainFromStatus } from "@app/queries/utils/pulpApi";
 
 /**
- * Resolve the default domain inside a router loader. Loaders run outside React so
- * can't use `useDefaultDomain`; the domain derives from the cached `/status` query,
- * which we prime/read via `ensureQueryData`.
+ * Resolve the default domain in a router loader (outside React, so no `useDefaultDomain`)
+ * from the cached `/status` query.
  */
 export const ensureDefaultDomain = async (
   queryClient: QueryClient,
@@ -18,9 +17,8 @@ export const ensureDefaultDomain = async (
   );
 
 /**
- * Loader equivalent of `useSelectedDomain`: `enabled` from `/status`, `name` from
- * the route's `$pulpDomain` path param (the source of truth for the selected
- * content domain). When domains are disabled the slug is irrelevant.
+ * Loader equivalent of `useSelectedDomain`: `enabled` from `/status`, `name` from the
+ * route's `$pulpDomain` param.
  */
 export const ensureDomainFromParam = async (
   queryClient: QueryClient,

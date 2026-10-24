@@ -8,14 +8,14 @@ import {
   ToggleGroupItem,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
@@ -27,11 +27,11 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   type Exporter,
-  useExportMutation,
   useExporterCreateMutation,
   useExporterDeleteMutation,
   useExportersListQuery,
   useExporterUpdateMutation,
+  useExportMutation,
   useExportsListQuery,
 } from "@app/queries/exporters";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -42,7 +42,11 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 import { EXPORTER_TYPES, type IExporterType } from "../utils/exporterTypes";
 import { RunsTable } from "./RunsTable";
 
-const ExportRuns: React.FC<{ href: string }> = ({ href }) => {
+interface IExportRunsProps {
+  href: string;
+}
+
+const ExportRuns: React.FC<IExportRunsProps> = ({ href }) => {
   const { data, isLoading } = useExportsListQuery({ href });
   return (
     <RunsTable

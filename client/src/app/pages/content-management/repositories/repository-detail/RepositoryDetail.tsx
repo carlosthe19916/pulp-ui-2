@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,25 +12,19 @@ import {
   StackItem,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
-import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
-import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
-import { RepositoryModal } from "@app/components/RepositoryModal";
-import {
-  getPlugin,
-  getRepositoryContentTypes,
-  type IRepositoryAction,
-} from "@catalog";
 import type { RepositoryVersionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
+import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
+import { RepositoryModal } from "@app/components/RepositoryModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
 import { UploadContentModal } from "@app/components/UploadContentModal";
@@ -56,6 +51,11 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import {
+  getPlugin,
+  getRepositoryContentTypes,
+  type IRepositoryAction,
+} from "@catalog";
 
 import { AddContentModal } from "./components/AddContentModal";
 import { OstreeImportModal } from "./components/OstreeImportModal";

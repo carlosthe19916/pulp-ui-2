@@ -2,8 +2,8 @@ import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import type { QueryKey } from "@tanstack/react-query";
 import { yupResolver } from "@hookform/resolvers/yup";
+import type { QueryKey } from "@tanstack/react-query";
 import * as yup from "yup";
 
 import {
@@ -116,14 +116,22 @@ const labelSchema = yup.object({
 
 type LabelFormValues = yup.InferType<typeof labelSchema>;
 
-const LabelModal: React.FC<{
+interface ILabelModalProps {
   href: string;
   /** Empty when adding a label. */
   labelKey: string;
   value: string;
   invalidateKey: QueryKey;
   onClose: () => void;
-}> = ({ href, labelKey, value, invalidateKey, onClose }) => {
+}
+
+const LabelModal: React.FC<ILabelModalProps> = ({
+  href,
+  labelKey,
+  value,
+  invalidateKey,
+  onClose,
+}) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { control, handleSubmit } = useForm<LabelFormValues>({

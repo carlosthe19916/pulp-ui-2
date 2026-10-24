@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
@@ -12,15 +12,13 @@ export interface IUseSubmitErrorResult {
 }
 
 /**
- * Standard state seam for a modal form's submission error. The form hook sets the
- * error in its mutation `onError` (or `catch` for `mutateAsync` modals) and clears
- * it when a new submit starts; the form renders it in a top-of-form `FormSubmitError`
- * (see `.rulesync/rules/forms.md`) instead of a danger toast.
+ * State for a modal form's submission error, shown in a top-of-form `FormSubmitError`
+ * instead of a toast (see `.rulesync/rules/forms.md`).
  */
 export const useSubmitError = (): IUseSubmitErrorResult => {
   const [submitError, setSubmitError] = useState<IMutationErrorMessage | null>(
     null,
   );
-  const clearSubmitError = useCallback(() => setSubmitError(null), []);
+  const clearSubmitError = () => setSubmitError(null);
   return { submitError, setSubmitError, clearSubmitError };
 };

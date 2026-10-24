@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,10 +11,9 @@ import {
   PageSection,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
-import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";

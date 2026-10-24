@@ -7,12 +7,13 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { TaskGroupResponse } from "@app/client";
-import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
+import { DEFAULT_REFETCH_INTERVAL } from "@app/constants";
+
 import { taskKeys } from "./tasks";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpHref, toProxyHref } from "./utils/pulpApi";
 
 export const TaskGroupsQueryKey = "task-groups";
 

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { Button, PaginationVariant } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
@@ -16,6 +15,7 @@ import {
   useDataViewPagination,
   useDataViewSort,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";

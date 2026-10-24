@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { Form, FormGroup } from "@patternfly/react-core";
@@ -11,10 +10,10 @@ import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import { PermissionMultiSelect } from "./PermissionMultiSelect";
 import { collectPermissionOptions } from "./permissionOptions";
-import type { RoleFormValues } from "./useRoleForm";
+import type { IRoleFormValues } from "./useRoleForm";
 
 interface IRoleFormProps {
-  form: UseFormReturn<RoleFormValues>;
+  form: UseFormReturn<IRoleFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   formId: string;
@@ -32,16 +31,12 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
   const { data: rolesData } = useAllRolesListQuery();
 
   const permissions = watch("permissions");
-  const permissionOptions = useMemo(
-    () =>
-      collectPermissionOptions({
-        rolePermissionLists: (rolesData?.results ?? []).map(
-          (role) => role.permissions,
-        ),
-        selected: permissions ?? [],
-      }),
-    [permissions, rolesData?.results],
-  );
+  const permissionOptions = collectPermissionOptions({
+    rolePermissionLists: (rolesData?.results ?? []).map(
+      (role) => role.permissions,
+    ),
+    selected: permissions ?? [],
+  });
 
   return (
     <Form

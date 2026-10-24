@@ -4,9 +4,9 @@ import { PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
   DataViewFilters,
+  type DataViewState,
   DataViewTextFilter,
   DataViewToolbar,
-  type DataViewState,
 } from "@patternfly/react-data-view";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 

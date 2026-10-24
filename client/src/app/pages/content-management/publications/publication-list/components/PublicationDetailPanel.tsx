@@ -18,9 +18,8 @@ interface IPublicationDetailPanelProps {
 }
 
 /**
- * Expanded-row detail for a publication: the repository/version it was built from
- * and the distributions currently serving it (`distributions[]` is plugin-specific
- * and only present on typed payloads).
+ * Expanded-row detail for a publication: the repository/version it was built from and the
+ * distributions serving it (typed payloads only).
  */
 export const PublicationDetailPanel: React.FC<IPublicationDetailPanelProps> = ({
   publication,

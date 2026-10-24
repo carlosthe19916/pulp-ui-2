@@ -1,14 +1,14 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import ENV from "@app/env";
+import { ENV } from "@app/env";
 import { LoginPage } from "@app/pages/login/LoginPage";
 
-type LoginSearch = {
+interface ILoginSearch {
   redirect?: string;
-};
+}
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
+  validateSearch: (search: Record<string, unknown>): ILoginSearch => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   beforeLoad: () => {

@@ -4,12 +4,12 @@ import type { MultipleArtifactContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
+import type { IPluginContentProps } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
   StorageFacts,
 } from "./ContentPanelLayout";
-import type { IPluginContentProps } from "./contentFields";
 
 /** Fallback for content types without a dedicated panel. */
 export const BaseContent: React.FC<IPluginContentProps> = ({ href }) => {

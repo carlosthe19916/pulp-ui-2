@@ -20,15 +20,14 @@ interface IDistributionDetailPanelProps {
 }
 
 /**
- * Expanded-row detail for a distribution: the fields the list columns omit —
- * serving URL, content guard, what it serves (repository / version / publication)
- * and metadata. `publication` is plugin-specific (file distributions) and only
- * shown when the payload includes it.
+ * Expanded-row detail for a distribution: what the list columns omit (serving URL,
+ * content guard, what it serves, metadata).
  */
 export const DistributionDetailPanel: React.FC<
   IDistributionDetailPanelProps
 > = ({ distribution }) => {
   const record = distribution as Record<string, unknown>;
+  // Plugin-specific (file distributions): only on typed payloads.
   const publication =
     typeof record.publication === "string" ? record.publication : null;
 

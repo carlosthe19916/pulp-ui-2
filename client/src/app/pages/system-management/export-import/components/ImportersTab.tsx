@@ -2,14 +2,14 @@ import type React from "react";
 import { useState } from "react";
 
 import { Button, PaginationVariant } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { PulpImporterResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
@@ -41,7 +41,11 @@ import {
 } from "../utils/exporterTypes";
 import { RunsTable } from "./RunsTable";
 
-const ImportRuns: React.FC<{ href: string }> = ({ href }) => {
+interface IImportRunsProps {
+  href: string;
+}
+
+const ImportRuns: React.FC<IImportRunsProps> = ({ href }) => {
   const { data, isLoading } = useImportsListQuery({ href });
   return (
     <RunsTable

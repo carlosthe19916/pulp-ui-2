@@ -9,12 +9,12 @@ import {
   ModalHeader,
 } from "@patternfly/react-core";
 
-import { getContentType, type IContentType } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getContentType, type IContentType } from "@catalog";
 
 import { fieldErrors, perFileFields } from "./uploadFields";
 import { UploadFilesForm } from "./UploadFilesForm";
@@ -32,9 +32,8 @@ interface IUploadContentModalProps {
 }
 
 /**
- * Uploads files as content: pick files, check their upload fields, upload them one by
- * one (large files in chunks), then add them to the repository in one change. When
- * some files fail, it pauses before touching the repository.
+ * Uploads files as content one by one (large files in chunks), then adds them to the
+ * repository in one change; pauses first if any failed.
  */
 export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
   contentTypes,

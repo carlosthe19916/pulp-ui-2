@@ -1,10 +1,10 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -13,11 +13,12 @@ import type {
   PaginatedArtifactResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export type IArtifactListParams = ListParams<ArtifactsListData>;
 

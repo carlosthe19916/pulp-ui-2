@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 const gemRepositoryExtras: IEntityField[] = [
@@ -54,7 +54,6 @@ export const gem: IPluginDefinition = {
   app: { isAvailable: whenInstalled("gem", "pulp-gem") },
   rest: { pulpType: "gem.gem", apiPath: "gem/gem" },
   entities: {
-    // Gem repository: a remote to sync from.
     repository: {
       form: {
         isWizard: false,
@@ -67,7 +66,6 @@ export const gem: IPluginDefinition = {
       archiveImport: false,
     },
 
-    // Gem remote: prerelease handling plus include/exclude filters.
     remote: {
       form: {
         isWizard: true,
@@ -76,7 +74,6 @@ export const gem: IPluginDefinition = {
       },
     },
 
-    // Gem distribution: serves a repository/publication, optionally pull-through.
     distribution: {
       form: {
         isWizard: false,
@@ -85,7 +82,6 @@ export const gem: IPluginDefinition = {
       },
     },
 
-    // Gem publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
         isWizard: false,

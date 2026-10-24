@@ -17,13 +17,17 @@ import { resolvePulpType } from "@app/queries/utils/pulpHref";
 /** Plugins whose `base_url` serves an API (registry, Galaxy) rather than a browsable file tree. */
 const NON_BROWSABLE_PLUGINS = ["container", "ansible"];
 
+interface IContentUrlLinkProps {
+  distribution: DistributionResponse;
+}
+
 /**
  * A distribution's `base_url`: an external link to the content app's directory index,
  * or a copyable value for plugins that serve an API instead.
  */
-export const ContentUrlLink: React.FC<{
-  distribution: DistributionResponse;
-}> = ({ distribution }) => {
+export const ContentUrlLink: React.FC<IContentUrlLinkProps> = ({
+  distribution,
+}) => {
   const url = distribution.base_url;
   if (!url) {
     return <>—</>;

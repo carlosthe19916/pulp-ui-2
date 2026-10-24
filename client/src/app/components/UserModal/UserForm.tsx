@@ -8,10 +8,10 @@ import { HookFormPFGroupController } from "@app/components/HookFormPFGroupContro
 import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
-import type { UserFormValues } from "./useUserForm";
+import type { IUserFormValues } from "./useUserForm";
 
 interface IUserFormProps {
-  form: UseFormReturn<UserFormValues>;
+  form: UseFormReturn<IUserFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   formId: string;

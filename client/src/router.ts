@@ -1,7 +1,8 @@
 import { createRouter } from "@tanstack/react-router";
 
-import { queryClient } from "@app/queries/config";
 import type { IAuthContext } from "@app/context/Auth/AuthContext";
+import { queryClient } from "@app/queries/config";
+
 import { routeTree } from "./routeTree.gen";
 
 export interface IRouterContext {

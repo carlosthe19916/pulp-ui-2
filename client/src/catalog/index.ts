@@ -7,9 +7,9 @@
 
 import type { VersionResponse } from "@app/client";
 
-import { remoteBase } from "./base-fields";
+import { remoteBase } from "./baseFields";
 import { buildCatalog } from "./compose";
-import type { IEntityField } from "./field-types";
+import type { IEntityField } from "./fieldTypes";
 import { ansible } from "./plugins/ansible";
 import { container } from "./plugins/container";
 import { core } from "./plugins/core";
@@ -22,7 +22,6 @@ import { npm } from "./plugins/npm";
 import { ostree } from "./plugins/ostree";
 import { python } from "./plugins/python";
 import { rpm } from "./plugins/rpm";
-import { ENTITY_TYPE_LABELS, ENTITY_TYPES } from "./types";
 import type {
   EntityType,
   IContentType,
@@ -30,6 +29,7 @@ import type {
   IPluginDefinition,
   PulpType,
 } from "./types";
+import { ENTITY_TYPE_LABELS, ENTITY_TYPES } from "./types";
 
 /** All plugin definitions, in display order. Add a new plugin here. */
 const pluginDefinitions: IPluginDefinition[] = [
@@ -135,9 +135,8 @@ export const resolveContentTypeByApiPath = ({
 }): PulpType | undefined => contentTypeByApiPath[apiPath];
 
 /**
- * Remote edit fields for a pulp_type, falling back to the shared pulpcore base when
- * the plugin (or its remote slot) isn't modelled, so any remote still shows its
- * standard fields.
+ * Remote edit fields for a pulp_type, falling back to the pulpcore base when the plugin
+ * (or its remote slot) isn't modelled.
  */
 export const getRemoteEditFields = (pulpType: PulpType): IEntityField[] =>
   getPlugin(pulpType)?.entities.remote?.form.editFields ?? remoteBase.edit;
@@ -183,4 +182,4 @@ export type {
   IRepositoryAction,
   PulpType,
 } from "./types";
-export type { IEntityField, ResourceKind } from "./field-types";
+export type { IEntityField, ResourceKind } from "./fieldTypes";

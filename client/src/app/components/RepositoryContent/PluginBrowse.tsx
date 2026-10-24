@@ -4,8 +4,8 @@ import { useState } from "react";
 import {
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
@@ -14,12 +14,18 @@ import type { ContentSummaryResponse } from "@app/client";
 import { visibleSections } from "./browseRegistry";
 import type { IBrowseContext, IPluginBrowse } from "./browseTypes";
 
-/** A plugin's Browse sections as sub-tabs; a single section renders without the tab bar. */
-export const PluginBrowse: React.FC<{
+interface IPluginBrowseProps {
   browse: IPluginBrowse;
   summary?: ContentSummaryResponse;
   context: IBrowseContext;
-}> = ({ browse, summary, context }) => {
+}
+
+/** A plugin's Browse sections as sub-tabs; a single section renders without the tab bar. */
+export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
+  browse,
+  summary,
+  context,
+}) => {
   const visible = visibleSections({ sections: browse.sections, summary });
   const [activeKey, setActiveKey] = useState<string | number>(
     visible[0]?.section.key ?? "",

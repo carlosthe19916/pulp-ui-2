@@ -1,6 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
+import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 /** GitRemote has no `policy` field (always on-demand server-side), so drop it. */
@@ -45,10 +45,13 @@ const ansibleDistributionExtras: IEntityField[] = [
   { key: "repository_version", label: "Repository Version", type: "text" },
 ];
 
-const collectionVersions = (
-  key: string,
+const collectionVersions = ({
+  key,
   label = "Collection versions",
-): IEntityField => ({
+}: {
+  key: string;
+  label?: string;
+}): IEntityField => ({
   key,
   label,
   type: "content",
@@ -57,7 +60,7 @@ const collectionVersions = (
 });
 
 const copyMoveFields: IEntityField[] = [
-  collectionVersions("collection_versions"),
+  collectionVersions({ key: "collection_versions" }),
   {
     key: "destination_repositories",
     label: "Destination repositories",
@@ -77,7 +80,7 @@ const copyMoveFields: IEntityField[] = [
 
 const markFields: IEntityField[] = [
   { key: "value", label: "Mark", type: "text", required: true },
-  collectionVersions("content_units"),
+  collectionVersions({ key: "content_units" }),
 ];
 
 const ansibleActions: IRepositoryAction[] = [
@@ -94,7 +97,7 @@ const ansibleActions: IRepositoryAction[] = [
         resourceKind: "signingService",
         required: true,
       },
-      collectionVersions("content_units"),
+      collectionVersions({ key: "content_units" }),
     ],
   },
   {
@@ -162,7 +165,6 @@ export const ansible: IPluginDefinition = {
   app: { isAvailable: whenInstalled("ansible", "pulp-ansible") },
   rest: { pulpType: "ansible.ansible", apiPath: "ansible/ansible" },
   entities: {
-    // Ansible repository: a remote to sync from plus GPG verification.
     repository: {
       form: {
         isWizard: false,
@@ -211,7 +213,6 @@ export const ansible: IPluginDefinition = {
       },
     ],
 
-    // Ansible distribution: serves a repository or a specific repository version.
     distribution: {
       form: {
         isWizard: false,

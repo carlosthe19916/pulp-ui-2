@@ -15,9 +15,8 @@ interface IOrphanedForFilterProps {
 }
 
 /**
- * Numeric filter for `orphaned_for` (minutes a unit has been orphaned). A number input rather
- * than free text; composed into `DataViewFilters` like the other custom filters (renders a
- * `ToolbarFilter`, carries `filterId`/`title`, uses the injected `value`/`onChange`/`showToolbarItem`).
+ * Numeric `orphaned_for` filter (minutes orphaned), composed into `DataViewFilters` like
+ * the other custom filters.
  */
 export const OrphanedForFilter: React.FC<IOrphanedForFilterProps> = ({
   filterId,

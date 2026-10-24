@@ -1,9 +1,8 @@
 import { cleanFormValues } from "@app/utils/formSchema";
 
 /**
- * Typed shared base of every distribution write body (pulpcore
- * DistributionSerializer fields). Plugin-specific extras (e.g. a `publication`
- * picker) ride the open index signature and pass through untouched.
+ * Typed base of every distribution write body (pulpcore DistributionSerializer fields);
+ * plugin extras ride the index signature.
  */
 export interface IDistributionWriteBase {
   name?: string;

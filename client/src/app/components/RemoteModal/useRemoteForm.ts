@@ -1,9 +1,10 @@
 import type { IPlugin } from "@catalog";
-import { useNotifications } from "@app/hooks/useNotifications";
+
 import type {
   IEntityForEdit,
   IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRemoteCreateMutation,
@@ -11,9 +12,9 @@ import {
 } from "@app/queries/remotes";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { valuesToCreate, valuesToPatch } from "./RemoteForm";
+import { valuesToCreate, valuesToPatch } from "./remoteForm";
 
-interface IUseRemoteFormArgs {
+interface IUseRemoteFormOptions {
   plugin: IPlugin | undefined;
   /** The full (detail-fetched) entity in edit mode; undefined ⇒ create. */
   entity?: IEntityForEdit;
@@ -21,17 +22,14 @@ interface IUseRemoteFormArgs {
 }
 
 /**
- * Remote create/edit form: maps form values to a remote write body (`RemoteForm`)
- * and runs the family's create/update mutations. The success toast is raised from
- * the mutations' hook-level callbacks and the call-level `onSuccess` closes the
- * modal (see `.rulesync/rules/toastr.md`); a submission failure is shown in-form via
- * `submitError`, not a toast (see `.rulesync/rules/forms.md`).
+ * Remote create/edit form: maps values to a remote write body and runs the create/update
+ * mutations; failures show in-form via `submitError`.
  */
 export const useRemoteForm = ({
   plugin,
   entity,
   onClose,
-}: IUseRemoteFormArgs): IUseEntityFormResult => {
+}: IUseRemoteFormOptions): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !entity;

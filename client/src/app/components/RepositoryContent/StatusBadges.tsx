@@ -13,10 +13,12 @@ const STATUS = {
 
 export type BrowseStatus = keyof typeof STATUS;
 
+interface IStatusBadgesProps {
+  statuses: (BrowseStatus | false)[];
+}
+
 /** Small status labels next to an item; renders nothing when no status applies. */
-export const StatusBadges: React.FC<{ statuses: (BrowseStatus | false)[] }> = ({
-  statuses,
-}) => {
+export const StatusBadges: React.FC<IStatusBadgesProps> = ({ statuses }) => {
   const shown = statuses.filter((status): status is BrowseStatus => !!status);
   return shown.length ? (
     <LabelGroup>

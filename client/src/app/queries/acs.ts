@@ -7,29 +7,27 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  AcsFileFileListData,
   AsyncOperationResponse,
   FileFileAlternateContentSourceResponse,
   PaginatedfileFileAlternateContentSourceResponseList,
   TaskGroupOperationResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { taskKeys } from "./tasks";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const AcsQueryKey = "acs";
 
 /** Every plugin's alternate content source has this shape. */
 export type AlternateContentSource = FileFileAlternateContentSourceResponse;
 
-export interface IAcsListParams {
-  limit: number;
-  offset: number;
-  ordering?: string;
-  name__icontains?: string;
-}
+export type IAcsListParams = ListParams<AcsFileFileListData>;
 
 /** Keyed by the plugin's `acs/<apiPath>/` collection (there is no aggregate list). */
 export const acsKeys = {

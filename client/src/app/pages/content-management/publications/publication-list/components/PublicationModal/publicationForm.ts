@@ -1,9 +1,8 @@
 import { cleanFormValues } from "@app/utils/formSchema";
 
 /**
- * Typed shared base of a publication write body. Publications are created against a
- * repository (optionally a specific version) and are immutable afterwards, so there
- * is only a create payload — no patch. Plugin extras ride the open index signature.
+ * Typed base of a publication create body. Publications are immutable, so there is no
+ * patch; plugin extras ride the index signature.
  */
 export interface IPublicationWriteBase {
   repository?: string;

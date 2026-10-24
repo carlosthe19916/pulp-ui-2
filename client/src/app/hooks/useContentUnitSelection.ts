@@ -50,6 +50,12 @@ export const useContentUnitSelection = () => {
 
 export type IContentUnitSelection = ReturnType<typeof useContentUnitSelection>;
 
+interface IDataViewSelectionOptions {
+  selection: IContentUnitSelection;
+  units: IContentUnitRef[];
+  isSelectDisabled?: (href: string) => boolean;
+}
+
 /**
  * The DataView `selection` for a page of units: table rows carry the unit href as
  * their id; a row checkbox passes that row, the header checkbox an array.
@@ -58,11 +64,7 @@ export const dataViewSelection = ({
   selection,
   units,
   isSelectDisabled,
-}: {
-  selection: IContentUnitSelection;
-  units: IContentUnitRef[];
-  isSelectDisabled?: (href: string) => boolean;
-}) => ({
+}: IDataViewSelectionOptions) => ({
   onSelect: (
     isSelecting: boolean,
     items?: { id?: unknown } | { id?: unknown }[],

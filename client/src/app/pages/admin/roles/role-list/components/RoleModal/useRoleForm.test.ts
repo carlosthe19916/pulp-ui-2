@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type IRoleFormValues,
   valuesToNewRole,
   valuesToPatchedRole,
-  type RoleFormValues,
 } from "./useRoleForm";
 
-const baseValues: RoleFormValues = {
+const baseValues: IRoleFormValues = {
   name: "my.role",
   description: "A role",
   permissions: ["core.view_task"],

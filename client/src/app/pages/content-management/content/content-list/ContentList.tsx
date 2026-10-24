@@ -17,19 +17,16 @@ import {
   useDataViewPagination,
 } from "@patternfly/react-data-view";
 
-import { ContentDataList } from "@app/components/ContentDataList";
-import { ListPagination } from "@app/components/ListPagination";
-import {
-  MultiSelectFilter,
-  type IMultiSelectOption,
-} from "@app/components/MultiSelectFilter";
-import type { IContentUnit } from "@app/utils/contentUnit";
-import { contentUnitRef } from "@app/utils/contentUnitRef";
-import { getContentTypes } from "@catalog";
 import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
 import { ContentBulkSelect } from "@app/components/ContentBulkSelect";
+import { ContentDataList } from "@app/components/ContentDataList";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ListPagination } from "@app/components/ListPagination";
+import {
+  type IMultiSelectOption,
+  MultiSelectFilter,
+} from "@app/components/MultiSelectFilter";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import { useApiStatus } from "@app/hooks/useApiStatus";
@@ -41,6 +38,9 @@ import {
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
+import type { IContentUnit } from "@app/utils/contentUnit";
+import { contentUnitRef } from "@app/utils/contentUnitRef";
+import { getContentTypes } from "@catalog";
 
 import { OrphanedForFilter } from "./components/OrphanedForFilter";
 import { RepositoryVersionFilter } from "./components/RepositoryVersionFilter";

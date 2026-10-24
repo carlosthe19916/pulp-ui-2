@@ -6,6 +6,8 @@ import {
   useContentTypeListQuery,
 } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -16,19 +18,21 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 interface ICollectionContent {
   name: string;
   content_type: string;
 }
 
+interface ICollectionContentsProps {
+  href: string;
+}
+
 /**
  * Modules, plugins and roles in the collection, grouped by type. The REST API omits
  * `contents` unless it's requested with `fields`, so ask for it explicitly.
  */
-const CollectionContents: React.FC<{ href: string }> = ({ href }) => {
+const CollectionContents: React.FC<ICollectionContentsProps> = ({ href }) => {
   const { data } = useContentTypeListQuery({
     pulpType: "ansible.collection_version",
     params: { pulp_href__in: [href], limit: 1, fields: ["contents"] },

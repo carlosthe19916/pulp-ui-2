@@ -8,16 +8,19 @@ import {
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
+  ExportersCorePulpListData,
   PaginatedPulpExporterResponseList,
   PaginatedPulpExportResponseList,
   PulpExporterResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { taskKeys } from "./tasks";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const ExportersQueryKey = "exporters";
 
@@ -28,12 +31,7 @@ export type Exporter = Pick<
 > &
   Record<string, unknown>;
 
-export interface IExporterListParams {
-  limit: number;
-  offset: number;
-  ordering?: string;
-  name__icontains?: string;
-}
+export type IExporterListParams = ListParams<ExportersCorePulpListData>;
 
 export const exporterKeys = {
   all: () => [ExportersQueryKey] as const,

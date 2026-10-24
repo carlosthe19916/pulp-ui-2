@@ -1,8 +1,9 @@
 import type React from "react";
 
-import { TaskActionModal } from "@app/components/TaskActionModal";
 import type { IEntityField } from "@catalog";
-import type { DomainResponse } from "@app/client";
+
+import type { DomainResponse, StorageClassEnum } from "@app/client";
+import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useDomainMigrateMutation } from "@app/queries/domains";
@@ -33,11 +34,16 @@ const MIGRATE_FIELDS: IEntityField[] = [
   },
 ];
 
-/** Moves a domain's stored files to a new storage backend. */
-export const DomainMigrateModal: React.FC<{
+interface IDomainMigrateModalProps {
   domain: DomainResponse;
   onClose: () => void;
-}> = ({ domain, onClose }) => {
+}
+
+/** Moves a domain's stored files to a new storage backend. */
+export const DomainMigrateModal: React.FC<IDomainMigrateModalProps> = ({
+  domain,
+  onClose,
+}) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useDomainMigrateMutation({
@@ -70,7 +76,7 @@ export const DomainMigrateModal: React.FC<{
           {
             domainName: domain.name,
             body: {
-              storage_class: String(body.storage_class),
+              storage_class: body.storage_class as StorageClassEnum,
               storage_settings: body.storage_settings as Record<
                 string,
                 unknown

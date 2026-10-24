@@ -16,9 +16,13 @@ const axiosErrorWithStatus = (status: number): AxiosError => {
 
 describe("isHttpError helpers", () => {
   it("detects matching axios status codes", () => {
-    expect(isHttpError(axiosErrorWithStatus(403), 403)).toBe(true);
-    expect(isHttpError(axiosErrorWithStatus(404), 403)).toBe(false);
-    expect(isHttpError(new Error("nope"), 403)).toBe(false);
+    expect(isHttpError({ error: axiosErrorWithStatus(403), status: 403 })).toBe(
+      true,
+    );
+    expect(isHttpError({ error: axiosErrorWithStatus(404), status: 403 })).toBe(
+      false,
+    );
+    expect(isHttpError({ error: new Error("nope"), status: 403 })).toBe(false);
   });
 
   it("detects forbidden and not-found errors", () => {

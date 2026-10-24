@@ -1,9 +1,7 @@
 import type React from "react";
 
-import { TaskActionModal } from "@app/components/TaskActionModal";
-import { buildResourceFilter } from "@app/utils/resourceFilter";
-import { getPlugin, type IEntityField } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
+import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositorySyncMutation } from "@app/queries/repositories";
@@ -11,8 +9,10 @@ import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
+import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getPlugin, type IEntityField } from "@catalog";
 
 const SYNC_FIELDS: IEntityField[] = [
   {

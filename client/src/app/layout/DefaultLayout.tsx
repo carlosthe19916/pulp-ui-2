@@ -2,8 +2,8 @@ import type React from "react";
 
 import { Page, SkipToContent } from "@patternfly/react-core";
 
-import { HeaderApp } from "./header";
-import { SidebarApp } from "./sidebar";
+import { HeaderApp } from "./HeaderApp";
+import { SidebarApp } from "./SidebarApp";
 
 interface IDefaultLayoutProps {
   children?: React.ReactNode;

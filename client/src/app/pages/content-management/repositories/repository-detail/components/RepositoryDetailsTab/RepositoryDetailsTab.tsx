@@ -31,11 +31,13 @@ interface IRepositoryDetailsTabProps {
   writes?: IContentWrites;
 }
 
+interface ITitledCardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
 /** A PatternFly expandable card, open by default. */
-const TitledCard: React.FC<{ title: string; children: React.ReactNode }> = ({
-  title,
-  children,
-}) => {
+const TitledCard: React.FC<ITitledCardProps> = ({ title, children }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const titleId = useId();
   return (

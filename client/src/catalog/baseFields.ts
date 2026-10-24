@@ -1,4 +1,4 @@
-import type { IEntityField } from "./field-types";
+import type { IEntityField } from "./fieldTypes";
 
 /**
  * Common field groups shared by an entity type's plugins (pulpcore serializer

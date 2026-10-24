@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type { StatusResponse } from "@app/client";
+
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 
 export const StatusQueryKey = "pulp-status";

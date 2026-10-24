@@ -3,15 +3,15 @@ import type React from "react";
 import type { OstreeOstreeContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { basename, dirname, facts } from "./contentFields";
 import {
+  Checksum,
   ContentHeader,
   ContentPanelLayout,
   FactList,
   StorageFacts,
-  Checksum,
 } from "./ContentPanelLayout";
-import { basename, dirname, facts } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 /** An OSTree repository file, identified by its path and object digest. */
 export const OstreeContent: React.FC<IPluginContentProps> = ({ href }) => {

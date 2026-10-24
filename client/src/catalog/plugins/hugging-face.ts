@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 const huggingFaceRepositoryExtras: IEntityField[] = [
@@ -67,7 +67,6 @@ export const huggingFace: IPluginDefinition = {
     apiPath: "hugging_face/hugging-face",
   },
   entities: {
-    // Hugging Face repository: a remote to sync from.
     repository: {
       form: {
         isWizard: false,
@@ -83,7 +82,6 @@ export const huggingFace: IPluginDefinition = {
       archiveImport: false,
     },
 
-    // Hugging Face remote: hub URL and token.
     remote: {
       form: {
         isWizard: true,
@@ -92,7 +90,6 @@ export const huggingFace: IPluginDefinition = {
       },
     },
 
-    // Hugging Face distribution: serves a repository/publication, or pull-through.
     distribution: {
       form: {
         isWizard: false,
@@ -107,7 +104,6 @@ export const huggingFace: IPluginDefinition = {
       },
     },
 
-    // Hugging Face publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
         isWizard: false,

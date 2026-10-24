@@ -1,12 +1,14 @@
+import type React from "react";
 import { type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import type { IEntityField } from "@catalog";
+
 import { Button, Form, ModalBody, ModalFooter } from "@patternfly/react-core";
 
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
-import type { IEntityField } from "@catalog";
 import { EntityFormFields } from "@app/components/EntityFormFields";
 import { FormSubmitError } from "@app/components/FormSubmitError";
+import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 const FORM_ID = "entity-form";
@@ -27,12 +29,10 @@ interface IEntityFormBodyProps {
 }
 
 /**
- * Presentational body + footer for the plain (non-wizard) entity form. It is form
- * -hook-agnostic: it takes an already-built react-hook-form plus the resolved
- * fields, so both the generic `EntityModal` and the per-family modals (which supply
- * a typed form hook, e.g. `useRepositoryForm`) render an identical body.
+ * Body + footer for the plain (non-wizard) entity form. Takes an already-built
+ * react-hook-form, so every family's modal renders the same body.
  */
-export const EntityFormBody = ({
+export const EntityFormBody: React.FC<IEntityFormBodyProps> = ({
   form,
   fields,
   isCreate,
@@ -43,7 +43,7 @@ export const EntityFormBody = ({
   typeSelector,
   resourceFilter,
   submitError,
-}: IEntityFormBodyProps) => (
+}) => (
   <>
     <ModalBody>
       <Form

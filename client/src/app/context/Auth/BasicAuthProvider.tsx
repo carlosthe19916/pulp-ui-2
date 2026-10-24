@@ -1,20 +1,25 @@
-import React, { useCallback, useMemo, useSyncExternalStore } from "react";
+import type React from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { redirect } from "@tanstack/react-router";
 
+import { router } from "../../../router.ts";
 import { AuthContext, type IAuthContext } from "./AuthContext";
 import {
   clearCredentials,
   getSnapshot,
+  type IStoredCredentials,
   loadCredentials,
   subscribe,
-  type IStoredCredentials,
 } from "./basicAuthHelpers";
-import { router } from "../../../router.ts";
 
-export const BasicAuthProvider: React.FC<{
+interface IBasicAuthProviderProps {
   children: React.ReactNode;
-}> = ({ children }) => {
+}
+
+export const BasicAuthProvider: React.FC<IBasicAuthProviderProps> = ({
+  children,
+}) => {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const user = useMemo(() => {
     if (!raw) {

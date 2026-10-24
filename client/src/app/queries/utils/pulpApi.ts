@@ -1,8 +1,8 @@
 import { normalizePulpApiRoot } from "@pulp-ui/common";
 
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import type { StatusResponse } from "@app/client";
-import ENV from "@app/env";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
+import { ENV } from "@app/env";
 
 /** Live API domain: whether pulpcore has DOMAIN_ENABLED, and the active slug. */
 export interface IPulpDomain {
@@ -26,9 +26,8 @@ const stripLeadingSlash = (endpoint: string): string =>
   endpoint.replace(/^\/+/, "");
 
 /**
- * Build a domain-scoped v3 API path behind the fixed `/api/pulp` proxy marker.
- * Leading slash on `endpoint` optional; trailing slash preserved (Pulp URLs are
- * trailing-slash-significant).
+ * Build a domain-scoped v3 API path behind the `/api/pulp` proxy marker. Keeps a trailing
+ * slash (Pulp URLs are trailing-slash-significant).
  */
 export const pulpApiPath = (endpoint: string, domain: IPulpDomain): string =>
   `/api/pulp${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
@@ -36,18 +35,15 @@ export const pulpApiPath = (endpoint: string, domain: IPulpDomain): string =>
 const apiRoot = (): string => normalizePulpApiRoot(ENV.PULP_API_ROOT ?? "");
 
 /**
- * Build a resource href in the server's own form (`{API_ROOT}…`), identical to the
- * `pulp_href` the API returns — so an href rebuilt from a route id shares the cache
- * slot (and invalidation) of one read from a response. A key, not a request URL:
- * fetch it through `toProxyHref`.
+ * Build a resource href in the server's form (`{API_ROOT}…`) so it shares the cache slot
+ * of the API's `pulp_href`. A key: fetch it via `toProxyHref`.
  */
 export const pulpHref = (endpoint: string, domain: IPulpDomain): string =>
   `${apiRoot()}${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
 
 /**
- * Normalize any pulp_href to the fixed `/api/pulp` proxy marker (routed to the
- * backend's real `API_ROOT`). Idempotent: `pulpApiPath` URLs pass through; server
- * hrefs (`pulp_href`, `pulpHref`) get their `API_ROOT` prefix swapped for `/api/pulp`.
+ * Normalize any pulp_href to the `/api/pulp` proxy marker by swapping its `API_ROOT`
+ * prefix; idempotent.
  */
 export const toProxyHref = (href: string): string => {
   if (href.startsWith("/api/pulp")) return href;

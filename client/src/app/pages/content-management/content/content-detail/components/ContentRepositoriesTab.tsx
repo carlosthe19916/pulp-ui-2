@@ -3,6 +3,7 @@ import type React from "react";
 import { Link } from "@tanstack/react-router";
 
 import { PaginationVariant } from "@patternfly/react-core";
+import { useDataViewPagination } from "@patternfly/react-data-view";
 import {
   ActionsColumn,
   Caption,
@@ -13,12 +14,10 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 
+import type { RepositoryResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
-import { getPlugin } from "@catalog";
-import type { RepositoryResponse } from "@app/client";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -29,6 +28,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
+import { getPlugin } from "@catalog";
 
 interface IContentRepositoriesTabProps {
   href: string;
@@ -47,9 +47,8 @@ const locationAnswer = (count: number): string => {
 };
 
 /**
- * Answers "where is this package now?": the repositories whose latest version
- * contains the content unit (`latest_with_content`), not ones it was removed from.
- * A plain PatternFly table because `DataViewTable` can't render a `<Caption>`.
+ * The repositories whose latest version contains the content unit
+ * (`latest_with_content`), not ones it was removed from.
  */
 export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   href,
@@ -85,6 +84,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
 
   return (
     <>
+      {/* A plain Table: `DataViewTable` can't render a `<Caption>`. */}
       <Table
         aria-label="Repositories containing this content"
         variant="compact"

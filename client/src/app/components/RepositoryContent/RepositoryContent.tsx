@@ -4,8 +4,8 @@ import { useState } from "react";
 import {
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
@@ -28,9 +28,8 @@ interface IRepositoryContentProps {
 }
 
 /**
- * A repository version's content: "Browse" in the plugin's own terms (collections, tags,
- * packages…) and "All content", the generic list. Plugins without a Browse view get only
- * the generic list. Each list keeps its own selection; switching tabs unmounts it.
+ * A repository version's content: the plugin's own "Browse" view (when it has one) and
+ * the generic "All content" list, each with its own selection.
  */
 export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
   repositoryHref,

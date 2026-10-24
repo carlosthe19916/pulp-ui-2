@@ -16,7 +16,7 @@ A route file calls `createFileRoute(...)` and wires a component from `@app/pages
 page JSX, hooks or queries in it; the only inline JSX is `pendingComponent`.
 
 ```tsx
-// routes/_authenticated/admin/users/index.tsx — list routes have no loader
+// routes/_authenticated/admin/users/index.ts — list routes have no loader
 export const Route = createFileRoute("/_authenticated/admin/users/")({
   component: UserList,
 });
@@ -67,7 +67,7 @@ selected domain, read via `useSelectedDomain()`.
 ## Search params and navigation
 
 - `validateSearch` returns a typed object with a fallback for each key, never throws:
-  `redirect: typeof search.redirect === "string" ? search.redirect : undefined` (`routes/login.tsx`).
+  `redirect: typeof search.redirect === "string" ? search.redirect : undefined` (`routes/login.ts`).
 - Internal links are typed: `<Link to="/monitoring/$pulpDomain/tasks/$taskId" params={{ … }}>`
   and `void navigate({ to, params })`. Never build an internal URL with a template string.
 

@@ -1,10 +1,12 @@
+import type React from "react";
 import { type ReactNode } from "react";
+
+import type { EntityType, IPlugin } from "@catalog";
 
 import { Wizard, WizardHeader, WizardStep } from "@patternfly/react-core";
 
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
-import type { EntityType, IPlugin } from "@catalog";
 import type { IEntityForEdit } from "@app/hooks/pluginForm/useEntityForm";
+import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import { EntityWizardStep } from "./EntityWizardStep";
@@ -27,13 +29,10 @@ interface IEntityWizardBodyProps {
 }
 
 /**
- * Multi-step wizard variant of the entity form, for large grouped field sets
- * (remotes). Steps come from the fields' `group`; each is an independent form whose
- * validity gates Next. The last step submits merged values once every step is valid.
- * Submission itself is owned by the family (via `onSubmit`), so the wizard stays
- * plugin-neutral.
+ * Multi-step entity form for large grouped field sets: one step per field `group`, each
+ * gating Next; the last step submits the merged values.
  */
-export const EntityWizardBody = ({
+export const EntityWizardBody: React.FC<IEntityWizardBodyProps> = ({
   kind,
   plugin,
   entity,
@@ -44,7 +43,7 @@ export const EntityWizardBody = ({
   onSubmit,
   isSubmitting,
   submitError,
-}: IEntityWizardBodyProps) => {
+}) => {
   const isCreate = !entity;
   const entityPlugin = plugin?.entities[kind];
   const fields =

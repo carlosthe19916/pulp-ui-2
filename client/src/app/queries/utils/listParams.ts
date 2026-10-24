@@ -9,9 +9,8 @@ type SingleOrdering<TQuery> = TQuery extends { ordering?: infer O }
   : never;
 
 /**
- * Params for a paged list query. `ordering` is narrowed to a single value
- * (data-view sorts one column; the query fn re-wraps to the spec's array form).
- * `limit` is required so no silent default caps results and truncates counts.
+ * Params for a paged list query. `ordering` is one value (the query fn re-wraps it);
+ * `limit` is required so no silent default truncates results.
  */
 export type ListParams<TData extends { query?: object }> = Omit<
   QueryOf<TData>,
@@ -22,9 +21,8 @@ export type ListParams<TData extends { query?: object }> = Omit<
 };
 
 /**
- * Like `ListParams`, but keeps the spec's `ordering` array so a caller can sort by
- * several fields (e.g. `["namespace", "name", "-version"]`). The axios params
- * serializer comma-joins it.
+ * Like `ListParams` but keeps the spec's `ordering` array for multi-field sorts (the
+ * axios serializer comma-joins it).
  */
 export type MultiOrderListParams<TData extends { query?: object }> = Omit<
   QueryOf<TData>,

@@ -14,12 +14,13 @@ import type {
   PulpContainerNamespacesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const ContainerNamespacesQueryKey = "container-namespaces";
 

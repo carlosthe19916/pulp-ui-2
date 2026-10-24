@@ -5,29 +5,25 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 const countOf = ({ count, item }: { count: number; item: string }) =>
   `${count} ${item}${count === 1 ? "" : "s"}`;
 
-/**
- * Toasts for a batch add: one success toast for what went through and one
- * danger toast naming what didn't (with the server's reason), so a partial
- * failure is never silent.
- *
- * @example
- * notifyBatchResult({ addNotification, result, item: "role", target: 'user "bob"' })
- * // "2 roles added to user "bob"" + "Failed to add 1 role to user "bob": admin"
- * // (the second with the first failure's server message as its description)
- */
-export const notifyBatchResult = ({
-  addNotification,
-  result: { succeeded, failed },
-  item,
-  target,
-}: {
+interface INotifyBatchResultOptions {
   addNotification: INotificationsContextValue["addNotification"];
   result: IBatchResult;
   /** Singular noun for one added item, e.g. "user". */
   item: string;
   /** What the items were added to, e.g. `group "admins"`. */
   target: string;
-}) => {
+}
+
+/**
+ * Toasts a batch add: one success toast, and one danger toast naming what failed with the
+ * server's reason, so a partial failure is never silent.
+ */
+export const notifyBatchResult = ({
+  addNotification,
+  result: { succeeded, failed },
+  item,
+  target,
+}: INotifyBatchResultOptions) => {
   if (succeeded.length > 0) {
     addNotification({
       title: `${countOf({ count: succeeded.length, item })} added to ${target}`,

@@ -34,12 +34,8 @@ interface IRepositoryVersionFilterProps {
 }
 
 /**
- * Filter content by a repository version: pick a repository + version and whether to show
- * content present in / added in / removed in that version. Rendered as inline toolbar controls
- * (a relation toggle, a repository typeahead, and a version select) rather than a popover — the
- * repository/version menus are themselves overlays, so nesting them inside a popover would close
- * it on selection. Composed into `DataViewFilters` like `MultiSelectFilter` (renders a
- * `ToolbarFilter`, carries `filterId`/`title`, uses the injected `value`/`onChange`/`showToolbarItem`).
+ * Filter content present in / added in / removed in a chosen repository version; composed
+ * into `DataViewFilters` like `MultiSelectFilter`.
  */
 export const RepositoryVersionFilter: React.FC<
   IRepositoryVersionFilterProps
@@ -61,6 +57,7 @@ export const RepositoryVersionFilter: React.FC<
       categoryName={title}
       showToolbarItem={showToolbarItem}
     >
+      {/* Inline controls, not a popover: these menus are overlays and would close it. */}
       <Flex
         spaceItems={{ default: "spaceItemsSm" }}
         alignItems={{ default: "alignItemsCenter" }}

@@ -1,5 +1,8 @@
 import type React from "react";
 
+import type { IEntityField } from "@catalog";
+
+import type { DescriptionListProps } from "@patternfly/react-core";
 import {
   ClipboardCopy,
   DescriptionList,
@@ -10,17 +13,18 @@ import {
   DescriptionListTermHelpTextButton,
   Popover,
 } from "@patternfly/react-core";
-import type { DescriptionListProps } from "@patternfly/react-core";
 
-import type { IEntityField } from "@catalog";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { isEmptyValue } from "@app/utils/utils";
 
 /** The server's write-only-secret descriptor (`hidden_fields` on every response). */
-type HiddenField = { name: string; is_set: boolean };
+interface IHiddenField {
+  name: string;
+  is_set: boolean;
+}
 
 /** One field's render inputs, shared by `renderValue` and `FieldGroup`. */
-interface IFieldRender {
+interface IRenderValueParams {
   field: IEntityField;
   data: Record<string, unknown>;
   copyable: boolean;
@@ -41,19 +45,19 @@ const getHiddenField = ({
 }: {
   key: string;
   data: Record<string, unknown>;
-}): HiddenField | undefined => {
+}): IHiddenField | undefined => {
   const hidden = data.hidden_fields;
   if (!Array.isArray(hidden)) {
     return undefined;
   }
-  return (hidden as HiddenField[]).find((field) => field.name === key);
+  return (hidden as IHiddenField[]).find((field) => field.name === key);
 };
 
 const renderValue = ({
   field,
   data,
   copyable,
-}: IFieldRender): React.ReactNode => {
+}: IRenderValueParams): React.ReactNode => {
   // Secrets aren't returned by the API; `hidden_fields` only reports whether they're set.
   const secret = getHiddenField({ key: field.key, data });
   if (secret) {
@@ -108,7 +112,11 @@ const renderValue = ({
   return String(value);
 };
 
-const FieldGroup: React.FC<IFieldRender> = ({ field, data, copyable }) => (
+const FieldGroup: React.FC<IRenderValueParams> = ({
+  field,
+  data,
+  copyable,
+}) => (
   <DescriptionListGroup>
     {field.helpText ? (
       <DescriptionListTermHelpText>
@@ -128,10 +136,8 @@ const FieldGroup: React.FC<IFieldRender> = ({ field, data, copyable }) => (
 );
 
 /**
- * Read-only `DescriptionList` built from an entity's catalog field descriptors,
- * reading values by `field.key`. Plugin-generic. A field's `helpText` renders a term
- * popover; `copyableKeys` is a presentation-only opt-in. Callers split `fields` by
- * group for sectioned layouts.
+ * Read-only `DescriptionList` of an entity's catalog fields (value by `field.key`,
+ * `helpText` as a term popover).
  */
 export const EntityDetailFields: React.FC<IEntityDetailFieldsProps> = ({
   fields,

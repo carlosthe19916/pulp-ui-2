@@ -15,7 +15,7 @@ flowchart TB
 ## The catalog
 
 Data only, never UI. One file per plugin in `catalog/plugins/`, shared field groups in
-`base-fields.ts`, assembled by `catalog/index.ts` and resolved per `pulp_type`
+`baseFields.ts`, assembled by `catalog/index.ts` and resolved per `pulp_type`
 (`getPlugin`, `getAvailablePlugins`, `getContentType(s)`). Types are in `catalog/types.ts`.
 
 A plugin (`IPluginDefinition`) declares:

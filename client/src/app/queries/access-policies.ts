@@ -12,11 +12,12 @@ import type {
   PaginatedAccessPolicyResponseList,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const AccessPoliciesQueryKey = "access-policies";
 

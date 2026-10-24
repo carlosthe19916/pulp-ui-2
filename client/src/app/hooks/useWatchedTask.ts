@@ -9,9 +9,8 @@ import {
 const FAILED_STATES = new Set(["failed", "canceled"]);
 
 /**
- * Polls one dispatched task until it is terminal (or 404s), then calls `onSettled`
- * once with its outcome. The caller owns what to show (toast, inline alert) and
- * clears `taskHref` afterwards. Polling stops when the caller unmounts.
+ * Polls one dispatched task until terminal (or 404), then calls `onSettled` once; the
+ * caller shows the outcome and clears `taskHref`.
  */
 export const useWatchedTask = ({
   taskHref,

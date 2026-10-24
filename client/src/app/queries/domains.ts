@@ -9,27 +9,28 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
   Domain,
+  DomainBackendMigrator,
   DomainResponse,
   DomainsListData,
   PaginatedDomainResponseList,
   PatchedDomain,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
+import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { taskKeys } from "./tasks";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const DomainsQueryKey = "domains";
 
 export type IDomainListParams = ListParams<DomainsListData>;
 
 /**
- * Query-key factory mirroring the REST paths; identifying segments precede params
- * so a prefix invalidates all variants. `apiDomain` is the pulp *deployment*
- * domain (`IPulpDomain`) — not the Domains *resource* this module lists.
+ * Query-key factory mirroring the REST paths (a prefix invalidates all variants).
+ * `apiDomain` is the deployment domain, not the Domains resource listed here.
  */
 export const domainKeys = {
   all: () => [DomainsQueryKey] as const,
@@ -159,7 +160,7 @@ export const useDomainDeleteMutation = (
 export interface IDomainMigrateVariables {
   /** The domain whose artifacts move to the new storage. */
   domainName: string;
-  body: { storage_class: string; storage_settings: Record<string, unknown> };
+  body: DomainBackendMigrator;
 }
 
 /**

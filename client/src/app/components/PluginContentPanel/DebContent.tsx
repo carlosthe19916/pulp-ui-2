@@ -7,6 +7,8 @@ import { Label } from "@patternfly/react-core";
 import type { DebPackageResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -17,8 +19,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 const splitList = (value?: string) =>
   value

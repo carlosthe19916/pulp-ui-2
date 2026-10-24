@@ -3,8 +3,8 @@ import { type FieldValues, type Path, type PathValue } from "react-hook-form";
 import { TextInput, type TextInputProps } from "@patternfly/react-core";
 
 import {
-  type IBaseHookFormPFGroupControllerProps,
   HookFormPFGroupController,
+  type IBaseHookFormPFGroupControllerProps,
 } from "@app/components/HookFormPFGroupController";
 import { getValidatedFromErrors } from "@app/utils/utils";
 

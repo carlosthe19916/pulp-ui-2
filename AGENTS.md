@@ -34,7 +34,7 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 │           ├── pages/        # page components, grouped by area
 │           ├── queries/      # TanStack Query hooks, one file per domain
 │           ├── components/   # shared UI components
-│           ├── hooks/        # custom hooks (useBranding, useStorage)
+│           ├── hooks/        # custom hooks (useStorage, useSelectedDomain)
 │           ├── context/      # React context providers
 │           ├── layout/       # app shell / layout components
 │           ├── utils/        # shared utilities

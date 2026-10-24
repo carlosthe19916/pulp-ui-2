@@ -6,9 +6,8 @@ import { useTasksByPrnQueries } from "@app/queries/tasks";
 export type EntityTaskKind = "delete" | "update" | "sync" | "modify";
 
 /**
- * Surfaced row op for a Pulp task name, else null: `…general_delete`/`…general_update`,
- * any plugin's `…synchronize`, and a content change (`…add_and_remove`, container
- * `…recursive_add_content`/`…recursive_remove_content`).
+ * The surfaced row op for a Pulp task name (delete, update, sync, content change), else
+ * null.
  */
 export const entityTaskKindFromName = (
   name?: string | null,
@@ -53,11 +52,8 @@ interface IRowTasks {
 }
 
 /**
- * Per-row in-flight task status from the live tasks endpoint (joined by
- * reserved-resource PRN), so it survives reloads. Each row probes `limit: 1` and
- * reads the paginated `count` — enough for 0 / 1 / 2+ and the single-task label,
- * without fetching the list. Fires `onSettled` when a row's count drops; the
- * caller decides what to do (e.g. refetch).
+ * Per-row in-flight task status from the live tasks endpoint (by reserved-resource PRN),
+ * so it survives reloads. Fires `onSettled` when a row's count drops.
  */
 export const useResourceTasks = <T extends IResourceEntity>({
   entities,
@@ -67,21 +63,15 @@ export const useResourceTasks = <T extends IResourceEntity>({
   /** Called for a row when its active-task count drops (a task settled). */
   onSettled: (event: IResourceTaskSettled<T>) => void;
 }) => {
-  const prns = useMemo(
-    () =>
-      entities
-        .map((entity) => entity.prn)
-        .filter((prn): prn is string => !!prn),
-    [entities],
-  );
+  const prns = entities
+    .map((entity) => entity.prn)
+    .filter((prn): prn is string => !!prn);
   const probesByPrn = useTasksByPrnQueries({ prns });
 
   // prn → { count, sample task }
   const activeByPrn = useMemo(() => {
     const map = new Map<string, IRowTasks>();
-    for (const prn of prns) {
-      const probe = probesByPrn.get(prn);
-      if (!probe) continue;
+    probesByPrn.forEach((probe, prn) => {
       const kind = entityTaskKindFromName(probe.task?.name);
       const task: IActiveResourceTask | undefined =
         probe.task?.pulp_href && kind
@@ -92,9 +82,9 @@ export const useResourceTasks = <T extends IResourceEntity>({
             }
           : undefined;
       map.set(prn, { count: probe.count, task });
-    }
+    });
     return map;
-  }, [probesByPrn, prns]);
+  }, [probesByPrn]);
 
   // Keep the latest callback current without making it an effect dependency.
   const onSettledRef = useRef(onSettled);

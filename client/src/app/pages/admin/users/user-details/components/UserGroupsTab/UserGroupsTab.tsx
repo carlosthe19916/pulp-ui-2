@@ -4,17 +4,17 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 
 import { Button, PaginationVariant } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
-  DataViewToolbar,
   DataViewFilters,
   DataViewTable,
   DataViewTextFilter,
+  DataViewToolbar,
   type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { GroupResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";

@@ -1,4 +1,4 @@
-import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
+import { type Resolver, useForm, type UseFormReturn } from "react-hook-form";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -31,7 +31,7 @@ const DEFAULT_STORAGE_CLASS: StorageClassEnum =
 
 const NAME_PATTERN = /^[-a-zA-Z0-9_]+$/;
 
-export type DomainFormValues = {
+export interface IDomainFormValues {
   name: string;
   description: string;
   storage_class: StorageClassEnum;
@@ -39,7 +39,7 @@ export type DomainFormValues = {
   hide_guarded_distributions: boolean;
   /** Per-backend `storage_settings` values, keyed by field key. */
   storage_settings: Record<string, string>;
-};
+}
 
 const buildDomainSchema = () =>
   yup.object({
@@ -86,7 +86,7 @@ const toStorageSettingsDefaults = (
   );
 };
 
-const toDefaults = (domain?: DomainResponse): DomainFormValues => ({
+const toDefaults = (domain?: DomainResponse): IDomainFormValues => ({
   name: domain?.name ?? "",
   description: domain?.description ?? "",
   storage_class: domain?.storage_class ?? DEFAULT_STORAGE_CLASS,
@@ -104,13 +104,13 @@ const collectStorageSettings = (
       .filter(([, value]) => value),
   );
 
-interface IUseDomainFormArgs {
+interface IUseDomainFormOptions {
   domain?: DomainResponse;
   onClose: () => void;
 }
 
 interface IUseDomainFormResult {
-  form: UseFormReturn<DomainFormValues>;
+  form: UseFormReturn<IDomainFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -120,7 +120,7 @@ interface IUseDomainFormResult {
 export const useDomainForm = ({
   domain,
   onClose,
-}: IUseDomainFormArgs): IUseDomainFormResult => {
+}: IUseDomainFormOptions): IUseDomainFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !domain;
@@ -159,10 +159,10 @@ export const useDomainForm = ({
       ),
   });
 
-  const form = useForm<DomainFormValues>({
+  const form = useForm<IDomainFormValues>({
     // Cast needed: the `.when(...)`-built `storage_settings` schema is a generic yup
     // object that doesn't infer as Record<string, string>.
-    resolver: yupResolver(buildDomainSchema()) as Resolver<DomainFormValues>,
+    resolver: yupResolver(buildDomainSchema()) as Resolver<IDomainFormValues>,
     defaultValues: toDefaults(domain),
     mode: "onChange",
   });

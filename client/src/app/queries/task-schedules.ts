@@ -6,10 +6,11 @@ import type {
   TaskSchedulesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath } from "./utils/pulpApi";
 
 export const TaskSchedulesQueryKey = "task-schedules";
 

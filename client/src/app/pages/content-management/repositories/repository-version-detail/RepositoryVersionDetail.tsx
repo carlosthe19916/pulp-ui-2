@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import {
   Alert,
   AlertActionLink,
@@ -12,12 +13,10 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
-import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
-import { getPlugin, type IRepositoryAction } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
+import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { RepositoryContent } from "@app/components/RepositoryContent";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -36,6 +35,7 @@ import {
 } from "@app/queries/repositories";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
+import { getPlugin, type IRepositoryAction } from "@catalog";
 
 import { VersionVulnerabilityAlert } from "./components/VersionVulnerabilityAlert";
 

@@ -10,7 +10,11 @@ const noAuthValue: IAuthContext = {
   logout: () => {},
 };
 
-export const NoAuthProvider: React.FC<{ children: React.ReactNode }> = ({
+interface INoAuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const NoAuthProvider: React.FC<INoAuthProviderProps> = ({
   children,
 }) => {
   return <AuthContext value={noAuthValue}>{children}</AuthContext>;

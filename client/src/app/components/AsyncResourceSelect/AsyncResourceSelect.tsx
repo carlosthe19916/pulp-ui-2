@@ -1,8 +1,10 @@
+import type React from "react";
 import { useState } from "react";
+
+import type { ResourceKind } from "@catalog";
 
 import { Label, LabelGroup, Stack, StackItem } from "@patternfly/react-core";
 
-import type { ResourceKind } from "@catalog";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 
@@ -19,20 +21,17 @@ interface IAsyncResourceSelectProps {
 }
 
 /**
- * Picker for an `asyncResource` field: a server-side typeahead that loads options
- * only while the dropdown is open and refines them as the user types (debounced).
- * Nothing is fetched until the user opens it, and the selected value's label is
- * resolved separately so it shows correctly in edit mode even when outside the
- * current search page.
+ * Server-side typeahead for an `asyncResource` field; fetches only while open and refines
+ * (debounced) as the user types.
  */
-export const AsyncResourceSelect = ({
+export const AsyncResourceSelect: React.FC<IAsyncResourceSelectProps> = ({
   id,
   label,
   resourceKind,
   value,
   onChange,
   filter,
-}: IAsyncResourceSelectProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebouncedValue({ value: term });
@@ -74,14 +73,9 @@ interface IAsyncResourceMultiSelectProps {
  * Multi-value `asyncResource` picker: the same typeahead adds a pick, and the
  * picks show as removable labels.
  */
-export const AsyncResourceMultiSelect = ({
-  id,
-  label,
-  resourceKind,
-  value,
-  onChange,
-  filter,
-}: IAsyncResourceMultiSelectProps) => {
+export const AsyncResourceMultiSelect: React.FC<
+  IAsyncResourceMultiSelectProps
+> = ({ id, label, resourceKind, value, onChange, filter }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebouncedValue({ value: term });

@@ -1,4 +1,5 @@
 import type React from "react";
+
 import { Link } from "@tanstack/react-router";
 import prettyBytes from "pretty-bytes";
 
@@ -20,10 +21,10 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPlugin } from "@catalog";
 
 import { VulnerabilitiesCard } from "./components/VulnerabilitiesCard";
 import { WorkersCard } from "./components/WorkersCard";

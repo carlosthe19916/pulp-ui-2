@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 import {
   Divider,
@@ -17,9 +18,9 @@ import OutlinedSunIcon from "@patternfly/react-icons/dist/esm/icons/outlined-sun
 
 import {
   CONTRAST_MODES,
+  type ContrastMode,
   THEME_MODES,
   THEME_VARIANTS,
-  type ContrastMode,
   type ThemeMode,
   type ThemeVariant,
 } from "@app/context/Theme/ThemeContext";
@@ -73,7 +74,11 @@ const eventButtonId = (
   event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
 ): string => (event.currentTarget as HTMLElement).id;
 
-export const ThemeSelector: React.FC<{ id?: string }> = ({
+interface IThemeSelectorProps {
+  id?: string;
+}
+
+export const ThemeSelector: React.FC<IThemeSelectorProps> = ({
   id = "theme-selector",
 }) => {
   const { mode, setMode, variant, setVariant, contrast, setContrast } =

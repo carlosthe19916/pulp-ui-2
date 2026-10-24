@@ -6,9 +6,48 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+
+// client/src style rules; .rulesync/rules/code-style.md covers what lint can't.
+const PF_CLASS_MESSAGE =
+  "Import the class from @patternfly/react-styles/css/... and combine with css().";
+const clientRestrictedSyntax = [
+  {
+    selector: "TSEnumDeclaration",
+    message: "Use a string-literal union or an `as const` object.",
+  },
+  {
+    selector: "ExportDefaultDeclaration",
+    message: "Use a named export.",
+  },
+  {
+    selector: "FunctionDeclaration:not([typeParameters])",
+    message: "Use an arrow const; `function` is only for generic helpers.",
+  },
+  {
+    selector:
+      "CallExpression[callee.name='memo'], CallExpression[callee.object.name='React'][callee.property.name='memo']",
+    message: "Don't use React.memo.",
+  },
+];
+const pfClassRestrictedSyntax = [
+  {
+    selector: "Literal[value=/\\bpf-(v6-c|m|u|l)-/]",
+    message: PF_CLASS_MESSAGE,
+  },
+  {
+    selector: "TemplateElement[value.raw=/\\bpf-(v6-c|m|u|l)-/]",
+    message: PF_CLASS_MESSAGE,
+  },
+];
+const iconBarrelImport = {
+  name: "@patternfly/react-icons",
+  message:
+    "Import the icon from its deep path: @patternfly/react-icons/dist/esm/icons/<name>-icon.",
+};
 
 export default defineConfig([
   globalIgnores(["**/dist", "**/coverage"]),
@@ -93,5 +132,69 @@ export default defineConfig([
       "client/src/routeTree.gen.ts",
       "client/test-setup.ts",
     ],
+  },
+  {
+    files: ["client/src/**/*.ts", "client/src/**/*.tsx"],
+    ignores: [
+      "client/src/app/client/**",
+      "client/src/routeTree.gen.ts",
+      "client/src/vite-env.d.ts",
+    ],
+    plugins: {
+      "simple-import-sort": simpleImportSort,
+    },
+    rules: {
+      // Five blocks: react → packages → @patternfly → @app/@catalog → relative.
+      "simple-import-sort/imports": [
+        "error",
+        {
+          groups: [
+            ["^\\u0000?react\\u0000?$", "^\\u0000?react-"],
+            ["^\\u0000?@?\\w"],
+            ["^\\u0000?@patternfly/"],
+            ["^\\u0000?@(app|catalog)(/|$)"],
+            ["^\\u0000?\\."],
+          ],
+        },
+      ],
+      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
+      "no-console": ["error", { allow: ["error"] }],
+      "no-restricted-imports": ["error", { paths: [iconBarrelImport] }],
+      "no-restricted-syntax": [
+        "error",
+        ...clientRestrictedSyntax,
+        ...pfClassRestrictedSyntax,
+      ],
+    },
+  },
+  {
+    // Tests may assert on rendered PatternFly class names.
+    files: ["client/src/**/*.test.ts", "client/src/**/*.test.tsx"],
+    rules: {
+      "no-restricted-syntax": ["error", ...clientRestrictedSyntax],
+    },
+  },
+  {
+    // App-root modules are shared; pages depend on them, never the reverse.
+    files: [
+      "client/src/app/components/**",
+      "client/src/app/hooks/**",
+      "client/src/app/utils/**",
+      "client/src/app/context/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [iconBarrelImport],
+          patterns: [
+            {
+              group: ["@app/pages", "@app/pages/*", "**/pages/*"],
+              message: "App-root modules never import from pages/.",
+            },
+          ],
+        },
+      ],
+    },
   },
 ]);

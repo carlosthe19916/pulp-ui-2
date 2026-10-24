@@ -1,3 +1,4 @@
+import type React from "react";
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
@@ -44,8 +45,12 @@ const renderRow = async ({
     );
   });
 
+interface IMarkerProps {
+  onMount: () => void;
+}
+
 /** Reports each mount via `onMount`, so a remount (broken keep-alive) is visible. */
-const Marker: React.FC<{ onMount: () => void }> = ({ onMount }) => {
+const Marker: React.FC<IMarkerProps> = ({ onMount }) => {
   useEffect(() => onMount(), [onMount]);
   return <span>detail</span>;
 };

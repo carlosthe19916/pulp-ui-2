@@ -5,8 +5,8 @@ import {
   MultipleFileUploadStatus,
   MultipleFileUploadStatusItem,
   ProgressStep,
-  type ProgressStepProps,
   ProgressStepper,
+  type ProgressStepProps,
   Stack,
   StackItem,
 } from "@patternfly/react-core";

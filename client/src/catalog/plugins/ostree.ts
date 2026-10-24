@@ -1,6 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
+import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 const ostreeRepositoryExtras: IEntityField[] = [
@@ -38,7 +38,6 @@ export const ostree: IPluginDefinition = {
   app: { isAvailable: whenInstalled("ostree", "pulp-ostree") },
   rest: { pulpType: "ostree.ostree", apiPath: "ostree/ostree" },
   entities: {
-    // OSTree repository: a remote to sync from plus static-delta generation.
     repository: {
       form: {
         isWizard: false,
@@ -51,7 +50,6 @@ export const ostree: IPluginDefinition = {
       archiveImport: true,
     },
 
-    // OSTree remote: sync depth plus ref include/exclude filters.
     remote: {
       form: {
         isWizard: true,
@@ -60,7 +58,6 @@ export const ostree: IPluginDefinition = {
       },
     },
 
-    // OSTree distribution: serves a repository or a specific repository version.
     distribution: {
       form: {
         isWizard: false,

@@ -1,6 +1,6 @@
 import type React from "react";
-import { useMemo } from "react";
 
+import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
 import {
   Bullseye,
   DataList,
@@ -10,9 +10,8 @@ import {
   DataListItemRow,
   Skeleton,
 } from "@patternfly/react-core";
-import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
 
-import type { PageHeaderAction } from "@app/components/PageHeaderActionsMenu";
+import type { IPageHeaderAction } from "@app/components/PageHeaderActionsMenu";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import type { IContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
@@ -44,13 +43,12 @@ interface IContentDataListProps {
   /** Bulk-selection checkboxes; absent when the list isn't selectable. */
   bulk?: { selection: IContentUnitSelection; isDisabled: boolean };
   /** Row kebab actions for a unit. */
-  rowActions?: (unit: IContentUnit) => PageHeaderAction[];
+  rowActions?: (unit: IContentUnit) => IPageHeaderAction[];
 }
 
 /**
- * The global Content list as a PatternFly `DataList`: loading/empty/error states, row expansion
- * (a selected-set over hrefs), and one `ContentListItem` per unit. Presentational — the page owns
- * the `DataView` shell, toolbar, filters, and pagination.
+ * The global Content list as a PatternFly `DataList`, one `ContentListItem` per unit.
+ * Presentational: the page owns the `DataView` shell.
  */
 export const ContentDataList: React.FC<IContentDataListProps> = ({
   units,
@@ -64,11 +62,7 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
   bulk,
   rowActions,
 }) => {
-  // Row expansion is a selected-set over the rows' hrefs (same hook used for selection).
-  const hrefs = useMemo(
-    () => units.map((unit) => unit.pulp_href ?? ""),
-    [units],
-  );
+  const hrefs = units.map((unit) => unit.pulp_href ?? "");
   const expansion = useSelectionState<string>({ items: hrefs });
 
   if (isLoading) {

@@ -23,8 +23,8 @@ import {
 import { ContentDataList } from "@app/components/ContentDataList";
 import { ListPagination } from "@app/components/ListPagination";
 import {
-  MultiSelectFilter,
   type IMultiSelectOption,
+  MultiSelectFilter,
 } from "@app/components/MultiSelectFilter";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import {

@@ -24,16 +24,18 @@ export const contentUnitLabel = ({
   return href.split("/").filter(Boolean).pop() ?? href;
 };
 
+interface IToUnitRefsOptions<T> {
+  rows: T[];
+  rowHref?: (row: T) => string | null | undefined;
+  pulpType?: string;
+}
+
 /** A page of typed rows as selectable units (rows without an href are skipped). */
 export const toUnitRefs = <T>({
   rows,
   rowHref,
   pulpType,
-}: {
-  rows: T[];
-  rowHref?: (row: T) => string | null | undefined;
-  pulpType?: string;
-}) =>
+}: IToUnitRefsOptions<T>) =>
   rows.flatMap((row) => {
     const href = rowHref?.(row);
     return href

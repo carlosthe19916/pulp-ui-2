@@ -10,12 +10,18 @@ import {
 
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 
-/** Object access for resources without a detail page (distributions, publications…). */
-export const ObjectAccessModal: React.FC<{
+interface IObjectAccessModalProps {
   href: string;
   name: string;
   onClose: () => void;
-}> = ({ href, name, onClose }) => (
+}
+
+/** Object access for resources without a detail page (distributions, publications…). */
+export const ObjectAccessModal: React.FC<IObjectAccessModalProps> = ({
+  href,
+  name,
+  onClose,
+}) => (
   <Modal isOpen onClose={onClose} variant="medium">
     <ModalHeader title={`Access — "${name}"`} />
     <ModalBody>

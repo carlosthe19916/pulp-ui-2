@@ -1,4 +1,5 @@
-import { useMemo, useState, type Ref } from "react";
+import type React from "react";
+import { type Ref, useState } from "react";
 
 import {
   Badge,
@@ -44,14 +45,10 @@ interface IMultiSelectFilterProps {
 }
 
 /**
- * A generic searchable, scrollable, optionally-grouped multi-select filter for
- * `DataViewFilters`. Like the library's `DataViewCheckboxFilter` (renders a
- * `ToolbarFilter` so DataView manages its chips and attribute-group visibility) but
- * adds an in-menu search box, a capped/scrolling list, and `SelectGroup` sections
- * when options carry a `group`. Selected values are emitted as `pulp_type__in`-style
- * arrays via `onChange`.
+ * Searchable, scrollable, grouped multi-select filter for `DataViewFilters`; like
+ * `DataViewCheckboxFilter`, its `ToolbarFilter` lets DataView manage chips.
  */
-export const MultiSelectFilter = ({
+export const MultiSelectFilter: React.FC<IMultiSelectFilterProps> = ({
   options,
   searchPlaceholder = "Search…",
   maxMenuHeight = "300px",
@@ -60,35 +57,30 @@ export const MultiSelectFilter = ({
   value = NO_SELECTION,
   onChange,
   showToolbarItem,
-}: IMultiSelectFilterProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return options;
-    return options.filter(
-      (option) =>
-        option.label.toLowerCase().includes(query) ||
-        option.value.toLowerCase().includes(query),
-    );
-  }, [options, search]);
+  const query = search.trim().toLowerCase();
+  const filtered = query
+    ? options.filter(
+        (option) =>
+          option.label.toLowerCase().includes(query) ||
+          option.value.toLowerCase().includes(query),
+      )
+    : options;
 
-  // Bucket the (filtered) options by `group`, preserving first-seen order.
-  const groups = useMemo(() => {
-    const ordered: { group?: string; options: IMultiSelectOption[] }[] = [];
-    const index = new Map<string | undefined, IMultiSelectOption[]>();
-    for (const option of filtered) {
-      let bucket = index.get(option.group);
-      if (!bucket) {
-        bucket = [];
-        index.set(option.group, bucket);
-        ordered.push({ group: option.group, options: bucket });
-      }
-      bucket.push(option);
+  const groups: { group?: string; options: IMultiSelectOption[] }[] = [];
+  const index = new Map<string | undefined, IMultiSelectOption[]>();
+  for (const option of filtered) {
+    let bucket = index.get(option.group);
+    if (!bucket) {
+      bucket = [];
+      index.set(option.group, bucket);
+      groups.push({ group: option.group, options: bucket });
     }
-    return ordered;
-  }, [filtered]);
+    bucket.push(option);
+  }
   const hasGroups = groups.some((bucket) => bucket.group != null);
 
   const toggleValue = (optionValue: string) => {

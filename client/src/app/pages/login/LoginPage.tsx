@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
+import pfBackground from "@patternfly/patternfly/assets/images/pf-background.svg";
 import {
   ListItem,
   ListVariant,
@@ -10,17 +12,16 @@ import {
   LoginPage as PFLoginPage,
 } from "@patternfly/react-core";
 import RhUiErrorFillIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-error-fill-icon";
-import pfBackground from "@patternfly/patternfly/assets/images/pf-background.svg";
 
 import { ThemeSelector } from "@app/components/ThemeSelector";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import {
   encodeBasicAuthHeader,
   saveCredentials,
 } from "@app/context/Auth/basicAuthHelpers";
 import { useApiStatus } from "@app/hooks/useApiStatus";
-import useBranding from "@app/hooks/useBranding";
 import { useTheme } from "@app/hooks/useTheme";
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
+import { getBranding } from "@app/utils/branding";
 
 const INVALID_CREDENTIALS = "Invalid login credentials.";
 const SERVER_ERROR = "Server error. Please come back later.";
@@ -32,7 +33,7 @@ export const LoginPage: React.FC = () => {
 
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
-  const branding = useBranding();
+  const branding = getBranding();
   const { isGlass } = useTheme();
 
   const [username, setUsername] = useState("");
@@ -60,10 +61,13 @@ export const LoginPage: React.FC = () => {
     clearHelperText();
   };
 
-  const showInvalidCredentials = (
-    usernameValid: boolean,
-    passwordValid: boolean,
-  ) => {
+  const showInvalidCredentials = ({
+    usernameValid,
+    passwordValid,
+  }: {
+    usernameValid: boolean;
+    passwordValid: boolean;
+  }) => {
     setIsValidUsername(usernameValid);
     setIsValidPassword(passwordValid);
     setHelperText(INVALID_CREDENTIALS);
@@ -84,7 +88,7 @@ export const LoginPage: React.FC = () => {
     const usernameValid = !!username;
     const passwordValid = !!password;
     if (!usernameValid || !passwordValid) {
-      showInvalidCredentials(usernameValid, passwordValid);
+      showInvalidCredentials({ usernameValid, passwordValid });
       return;
     }
 
@@ -102,7 +106,7 @@ export const LoginPage: React.FC = () => {
         },
       );
       if (response.status === 401) {
-        showInvalidCredentials(false, false);
+        showInvalidCredentials({ usernameValid: false, passwordValid: false });
         return;
       }
       if (!response.ok) {

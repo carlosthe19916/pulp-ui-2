@@ -1,11 +1,13 @@
+import { useCallback } from "react";
+
 import {
   queryOptions,
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
-  useSuspenseQuery,
   type UseQueryResult,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -17,25 +19,21 @@ import type {
   TaskResponse,
   TasksListData,
 } from "@app/client";
-import { DEFAULT_REFETCH_INTERVAL } from "@app/Constants";
+import { DEFAULT_REFETCH_INTERVAL } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getTaskErrorMessage } from "@app/utils/utils";
+
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const TasksQueryKey = "tasks";
 
-export type TaskState =
-  | "canceled"
-  | "canceling"
-  | "completed"
-  | "failed"
-  | "running"
-  | "skipped"
-  | "waiting";
+export type TaskState = NonNullable<
+  NonNullable<TasksListData["query"]>["state"]
+>;
 
 export type ITaskListParams = ListParams<TasksListData>;
 
@@ -54,8 +52,7 @@ export const isCancelable = (state?: string | null): boolean =>
   state === "running" || state === "waiting";
 
 /**
- * Query-key factory mirroring the REST paths. `domain` is the Pulp deployment
- * slug that scopes every API path. Two tiers: folders (invalidateQueries
+ * Query-key factory mirroring the REST paths, in two tiers: folders (invalidation
  * prefixes) and the real query keys built on them.
  */
 export const taskKeys = {
@@ -87,10 +84,14 @@ const PRN_TASK_STATES = [
   "canceling",
   "failed",
   "canceled",
-] as const;
+] as const satisfies readonly TaskState[];
 
 /** Strictly-active states — the probe's `count` is the exact in-progress count. */
-const PRN_ACTIVE_STATES = ["running", "waiting", "canceling"] as const;
+const PRN_ACTIVE_STATES = [
+  "running",
+  "waiting",
+  "canceling",
+] as const satisfies readonly TaskState[];
 
 /**
  * Shared `GET tasks/`, re-wrapping the single `ordering` to the spec's array
@@ -121,9 +122,8 @@ export interface IPrnTaskProbe {
 }
 
 /**
- * Per-PRN in-flight probe, one query each (the task API has no OR-across-resources
- * filter). Fetches `limit: 1` but reads the paginated `count`, giving the exact
- * active count plus a sample task without pulling the whole list.
+ * One in-flight probe per PRN (the task API can't OR across resources); `limit: 1` plus
+ * the paginated `count` gives the active count and a sample task.
  */
 export const useTasksByPrnQueries = ({
   prns,
@@ -131,6 +131,22 @@ export const useTasksByPrnQueries = ({
   prns: string[];
 }): Map<string, IPrnTaskProbe> => {
   const domain = useSelectedDomain();
+  // `combine` must be referentially stable or useQueries returns a new Map every
+  // render; key it on the PRN list's content, not the (often fresh) array.
+  const prnsKey = prns.join("\n");
+  const combine = useCallback(
+    (
+      results: UseQueryResult<IPrnTaskProbe, DrfAxiosError>[],
+    ): Map<string, IPrnTaskProbe> => {
+      const byPrn = new Map<string, IPrnTaskProbe>();
+      prnsKey.split("\n").forEach((prn, index) => {
+        const data = results[index]?.data;
+        if (data) byPrn.set(prn, data);
+      });
+      return byPrn;
+    },
+    [prnsKey],
+  );
   return useQueries({
     queries: prns.map((prn) =>
       queryOptions<IPrnTaskProbe, DrfAxiosError>({
@@ -150,16 +166,7 @@ export const useTasksByPrnQueries = ({
           (query.state.data?.count ?? 0) > 0 ? DEFAULT_REFETCH_INTERVAL : false,
       }),
     ),
-    combine: (
-      results: UseQueryResult<IPrnTaskProbe, DrfAxiosError>[],
-    ): Map<string, IPrnTaskProbe> => {
-      const byPrn = new Map<string, IPrnTaskProbe>();
-      prns.forEach((prn, index) => {
-        const data = results[index]?.data;
-        if (data) byPrn.set(prn, data);
-      });
-      return byPrn;
-    },
+    combine,
   });
 };
 
@@ -214,9 +221,8 @@ export interface ITaskStateProbe {
 }
 
 /**
- * Polls a set of task hrefs (one query each) until each is terminal or 404s
- * (purged); keeps polling through transient errors. Returns a Map keyed by href.
- * Tracks dispatched tasks with no on-screen row yet (e.g. in-flight creates).
+ * Polls task hrefs (one query each) until terminal or 404 (purged), through transient
+ * errors; for dispatched tasks with no on-screen row yet.
  */
 export const useTaskDetailQueries = ({
   taskHrefs,

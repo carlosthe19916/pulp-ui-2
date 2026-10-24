@@ -6,6 +6,8 @@ import type { HuggingFaceHuggingFaceContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
 
+import type { IPluginContentProps } from "./contentFields";
+import { basename, facts } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -13,8 +15,6 @@ import {
   InstallSnippet,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { basename, facts } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 /** Hub "Files and versions": one file of a repo at a revision. */
 export const HuggingFaceContent: React.FC<IPluginContentProps> = ({ href }) => {

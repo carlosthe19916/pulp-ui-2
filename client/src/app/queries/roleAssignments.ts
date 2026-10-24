@@ -1,10 +1,10 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -16,14 +16,15 @@ import type {
   UserRoleResponse,
   UsersRolesListData,
 } from "@app/client";
+
 import { groupKeys } from "./groups";
 import { userKeys } from "./users";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
-import { settleBatch } from "./utils/settleBatch";
 import type { IBatchResult } from "./utils/settleBatch";
+import { settleBatch } from "./utils/settleBatch";
 
 /*
  * Users and groups expose the same nested `{href}roles/` collection (pulpcore

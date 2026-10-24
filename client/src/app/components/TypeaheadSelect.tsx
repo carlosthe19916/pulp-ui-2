@@ -1,4 +1,5 @@
-import { useMemo, useState, type Ref } from "react";
+import type React from "react";
+import { type Ref, useState } from "react";
 
 import {
   Divider,
@@ -45,7 +46,7 @@ interface ITypeaheadSelectProps {
 }
 
 /** Single-select typeahead built on PatternFly Select. */
-export const TypeaheadSelect = ({
+export const TypeaheadSelect: React.FC<ITypeaheadSelectProps> = ({
   id,
   ariaLabel,
   placeholder = "Select…",
@@ -58,7 +59,7 @@ export const TypeaheadSelect = ({
   onOpenChange,
   selectedLabel: selectedLabelProp,
   isToggleFullWidth = true,
-}: ITypeaheadSelectProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
   // Keep the last picked option so the toggle still shows its label after a new
@@ -78,20 +79,15 @@ export const TypeaheadSelect = ({
     onFilterChange?.(next);
   };
 
-  const filtered = useMemo(() => {
-    if (isServerFiltered) {
-      return options;
-    }
-    const query = filter.trim().toLowerCase();
-    if (!query) {
-      return options;
-    }
-    return options.filter(
-      (option) =>
-        option.label.toLowerCase().includes(query) ||
-        option.value.toLowerCase().includes(query),
-    );
-  }, [filter, options, isServerFiltered]);
+  const query = filter.trim().toLowerCase();
+  const filtered =
+    isServerFiltered || !query
+      ? options
+      : options.filter(
+          (option) =>
+            option.label.toLowerCase().includes(query) ||
+            option.value.toLowerCase().includes(query),
+        );
 
   return (
     <Select

@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { Alert, FormAlert } from "@patternfly/react-core";
 
 import type { IMutationErrorMessage } from "@app/utils/utils";
@@ -8,11 +10,10 @@ interface IFormSubmitErrorProps {
 }
 
 /**
- * Top-of-form submission-error alert. Rendered as the first child of a `<Form>`, it
- * shows a modal form's create/update/action failure inline (PatternFly Form error
- * guidelines) instead of a detached toast. See `.rulesync/rules/forms.md`.
+ * Top-of-form alert for a modal form's submission failure, rendered as the first child of
+ * a `<Form>` (see `.rulesync/rules/forms.md`).
  */
-export const FormSubmitError = ({ error }: IFormSubmitErrorProps) => {
+export const FormSubmitError: React.FC<IFormSubmitErrorProps> = ({ error }) => {
   if (!error) return null;
   return (
     <FormAlert>

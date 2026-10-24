@@ -3,8 +3,8 @@ import type React from "react";
 import { AboutModal, Content, ContentVariants } from "@patternfly/react-core";
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
-import ENV from "@app/env";
-import useBranding from "@app/hooks/useBranding";
+import { ENV } from "@app/env";
+import { getBranding } from "@app/utils/branding";
 
 interface IButtonAboutAppProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export const AboutApp: React.FC<IButtonAboutAppProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { about } = useBranding();
+  const { about } = getBranding();
 
   return (
     <AboutModal

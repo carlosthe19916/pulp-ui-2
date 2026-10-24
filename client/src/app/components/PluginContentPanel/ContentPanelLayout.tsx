@@ -32,17 +32,25 @@ import { contentKeys } from "@app/queries/content";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { formatDateTime } from "@app/utils/utils";
 
-import { facts } from "./contentFields";
 import type { IFact, ILink } from "./contentFields";
+import { facts } from "./contentFields";
 
-/** Identity header on top, usage sections left, facts sidebar right. */
-export const ContentPanelLayout: React.FC<{
+interface IContentPanelLayoutProps {
   isLoading: boolean;
   error: DrfAxiosError | null;
   header: React.ReactNode;
   aside: React.ReactNode;
   children?: React.ReactNode;
-}> = ({ isLoading, error, header, aside, children }) => (
+}
+
+/** Identity header on top, usage sections left, facts sidebar right. */
+export const ContentPanelLayout: React.FC<IContentPanelLayoutProps> = ({
+  isLoading,
+  error,
+  header,
+  aside,
+  children,
+}) => (
   <LoadingWrapper isFetching={isLoading} fetchError={error}>
     <Stack hasGutter>
       <StackItem>{header}</StackItem>
@@ -65,7 +73,11 @@ export const ContentPanelLayout: React.FC<{
   </LoadingWrapper>
 );
 
-const Column: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+interface IColumnProps {
+  children: React.ReactNode;
+}
+
+const Column: React.FC<IColumnProps> = ({ children }) => (
   <Flex
     direction={{ default: "column" }}
     spaceItems={{ default: "spaceItemsXl" }}
@@ -74,13 +86,21 @@ const Column: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </Flex>
 );
 
-export const ContentHeader: React.FC<{
+interface IContentHeaderProps {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   version?: string;
   labels?: React.ReactNode;
   summary?: string;
-}> = ({ title, subtitle, version, labels, summary }) => (
+}
+
+export const ContentHeader: React.FC<IContentHeaderProps> = ({
+  title,
+  subtitle,
+  version,
+  labels,
+  summary,
+}) => (
   <Stack hasGutter>
     <Flex
       spaceItems={{ default: "spaceItemsSm" }}
@@ -107,10 +127,15 @@ export const ContentHeader: React.FC<{
   </Stack>
 );
 
-export const ContentSection: React.FC<{
+interface IContentSectionProps {
   title: string;
   children: React.ReactNode;
-}> = ({ title, children }) => (
+}
+
+export const ContentSection: React.FC<IContentSectionProps> = ({
+  title,
+  children,
+}) => (
   <Flex
     direction={{ default: "column" }}
     spaceItems={{ default: "spaceItemsSm" }}
@@ -122,19 +147,26 @@ export const ContentSection: React.FC<{
   </Flex>
 );
 
-export const InstallSnippet: React.FC<{
+interface IInstallSnippetProps {
   title?: string;
   command: string;
-}> = ({ title = "Install", command }) => (
+}
+
+export const InstallSnippet: React.FC<IInstallSnippetProps> = ({
+  title = "Install",
+  command,
+}) => (
   <ContentSection title={title}>
     <Snippet code={command} />
   </ContentSection>
 );
 
-export const LabelList: React.FC<{
+interface ILabelListProps {
   items: string[];
   emptyText: string;
-}> = ({ items, emptyText }) =>
+}
+
+export const LabelList: React.FC<ILabelListProps> = ({ items, emptyText }) =>
   items.length === 0 ? (
     <Content component={ContentVariants.small}>{emptyText}</Content>
   ) : (
@@ -147,10 +179,12 @@ export const LabelList: React.FC<{
     </LabelGroup>
   );
 
-export const FactList: React.FC<{ title: string; items: IFact[] }> = ({
-  title,
-  items,
-}) =>
+interface IFactListProps {
+  title: string;
+  items: IFact[];
+}
+
+export const FactList: React.FC<IFactListProps> = ({ title, items }) =>
   items.length > 0 && (
     <ContentSection title={title}>
       <DescriptionList isCompact>
@@ -164,7 +198,11 @@ export const FactList: React.FC<{ title: string; items: IFact[] }> = ({
     </ContentSection>
   );
 
-export const LinkList: React.FC<{ links: ILink[] }> = ({ links }) =>
+interface ILinkListProps {
+  links: ILink[];
+}
+
+export const LinkList: React.FC<ILinkListProps> = ({ links }) =>
   links.length > 0 && (
     <ContentSection title="Links">
       <Flex
@@ -191,7 +229,11 @@ export const LinkList: React.FC<{ links: ILink[] }> = ({ links }) =>
     </ContentSection>
   );
 
-export const Checksum: React.FC<{ value: string }> = ({ value }) => (
+interface IChecksumProps {
+  value: string;
+}
+
+export const Checksum: React.FC<IChecksumProps> = ({ value }) => (
   <ClipboardCopy
     variant="inline-compact"
     isReadOnly
@@ -204,7 +246,7 @@ export const Checksum: React.FC<{ value: string }> = ({ value }) => (
   </ClipboardCopy>
 );
 
-export const StorageFacts: React.FC<{
+interface IStorageFactsProps {
   /** The content unit; its labels are editable. */
   href: string;
   artifactHref?: string | null;
@@ -212,7 +254,16 @@ export const StorageFacts: React.FC<{
   size?: number;
   created?: string;
   labels?: { [key: string]: string | null };
-}> = ({ href, artifactHref, sha256, size, created, labels }) => {
+}
+
+export const StorageFacts: React.FC<IStorageFactsProps> = ({
+  href,
+  artifactHref,
+  sha256,
+  size,
+  created,
+  labels,
+}) => {
   const { data: artifact } = useArtifactDetailQuery({
     href: artifactHref ?? "",
   });

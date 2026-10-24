@@ -15,8 +15,8 @@ import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
@@ -39,11 +39,17 @@ const actionLabel = (name?: string | null): string => {
   return "Task";
 };
 
+interface IResourceTaskTableProps {
+  prn: string;
+}
+
 /**
  * Expanded content for a row's task cell: the full, paginated task list for the
  * resource (active + recent failures), each linkable to its detail and cancelable.
  */
-export const ResourceTaskTable: React.FC<{ prn: string }> = ({ prn }) => {
+export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
+  prn,
+}) => {
   const { addNotification } = useNotifications();
   const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
     perPage: 5,

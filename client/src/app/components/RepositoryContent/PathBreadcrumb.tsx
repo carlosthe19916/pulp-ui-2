@@ -4,12 +4,18 @@ import { Breadcrumb, BreadcrumbItem, Button } from "@patternfly/react-core";
 
 import { pathSegments } from "./browseHelpers";
 
-/** Breadcrumb over a path prefix; clicking a segment narrows the list to that folder. */
-export const PathBreadcrumb: React.FC<{
+interface IPathBreadcrumbProps {
   rootLabel: string;
   prefix: string;
   onNavigate: (prefix: string) => void;
-}> = ({ rootLabel, prefix, onNavigate }) => {
+}
+
+/** Breadcrumb over a path prefix; clicking a segment narrows the list to that folder. */
+export const PathBreadcrumb: React.FC<IPathBreadcrumbProps> = ({
+  rootLabel,
+  prefix,
+  onNavigate,
+}) => {
   const segments = pathSegments(prefix);
   const link = ({ label, target }: { label: string; target: string }) => (
     <Button variant="link" isInline onClick={() => onNavigate(target)}>

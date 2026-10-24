@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -5,9 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
-import { getPlugin } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
@@ -25,36 +24,34 @@ import type {
   TaskGroupOperationResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPlugin } from "@catalog";
+
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
+import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import {
   extractIdFromHref,
   parseRepositoryVersionHref,
   resolvePulpType,
 } from "./utils/pulpHref";
-import type { IPulpDomain } from "./utils/pulpApi";
 
 export const RepositoriesQueryKey = "repositories";
 
 export type IRepositoryListParams = ListParams<RepositoriesListData>;
 
 /**
- * Params for a repository's `versions/` list. The `versions` sub-resource is
- * plugin-neutral: every plugin's generated `*VersionsListData` has the same
- * `query` block (the only plugin-specific bit, the repository href, is a `path`
- * param that `ListParams` drops), so the File variant stands in as the canonical
- * spec source and stays in sync on `npm run generate`.
+ * Params for a repository's `versions/` list. Every plugin's `*VersionsListData` has the
+ * same `query` block, so the File one stands in.
  */
 export type IRepositoryVersionsListParams =
   ListParams<RepositoriesFileFileVersionsListData>;
 
 /**
- * Query-key factory mirroring the REST paths; identifying segments precede
- * params so a prefix invalidates all variants. Shared by the query options and
- * the generic CRUD mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
  */
 export const repositoryKeys = {
   all: () => [RepositoriesQueryKey] as const,
@@ -138,11 +135,8 @@ export const useRepositoryDeleteMutation = (
 };
 
 /**
- * Superset of every repository sync body. The `…/sync/` endpoint is uniform
- * across plugins (the path comes from the repository's own `pulp_href`); only
- * the body varies, and every plugin-specific field is optional and additive on
- * top of the base `remote`/`mirror`. Derived from the generated OpenAPI types so
- * regenerating the client surfaces any new `*RepositorySyncUrl` to fold in here.
+ * Superset of every plugin's repository sync body: the base `remote`/`mirror` plus
+ * optional plugin fields, derived from the generated types.
  */
 export type RepositorySyncBody = RepositorySyncUrl &
   Partial<FileRepositorySyncUrl> &
@@ -150,13 +144,8 @@ export type RepositorySyncBody = RepositorySyncUrl &
   Partial<RpmRepositorySyncUrl>;
 
 /**
- * Sync any repository. Plugin-neutral but path-constructed (like
- * `useRepositoryCreateMutation`): rather than appending to the server-provided
- * `pulp_href`, the client rebuilds the exact endpoint from parts it already
- * knows — the `repositories/` family, the plugin's catalog `apiPath` (e.g.
- * `python/python`), the resource `id`, and the active domain — so the URL is
- * explicit and typed at the call site. One mutation serves every plugin; the body
- * carries only the universal `remote`/`mirror`.
+ * Sync any repository. The endpoint is rebuilt from the catalog `apiPath`, id and domain
+ * (like create); the body carries `remote`/`mirror`.
  */
 export const useRepositorySyncMutation = (
   options?: IMutationCallbacks<
@@ -224,9 +213,8 @@ const toActionBody = (body: Record<string, unknown>) => {
 };
 
 /**
- * Runs a catalog repository action (sign, tag, copy, scan…): one POST that
- * starts a task. Invalidates the repository so its versions and running task
- * refresh.
+ * Runs a catalog repository action (sign, tag, copy…): one POST that starts a task, then
+ * invalidates the repository.
  */
 export const useRepositoryActionMutation = (
   options?: IMutationCallbacks<
@@ -442,9 +430,8 @@ export const useRepositoryVersionsListQuery = ({
   });
 
 /**
- * A plugin's read-only sub-resource of a repository (`{href}<path>`, e.g. Maven
- * `packages/` or `metrics/`). The caller passes the generated response and query
- * types; the key nests under the repository's detail so a sync refreshes it.
+ * A plugin's read-only repository sub-resource (`{href}<path>`, e.g. Maven `packages/`),
+ * keyed under the repository's detail so a sync refreshes it.
  */
 export const repositorySubResourceQueryOptions = <
   TData,

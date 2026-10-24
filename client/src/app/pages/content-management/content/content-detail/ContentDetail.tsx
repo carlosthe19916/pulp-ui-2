@@ -3,18 +3,17 @@ import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
+import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 import {
   Breadcrumb,
   BreadcrumbItem,
   PageSection,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
-import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/PageHeader";
 
-import { getRepositoryTypesForContent } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
 import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
@@ -24,6 +23,7 @@ import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentDetailQuery } from "@app/queries/content";
+import { getRepositoryTypesForContent } from "@catalog";
 
 import { ContentArtifactsTab } from "./components/ContentArtifactsTab";
 import { ContentRepositoriesTab } from "./components/ContentRepositoriesTab";

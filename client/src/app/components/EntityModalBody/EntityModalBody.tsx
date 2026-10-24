@@ -1,14 +1,16 @@
+import type React from "react";
 import { type ReactNode } from "react";
 
+import type { EntityType, IPlugin } from "@catalog";
+
+import {
+  type IEntityForEdit,
+  useEntityFormBase,
+} from "@app/hooks/pluginForm/useEntityForm";
 import {
   buildResourceFilter,
   type ResourceFilterMap,
 } from "@app/utils/resourceFilter";
-import type { EntityType, IPlugin } from "@catalog";
-import {
-  useEntityFormBase,
-  type IEntityForEdit,
-} from "@app/hooks/pluginForm/useEntityForm";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import { EntityFormBody } from "./EntityFormBody";
@@ -38,7 +40,7 @@ interface IPlainEntityFormBodyProps extends Omit<
 }
 
 /** Plain-form path: owns the single react-hook-form and wraps the family submit. */
-const PlainEntityFormBody = ({
+const PlainEntityFormBody: React.FC<IPlainEntityFormBodyProps> = ({
   kind,
   plugin,
   entity,
@@ -48,7 +50,7 @@ const PlainEntityFormBody = ({
   isSubmitting,
   resourceFilter,
   submitError,
-}: IPlainEntityFormBodyProps) => {
+}) => {
   const { form, isCreate, fields } = useEntityFormBase({
     kind,
     plugin,
@@ -72,12 +74,10 @@ const PlainEntityFormBody = ({
 };
 
 /**
- * Picks the form body from the catalog's `isWizard` (sibling of `EntityModalShell`,
- * which owns the chrome). It calls no hooks itself — each branch's hooks live in a
- * mounted sub-component — so the switch is safe. The caller must `key` it to remount
- * when the create type (and thus `useWizard`) or edited entity changes.
+ * Picks the plain or wizard form body from the catalog's `isWizard`. Calls no hooks; the
+ * caller must `key` it to remount when the create type or entity changes.
  */
-export const EntityModalBody = ({
+export const EntityModalBody: React.FC<IEntityModalBodyProps> = ({
   kind,
   plugin,
   entity,
@@ -88,7 +88,7 @@ export const EntityModalBody = ({
   onSubmit,
   isSubmitting,
   submitError,
-}: IEntityModalBodyProps) => {
+}) => {
   const resourceFilter = buildResourceFilter({ kind, plugin });
 
   if (useWizard) {

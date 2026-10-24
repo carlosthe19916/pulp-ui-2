@@ -26,26 +26,24 @@ import {
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
-import { dataViewBodyStates } from "@app/components/dataViewStates";
-import { ListPagination } from "@app/components/ListPagination";
-import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
-import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
-import { useColumnSort } from "@app/hooks/useColumnSort";
-import type { DataViewTh } from "@app/utils/dataViewTypes";
-import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { ListPagination } from "@app/components/ListPagination";
+import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
@@ -55,8 +53,10 @@ import {
 } from "@app/queries/distributions";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getPlugin } from "@catalog";
 
 import { DistributionDetailPanel } from "./components/DistributionDetailPanel";
 import { DistributionModal } from "./components/DistributionModal";

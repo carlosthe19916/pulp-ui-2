@@ -5,10 +5,8 @@ import prettyBytes from "pretty-bytes";
 
 import { Button, Content, ContentVariants } from "@patternfly/react-core";
 
-import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
-import { platformOf } from "@app/utils/pluginContentFormat";
-import { getPlugin } from "@catalog";
 import type { ContainerManifestResponse } from "@app/client";
+import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { Snippet } from "@app/components/Snippet";
 import {
   useContentTypeAllQuery,
@@ -16,6 +14,8 @@ import {
 } from "@app/queries/content";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { platformOf } from "@app/utils/pluginContentFormat";
+import { getPlugin } from "@catalog";
 
 import { isMultiArch, pullCommand } from "./browseHelpers";
 import { BrowseTable } from "./BrowseTable";

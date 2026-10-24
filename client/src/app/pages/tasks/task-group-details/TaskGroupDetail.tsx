@@ -29,6 +29,7 @@ import {
   useSuspenseTaskGroupDetailQuery,
   useTaskGroupCancelMutation,
 } from "@app/queries/task-groups";
+import type { TaskState } from "@app/queries/tasks";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const COUNTS = [
@@ -39,10 +40,14 @@ const COUNTS = [
   "canceled",
   "canceling",
   "skipped",
-] as const;
+] as const satisfies readonly TaskState[];
+
+interface ITaskGroupDetailProps {
+  href: string;
+}
 
 /** A task group (e.g. a replication): its counts, progress and tasks. */
-export const TaskGroupDetail: React.FC<{ href: string }> = ({ href }) => {
+export const TaskGroupDetail: React.FC<ITaskGroupDetailProps> = ({ href }) => {
   const { name: pulpDomain } = useSelectedDomain();
   const { addNotification } = useNotifications();
   const { data: group } = useSuspenseTaskGroupDetailQuery({ href });

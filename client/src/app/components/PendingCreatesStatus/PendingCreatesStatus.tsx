@@ -7,19 +7,22 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-import { getEntityLabel } from "@catalog";
 import type { PendingCreateEntityType } from "@app/hooks/usePendingCreatesStore";
+import { getEntityLabel } from "@catalog";
 
 import { usePendingCreates } from "./usePendingCreates";
 
-/**
- * Inline "creating…" status for a list toolbar: a spinner + live count of
- * in-flight async creates for this entity type. Renders nothing when idle and
- * disappears once the creates settle (see `usePendingCreates`).
- */
-export const PendingCreatesStatus: React.FC<{
+interface IPendingCreatesStatusProps {
   entityType: PendingCreateEntityType;
-}> = ({ entityType }) => {
+}
+
+/**
+ * Toolbar spinner + live count of in-flight async creates for an entity type; renders
+ * nothing when idle.
+ */
+export const PendingCreatesStatus: React.FC<IPendingCreatesStatusProps> = ({
+  entityType,
+}) => {
   const { pendingCount } = usePendingCreates({ entityType });
   if (pendingCount === 0) return null;
 

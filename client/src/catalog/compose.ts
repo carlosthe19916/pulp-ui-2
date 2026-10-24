@@ -47,24 +47,21 @@ const slotContributions = <T extends IContributionBase>(
   Array.isArray(slot) ? slot : slot ? [slot] : [];
 
 /** Mutable accumulator: repository entries narrow to `IPluginRepositoryEntity` at runtime. */
-type MutablePlugin = {
+interface IMutablePlugin {
   pulpType: PulpType;
   isAvailable: IPlugin["isAvailable"];
   entities: Partial<Record<EntityType, IPluginEntity>>;
   content?: IContentType[];
-};
+}
 
 /**
- * Assemble the authored definitions into the resolved catalog, keyed by pulp_type.
- * Each contribution resolves its identity (plugin defaults overridden by a variant's
- * `ui`/`rest`); contributions sharing a pulp_type (its default plus the entities it
- * fills) merge into one `IPlugin`, so every `entities` slot is a single contribution.
- * Returns a deeply-frozen catalog and throws on a duplicate `(pulp_type, entity)`.
+ * Assemble the authored definitions into the frozen catalog keyed by pulp_type, merging
+ * contributions that share one. Throws on a duplicate `(pulp_type, entity)`.
  */
 export const buildCatalog = (
   definitions: IPluginDefinition[],
 ): PluginCatalog => {
-  const catalog: Record<PulpType, MutablePlugin> = {};
+  const catalog: Record<PulpType, IMutablePlugin> = {};
   // Content pulp_types/apiPaths are NOT catalog keys, so the per-entity duplicate
   // check below doesn't cover them; guard their global uniqueness independently.
   const seenContentTypes = new Set<PulpType>();

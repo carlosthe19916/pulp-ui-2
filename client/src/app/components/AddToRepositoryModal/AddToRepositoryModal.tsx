@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -19,7 +20,6 @@ import {
   ModalHeader,
 } from "@patternfly/react-core";
 
-import { getRepositoryTypesForContent } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
@@ -34,6 +34,7 @@ import {
 } from "@app/queries/repositories";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getRepositoryTypesForContent } from "@catalog";
 
 const addSchema = yup.object({
   repository: yup.string().required("Select a repository"),

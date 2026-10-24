@@ -17,11 +17,16 @@ import { summarizeUnits } from "./summarizeUnits";
 const names = ({ labels, more }: { labels: string[]; more: number }) =>
   `${labels.join(" · ")}${more ? ` and ${more} more` : ""}`;
 
-/** Remove confirmation body: what happens, then the units (grouped by type when mixed). */
-export const RemoveContentBody: React.FC<{
+interface IRemoveContentBodyProps {
   units: IContentUnitRef[];
   isContainer: boolean;
-}> = ({ units, isContainer }) => {
+}
+
+/** Remove confirmation body: what happens, then the units (grouped by type when mixed). */
+export const RemoveContentBody: React.FC<IRemoveContentBodyProps> = ({
+  units,
+  isContainer,
+}) => {
   const groups = summarizeUnits({ units });
   return (
     <Stack hasGutter>

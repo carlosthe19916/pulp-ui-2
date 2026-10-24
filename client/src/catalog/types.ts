@@ -1,6 +1,6 @@
 import type { VersionResponse } from "@app/client";
 
-import type { IEntityField } from "./field-types";
+import type { IEntityField } from "./fieldTypes";
 
 /**
  * Data model for Pulp's content entity types and the plugins implementing them.
@@ -10,9 +10,8 @@ import type { IEntityField } from "./field-types";
  */
 
 /**
- * The mutable CRUD entity types Pulp exposes — the static, closed backbone. Content
- * is deliberately NOT here: it is immutable (no create/edit form) and a single
- * plugin owns many content types, so it is modelled separately as `IContentType`.
+ * The mutable CRUD entity types. Content isn't here: it is immutable and one plugin owns
+ * many content types (see `IContentType`).
  */
 export const ENTITY_TYPES = [
   "repository",
@@ -37,9 +36,8 @@ export type PulpType = string;
 // --- Content types (immutable, many-per-plugin; NOT a CRUD entity) ---
 
 /**
- * How a content unit is uploaded: `upload` posts the file to the synchronous
- * `<apiPath>/upload/` (201 + the content); `create` posts it to `<apiPath>/`
- * (202 + a task whose `created_resources` holds the content).
+ * How a content unit is uploaded: `upload` to the synchronous `<apiPath>/upload/` (201 +
+ * content), or `create` to `<apiPath>/` (202 + task).
  */
 export type ContentUploadMechanism = "upload" | "create";
 
@@ -55,10 +53,8 @@ export interface IContentDetail {
 }
 
 /**
- * One content type owned by a plugin. Identity is always present; capabilities are
- * optional and phase-populated. Content is IMMUTABLE — no create/edit field lists.
- * `pulpType` is NOT a catalog key (a plugin owns many content types); `apiPath` is
- * the `<app>/<slug>` collection segment, omitted for endpoint-less types.
+ * One content type owned by a plugin (immutable: no form fields). `apiPath` is its
+ * `<app>/<slug>` segment, omitted for endpoint-less types.
  */
 export interface IContentType {
   pulpType: PulpType;
@@ -95,10 +91,8 @@ export interface IPluginEntity {
 }
 
 /**
- * A repository's resolved contribution additionally carries the pulp_types it can
- * sync from (`compatibleRemoteTypes`, the backend's `REMOTE_TYPES`) and publish to
- * (`compatiblePublicationTypes`). `[]` when it can't sync/publish. `contentTypes`
- * are the content pulp_types its plugin owns (also for variants).
+ * A repository's resolved contribution, adding the pulp_types it syncs from / publishes to
+ * (`[]` when it can't) and its plugin's content types.
  */
 export interface IPluginRepositoryEntity extends IPluginEntity {
   compatibleRemoteTypes: PulpType[];
@@ -110,10 +104,8 @@ export interface IPluginRepositoryEntity extends IPluginEntity {
 }
 
 /**
- * A plugin resolved for a single pulp_type: its identity plus the entity types it
- * implements. Variants (a second pulp_type for one entity, e.g. `file.git`) resolve
- * to their own `IPlugin`, so every `entities` slot is a single contribution — which
- * makes `plugin.entities.repository?.compatibleRemoteTypes` a direct read.
+ * A plugin resolved for one pulp_type. A variant (e.g. `file.git`) resolves to its own
+ * `IPlugin`, so each `entities` slot is one contribution.
  */
 export interface IPlugin {
   pulpType: PulpType;
@@ -131,9 +123,8 @@ export interface IPlugin {
 // --- Authored shapes (what a `plugins/*.ts` file writes) ---
 
 /**
- * What every entity slot provides. No identity (`rest`) — that comes from the plugin
- * defaults, overridden only by variants (see `IEntityVariant`). Every field is
- * required and explicit.
+ * What every entity slot provides. Identity (`rest`) comes from the plugin defaults,
+ * overridden only by variants.
  */
 export interface IContributionBase {
   form: {
@@ -144,10 +135,8 @@ export interface IContributionBase {
 }
 
 /**
- * A repository slot additionally declares the pulp_types it can be associated with:
- * `compatibleRemoteTypes` (sync sources, the backend's `REMOTE_TYPES`) and
- * `compatiblePublicationTypes` (publish targets). `[]` when it can't sync/publish.
- * Only repositories carry these — other entities never need them.
+ * A repository slot also declares the pulp_types it syncs from (`compatibleRemoteTypes`,
+ * backend `REMOTE_TYPES`) and publishes to; `[]` when it can't.
  */
 export interface IRepositoryContribution extends IContributionBase {
   compatibleRemoteTypes: PulpType[];
@@ -165,25 +154,28 @@ export interface IRepositoryContribution extends IContributionBase {
 
 /**
  * A plugin action: a POST that starts a task, with a form built from `fields`.
- * `path` is relative to the target's href (`sign/`), or, starting with `/`, a
- * collection endpoint (`/rpm/copy/`). `target` is the repository or one of its
- * versions. `repositoryParam` names the body field the repository href fills in
- * (`list` sends it as a one-item list), for collection endpoints that need it.
  */
 export interface IRepositoryAction {
   key: string;
   label: string;
+  /**
+   * Relative to the target's href (`sign/`), or a collection endpoint when it
+   * starts with `/` (`/rpm/copy/`).
+   */
   path: string;
   target: "repository" | "version";
   fields: IEntityField[];
   description?: string;
+  /**
+   * For collection endpoints: the body field the repository href fills (`list`
+   * sends it as a one-item list).
+   */
   repositoryParam?: { key: string; list?: boolean };
 }
 
 /**
- * A variant slot — a second pulp_type for one entity (e.g. `file.git`, `rpm.uln`,
- * `python.pypi`, container pull-through). It overrides the plugin's REST identity;
- * non-variant slots inherit the plugin defaults.
+ * A variant slot: a second pulp_type for one entity (e.g. `file.git`, `rpm.uln`) that
+ * overrides the plugin's REST identity.
  */
 export type IEntityVariant<T extends IContributionBase> = T & {
   rest: Partial<IPluginRest>;
@@ -194,9 +186,8 @@ export type IEntitySlot<T extends IContributionBase> =
   T | IEntityVariant<T> | Array<T | IEntityVariant<T>>;
 
 /**
- * A plugin: its `app`/`rest` identity once, then the entities it implements. `rest`
- * is the default for every slot; a variant slot overrides it. Only `repository`
- * slots carry remote/publication type lists.
+ * A plugin: its `app`/`rest` identity once (the default for every slot), then the
+ * entities it implements.
  */
 export interface IPluginDefinition {
   app: IPluginApp;

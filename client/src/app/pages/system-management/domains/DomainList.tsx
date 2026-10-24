@@ -4,37 +4,37 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
+  Button,
   Content,
   ContentVariants,
-  Button,
   Label,
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { DomainResponse } from "@app/client";
-import { dataViewBodyStates } from "@app/components/dataViewStates";
-import { ListPagination } from "@app/components/ListPagination";
-import { DEFAULT_PULP_DOMAIN } from "@app/Constants";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ListPagination } from "@app/components/ListPagination";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import { useColumnSort } from "@app/hooks/useColumnSort";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDomainListParams } from "@app/queries/domains";
 import {
@@ -63,7 +63,11 @@ interface IDomainFilters {
   name: IDomainListParams["name"];
 }
 
-const YesNoLabel: React.FC<{ value?: boolean }> = ({ value }) => (
+interface IYesNoLabelProps {
+  value?: boolean;
+}
+
+const YesNoLabel: React.FC<IYesNoLabelProps> = ({ value }) => (
   <Label color={value ? "green" : "grey"} isCompact>
     {value ? "Yes" : "No"}
   </Label>

@@ -1,13 +1,11 @@
 ---
-description: TypeScript and React style for client/src — React.FC components with named exports, arrow consts, named-object parameters, interface vs type, generated API types, no enum/any, .ts vs .tsx, effects, memoization, import block order, component-folder index.ts imports, PatternFly icon and class imports, and comments.
+description: TypeScript and React style for client/src that lint can't check — React.FC components, named-object parameters, .ts vs .tsx and file naming, generated API types, satisfies, memoization, effects vs render/handlers/queries, component-folder index.ts imports, and comments.
 globs: client/src/**/*.ts,client/src/**/*.tsx
 ---
 
 # TypeScript and React style (`client/src/`)
 
-ESLint, Prettier and `tsc` already enforce type-only imports, `I`-prefixed interfaces, the
-hooks rules, stable context values and formatting; run `npm run lint`. This file covers what
-they don't. Never edit the generated `client/src/app/client/` or `routeTree.gen.ts`.
+`npm run lint` checks the mechanical rules (`eslint.config.mjs`); this file covers what it can't.
 
 ## Components
 
@@ -22,14 +20,12 @@ export const RepositoryCard: React.FC<IRepositoryCardProps> = ({ repository }) =
 ```
 
 - `export const X: React.FC<IXProps>` (prop-less: `React.FC`), with `import type React`.
-- Named exports only, no `export default`. Import modules by their named export.
-- No `React.memo`, and no `useMemo` / `useCallback` without a measured reason or a lint
-  rule that asks for one (context values).
+  Props are always a named `I<Component>Props` interface, never inline (`React.FC<{ … }>`).
+- No `useMemo` / `useCallback` without a measured reason or a lint rule that asks for one
+  (context values).
 
-## Functions and files
+## Files
 
-- Functions are arrow consts (`const toLabel = (…) => …`). Use a `function` declaration
-  only for a generic helper, where an arrow in `.tsx` would need the `<T,>` workaround.
 - `.tsx` only when the file contains JSX; hooks and helpers without JSX are `.ts`.
 - Component files are PascalCase, helper and hook files camelCase (`useX.ts`), page
   directories kebab-case (`user-list/`, `user-details/`).
@@ -48,9 +44,6 @@ takes one destructured object, so each argument names itself at the call site:
 
 ## Types
 
-- `interface` for object shapes (small inline param types excepted, see above), `type` for unions, intersections and mapped types.
-- No `enum`: use a string-literal union or an `as const` object.
-- No `any`. Use `unknown` and narrow, or the real type.
 - API types come from the generated client barrel: `import type { UserResponse } from "@app/client"`.
   Don't hand-write a type the client already generates (request bodies, list params,
   responses). Error bodies are the exception: the spec omits them, so they live in
@@ -65,21 +58,10 @@ takes one destructured object, so each argument names itself at the call site:
 - Logic caused by a user action runs in the event handler, not in an effect that watches
   state. Reset a component's state with a `key`, not an effect.
 
-## Imports and the rest
+## Imports and comments
 
-- Imports form five blocks in this order, separated by a blank line, alphabetical within
-  each: React and `react-*` → other packages → `@patternfly/*` → `@app/*` and `@catalog` →
-  relative.
 - Import a component folder (`X/`) only through its `index.ts`, which exports only the
   public component(s); never import another file in `X/` from outside it.
-- App-root modules (`@app/components`, `@app/hooks`, `@app/utils`, `@app/context`) never
-  import from `pages/`.
-- PatternFly icons are imported from their deep path
-  (`@patternfly/react-icons/dist/esm/icons/plus-circle-icon`), not the barrel.
-- Never hard-code `pf-v6-c-*`, `pf-m-*`, `pf-u-*` or `pf-l-*` class strings outside tests.
-  Import the typed constants from `@patternfly/react-styles/css/...` and combine them with
-  `css()`.
-- No `console.log`; `console.error` only where an error has nowhere else to go.
 - Comments say what the code can't: a reason, a gotcha, an API quirk. Don't restate the
   code. Exported components and helpers get at most a one- or two-line `/** … */`.
 
@@ -87,17 +69,13 @@ takes one destructured object, so each argument names itself at the call site:
 
 Pass/fail rubric for `/eval`. Check changed `.ts` / `.tsx` files under `client/src/`.
 
-- [ ] Components are `export const X: React.FC<IXProps>` with `import type React`; no
-      default exports; no `React.memo`; no speculative `useMemo` / `useCallback`.
-- [ ] Functions are arrow consts (generic helpers excepted); JSX-free files are `.ts`.
+- [ ] Components are `export const X: React.FC<IXProps>` with `import type React` and a
+      named `I<Component>Props` interface; no speculative `useMemo` / `useCallback`.
+- [ ] JSX-free files are `.ts`; file and directory names follow the casing above.
 - [ ] Functions with 2+ params, a `boolean`, or optional params after the first take one
       named object (inline type for ≤2 one-off fields, else `I<Name>Options`), unless they
       match a listed exception.
-- [ ] No `enum`, no `any`; object shapes are interfaces.
 - [ ] API types are imported from `@app/client`, not redeclared.
 - [ ] No effect derives state or fetches data; user-triggered logic lives in handlers.
-- [ ] Imports follow the five-block order; component folders are imported only through
-      their `index.ts`; app-root modules import nothing from `pages/`.
-- [ ] Icons use deep imports; PatternFly classes come from typed `@patternfly/react-styles`
-      constants, never hard-coded strings outside tests.
-- [ ] No `console.log`; comments only explain non-obvious reasons.
+- [ ] Component folders are imported only through their `index.ts`.
+- [ ] Comments only explain non-obvious reasons.

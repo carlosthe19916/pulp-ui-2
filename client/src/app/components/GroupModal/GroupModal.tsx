@@ -10,8 +10,8 @@ import {
 
 import type { GroupResponse } from "@app/client";
 
-import { useGroupForm } from "./useGroupForm";
 import { GroupForm } from "./GroupForm";
+import { useGroupForm } from "./useGroupForm";
 
 interface IGroupModalInnerProps {
   group?: GroupResponse;

@@ -1,8 +1,8 @@
 import type React from "react";
 
+import type { EntityType } from "@catalog";
 import { Link } from "@tanstack/react-router";
 
-import type { EntityType } from "@catalog";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   extractIdFromHref,
@@ -25,9 +25,8 @@ const truncate = ({ value, max }: { value: string; max: number }): string =>
   value.length > max ? `${value.slice(0, max)}...` : value;
 
 /**
- * Renders a link (or plain text, when the family has no detail page) for a resource
- * `pulp_href`. The label falls back name → short id → truncated href; a repository
- * version falls back to "Version N".
+ * Link (or plain text when the family has no detail page) for a resource `pulp_href`,
+ * labelled name, short id, or truncated href.
  */
 export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
   kind,

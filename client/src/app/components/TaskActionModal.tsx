@@ -17,22 +17,22 @@ import {
   ModalHeader,
 } from "@patternfly/react-core";
 
-import { ContentPicker } from "@app/components/ContentPicker";
-import {
-  buildDefaultValues,
-  buildFieldSchema,
-  fieldsToBody,
-} from "@app/utils/formSchema";
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
-import { getContentType, type IContentType, type IEntityField } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
+import { ContentPicker } from "@app/components/ContentPicker";
 import { EntityFormFields } from "@app/components/EntityFormFields";
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import type {
   IContentUnitRef,
   IContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
+import {
+  buildDefaultValues,
+  buildFieldSchema,
+  fieldsToBody,
+} from "@app/utils/formSchema";
+import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
+import { getContentType, type IContentType, type IEntityField } from "@catalog";
 
 interface ITaskActionModalProps {
   title: string;
@@ -73,10 +73,8 @@ const formSelection = ({
 });
 
 /**
- * The form shell every task-starting action shares (sync, sign, tag, copy…), also
- * used for simple field-driven create/edit forms: the fields render from data, and
- * submit hands the request body to the caller, which runs the mutation and owns the
- * toast. Mount it only while open (remount, e.g. by `key`, to reset it).
+ * Form shell for task-starting actions (sync, sign, copy…) and simple field-driven forms;
+ * submit hands the body to the caller. Mount only while open.
  */
 export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
   title,

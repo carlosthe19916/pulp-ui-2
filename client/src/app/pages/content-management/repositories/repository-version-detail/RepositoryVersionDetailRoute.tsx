@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { getRouteApi } from "@tanstack/react-router";
 
 import { RepositoryVersionDetail } from "./RepositoryVersionDetail";
@@ -6,7 +8,7 @@ const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/versions/$versionNumber",
 );
 
-export const RepositoryVersionDetailRoute = () => {
+export const RepositoryVersionDetailRoute: React.FC = () => {
   const { pulpDomain, repositoryType, repositoryId, versionNumber } =
     routeApi.useParams();
   const { repositoryHref, versionHref } = routeApi.useLoaderData();

@@ -1,6 +1,5 @@
-import * as yup from "yup";
-
 import type { IEntityField } from "@catalog";
+import * as yup from "yup";
 
 export const getFieldValue = ({
   entity,

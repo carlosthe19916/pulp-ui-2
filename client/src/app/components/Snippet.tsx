@@ -9,7 +9,11 @@ import {
   CodeBlockCode,
 } from "@patternfly/react-core";
 
-const CopyableCodeBlock: React.FC<{ code: string }> = ({ code }) => {
+interface ICopyableCodeBlockProps {
+  code: string;
+}
+
+const CopyableCodeBlock: React.FC<ICopyableCodeBlockProps> = ({ code }) => {
   const id = useId();
   const [copied, setCopied] = useState(false);
   return (
@@ -38,8 +42,12 @@ const CopyableCodeBlock: React.FC<{ code: string }> = ({ code }) => {
   );
 };
 
+interface ISnippetProps {
+  code: string;
+}
+
 /** Copyable command or config: an inline copy field, or a code block when multi-line. */
-export const Snippet: React.FC<{ code: string }> = ({ code }) =>
+export const Snippet: React.FC<ISnippetProps> = ({ code }) =>
   code.includes("\n") ? (
     <CopyableCodeBlock code={code} />
   ) : (

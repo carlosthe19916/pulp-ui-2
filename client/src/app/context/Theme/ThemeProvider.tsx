@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   CONTRAST_MODES,
+  type ContrastMode,
   isContrastModeValid,
   isThemeModeValid,
   isThemeVariantValid,
-  ThemeContext,
   THEME_MODES,
   THEME_VARIANTS,
-  type ContrastMode,
+  ThemeContext,
   type ThemeMode,
   type ThemeVariant,
 } from "./ThemeContext";

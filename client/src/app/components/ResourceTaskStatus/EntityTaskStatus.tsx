@@ -17,8 +17,12 @@ const TASK_LABEL: Record<EntityTaskKind, string> = {
   modify: "Changing content",
 };
 
+interface IEntityTaskStatusProps {
+  kind?: EntityTaskKind;
+}
+
 /** Inline spinner + label shown in a row while its entity's single task runs. */
-export const EntityTaskStatus: React.FC<{ kind?: EntityTaskKind }> = ({
+export const EntityTaskStatus: React.FC<IEntityTaskStatusProps> = ({
   kind,
 }) => {
   const label = kind ? `${TASK_LABEL[kind]}…` : "In progress…";

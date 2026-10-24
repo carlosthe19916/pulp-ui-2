@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { Link } from "@tanstack/react-router";
-
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import type {
   RepositoryAddRemoveContent,
@@ -21,11 +20,17 @@ import { latestVersionNumber } from "@app/utils/latestVersionNumber";
 import { extractTaskDomain } from "@app/utils/taskHref";
 import { notifyTaskFailed, notifyTaskStarted } from "@app/utils/taskNotify";
 
+export interface IContentChangeWatchParams {
+  taskHref: string;
+  repository: RepositoryResponse;
+  body?: RepositoryAddRemoveContent;
+  /** Names the change in the started toast; else it's derived from `body`. */
+  title?: string;
+}
+
 /**
- * Follows one content change at a time (a modify, add, remove or import task): raises the
- * "started" toast, then on settle refreshes the repository, raises the outcome toast
- * (the version it created, "No changes", or the failure) and keeps the failure for
- * an inline alert. Callers pass `watch` the dispatched task (a modify, or an import).
+ * Follows one content change task (modify, add, remove, import): toasts its start and
+ * outcome, refreshes the repository, and keeps a failure for an inline alert.
  */
 export const useContentChangeTask = () => {
   const queryClient = useQueryClient();
@@ -104,18 +109,12 @@ export const useContentChangeTask = () => {
     /** The change being watched, while it runs. */
     task,
     failure,
-    /** `title` names the change in the started toast; else it's derived from `body`. */
     watch: ({
       taskHref,
       repository,
       body,
       title,
-    }: {
-      taskHref: string;
-      repository: RepositoryResponse;
-      body?: RepositoryAddRemoveContent;
-      title?: string;
-    }) => {
+    }: IContentChangeWatchParams) => {
       notifyTaskStarted({
         addNotification,
         taskHref,

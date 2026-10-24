@@ -15,12 +15,18 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { ACS_FIELDS, type IAcsType } from "../utils/acsTypes";
 
-/** Creates an ACS of the selected plugin, or edits one. */
-export const AcsModal: React.FC<{
+interface IAcsModalProps {
   acsType: IAcsType;
   acs?: AlternateContentSource;
   onClose: () => void;
-}> = ({ acsType, acs, onClose }) => {
+}
+
+/** Creates an ACS of the selected plugin, or edits one. */
+export const AcsModal: React.FC<IAcsModalProps> = ({
+  acsType,
+  acs,
+  onClose,
+}) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const onError = (error: unknown) =>

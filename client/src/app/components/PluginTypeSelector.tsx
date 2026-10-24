@@ -1,10 +1,12 @@
+import type React from "react";
+
+import type { IPlugin } from "@catalog";
+
 import {
   FormGroup,
   FormSelect,
   FormSelectOption,
 } from "@patternfly/react-core";
-
-import type { IPlugin } from "@catalog";
 
 interface IPluginTypeSelectorProps {
   available: IPlugin[];
@@ -16,11 +18,11 @@ interface IPluginTypeSelectorProps {
  * The create-time plugin-type dropdown, shared by every family modal (plain and
  * wizard). Renders nothing unless there is a genuine choice (>1 available type).
  */
-export const PluginTypeSelector = ({
+export const PluginTypeSelector: React.FC<IPluginTypeSelectorProps> = ({
   available,
   selectedType,
   onChange,
-}: IPluginTypeSelectorProps) => {
+}) => {
   if (available.length <= 1) return null;
   return (
     <FormGroup label="Type" fieldId="entity-type" isRequired>

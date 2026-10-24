@@ -11,17 +11,17 @@ import {
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type { UpstreamPulpResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";

@@ -1,6 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
+import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 /** Shared rest override for the pull-through variant (remote + distribution). */

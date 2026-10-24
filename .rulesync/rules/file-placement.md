@@ -63,7 +63,7 @@ client/src/app/
 
 ## React Context
 
-A context follows the same scopes as any module. It is a pair: `<Name>Context.tsx` holds the
+A context follows the same scopes as any module. It is a pair: `<Name>Context.ts` holds the
 `createContext` call and value type, `<Name>Provider.tsx` holds the provider. Never both in
 one file.
 
@@ -79,5 +79,5 @@ Pass/fail rubric for `/eval`.
 - [ ] Component folders are flat and hold an `index.ts`.
 - [ ] A page directory's root holds its main component and its route adapter, if any.
 - [ ] No `components/`, `hooks/`, `utils/` or `context/` under an area or entity directory.
-- [ ] New contexts sit at the narrowest scope, split into `<Name>Context.tsx` +
+- [ ] New contexts sit at the narrowest scope, split into `<Name>Context.ts` +
       `<Name>Provider.tsx` (in `context/<Name>/` outside a component folder).

@@ -10,8 +10,8 @@ import {
   PageSection,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";

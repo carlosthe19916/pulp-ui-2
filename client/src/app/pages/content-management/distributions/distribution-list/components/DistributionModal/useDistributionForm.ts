@@ -1,9 +1,10 @@
 import type { IPlugin } from "@catalog";
-import { useNotifications } from "@app/hooks/useNotifications";
+
 import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
@@ -13,27 +14,23 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { valuesToCreate, valuesToPatch } from "./DistributionForm";
+import { valuesToCreate, valuesToPatch } from "./distributionForm";
 
-interface IUseDistributionFormArgs {
+interface IUseDistributionFormOptions {
   plugin: IPlugin | undefined;
   entity?: IEntityForEdit;
   onClose: () => void;
 }
 
 /**
- * Distribution create/edit form: maps form values to a distribution write body
- * (`DistributionForm`) and runs the family's create/update mutations. Create is
- * async (202 + task). The success toast is raised from the mutations' hook-level
- * callbacks and the call-level `onSuccess` closes the modal (see `.rulesync/rules/toastr.md`);
- * a submission failure is shown in-form via `submitError`, not a toast (see
- * `.rulesync/rules/forms.md`).
+ * Distribution create/edit form: maps values to a write body and runs the create (async,
+ * 202 + task) / update mutations; failures show in-form.
  */
 export const useDistributionForm = ({
   plugin,
   entity,
   onClose,
-}: IUseDistributionFormArgs): IUseEntityFormResult => {
+}: IUseDistributionFormOptions): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { recordPendingCreate } = usePendingCreateRecorder({

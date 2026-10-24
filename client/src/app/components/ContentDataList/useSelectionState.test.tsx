@@ -1,8 +1,10 @@
+import type React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { useSelectionState, type ISelectionState } from "./useSelectionState";
+import { type ISelectionState, useSelectionState } from "./useSelectionState";
 
 // The repo has no @testing-library/dom, so drive the hook with react-dom/client directly.
 let container: HTMLElement;
@@ -19,12 +21,15 @@ afterEach(() => {
   container.remove();
 });
 
-const renderSelection = (
-  items: string[],
-  initialSelected?: string[],
-): { current: ISelectionState<string> } => {
+const renderSelection = ({
+  items,
+  initialSelected,
+}: {
+  items: string[];
+  initialSelected?: string[];
+}): { current: ISelectionState<string> } => {
   const ref = { current: undefined as unknown as ISelectionState<string> };
-  const Probe = () => {
+  const Probe: React.FC = () => {
     ref.current = useSelectionState<string>({ items, initialSelected });
     return null;
   };
@@ -34,7 +39,7 @@ const renderSelection = (
 
 describe("useSelectionState", () => {
   it("starts empty and toggles a single item", () => {
-    const state = renderSelection(["a", "b", "c"]);
+    const state = renderSelection({ items: ["a", "b", "c"] });
     expect(state.current.isItemSelected("a")).toBe(false);
 
     act(() => state.current.toggleItem("a"));
@@ -47,18 +52,21 @@ describe("useSelectionState", () => {
   });
 
   it("tracks multiple items and areAllSelected", () => {
-    const state = renderSelection(["a", "b"]);
+    const state = renderSelection({ items: ["a", "b"] });
     act(() => state.current.toggleItem("a"));
     act(() => state.current.toggleItem("b"));
     expect(state.current.areAllSelected).toBe(true);
 
-    act(() => state.current.selectAll(false));
+    act(() => state.current.selectAll({ isSelecting: false }));
     expect(state.current.selectedItems).toEqual([]);
     expect(state.current.areAllSelected).toBe(false);
   });
 
   it("honors initialSelected and selectOnly", () => {
-    const state = renderSelection(["a", "b", "c"], ["b"]);
+    const state = renderSelection({
+      items: ["a", "b", "c"],
+      initialSelected: ["b"],
+    });
     expect(state.current.isItemSelected("b")).toBe(true);
 
     act(() => state.current.selectOnly(["c"]));

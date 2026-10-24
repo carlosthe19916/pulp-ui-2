@@ -1,6 +1,8 @@
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { Controller } from "react-hook-form";
 
+import type { IEntityField } from "@catalog";
+
 import {
   Checkbox,
   type DropEvent,
@@ -22,7 +24,6 @@ import {
   AsyncResourceSelect,
 } from "@app/components/AsyncResourceSelect";
 import type { ResourceFilterMap } from "@app/utils/resourceFilter";
-import type { IEntityField } from "@catalog";
 
 const isFile = (value: unknown): value is File => {
   return typeof File !== "undefined" && value instanceof File;
@@ -88,9 +89,6 @@ export const EntityFormFields = <
                 </FormHelperText>
               ) : null;
 
-              // Catalog field description, rendered as a help-icon popover on the
-              // field label — mirrors the detail page's term help popover
-              // (EntityDetailFields.tsx). Undefined when a field has no helpText.
               const labelHelp = field.helpText ? (
                 <Popover
                   headerContent={field.label}

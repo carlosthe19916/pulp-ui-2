@@ -7,8 +7,8 @@ import {
   PageSection,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";

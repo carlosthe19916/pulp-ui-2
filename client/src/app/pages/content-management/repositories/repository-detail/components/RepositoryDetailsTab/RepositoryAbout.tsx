@@ -13,7 +13,6 @@ import {
   Title,
 } from "@patternfly/react-core";
 
-import { getPlugin } from "@catalog";
 import type {
   RepositoryResponse,
   RepositoryVersionResponse,
@@ -27,6 +26,7 @@ import { repositoryKeys } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
+import { getPlugin } from "@catalog";
 
 interface IRepositoryAboutProps {
   repository: RepositoryResponse;
@@ -35,16 +35,17 @@ interface IRepositoryAboutProps {
   pulpDomain: string;
 }
 
-// One column on narrow screens, two from md, three from xl.
 const COLUMNS = { default: "1Col", md: "2Col", xl: "3Col" } as const;
 
 // Shown as the page title, the description paragraph and the Remote fact.
 const NON_SETTING_KEYS = ["name", "description", "remote"];
 
-const Fact: React.FC<{ term: string; children: React.ReactNode }> = ({
-  term,
-  children,
-}) => (
+interface IFactProps {
+  term: string;
+  children: React.ReactNode;
+}
+
+const Fact: React.FC<IFactProps> = ({ term, children }) => (
   <DescriptionListGroup>
     <DescriptionListTerm>{term}</DescriptionListTerm>
     <DescriptionListDescription>{children}</DescriptionListDescription>

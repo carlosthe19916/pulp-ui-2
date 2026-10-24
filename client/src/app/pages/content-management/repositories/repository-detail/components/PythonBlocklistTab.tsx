@@ -14,14 +14,14 @@ import {
   ModalHeader,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
 import type {
   PythonPythonBlocklistEntryResponse,
@@ -47,10 +47,14 @@ const entryLabel = (entry: PythonPythonBlocklistEntryResponse) =>
   [entry.name, entry.version].filter(Boolean).join(" ") ||
   "entry";
 
-/** Packages this Python repository refuses, by name, version or filename. */
-export const PythonBlocklistTab: React.FC<{
+interface IPythonBlocklistTabProps {
   repository: RepositoryResponse;
-}> = ({ repository }) => {
+}
+
+/** Packages this Python repository refuses, by name, version or filename. */
+export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
+  repository,
+}) => {
   const repositoryHref = repository.pulp_href ?? "";
   const { addNotification } = useNotifications();
   const [isAdding, setIsAdding] = useState(false);
@@ -186,10 +190,15 @@ const entrySchema = yup
 
 type EntryFormValues = yup.InferType<typeof entrySchema>;
 
-const AddBlocklistEntryModal: React.FC<{
+interface IAddBlocklistEntryModalProps {
   repositoryHref: string;
   onClose: () => void;
-}> = ({ repositoryHref, onClose }) => {
+}
+
+const AddBlocklistEntryModal: React.FC<IAddBlocklistEntryModalProps> = ({
+  repositoryHref,
+  onClose,
+}) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const {

@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { EntityModalBody } from "@app/components/EntityModalBody";
 import { EntityModalShell } from "@app/components/EntityModalShell";
 import { PluginTypeSelector } from "@app/components/PluginTypeSelector";
@@ -12,7 +14,10 @@ interface IRemoteModalInnerProps {
   onClose: () => void;
 }
 
-const RemoteModalInner = ({ entity, onClose }: IRemoteModalInnerProps) => {
+const RemoteModalInner: React.FC<IRemoteModalInnerProps> = ({
+  entity,
+  onClose,
+}) => {
   const { data: full, isLoading } = useRemoteDetailQuery({
     href: entity?.pulp_href ?? "",
   });
@@ -74,5 +79,8 @@ interface IRemoteModalProps {
 }
 
 /** Create/edit modal for remotes; wizard vs plain follows the catalog. */
-export const RemoteModal = ({ isOpen, entity, onClose }: IRemoteModalProps) =>
-  isOpen ? <RemoteModalInner entity={entity} onClose={onClose} /> : null;
+export const RemoteModal: React.FC<IRemoteModalProps> = ({
+  isOpen,
+  entity,
+  onClose,
+}) => (isOpen ? <RemoteModalInner entity={entity} onClose={onClose} /> : null);

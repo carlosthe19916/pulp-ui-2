@@ -1,4 +1,4 @@
 export {
   PageHeaderActionsMenu,
-  type PageHeaderAction,
+  type IPageHeaderAction,
 } from "./PageHeaderActionsMenu";

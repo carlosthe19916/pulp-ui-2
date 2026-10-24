@@ -1,6 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
+import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const mavenRepositoryExtras: IEntityField[] = [
@@ -90,7 +90,6 @@ export const maven: IPluginDefinition = {
       actions: mavenActions,
     },
 
-    // Maven remote: no fields beyond the pulpcore remote base.
     remote: {
       form: {
         isWizard: true,
@@ -99,7 +98,6 @@ export const maven: IPluginDefinition = {
       },
     },
 
-    // Maven distribution: serves a repository, or pull-through via a remote.
     distribution: {
       form: {
         isWizard: false,

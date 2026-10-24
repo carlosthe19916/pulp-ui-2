@@ -14,8 +14,8 @@ import { AsyncResourceSelect } from "@app/components/AsyncResourceSelect";
 
 import {
   decodeVersionDiff,
-  encodeVersionDiff,
   type DiffRelation,
+  encodeVersionDiff,
 } from "../utils/versionFilterCodec";
 import { VersionSelect } from "./VersionSelect";
 
@@ -33,13 +33,8 @@ interface IVersionDiffFilterProps {
 }
 
 /**
- * Filter content by what was added/removed between two versions of one repository
- * (`added_between` / `removed_between`, a comma-joined `base,target` pair). Rendered as inline
- * toolbar controls (relation toggle, repository typeahead, base + target version selects).
- *
- * Base/target are picked in separate steps, so they're held in local state and only encoded into
- * the filter value once BOTH are chosen — deriving them from the (both-required) encoded value
- * alone would discard the first selection.
+ * Filter content added/removed between two versions of one repository (`added_between` /
+ * `removed_between`, a `base,target` pair).
  */
 export const VersionDiffFilter: React.FC<IVersionDiffFilterProps> = ({
   filterId,
@@ -51,6 +46,8 @@ export const VersionDiffFilter: React.FC<IVersionDiffFilterProps> = ({
   const decoded = decodeVersionDiff(value);
   const [repositoryHref, setRepositoryHref] = useState("");
   const [relation, setRelation] = useState<DiffRelation>(decoded.relation);
+  // Base and target are picked in separate steps; hold them here until both are
+  // chosen, since the encoded value needs both and would drop the first pick.
   const [baseHref, setBaseHref] = useState(decoded.baseHref);
   const [targetHref, setTargetHref] = useState(decoded.targetHref);
 

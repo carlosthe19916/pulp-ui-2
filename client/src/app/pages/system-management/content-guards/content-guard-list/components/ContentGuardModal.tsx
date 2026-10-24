@@ -21,12 +21,17 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { GUARD_TYPES, guardTypeOf } from "../utils/guardTypes";
 
-/** Creates a guard of a chosen type, or edits one (its type is fixed). */
-export const ContentGuardModal: React.FC<{
+interface IContentGuardModalProps {
   /** The full (typed) guard being edited; absent to create. */
   guard?: ContentGuard;
   onClose: () => void;
-}> = ({ guard, onClose }) => {
+}
+
+/** Creates a guard of a chosen type, or edits one (its type is fixed). */
+export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
+  guard,
+  onClose,
+}) => {
   const { status } = useApiStatus();
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();

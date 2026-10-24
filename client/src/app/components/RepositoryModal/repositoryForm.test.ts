@@ -4,7 +4,7 @@ import {
   type RepositoryFormValues,
   valuesToCreate,
   valuesToPatch,
-} from "./RepositoryForm";
+} from "./repositoryForm";
 
 const baseValues: RepositoryFormValues = {
   name: "my-repo",

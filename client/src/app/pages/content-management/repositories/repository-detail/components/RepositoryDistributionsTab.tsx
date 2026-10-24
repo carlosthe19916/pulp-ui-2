@@ -5,8 +5,8 @@ import {
   DataView,
   DataViewTable,
   DataViewToolbar,
-  useDataViewPagination,
   type DataViewTr,
+  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { ContentUrlLink } from "@app/components/ContentUrlLink";

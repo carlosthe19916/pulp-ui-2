@@ -9,12 +9,18 @@ import { formatDateTime } from "@app/utils/utils";
 
 const LIMIT = 20;
 
-/** A collection's versions (newest first), optionally only those with some tags. */
-export const CollectionVersions: React.FC<{
+interface ICollectionVersionsProps {
   namespace: string;
   name: string;
   tags: string[];
-}> = ({ namespace, name, tags }) => {
+}
+
+/** A collection's versions (newest first), optionally only those with some tags. */
+export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
+  namespace,
+  name,
+  tags,
+}) => {
   const { data, isLoading } = useContentTypeListQuery({
     pulpType: "ansible.collection_version",
     params: {

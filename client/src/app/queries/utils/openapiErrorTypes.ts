@@ -14,9 +14,8 @@ import type { TaskResponse } from "@app/client";
  */
 
 /**
- * DRF serializer validation (400): each field maps to a list of messages; nested
- * serializers nest a dict. `non_field_errors` holds object-level errors; `detail`
- * carries a scalar `APIException` message (404/403/401/405/406/415/429/throttle).
+ * DRF validation error body (400): field to messages (nested serializers nest), plus
+ * `non_field_errors` and a scalar `detail`.
  */
 export interface IDrfValidationErrorData {
   detail?: string | string[] | IDrfValidationErrorData;
@@ -25,10 +24,8 @@ export interface IDrfValidationErrorData {
 }
 
 /**
- * `errors[]` envelope used by two view-scoped handlers:
- * - pulp_container `/v2/` registry: `{ code, message, detail? }`.
- * - pulp_ansible Galaxy v3 (JSON:API): `{ status, code, title, detail?, source? }`.
- * Not reachable from the current `queries/` hooks; kept for completeness.
+ * `errors[]` envelope of pulp_container `/v2/` and pulp_ansible Galaxy v3. Not reachable
+ * from the current `queries/` hooks; kept for completeness.
  */
 export interface IErrorsEnvelopeData {
   errors: {
@@ -44,9 +41,8 @@ export interface IErrorsEnvelopeData {
 }
 
 /**
- * `{ error }` (+ optional free-form `detail`) returned by custom plugin views
- * (pulp_maven, pulp_npm, pulp_trustify, pulp-service). Not reachable from the
- * current `queries/` hooks; kept for completeness.
+ * `{ error, detail? }` from custom plugin views (maven, npm, trustify, pulp-service). Not
+ * reachable from the current `queries/` hooks.
  */
 export interface IPluginErrorData {
   error: string;
@@ -54,9 +50,8 @@ export interface IPluginErrorData {
 }
 
 /**
- * Any error body the Pulp API can return. A 400 may be a bare array (list
- * serializer / bare `ValidationError`); a non-JSON body (e.g. pulp_hugging_face
- * content-proxy) arrives as a plain string.
+ * Any Pulp API error body. A 400 may be a bare array, and a non-JSON body arrives as a
+ * plain string.
  */
 export type PulpErrorData =
   | IDrfValidationErrorData
@@ -66,14 +61,14 @@ export type PulpErrorData =
   | string;
 
 /**
- * Pulp's fatal-task error object, carried in `TaskResponse.error` when a task ends in
- * `failed`. The OpenAPI spec types this field as an untyped `object`, so the generated
- * client drops it entirely — this fills that gap. The backend populates `description`
- * (+ `traceback`) for a crashed task, or `reason` for a cancellation.
+ * Pulp's fatal-task error (`TaskResponse.error`). The spec types it as an untyped
+ * `object`, so the generated client drops it.
  */
 export interface ITaskErrorData {
+  /** Set (with `traceback`) for a crashed task. */
   description?: string;
   traceback?: string;
+  /** Set for a cancellation. */
   reason?: string;
   [key: string]: unknown;
 }
@@ -85,15 +80,13 @@ export interface ITaskErrorData {
 export type TaskWithError = TaskResponse & { error?: ITaskErrorData | null };
 
 /**
- * The error type for a standard Pulp v3 DRF endpoint (validation dict,
- * `non_field_errors`, or a scalar `detail`). This is the granular `TError` for every
- * query/mutation in `queries/` — all of them hit `/pulp/api/v3/…` DRF endpoints.
+ * Error type for standard Pulp v3 DRF endpoints: the `TError` of every query/mutation in
+ * `queries/`.
  */
 export type DrfAxiosError = AxiosError<IDrfValidationErrorData>;
 
 /**
- * The widest error type — any shape the API *could* return (incl. non-reachable
- * container/Galaxy/plugin/plain-text bodies). Use only when the endpoint's error
- * shape is genuinely unknown; it is the fallback default of `IMutationCallbacks`.
+ * The widest error type (any shape the API could return), for endpoints whose error shape
+ * is unknown; `IMutationCallbacks`' default.
  */
 export type PulpAxiosError = AxiosError<PulpErrorData>;

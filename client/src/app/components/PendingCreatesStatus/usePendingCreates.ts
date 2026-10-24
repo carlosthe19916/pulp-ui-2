@@ -2,17 +2,17 @@ import { useEffect, useRef } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  usePendingCreatesStore,
-  type PendingCreateEntityType,
-} from "@app/hooks/usePendingCreatesStore";
-import { getEntityLabel } from "@catalog";
 import { useNotifications } from "@app/hooks/useNotifications";
+import {
+  type PendingCreateEntityType,
+  usePendingCreatesStore,
+} from "@app/hooks/usePendingCreatesStore";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { distributionKeys } from "@app/queries/distributions";
 import { publicationKeys } from "@app/queries/publications";
 import { isTerminalTaskState, useTaskDetailQueries } from "@app/queries/tasks";
 import { notifyTaskFailed } from "@app/utils/taskNotify";
+import { getEntityLabel } from "@catalog";
 
 /** List query-key folders to invalidate when a create of each type settles. */
 const listKeyByEntityType: Record<
@@ -26,12 +26,8 @@ const listKeyByEntityType: Record<
 const FAILED_STATES = new Set(["failed", "canceled"]);
 
 /**
- * Drives the "a create is in flight" state for one list. Reads the persisted
- * pending creates for this `entityType` + current domain, polls each create
- * task until terminal, then evicts the entry and refetches the list so the new
- * row appears (it may land on any page). Failures/cancellations raise a toast;
- * success is silent. Refresh-proof: the task href comes from localStorage, so a
- * reload resumes polling.
+ * Polls this list's persisted pending creates (current domain); as each settles, evicts
+ * it, refetches the list and toasts a failure.
  */
 export const usePendingCreates = ({
   entityType,
@@ -79,6 +75,7 @@ export const usePendingCreates = ({
       processedRef.current.add(entry.taskHref);
 
       remove(entry.taskHref);
+      // Refetch the whole list: the new row may land on any page.
       void queryClient.invalidateQueries({
         queryKey: listKeyByEntityType[entityType](),
       });

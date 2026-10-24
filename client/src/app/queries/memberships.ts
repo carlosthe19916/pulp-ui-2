@@ -8,14 +8,15 @@ import type {
   GroupUserResponse,
   UserResponse,
 } from "@app/client";
+
 import { groupKeys } from "./groups";
 import { userKeys } from "./users";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
 import { extractIdFromHref } from "./utils/pulpHref";
-import { settleBatch } from "./utils/settleBatch";
 import type { IBatchResult } from "./utils/settleBatch";
+import { settleBatch } from "./utils/settleBatch";
 
 /*
  * User ↔ group membership, edited from either side. Pulp stores it once (the

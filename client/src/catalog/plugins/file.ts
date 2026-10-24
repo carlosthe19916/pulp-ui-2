@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 const fileDistributionExtras: IEntityField[] = [
@@ -42,7 +42,6 @@ export const file: IPluginDefinition = {
   app: { isAvailable: whenInstalled("file", "pulp-file") },
   rest: { pulpType: "file.file", apiPath: "file/file" },
   entities: {
-    // File repository: a remote to sync from plus auto-publish.
     repository: {
       form: {
         isWizard: false,
@@ -106,7 +105,6 @@ export const file: IPluginDefinition = {
       },
     ],
 
-    // File distribution: serves a repository or a specific publication.
     distribution: {
       form: {
         isWizard: false,
@@ -115,7 +113,6 @@ export const file: IPluginDefinition = {
       },
     },
 
-    // File publication: base supplies the repository; adds repository_version.
     publication: {
       form: {
         isWizard: false,

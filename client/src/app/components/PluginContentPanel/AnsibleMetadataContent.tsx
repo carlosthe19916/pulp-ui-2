@@ -6,6 +6,8 @@ import type {
 } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -15,8 +17,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 /** Galaxy namespace page: the publisher, contact and links. */
 export const AnsibleNamespaceContent: React.FC<IPluginContentProps> = ({

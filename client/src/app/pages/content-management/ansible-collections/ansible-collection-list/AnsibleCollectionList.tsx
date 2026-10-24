@@ -12,9 +12,9 @@ import {
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";

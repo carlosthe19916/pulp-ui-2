@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type IUserFormValues,
   valuesToNewUser,
   valuesToPatchedUser,
-  type UserFormValues,
 } from "./useUserForm";
 
-const baseValues: UserFormValues = {
+const baseValues: IUserFormValues = {
   username: "alice",
   password: "supersecret",
   email: "alice@example.com",

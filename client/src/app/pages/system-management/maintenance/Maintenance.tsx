@@ -1,6 +1,8 @@
 import type React from "react";
 import { useState } from "react";
 
+import type { IEntityField } from "@catalog";
+
 import {
   Button,
   Card,
@@ -13,10 +15,9 @@ import {
   PageSection,
 } from "@patternfly/react-core";
 
-import { TaskActionModal } from "@app/components/TaskActionModal";
-import type { IEntityField } from "@catalog";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {

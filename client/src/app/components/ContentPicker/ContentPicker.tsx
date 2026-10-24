@@ -1,6 +1,8 @@
 import type React from "react";
 import { useState } from "react";
 
+import type { IContentType } from "@catalog";
+
 import {
   EmptyState,
   EmptyStateBody,
@@ -24,7 +26,6 @@ import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
-import type { IContentType } from "@catalog";
 import {
   dataViewSelection,
   type IContentUnitSelection,
@@ -64,9 +65,8 @@ interface IContentPickerProps {
 }
 
 /**
- * A selectable list of content of one type at a time: type select, text search, a
- * toggle that hides what the target repository already has, and an "In repository"
- * label (rows not selectable) when it's shown.
+ * Selectable list of one content type at a time, with search and a toggle that hides what
+ * the target repository already has.
  */
 export const ContentPicker: React.FC<IContentPickerProps> = ({
   contentTypes,
@@ -110,7 +110,6 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
     pulpType,
   });
 
-  // Which of this page's units the target repository already has.
   const pageHrefs = units.map((unit) => unit.href);
   const { data: present } = useContentTypeListQuery({
     pulpType: typeKey,

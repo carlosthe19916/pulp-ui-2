@@ -1,8 +1,8 @@
-import type { ISortBy } from "@patternfly/react-table";
 import {
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
+import type { ISortBy } from "@patternfly/react-table";
 
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -27,9 +27,8 @@ interface IUseBrowseListStateOptions<
 }
 
 /**
- * Paging, column sort and toolbar filters for one Browse list. Returns the state the
- * shared `BrowseShell` renders plus `params` (paging, ordering, debounced filters) that
- * the section spreads into its own query, so the section still owns every param.
+ * Paging, column sort and toolbar filters for one Browse list: `BrowseShell` state plus
+ * `params` the section spreads into its own query.
  */
 export const useBrowseListState = <
   TSort extends string = never,

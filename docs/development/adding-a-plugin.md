@@ -9,7 +9,7 @@ entries.
    - `app.isAvailable`: use `whenInstalled(<component>, <package>)`.
    - `rest`: the repository `pulp_type` and `<app>/<slug>` path, as in the OpenAPI spec.
    - `entities`: only the entity types the plugin implements. Start from the shared groups in
-     `base-fields.ts` and add the plugin's fields. Field types are in `field-types.ts`.
+     `baseFields.ts` and add the plugin's fields. Field types are in `fieldTypes.ts`.
    - `content`: every content type with its `apiPath`; add `uploadable` only if the API has an
      upload or create endpoint for it.
 2. **Check the catalog test** (`catalog.test.ts`) still passes: `npm test`.

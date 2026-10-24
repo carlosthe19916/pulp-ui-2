@@ -1,6 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../base-fields";
+import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 const npmRepositoryExtras: IEntityField[] = [
@@ -45,7 +45,6 @@ export const npm: IPluginDefinition = {
       archiveImport: false,
     },
 
-    // npm remote: no fields beyond the pulpcore remote base.
     remote: {
       form: {
         isWizard: true,
@@ -54,7 +53,6 @@ export const npm: IPluginDefinition = {
       },
     },
 
-    // npm distribution: serves a repository, or pull-through via a remote.
     distribution: {
       form: {
         isWizard: false,

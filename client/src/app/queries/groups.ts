@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -5,7 +6,6 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -20,13 +20,14 @@ import type {
   PatchedGroup,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
 import { userKeys } from "./users";
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const GroupsQueryKey = "groups";
 
@@ -37,9 +38,8 @@ export type IGroupUserListParams = ListParams<GroupsUsersListData>;
 export type IGroupRoleListParams = ListParams<GroupsRolesListData>;
 
 /**
- * Query-key factory mirroring the REST paths; identifying segments precede
- * params/`"all"` so a prefix invalidates all variants. Shared by the query
- * options and mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
  */
 export const groupKeys = {
   all: () => [GroupsQueryKey] as const,

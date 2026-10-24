@@ -8,11 +8,11 @@ import { artifactKeys } from "./artifacts";
 import { containerNamespaceKeys } from "./container-namespaces";
 import { contentKeys } from "./content";
 import { contentGuardKeys } from "./content-guards";
-import { exporterKeys } from "./exporters";
-import { importerKeys } from "./importers";
 import { distributionKeys } from "./distributions";
 import { domainKeys } from "./domains";
+import { exporterKeys } from "./exporters";
 import { groupKeys } from "./groups";
+import { importerKeys } from "./importers";
 import { publicationKeys } from "./publications";
 import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
@@ -23,54 +23,74 @@ import { taskKeys } from "./tasks";
 import { uploadKeys } from "./uploads";
 import { upstreamPulpKeys } from "./upstream-pulps";
 import { userKeys } from "./users";
+import type { IPulpDomain } from "./utils/pulpApi";
 import { vulnReportKeys } from "./vuln-reports";
 import { workerKeys } from "./workers";
-import type { IPulpDomain } from "./utils/pulpApi";
 
 const domain: IPulpDomain = { enabled: false, name: "default" };
 const href = "/pulp/api/v3/groups/1/";
 
 /** True when `key` begins with every segment of `prefix` (TanStack prefix match). */
-const startsWith = (key: readonly unknown[], prefix: readonly unknown[]) =>
-  prefix.every((segment, i) => Object.is(key[i], segment));
+const startsWith = ({
+  key,
+  prefix,
+}: {
+  key: readonly unknown[];
+  prefix: readonly unknown[];
+}) => prefix.every((segment, i) => Object.is(key[i], segment));
 
 describe("query-key factories", () => {
   describe("groupKeys", () => {
     it("nests both user-query variants under the group's users folder", () => {
       const folder = groupKeys.users(href);
       expect(
-        startsWith(groupKeys.usersQuery(href, { limit: 10 }), folder),
+        startsWith({
+          key: groupKeys.usersQuery(href, { limit: 10 }),
+          prefix: folder,
+        }),
       ).toBe(true);
-      expect(startsWith(groupKeys.usersAllQuery(href), folder)).toBe(true);
+      expect(
+        startsWith({ key: groupKeys.usersAllQuery(href), prefix: folder }),
+      ).toBe(true);
     });
 
     it("nests the role query under the group's roles folder", () => {
       const folder = groupKeys.roles(href);
       expect(
-        startsWith(groupKeys.rolesQuery(href, { limit: 10 }), folder),
+        startsWith({
+          key: groupKeys.rolesQuery(href, { limit: 10 }),
+          prefix: folder,
+        }),
       ).toBe(true);
     });
 
     it("nests users/roles sub-collections under the group detail folder", () => {
       const detail = groupKeys.detail(href);
-      expect(startsWith(groupKeys.users(href), detail)).toBe(true);
-      expect(startsWith(groupKeys.roles(href), detail)).toBe(true);
+      expect(startsWith({ key: groupKeys.users(href), prefix: detail })).toBe(
+        true,
+      );
+      expect(startsWith({ key: groupKeys.roles(href), prefix: detail })).toBe(
+        true,
+      );
     });
 
     it("does not touch the group detail when invalidating a sub-collection", () => {
       // detail is shorter than the users folder, so a users-folder invalidation
       // never matches the detail query.
-      expect(startsWith(groupKeys.detail(href), groupKeys.users(href))).toBe(
-        false,
-      );
+      expect(
+        startsWith({
+          key: groupKeys.detail(href),
+          prefix: groupKeys.users(href),
+        }),
+      ).toBe(false);
     });
 
     it("keeps the list query under the list folder", () => {
       expect(
-        startsWith(
-          groupKeys.listQuery(domain, { limit: 10 }),
-          groupKeys.list(),
-        ),
+        startsWith({
+          key: groupKeys.listQuery(domain, { limit: 10 }),
+          prefix: groupKeys.list(),
+        }),
       ).toBe(true);
     });
   });
@@ -78,31 +98,40 @@ describe("query-key factories", () => {
   describe("userKeys", () => {
     it("nests the role query under the user's roles folder", () => {
       const folder = userKeys.roles(href);
-      expect(startsWith(userKeys.rolesQuery(href, { limit: 10 }), folder)).toBe(
-        true,
-      );
+      expect(
+        startsWith({
+          key: userKeys.rolesQuery(href, { limit: 10 }),
+          prefix: folder,
+        }),
+      ).toBe(true);
     });
 
     it("nests the roles sub-collection under the user detail folder", () => {
-      expect(startsWith(userKeys.roles(href), userKeys.detail(href))).toBe(
-        true,
-      );
+      expect(
+        startsWith({
+          key: userKeys.roles(href),
+          prefix: userKeys.detail(href),
+        }),
+      ).toBe(true);
     });
   });
 
   describe("domainKeys", () => {
     it("keeps the list query under the list folder", () => {
       expect(
-        startsWith(
-          domainKeys.listQuery(domain, { limit: 10 }),
-          domainKeys.list(),
-        ),
+        startsWith({
+          key: domainKeys.listQuery(domain, { limit: 10 }),
+          prefix: domainKeys.list(),
+        }),
       ).toBe(true);
     });
 
     it("keeps the detail query under the detail folder", () => {
       expect(
-        startsWith(domainKeys.detailQuery(href), domainKeys.detail(href)),
+        startsWith({
+          key: domainKeys.detailQuery(href),
+          prefix: domainKeys.detail(href),
+        }),
       ).toBe(true);
     });
   });
@@ -110,22 +139,28 @@ describe("query-key factories", () => {
   describe("taskKeys", () => {
     it("keeps the list query under the list folder", () => {
       expect(
-        startsWith(taskKeys.listQuery(domain, { limit: 10 }), taskKeys.list()),
+        startsWith({
+          key: taskKeys.listQuery(domain, { limit: 10 }),
+          prefix: taskKeys.list(),
+        }),
       ).toBe(true);
     });
 
     it("keeps the detail query under the detail folder", () => {
       expect(
-        startsWith(taskKeys.detailQuery(href), taskKeys.detail(href)),
+        startsWith({
+          key: taskKeys.detailQuery(href),
+          prefix: taskKeys.detail(href),
+        }),
       ).toBe(true);
     });
 
     it("keeps the per-resource by-PRN query under the byPrn folder", () => {
       expect(
-        startsWith(
-          taskKeys.byPrnQuery(domain, "prn:file.filerepository:abc"),
-          taskKeys.byPrn(),
-        ),
+        startsWith({
+          key: taskKeys.byPrnQuery(domain, "prn:file.filerepository:abc"),
+          prefix: taskKeys.byPrn(),
+        }),
       ).toBe(true);
     });
   });
@@ -133,10 +168,16 @@ describe("query-key factories", () => {
   describe("roleKeys", () => {
     it("keeps both list-query variants under the list folder", () => {
       expect(
-        startsWith(roleKeys.listQuery(domain, { limit: 10 }), roleKeys.list()),
+        startsWith({
+          key: roleKeys.listQuery(domain, { limit: 10 }),
+          prefix: roleKeys.list(),
+        }),
       ).toBe(true);
       expect(
-        startsWith(roleKeys.listAllQuery(domain, {}), roleKeys.list()),
+        startsWith({
+          key: roleKeys.listAllQuery(domain, {}),
+          prefix: roleKeys.list(),
+        }),
       ).toBe(true);
     });
   });
@@ -144,16 +185,16 @@ describe("query-key factories", () => {
   describe("contentKeys", () => {
     it("keeps typed list queries (page and fetch-all) under the list folder", () => {
       expect(
-        startsWith(
-          contentKeys.typeListQuery(domain, "file.file", { limit: 10 }),
-          contentKeys.list(),
-        ),
+        startsWith({
+          key: contentKeys.typeListQuery(domain, "file.file", { limit: 10 }),
+          prefix: contentKeys.list(),
+        }),
       ).toBe(true);
       expect(
-        startsWith(
-          contentKeys.typeAllListQuery(domain, "file.file", {}),
-          contentKeys.list(),
-        ),
+        startsWith({
+          key: contentKeys.typeAllListQuery(domain, "file.file", {}),
+          prefix: contentKeys.list(),
+        }),
       ).toBe(true);
     });
   });
@@ -163,19 +204,19 @@ describe("query-key factories", () => {
 
     it("nests the versions list under the repository detail folder", () => {
       expect(
-        startsWith(
-          repositoryKeys.versionsQuery(repoHref, { limit: 1 }),
-          repositoryKeys.detail(repoHref),
-        ),
+        startsWith({
+          key: repositoryKeys.versionsQuery(repoHref, { limit: 1 }),
+          prefix: repositoryKeys.detail(repoHref),
+        }),
       ).toBe(true);
     });
 
     it("nests plugin sub-resources under the repository detail folder", () => {
       expect(
-        startsWith(
-          repositoryKeys.subResourceQuery(repoHref, "packages/", {}),
-          repositoryKeys.detail(repoHref),
-        ),
+        startsWith({
+          key: repositoryKeys.subResourceQuery(repoHref, "packages/", {}),
+          prefix: repositoryKeys.detail(repoHref),
+        }),
       ).toBe(true);
     });
   });
@@ -185,19 +226,19 @@ describe("query-key factories", () => {
 
     it("keeps the list query under the list folder", () => {
       expect(
-        startsWith(
-          remoteKeys.listQuery(domain, { limit: 10 }),
-          remoteKeys.list(),
-        ),
+        startsWith({
+          key: remoteKeys.listQuery(domain, { limit: 10 }),
+          prefix: remoteKeys.list(),
+        }),
       ).toBe(true);
     });
 
     it("keeps the detail query under the detail folder", () => {
       expect(
-        startsWith(
-          remoteKeys.detailQuery(remoteHref),
-          remoteKeys.detail(remoteHref),
-        ),
+        startsWith({
+          key: remoteKeys.detailQuery(remoteHref),
+          prefix: remoteKeys.detail(remoteHref),
+        }),
       ).toBe(true);
     });
   });
@@ -207,25 +248,25 @@ describe("query-key factories", () => {
 
     it("keeps typed and untyped list queries under the list folder", () => {
       expect(
-        startsWith(
-          distributionKeys.listQuery(domain, { limit: 10 }),
-          distributionKeys.list(),
-        ),
+        startsWith({
+          key: distributionKeys.listQuery(domain, { limit: 10 }),
+          prefix: distributionKeys.list(),
+        }),
       ).toBe(true);
       expect(
-        startsWith(
-          distributionKeys.listQuery(domain, { limit: 10 }, "file/file"),
-          distributionKeys.list(),
-        ),
+        startsWith({
+          key: distributionKeys.listQuery(domain, { limit: 10 }, "file/file"),
+          prefix: distributionKeys.list(),
+        }),
       ).toBe(true);
     });
 
     it("keeps the detail query under the detail folder", () => {
       expect(
-        startsWith(
-          distributionKeys.detailQuery(distHref),
-          distributionKeys.detail(distHref),
-        ),
+        startsWith({
+          key: distributionKeys.detailQuery(distHref),
+          prefix: distributionKeys.detail(distHref),
+        }),
       ).toBe(true);
     });
   });
@@ -235,25 +276,25 @@ describe("query-key factories", () => {
 
     it("keeps both list-query variants under the list folder", () => {
       expect(
-        startsWith(
-          publicationKeys.listQuery(domain, { limit: 10 }),
-          publicationKeys.list(),
-        ),
+        startsWith({
+          key: publicationKeys.listQuery(domain, { limit: 10 }),
+          prefix: publicationKeys.list(),
+        }),
       ).toBe(true);
       expect(
-        startsWith(
-          publicationKeys.allListQuery(domain, {}),
-          publicationKeys.list(),
-        ),
+        startsWith({
+          key: publicationKeys.allListQuery(domain, {}),
+          prefix: publicationKeys.list(),
+        }),
       ).toBe(true);
     });
 
     it("keeps the detail query under the detail folder", () => {
       expect(
-        startsWith(
-          publicationKeys.detailQuery(pubHref),
-          publicationKeys.detail(pubHref),
-        ),
+        startsWith({
+          key: publicationKeys.detailQuery(pubHref),
+          prefix: publicationKeys.detail(pubHref),
+        }),
       ).toBe(true);
     });
   });
@@ -263,10 +304,15 @@ describe("query-key factories", () => {
 
     it("nests roles and the user's permissions under the object", () => {
       const object = accessKeys.object(objectHref);
-      expect(startsWith(accessKeys.roles(objectHref), object)).toBe(true);
-      expect(startsWith(accessKeys.myPermissions(objectHref), object)).toBe(
-        true,
-      );
+      expect(
+        startsWith({ key: accessKeys.roles(objectHref), prefix: object }),
+      ).toBe(true);
+      expect(
+        startsWith({
+          key: accessKeys.myPermissions(objectHref),
+          prefix: object,
+        }),
+      ).toBe(true);
     });
   });
 
@@ -276,31 +322,34 @@ describe("query-key factories", () => {
 
     it("nests past runs under their exporter or importer", () => {
       expect(
-        startsWith(
-          exporterKeys.exports(exporterHref),
-          exporterKeys.detail(exporterHref),
-        ),
+        startsWith({
+          key: exporterKeys.exports(exporterHref),
+          prefix: exporterKeys.detail(exporterHref),
+        }),
       ).toBe(true);
       expect(
-        startsWith(
-          importerKeys.imports(importerHref),
-          importerKeys.detail(importerHref),
-        ),
+        startsWith({
+          key: importerKeys.imports(importerHref),
+          prefix: importerKeys.detail(importerHref),
+        }),
       ).toBe(true);
     });
 
     it("keeps each list query under its list folder", () => {
       expect(
-        startsWith(
-          exporterKeys.listQuery(domain, "core/pulp", { limit: 10, offset: 0 }),
-          exporterKeys.list(),
-        ),
+        startsWith({
+          key: exporterKeys.listQuery(domain, "core/pulp", {
+            limit: 10,
+            offset: 0,
+          }),
+          prefix: exporterKeys.list(),
+        }),
       ).toBe(true);
       expect(
-        startsWith(
-          importerKeys.listQuery(domain, { limit: 10 }),
-          importerKeys.list(),
-        ),
+        startsWith({
+          key: importerKeys.listQuery(domain, { limit: 10 }),
+          prefix: importerKeys.list(),
+        }),
       ).toBe(true);
     });
   });
@@ -345,16 +394,16 @@ describe("query-key factories", () => {
         [uploadKeys.listQuery(domain, { limit: 10 }), uploadKeys.list()],
       ];
       for (const [key, folder] of pairs) {
-        expect(startsWith(key, folder)).toBe(true);
+        expect(startsWith({ key, prefix: folder })).toBe(true);
       }
     });
 
     it("keeps a task group's detail under the family root", () => {
       expect(
-        startsWith(
-          taskGroupKeys.detail("/pulp/api/v3/task-groups/abc/"),
-          taskGroupKeys.all(),
-        ),
+        startsWith({
+          key: taskGroupKeys.detail("/pulp/api/v3/task-groups/abc/"),
+          prefix: taskGroupKeys.all(),
+        }),
       ).toBe(true);
     });
   });

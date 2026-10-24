@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { EntityModalBody } from "@app/components/EntityModalBody";
 import { EntityModalShell } from "@app/components/EntityModalShell";
 import { PluginTypeSelector } from "@app/components/PluginTypeSelector";
@@ -5,7 +7,13 @@ import { usePluginTypeSelection } from "@app/hooks/pluginForm/usePluginTypeSelec
 
 import { usePublicationForm } from "./usePublicationForm";
 
-const PublicationModalInner = ({ onClose }: { onClose: () => void }) => {
+interface IPublicationModalInnerProps {
+  onClose: () => void;
+}
+
+const PublicationModalInner: React.FC<IPublicationModalInnerProps> = ({
+  onClose,
+}) => {
   const {
     availablePlugins,
     selectedType,
@@ -58,8 +66,7 @@ interface IPublicationModalProps {
 }
 
 /** Create modal for publications (create-only — publications are immutable). */
-export const PublicationModal = ({
+export const PublicationModal: React.FC<IPublicationModalProps> = ({
   isOpen,
   onClose,
-}: IPublicationModalProps) =>
-  isOpen ? <PublicationModalInner onClose={onClose} /> : null;
+}) => (isOpen ? <PublicationModalInner onClose={onClose} /> : null);

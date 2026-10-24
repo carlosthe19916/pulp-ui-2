@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { Outlet, useRouterState } from "@tanstack/react-router";
 
 import {
@@ -20,9 +22,9 @@ import { ThemeProvider } from "@app/context/Theme/ThemeProvider";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useLocalStorage } from "@app/hooks/useStorage";
 
-import { DefaultLayout } from "./default-layout";
+import { DefaultLayout } from "./DefaultLayout";
 
-export const RootComponent = () => {
+export const RootComponent: React.FC = () => {
   const [mode, setMode] = useLocalStorage<ThemeMode>({
     key: "theme-preference",
     defaultValue: "system",
@@ -56,7 +58,11 @@ export const RootComponent = () => {
   );
 };
 
-export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
+interface IWaitForApiStatusProps {
+  children: React.ReactNode;
+}
+
+export const WaitForApiStatus: React.FC<IWaitForApiStatusProps> = ({
   children,
 }) => {
   const apiStatus = useApiStatus();
@@ -83,7 +89,7 @@ export const WaitForApiStatus: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-const RootLayout = () => {
+const RootLayout: React.FC = () => {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isLoginRoute = pathname === "/login";
 

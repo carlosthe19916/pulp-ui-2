@@ -20,22 +20,22 @@ export interface IUploadItem {
   error?: string;
 }
 
+interface IUseUploadQueueOptions {
+  apiPath: string;
+  mechanism: ContentUploadMechanism;
+  /** Initial upload fields for a newly picked file. */
+  defaultFields: (file: File) => Record<string, string>;
+}
+
 /**
- * A batch of files uploaded one after another as one content type (large files in
- * chunks). Uploads create content without a repository;
- * the caller adds the resulting hrefs in one change. `stop` lets the current file
- * finish and skips the rest.
+ * Uploads a batch of files one after another as one content type, without a repository.
+ * `stop` lets the current file finish and skips the rest.
  */
 export const useUploadQueue = ({
   apiPath,
   mechanism,
   defaultFields,
-}: {
-  apiPath: string;
-  mechanism: ContentUploadMechanism;
-  /** Initial upload fields for a newly picked file. */
-  defaultFields: (file: File) => Record<string, string>;
-}) => {
+}: IUseUploadQueueOptions) => {
   const [items, setItems] = useState<IUploadItem[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const stopRef = useRef(false);

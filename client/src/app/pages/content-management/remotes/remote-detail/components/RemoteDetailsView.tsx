@@ -24,7 +24,6 @@ import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
 import OutlinedClockIcon from "@patternfly/react-icons/dist/esm/icons/outlined-clock-icon";
 import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 
-import { getRemoteEditFields } from "@catalog";
 import type { GenericRemoteResponse } from "@app/client";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
@@ -32,10 +31,10 @@ import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { remoteKeys } from "@app/queries/remotes";
 import { formatDateTime } from "@app/utils/utils";
+import { getRemoteEditFields } from "@catalog";
 
 const DEFAULT_GROUP = "General";
 
-// Two columns from md up, one on narrow screens.
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 
 // Shared transport groups, in trailing order. Any other group is plugin-specific and
@@ -65,7 +64,11 @@ interface IRemoteDetailsViewProps {
   pulpType: string;
 }
 
-const CopyableValue: React.FC<{ value?: string }> = ({ value }) =>
+interface ICopyableValueProps {
+  value?: string;
+}
+
+const CopyableValue: React.FC<ICopyableValueProps> = ({ value }) =>
   value ? (
     <ClipboardCopy variant="inline-compact" isReadOnly>
       {value}

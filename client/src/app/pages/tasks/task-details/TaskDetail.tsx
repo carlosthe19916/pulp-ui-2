@@ -22,8 +22,8 @@ import {
 } from "@patternfly/react-core";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
@@ -40,7 +40,6 @@ import type { TaskWithError } from "@app/queries/utils/openapiErrorTypes";
 import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-// Two columns from md up, one on narrow screens.
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 
 interface ITaskDetailProps {

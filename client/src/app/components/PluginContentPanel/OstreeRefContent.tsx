@@ -9,6 +9,7 @@ import type {
 } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
 import {
   Checksum,
   ContentHeader,
@@ -16,19 +17,24 @@ import {
   ContentSection,
   StorageFacts,
 } from "./ContentPanelLayout";
-import type { IPluginContentProps } from "./contentFields";
 
 const PAGE = 10;
+
+interface ICommitChainProps {
+  href: string;
+  remaining: number;
+  onMore: () => void;
+}
 
 /**
  * One commit of `ostree log`, then its parent. Commits only link to their parent,
  * so history is walked one request at a time, `remaining` commits deep.
  */
-const CommitChain: React.FC<{
-  href: string;
-  remaining: number;
-  onMore: () => void;
-}> = ({ href, remaining, onMore }) => {
+const CommitChain: React.FC<ICommitChainProps> = ({
+  href,
+  remaining,
+  onMore,
+}) => {
   const { data } = useContentDetailQuery<OstreeOstreeCommitResponse>({ href });
   if (!data) return null;
   return (

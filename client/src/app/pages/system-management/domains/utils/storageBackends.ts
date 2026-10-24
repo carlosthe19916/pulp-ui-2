@@ -3,10 +3,8 @@ import * as yup from "yup";
 import type { StorageClassEnum } from "@app/client";
 
 /**
- * Storage backends are plugin-dependent, so the spec's `StorageClassEnum` shrinks
- * or grows with what's installed. OCI ships with `pulp_service`, which isn't on
- * every backend (and isn't in the dev spec), so keep it selectable without
- * coupling to the generated enum.
+ * The spec's `StorageClassEnum` plus OCI's `pulp_service` backend, which isn't on every
+ * install (nor in the dev spec).
  */
 export type StorageClass =
   StorageClassEnum | "pulp_service.app.storage.OCIStorage";

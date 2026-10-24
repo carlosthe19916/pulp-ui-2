@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField, IFieldOption } from "../field-types";
+import type { IEntityField, IFieldOption } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const LAYOUT_OPTIONS: IFieldOption[] = [
@@ -108,7 +108,6 @@ export const deb: IPluginDefinition = {
   // pulp_types, overridden per slot below.
   rest: { pulpType: "deb.deb", apiPath: "deb/apt" },
   entities: {
-    // APT repository: a remote to sync from, auto-publish and signing options.
     repository: {
       form: {
         isWizard: false,
@@ -125,7 +124,6 @@ export const deb: IPluginDefinition = {
       actions: debActions,
     },
 
-    // APT remote (deb.apt-remote): release filters and sync toggles.
     remote: {
       rest: { pulpType: "deb.apt-remote" },
       form: {
@@ -135,7 +133,6 @@ export const deb: IPluginDefinition = {
       },
     },
 
-    // APT distribution (deb.apt-distribution): serves a repository/publication.
     distribution: {
       rest: { pulpType: "deb.apt-distribution" },
       form: {

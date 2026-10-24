@@ -1,6 +1,6 @@
+import type { ResourceKind } from "@catalog";
 import { useQuery } from "@tanstack/react-query";
 
-import type { ResourceKind } from "@catalog";
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -33,7 +33,7 @@ export interface IResourceSearch {
   selectedLabel?: string;
 }
 
-interface IUseResourceSearchArgs {
+interface IUseResourceSearchOptions {
   resourceKind: ResourceKind;
   /** Debounced search text typed into the dropdown. */
   term: string;
@@ -46,14 +46,8 @@ interface IUseResourceSearchArgs {
 }
 
 /**
- * Server-side typeahead search for a single `asyncResource` field. Only the query
- * for the field's `resourceKind` runs, and only while the dropdown is open — so no
- * resource list is fetched unless the schema has such a field and the user opens it.
- * Repositories/remotes search server-side by name; publications (no name filter)
- * fetch a page and filter client-side by their `Publication <id>` label.
- *
- * All list queries are declared unconditionally (rules of hooks) and gated by
- * `enabled`; the inactive ones never fire.
+ * Server-side typeahead search for one `asyncResource` field: only the query for its
+ * `resourceKind` runs, and only while the dropdown is open.
  */
 export const useResourceSearch = ({
   resourceKind,
@@ -61,7 +55,7 @@ export const useResourceSearch = ({
   selectedHref,
   enabled,
   filter,
-}: IUseResourceSearchArgs): IResourceSearch => {
+}: IUseResourceSearchOptions): IResourceSearch => {
   const domain = useSelectedDomain();
   const defaultDomain = useDefaultDomain();
 
@@ -71,6 +65,8 @@ export const useResourceSearch = ({
   const isSigningService = resourceKind === "signingService";
   const isContentGuard = resourceKind === "contentGuard";
 
+  // Every kind's query is declared (rules of hooks); `enabled` keeps the inactive
+  // ones from firing.
   const repositoryQuery = useQuery({
     ...repositoriesListQueryOptions({
       domain,
@@ -95,6 +91,7 @@ export const useResourceSearch = ({
     }),
     enabled: enabled && isRemote,
   });
+  // Publications have no name filter: fetch a page and match the label client-side.
   const publicationQuery = useQuery({
     ...publicationsListQueryOptions({
       domain,

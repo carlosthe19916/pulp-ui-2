@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { getRouteApi } from "@tanstack/react-router";
 
 import { ContentDetail } from "./ContentDetail";
@@ -6,7 +8,7 @@ const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/content/$contentType/$contentId/",
 );
 
-export const ContentDetailRoute = () => {
+export const ContentDetailRoute: React.FC = () => {
   const { pulpDomain, contentType, contentId } = routeApi.useParams();
   const { href } = routeApi.useLoaderData();
   return (

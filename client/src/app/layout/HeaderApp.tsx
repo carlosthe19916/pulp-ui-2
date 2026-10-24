@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { useReducer, useState } from "react";
 
 import {
@@ -24,25 +24,25 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
+import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
 import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
+import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 import HelpIcon from "@patternfly/react-icons/dist/esm/icons/help-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
-import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
-import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 
 import { ThemeSelector } from "@app/components/ThemeSelector";
-import ENV from "@app/env";
+import { ENV } from "@app/env";
 import { useAuth } from "@app/hooks/useAuth";
-import useBranding from "@app/hooks/useBranding";
+import { getBranding } from "@app/utils/branding";
 
-import { AboutApp } from "./about";
+import { AboutApp } from "./AboutApp";
 
 export const HeaderApp: React.FC = () => {
   const auth = useAuth();
 
   const {
     masthead: { leftBrand, leftTitle, rightBrand, supportUrl },
-  } = useBranding();
+  } = getBranding();
 
   const [isAboutModalOpen, toggleIsAboutModalOpen] = useReducer(
     (state) => !state,

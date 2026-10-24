@@ -14,10 +14,10 @@ import {
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTrObject,
   useDataViewFilters,
   useDataViewPagination,
   useDataViewSelection,
-  type DataViewTrObject,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";

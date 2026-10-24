@@ -1,9 +1,9 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
 
+import type { EntityType, IEntityField, IPlugin } from "@catalog";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 import { buildDefaultValues, buildFieldSchema } from "@app/utils/formSchema";
-import type { EntityType, IEntityField, IPlugin } from "@catalog";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 type EntityFormValues = Record<string, unknown>;
@@ -14,7 +14,7 @@ export interface IEntityForEdit {
   [key: string]: unknown;
 }
 
-interface IUseEntityFormBaseArgs {
+interface IUseEntityFormBaseOptions {
   /** The content entity type (catalog key) this form is for. */
   kind: EntityType;
   /** Resolved plugin for the selected/edited pulp_type (undefined ⇒ no fields). */
@@ -30,25 +30,19 @@ export interface IUseEntityFormBaseResult {
 }
 
 /**
- * The shared, plugin-neutral form builder reused by every family's form hook
- * (e.g. `useRepositoryForm`): it reads the catalog's field descriptors for the
- * `kind` + plugin and returns a configured react-hook-form (resolver + defaults)
- * and the resolved field list, with **no submit wiring** — each family injects its
- * own typed submit via its actions hook.
- *
- * Fields are fixed for this mount: the modal remounts (via `key`) when the create
- * type changes, so no memo/reset dance is needed here.
+ * Plugin-neutral form builder for every family's form hook: catalog fields to a
+ * configured react-hook-form, with no submit wiring.
  */
 export const useEntityFormBase = ({
   kind,
   plugin,
   entity,
-}: IUseEntityFormBaseArgs): IUseEntityFormBaseResult => {
+}: IUseEntityFormBaseOptions): IUseEntityFormBaseResult => {
   const isCreate = !entity;
 
-  // The plugin's contribution for this family (form fields + create endpoint).
   const entityPlugin = plugin?.entities[kind];
 
+  // Fixed for this mount: the modal remounts (via `key`) when the create type changes.
   const fields =
     (isCreate
       ? entityPlugin?.form.createFields
@@ -64,9 +58,8 @@ export const useEntityFormBase = ({
 };
 
 /**
- * What every family's form hook returns: a values-based submit (create or edit) plus
- * pending state. The plain body wraps it in `form.handleSubmit`; the wizard body
- * calls it with the merged step values.
+ * What every family's form hook returns. The plain body wraps `onSubmit` in
+ * `form.handleSubmit`; the wizard calls it with the merged step values.
  */
 export interface IUseEntityFormResult {
   // Submit the (create or edit) values. The success toast + call-level onSuccess

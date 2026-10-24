@@ -1,7 +1,7 @@
-import { getPlugin } from "@catalog";
 import type { DistributionResponse } from "@app/client";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
+import { getPlugin } from "@catalog";
 
 const LIMIT = 100;
 
@@ -9,10 +9,8 @@ const publicationOf = (distribution: DistributionResponse): string | null =>
   (distribution as { publication?: string | null }).publication ?? null;
 
 /**
- * Distributions serving a repository: those pointing at it directly plus, for plugins
- * that publish, those serving one of its publications. Distributions can't be filtered
- * by publication, so the plugin's publication-backed distributions are narrowed to this
- * repository's publications.
+ * Distributions serving a repository: directly, or (for plugins that publish) through one
+ * of its publications.
  */
 export const useServingDistributions = ({
   repositoryHref,
@@ -36,6 +34,8 @@ export const useServingDistributions = ({
     options: { enabled: canPublish && !!distributionApiPath },
   });
   const published = (typed.data?.results ?? []).filter(publicationOf);
+  // Distributions can't be filtered by publication: keep those serving this
+  // repository's publications.
   const own = usePublicationsListQuery({
     params: {
       repository: repositoryHref,

@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { type EntityType, getPlugin, type IPlugin } from "@catalog";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { type IEntityForEdit } from "@app/hooks/pluginForm/useEntityForm";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
+import { type IEntityForEdit } from "@app/hooks/pluginForm/useEntityForm";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { type EntityType, getPlugin, type IPlugin } from "@catalog";
 
 export interface IPluginTypeSelection {
   /** Plugins implementing this family, installed and UI-creatable (create mode). */
@@ -16,7 +16,7 @@ export interface IPluginTypeSelection {
   useWizard: boolean;
 }
 
-interface IUsePluginTypeSelectionArgs {
+interface IUsePluginTypeSelectionOptions {
   /** The content entity type (catalog key). */
   kind: EntityType;
   /** Present ⇒ edit mode (the list row or the full entity — both carry `pulp_href`). */
@@ -24,16 +24,13 @@ interface IUsePluginTypeSelectionArgs {
 }
 
 /**
- * Resolves the plugin type for a content-family modal: the create-time type selector
- * state (available plugins + selection), or the edited entity's type from its href —
- * plus the wizard flag. The edit-mode full-entity prefetch lives in each family's
- * modal (it uses the family's own typed detail query); this hook is plugin-neutral
- * and query-free.
+ * Resolves a content-family modal's plugin type (the create-time selector, or the edited
+ * entity's type from its href) plus the wizard flag.
  */
 export const usePluginTypeSelection = ({
   kind,
   entity,
-}: IUsePluginTypeSelectionArgs): IPluginTypeSelection => {
+}: IUsePluginTypeSelectionOptions): IPluginTypeSelection => {
   const isCreate = !entity;
 
   const availablePlugins = useCreatablePlugins(kind);

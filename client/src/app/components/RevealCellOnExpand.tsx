@@ -1,23 +1,22 @@
 import type React from "react";
 import { useCallback, useState } from "react";
 
-/**
- * Defers mounting expanded-row content until its row is first expanded, then keeps
- * it mounted (keep-alive). The library `DataViewTable` always renders expanded-row
- * content into the DOM and merely toggles PatternFly's native `hidden` attribute on
- * the `<tr>` when collapsing; this watches that attribute so a heavy panel (and its
- * queries) only mounts on first expand instead of on page load. `children` is a
- * thunk so even building the content element is deferred until that first expand.
- *
- * @param props.children - Builds the expanded content; called once revealed.
- */
-export const RevealCellOnExpand: React.FC<{
+interface IRevealCellOnExpandProps {
   children: () => React.ReactNode;
-}> = ({ children }) => {
+}
+
+/**
+ * Mounts expanded-row content on its row's first expand, then keeps it mounted.
+ * `children` is a thunk so building it is deferred too.
+ */
+export const RevealCellOnExpand: React.FC<IRevealCellOnExpandProps> = ({
+  children,
+}) => {
   const [revealed, setRevealed] = useState(false);
 
-  // Observe the owning `<tr>` from a ref callback (not an effect) so revealing
-  // stays out of React's effect phase. Returns a React 19 ref-cleanup.
+  // `DataViewTable` always renders expanded rows and only toggles `hidden` on the
+  // `<tr>`, so watch that attribute. Observe it from a ref callback (not an effect)
+  // so revealing stays out of React's effect phase. Returns a React 19 ref-cleanup.
   const observeRow = useCallback(
     (node: HTMLSpanElement | null) => {
       if (!node || revealed) return;

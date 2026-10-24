@@ -1,5 +1,5 @@
-import { type EntityType, getAvailablePlugins, type IPlugin } from "@catalog";
 import { useApiStatus } from "@app/hooks/useApiStatus";
+import { type EntityType, getAvailablePlugins, type IPlugin } from "@catalog";
 
 /** pulp_types that can't be created from the UI (e.g. push repos are populated by `podman push`). */
 export const NON_CREATABLE_TYPES = new Set(["container.container-push"]);

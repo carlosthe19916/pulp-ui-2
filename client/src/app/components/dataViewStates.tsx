@@ -1,18 +1,18 @@
 import type React from "react";
 
-import { Bullseye } from "@patternfly/react-core";
-import { Tbody, Td, Tr } from "@patternfly/react-table";
-import { DataViewState } from "@patternfly/react-data-view";
 import ErrorState from "@patternfly/react-component-groups/dist/dynamic/ErrorState";
 import SkeletonTableBody from "@patternfly/react-component-groups/dist/dynamic/SkeletonTableBody";
+import { Bullseye } from "@patternfly/react-core";
+import { DataViewState } from "@patternfly/react-data-view";
 import { css } from "@patternfly/react-styles";
 import checkStyles from "@patternfly/react-styles/css/components/Check/check";
 import tableStyles from "@patternfly/react-styles/css/components/Table/table";
+import { Tbody, Td, Tr } from "@patternfly/react-table";
 
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { isForbiddenError } from "@app/utils/isHttpError";
 
-interface IDataViewStatesArgs<TError = unknown> {
+interface IDataViewBodyStatesOptions<TError = unknown> {
   /** Data columns only; a leading selection column is set via the flag below. */
   columnCount: number;
   hasSelectionColumn?: boolean;
@@ -35,7 +35,7 @@ export function dataViewBodyStates<TError = unknown>({
   errorState,
   isEmpty,
   emptyState,
-}: IDataViewStatesArgs<TError>): {
+}: IDataViewBodyStatesOptions<TError>): {
   activeState: DataViewState | undefined;
   bodyStates: Partial<Record<DataViewState, React.ReactNode>>;
 } {

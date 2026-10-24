@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo } from "react";
+import type React from "react";
+import { useCallback, useMemo } from "react";
 import { AuthProvider, useAuth } from "react-oidc-context";
 
 import {
@@ -10,9 +11,14 @@ import {
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
 import { oidcClientSettings, oidcSignoutArgs } from "@app/oidc";
+
 import { AuthContext, type IAuthContext } from "./AuthContext";
 
-export const OidcAuthProvider: React.FC<{ children: React.ReactNode }> = ({
+interface IOidcAuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const OidcAuthProvider: React.FC<IOidcAuthProviderProps> = ({
   children,
 }) => {
   return (
@@ -28,20 +34,18 @@ export const OidcAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-const OidcAuthBridge: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+interface IOidcAuthBridgeProps {
+  children: React.ReactNode;
+}
+
+const OidcAuthBridge: React.FC<IOidcAuthBridgeProps> = ({ children }) => {
   const auth = useAuth();
 
   const login = useCallback(
     (_redirectTo?: string) => {
-      void auth
-        .signinRedirect({
-          url_state: window.location.pathname + window.location.search,
-        })
-        .then(() => {
-          console.log("Redirect to login");
-        });
+      void auth.signinRedirect({
+        url_state: window.location.pathname + window.location.search,
+      });
     },
     [auth],
   );

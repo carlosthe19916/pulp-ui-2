@@ -15,24 +15,23 @@ import type {
   UploadsListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+
 import { waitForTask } from "./tasks";
 import { CHUNK_SIZE, contentRange, planChunks } from "./utils/chunks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
-/** Creates an upload of the file's size and PUTs each chunk; returns the upload href. */
-const putChunks = async ({
-  domain,
-  file,
-  onProgress,
-}: {
+interface IPutChunksParams {
   domain: IPulpDomain;
   file: File;
   onProgress?: (fraction: number) => void;
-}) => {
+}
+
+/** Creates an upload of the file's size and PUTs each chunk; returns the upload href. */
+const putChunks = async ({ domain, file, onProgress }: IPutChunksParams) => {
   const { data: upload } = await axiosInstance.post<UploadResponse>(
     pulpApiPath("uploads/", domain),
     { size: file.size },
@@ -52,9 +51,8 @@ const putChunks = async ({
 };
 
 /**
- * Sends a large file through the plugin-neutral `uploads/` API in chunks and returns
- * the upload href, which a content create/upload call takes as `upload` (no
- * `commit/` needed). Uses the XHR adapter so progress is reported in every browser.
+ * Sends a large file through `uploads/` in chunks and returns the upload href (no
+ * `commit/` needed). Uses XHR so progress is reported in every browser.
  */
 export const useChunkedUploadMutation = (
   options?: IMutationCallbacks<
@@ -87,9 +85,8 @@ const sha256Hex = async (file: File) => {
 };
 
 /**
- * Stores a file as an Artifact and returns its href. An artifact with the same
- * SHA-256 is reused (Pulp rejects duplicates); otherwise one `artifacts/` POST, or
- * for a large file the chunked `uploads/` plus `commit/` (a task that creates it).
+ * Stores a file as an Artifact and returns its href, reusing one with the same SHA-256
+ * (Pulp rejects duplicates); large files go through chunked `uploads/`.
  */
 export const useArtifactUploadMutation = (
   options?: IMutationCallbacks<

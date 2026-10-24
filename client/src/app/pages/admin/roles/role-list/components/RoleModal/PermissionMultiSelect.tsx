@@ -1,4 +1,5 @@
-import { useMemo, useState, type Ref } from "react";
+import type React from "react";
+import { type Ref, useState } from "react";
 
 import {
   Button,
@@ -27,28 +28,23 @@ interface IPermissionMultiSelectProps {
   isDisabled?: boolean;
 }
 
-export const PermissionMultiSelect = ({
+export const PermissionMultiSelect: React.FC<IPermissionMultiSelectProps> = ({
   id,
   options,
   value,
   onChange,
   isDisabled,
-}: IPermissionMultiSelectProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [customPermission, setCustomPermission] = useState("");
 
-  const filtered = useMemo(() => {
-    const query = filter.trim().toLowerCase();
-    if (!query) {
-      return options;
-    }
-    return options.filter((permission) =>
-      permission.toLowerCase().includes(query),
-    );
-  }, [filter, options]);
+  const query = filter.trim().toLowerCase();
+  const filtered = query
+    ? options.filter((permission) => permission.toLowerCase().includes(query))
+    : options;
 
-  const selectedSet = useMemo(() => new Set(value), [value]);
+  const selectedSet = new Set(value);
 
   const togglePermission = (permission: string) => {
     if (value.includes(permission)) {

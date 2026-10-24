@@ -7,12 +7,18 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
 
-/** Past exports or imports: when, and the task that ran it. */
-export const RunsTable: React.FC<{
+interface IRunsTableProps {
   label: string;
   runs: { pulp_href?: string; pulp_created?: string; task?: string | null }[];
   isLoading: boolean;
-}> = ({ label, runs, isLoading }) => {
+}
+
+/** Past exports or imports: when, and the task that ran it. */
+export const RunsTable: React.FC<IRunsTableProps> = ({
+  label,
+  runs,
+  isLoading,
+}) => {
   if (isLoading) return <>Loading…</>;
   if (runs.length === 0) return <>No {label.toLowerCase()} yet.</>;
   return (

@@ -5,23 +5,21 @@ export interface IBatchResult {
   failed: { label: string; error: unknown }[];
 }
 
+interface ISettleBatchOptions<T> {
+  items: T[];
+  label: (item: T) => string;
+  request: (item: T) => Promise<unknown>;
+}
+
 /**
- * Run one request per item in parallel and split the items by outcome, so a
- * partial failure still reports what went through and why the rest didn't.
- *
- * @example
- * settleBatch({ items: users, label: (u) => u.username, request: (u) => post(u) })
- * // { succeeded: ["alice"], failed: [{ label: "bob", error: AxiosError }] }
+ * Run one request per item in parallel and split the items by outcome, so a partial
+ * failure still reports what went through and why the rest didn't.
  */
 export const settleBatch = async <T>({
   items,
   label,
   request,
-}: {
-  items: T[];
-  label: (item: T) => string;
-  request: (item: T) => Promise<unknown>;
-}): Promise<IBatchResult> => {
+}: ISettleBatchOptions<T>): Promise<IBatchResult> => {
   const results = await Promise.allSettled(items.map(request));
   const result: IBatchResult = { succeeded: [], failed: [] };
   results.forEach((outcome, i) => {

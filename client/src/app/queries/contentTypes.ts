@@ -91,10 +91,8 @@ import type {
 import type { MultiOrderListParams } from "./utils/listParams";
 
 /**
- * Generated types of each content type's own list endpoint (`content/<apiPath>/`),
- * keyed by `pulp_type`: the row, the paginated page and the `*ListData` whose
- * `query` block types the caller's params. Add a type here to list it with
- * `useContentTypeListQuery`.
+ * Generated list types (row, page, `*ListData`) of each content type's own endpoint,
+ * keyed by pulp_type; add a type here to list it.
  */
 export interface IContentTypeMap {
   "ansible.collection_version": {

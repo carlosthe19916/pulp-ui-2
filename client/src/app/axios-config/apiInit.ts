@@ -1,17 +1,17 @@
 import axios from "axios";
 import { User, UserManager } from "oidc-client-ts";
 
-import ENV from "@app/env";
+import {
+  encodeBasicAuthHeader,
+  loadCredentials,
+} from "@app/context/Auth/basicAuthHelpers";
+import { ENV } from "@app/env";
 import {
   OIDC_CLIENT_ID,
   OIDC_SERVER_URL,
   oidcClientSettings,
   oidcSignoutArgs,
 } from "@app/oidc";
-import {
-  loadCredentials,
-  encodeBasicAuthHeader,
-} from "@app/context/Auth/basicAuthHelpers";
 
 const getOidcUser = () => {
   const oidcStorage = sessionStorage.getItem(

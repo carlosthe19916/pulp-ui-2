@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { IEntityForEdit } from "@app/hooks/pluginForm/useEntityForm";
 import { buildDefaultValues, buildFieldSchema } from "@app/utils/formSchema";
@@ -11,7 +11,7 @@ export interface IWizardStepSlice {
   isDirty: boolean;
 }
 
-interface IUseEntityWizardStateArgs {
+interface IUseEntityWizardStateOptions {
   steps: IFieldGroup[];
   entity?: IEntityForEdit;
 }
@@ -24,15 +24,13 @@ export interface IUseEntityWizardStateResult {
 }
 
 /**
- * One state slice per field group. Slices are seeded synchronously (defaults + a
- * sync yup check) so `isReady` is correct before any step mounts, and holding the
- * values here lets a step restore its inputs — PatternFly mounts only the active
- * step, discarding the others' form state on navigation.
+ * One state slice per field group, seeded synchronously so `isReady` is right before any
+ * step mounts; holding values here survives PatternFly unmounting inactive steps.
  */
 export const useEntityWizardState = ({
   steps,
   entity,
-}: IUseEntityWizardStateArgs): IUseEntityWizardStateResult => {
+}: IUseEntityWizardStateOptions): IUseEntityWizardStateResult => {
   const [stepStates, setStepStates] = useState<
     Record<string, IWizardStepSlice>
   >(() => {
@@ -51,37 +49,32 @@ export const useEntityWizardState = ({
     return initial;
   });
 
-  const setStepState = useCallback(
-    ({ group, slice }: { group: string; slice: IWizardStepSlice }) => {
-      setStepStates((prev) => {
-        const current = prev[group];
-        if (
-          current &&
-          current.isValid === slice.isValid &&
-          current.isDirty === slice.isDirty &&
-          current.values === slice.values
-        ) {
-          return prev;
-        }
-        return { ...prev, [group]: slice };
-      });
-    },
-    [],
+  const setStepState = ({
+    group,
+    slice,
+  }: {
+    group: string;
+    slice: IWizardStepSlice;
+  }) => {
+    setStepStates((prev) => {
+      const current = prev[group];
+      if (
+        current &&
+        current.isValid === slice.isValid &&
+        current.isDirty === slice.isDirty &&
+        current.values === slice.values
+      ) {
+        return prev;
+      }
+      return { ...prev, [group]: slice };
+    });
+  };
+
+  const mergedValues: Record<string, unknown> = Object.fromEntries(
+    Object.values(stepStates).flatMap((slice) => Object.entries(slice.values)),
   );
 
-  const mergedValues = useMemo(
-    () =>
-      Object.assign(
-        {},
-        ...Object.values(stepStates).map((slice) => slice.values),
-      ) as Record<string, unknown>,
-    [stepStates],
-  );
-
-  const isReady = useMemo(
-    () => Object.values(stepStates).every((slice) => slice.isValid),
-    [stepStates],
-  );
+  const isReady = Object.values(stepStates).every((slice) => slice.isValid);
 
   return { stepStates, setStepState, mergedValues, isReady };
 };

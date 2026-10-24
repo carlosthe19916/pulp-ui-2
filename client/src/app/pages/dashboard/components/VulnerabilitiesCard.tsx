@@ -13,8 +13,12 @@ import {
 
 import { useVulnReportsListQuery } from "@app/queries/vuln-reports";
 
+interface IVulnerabilitiesCardProps {
+  pulpDomain: string;
+}
+
 /** How many content units have vulnerability reports in the selected domain. */
-export const VulnerabilitiesCard: React.FC<{ pulpDomain: string }> = ({
+export const VulnerabilitiesCard: React.FC<IVulnerabilitiesCardProps> = ({
   pulpDomain,
 }) => {
   const { data } = useVulnReportsListQuery({

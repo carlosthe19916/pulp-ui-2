@@ -19,13 +19,12 @@ import {
   StackItem,
   Tab,
   TabContentBody,
-  TabTitleText,
   Tabs,
+  TabTitleText,
 } from "@patternfly/react-core";
 
-import { ContentPicker } from "@app/components/ContentPicker";
-import { getRepositoryContentTypes } from "@catalog";
 import type { RepositoryResponse } from "@app/client";
+import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
@@ -38,6 +37,7 @@ import {
   useRepositoryVersionsListQuery,
 } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getRepositoryContentTypes } from "@catalog";
 
 interface IAddContentModalProps {
   repository: RepositoryResponse;
@@ -46,12 +46,18 @@ interface IAddContentModalProps {
   onStarted: ReturnType<typeof useContentChangeTask>["watch"];
 }
 
-/** "From another repository": pick a repository and one of its versions. */
-const SourcePicker: React.FC<{
+interface ISourcePickerProps {
   repositoryType: string;
   excludeHref: string;
   onChange: (versionHref?: string) => void;
-}> = ({ repositoryType, excludeHref, onChange }) => {
+}
+
+/** "From another repository": pick a repository and one of its versions. */
+const SourcePicker: React.FC<ISourcePickerProps> = ({
+  repositoryType,
+  excludeHref,
+  onChange,
+}) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue({ value: search });
   const [source, setSource] = useState<RepositoryResponse>();

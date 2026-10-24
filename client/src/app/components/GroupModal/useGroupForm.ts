@@ -1,4 +1,5 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -14,35 +15,35 @@ import {
   type IMutationErrorMessage,
 } from "@app/utils/utils";
 
-export type GroupFormValues = {
+export interface IGroupFormValues {
   name: string;
-};
+}
 
 const groupSchema = yup.object({
   name: yup.string().default("").required("Name is required"),
 });
 
-const toDefaults = (group?: GroupResponse): GroupFormValues => ({
+const toDefaults = (group?: GroupResponse): IGroupFormValues => ({
   name: group?.name ?? "",
 });
 
-export const valuesToNewGroup = (values: GroupFormValues): Group => ({
+export const valuesToNewGroup = (values: IGroupFormValues): Group => ({
   name: values.name,
 });
 
 export const valuesToPatchedGroup = (
-  values: GroupFormValues,
+  values: IGroupFormValues,
 ): PatchedGroup => ({
   name: values.name,
 });
 
-interface IUseGroupFormArgs {
+interface IUseGroupFormOptions {
   group?: GroupResponse;
   onClose: () => void;
 }
 
 interface IUseGroupFormResult {
-  form: UseFormReturn<GroupFormValues>;
+  form: UseFormReturn<IGroupFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -52,7 +53,7 @@ interface IUseGroupFormResult {
 export const useGroupForm = ({
   group,
   onClose,
-}: IUseGroupFormArgs): IUseGroupFormResult => {
+}: IUseGroupFormOptions): IUseGroupFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !group;
@@ -80,7 +81,7 @@ export const useGroupForm = ({
       ),
   });
 
-  const form = useForm<GroupFormValues>({
+  const form = useForm<IGroupFormValues>({
     resolver: yupResolver(groupSchema),
     defaultValues: toDefaults(group),
     mode: "onChange",

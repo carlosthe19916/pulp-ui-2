@@ -3,9 +3,9 @@ import {
   publicationBase,
   remoteBase,
   repositoryBase,
-} from "../base-fields";
+} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField, IFieldOption } from "../field-types";
+import type { IEntityField, IFieldOption } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
 const CHECKSUM_TYPE_OPTIONS: IFieldOption[] = [
@@ -173,7 +173,6 @@ export const rpm: IPluginDefinition = {
   app: { isAvailable: whenInstalled("rpm", "pulp-rpm") },
   rest: { pulpType: "rpm.rpm", apiPath: "rpm/rpm" },
   entities: {
-    // RPM repository: remotes, signing services and metadata layout options.
     repository: {
       form: {
         isWizard: false,
@@ -223,7 +222,6 @@ export const rpm: IPluginDefinition = {
       },
     ],
 
-    // RPM distribution: repo/publication plus content-guard and repo-config options.
     distribution: {
       form: {
         isWizard: false,
@@ -232,7 +230,6 @@ export const rpm: IPluginDefinition = {
       },
     },
 
-    // RPM publication: base supplies the repository; adds publish-time options.
     publication: {
       form: {
         isWizard: false,

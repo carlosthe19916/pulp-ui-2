@@ -14,12 +14,13 @@ import type {
   RolesListData,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
 import { fetchAllPages } from "./utils/fetchAllPages";
 import type { AllListParams, ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const RolesQueryKey = "roles";
 
@@ -28,9 +29,8 @@ export type IRoleListParams = ListParams<RolesListData>;
 export type IAllRoleListParams = AllListParams<RolesListData>;
 
 /**
- * Query-key factory mirroring the REST paths. Identifying segments precede the
- * `"all"` fetch variant and params, so a prefix invalidates all variants of a
- * collection. Shared by the query options and mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
  */
 export const roleKeys = {
   all: () => [RolesQueryKey] as const,

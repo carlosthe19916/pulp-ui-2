@@ -5,13 +5,13 @@ import { Link } from "@tanstack/react-router";
 
 import {
   Button,
+  MenuToggle,
+  type MenuToggleElement,
   PaginationVariant,
   Select,
   SelectList,
   SelectOption,
   ToolbarItem,
-  MenuToggle,
-  type MenuToggleElement,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -19,9 +19,9 @@ import {
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -88,9 +88,8 @@ interface ITasksTableProps {
 }
 
 /**
- * Sortable/filterable tasks table scoped to the selected domain (via
- * `useTasksListQuery`). Renders no `PageSection`, so it is safe inside a detail
- * tab as well as the global Tasks page.
+ * Sortable/filterable tasks table for the selected domain. Renders no `PageSection`, so
+ * it also works inside a detail tab.
  */
 export const TasksTable: React.FC<ITasksTableProps> = ({
   lockedParams,

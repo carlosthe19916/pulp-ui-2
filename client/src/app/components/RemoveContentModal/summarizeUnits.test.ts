@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { summarizeUnits } from "./summarizeUnits";
 
-const unit = (label: string, pulpType?: string) => ({
+const unit = ({ label, pulpType }: { label: string; pulpType?: string }) => ({
   href: `/${label}/`,
   label,
   pulpType,
@@ -13,10 +13,10 @@ describe("summarizeUnits", () => {
     expect(
       summarizeUnits({
         units: [
-          unit("a", "rpm.package"),
-          unit("x", "rpm.advisory"),
-          unit("b", "rpm.package"),
-          unit("c", "rpm.package"),
+          unit({ label: "a", pulpType: "rpm.package" }),
+          unit({ label: "x", pulpType: "rpm.advisory" }),
+          unit({ label: "b", pulpType: "rpm.package" }),
+          unit({ label: "c", pulpType: "rpm.package" }),
         ],
         limit: 2,
       }),
@@ -27,8 +27,8 @@ describe("summarizeUnits", () => {
   });
 
   it("keeps untyped units (Browse rows) in one group", () => {
-    expect(summarizeUnits({ units: [unit("a"), unit("b")] })).toEqual([
-      { pulpType: undefined, labels: ["a", "b"], more: 0 },
-    ]);
+    expect(
+      summarizeUnits({ units: [unit({ label: "a" }), unit({ label: "b" })] }),
+    ).toEqual([{ pulpType: undefined, labels: ["a", "b"], more: 0 }]);
   });
 });

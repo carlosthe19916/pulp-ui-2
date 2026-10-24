@@ -1,15 +1,12 @@
-import { useCallback } from "react";
-
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
-  usePendingCreatesStore,
   type PendingCreateEntityType,
+  usePendingCreatesStore,
 } from "@app/hooks/usePendingCreatesStore";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 /**
- * Records an async create (202 + task) as pending so the list surfaces its
- * progress. Captures `entityType` + domain once; callers pass only the per-create
- * `taskHref`/`name`.
+ * Records an async create (202 + task) as pending so its list shows progress; callers
+ * pass only the per-create `taskHref`/`name`.
  */
 export const usePendingCreateRecorder = ({
   entityType,
@@ -21,11 +18,13 @@ export const usePendingCreateRecorder = ({
   const { add } = usePendingCreatesStore();
   const domain = useSelectedDomain();
 
-  const recordPendingCreate = useCallback(
-    ({ taskHref, name }: { taskHref: string; name: string }) =>
-      add({ taskHref, entityType, domainName: domain.name, name }),
-    [add, entityType, domain.name],
-  );
+  const recordPendingCreate = ({
+    taskHref,
+    name,
+  }: {
+    taskHref: string;
+    name: string;
+  }) => add({ taskHref, entityType, domainName: domain.name, name });
 
   return { recordPendingCreate };
 };

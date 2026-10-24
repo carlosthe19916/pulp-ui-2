@@ -12,11 +12,16 @@ import type { DomainResponse } from "@app/client";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { domainKeys } from "@app/queries/domains";
 
-/** A domain's labels, edited in place (domains have no detail page). */
-export const DomainLabelsModal: React.FC<{
+interface IDomainLabelsModalProps {
   domain: DomainResponse;
   onClose: () => void;
-}> = ({ domain, onClose }) => (
+}
+
+/** A domain's labels, edited in place (domains have no detail page). */
+export const DomainLabelsModal: React.FC<IDomainLabelsModalProps> = ({
+  domain,
+  onClose,
+}) => (
   <Modal isOpen onClose={onClose} variant="small">
     <ModalHeader title={`Labels — "${domain.name}"`} />
     <ModalBody>

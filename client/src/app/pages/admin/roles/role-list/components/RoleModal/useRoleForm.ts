@@ -1,4 +1,5 @@
 import { useForm, type UseFormReturn } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -14,11 +15,11 @@ import {
   type IMutationErrorMessage,
 } from "@app/utils/utils";
 
-export type RoleFormValues = {
+export interface IRoleFormValues {
   name: string;
   description: string;
   permissions: string[];
-};
+}
 
 /** Name is required (and editable) only when creating a role. */
 const buildRoleSchema = ({ isCreate }: { isCreate: boolean }) =>
@@ -30,30 +31,30 @@ const buildRoleSchema = ({ isCreate }: { isCreate: boolean }) =>
     permissions: yup.array(yup.string().required()).default([]),
   });
 
-const toDefaults = (role?: RoleResponse): RoleFormValues => ({
+const toDefaults = (role?: RoleResponse): IRoleFormValues => ({
   name: role?.name ?? "",
   description: role?.description ?? "",
   permissions: role?.permissions ?? [],
 });
 
-export const valuesToNewRole = (values: RoleFormValues): Role => ({
+export const valuesToNewRole = (values: IRoleFormValues): Role => ({
   name: values.name,
   description: values.description || undefined,
   permissions: values.permissions ?? [],
 });
 
-export const valuesToPatchedRole = (values: RoleFormValues): PatchedRole => ({
+export const valuesToPatchedRole = (values: IRoleFormValues): PatchedRole => ({
   description: values.description || undefined,
   permissions: values.permissions ?? [],
 });
 
-interface IUseRoleFormArgs {
+interface IUseRoleFormOptions {
   role?: RoleResponse;
   onClose: () => void;
 }
 
 interface IUseRoleFormResult {
-  form: UseFormReturn<RoleFormValues>;
+  form: UseFormReturn<IRoleFormValues>;
   isCreate: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -63,7 +64,7 @@ interface IUseRoleFormResult {
 export const useRoleForm = ({
   role,
   onClose,
-}: IUseRoleFormArgs): IUseRoleFormResult => {
+}: IUseRoleFormOptions): IUseRoleFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !role;
@@ -91,7 +92,7 @@ export const useRoleForm = ({
       ),
   });
 
-  const form = useForm<RoleFormValues>({
+  const form = useForm<IRoleFormValues>({
     resolver: yupResolver(buildRoleSchema({ isCreate })),
     defaultValues: toDefaults(role),
     mode: "onChange",

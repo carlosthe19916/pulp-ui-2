@@ -1,5 +1,5 @@
-import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -8,10 +8,11 @@ import type {
   SigningServicesListData,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 export const SigningServicesQueryKey = "signing-services";
 

@@ -7,10 +7,8 @@ const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";
 
 /**
- * Where a repository's content is served, from the first distribution serving it:
- * `base_url` from the aggregate list (the content URL the "Use this repository" card
- * shows) and `registry_path` from the typed detail, which the aggregate list omits.
- * Empty strings when nothing serves the repository.
+ * Where a repository's content is served (`base_url`, `registry_path`), from the first
+ * distribution serving it; empty strings when none does.
  */
 export const useServedAt = ({
   repositoryHref,
@@ -24,6 +22,7 @@ export const useServedAt = ({
     pulpType: repositoryType,
   });
   const listed = distributions[0];
+  // `registry_path` is only on the typed detail; the aggregate list omits it.
   const { data: detail } = useDistributionDetailQuery({
     href: listed?.pulp_href ?? null,
   });

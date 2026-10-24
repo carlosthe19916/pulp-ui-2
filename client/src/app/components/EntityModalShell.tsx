@@ -1,3 +1,4 @@
+import type React from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -25,20 +26,17 @@ interface IEntityModalShellProps {
 }
 
 /**
- * Shared modal chrome for every content-family create/edit dialog: the loading
- * spinner (edit prefetch), and the plain-vs-wizard modal shell. The body itself
- * (fields, footer, submit) is supplied by the caller — the generic `EntityModal` or
- * a per-family modal — so families own their data/submit while the chrome stays
- * identical across all four families.
+ * Shared modal chrome (edit-prefetch spinner, plain vs wizard shell) for every
+ * content-family create/edit dialog; the caller supplies the body.
  */
-export const EntityModalShell = ({
+export const EntityModalShell: React.FC<IEntityModalShellProps> = ({
   title,
   variant,
   isDetailLoading,
   isCreate,
   onClose,
   children,
-}: IEntityModalShellProps) => {
+}) => {
   const useWizard = variant === "wizard";
 
   if (!isCreate && isDetailLoading) {

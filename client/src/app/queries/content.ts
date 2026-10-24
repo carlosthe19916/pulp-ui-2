@@ -1,13 +1,12 @@
+import type { ContentUploadMechanism } from "@catalog";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
-import { getContentType } from "@catalog";
-import type { ContentUploadMechanism } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
@@ -16,6 +15,8 @@ import type {
   PaginatedMultipleArtifactContentResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getContentType } from "@catalog";
+
 import type {
   ContentTypeKey,
   ContentTypePage,
@@ -28,8 +29,8 @@ import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 
 export const ContentQueryKey = "content";
 
@@ -115,9 +116,8 @@ type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
 >;
 
 /**
- * One content type's own list (`content/<apiPath>/`, path from the catalog): full typed
- * rows, the type's filters and multi-field ordering. The caller decides every param,
- * so one query serves every list, lookup (`pulp_href__in`) and field selection.
+ * One content type's own list (`content/<apiPath>/`): typed rows, its filters and
+ * multi-field ordering. The caller decides every param.
  */
 export const contentTypeListQueryOptions = <K extends ContentTypeKey>({
   domain,
@@ -213,9 +213,8 @@ export const useContentTypeAllQuery = <K extends ContentTypeKey>({
 };
 
 /**
- * Typed per-unit GET (the aggregate list is sparse). Generic over the response type:
- * the payload varies by pulp_type, so each caller passes the concrete generated type
- * (e.g. `useContentDetailQuery<FileFileContentResponse>`) — never a union.
+ * Typed per-unit GET (the aggregate list is sparse). Callers pass the concrete generated
+ * type for the pulp_type, never a union.
  */
 export const contentDetailQueryOptions = <T = MultipleArtifactContentResponse>({
   href,
@@ -238,9 +237,8 @@ export const useContentDetailQuery = <T = MultipleArtifactContentResponse>({
 }) => useQuery({ ...contentDetailQueryOptions<T>({ href }), enabled: !!href });
 
 /**
- * Reconstruct a content unit's `pulp_href` from its route parts — the content detail
- * route encodes `pulp_type` + pk rather than the opaque href. Mirrors
- * `buildRepositoryHref`; `null` for endpoint-less types (no `apiPath`).
+ * Rebuild a content unit's `pulp_href` from its route's `pulp_type` + pk; `null` for
+ * endpoint-less types.
  */
 export const buildContentHref = (
   pulpType: string,
@@ -265,10 +263,8 @@ export interface IContentUploadVariables {
 }
 
 /**
- * Creates a content unit from a file and returns its href. `upload` posts to the
- * synchronous `content/<apiPath>/upload/`; `create` posts to `content/<apiPath>/` and
- * waits for the task. Not tied to a repository: callers add the hrefs with one
- * `modify/` so a batch makes one version. Empty fields are not sent.
+ * Creates a content unit from a file and returns its href. Not tied to a repository:
+ * callers add the hrefs in one `modify/` so a batch makes one version.
  */
 export const useContentUploadMutation = (
   options?: IMutationCallbacks<string, IContentUploadVariables>,

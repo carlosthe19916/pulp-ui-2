@@ -18,7 +18,6 @@ import {
 
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
-
 import { useServingDistributions } from "@app/hooks/useServingDistributions";
 
 interface IRepositoryUsageProps {

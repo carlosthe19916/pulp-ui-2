@@ -15,15 +15,10 @@ import {
   StackItem,
   TextInput,
 } from "@patternfly/react-core";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
 import UploadIcon from "@patternfly/react-icons/dist/esm/icons/upload-icon";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
-import {
-  getContentType,
-  getRepositoryTypesForContent,
-  type IContentType,
-} from "@catalog";
 import type { RepositoryResponse } from "@app/client";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -31,6 +26,11 @@ import {
   type IRepositoryListParams,
   useRepositoriesListQuery,
 } from "@app/queries/repositories";
+import {
+  getContentType,
+  getRepositoryTypesForContent,
+  type IContentType,
+} from "@catalog";
 
 import { formatSize, perFileFields } from "./uploadFields";
 import type { useUploadQueue } from "./useUploadQueue";

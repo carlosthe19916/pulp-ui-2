@@ -120,8 +120,3 @@ export const useLocalStorage = <T>(
   options: UseStorageTypeOptions<T>,
 ): [T, React.Dispatch<React.SetStateAction<T>>] =>
   useStorage({ ...options, type: "localStorage" });
-
-export const useSessionStorage = <T>(
-  options: UseStorageTypeOptions<T>,
-): [T, React.Dispatch<React.SetStateAction<T>>] =>
-  useStorage({ ...options, type: "sessionStorage" });

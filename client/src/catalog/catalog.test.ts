@@ -418,17 +418,23 @@ describe("content types", () => {
 });
 
 describe("repository actions", () => {
-  const actionKeys = (pulpType: string, target = "repository") =>
+  const actionKeys = ({
+    pulpType,
+    target = "repository",
+  }: {
+    pulpType: string;
+    target?: string;
+  }) =>
     (getPlugin(pulpType)?.entities.repository?.actions ?? [])
       .filter((action) => action.target === target)
       .map((action) => action.key);
 
   it("defaults to no actions", () => {
-    expect(actionKeys("file.file")).toEqual([]);
+    expect(actionKeys({ pulpType: "file.file" })).toEqual([]);
   });
 
   it("models ansible's signing, marking and copy actions", () => {
-    expect(actionKeys("ansible.ansible")).toEqual([
+    expect(actionKeys({ pulpType: "ansible.ansible" })).toEqual([
       "sign",
       "mark",
       "unmark",
@@ -440,22 +446,34 @@ describe("repository actions", () => {
   });
 
   it("models container and push-repository actions", () => {
-    expect(actionKeys("container.container")).toContain("build-image");
-    expect(actionKeys("container.container-push")).toEqual(
+    expect(actionKeys({ pulpType: "container.container" })).toContain(
+      "build-image",
+    );
+    expect(actionKeys({ pulpType: "container.container-push" })).toEqual(
       expect.arrayContaining(["remove-image", "remove-signatures", "migrate"]),
     );
   });
 
   it("models rpm, deb, python and maven actions", () => {
-    expect(actionKeys("rpm.rpm")).toEqual(["copy", "comps", "prune"]);
-    expect(actionKeys("deb.deb")).toEqual(["copy"]);
-    expect(actionKeys("python.python")).toEqual(["repair-metadata"]);
-    expect(actionKeys("maven.maven")).toHaveLength(5);
+    expect(actionKeys({ pulpType: "rpm.rpm" })).toEqual([
+      "copy",
+      "comps",
+      "prune",
+    ]);
+    expect(actionKeys({ pulpType: "deb.deb" })).toEqual(["copy"]);
+    expect(actionKeys({ pulpType: "python.python" })).toEqual([
+      "repair-metadata",
+    ]);
+    expect(actionKeys({ pulpType: "maven.maven" })).toHaveLength(5);
   });
 
   it("scans rpm and python versions", () => {
-    expect(actionKeys("rpm.rpm", "version")).toEqual(["scan"]);
-    expect(actionKeys("python.python", "version")).toEqual(["scan"]);
+    expect(actionKeys({ pulpType: "rpm.rpm", target: "version" })).toEqual([
+      "scan",
+    ]);
+    expect(
+      actionKeys({ pulpType: "python.python", target: "version" }),
+    ).toEqual(["scan"]);
   });
 
   it("fills collection endpoints' repository parameter", () => {

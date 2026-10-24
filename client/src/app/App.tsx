@@ -1,3 +1,5 @@
+import type React from "react";
+
 import { RouterProvider } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
@@ -7,7 +9,11 @@ import { queryClient } from "@app/queries/config";
 
 import type { AppRouter } from "../router";
 
-export const App = ({ router }: { router: AppRouter }) => {
+interface IAppProps {
+  router: AppRouter;
+}
+
+export const App: React.FC<IAppProps> = ({ router }) => {
   const authContext = useAuth();
 
   if (authContext.isLoading) {

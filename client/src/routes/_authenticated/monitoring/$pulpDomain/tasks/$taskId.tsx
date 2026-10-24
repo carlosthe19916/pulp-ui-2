@@ -15,7 +15,7 @@ export const Route = createFileRoute(
     params: { pulpDomain, taskId },
   }) => {
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
-    const href = buildTaskHref(taskId, domain);
+    const href = buildTaskHref({ taskId, domain });
     await queryClient.ensureQueryData(
       taskDetailQueryOptions({ taskHref: href }),
     );

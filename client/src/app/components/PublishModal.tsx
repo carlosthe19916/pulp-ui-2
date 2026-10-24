@@ -1,6 +1,7 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -17,12 +18,11 @@ import {
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import {
-  TypeaheadSelect,
   type ITypeaheadOption,
+  TypeaheadSelect,
 } from "@app/components/TypeaheadSelect";
-import { getPlugin } from "@catalog";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
@@ -30,6 +30,7 @@ import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getPlugin } from "@catalog";
 
 const publishSchema = yup.object({
   repository: yup.string(),
@@ -69,22 +70,19 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       },
     });
 
-  const repositoryOptions = useMemo<ITypeaheadOption[]>(
-    () =>
-      (repositoriesData?.results ?? [])
-        .filter((repo) => !!repo.pulp_href)
-        .map((repo) => ({
-          value: repo.pulp_href as string,
-          label: repo.name ?? (repo.pulp_href as string),
-        })),
-    [repositoriesData?.results],
-  );
+  const repositoryOptions: ITypeaheadOption[] = (
+    repositoriesData?.results ?? []
+  )
+    .filter((repo) => !!repo.pulp_href)
+    .map((repo) => ({
+      value: repo.pulp_href as string,
+      label: repo.name ?? (repo.pulp_href as string),
+    }));
 
   const {
     handleSubmit,
     setValue,
     watch,
-    reset,
     formState: { isSubmitting },
   } = useForm<PublishFormValues>({
     resolver: yupResolver(publishSchema),
@@ -93,13 +91,6 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
       repository_version: repoVersionHref ?? "",
     },
   });
-
-  useEffect(() => {
-    reset({
-      repository: repoHref ?? "",
-      repository_version: repoVersionHref ?? "",
-    });
-  }, [repoHref, repoVersionHref, reset]);
 
   const repository = watch("repository");
   const repositoryVersion = watch("repository_version");

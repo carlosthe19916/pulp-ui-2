@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
@@ -5,9 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
 
-import { getPlugin } from "@catalog";
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AsyncOperationResponse,
@@ -16,21 +15,22 @@ import type {
   RemotesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPlugin } from "@catalog";
+
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 
 export const RemotesQueryKey = "remotes";
 
 export type IRemoteListParams = ListParams<RemotesListData>;
 
 /**
- * Query-key factory mirroring the REST paths; identifying segments precede
- * params so a prefix invalidates all variants. Shared by the query options and
- * the generic CRUD mutations to prevent key drift.
+ * Query-key factory mirroring the REST paths; identifying segments precede params so a
+ * prefix invalidates all variants.
  */
 export const remoteKeys = {
   all: () => [RemotesQueryKey] as const,

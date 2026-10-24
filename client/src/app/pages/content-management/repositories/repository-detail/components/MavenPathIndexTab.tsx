@@ -15,10 +15,14 @@ import type {
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { useRepositorySubResourceQuery } from "@app/queries/repositories";
 
-/** The state of a Maven repository's path index (build it from the actions menu). */
-export const MavenPathIndexTab: React.FC<{
+interface IMavenPathIndexTabProps {
   repository: RepositoryResponse;
-}> = ({ repository }) => {
+}
+
+/** The state of a Maven repository's path index (build it from the actions menu). */
+export const MavenPathIndexTab: React.FC<IMavenPathIndexTabProps> = ({
+  repository,
+}) => {
   const { data, isLoading, error } = useRepositorySubResourceQuery<
     MavenPathIndexStatusResponse,
     Record<string, never>

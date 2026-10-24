@@ -1,9 +1,10 @@
 import type { IPlugin } from "@catalog";
-import { useNotifications } from "@app/hooks/useNotifications";
+
 import {
   type IEntityForEdit,
   type IUseEntityFormResult,
 } from "@app/hooks/pluginForm/useEntityForm";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRepositoryCreateMutation,
@@ -11,9 +12,9 @@ import {
 } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { valuesToCreate, valuesToPatch } from "./RepositoryForm";
+import { valuesToCreate, valuesToPatch } from "./repositoryForm";
 
-interface IUseRepositoryFormArgs {
+interface IUseRepositoryFormOptions {
   /** Resolved plugin for the selected/edited pulp_type (undefined ⇒ no fields). */
   plugin: IPlugin | undefined;
   /** Present ⇒ edit mode. */
@@ -22,17 +23,14 @@ interface IUseRepositoryFormArgs {
 }
 
 /**
- * Repository create/edit form: maps form values to a repository write body
- * (`RepositoryForm`) and runs the family's create/update mutations. The success
- * toast is raised from the mutations' hook-level callbacks and the call-level
- * `onSuccess` closes the modal (see `.rulesync/rules/toastr.md`); a submission failure is
- * shown in-form via `submitError`, not a toast (see `.rulesync/rules/forms.md`).
+ * Repository create/edit form: maps values to a repository write body and runs the
+ * create/update mutations; failures show in-form via `submitError`.
  */
 export const useRepositoryForm = ({
   plugin,
   entity,
   onClose,
-}: IUseRepositoryFormArgs): IUseEntityFormResult => {
+}: IUseRepositoryFormOptions): IUseEntityFormResult => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !entity;

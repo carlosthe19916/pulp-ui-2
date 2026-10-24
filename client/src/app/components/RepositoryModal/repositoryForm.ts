@@ -1,9 +1,8 @@
 import { cleanFormValues } from "@app/utils/formSchema";
 
 /**
- * The typed, shared base of every repository write body (the pulpcore
- * RepositorySerializer fields). Plugin-specific extras ride the open index
- * signature and pass through untouched.
+ * Typed base of every repository write body (pulpcore RepositorySerializer fields);
+ * plugin extras ride the index signature.
  */
 export interface IRepositoryWriteBase {
   name?: string;

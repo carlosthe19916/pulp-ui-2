@@ -23,7 +23,7 @@ import {
 } from "@patternfly/react-core";
 
 import {
-  type PageHeaderAction,
+  type IPageHeaderAction,
   PageHeaderActionsMenu,
 } from "@app/components/PageHeaderActionsMenu";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
@@ -48,10 +48,12 @@ const MetaDot: React.FC = () => (
   </Content>
 );
 
-/** Expanded-row body: the row's own artifacts map — no extra REST call. */
-const ArtifactsPanel: React.FC<{
+interface IArtifactsPanelProps {
   artifacts: Record<string, string | null>;
-}> = ({ artifacts }) => {
+}
+
+/** Expanded-row body: the row's own artifacts map — no extra REST call. */
+const ArtifactsPanel: React.FC<IArtifactsPanelProps> = ({ artifacts }) => {
   const entries = Object.entries(artifacts);
   if (entries.length === 0) {
     return <>No artifacts for this content unit.</>;
@@ -90,13 +92,12 @@ interface IContentListItemProps {
     onChange: (checked: boolean) => void;
   };
   /** Row kebab actions. */
-  actions?: PageHeaderAction[];
+  actions?: IPageHeaderAction[];
 }
 
 /**
- * One `DataList` row for a content unit: the full PRN (linked) as the title, a metadata line
- * (type · created · artifact count), right-aligned clickable labels, and an artifacts panel that
- * expands from the row's own data.
+ * One `DataList` row for a content unit: linked PRN title, metadata line, labels, and an
+ * expandable artifacts panel.
  */
 export const ContentListItem: React.FC<IContentListItemProps> = ({
   unit,

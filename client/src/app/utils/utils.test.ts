@@ -19,7 +19,13 @@ describe("utils", () => {
     expect(result).toBe("myKey");
   });
 
-  const makeAxiosError = (status: number, data?: unknown): AxiosError => {
+  const makeAxiosError = ({
+    status,
+    data,
+  }: {
+    status: number;
+    data?: unknown;
+  }): AxiosError => {
     return new AxiosError(
       "Request failed",
       String(status),
@@ -59,7 +65,7 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: surfaces a permission message on 403", () => {
-    const error = makeAxiosError(403);
+    const error = makeAxiosError({ status: 403 });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed to delete role" }),
     ).toEqual({
@@ -70,7 +76,10 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: surfaces validation detail from response data", () => {
-    const error = makeAxiosError(400, { detail: "name already exists" });
+    const error = makeAxiosError({
+      status: 400,
+      data: { detail: "name already exists" },
+    });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed to create group" }),
     ).toEqual({
@@ -80,8 +89,11 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: surfaces joined non_field_errors", () => {
-    const error = makeAxiosError(400, {
-      non_field_errors: ["This field is required.", "Invalid value."],
+    const error = makeAxiosError({
+      status: 400,
+      data: {
+        non_field_errors: ["This field is required.", "Invalid value."],
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed to create user" }),
@@ -92,8 +104,11 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: surfaces a single DRF field error", () => {
-    const error = makeAxiosError(400, {
-      name: ["This field is required."],
+    const error = makeAxiosError({
+      status: 400,
+      data: {
+        name: ["This field is required."],
+      },
     });
     expect(
       getMutationErrorMessage({
@@ -107,9 +122,12 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: joins multiple DRF field errors", () => {
-    const error = makeAxiosError(400, {
-      name: ["Required."],
-      url: ["Enter a valid URL."],
+    const error = makeAxiosError({
+      status: 400,
+      data: {
+        name: ["Required."],
+        url: ["Enter a valid URL."],
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed to create remote" }),
@@ -120,8 +138,11 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: recurses into nested field dicts", () => {
-    const error = makeAxiosError(400, {
-      config: { proxy_url: ["Enter a valid URL."] },
+    const error = makeAxiosError({
+      status: 400,
+      data: {
+        config: { proxy_url: ["Enter a valid URL."] },
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed to save" })
@@ -130,25 +151,31 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: handles a bare-array 400 body", () => {
-    const error = makeAxiosError(400, ["URI not valid: /bad/uri"]);
+    const error = makeAxiosError({
+      status: 400,
+      data: ["URI not valid: /bad/uri"],
+    });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
     ).toBe("URI not valid: /bad/uri");
   });
 
   it("getMutationErrorMessage: handles a list-serializer array body", () => {
-    const error = makeAxiosError(400, [
-      {},
-      { name: ["This field is required."] },
-    ]);
+    const error = makeAxiosError({
+      status: 400,
+      data: [{}, { name: ["This field is required."] }],
+    });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
     ).toBe("Name: This field is required.");
   });
 
   it("getMutationErrorMessage: reads a container errors[] envelope", () => {
-    const error = makeAxiosError(401, {
-      errors: [{ code: "UNAUTHORIZED", message: "authentication required" }],
+    const error = makeAxiosError({
+      status: 401,
+      data: {
+        errors: [{ code: "UNAUTHORIZED", message: "authentication required" }],
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
@@ -156,8 +183,11 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: reads a Galaxy v3 errors[] envelope", () => {
-    const error = makeAxiosError(404, {
-      errors: [{ status: "404", code: "not_found", title: "Not found." }],
+    const error = makeAxiosError({
+      status: 404,
+      data: {
+        errors: [{ status: "404", code: "not_found", title: "Not found." }],
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
@@ -165,16 +195,22 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: reads a plugin { error } body", () => {
-    const error = makeAxiosError(400, { error: "Service unavailable" });
+    const error = makeAxiosError({
+      status: 400,
+      data: { error: "Service unavailable" },
+    });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
     ).toBe("Service unavailable");
   });
 
   it("getMutationErrorMessage: combines a plugin { error, detail } body", () => {
-    const error = makeAxiosError(409, {
-      error: "Migration failed",
-      detail: "domain is busy",
+    const error = makeAxiosError({
+      status: 409,
+      data: {
+        error: "Migration failed",
+        detail: "domain is busy",
+      },
     });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
@@ -182,7 +218,10 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: surfaces a plain-text (non-JSON) body", () => {
-    const error = makeAxiosError(502, "Proxy error: upstream down");
+    const error = makeAxiosError({
+      status: 502,
+      data: "Proxy error: upstream down",
+    });
     expect(
       getMutationErrorMessage({ error, fallback: "Failed" }).description,
     ).toBe("Proxy error: upstream down");
@@ -199,7 +238,7 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: falls back to title-only when no useful detail exists", () => {
-    const error = makeAxiosError(500, {});
+    const error = makeAxiosError({ status: 500, data: {} });
     const result = getMutationErrorMessage({
       error,
       fallback: "Failed to create remote",
@@ -208,16 +247,22 @@ describe("utils", () => {
   });
 
   it("getMutationErrorMessage: appends the server detail to a 403 message", () => {
-    const error = makeAxiosError(403, { detail: "repository is read-only" });
+    const error = makeAxiosError({
+      status: 403,
+      data: { detail: "repository is read-only" },
+    });
     const result = getMutationErrorMessage({ error, fallback: "Failed" });
     expect(result.description).toContain("repository is read-only");
     expect(result.description).toContain("You do not have permission");
   });
 
   it("getMutationErrorMessage: keeps DRF field errors when a field is named 'error'", () => {
-    const error = makeAxiosError(400, {
-      error: ["This field is required."],
-      name: ["Required."],
+    const error = makeAxiosError({
+      status: 400,
+      data: {
+        error: ["This field is required."],
+        name: ["Required."],
+      },
     });
     const result = getMutationErrorMessage({ error, fallback: "Failed" });
     expect(result.description).toContain("Name: Required.");

@@ -11,6 +11,8 @@ import { useContentDetailQuery } from "@app/queries/content";
 import { type INevraParams, nevra } from "@app/utils/pluginContentFormat";
 import { formatDateTime } from "@app/utils/utils";
 
+import type { IPluginContentProps } from "./contentFields";
+import { asArray, facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -20,8 +22,6 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { asArray, facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 interface IAdvisoryReference {
   id?: string;

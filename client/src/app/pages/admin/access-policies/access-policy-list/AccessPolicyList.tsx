@@ -1,6 +1,8 @@
 import type React from "react";
 import { useState } from "react";
 
+import type { IEntityField } from "@catalog";
+
 import {
   Content,
   ContentVariants,
@@ -8,29 +10,26 @@ import {
   PageSection,
   PaginationVariant,
 } from "@patternfly/react-core";
-import { ActionsColumn } from "@patternfly/react-table";
 import {
   DataView,
   DataViewFilters,
   DataViewTable,
   DataViewTextFilter,
   DataViewToolbar,
+  type DataViewTr,
   useDataViewFilters,
   useDataViewPagination,
-  type DataViewTr,
 } from "@patternfly/react-data-view";
+import { ActionsColumn } from "@patternfly/react-table";
 
-import { dataViewBodyStates } from "@app/components/dataViewStates";
-import { ListPagination } from "@app/components/ListPagination";
-import { TaskActionModal } from "@app/components/TaskActionModal";
-import { useColumnSort } from "@app/hooks/useColumnSort";
-import type { DataViewTh } from "@app/utils/dataViewTypes";
-import { buildDefaultValues } from "@app/utils/formSchema";
-import type { IEntityField } from "@catalog";
 import type { AccessPolicyResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
+import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { TaskActionModal } from "@app/components/TaskActionModal";
+import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
@@ -41,6 +40,8 @@ import {
   useAccessPolicyUpdateMutation,
 } from "@app/queries/access-policies";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { buildDefaultValues } from "@app/utils/formSchema";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const SORTABLE_COLUMN_KEYS = [

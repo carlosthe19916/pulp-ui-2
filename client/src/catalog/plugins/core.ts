@@ -1,6 +1,6 @@
-import { distributionBase, repositoryBase } from "../base-fields";
+import { distributionBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../field-types";
+import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 /** OpenPGP keyrings (repository) and their distributions share one pulp_type. */
@@ -17,10 +17,8 @@ const keyringDistributionExtras: IEntityField[] = [
 ];
 
 /**
- * pulpcore — the platform. It owns the OpenPGP content types (and the internal
- * `core.publishedmetadata`) and the OpenPGP keyring, a repository of keys served
- * by an OpenPGP distribution (both pulp_type `core.openpgp`). `rest.pulpType` is
- * the synthetic key `"core"` (never a real pulp_type, so it can't collide).
+ * pulpcore: the OpenPGP content types and keyring (pulp_type `core.openpgp`).
+ * `rest.pulpType` is the synthetic `"core"`, never a real pulp_type.
  */
 export const core: IPluginDefinition = {
   app: { isAvailable: whenInstalled("core", "pulpcore") },

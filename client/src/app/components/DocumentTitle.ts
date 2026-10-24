@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect } from "react";
 
-import { useBranding } from "@app/hooks/useBranding";
+import { getBranding } from "@app/utils/branding";
 
 interface IDocumentTitleProps {
   title?: string | null;
@@ -9,7 +9,7 @@ interface IDocumentTitleProps {
 
 /** Sets `document.title` to `"Page · Brand"` while mounted; restores it on unmount. */
 export const DocumentTitle: React.FC<IDocumentTitleProps> = ({ title }) => {
-  const branding = useBranding();
+  const branding = getBranding();
   const brandTitle = branding?.application?.title || "Pulp";
 
   useEffect(() => {

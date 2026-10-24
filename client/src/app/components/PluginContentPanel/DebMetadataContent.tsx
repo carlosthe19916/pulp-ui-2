@@ -3,6 +3,8 @@ import type React from "react";
 import type { DebReleaseResponse, DebSourcePackageResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 
+import type { IPluginContentProps } from "./contentFields";
+import { facts, links } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -12,18 +14,15 @@ import {
   LinkList,
   StorageFacts,
 } from "./ContentPanelLayout";
-import { facts, links } from "./contentFields";
-import type { IPluginContentProps } from "./contentFields";
 
 /**
  * A dist (`dists/<codename>/Release`): suite, origin, components and architectures.
- *
- * TODO: pulp_deb leaves the release's `components` / `architectures` empty and stores
- * them only as `deb.release_component` / `deb.release_architecture` content (linked by
- * distribution name, not by href), so this panel shows "No components" while Browse
- * shows them. Fix in pulp_deb by filling the release's own lists.
  */
 export const DebReleaseContent: React.FC<IPluginContentProps> = ({ href }) => {
+  // TODO: pulp_deb leaves the release's `components` / `architectures` empty and
+  // stores them only as `deb.release_component` / `deb.release_architecture` content
+  // (linked by distribution name), so this shows "No components" while Browse shows
+  // them. Fix in pulp_deb by filling the release's own lists.
   const { data, isLoading, error } = useContentDetailQuery<DebReleaseResponse>({
     href,
   });
