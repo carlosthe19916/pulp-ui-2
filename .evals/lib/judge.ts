@@ -3,7 +3,8 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import dedent from "dedent";
 import { z } from "zod";
 
-import { MODEL } from "./agent.ts";
+// The grader, not the agent under test: the same model whichever vendor answered.
+const MODEL = "claude-opus-4-8";
 
 export const PASS_SCORE = 4;
 

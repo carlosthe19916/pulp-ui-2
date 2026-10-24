@@ -11,7 +11,7 @@ export default {
     Don't write any code. List every file you would create, move or change, each with one line on
     why, and the import line each page would use for PermissionMultiSelect.
   `,
-  tools: ["Read", "Glob", "Grep"],
+  tools: "read",
   expect: {
     shared_to_app_root: dedent`
       PermissionMultiSelect moves to the app-root components layer (client/src/app/components/),
