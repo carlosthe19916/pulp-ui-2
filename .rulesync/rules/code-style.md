@@ -1,6 +1,6 @@
 ---
 name: code-style
-description: TypeScript and React style for client/src — React.FC components with named exports, arrow consts, named-object parameters, interface vs type, generated API types, no enum/any, .ts vs .tsx, effects, memoization and comments.
+description: TypeScript and React style for client/src — React.FC components with named exports, arrow consts, named-object parameters, interface vs type, generated API types, no enum/any, .ts vs .tsx, effects, memoization, import block order, component-folder index.ts imports, PatternFly icon and class imports, and comments.
 root: false
 targets: ["claudecode", "cursor"]
 globs: ["client/src/**/*.ts", "client/src/**/*.tsx"]
@@ -70,8 +70,18 @@ takes one destructured object, so each argument names itself at the call site:
 
 ## Imports and the rest
 
+- Imports form five blocks in this order, separated by a blank line, alphabetical within
+  each: React and `react-*` → other packages → `@patternfly/*` → `@app/*` and `@catalog` →
+  relative.
+- Import a component folder (`X/`) only through its `index.ts`, which exports only the
+  public component(s); never import another file in `X/` from outside it.
+- App-root modules (`@app/components`, `@app/hooks`, `@app/utils`, `@app/context`) never
+  import from `pages/`.
 - PatternFly icons are imported from their deep path
   (`@patternfly/react-icons/dist/esm/icons/plus-circle-icon`), not the barrel.
+- Never hard-code `pf-v6-c-*`, `pf-m-*`, `pf-u-*` or `pf-l-*` class strings outside tests.
+  Import the typed constants from `@patternfly/react-styles/css/...` and combine them with
+  `css()`.
 - No `console.log`; `console.error` only where an error has nowhere else to go.
 - Comments say what the code can't: a reason, a gotcha, an API quirk. Don't restate the
   code. Exported components and helpers get at most a one- or two-line `/** … */`.
@@ -89,4 +99,8 @@ Pass/fail rubric for `/eval`. Check changed `.ts` / `.tsx` files under `client/s
 - [ ] No `enum`, no `any`; object shapes are interfaces.
 - [ ] API types are imported from `@app/client`, not redeclared.
 - [ ] No effect derives state or fetches data; user-triggered logic lives in handlers.
-- [ ] Icons use deep imports; no `console.log`; comments only explain non-obvious reasons.
+- [ ] Imports follow the five-block order; component folders are imported only through
+      their `index.ts`; app-root modules import nothing from `pages/`.
+- [ ] Icons use deep imports; PatternFly classes come from typed `@patternfly/react-styles`
+      constants, never hard-coded strings outside tests.
+- [ ] No `console.log`; comments only explain non-obvious reasons.

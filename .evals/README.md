@@ -8,9 +8,10 @@ doesn't test application code. A standalone package (like `website/`), run by ha
 cd .evals
 npm ci
 npm start                       # every case, on every vendor
-npm start -- rules/placement    # agents-md + cases whose path contains the filter
+npm start -- rules/file-placement    # agents-md + cases whose path contains the filter
 npm start -- --vendor cursor    # one vendor (repeat --vendor for several)
 EVAL_REPEAT=3 npm start         # run each case 3 times
+EVAL_CONCURRENCY=2 npm start    # case runs in flight per vendor (default 4)
 npm run typecheck
 ```
 
@@ -38,7 +39,9 @@ a conflict with another guidance file goes unnoticed.
 ## Layout
 
 ```
-run.ts               runs cases/agents-md.ts first (the canary), then every other file under cases/
+run.ts               per vendor, runs cases/agents-md.ts once (the canary), then every other file
+                     under cases/ in parallel (EVAL_CONCURRENCY at a time); vendors run side by
+                     side and each run prints its verdict when it finishes
 lib/agent.ts         runs a vendor's agent in a copy of the repo, with a timeout
 lib/workspace.ts     the throwaway copy of the working tree
 lib/judge.ts         model grader: scores 0–5 per criterion, passes at ≥ 4 on all
@@ -50,8 +53,10 @@ lib/vendors/
 cases/
   agents-md.ts       AGENTS.md loads; if not, that vendor's other cases are skipped
   <kind>/<name>.ts   one folder per kind of guidance, one file per thing it tests,
-                     e.g. rules/placement.ts for .rulesync/rules/placement.md,
-                     skills/vercel-composition-patterns.ts for .agents/skills/<name>/
+                     e.g. skills/vercel-composition-patterns.ts for .agents/skills/<name>/
+  <kind>/<name>/     one file per case when a guidance file needs several, e.g.
+                     rules/file-placement/{role-detail,component-context}.ts for
+                     .rulesync/rules/file-placement.md
 ```
 
 The judge always uses `claude-opus-4-8` (`MODEL` in `lib/judge.ts`), whichever vendor answered.
@@ -72,11 +77,12 @@ copy, timeout, judge and report are shared and compose around it.
 
 1. Create `lib/vendors/<name>.ts` exporting an `IVendor` (copy `lib/vendors/cursor.ts`).
 2. List it in `lib/vendors/index.ts`. `npm start` now runs it too; `--vendor <name>` runs it alone.
-3. Run it on one case, e.g. `npm start -- --vendor <name> rules/placement` (the canary runs first).
+3. Run it on one case, e.g. `npm start -- --vendor <name> rules/file-placement` (the canary runs first).
 
 ## Adding a case
 
-1. Create `cases/<kind>/<name>.ts` (copy `cases/rules/placement.ts`).
+1. Create `cases/<kind>/<name>.ts`, or `cases/<kind>/<name>/<case>.ts` when the guidance needs
+   several cases (copy `cases/rules/file-placement/role-detail.ts`).
 2. Set `target` to the guidance it tests: `rules` and `skills` by name, `paths` for anything else. Add the
    ADRs a rule `implements:` only when the rule depends on them.
 3. Write a task that needs the guidance but doesn't name it, so it loads the way it does in real
