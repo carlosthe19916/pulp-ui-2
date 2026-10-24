@@ -45,7 +45,7 @@ cases/
 ```
 
 The judge always uses `claude-opus-4-8` (`MODEL` in `lib/judge.ts`), whichever vendor answered.
-Each vendor sets its own agent model: `claude-opus-4-8` for Claude, `grok-4.7` for Cursor. Cursor
+Each vendor sets its own agent model: `claude-opus-4-8` for Claude, `composer-2.5` for Cursor. Cursor
 reports no cost (the SDK's usage API isn't available on our account), so its runs print
 `cost n/a`. The judge uses structured outputs (`messages.parse` + `zodOutputFormat`); our Vertex
 org policy blocks them on `claude-opus-5-5`, so check that before switching models.

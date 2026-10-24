@@ -2,8 +2,8 @@ import { Agent } from "@cursor/sdk";
 
 import type { IVendor, ToolAccess } from "../types.ts";
 
-// Its default variant (256k context, xhigh reasoning effort, not fast).
-const MODEL = { id: "grok-4.7" };
+// Its default variant (not fast).
+const MODEL = { id: "composer-2.5" };
 
 const TOOLS_BY_ACCESS: Record<ToolAccess, string[]> = {
   none: [],
