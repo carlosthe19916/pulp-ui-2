@@ -42,11 +42,18 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 ├── server/                   # Express.js production server (proxying, env injection)
 └── e2e/                      # Playwright end-to-end tests
     └── tests/
-        ├── *.spec.ts         # one spec per area (remotes, repositories, content, users, …)
+        ├── <area>/<entity>/<surface>/  # specs mirror client/.../pages/ down to the
+        │   └── *.spec.ts               #   list/detail surface folder, e.g.
+        │                               #   admin/users/user-list/user-list.spec.ts,
+        │                               #   admin/users/user-details/user-details.spec.ts
+        ├── <area>/<entity>/*.api.spec.ts  # entity contract tests (no UI surface)
+        ├── <area>/*.spec.ts  # area-wide specs (admin-lists, creation-forms)
+        ├── *.spec.ts         # cross-area specs (seed, system-pages smoke sweep)
         ├── auth.setup.ts     # authentication setup project
         ├── fixtures.ts       # shared Playwright fixtures
         ├── pom/              # page objects
-        └── helpers/          # shared test helpers
+        ├── helpers/          # shared test helpers
+        └── data/             # test fixtures (upload samples)
 ```
 
 ## Key Commands
@@ -174,7 +181,7 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 
 ### E2E Tests (Playwright)
 
-- Plain Playwright `.spec.ts` files in `e2e/tests/`, one per area (`remotes`, `repositories`, `publications`, `distributions`, `content`, `domains`, `users`, `groups`, `roles`, `task-status`, …).
+- Plain Playwright `.spec.ts` files in `e2e/tests/`, nested to mirror `client/src/app/pages/` down to the list/detail surface folder (`content-management/remotes/remote-list/remotes.spec.ts`, `admin/users/user-list/user-list.spec.ts`, `admin/users/user-details/user-details.spec.ts`). An entity's contract test (`users.api.spec.ts`) and an entity with no surface split (`system-management/domains/domains.spec.ts`) sit at the entity root; area-wide specs at the area root (`admin/admin-lists.spec.ts`, `content-management/creation-forms.spec.ts`); cross-area specs (`seed`, `system-pages`) at the `tests/` root.
 - `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/tests/helpers/`, `fixtures.ts` and the page objects in `pom/`.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
 

@@ -55,7 +55,7 @@ oci-env -e compose.env pulpcore-manager reset-admin-password --password password
 
 ```bash
 npm run test:local -w e2e                              # whole suite
-npm run test:local -w e2e -- tests/remotes.spec.ts     # one spec
+npm run test:local -w e2e -- tests/content-management/remotes/remote-list/remotes.spec.ts   # one spec
 npm run test:local -w e2e -- -g "creates a remote"     # by test title
 npm run test:local -w e2e -- --headed                  # visible browser
 npm run test:local -w e2e -- --ui                      # Playwright UI mode

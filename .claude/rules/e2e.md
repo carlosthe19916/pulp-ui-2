@@ -10,19 +10,54 @@ workspace has no lint script, so nothing type-checks it for you: keep it strict 
 
 ## Scenario specs
 
-The admin suites derive from the use cases in `e2e/specs/**/*.md` (the source of truth). A
-test's title starts with its scenario ID so it greps back to the spec
-(`USR-CRE-02 username "only spaces" → blank error`); an example table becomes a typed array
-looped into tests. Markers map to: `Open:` → `test.fixme(true, …)`, `Manual` → `test.skip`,
-`Requires: domains` → `test.skip(!api.domainEnabled, …)`, `UI gap` → fix the UI (or
-`test.fail` with the reason when no endpoint can support it). Shared behaviour (lists, forms,
-dialogs, batch-add) iterates over one descriptor array, not a copy per screen.
+The admin suites derive from the use cases in `e2e/specs/**/*.md` (the source of truth).
+**One test per scenario ID**, its title starting with the ID so it greps back to the spec
+(`USR-CRE-02 username`); the coverage check asserts every `### ID` appears in a test title.
+The example-table rows are `test.step(row.label, …)` **inside** that one test, sharing a single
+page load (and, for read-only scenarios, a single seed) — this is far faster than a test per
+row and the report still shows and pins failures to each step. Split rows into separate tests
+only when a row must mutate global list state in isolation. Markers map to: `Open:` →
+`test.fixme(true, …)`, `Manual` → `test.skip`, `Requires: domains` →
+`test.skip(!api.domainEnabled, …)`, `UI gap` → fix the UI (or `test.fail` when no endpoint can
+support it). Shared behaviour (lists, forms, dialogs, batch-add) iterates over one descriptor
+array, not a copy per screen. Tag a small core subset `@smoke`
+(`test(title, { tag: "@smoke" }, …)`) for the reduced CI leg.
+
+Put each scenario in the **cheapest layer that can prove it** (see `e2e/specs/README.md` → Test
+layering). RBAC especially: permission **gating** (which actions are enabled/disabled and the
+tooltip, per permission combo) is a **component test** on `useObjectPermissions` / `GatedButton`,
+not a second-user browser test; backend **enforcement and effect** (a non-superuser is denied; an
+assignment or policy change takes effect) is an **api contract test** that acts as the user via
+`api.attemptAs(...)`; keep only **one representative e2e per surface** for the real UI journey.
+Logging a second user into the browser is the slowest kind of test — add one only when the UI
+journey itself is the point, never to re-check a rule a component or api test already owns.
 
 ## Structure
 
-- One spec per area in `e2e/tests/<area>.spec.ts`.
-- Specs import `test` and `expect` from `./fixtures`, never from `@playwright/test`, so they
-  get the page objects, `api` and `cleanup`. Page objects and helpers may import types and
+- Specs mirror `client/src/app/pages/` all the way down — area, then entity, then the entity's
+  surface folder (`<entity>-list`, `<entity>-detail(s)`, …), matching each folder's exact name
+  (`user-details` but `content-detail`). A UI spec sits at
+  `e2e/tests/<area>/<entity>/<surface>/<spec>.spec.ts`, e.g.
+  `content-management/remotes/remote-list/remotes.spec.ts`,
+  `admin/users/user-list/user-list.spec.ts`, `admin/users/user-details/user-details.spec.ts`.
+  Put a test in the surface it drives; a test that acts from **both** the list and the detail
+  page (edit/delete "from each entry point") goes in the `*-list` spec, with its single scenario
+  ID. Where the app gives an entity no surface split (e.g. `domains`), the spec stays at the
+  entity root.
+- The entity's **contract** test (`*.api.spec.ts`, browserless) has no UI surface, so it sits at
+  the entity root (`admin/users/users.api.spec.ts`).
+- A spec that genuinely spans a whole area rather than one entity sits at the **area root**
+  (`admin/admin-lists.spec.ts`, `content-management/creation-forms.spec.ts`); one that spans
+  **every** area (a smoke sweep, the seed) sits at the `tests/` root.
+- Helpers a split entity's list and detail specs both use are extracted to a per-entity module
+  in `tests/helpers/` (`helpers/users.ts`, `helpers/groups.ts`); helpers only one surface uses
+  stay local to that spec.
+- Shared infra lives at the `tests/` root, not inside an area: `fixtures.ts`, `pom/`,
+  `helpers/`, `data/` and `auth.setup.ts`.
+- A spec imports `test` and `expect` from `fixtures`, never from `@playwright/test`, so it gets
+  the page objects, `api` and `cleanup`. The number of `../` segments matches how deep the spec
+  sits below `tests/`: `../../../fixtures` for a surface spec (three folders deep), `../../` for
+  an entity-root spec, `../` at the area root. Page objects and helpers may import types and
   `expect` from `@playwright/test`.
 - Page objects are classes in `tests/pom/`. List screens extend `DataViewList` (heading,
   grid, `filterBy`, `row`, `rowAction`) and add only their own modal-form helpers. A spec
@@ -52,9 +87,9 @@ export class WidgetsPage extends DataViewList {
   }
 }
 
-// widgets.spec.ts
-import { expect, test } from "./fixtures";
-import { uniqueName } from "./helpers/unique";
+// inventory/widgets/widget-list/widget-list.spec.ts
+import { expect, test } from "../../../fixtures";
+import { uniqueName } from "../../../helpers/unique";
 
 test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   const name = cleanup.widget(uniqueName("widget"));
@@ -118,7 +153,11 @@ test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
 
 Pass/fail rubric for `/eval`. Check changed files under `e2e/`.
 
-- [ ] Specs import `test` / `expect` from `./fixtures`; page objects come from fixtures.
+- [ ] Specs live under `tests/<area>/<entity>/<surface>/` mirroring `pages/` (entity root for a
+      contract test or an unsplit entity, area root for a whole-area spec); a both-surfaces test
+      is in the `*-list` spec; shared helpers of a split entity are in `helpers/<entity>.ts`;
+      they import `test` / `expect` from `fixtures` with `../` segments matching their depth,
+      never `@playwright/test`; page objects come from fixtures.
 - [ ] An admin scenario test's title starts with its `e2e/specs` ID; tables are looped, not
       copied; markers map to `fixme` / `skip` / `fail`.
 - [ ] Locators are role / label / text based; no CSS, `#id` or `.pf-*` selectors; required

@@ -73,6 +73,20 @@ it("adds the typed tag on Enter", async () => {
 
 - `vi.spyOn` on a module namespace throws in the browser; use `vi.mock(import(…), { spy: true })`.
 - Mock at the module boundary (query hooks, context hooks). Don't mock PatternFly or React.
+- A **partial** factory that spreads `await importOriginal()` **hangs** browser-mode RPC
+  (`[birpc] rpc is closed`); use a **full factory** that returns only the exports the component
+  under test uses (e.g. a modal form needs just its two mutation hooks).
+- A form inside a modal needs `useNotifications` mocked — it throws without its provider.
+- A modal's accessible name concatenates its field labels, so `getByLabelText("Password")` can
+  match the dialog too; prefer `getByRole("textbox", { name, exact: true })` (password inputs
+  included).
+
+## What belongs here vs e2e
+
+Pure client behaviour is a component test: form validation messages and submit wiring, confirm
+dialog content/style/dismissal, permission-gated disabling + tooltips, a tag/permission input.
+Anything needing the real backend (create/edit/delete round-trips, server validation, RBAC,
+cross-page sync, navigation) stays in Playwright e2e (`e2e/`).
 
 ## Checklist
 
