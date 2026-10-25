@@ -1,6 +1,6 @@
 ---
 name: ui-conventions
-description: UI behaviour in components/pages — neutral (non-red) actions, empty states without actions, permission-disabled (not hidden) actions with tooltip, server-derived task status and repository write lock.
+description: UI code in components/pages — where the project departs from PatternFly defaults (no red actions, no empty-state actions, disabled-not-hidden), the shared table/modal/detail helpers, server-derived task status and the repository write lock.
 implements: docs/adr/0003-detail-pages-and-expandable-rows.md, docs/adr/0008-async-task-feedback.md, docs/adr/0011-permission-aware-actions.md, docs/adr/0012-visual-conventions.md
 root: false
 targets: ["claudecode", "cursor"]
@@ -9,87 +9,59 @@ globs: ["client/src/app/pages/**", "client/src/app/components/**"]
 
 # UI conventions (`components/`, `pages/`)
 
-How the code realises the visual, permission and task-feedback ADRs. Read the ADR's
-`## Rules` when a case isn't covered here; the ADR wins.
+Generic PatternFly compliance (imports, composition, tokens, no custom CSS) is the PF tooling's
+job (`pf-review`). This rule covers where the project departs from PatternFly defaults and which
+shared helpers to use. Toast wording and task-start toasts: `toastr.md`. When a case isn't
+covered, the ADR's `## Rules` win.
 
 ## Layout
 
-- Tables use `@patternfly/react-data-view` with the shared helpers (`dataViewBodyStates`,
-  `ListPagination`, `useColumnSort`, `buildThSort`; `UserList` is the reference); paging,
-  sorting and filtering are server-side.
-- Detail pages use tabs; a tab's content component never renders its own `<PageSection>`.
-  `Tabs` set `mountOnEnter` so an inactive tab's queries don't run.
-- List pages put the page header (title, description) in its own `<PageSection>` above the
-  table's `<PageSection>`, and render `<DocumentTitle>`; so do detail pages.
-- Paging uses `useDataViewPagination({ perPage: 10 })` + `ListPagination`, which owns the
-  per-page menu (10/20, capped to bound per-row task probes). Don't pass other options.
-- Server-side text filters go through `useDebouncedValue` so typing doesn't fire a request
-  per keystroke; non-text filters stay instant.
-- Long cell values use the column's PatternFly `modifier: "truncate"`, never hand-rolled
-  slicing. Data columns carry `width`s that sum to 100; action columns stay unsized.
-- Expanded-row content is wrapped in `RevealCellOnExpand`, so it (and its queries) mounts on
-  first expand.
-- Entity detail fields render through `EntityDetailFields` (stacked: term above value).
-- Confirmations use `ConfirmActionModal`, never a hand-rolled `Modal`.
+- Tables: `@patternfly/react-data-view` with `dataViewBodyStates`, `ListPagination`,
+  `useColumnSort` / `buildThSort` (reference: `UserList`); paging, sorting and filtering are
+  server-side. `useDataViewPagination({ perPage: 10 })` by default, never above 20
+  (`ListPagination` caps it to bound per-row task probes).
+- Text filters go through `useDebouncedValue`; long cells use the column's
+  `modifier: "truncate"`; data column `width`s sum to 100, action columns stay unsized.
+- List and detail pages put the header in its own `<PageSection>` and render
+  `<DocumentTitle>`. A tab's content never renders a `<PageSection>`; `Tabs` whose content
+  runs queries set `mountOnEnter`.
+- Expanded-row content goes in `RevealCellOnExpand`; detail fields in `EntityDetailFields`;
+  confirmations in `ConfirmActionModal`, never a hand-rolled `Modal`.
+- No inline `style` or custom CSS where a PatternFly component, layout or token exists.
 
-## Colour
+## Departures from PatternFly defaults
 
-- Row actions (`ActionsColumn` items), header kebab items (`dropdownItemProps`) and toolbar
-  buttons never set `isDanger: true` or `variant="danger"`.
-- `ConfirmActionModal` defaults `confirmVariant` to `"danger"`: keep it only for an
-  irreversible delete. Reversible or non-destructive confirmations (content removal, version
-  actions, task cancel, reset) pass `confirmVariant="primary"` — see `RemoveContentModal`,
-  `VersionActionModal`, `TasksTable`.
-- `variant: "danger"` on toasts and inline `Alert`s for errors is fine.
-
-## Empty states
-
-- Use `TableEmptyState` (or the shared DataView body states) for empty lists. It renders no
-  actions except **Clear filters** when the empty result comes from filters.
-- No `EmptyStateFooter` / `EmptyStateActions` with create/upload/sync buttons. The only
-  exception is the route error fallback (`RouteErrorFallback`: retry, go home).
-- Titles say what is empty, naming the object when known ("No content in my-files yet").
-
-## Permissions
-
-- Object actions read `useObjectPermissions({ href })`. Buttons and menu items spread
-  `disabledProps(verb)` (or set `isAriaDisabled` + a tooltip with the same message); they are
-  not conditionally rendered on `can(verb)`.
-- Inline micro-controls (a label's close button) may be omitted when `!can(verb)`.
-- Nothing is disabled while permissions are loading (`can` returns `true` without data) — don't
-  add a separate loading gate.
+- **Never red** on row actions, header kebab items or toolbar buttons: no `isDanger: true`,
+  no `variant="danger"`. Danger alerts and toasts for errors are fine.
+- `ConfirmActionModal`'s default `confirmVariant="danger"` is only for an irreversible delete;
+  every other confirmation (content removal, version actions, task cancel, reset) passes
+  `confirmVariant="primary"`.
+- **Empty states carry no actions**: `TableEmptyState` / DataView body states, title naming
+  what is empty, only **Clear filters** for filtered results. `EmptyStateActions` only in
+  `RouteErrorFallback`.
+- **Disabled, not hidden**: object actions spread `disabledProps(verb)` from
+  `useObjectPermissions({ href })` instead of rendering on `can(verb)`. Inline micro-controls
+  (a label's close button) may be omitted. No loading gate: `can` is `true` until data loads.
 
 ## Tasks
 
-- A mutation answering `202` raises `notifyTaskStarted({ addNotification, taskHref, title })`
-  from its hook-level `onSuccess` (toast placement rules: `.rulesync/rules/toastr.md`).
-- Row/page task status comes from the server via `useResourceTasks` + `ResourceTaskStatus` /
+- Task status on rows and pages comes from `useResourceTasks` + `ResourceTaskStatus` /
   `EntityTaskStatus`, never from local "pending" flags alone.
-- Repository content writes and header actions check `useRepositoryActivity`: while a task
-  runs on the repository they are disabled with its `lockedProps` tooltip.
-- Failure toasts/alerts use "Could not …" or "Failed to …" (via `getMutationErrorMessage`'s
-  `fallback`).
+- Repository content writes and header actions spread `lockedProps` from
+  `useRepositoryActivity` so they are disabled while a task runs on the repository.
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check changed files under `pages/` and `components/`.
 
-- [ ] New tables use react-data-view with the DataView helpers and server-side paging,
-      sorting and filtering; tab content renders no `<PageSection>`; `Tabs` use
-      `mountOnEnter`.
-- [ ] List pages: header in its own `<PageSection>`, `<DocumentTitle>`, `ListPagination`
-      with `perPage: 10`, debounced text filters, PatternFly truncation, column widths
-      summing to 100, expanded rows in `RevealCellOnExpand`.
-- [ ] Confirmations use `ConfirmActionModal`.
-- [ ] No `isDanger: true` or `variant="danger"` on row actions, menu items or toolbar buttons.
-- [ ] `ConfirmActionModal` keeps the default danger confirm only for irreversible deletes;
-      every other confirmation passes `confirmVariant="primary"`.
-- [ ] Empty states carry no actions (only **Clear filters** for filtered results); no
-      `EmptyStateActions` outside the route error fallback.
-- [ ] Permission-gated buttons and menu items are disabled with a tooltip via
-      `useObjectPermissions` (`disabledProps`), not hidden; only inline micro-controls may be
-      omitted.
-- [ ] `202` mutations raise `notifyTaskStarted` from the hook-level `onSuccess`.
-- [ ] Task status shown on rows/pages is server-derived (`useResourceTasks`).
-- [ ] Repository write actions are disabled while `useRepositoryActivity` reports a running
-      task.
+- [ ] Tables: react-data-view helpers, server-side paging/sorting/filtering, `perPage` 10
+      (≤ 20), debounced text filters, `truncate`, widths summing to 100.
+- [ ] Header in its own `<PageSection>` + `<DocumentTitle>`; tab content has no
+      `<PageSection>`; query-running tabs use `mountOnEnter`.
+- [ ] `RevealCellOnExpand`, `EntityDetailFields`, `ConfirmActionModal` used where they apply;
+      no custom styling where PatternFly has an equivalent.
+- [ ] No red row actions, menu items or toolbar buttons; danger confirm only for irreversible
+      deletes.
+- [ ] Empty states have no actions except **Clear filters**.
+- [ ] Permission-gated actions are disabled via `disabledProps`, not hidden.
+- [ ] Task status is server-derived; repository writes honour `useRepositoryActivity`.
