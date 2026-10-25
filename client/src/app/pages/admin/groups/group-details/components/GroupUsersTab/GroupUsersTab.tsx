@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
-import { Button, PaginationVariant } from "@patternfly/react-core";
+import { PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
   DataViewTable,
@@ -16,9 +16,11 @@ import { ActionsColumn } from "@patternfly/react-table";
 import type { GroupUserResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { GatedButton } from "@app/components/GatedButton";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
   useGroupUsersListQuery,
   useSuspenseGroupDetailQuery,
@@ -36,6 +38,7 @@ interface IGroupUsersTabProps {
 
 export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
   const { data: group } = useSuspenseGroupDetailQuery({ href: groupHref });
+  const { disabledProps } = useObjectPermissions({ href: groupHref });
   const { addNotification } = useNotifications();
 
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -97,7 +100,13 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
       {
         cell: (
           <ActionsColumn
-            items={[{ title: "Remove", onClick: () => setRemoveTarget(user) }]}
+            items={[
+              {
+                title: "Remove",
+                onClick: () => setRemoveTarget(user),
+                ...disabledProps("change"),
+              },
+            ]}
           />
         ),
         props: { dataLabel: "Actions", isActionCell: true },
@@ -126,9 +135,13 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
       <DataView activeState={activeState}>
         <DataViewToolbar
           actions={
-            <Button variant="primary" onClick={() => setIsAddUserOpen(true)}>
+            <GatedButton
+              variant="primary"
+              onClick={() => setIsAddUserOpen(true)}
+              {...disabledProps("change")}
+            >
               Add User
-            </Button>
+            </GatedButton>
           }
           pagination={
             <ListPagination

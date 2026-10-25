@@ -81,7 +81,9 @@ const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
 }) => {
-  const { can } = useObjectPermissions({ href: remote.pulp_href ?? "" });
+  const { disabledProps } = useObjectPermissions({
+    href: remote.pulp_href ?? "",
+  });
   return (
     <DescriptionList columnModifier={COLUMNS}>
       <DescriptionListGroup>
@@ -109,7 +111,7 @@ const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
             href={remote.pulp_href ?? ""}
             labels={remote.pulp_labels}
             invalidateKey={remoteKeys.detail(remote.pulp_href ?? "")}
-            isDisabled={!can("change")}
+            actionProps={disabledProps("change")}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

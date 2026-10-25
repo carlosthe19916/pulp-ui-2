@@ -1,7 +1,10 @@
-import type { UseQueryOptions } from "@tanstack/react-query";
+import { useCallback } from "react";
+
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -81,6 +84,37 @@ export const myPermissionsQueryOptions = ({
 
 export const useMyPermissionsQuery = ({ href }: { href: string }) =>
   useQuery({ ...myPermissionsQueryOptions({ href }), enabled: !!href });
+
+/** One `my_permissions/` read per href (a list page's rows), keyed by href. */
+export const useMyPermissionsQueries = ({
+  hrefs,
+}: {
+  hrefs: string[];
+}): Map<string, MyPermissionsResponse> => {
+  // `combine` must be referentially stable or useQueries returns a new Map every
+  // render; key it on the href list's content, not the (often fresh) array.
+  const hrefsKey = hrefs.join("\n");
+  const combine = useCallback(
+    (
+      results: UseQueryResult<MyPermissionsResponse, DrfAxiosError>[],
+    ): Map<string, MyPermissionsResponse> => {
+      const byHref = new Map<string, MyPermissionsResponse>();
+      hrefsKey.split("\n").forEach((href, index) => {
+        const data = results[index]?.data;
+        if (data) byHref.set(href, data);
+      });
+      return byHref;
+    },
+    [hrefsKey],
+  );
+  return useQueries({
+    queries: hrefs.map((href) => ({
+      ...myPermissionsQueryOptions({ href }),
+      enabled: !!href,
+    })),
+    combine,
+  });
+};
 
 export interface IObjectRoleVariables {
   href: string;

@@ -30,10 +30,12 @@ import type {
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { FormSubmitError } from "@app/components/FormSubmitError";
+import { GatedButton } from "@app/components/GatedButton";
 import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   usePythonBlocklistCreateMutation,
@@ -56,6 +58,7 @@ export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
   repository,
 }) => {
   const repositoryHref = repository.pulp_href ?? "";
+  const { disabledProps } = useObjectPermissions({ href: repositoryHref });
   const { addNotification } = useNotifications();
   const [isAdding, setIsAdding] = useState(false);
   const [deleteTarget, setDeleteTarget] =
@@ -100,7 +103,13 @@ export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
       {
         cell: (
           <ActionsColumn
-            items={[{ title: "Remove", onClick: () => setDeleteTarget(entry) }]}
+            items={[
+              {
+                title: "Remove",
+                onClick: () => setDeleteTarget(entry),
+                ...disabledProps("modify"),
+              },
+            ]}
           />
         ),
         props: { dataLabel: "Actions", isActionCell: true },
@@ -125,9 +134,13 @@ export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
       <DataView activeState={activeState}>
         <DataViewToolbar
           actions={
-            <Button variant="secondary" onClick={() => setIsAdding(true)}>
+            <GatedButton
+              variant="secondary"
+              onClick={() => setIsAdding(true)}
+              {...disabledProps("modify")}
+            >
               Block a package
-            </Button>
+            </GatedButton>
           }
           pagination={
             <ListPagination

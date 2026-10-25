@@ -36,6 +36,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import type { IPublicationListParams } from "@app/queries/publications";
 import {
   usePublicationDeleteMutation,
@@ -102,6 +103,10 @@ export const PublicationList: React.FC = () => {
   });
 
   const publications = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: publications.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -149,10 +154,15 @@ export const PublicationList: React.FC = () => {
                 {
                   title: "Manage access",
                   onClick: () => setAccessTarget(pub),
+                  ...disabledProps({
+                    href: pub.pulp_href,
+                    verb: "manage_roles",
+                  }),
                 },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(pub),
+                  ...disabledProps({ href: pub.pulp_href, verb: "delete" }),
                 },
               ]}
             />

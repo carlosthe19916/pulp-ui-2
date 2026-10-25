@@ -34,6 +34,7 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   type IContainerNamespaceListParams,
@@ -121,6 +122,10 @@ export const ContainerNamespaceList: React.FC = () => {
   });
 
   const namespaces = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: namespaces.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name") } },
@@ -147,8 +152,16 @@ export const ContainerNamespaceList: React.FC = () => {
               {
                 title: "Manage access",
                 onClick: () => setAccessTarget(namespace),
+                ...disabledProps({
+                  href: namespace.pulp_href,
+                  verb: "manage_roles",
+                }),
               },
-              { title: "Delete", onClick: () => setDeleteTarget(namespace) },
+              {
+                title: "Delete",
+                onClick: () => setDeleteTarget(namespace),
+                ...disabledProps({ href: namespace.pulp_href, verb: "delete" }),
+              },
             ]}
           />
         ),

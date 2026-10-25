@@ -33,6 +33,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import {
   type IContentGuardListParams,
   useContentGuardDeleteMutation,
@@ -109,6 +110,10 @@ export const ContentGuardList: React.FC = () => {
   });
 
   const guards = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: guards.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name") } },
@@ -140,16 +145,27 @@ export const ContentGuardList: React.FC = () => {
                   title: "Edit",
                   onClick: () => setEditHref(guard.pulp_href ?? null),
                   isAriaDisabled: !type,
+                  ...(type
+                    ? disabledProps({ href: guard.pulp_href, verb: "change" })
+                    : {}),
                 },
                 ...(type?.hasAccess
                   ? [
                       {
                         title: "Manage access",
                         onClick: () => setAccessTarget(guard),
+                        ...disabledProps({
+                          href: guard.pulp_href,
+                          verb: "manage_roles",
+                        }),
                       },
                     ]
                   : []),
-                { title: "Delete", onClick: () => setDeleteTarget(guard) },
+                {
+                  title: "Delete",
+                  onClick: () => setDeleteTarget(guard),
+                  ...disabledProps({ href: guard.pulp_href, verb: "delete" }),
+                },
               ]}
             />
           ),

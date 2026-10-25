@@ -39,6 +39,7 @@ import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import {
@@ -127,6 +128,10 @@ export const RemoteList: React.FC = () => {
   });
 
   const remotes = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: remotes.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const STATUS_COLUMN_INDEX = 4;
@@ -226,10 +231,14 @@ export const RemoteList: React.FC = () => {
                           "This remote's plugin type isn't available in the UI.",
                       },
                   onClick: () => setModalState(remote),
+                  ...(canEdit
+                    ? disabledProps({ href: remote.pulp_href, verb: "change" })
+                    : {}),
                 },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(remote),
+                  ...disabledProps({ href: remote.pulp_href, verb: "delete" }),
                 },
               ]}
             />

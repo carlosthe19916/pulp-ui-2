@@ -13,6 +13,8 @@ export interface IContentWrites {
   onRemove: (units: IContentUnitRef[]) => void;
   /** A task runs on the repository: selection and Remove are disabled. */
   isLocked: boolean;
+  /** Lock and permission props every write action (Remove, Untag) spreads. */
+  actionProps: { isAriaDisabled?: boolean; tooltipProps?: { content: string } };
 }
 
 /**

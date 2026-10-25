@@ -32,6 +32,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import type { IGroupListParams } from "@app/queries/groups";
 import {
   useGroupDeleteMutation,
@@ -94,6 +95,10 @@ export const GroupList: React.FC = () => {
   });
 
   const groups = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: groups.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -126,10 +131,12 @@ export const GroupList: React.FC = () => {
                 {
                   title: "Edit",
                   onClick: () => setModalState(group),
+                  ...disabledProps({ href: group.pulp_href, verb: "change" }),
                 },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(group),
+                  ...disabledProps({ href: group.pulp_href, verb: "delete" }),
                 },
               ]}
             />

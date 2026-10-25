@@ -33,6 +33,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import {
   type AlternateContentSource,
   useAcsDeleteMutation,
@@ -120,6 +121,10 @@ export const AcsList: React.FC = () => {
   });
 
   const sources = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: sources.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Name" },
@@ -148,9 +153,21 @@ export const AcsList: React.FC = () => {
         cell: (
           <ActionsColumn
             items={[
-              { title: "Refresh", onClick: () => refreshMutation.mutate(acs) },
-              { title: "Edit", onClick: () => setModalState(acs) },
-              { title: "Delete", onClick: () => setDeleteTarget(acs) },
+              {
+                title: "Refresh",
+                onClick: () => refreshMutation.mutate(acs),
+                ...disabledProps({ href: acs.pulp_href, verb: "refresh" }),
+              },
+              {
+                title: "Edit",
+                onClick: () => setModalState(acs),
+                ...disabledProps({ href: acs.pulp_href, verb: "change" }),
+              },
+              {
+                title: "Delete",
+                onClick: () => setDeleteTarget(acs),
+                ...disabledProps({ href: acs.pulp_href, verb: "delete" }),
+              },
             ]}
           />
         ),

@@ -292,7 +292,14 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                     onViewDistributions={() => setActiveTab("distributions")}
                     writes={
                       canChangeContent
-                        ? { onRemove: setRemoveUnits, isLocked: isRunning }
+                        ? {
+                            onRemove: setRemoveUnits,
+                            isLocked: isRunning,
+                            actionProps: {
+                              ...lockedProps,
+                              ...disabledProps("modify"),
+                            },
+                          }
                         : undefined
                     }
                   />

@@ -33,6 +33,7 @@ import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
   isCancelable,
@@ -167,6 +168,10 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   });
 
   const tasks = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: tasks.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -219,6 +224,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
                 {
                   title: "Cancel",
                   onClick: () => setCancelTaskHref(task.pulp_href ?? null),
+                  ...disabledProps({ href: task.pulp_href, verb: "change" }),
                 },
               ]}
             />
@@ -228,6 +234,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
                 {
                   title: "Delete",
                   onClick: () => setDeleteTaskHref(task.pulp_href ?? null),
+                  ...disabledProps({ href: task.pulp_href, verb: "delete" }),
                 },
               ]}
             />

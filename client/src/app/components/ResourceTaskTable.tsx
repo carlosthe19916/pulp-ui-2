@@ -4,7 +4,6 @@ import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 
 import {
-  Button,
   Flex,
   FlexItem,
   Pagination,
@@ -20,8 +19,10 @@ import {
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
+import { GatedButton } from "@app/components/GatedButton";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import {
   isTerminalTaskState,
   PRN_TASK_STATES,
@@ -89,6 +90,9 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
   });
 
   const tasks = data?.results ?? [];
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: tasks.map((task) => task.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -137,16 +141,17 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
               </FlexItem>
               {isActive && (
                 <FlexItem>
-                  <Button
+                  <GatedButton
                     variant="link"
                     isInline
                     isDisabled={cancelMutation.isPending}
                     onClick={() =>
                       task.pulp_href && cancelMutation.mutate(task.pulp_href)
                     }
+                    {...disabledProps({ href: task.pulp_href, verb: "change" })}
                   >
                     Cancel
-                  </Button>
+                  </GatedButton>
                 </FlexItem>
               )}
             </Flex>

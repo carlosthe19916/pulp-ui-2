@@ -15,6 +15,7 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Tooltip,
 } from "@patternfly/react-core";
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
@@ -33,8 +34,11 @@ interface IEditablePulpLabelsProps {
   labels?: Record<string, string | null>;
   /** The resource's detail query key, refreshed after a change. */
   invalidateKey: QueryKey;
-  /** Shown read-only (e.g. no permission or a running task). */
-  isDisabled?: boolean;
+  /** Read-only with a reason (`disabledProps("change")`); Add label stays visible. */
+  actionProps?: {
+    isAriaDisabled?: boolean;
+    tooltipProps?: { content: string };
+  };
 }
 
 /**
@@ -45,8 +49,9 @@ export const EditablePulpLabels: React.FC<IEditablePulpLabelsProps> = ({
   href,
   labels,
   invalidateKey,
-  isDisabled,
+  actionProps,
 }) => {
+  const isDisabled = !!actionProps?.isAriaDisabled;
   const { addNotification } = useNotifications();
   // `null` closed, `""` adding, otherwise the key being edited.
   const [editing, setEditing] = useState<string | null>(null);
@@ -70,7 +75,23 @@ export const EditablePulpLabels: React.FC<IEditablePulpLabelsProps> = ({
         numLabels={8}
         isCompact
         addLabelControl={
-          isDisabled ? undefined : (
+          isDisabled ? (
+            // PF styles an add label disabled only with an onClick, and then drops its
+            // pointer events: the span takes the hover.
+            <Tooltip content={actionProps?.tooltipProps?.content}>
+              <span>
+                <Label
+                  variant="add"
+                  isCompact
+                  isDisabled
+                  aria-disabled
+                  onClick={() => undefined}
+                >
+                  Add label
+                </Label>
+              </span>
+            </Tooltip>
+          ) : (
             <Label variant="add" isCompact onClick={() => setEditing("")}>
               Add label
             </Label>
@@ -91,7 +112,6 @@ export const EditablePulpLabels: React.FC<IEditablePulpLabelsProps> = ({
           </Label>
         ))}
       </LabelGroup>
-      {entries.length === 0 && isDisabled ? "—" : null}
       {editing !== null && (
         <LabelModal
           href={href}

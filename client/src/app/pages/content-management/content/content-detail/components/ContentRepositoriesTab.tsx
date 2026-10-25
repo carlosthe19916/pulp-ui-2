@@ -22,6 +22,7 @@ import { ListPagination } from "@app/components/ListPagination";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -77,6 +78,9 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
 
   // A task on a row's repository (e.g. a sync started elsewhere) locks that row too.
   const queryClient = useQueryClient();
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: repositories.map((repository) => repository.pulp_href ?? ""),
+  });
   const { getActiveCount } = useResourceTasks({
     entities: repositories,
     onSettled: () => {
@@ -171,6 +175,10 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                             ...(isLocked || getActiveCount(repository.prn) > 0
                               ? REPOSITORY_LOCKED_PROPS
                               : {}),
+                            ...disabledProps({
+                              href: repository.pulp_href,
+                              verb: "modify",
+                            }),
                           },
                         ]}
                       />

@@ -12,7 +12,6 @@ import type {
   IContentUnitSelection,
   IContentWrites,
 } from "@app/hooks/useContentUnitSelection";
-import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 
 interface IContentBulkSelectProps {
   /** The units on the current page. */
@@ -72,10 +71,12 @@ export const RemoveSelectedButton: React.FC<IRemoveSelectedButtonProps> = ({
 }) => (
   <GatedButton
     variant="secondary"
-    // Locked keeps the reason tooltip; a plain-disabled button can't show it.
-    isDisabled={!writes.isLocked && selection.selected.length === 0}
+    // A gated button keeps its reason tooltip; a plain-disabled one can't show it.
+    isDisabled={
+      !writes.actionProps.isAriaDisabled && selection.selected.length === 0
+    }
     onClick={() => writes.onRemove(selection.selected)}
-    {...(writes.isLocked ? REPOSITORY_LOCKED_PROPS : {})}
+    {...writes.actionProps}
   >
     Remove
   </GatedButton>

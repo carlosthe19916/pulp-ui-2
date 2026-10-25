@@ -9,7 +9,6 @@ import type { ContainerManifestResponse } from "@app/client";
 import { GatedButton } from "@app/components/GatedButton";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { Snippet } from "@app/components/Snippet";
-import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import {
   useContentTypeListQueries,
   useContentTypeListQuery,
@@ -215,7 +214,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
                         event.stopPropagation();
                         setUntagName(tag.name);
                       }}
-                      {...(writes?.isLocked ? REPOSITORY_LOCKED_PROPS : {})}
+                      {...writes?.actionProps}
                     >
                       Untag
                     </GatedButton>

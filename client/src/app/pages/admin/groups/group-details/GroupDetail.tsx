@@ -20,6 +20,7 @@ import { GroupModal } from "@app/components/GroupModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RoleAssignmentsTab } from "@app/components/RoleAssignmentsTab";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
   useGroupDeleteMutation,
   useGroupUsersListQuery,
@@ -39,6 +40,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
   const { addNotification } = useNotifications();
 
   const { data: group } = useSuspenseGroupDetailQuery({ href: groupHref });
+  const { disabledProps } = useObjectPermissions({ href: groupHref });
   // These fetches feed only the tab-title counts, so request a single row and
   // read the paginated `count` rather than pulling a page of results.
   const { data: usersData } = useGroupUsersListQuery({
@@ -95,6 +97,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
                 dropdownItemProps: {
                   children: "Edit Group",
                   onClick: () => setIsEditOpen(true),
+                  ...disabledProps("change"),
                 },
               },
               {
@@ -102,6 +105,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
                 dropdownItemProps: {
                   children: "Delete Group",
                   onClick: () => setIsDeleteOpen(true),
+                  ...disabledProps("delete"),
                 },
               },
             ]}

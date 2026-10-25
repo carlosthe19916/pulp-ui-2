@@ -20,6 +20,7 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import {
   type IUploadListParams,
   useUploadDeleteMutation,
@@ -64,6 +65,10 @@ export const UploadsTab: React.FC = () => {
   });
 
   const uploads = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: uploads.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Size", props: { sort: sortProps("size") } },
@@ -95,7 +100,11 @@ export const UploadsTab: React.FC = () => {
         cell: (
           <ActionsColumn
             items={[
-              { title: "Delete", onClick: () => setDeleteTarget(upload) },
+              {
+                title: "Delete",
+                onClick: () => setDeleteTarget(upload),
+                ...disabledProps({ href: upload.pulp_href, verb: "delete" }),
+              },
             ]}
           />
         ),

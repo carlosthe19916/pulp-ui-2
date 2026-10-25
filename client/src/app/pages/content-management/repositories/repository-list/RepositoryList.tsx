@@ -41,6 +41,7 @@ import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
@@ -125,6 +126,9 @@ export const RepositoryList: React.FC = () => {
   });
 
   const repositories = data?.results ?? [];
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: repositories.map((repository) => repository.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const STATUS_COLUMN_INDEX = 4;
@@ -189,20 +193,23 @@ export const RepositoryList: React.FC = () => {
     const actionItems: IAction[] = [
       {
         title: "Edit",
-        isAriaDisabled: !canEdit,
-        tooltipProps: canEdit
-          ? undefined
-          : {
-              content:
-                "This repository's plugin type isn't available in the UI.",
-            },
         onClick: () => setModalState(repository),
+        ...(canEdit
+          ? disabledProps({ href: repository.pulp_href, verb: "change" })
+          : {
+              isAriaDisabled: true,
+              tooltipProps: {
+                content:
+                  "This repository's plugin type isn't available in the UI.",
+              },
+            }),
       },
     ];
     if (canSync) {
       actionItems.push({
         title: "Sync",
         onClick: () => setSyncTarget(repository),
+        ...disabledProps({ href: repository.pulp_href, verb: "sync" }),
       });
     }
     if (canPublish) {
@@ -214,6 +221,7 @@ export const RepositoryList: React.FC = () => {
     actionItems.push({
       title: "Delete",
       onClick: () => setDeleteTarget(repository),
+      ...disabledProps({ href: repository.pulp_href, verb: "delete" }),
     });
 
     return {

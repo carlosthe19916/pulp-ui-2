@@ -44,6 +44,7 @@ import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
@@ -130,6 +131,10 @@ export const DistributionList: React.FC = () => {
   });
 
   const distributions = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: distributions.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
 
   const { getActiveCount, getTaskKinds } = useResourceTasks({
@@ -199,14 +204,28 @@ export const DistributionList: React.FC = () => {
                           "This distribution's plugin type isn't available in the UI.",
                       },
                   onClick: () => setModalState(distribution),
+                  ...(canEdit
+                    ? disabledProps({
+                        href: distribution.pulp_href,
+                        verb: "change",
+                      })
+                    : {}),
                 },
                 {
                   title: "Manage access",
                   onClick: () => setAccessTarget(distribution),
+                  ...disabledProps({
+                    href: distribution.pulp_href,
+                    verb: "manage_roles",
+                  }),
                 },
                 {
                   title: "Delete",
                   onClick: () => setDeleteTarget(distribution),
+                  ...disabledProps({
+                    href: distribution.pulp_href,
+                    verb: "delete",
+                  }),
                 },
               ]}
             />

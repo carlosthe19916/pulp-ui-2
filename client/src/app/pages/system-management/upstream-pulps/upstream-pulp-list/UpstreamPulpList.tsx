@@ -34,6 +34,7 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useUpstreamPulpCreateMutation,
@@ -131,6 +132,10 @@ export const UpstreamPulpList: React.FC = () => {
   });
 
   const upstreams = data?.results ?? [];
+
+  const { disabledProps } = useObjectsPermissions({
+    hrefs: upstreams.map((item) => item.pulp_href ?? ""),
+  });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Name" },
@@ -159,16 +164,29 @@ export const UpstreamPulpList: React.FC = () => {
               {
                 title: "Replicate…",
                 onClick: () => setModal({ kind: "replicate", upstream }),
+                ...disabledProps({
+                  href: upstream.pulp_href,
+                  verb: "replicate",
+                }),
               },
               {
                 title: "Edit",
                 onClick: () => setModal({ kind: "edit", upstream }),
+                ...disabledProps({ href: upstream.pulp_href, verb: "change" }),
               },
               {
                 title: "Manage access",
                 onClick: () => setAccessTarget(upstream),
+                ...disabledProps({
+                  href: upstream.pulp_href,
+                  verb: "manage_roles",
+                }),
               },
-              { title: "Delete", onClick: () => setDeleteTarget(upstream) },
+              {
+                title: "Delete",
+                onClick: () => setDeleteTarget(upstream),
+                ...disabledProps({ href: upstream.pulp_href, verb: "delete" }),
+              },
             ]}
           />
         ),

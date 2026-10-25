@@ -59,7 +59,9 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   pulpType,
   pulpDomain,
 }) => {
-  const { can } = useObjectPermissions({ href: repository.pulp_href ?? "" });
+  const { disabledProps } = useObjectPermissions({
+    href: repository.pulp_href ?? "",
+  });
   const data = repository as Record<string, unknown>;
   const settings = (
     getPlugin(pulpType)?.entities.repository?.form.editFields ?? []
@@ -123,7 +125,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
             href={repository.pulp_href ?? ""}
             labels={repository.pulp_labels}
             invalidateKey={repositoryKeys.detail(repository.pulp_href ?? "")}
-            isDisabled={!can("change")}
+            actionProps={disabledProps("change")}
           />
         </Fact>
         {repository.prn && (
