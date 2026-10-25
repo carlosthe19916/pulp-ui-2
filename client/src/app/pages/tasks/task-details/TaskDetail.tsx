@@ -322,7 +322,7 @@ export const TaskDetail: React.FC<ITaskDetailProps> = ({ taskHref }) => {
         isConfirming={cancelMutation.isPending}
         confirmLabel="Cancel Task"
         cancelLabel="Close"
-        confirmVariant="danger"
+        confirmVariant="primary"
         onConfirm={() => void handleCancel()}
         onCancel={() => setIsCancelModalOpen(false)}
       />

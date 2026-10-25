@@ -226,6 +226,7 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
         body={`Are you sure you want to remove role "${removeTarget?.role}" from ${kind} "${name}"?`}
         isConfirming={deleteMutation.isPending}
         confirmLabel="Remove"
+        confirmVariant="primary"
         onConfirm={handleRemove}
         onCancel={() => setRemoveTarget(null)}
       />

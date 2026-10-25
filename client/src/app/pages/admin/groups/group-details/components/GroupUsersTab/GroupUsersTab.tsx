@@ -167,6 +167,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
         body={`Are you sure you want to remove user "${removeTarget?.username}" from group "${group.name}"?`}
         isConfirming={removeMutation.isPending}
         confirmLabel="Remove"
+        confirmVariant="primary"
         onConfirm={handleRemove}
         onCancel={() => setRemoveTarget(null)}
       />
