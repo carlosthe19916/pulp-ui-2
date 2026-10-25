@@ -73,7 +73,7 @@ npm run format:fix  # Prettier auto-fix
 
 # Fast inner loop, mostly for coding agents (CI still runs the commands above)
 npm run lint:fast        # oxlint (subset of the ESLint rules)
-npm run format:fast:fix  # oxfmt (Prettier-compatible)
+npm run format:fast:fix  # oxfmt (close to Prettier; follow with format:fix)
 npm run oxlint:sync      # regenerate .oxlintrc.json after editing eslint.config.mjs
 ```
 

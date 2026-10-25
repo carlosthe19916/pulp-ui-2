@@ -107,6 +107,11 @@ compared with about 30 s for ESLint), and run the full ESLint and Prettier gate 
 - Before finishing: `npm run format:fix && npm run lint && npm run format`.
   ESLint, tsc and Prettier are the gate (CI, pre-commit); oxlint misses some
   ESLint rules and oxfmt differs slightly from Prettier.
+- oxfmt trails the latest Prettier, so `format:fast` can report files that `npm run format`
+  accepts (for example long union types after Prettier 3.9). `npm run format` is the one that
+  counts: ignore those `format:fast` failures and never "fix" them by hand.
+- Never run `npm run format:fast:fix` without `npm run format:fix` after it, or oxfmt's
+  output can fail the Prettier check.
 - After changing `eslint.config.mjs`, run `npm run oxlint:sync`; after changing
   `.prettierrc.mjs`, update `.oxfmtrc.json`.
 
