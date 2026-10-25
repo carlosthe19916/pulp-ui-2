@@ -50,7 +50,10 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         storageState: authFile,
       },
-      dependencies: ["chromium"],
+      // Locally it runs after the whole suite (one `npx playwright test` command).
+      // In CI it is its own sharded job, so it depends only on auth and never
+      // pulls the main suite in behind it.
+      dependencies: process.env.CI ? ["setup"] : ["chromium"],
       testMatch: /access-policies\.spec\.ts/,
     },
   ],

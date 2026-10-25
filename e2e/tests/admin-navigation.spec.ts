@@ -57,20 +57,24 @@ test.describe("Administration navigation", () => {
       },
     ];
     for (const { item, heading, path } of items) {
-      test(`NAV-01 Administration links ${item}`, async ({ page }) => {
-        await page.goto("/");
-        await openAdministration(page);
-        await navLink(page, item).click();
-        await expect(
-          page.getByRole("heading", { level: 1, name: heading, exact: true }),
-        ).toBeVisible();
-        await expect(page).toHaveURL(new RegExp(`${path}$`));
-        await openAdministration(page);
-        await expect(navLink(page, item)).toHaveAttribute(
-          "aria-current",
-          "page",
-        );
-      });
+      test(
+        `NAV-01 Administration links ${item}`,
+        { tag: "@smoke" },
+        async ({ page }) => {
+          await page.goto("/");
+          await openAdministration(page);
+          await navLink(page, item).click();
+          await expect(
+            page.getByRole("heading", { level: 1, name: heading, exact: true }),
+          ).toBeVisible();
+          await expect(page).toHaveURL(new RegExp(`${path}$`));
+          await openAdministration(page);
+          await expect(navLink(page, item)).toHaveAttribute(
+            "aria-current",
+            "page",
+          );
+        },
+      );
     }
 
     const details = [

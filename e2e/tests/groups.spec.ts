@@ -263,35 +263,39 @@ test.describe("Groups", () => {
 
   for (const change of [true, false]) {
     for (const del of [true, false]) {
-      for (const action of GATED_ACTIONS) {
-        const needs = action.includes("Delete") ? "delete" : "change";
-        const allowed = needs === "delete" ? del : change;
-        const gate: Gate = allowed
-          ? "enabled"
-          : { tooltip: needs === "delete" ? NO_DELETE : NO_CHANGE };
-        test(`GRP-PERM-01 change ${change ? "yes" : "no"}, delete ${del ? "yes" : "no"}: ${action} is ${allowed ? "enabled" : "disabled"}`, async ({
-          api,
-          cleanup,
-          secondUser,
-        }) => {
-          const user = await secondUser.create();
-          const group = await seedGroup(api, cleanup);
-          await grantOnGroup(api, cleanup, {
-            username: user.username,
-            group,
-            permissions: permissionsFor({ change, del }),
-          });
-          // The second user is the member the Remove row acts on.
-          await api.addGroupMember(group.name, user.username);
-          const page = await secondUser.login(user);
-          const item = await locateAction(page, {
-            action,
-            group,
-            member: user.username,
-          });
-          await expectGate(item, gate);
+      // One second-user login per (change, delete) combo; each gated action is a
+      // read-only step (logging a second user in is the expensive part).
+      test(`GRP-PERM-01 change ${change ? "yes" : "no"}, delete ${del ? "yes" : "no"}: gated actions`, async ({
+        api,
+        cleanup,
+        secondUser,
+      }) => {
+        const user = await secondUser.create();
+        const group = await seedGroup(api, cleanup);
+        await grantOnGroup(api, cleanup, {
+          username: user.username,
+          group,
+          permissions: permissionsFor({ change, del }),
         });
-      }
+        // The second user is the member the Remove row acts on.
+        await api.addGroupMember(group.name, user.username);
+        const page = await secondUser.login(user);
+        for (const action of GATED_ACTIONS) {
+          const needs = action.includes("Delete") ? "delete" : "change";
+          const allowed = needs === "delete" ? del : change;
+          const gate: Gate = allowed
+            ? "enabled"
+            : { tooltip: needs === "delete" ? NO_DELETE : NO_CHANGE };
+          await test.step(`${action} is ${allowed ? "enabled" : "disabled"}`, async () => {
+            const item = await locateAction(page, {
+              action,
+              group,
+              member: user.username,
+            });
+            await expectGate(item, gate);
+          });
+        }
+      });
     }
   }
 
@@ -317,33 +321,35 @@ test.describe("Groups", () => {
     await expect(modal.table.stateHeading("403: Access denied")).toBeVisible();
   });
 
-  for (const action of GATED_ACTIONS) {
-    test(`GRP-PERM-02 disabled ${action} opens nothing`, async ({
-      api,
-      cleanup,
-      secondUser,
-    }) => {
-      const user = await secondUser.create();
-      const group = await seedGroup(api, cleanup);
-      await grantOnGroup(api, cleanup, {
-        username: user.username,
-        group,
-        permissions: permissionsFor({ change: false, del: false }),
-      });
-      await api.addGroupMember(group.name, user.username);
-      const page = await secondUser.login(user);
-      const item = await locateAction(page, {
-        action,
-        group,
-        member: user.username,
-      });
-      await expect(item).toHaveAttribute("aria-disabled", "true");
-      // force: Playwright won't click an aria-disabled element otherwise; the point
-      // is that the click does nothing.
-      await item.click({ force: true });
-      await expect(page.getByRole("dialog")).toHaveCount(0);
+  test("GRP-PERM-02 disabled actions open nothing", async ({
+    api,
+    cleanup,
+    secondUser,
+  }) => {
+    const user = await secondUser.create();
+    const group = await seedGroup(api, cleanup);
+    await grantOnGroup(api, cleanup, {
+      username: user.username,
+      group,
+      permissions: permissionsFor({ change: false, del: false }),
     });
-  }
+    await api.addGroupMember(group.name, user.username);
+    const page = await secondUser.login(user);
+    for (const action of GATED_ACTIONS) {
+      await test.step(action, async () => {
+        const item = await locateAction(page, {
+          action,
+          group,
+          member: user.username,
+        });
+        await expect(item).toHaveAttribute("aria-disabled", "true");
+        // force: Playwright won't click an aria-disabled element otherwise; the
+        // point is that the click does nothing.
+        await item.click({ force: true });
+        await expect(page.getByRole("dialog")).toHaveCount(0);
+      });
+    }
+  });
 
   test("GRP-PERM-03 permissions are per group, on the same page", async ({
     api,
@@ -476,30 +482,32 @@ test.describe("Groups", () => {
   }
 
   for (const creator of ["the admin", "someone else"] as const) {
-    for (const action of GATED_ACTIONS) {
-      test(`GRP-PERM-06 the admin sees ${action} enabled on a group created by ${creator}`, async ({
-        api,
-        cleanup,
-        page,
-      }) => {
-        const group = await seedGroup(api, cleanup);
-        if (creator === "someone else") {
-          // The creator becomes the group's owner; drop the admin's roles on it so
-          // only superuser status grants the actions.
-          for (const assignment of await api.roleAssignments({
-            user: "admin",
-          })) {
-            if (assignment.content_object === group.pulp_href)
-              await api.removeRoleAssignment(assignment.pulp_href);
-          }
+    test(`GRP-PERM-06 the admin sees gated actions enabled on a group created by ${creator}`, async ({
+      api,
+      cleanup,
+      page,
+    }) => {
+      const group = await seedGroup(api, cleanup);
+      if (creator === "someone else") {
+        // The creator becomes the group's owner; drop the admin's roles on it so
+        // only superuser status grants the actions.
+        for (const assignment of await api.roleAssignments({
+          user: "admin",
+        })) {
+          if (assignment.content_object === group.pulp_href)
+            await api.removeRoleAssignment(assignment.pulp_href);
         }
-        const member = cleanup.user(uniqueName("user"));
-        await api.createUser({ username: member });
-        await api.addGroupMember(group.name, member);
-        const item = await locateAction(page, { action, group, member });
-        await expectGate(item, "enabled");
-      });
-    }
+      }
+      const member = cleanup.user(uniqueName("user"));
+      await api.createUser({ username: member });
+      await api.addGroupMember(group.name, member);
+      for (const action of GATED_ACTIONS) {
+        await test.step(action, async () => {
+          const item = await locateAction(page, { action, group, member });
+          await expectGate(item, "enabled");
+        });
+      }
+    });
   }
 
   test('GRP-PERM-07 "Create Group" is enabled and submitting shows the permission error', async ({
@@ -643,18 +651,18 @@ test.describe("Groups", () => {
     });
   }
 
-  test("GRP-CRE-03 the new group appears with a toast", async ({
-    groupsPage,
-    cleanup,
-    toasts,
-  }) => {
-    const name = cleanup.group(uniqueName("group"));
-    await groupsPage.goto();
-    await groupsPage.create(name);
-    await expect(toasts.success(`Group "${name}" created`)).toBeVisible();
-    await groupsPage.filterBy("Name", name);
-    await groupsPage.expectRowVisible(name);
-  });
+  test(
+    "GRP-CRE-03 the new group appears with a toast",
+    { tag: "@smoke" },
+    async ({ groupsPage, cleanup, toasts }) => {
+      const name = cleanup.group(uniqueName("group"));
+      await groupsPage.goto();
+      await groupsPage.create(name);
+      await expect(toasts.success(`Group "${name}" created`)).toBeVisible();
+      await groupsPage.filterBy("Name", name);
+      await groupsPage.expectRowVisible(name);
+    },
+  );
 
   // --- Edit ---------------------------------------------------------------
 

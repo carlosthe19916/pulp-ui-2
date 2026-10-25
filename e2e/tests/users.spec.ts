@@ -76,36 +76,40 @@ test.describe("Users", () => {
     { email: "", active: false, groups: 1 },
     { email: "", active: false, groups: 2 },
   ];
-  for (const row of listRows) {
-    test(`USR-LIST-01 row content: email ${row.email || "(none)"}, ${row.active ? "active" : "inactive"}, ${row.groups} groups`, async ({
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({
-        username,
-        email: row.email,
-        is_active: row.active,
-      });
-      for (let i = 0; i < row.groups; i++) {
-        const group = cleanup.group(uniqueName("group"));
-        await api.createGroup(group);
-        await api.addGroupMember(group, username);
-      }
+  test("USR-LIST-01 row content", async ({ usersPage, api, cleanup }) => {
+    // Seed every row once (in parallel), then assert each on a single page load.
+    const seeded = await Promise.all(
+      listRows.map(async (row) => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({
+          username,
+          email: row.email,
+          is_active: row.active,
+        });
+        for (let i = 0; i < row.groups; i++) {
+          const group = cleanup.group(uniqueName("group"));
+          await api.createGroup(group);
+          await api.addGroupMember(group, username);
+        }
+        return { row, username };
+      }),
+    );
 
-      await usersPage.goto();
-      await usersPage.list.filter("Username", username);
-      const tr = usersPage.list.row(username);
-      await expect(cell(tr, COL.email)).toHaveText(row.email || "—");
-      await expect(cell(tr, COL.active)).toHaveText(
-        row.active ? "Active" : "Inactive",
-      );
-      await expect(cell(tr, COL.groups)).toHaveText(String(row.groups));
-      // Formatted for people, never the raw ISO timestamp.
-      await expect(cell(tr, COL.dateJoined)).not.toHaveText(/^—$|T\d\d:/);
-    });
-  }
+    await usersPage.goto();
+    for (const { row, username } of seeded) {
+      await test.step(`email ${row.email || "(none)"}, ${row.active ? "active" : "inactive"}, ${row.groups} groups`, async () => {
+        await usersPage.list.filter("Username", username);
+        const tr = usersPage.list.row(username);
+        await expect(cell(tr, COL.email)).toHaveText(row.email || "—");
+        await expect(cell(tr, COL.active)).toHaveText(
+          row.active ? "Active" : "Inactive",
+        );
+        await expect(cell(tr, COL.groups)).toHaveText(String(row.groups));
+        // Formatted for people, never the raw ISO timestamp.
+        await expect(cell(tr, COL.dateJoined)).not.toHaveText(/^—$|T\d\d:/);
+      });
+    }
+  });
 
   test("USR-LIST-02 row actions Edit and Delete are enabled", async ({
     usersPage,
@@ -522,23 +526,22 @@ test.describe("Users", () => {
     }
   }
 
-  test("USR-CRE-07 the new user appears with a toast and Groups 0", async ({
-    page,
-    usersPage,
-    cleanup,
-    toasts,
-  }) => {
-    const username = cleanup.user(uniqueName("user"));
-    const modal = await openCreate(page, usersPage);
-    await modal.field("Username").fill(username);
-    await modal.field("Password").fill(STRONG_PASSWORD);
-    await modal.button("Create").click();
-    await expect(toasts.success(`User "${username}" created`)).toBeVisible();
-    await usersPage.list.filter("Username", username);
-    await expect(cell(usersPage.list.row(username), COL.groups)).toHaveText(
-      "0",
-    );
-  });
+  test(
+    "USR-CRE-07 the new user appears with a toast and Groups 0",
+    { tag: "@smoke" },
+    async ({ page, usersPage, cleanup, toasts }) => {
+      const username = cleanup.user(uniqueName("user"));
+      const modal = await openCreate(page, usersPage);
+      await modal.field("Username").fill(username);
+      await modal.field("Password").fill(STRONG_PASSWORD);
+      await modal.button("Create").click();
+      await expect(toasts.success(`User "${username}" created`)).toBeVisible();
+      await usersPage.list.filter("Username", username);
+      await expect(cell(usersPage.list.row(username), COL.groups)).toHaveText(
+        "0",
+      );
+    },
+  );
 
   for (const active of [true, false]) {
     test(`USR-CRE-08 a user created ${active ? "active" : "inactive"} ${active ? "can" : "cannot"} log in`, async ({

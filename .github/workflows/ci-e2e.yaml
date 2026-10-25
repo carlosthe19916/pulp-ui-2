@@ -9,10 +9,47 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    name: e2e (${{ matrix.name }})
     strategy:
       fail-fast: false
       matrix:
-        domains: [enabled, disabled]
+        # Each entry is its own job with its own Pulp backend, so the shards run
+        # in parallel with no shared-backend contention. The main suite (the
+        # chromium project, which ignores access-policies) is split into 4 shards
+        # under domains=enabled; access-policies runs on its own (serial); the
+        # domains=disabled leg re-checks only the @smoke flows on the no-domains
+        # code path.
+        include:
+          - {
+              name: main-1,
+              domains: enabled,
+              args: "--project=chromium --shard=1/4",
+            }
+          - {
+              name: main-2,
+              domains: enabled,
+              args: "--project=chromium --shard=2/4",
+            }
+          - {
+              name: main-3,
+              domains: enabled,
+              args: "--project=chromium --shard=3/4",
+            }
+          - {
+              name: main-4,
+              domains: enabled,
+              args: "--project=chromium --shard=4/4",
+            }
+          - {
+              name: access-policies,
+              domains: enabled,
+              args: "--project=access-policies",
+            }
+          - {
+              name: smoke-no-domains,
+              domains: disabled,
+              args: "--project=chromium --grep @smoke",
+            }
     env:
       PULP_API_URL: http://localhost:8080
       E2E_USERNAME: admin
@@ -54,13 +91,13 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
 
-      - run: npx playwright test
+      - run: npx playwright test ${{ matrix.args }}
         working-directory: e2e
 
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-${{ matrix.domains }}
+          name: playwright-report-${{ matrix.name }}
           path: e2e/playwright-report/
 
       - name: Stop Pulp

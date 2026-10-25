@@ -460,21 +460,23 @@ forEachDialog((dialog) => {
     await expect(modal.button("Cancel")).toBeVisible();
   });
 
-  for (const how of ["Cancel", "×", "Escape"] as const) {
-    test(`CONF-02 ${dialog.name}: dismissing with ${how} changes nothing`, async ({
-      page,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      const fx = { page, api, cleanup };
-      const ctx = await dialog.seed(fx);
-      const modal = await dialog.open(fx, ctx);
-      await modal.dismiss(how);
-      await toasts.expectNone();
-      await dialog.expectUnchanged(fx, ctx);
-    });
-  }
+  test(`CONF-02 ${dialog.name}: dismissing changes nothing`, async ({
+    page,
+    api,
+    cleanup,
+    toasts,
+  }) => {
+    const fx = { page, api, cleanup };
+    const ctx = await dialog.seed(fx);
+    for (const how of ["Cancel", "×", "Escape"] as const) {
+      await test.step(`dismissing with ${how}`, async () => {
+        const modal = await dialog.open(fx, ctx);
+        await modal.dismiss(how);
+        await toasts.expectNone();
+        await dialog.expectUnchanged(fx, ctx);
+      });
+    }
+  });
 
   test(`CONF-03 ${dialog.name}: confirming spins, then succeeds`, async ({
     page,

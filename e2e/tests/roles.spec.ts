@@ -193,37 +193,47 @@ test.describe("Roles", () => {
       },
     ];
 
-    for (const row of customRows) {
-      test(`ROL-LIST-01 ${row.label}`, async ({ rolesPage, api, cleanup }) => {
-        const name = cleanup.role(row.name());
-        await api.createRole({
-          name,
-          description: row.description,
-          permissions: row.permissions,
+    test("ROL-LIST-01 custom roles", async ({ rolesPage, api, cleanup }) => {
+      // Seed every row once, then assert each on a single page load.
+      const seeded = await Promise.all(
+        customRows.map(async (row) => {
+          const name = cleanup.role(row.name());
+          await api.createRole({
+            name,
+            description: row.description,
+            permissions: row.permissions,
+          });
+          return { row, name };
+        }),
+      );
+      await rolesPage.goto();
+      for (const { row, name } of seeded) {
+        await test.step(row.label, async () => {
+          await rolesPage.filterBy("Name", name);
+          await expect(rolesPage.exactRow(name)).toBeVisible();
+          const cells = rolesPage.exactRow(name).getByRole("gridcell");
+          await expect(cells.nth(NAME)).toHaveText(name);
+          await expect(cells.nth(NAME).getByRole("link")).toHaveCount(0);
+          await expect(cells.nth(PLUGIN)).toHaveText(row.plugin(name));
+          if (row.cell === "truncated") {
+            // The cell keeps the whole text but cuts it off with an ellipsis.
+            await expect
+              .poll(() =>
+                cells
+                  .nth(DESCRIPTION)
+                  .evaluate((cell) => cell.scrollWidth > cell.clientWidth),
+              )
+              .toBe(true);
+          } else {
+            await expect(cells.nth(DESCRIPTION)).toHaveText(row.cell);
+          }
+          await expect(cells.nth(PERMISSIONS)).toHaveText(
+            String(row.permissions.length),
+          );
+          await expect(cells.nth(LOCKED)).toHaveText("No");
         });
-        await findRole(rolesPage, name);
-        const cells = rolesPage.exactRow(name).getByRole("gridcell");
-        await expect(cells.nth(NAME)).toHaveText(name);
-        await expect(cells.nth(NAME).getByRole("link")).toHaveCount(0);
-        await expect(cells.nth(PLUGIN)).toHaveText(row.plugin(name));
-        if (row.cell === "truncated") {
-          // The cell keeps the whole text but cuts it off with an ellipsis.
-          await expect
-            .poll(() =>
-              cells
-                .nth(DESCRIPTION)
-                .evaluate((cell) => cell.scrollWidth > cell.clientWidth),
-            )
-            .toBe(true);
-        } else {
-          await expect(cells.nth(DESCRIPTION)).toHaveText(row.cell);
-        }
-        await expect(cells.nth(PERMISSIONS)).toHaveText(
-          String(row.permissions.length),
-        );
-        await expect(cells.nth(LOCKED)).toHaveText("No");
-      });
-    }
+      }
+    });
 
     test("ROL-LIST-01 .leading (empty plugin)", async () => {
       test.fixme(
@@ -792,20 +802,20 @@ test.describe("Roles", () => {
       });
     }
 
-    test("ROL-CRE-05 the new role appears", async ({
-      rolesPage,
-      cleanup,
-      toasts,
-    }) => {
-      const name = cleanup.role(roleName((u) => `custom.${u}`));
-      await rolesPage.goto();
-      await rolesPage.create({ name });
-      await expect(toasts.success(`Role "${name}" created`)).toBeVisible();
-      await rolesPage.filterBy("Name", name);
-      await expect(
-        rolesPage.exactRow(name).getByRole("gridcell").nth(LOCKED),
-      ).toHaveText("No");
-    });
+    test(
+      "ROL-CRE-05 the new role appears",
+      { tag: "@smoke" },
+      async ({ rolesPage, cleanup, toasts }) => {
+        const name = cleanup.role(roleName((u) => `custom.${u}`));
+        await rolesPage.goto();
+        await rolesPage.create({ name });
+        await expect(toasts.success(`Role "${name}" created`)).toBeVisible();
+        await rolesPage.filterBy("Name", name);
+        await expect(
+          rolesPage.exactRow(name).getByRole("gridcell").nth(LOCKED),
+        ).toHaveText("No");
+      },
+    );
   });
 
   test.describe("Permission input", () => {

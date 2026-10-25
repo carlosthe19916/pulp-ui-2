@@ -547,23 +547,25 @@ forEachModal((modal) => {
     await expect(form.button("Cancel")).toBeVisible();
   });
 
-  for (const how of ["Cancel", "×", "Escape"] as const) {
-    test(`FORM-02 ${modal.name}: closing with ${how} saves nothing`, async ({
-      page,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      const fx = { page, api, cleanup };
-      const ctx = await modal.seed(fx);
-      const before = await modal.state(fx, ctx);
-      const form = await modal.open(fx, ctx);
-      await form.field(modal.field).fill(ctx.fresh);
-      await form.close(how);
-      await toasts.expectNone();
-      expect(await modal.state(fx, ctx)).toEqual(before);
-    });
-  }
+  test(`FORM-02 ${modal.name}: closing saves nothing`, async ({
+    page,
+    api,
+    cleanup,
+    toasts,
+  }) => {
+    const fx = { page, api, cleanup };
+    const ctx = await modal.seed(fx);
+    const before = await modal.state(fx, ctx);
+    for (const how of ["Cancel", "×", "Escape"] as const) {
+      await test.step(`closing with ${how}`, async () => {
+        const form = await modal.open(fx, ctx);
+        await form.field(modal.field).fill(ctx.fresh);
+        await form.close(how);
+        await toasts.expectNone();
+        expect(await modal.state(fx, ctx)).toEqual(before);
+      });
+    }
+  });
 
   test(`FORM-03 ${modal.name}: reopening starts fresh`, async ({
     page,

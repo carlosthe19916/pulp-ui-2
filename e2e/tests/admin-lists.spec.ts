@@ -677,35 +677,45 @@ test.describe("Data lists", () => {
 
   // LIST-04
   for (const t of sortable) {
-    for (const [index, column] of t.sort.entries()) {
-      for (const clicks of [1, 2]) {
-        // The default column starts ascending, so its first click turns it around.
-        const descending = index === 0 ? clicks === 1 : clicks === 2;
-        const direction = descending ? "descending" : "ascending";
-        test(`LIST-04 ${t.name}: ${column.column} clicked ${clicks} time(s) sorts ${direction}`, async ({
-          page,
-          api,
-        }) => {
-          // Ranked columns stay unscoped, so both values exist (built-in roles
-          // are locked, seeded ones are not).
-          const dataTable = column.rank
-            ? await open(page, t)
-            : await openScoped(page, t);
-          for (let i = 0; i < clicks; i++)
-            await dataTable.sortBy(column.column);
-          await dataTable.expectSorted(column.column, direction);
-          if (column.column === "Locked") {
-            await expect
-              .poll(async () => (await dataTable.columnTexts("Locked"))[0])
-              .toBe(descending ? "Yes" : "No");
+    // One page load per table; each column is a step. Non-rank columns compare
+    // against the scoped API page so the view is scoped with the filter; rank
+    // columns (e.g. Locked) check rank order on the full list, so the filter is
+    // cleared. Toggling the filter keeps the sort, so the first click on a column
+    // not yet sorted goes ascending, and the default column (pre-sorted ascending)
+    // turns around on its first click.
+    test(`LIST-04 ${t.name}: every sortable column, both directions`, async ({
+      page,
+      api,
+    }) => {
+      const dataTable = await open(page, t);
+      for (const [index, column] of t.sort.entries()) {
+        await test.step(column.column, async () => {
+          if (t.scopeFilter && t.filter) {
+            if (column.rank) {
+              await dataTable.filterInput(t.filter.title).fill("");
+            } else {
+              await dataTable.filter(t.filter.title, t.scopeFilter());
+            }
+            await dataTable.expectLoaded();
           }
-          await expectOrder(api, t, dataTable, {
-            column,
-            ordering: `${descending ? "-" : ""}${column.key}`,
-          });
+          for (const clicks of [1, 2]) {
+            const descending = index === 0 ? clicks === 1 : clicks === 2;
+            const direction = descending ? "descending" : "ascending";
+            await dataTable.sortBy(column.column);
+            await dataTable.expectSorted(column.column, direction);
+            if (column.column === "Locked") {
+              await expect
+                .poll(async () => (await dataTable.columnTexts("Locked"))[0])
+                .toBe(descending ? "Yes" : "No");
+            }
+            await expectOrder(api, t, dataTable, {
+              column,
+              ordering: `${descending ? "-" : ""}${column.key}`,
+            });
+          }
         });
       }
-    }
+    });
   }
 
   // LIST-05
@@ -840,12 +850,17 @@ test.describe("Data lists", () => {
     },
   ];
   for (const t of filtered) {
-    for (const { input, check } of filterClasses) {
-      test(`LIST-07 ${t.name}: filter by ${input}`, async ({ page, api }) => {
-        const dataTable = await open(page, t);
-        await check(t, dataTable, api);
-      });
-    }
+    // One page load per table; each equivalence class is a step (it sets its own
+    // filter, so the classes are independent on the same page).
+    test(`LIST-07 ${t.name}: text filter equivalence classes`, async ({
+      page,
+      api,
+    }) => {
+      const dataTable = await open(page, t);
+      for (const { input, check } of filterClasses) {
+        await test.step(`filter by ${input}`, () => check(t, dataTable, api));
+      }
+    });
   }
 
   // LIST-08
@@ -1136,54 +1151,64 @@ test.describe("Data lists", () => {
     },
   ];
   for (const t of TABLES) {
-    for (const { action, setup, act, expectPageNumber } of pagingActions) {
-      test(`LIST-15 ${t.name}: ${action}, from the top and the bottom paginator`, async ({
-        page,
-      }) => {
-        const dataTable = await openForPaging(page, t);
-        const { total } = await dataTable.paginator().range();
-        const lastPage = Math.ceil(total / t.pageSize);
-        expect(lastPage).toBeGreaterThan(2);
-        for (const which of ["top", "bottom"] as const) {
-          const paginator = dataTable.paginator(which);
-          if (setup) {
-            await setup(paginator);
+    // One page load per table; each action resets to a known page in its setup,
+    // so the actions are independent steps on the same table.
+    test(`LIST-15 ${t.name}: paging from the top and the bottom paginator`, async ({
+      page,
+    }) => {
+      const dataTable = await openForPaging(page, t);
+      const { total } = await dataTable.paginator().range();
+      const lastPage = Math.ceil(total / t.pageSize);
+      expect(lastPage).toBeGreaterThan(2);
+      for (const { action, setup, act, expectPageNumber } of pagingActions) {
+        await test.step(action, async () => {
+          for (const which of ["top", "bottom"] as const) {
+            const paginator = dataTable.paginator(which);
+            // Start every action from page 1: a previous action may have left the
+            // table on the last page, where a setup that clicks "last" is disabled.
+            await dataTable.paginator().goToPage(1);
             await dataTable.expectLoaded();
+            if (setup) {
+              await setup(paginator);
+              await dataTable.expectLoaded();
+            }
+            const before = await dataTable.rows.first().innerText();
+            await act(paginator);
+            const pageNumber = expectPageNumber(lastPage);
+            await expectPage(dataTable, pageNumber);
+            await expect(
+              dataTable.paginator("bottom").currentPage(),
+            ).toHaveValue(String(pageNumber));
+            const first = (pageNumber - 1) * t.pageSize + 1;
+            const last = Math.min(pageNumber * t.pageSize, total);
+            const range = `${first} - ${last} of ${total}`;
+            await dataTable.paginator("top").expectRange(range);
+            await dataTable.paginator("bottom").expectRange(range);
+            await expect(dataTable.rows).toHaveCount(last - first + 1);
+            await expect(dataTable.rows.first()).not.toHaveText(before);
           }
-          const before = await dataTable.rows.first().innerText();
-          await act(paginator);
-          const pageNumber = expectPageNumber(lastPage);
-          await expectPage(dataTable, pageNumber);
-          await expect(dataTable.paginator("bottom").currentPage()).toHaveValue(
-            String(pageNumber),
-          );
-          const first = (pageNumber - 1) * t.pageSize + 1;
-          const last = Math.min(pageNumber * t.pageSize, total);
-          const range = `${first} - ${last} of ${total}`;
-          await dataTable.paginator("top").expectRange(range);
-          await dataTable.paginator("bottom").expectRange(range);
-          await expect(dataTable.rows).toHaveCount(last - first + 1);
-          await expect(dataTable.rows.first()).not.toHaveText(before);
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   // LIST-16
   for (const t of TABLES) {
-    for (const size of [10, 20] as const) {
-      test(`LIST-16 ${t.name}: ${size} per page`, async ({ page }) => {
-        const dataTable = await openForPaging(page, t);
-        const { total } = await dataTable.paginator().range();
-        expect(total).toBeGreaterThan(20);
-        await dataTable.paginator().next().click();
-        await expectPage(dataTable, 2);
-        await dataTable.paginator().setPerPage(size);
-        await expectPage(dataTable, 1);
-        await dataTable.paginator().expectRange(`1 - ${size} of ${total}`);
-        await expect(dataTable.rows).toHaveCount(size);
-      });
-    }
+    test(`LIST-16 ${t.name}: page size`, async ({ page }) => {
+      const dataTable = await openForPaging(page, t);
+      const { total } = await dataTable.paginator().range();
+      expect(total).toBeGreaterThan(20);
+      for (const size of [10, 20] as const) {
+        await test.step(`${size} per page`, async () => {
+          await dataTable.paginator().next().click();
+          await expectPage(dataTable, 2);
+          await dataTable.paginator().setPerPage(size);
+          await expectPage(dataTable, 1);
+          await dataTable.paginator().expectRange(`1 - ${size} of ${total}`);
+          await expect(dataTable.rows).toHaveCount(size);
+        });
+      }
+    });
   }
 
   // LIST-17
@@ -1221,6 +1246,8 @@ test.describe("Data lists", () => {
     },
   ];
   for (const t of sortable.filter((s) => s.filter)) {
+    // Each order re-navigates (its steps include "go to page 2" and the end state
+    // must be page 1 regardless of order), so it stays a test per order.
     for (const { order, steps } of orders) {
       test(`LIST-18 ${t.name}: ${order}`, async ({ page, api }) => {
         const dataTable = await open(page, t);
