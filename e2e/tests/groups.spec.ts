@@ -562,23 +562,8 @@ test.describe("Groups", () => {
       input: async () => `${uniqueName("group")} ops-team_2.0 日本`,
       outcome: { created: (input) => input },
     },
-    {
-      name: "only spaces",
-      input: async () => "     ",
-      outcome: { serverError: "This field may not be blank." },
-    },
-    {
-      name: "an existing group's name",
-      input: async ({ api, cleanup }) => (await seedGroup(api, cleanup)).name,
-      outcome: { serverError: "This field must be unique." },
-    },
-    {
-      name: "151 characters",
-      input: async () => uniqueName("group").padEnd(151, "x"),
-      outcome: {
-        serverError: "Ensure this field has no more than 150 characters.",
-      },
-    },
+    // Server rejections (blank, unique, length) are contract tests:
+    // tests/api/groups.api.spec.ts.
   ];
 
   for (const row of createNames) {

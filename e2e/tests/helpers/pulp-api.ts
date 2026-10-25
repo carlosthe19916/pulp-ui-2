@@ -524,6 +524,39 @@ export class PulpApi {
     return (res.status() === 204 ? undefined : await res.json()) as T;
   }
 
+  /**
+   * Send a request and return the status + parsed body without throwing, so a
+   * contract test can assert the server's own rejection (status and message).
+   */
+  async attempt(
+    method: "post" | "patch" | "put" | "delete",
+    href: string,
+    data?: unknown,
+  ): Promise<{ status: number; body: unknown }> {
+    const res = await this.ctx[method](href, { data });
+    const text = await res.text();
+    let body: unknown = text;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      // Non-JSON error page (e.g. a bare 404 HTML); keep the raw text.
+    }
+    return { status: res.status(), body };
+  }
+
+  /** Attempt a create on a collection (e.g. `users`, `groups`, `roles`). */
+  attemptCreate(
+    collection: string,
+    body: Record<string, unknown>,
+  ): Promise<{ status: number; body: unknown }> {
+    return this.attempt("post", this.collectionUrl(collection), body);
+  }
+
+  /** The href of a collection, for contract tests that post to nested routes. */
+  hrefOf(collection: string): string {
+    return this.collectionUrl(collection);
+  }
+
   async createUser(input: ISeedUser): Promise<IUserRecord> {
     return this.send("post", this.collectionUrl("users"), {
       password: STRONG_PASSWORD,

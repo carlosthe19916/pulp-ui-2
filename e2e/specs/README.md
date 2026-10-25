@@ -6,22 +6,25 @@ scenario changes here first.
 
 ## Test layering
 
-These specs describe **e2e** (real-backend) behaviour only. Pure client-side behaviour is
-covered by faster, isolated **Vitest component tests** colocated with the components
-(`client/src/app/**/*.test.tsx`), not here. The split:
+Tests live in **three layers**; these specs describe the e2e layer. Each scenario is covered by
+exactly one layer (its ID appears in that layer's test title):
 
-- **Component test (Vitest):** form validation messages, modal defaults and submit wiring,
-  confirm-dialog content/style/dismissal, the permission tag input, and permission-gated
-  disabling + tooltips. These mock the data hooks and need no server.
-- **E2E (this spec):** anything that needs the real backend — create/edit/delete round-trips,
-  the server's own validation (duplicate, password/email rules, length), RBAC and permission
-  effects, cross-page sync, navigation/404s, and full workflows.
+- **Component (Vitest)** — `client/src/app/**/*.test.tsx`: client-only behaviour with the data
+  hooks mocked — form validation messages, modal defaults and submit wiring, confirm-dialog
+  content/style/dismissal, the permission tag input, permission-gated disabling + tooltips.
+- **API / contract (Playwright `api` project)** — `e2e/tests/api/*.api.spec.ts`: the server's own
+  accept/reject rules over REST, no browser — duplicate / length / blank, password and email
+  rules, locked-role 403, permission format, malformed policy JSON, membership no-op / unknown
+  user, cascades. Fast and stable; the place to extend for every future entity.
+- **E2E (this spec, Playwright `chromium`)** — only what needs the **real UI against the real
+  backend**: create/edit/delete round-trips, **one** generic "the form shows a server error",
+  RBAC and permission effects, cross-page sync, navigation/404s, and full workflows.
 
-So a validation scenario keeps only its **server** rows here (the client-side rows live in the
-component test), and generic table/form/dialog behaviour is exercised against one reference
-surface rather than every screen. Cover the **main** cases, not every permutation: each value
-of an independent dimension at least once (not the full cross-product), and one representative
-per free-text equivalence class plus the boundaries.
+So a validation scenario's **server** rules live in the API layer and its **client** checks in the
+component layer; e2e keeps the UI journey. Generic table/form/dialog behaviour is exercised against
+one reference surface, not every screen. Cover the **main** cases, not every permutation: each
+value of an independent dimension at least once (not the full cross-product), and one
+representative per free-text equivalence class plus the boundaries.
 
 | File                                                   | Prefix               | Covers                                                  |
 | ------------------------------------------------------ | -------------------- | ------------------------------------------------------- |

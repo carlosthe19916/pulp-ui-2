@@ -242,26 +242,8 @@ test.describe("Access policies", () => {
         value: () => "[",
         outcome: { kind: "client", error: "Statements must be valid JSON" },
       },
-      {
-        field: "Statements",
-        label: "{} (not a list)",
-        viewset: V_BREAK,
-        value: () => "{}",
-        outcome: {
-          kind: "server",
-          error: 'Expected a list of items but got type "dict".',
-        },
-      },
-      {
-        field: "Statements",
-        label: '["x"]',
-        viewset: V_BREAK,
-        value: () => '["x"]',
-        outcome: {
-          kind: "server",
-          error: 'Expected a dictionary of items but got type "str".',
-        },
-      },
+      // Malformed JSON that the server rejects ({}, ["x"], null hooks) are
+      // contract tests: tests/api/access-policies.api.spec.ts.
       {
         field: "Statements",
         label: "the saved value, unchanged",
@@ -317,16 +299,6 @@ test.describe("Access policies", () => {
         viewset: V_HOOKS,
         value: () => "[]",
         outcome: { kind: "emptied" },
-      },
-      {
-        field: "Creation hooks",
-        label: "{} (not a list)",
-        viewset: V_HOOKS,
-        value: () => "{}",
-        outcome: {
-          kind: "server",
-          error: 'Expected a list of items but got type "dict".',
-        },
       },
       {
         field: "Queryset scoping",

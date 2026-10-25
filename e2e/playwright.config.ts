@@ -20,7 +20,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   // One shared Pulp backend on a 4-vCPU runner: a few workers speed the large
   // suite up without the contention flakiness that more would bring.
-  workers: process.env.CI ? 3 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",
@@ -42,7 +42,8 @@ export default defineConfig({
       // The access-policy suite changes server-wide behaviour (it edits and
       // resets policies, and tightens who may list tasks/repositories), so it
       // runs on its own after everything else, never in parallel with them.
-      testIgnore: /access-policies\.spec\.ts/,
+      // The API/contract specs are a browserless project of their own.
+      testIgnore: [/access-policies\.spec\.ts/, /\.api\.spec\.ts$/],
     },
     {
       name: "access-policies",
@@ -55,6 +56,12 @@ export default defineConfig({
       // pulls the main suite in behind it.
       dependencies: process.env.CI ? ["setup"] : ["chromium"],
       testMatch: /access-policies\.spec\.ts/,
+    },
+    {
+      // Contract tests for the backend's accept/reject rules: no browser or auth
+      // storage, just the REST client (`api` fixture) talking to Pulp directly.
+      name: "api",
+      testMatch: /\.api\.spec\.ts$/,
     },
   ],
   webServer: {

@@ -25,8 +25,9 @@ export default defineConfig({
       dependencies: ["setup"],
       testMatch: /.*\.spec\.ts/,
       // The access-policy suite changes server-wide behaviour, so it runs on its
-      // own after everything else (see playwright.config.ts).
-      testIgnore: /access-policies\.spec\.ts/,
+      // own after everything else (see playwright.config.ts). The API/contract
+      // specs are a browserless project of their own.
+      testIgnore: [/access-policies\.spec\.ts/, /\.api\.spec\.ts$/],
     },
     {
       name: "access-policies",
@@ -36,6 +37,11 @@ export default defineConfig({
       },
       dependencies: ["chromium"],
       testMatch: /access-policies\.spec\.ts/,
+    },
+    {
+      // Browserless contract tests for the backend's accept/reject rules.
+      name: "api",
+      testMatch: /\.api\.spec\.ts$/,
     },
   ],
   webServer: {

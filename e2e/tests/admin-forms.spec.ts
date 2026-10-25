@@ -543,8 +543,6 @@ forEachModal((modal) => {
 
 // --- FORM-09: server rejection -----------------------------------------------
 
-const LONG_151 = "a".repeat(151);
-
 const FORM_09: {
   modal: string;
   input: string;
@@ -552,172 +550,26 @@ const FORM_09: {
   kept: { field: string; value: (ctx: ICtx) => string };
   reason: string;
 }[] = [
-  ...(
-    [
-      [
-        "a username that already exists",
-        (c: ICtx) => c.other,
-        STRONG_PASSWORD,
-        "",
-        "This field must be unique.",
-      ],
-      [
-        "a username longer than 150 characters",
-        () => LONG_151,
-        STRONG_PASSWORD,
-        "",
-        "Ensure this field has no more than 150 characters.",
-      ],
-      [
-        "only spaces as username",
-        () => "   ",
-        STRONG_PASSWORD,
-        "",
-        "This field may not be blank.",
-      ],
-      [
-        "a too common password (password)",
-        (c: ICtx) => c.fresh,
-        "password",
-        "",
-        "This password is too common.",
-      ],
-      [
-        "an entirely numeric password (12345678)",
-        (c: ICtx) => c.fresh,
-        "12345678",
-        "",
-        "This password is entirely numeric.",
-      ],
-      [
-        "8 spaces as password",
-        (c: ICtx) => c.fresh,
-        "        ",
-        "",
-        "This field may not be blank.",
-      ],
-      [
-        "an email without a top-level domain (alice@example)",
-        (c: ICtx) => c.fresh,
-        STRONG_PASSWORD,
-        "alice@example",
-        "Enter a valid email address.",
-      ],
-    ] as const
-  ).map(([input, username, password, email, reason]) => ({
+  // The specific server rules are contract tests (tests/api/*.api.spec.ts); these
+  // two prove the UI surfaces a server rejection in the form — a field error and
+  // the policy JSON textarea.
+  {
     modal: "Create user",
-    input,
-    enter: async (form: FormModal, ctx: ICtx) => {
-      await form.field("Username").fill(username(ctx));
-      await form.field("Password").fill(password);
-      if (email) await form.field("Email").fill(email);
+    input: "a username that already exists",
+    enter: async (form, ctx) => {
+      await form.field("Username").fill(ctx.other);
+      await form.field("Password").fill(STRONG_PASSWORD);
     },
-    kept: { field: "Username", value: username },
-    reason,
-  })),
-  ...(
-    [
-      [
-        "a name that already exists",
-        (c: ICtx) => c.other,
-        "This field must be unique.",
-      ],
-      [
-        "a name longer than 150 characters",
-        () => LONG_151,
-        "Ensure this field has no more than 150 characters.",
-      ],
-      ["only spaces as name", () => "   ", "This field may not be blank."],
-    ] as const
-  ).map(([input, name, reason]) => ({
-    modal: "Create group",
-    input,
-    enter: async (form: FormModal, ctx: ICtx) => {
-      await form.field("Name").fill(name(ctx));
-    },
-    kept: { field: "Name", value: name },
-    reason,
-  })),
-  {
-    modal: "Edit group (list)",
-    input: "the name of another existing group",
-    enter: async (form, { other }) => form.field("Name").fill(other),
-    kept: { field: "Name", value: ({ other }) => other },
+    kept: { field: "Username", value: (ctx) => ctx.other },
     reason: "This field must be unique.",
   },
   {
-    modal: "Create role",
-    input: "a name that already exists",
-    enter: async (form, { other }) => form.field("Name").fill(other),
-    kept: { field: "Name", value: ({ other }) => other },
-    reason: "This field must be unique.",
-  },
-  ...(
-    [
-      [
-        "core.not_a_permission",
-        "Permission 'core.not_a_permission' does not exist.",
-      ],
-      [
-        "viewtask",
-        "Permission 'viewtask' is not in the format '<app_label>.<codename>'.",
-      ],
-    ] as const
-  ).map(([permission, reason]) => ({
-    modal: "Create role",
-    input: `the permission ${permission}`,
-    enter: async (form: FormModal, { fresh }: ICtx) => {
-      await form.field("Name").fill(fresh);
-      const input = form.dialog.getByRole("textbox", {
-        name: "Add permission",
-      });
-      await input.fill(permission);
-      await input.press("Enter");
-    },
-    kept: { field: "Name", value: ({ fresh }: ICtx) => fresh },
-    reason,
-  })),
-  {
-    modal: "Edit role",
-    input: "a permission that does not exist",
-    enter: async (form) => {
-      const input = form.dialog.getByRole("textbox", {
-        name: "Add permission",
-      });
-      await input.fill("core.not_a_permission");
-      await input.press("Enter");
-    },
-    kept: { field: "Description", value: () => ROLE_DESCRIPTION },
-    reason: "Permission 'core.not_a_permission' does not exist.",
-  },
-  ...(
-    [
-      [
-        "statements that are valid JSON but not a list ({})",
-        "Statements",
-        "{}",
-        'Expected a list of items but got type "dict".',
-      ],
-      [
-        'a statement that is not an object (["x"])',
-        "Statements",
-        '["x"]',
-        'Expected a dictionary of items but got type "str".',
-      ],
-      [
-        "creation hooks that are not a list ({})",
-        "Creation hooks",
-        "{}",
-        'Expected a list of items but got type "dict".',
-      ],
-    ] as const
-  ).map(([input, field, value, reason]) => ({
     modal: "Edit policy",
-    input,
-    enter: async (form: FormModal) => form.field(field).fill(value),
-    kept: { field, value: () => value },
-    reason,
-  })),
+    input: "statements that are not a list ({})",
+    enter: async (form) => form.field("Statements").fill("{}"),
+    kept: { field: "Statements", value: () => "{}" },
+    reason: 'Expected a list of items but got type "dict".',
+  },
 ];
 
 for (const row of FORM_09) {

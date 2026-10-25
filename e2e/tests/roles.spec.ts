@@ -620,22 +620,8 @@ test.describe("Roles", () => {
         name: () => roleName((u) => `${u}${"x".repeat(1000 - u.length)}`),
         outcome: { kind: "created", plugin: "other" },
       },
-      {
-        label: "only spaces",
-        name: () => "   ",
-        outcome: { kind: "error", text: "This field may not be blank." },
-      },
-      {
-        label: "an existing custom role's name",
-        name: (existing) => existing,
-        seed: true,
-        outcome: { kind: "error", text: "This field must be unique." },
-      },
-      {
-        label: `a locked role's name (${LOCKED_ROLE})`,
-        name: () => LOCKED_ROLE,
-        outcome: { kind: "error", text: "This field must be unique." },
-      },
+      // Server rejections (blank, unique, locked-name) are contract tests:
+      // tests/api/roles.api.spec.ts.
     ];
 
     for (const row of nameRows) {
@@ -733,24 +719,10 @@ test.describe("Roles", () => {
       permissions: string[];
       outcome: { count: number } | { error: string };
     }[] = [
-      // Main real-backend outcomes: a created count, and the server's two
-      // permission rejections. (The tag input itself is a component test.)
+      // The UI create happy-path with a permission; the server's permission
+      // rejections are contract tests (tests/api/roles.api.spec.ts) and the tag
+      // input is a component test.
       { label: VIEW_TASK, permissions: [VIEW_TASK], outcome: { count: 1 } },
-      {
-        label: "core.not_a_permission",
-        permissions: ["core.not_a_permission"],
-        outcome: {
-          error: "Permission 'core.not_a_permission' does not exist.",
-        },
-      },
-      {
-        label: "not-a-codename (no dot)",
-        permissions: ["not-a-codename"],
-        outcome: {
-          error:
-            "Permission 'not-a-codename' is not in the format '<app_label>.<codename>'.",
-        },
-      },
     ];
 
     for (const row of permissionRows) {
