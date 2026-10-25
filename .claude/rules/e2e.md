@@ -8,6 +8,16 @@ paths:
 Run with `npm run test:e2e` (or `npm run test:local -w e2e` against a local Pulp). The `e2e`
 workspace has no lint script, so nothing type-checks it for you: keep it strict by hand.
 
+## Scenario specs
+
+The admin suites derive from the use cases in `e2e/specs/**/*.md` (the source of truth). A
+test's title starts with its scenario ID so it greps back to the spec
+(`USR-CRE-02 username "only spaces" → blank error`); an example table becomes a typed array
+looped into tests. Markers map to: `Open:` → `test.fixme(true, …)`, `Manual` → `test.skip`,
+`Requires: domains` → `test.skip(!api.domainEnabled, …)`, `UI gap` → fix the UI (or
+`test.fail` with the reason when no endpoint can support it). Shared behaviour (lists, forms,
+dialogs, batch-add) iterates over one descriptor array, not a copy per screen.
+
 ## Structure
 
 - One spec per area in `e2e/tests/<area>.spec.ts`.
@@ -64,10 +74,20 @@ test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   The data-view table is `getByRole("grid", { name })`; narrow rows with
   `.filter({ hasText })`.
 - No CSS, `#id`, `.pf-*` or XPath selectors.
+- A required field's label carries a `*`, so an exact `getByLabel("Name")` misses it; locate
+  it as `getByRole("textbox", { name: "Name", exact: true })`.
+- Playwright treats `aria-disabled="true"` as disabled, so to prove a disabled action does
+  nothing, click it with `{ force: true }`.
 - Use web-first assertions that retry: `await expect(locator).toBeVisible()`, never
   `expect(await locator.isVisible()).toBe(true)`.
 - No `page.waitForTimeout`. Wait for a real event: `page.waitForResponse(...)`, a web-first
   assertion, or `expect.poll(() => api.…)` for server-side state.
+- A list refetch can be served from the React Query cache with **no** network request
+  (clearing a filter, or sorting a column back to its default), so a bare `waitForResponse`
+  hangs. Make such waits tolerant (race a timeout) and assert the settled rows with a
+  retrying `expect`/`expect.poll`, never a one-shot read right after the filter helper
+  returns. Compare JSON from the API after parsing it (Pulp's jsonb reorders object keys),
+  and for "nothing is sent" count requests with `page.on("request")`.
 - When a wait or assertion needs a reason (a debounce, a skeleton swap, a cached modal),
   explain it in a short comment.
 
@@ -79,15 +99,28 @@ test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   test is about.
 - Gate on backend capabilities with a reason:
   `test.skip(!api.domainEnabled, "domains are disabled on this backend")`.
-- `page.route` is only for task-poll mocks (the task-mock helper); everything else runs
-  against the real backend.
+- A non-admin is the `secondUser` fixture (basic-auth only; it skips other auth modes): it
+  creates the user through `api` with just the roles the scenario states and logs it in in its
+  own browser context, leaving the admin `page` signed in. Pulp's API can't make a superuser
+  (`is_superuser` is ignored), so a scenario needing one is `Manual`.
+- `page.route` is for task-poll mocks (the task-mock helper) and `delayApi` (holds real
+  requests to observe loading states, spinners and double-submit guards — it delays, never
+  fakes a body); everything else runs against the real backend.
+- A group's members have no guaranteed order; never assert their row order.
+- Seed in parallel (`Promise.all`) and mark a test `test.slow()` when it seeds a lot or logs
+  in a second user; the first page load needs longer than the default 5s.
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check changed files under `e2e/`.
 
 - [ ] Specs import `test` / `expect` from `./fixtures`; page objects come from fixtures.
-- [ ] Locators are role / label / text based; no CSS, `#id` or `.pf-*` selectors.
-- [ ] Web-first assertions; no `waitForTimeout`; waits target responses or `expect.poll`.
+- [ ] An admin scenario test's title starts with its `e2e/specs` ID; tables are looped, not
+      copied; markers map to `fixme` / `skip` / `fail`.
+- [ ] Locators are role / label / text based; no CSS, `#id` or `.pf-*` selectors; required
+      fields via `getByRole("textbox", …)`.
+- [ ] Web-first assertions; no `waitForTimeout`; waits target responses or `expect.poll`, and
+      stay tolerant of a cache-served refetch (no network request) rather than hanging.
 - [ ] Test data uses `uniqueName` + `cleanup`; capability gating uses `test.skip` with a
-      reason; `page.route` only for task mocks.
+      reason; `page.route` only for task mocks and `delayApi`; non-admins use the `secondUser`
+      fixture; no assertion on group-member order.

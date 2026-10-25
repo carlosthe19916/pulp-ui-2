@@ -43,6 +43,9 @@ toasts (delete, one-off actions, navigate-away) stay toasts.
   list page keeps one `"create" | Entity | null` state. No separate `Create*` / `Edit*` modals.
 - The primary button is `type="submit" form={formId}` with `<Form id={formId}>`, so Enter and
   click share one `onSubmit`.
+- An edit form's values→payload mapping sends a cleared optional field as its empty value so
+  the server clears it (`""` for text, `null` for a nullable field); omitting it keeps the old
+  value (see [pulp-api](pulp-api.md)). Create may still drop empties.
 
 Out of scope: batch/selection modals with partial success (add several members or roles at
 once) and delete confirmations (`ConfirmActionModal`, errors owned by the list page) keep

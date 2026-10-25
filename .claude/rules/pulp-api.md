@@ -39,8 +39,19 @@ or the generated client: its params, filters, `ordering` enum and declared respo
 ## Permissions
 
 - Object actions read `my_permissions/` through `useObjectPermissions({ href })`.
+- `my_permissions/` returns object-level roles only — not superuser status, nor global or
+  domain roles. `useObjectPermissions` adds a superuser check (reading a user record 403s for
+  a non-superuser) so a superuser has every action; a non-superuser's global role still can't
+  be seen (no endpoint exposes it).
 - There is no "can I create?" endpoint: create buttons stay enabled and a `403` shows as the
   form's submission error.
+
+## Clearing an optional field
+
+An edit `PATCH` that omits a field leaves it unchanged, so to clear one, send its empty value,
+and match the field's type: a text field clears on `""` (`email`, `first_name`), a nullable
+field only on `null` (a role's `description` rejects `""`). Don't coerce empty to `undefined`
+on edit, or the old value sticks.
 
 ## Deprecated API
 
@@ -58,5 +69,8 @@ Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and
 - [ ] API errors become text via `getMutationErrorMessage`; no ad hoc error parsing.
 - [ ] Sort keys come from the `ordering` enum; filters exist in the operation's params; `q`
       values are quoted and within the complexity cap; empty `__in` lists are guarded.
-- [ ] Object permissions come from `useObjectPermissions`; creates aren't pre-checked.
+- [ ] Object permissions come from `useObjectPermissions` (which also covers superusers, who
+      are absent from `my_permissions/`); creates aren't pre-checked.
+- [ ] An edit clears an optional field by sending its empty value (`""` for text, `null` for a
+      nullable field), not by omitting it.
 - [ ] No new use of deprecated fields or endpoints.
