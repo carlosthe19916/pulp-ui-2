@@ -13,7 +13,7 @@ import {
   Select,
   SelectList,
   SelectOption,
-  ToolbarItem,
+  ToolbarFilter,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -123,8 +123,9 @@ export const RoleList: React.FC = () => {
     { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
     { cell: "Plugin", props: { width: 15 } },
     { cell: "Description", props: { width: 30 } },
-    { cell: "Permissions", props: { width: 20 } },
-    { cell: "Locked", props: { sort: sortProps("locked"), width: 10 } },
+    { cell: "Permissions", props: { width: 15 } },
+    // Wide enough that the sortable header isn't truncated behind a tooltip.
+    { cell: "Locked", props: { sort: sortProps("locked"), width: 15 } },
     {
       cell: "",
       props: {
@@ -213,8 +214,21 @@ export const RoleList: React.FC = () => {
     ),
   });
 
+  const lockedLabel = LOCKED_OPTIONS.find(
+    (o) => o.value === lockedFilter,
+  )?.label;
+
+  // A ToolbarFilter (not a plain item) so the choice shows as a chip and the
+  // toolbar's "Clear filters" appears for it too.
   const lockedSelect = (
-    <ToolbarItem>
+    <ToolbarFilter
+      categoryName="Locked"
+      labels={lockedFilter && lockedLabel ? [lockedLabel] : []}
+      deleteLabel={() => {
+        setLockedFilter("");
+        pagination.onSetPage(undefined, 1);
+      }}
+    >
       <Select
         isOpen={isLockedOpen}
         selected={lockedFilter}
@@ -230,7 +244,7 @@ export const RoleList: React.FC = () => {
             onClick={() => setIsLockedOpen(!isLockedOpen)}
             isExpanded={isLockedOpen}
           >
-            {LOCKED_OPTIONS.find((o) => o.value === lockedFilter)?.label}
+            {lockedLabel}
           </MenuToggle>
         )}
       >
@@ -242,7 +256,7 @@ export const RoleList: React.FC = () => {
           ))}
         </SelectList>
       </Select>
-    </ToolbarItem>
+    </ToolbarFilter>
   );
 
   const handleDelete = () => {

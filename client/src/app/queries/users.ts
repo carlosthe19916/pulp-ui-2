@@ -9,6 +9,7 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  LoginResponse,
   PaginatedUserResponseList,
   PatchedUser,
   UserResponse,
@@ -17,6 +18,7 @@ import type {
   UserWritable,
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
+import { isForbiddenError } from "@app/utils/isHttpError";
 
 import { groupKeys } from "./groups";
 import type { ListParams } from "./utils/listParams";
@@ -41,6 +43,8 @@ export const userKeys = {
   details: () => [...userKeys.all(), "detail"] as const,
   detail: (userHref: string) => [...userKeys.details(), userHref] as const,
   roles: (userHref: string) => [...userKeys.detail(userHref), "roles"] as const,
+  isSuperuser: (domain: IPulpDomain) =>
+    [...userKeys.all(), "is-superuser", domain] as const,
 
   listQuery: (domain: IPulpDomain, params: IUserListParams) =>
     [...userKeys.list(), domain, params] as const,
@@ -90,6 +94,35 @@ export const userDetailQueryOptions = ({
       return response.data;
     },
   });
+
+/**
+ * Whether the logged-in user is a superuser. Pulp reports neither the flag nor
+ * superuser status in `my_permissions/`, but only superusers may read a user record,
+ * so reading one's own record answers it: `403` means not a superuser.
+ */
+export const isSuperuserQueryOptions = ({ domain }: { domain: IPulpDomain }) =>
+  queryOptions<boolean, DrfAxiosError>({
+    queryKey: userKeys.isSuperuser(domain),
+    queryFn: async () => {
+      const { data: me } = await axiosInstance.get<LoginResponse>(
+        pulpApiPath("login/", domain),
+      );
+      try {
+        await axiosInstance.get(toProxyHref(me.pulp_href ?? ""));
+        return true;
+      } catch (error) {
+        if (isForbiddenError(error)) return false;
+        throw error;
+      }
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+
+export const useIsSuperuserQuery = () => {
+  const domain = useDefaultDomain();
+  return useQuery(isSuperuserQueryOptions({ domain }));
+};
 
 export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
   const domain = useDefaultDomain();
@@ -141,6 +174,9 @@ export const useUserUpdateMutation = (
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userKeys.list() });
+      // Seed the detail with the saved record, so an edit form reopened before
+      // the refetch lands shows the new values.
+      queryClient.setQueryData(userKeys.detail(variables.href), data);
       void queryClient.invalidateQueries({
         queryKey: userKeys.detail(variables.href),
       });

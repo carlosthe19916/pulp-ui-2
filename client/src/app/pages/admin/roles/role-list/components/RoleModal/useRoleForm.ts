@@ -43,8 +43,9 @@ export const valuesToNewRole = (values: IRoleFormValues): Role => ({
   permissions: values.permissions ?? [],
 });
 
+/** Pulp rejects an empty description and clears it only on `null`. */
 export const valuesToPatchedRole = (values: IRoleFormValues): PatchedRole => ({
-  description: values.description || undefined,
+  description: values.description || null,
   permissions: values.permissions ?? [],
 });
 

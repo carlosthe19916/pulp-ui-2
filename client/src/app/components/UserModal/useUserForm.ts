@@ -67,10 +67,11 @@ export const valuesToNewUser = (values: IUserFormValues): UserWritable => ({
   is_staff: values.is_staff,
 });
 
+/** Edit sends empty text as-is: Pulp clears a field on `""` and keeps it when omitted. */
 export const valuesToPatchedUser = (values: IUserFormValues): PatchedUser => ({
-  email: emptyToUndefined(values.email),
-  first_name: emptyToUndefined(values.first_name),
-  last_name: emptyToUndefined(values.last_name),
+  email: values.email,
+  first_name: values.first_name,
+  last_name: values.last_name,
   is_active: values.is_active,
   is_staff: values.is_staff,
 });

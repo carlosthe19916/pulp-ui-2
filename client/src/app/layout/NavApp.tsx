@@ -455,7 +455,7 @@ export const NavApp: React.FC<INavAppProps> = ({
               !!matchRoute({ to: "/admin/access-policies", fuzzy: true })
             }
           >
-            <Link to="/admin/access-policies">Access Policies</Link>
+            <Link to="/admin/access-policies">Access policies</Link>
           </NavItem>
         </NavGroup>
       </NavList>

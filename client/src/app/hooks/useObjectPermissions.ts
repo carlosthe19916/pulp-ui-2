@@ -3,6 +3,7 @@ import {
   useMyPermissionsQueries,
   useMyPermissionsQuery,
 } from "@app/queries/access";
+import { useIsSuperuserQuery } from "@app/queries/users";
 
 /** What an action needs on its object; `delete_version` is a repository's version delete. */
 export type PermissionVerb =
@@ -94,14 +95,26 @@ const disabledPropsFor = ({
       };
 
 /**
+ * `my_permissions/` leaves out superuser status, so a superuser, or a user whose status
+ * is still loading, may do anything.
+ */
+const useMayDoAnything = (): boolean => {
+  const { data: isSuperuser, isPending } = useIsSuperuserQuery();
+  return isPending || !!isSuperuser;
+};
+
+/**
  * Per-object permission checks for an object's actions. Until the permissions load
  * (or when they can't be read) nothing is disabled — the server still enforces.
  */
 export const useObjectPermissions = ({ href }: { href: string }) => {
   const { data } = useMyPermissionsQuery({ href });
+  const mayDoAnything = useMayDoAnything();
 
   const can = (verb: PermissionVerb): boolean =>
-    !data || hasPermission({ permissions: data.permissions, verb });
+    mayDoAnything ||
+    !data ||
+    hasPermission({ permissions: data.permissions, verb });
 
   const disabledProps = (verb: PermissionVerb) =>
     disabledPropsFor({ allowed: can(verb), verb });
@@ -112,6 +125,7 @@ export const useObjectPermissions = ({ href }: { href: string }) => {
 /** `useObjectPermissions` for several objects at once (a list page's rows). */
 export const useObjectsPermissions = ({ hrefs }: { hrefs: string[] }) => {
   const byHref = useMyPermissionsQueries({ hrefs });
+  const mayDoAnything = useMayDoAnything();
 
   const can = ({
     href,
@@ -121,7 +135,11 @@ export const useObjectsPermissions = ({ hrefs }: { hrefs: string[] }) => {
     verb: PermissionVerb;
   }): boolean => {
     const data = href ? byHref.get(href) : undefined;
-    return !data || hasPermission({ permissions: data.permissions, verb });
+    return (
+      mayDoAnything ||
+      !data ||
+      hasPermission({ permissions: data.permissions, verb })
+    );
   };
 
   const disabledProps = ({

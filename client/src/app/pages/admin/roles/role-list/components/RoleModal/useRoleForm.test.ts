@@ -43,8 +43,8 @@ describe("valuesToPatchedRole", () => {
     });
   });
 
-  it("coerces an empty description to undefined", () => {
+  it("sends null for a cleared description, which Pulp needs to clear it", () => {
     const result = valuesToPatchedRole({ ...baseValues, description: "" });
-    expect(result.description).toBeUndefined();
+    expect(result.description).toBeNull();
   });
 });

@@ -14,6 +14,8 @@ fail with a permission error.
 ## Rules
 
 - [ ] Object pages read the user's permissions on that object.
+- [ ] A superuser has every permission: nothing is disabled for them. Pulp leaves superuser
+      status out of the per-object permissions, so the UI checks it separately.
 - [ ] Buttons and menu actions the user can't run stay visible, disabled, with the tooltip
       "You don't have permission to … this." Small inline controls (e.g. a label's remove
       button) may be omitted instead.

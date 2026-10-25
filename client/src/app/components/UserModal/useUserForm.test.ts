@@ -59,15 +59,15 @@ describe("valuesToPatchedUser", () => {
     });
   });
 
-  it("coerces empty optional strings to undefined", () => {
+  it("sends cleared optional strings as empty, so Pulp clears them", () => {
     const result = valuesToPatchedUser({
       ...baseValues,
       email: "",
       first_name: "",
       last_name: "",
     });
-    expect(result.email).toBeUndefined();
-    expect(result.first_name).toBeUndefined();
-    expect(result.last_name).toBeUndefined();
+    expect(result.email).toBe("");
+    expect(result.first_name).toBe("");
+    expect(result.last_name).toBe("");
   });
 });

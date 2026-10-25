@@ -93,6 +93,7 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
   const { control, handleSubmit } = useForm<Record<string, unknown>>({
     resolver: yupResolver(buildFieldSchema(fields)),
     defaultValues: { ...buildDefaultValues({ fields }), ...initialValues },
+    mode: "onChange",
   });
   const contentFields = fields.filter((field) => field.type === "content");
   const hasContentField = contentFields.length > 0;

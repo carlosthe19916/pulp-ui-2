@@ -22,6 +22,7 @@ import {
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
+import { PageBulkSelect } from "@app/components/PageBulkSelect";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
@@ -168,6 +169,12 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
         >
           <DataViewToolbar
             clearAllFilters={clearAllFilters}
+            bulkSelect={
+              <PageBulkSelect
+                pageRows={rows.filter((row) => !row.isMember)}
+                selection={selection}
+              />
+            }
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
