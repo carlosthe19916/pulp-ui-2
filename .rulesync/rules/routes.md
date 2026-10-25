@@ -1,6 +1,6 @@
 ---
 name: routes
-description: TanStack Router file routes — thin route files, detail loaders that build the href and own pending/error states, getRouteApi adapters, which params and search a page may read, typed links.
+description: "Apply when adding or changing a TanStack Router route or a *DetailRoute adapter: route files only wire loaders and states to pages, the loader builds the href, and pages get props instead of reading params."
 root: false
 targets: ["claudecode", "cursor"]
 globs:
@@ -22,8 +22,6 @@ globs:
 
 ## Detail routes
 
-Reference: `routes/_authenticated/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/index.tsx`.
-
 - The loader is the only place an href is built: `ensureDomainFromParam` (or
   `ensureDefaultDomain` for global objects) → `build*Href` from `@app/queries/…` (throw if it
   returns nothing) → `queryClient.ensureQueryData(…)` → return the href(s).
@@ -32,6 +30,37 @@ Reference: `routes/_authenticated/content-management/$pulpDomain/repositories/$r
   loading or not-found guards.
 - `component` is a `*DetailRoute.tsx` adapter next to the page: it reads loader data and path
   params with `getRouteApi("<exact route id>")` and passes them as props.
+
+```tsx
+// routes/_authenticated/inventory/$pulpDomain/widgets/$widgetId/index.tsx
+export const Route = createFileRoute(
+  "/_authenticated/inventory/$pulpDomain/widgets/$widgetId/",
+)({
+  loader: async ({
+    context: { queryClient },
+    params: { pulpDomain, widgetId },
+  }) => {
+    const domain = await ensureDomainFromParam(queryClient, pulpDomain);
+    const href = buildWidgetHref(widgetId, domain);
+    if (!href) throw new Error("Unknown widget");
+    await queryClient.ensureQueryData(widgetDetailQueryOptions({ href }));
+    return { href };
+  },
+  pendingComponent: () => <DetailRoutePending label="Loading widget" />,
+  errorComponent: DetailRouteError,
+  component: WidgetDetailRoute,
+});
+
+// pages/inventory/widgets/widget-detail/WidgetDetailRoute.tsx
+const routeApi = getRouteApi(
+  "/_authenticated/inventory/$pulpDomain/widgets/$widgetId/",
+);
+
+export const WidgetDetailRoute: React.FC = () => {
+  const { href } = routeApi.useLoaderData();
+  return <WidgetDetail href={href} />;
+};
+```
 
 ## Params, search and links
 

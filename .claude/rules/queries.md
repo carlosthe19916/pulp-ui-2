@@ -1,338 +1,148 @@
 ---
 paths:
   - client/src/app/queries/**
-  - client/src/app/components/**
-  - client/src/app/pages/**
 ---
 
 # Query module conventions (`client/src/app/queries/`)
 
-Scope: the **public query-reading surface** only — `*QueryOptions` factories and
-`use*Query` / `use*Queries` hooks. Mutation signatures/toasts live in
-`.rulesync/rules/toastr.md`; for mutations this rule only sets their `TError`/`TData`
-typing and which file they live in (below). The `limit` and fetch-every-page sections also
-apply to the callers in `components/` and `pages/` that pass `params`.
+Scope: the **public query-reading surface** — `*QueryOptions` factories and `use*Query` /
+`use*Queries` hooks. For mutations it sets only their `TError`/`TData` and which file they
+live in.
 
 ## One inline-object arg
 
-Every `*QueryOptions` factory and `use*Query`/`use*Queries` hook takes **exactly
-one inline-typed object**, even for a single field. Reference: `users.ts`.
+Every `*QueryOptions` factory and `use*Query`/`use*Queries` hook takes **exactly one
+inline-typed object**, even for a single field:
 
 ```ts
-// factory — one object arg; receives domain (or an href) from the hook
-export const usersListQueryOptions = ({
+export const widgetsListQueryOptions = ({
   domain,
   params,
 }: {
   domain: IPulpDomain;
-  params: IUserListParams;
-}) => queryOptions<PaginatedUserResponseList, DrfAxiosError>({ ... });
+  params: IWidgetListParams;
+}) => queryOptions<PaginatedWidgetResponseList, DrfAxiosError>({/* key, fn */});
 
-// hook — one object arg; injects domain itself
-export const useUsersListQuery = ({ params }: { params: IUserListParams }) => {
-  const domain = useDefaultDomain();
-  return useQuery(usersListQueryOptions({ domain, params }));
+export const useWidgetsListQuery = ({
+  params,
+}: {
+  params: IWidgetListParams;
+}) => {
+  const domain = useSelectedDomain();
+  return useQuery(widgetsListQueryOptions({ domain, params }));
 };
 ```
 
-Object fields:
+- **`params`** — list/filter/ordering, always required, typed from the generated list data
+  (`type IWidgetListParams = ListParams<WidgetsListData>`). `ListParams` makes `limit` required.
+- **`domain`** — passed explicitly to the pure `*QueryOptions`; the **hook** injects it, so
+  callers never pass it: `useDefaultDomain()` for global admin resources (users, groups, roles,
+  signing services, domains), `useSelectedDomain()` for domain-scoped ones (repositories,
+  remotes, distributions, publications, content, artifacts, tasks). An href-addressed query
+  needs no domain.
+- **`href`** — for a query that targets one resource (below).
+- **`options`** — optional, typed
+  `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">`, **spread first** so the
+  factory's `queryKey`/`queryFn` win.
 
-- **`params`** — list/filter/ordering, always required. Param aliases derive from the
-  generated types (`type IUserListParams = ListParams<UsersListData>`), so every spec
-  filter is available and stays in sync on regeneration.
-  - `ListParams` makes `limit` required: a paged list always states its page size,
-    never relies on a default that silently truncates. Which values are allowed:
-    [`limit` comes from the UI](#limit-comes-from-the-ui-never-a-literal).
-- **`domain`** — passed explicitly to the pure `*QueryOptions`; the **hook**
-  injects it so callers never pass it. Injectors:
-  - `useDefaultDomain()` — global admin resources (users, groups, roles,
-    signing services, domains, …).
-  - `useSelectedDomain()` — domain-scoped resources (repositories, remotes,
-    distributions, publications, content, artifacts, tasks, …).
-  - A query addressed by href needs no domain (the href carries it).
-- **`href`** — for a query that targets one resource; see
-  [href only, pure keys](#href-only-pure-keys).
-- **`options`** — optional extra React Query config, typed
-  `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">` (the two
-  fields the module owns), **spread first** so the factory's `queryKey`/`queryFn`
-  win.
-
-The rule is narrow: only the query-reading surface is single-object. Key factories
-(`userKeys.listQuery(domain, params)`, `detail(userHref)`), `use*Mutation` (and their
-call signatures) and href builders (`buildGroupHref(groupId, domain)`) **stay
-positional**.
+Key factories (`widgetKeys.listQuery(domain, params)`, `widgetKeys.detail(href)`),
+`use*Mutation` (and their call signatures) and href builders (`buildWidgetHref(id, domain)`)
+**stay positional**.
 
 ## href only, pure keys
 
-Every `*QueryOptions` and `use*Query` hook that targets one resource takes an **href**
-(the resource's, or the parent's for a nested list — read as
-`${toProxyHref(parentHref)}child/`), never an id. id→href building lives **only in route
-loaders**: the loader calls `build*Href(…)`, primes the query and returns `{ href }`; the
-`*DetailRoute.tsx` adapter passes it down (`useSuspenseRepositoryDetailQuery({ href })`,
-…).
+- A query that targets one resource takes an **href** (the resource's, or the parent's for a
+  nested list, read as `${toProxyHref(parentHref)}child/`), never an id.
+- id→href building lives **only in route loaders**: the loader calls `build*Href(…)`, primes
+  the query with `ensureQueryData` and returns `{ href }` for the page.
+- `build*Href` returns the server form (`pulpHref()` → `{API_ROOT}…`), identical to the API's
+  `pulp_href`, so a rebuilt href and a response href share one cache slot. Key factories stay
+  pure: no `toProxyHref` in keys or at invalidation call sites; it is only for request URLs.
+- Sub-resource keys nest under the parent's `detail(href)` (`widgetKeys.parts(href)`).
 
-- **`build*Href` returns the server form** (`pulpHref()` → `{API_ROOT}…`), identical to
-  the API's `pulp_href`. So **key factories stay pure** — `detail(href)` just appends the
-  href — and a rebuilt href and a response href share one cache slot. No `toProxyHref` in
-  keys or at invalidation call sites; `toProxyHref` is only for request URLs.
-- Sub-resources nest under the parent's `detail(href)` key
-  (`repositoryKeys.versions(href)`, `groupKeys.users(href)`).
+## One generic query per list endpoint
 
-## Generic queries, caller-defined params
+Each list endpoint has **one** generic `*QueryOptions` + `use*Query` typed with the full
+`ListParams<…ListData>`; callers pass their own params.
 
-Each list endpoint has **one** generic `*QueryOptions` + `use*Query`, typed with the full
-`ListParams<…ListData>`. The caller passes the filters, `fields`, `ordering` and
-`limit`/`offset` it needs.
-
-- Don't add a per-use-case query (`use<X>By<Y>Query`, `use<X>For<Z>Query`) that
-  bakes params in: it duplicates the generic hook, and its own key bypasses
-  `<x>Keys.listQuery(domain, params)`.
-- Extra behaviour on a list (polling, `enabled`) goes through `options`; it doesn't
-  justify a new hook.
-- Params shared by several callers are an exported constant or a small params
-  builder that callers spread into `params` (e.g. `PRN_TASK_STATES`), not a hook.
-- Separate queries that params can't replace are fine: a different endpoint or
-  sub-resource, or a `use*Queries` fan-out.
-- Anything else is the exception, not the rule: add it only with real evidence the
-  generic query can't serve the case, and say why in a comment on the hook.
-
-```ts
-// ✗ params baked into a use-case hook
-useTasksByPrnListQuery({ prn, limit, offset });
-
-// ✓ generic hook, caller defines params
-useTasksListQuery({
-  params: {
-    reserved_resources: prn,
-    state__in: [...PRN_TASK_STATES],
-    ordering: "-pulp_created",
-    limit,
-    offset,
-  },
-});
-```
-
-## `limit` comes from the UI, never a literal
-
-A hardcoded page size silently truncates a list or sizes a picker by guesswork.
-`limit` must be one of:
-
-- **Count-only** — `limit: 1` and the caller reads `.count` (tab counts, dashboard
-  cards). Never `results[0]`, except in an **active-item probe** (the per-PRN task
-  probe): it may also read `results[0]` as a sample when the query sets an explicit
-  `ordering` (so the sample is "the newest") and the UI shows the sample only alongside
-  the count — never as a lookup of a specific row (that's detail-by-href or a unique
-  filter, below).
-- **Paged table** — `perPage` from `useDataViewPagination` + `ListPagination`
-  (offset `(page - 1) * perPage`). Expanded-row sub-lists page too.
-- **Dropdown** — a typeahead uses `DROPDOWN_PAGE_SIZE` (`@app/constants`, 10), with a
-  server filter on the typed term (`name__icontains`, …) when the endpoint has one, and
-  `offset: 0`.
-- **Per-page lookup** — an `__in` filter over the keys of the page on screen, with
-  `limit: keys.length` (python provenance, modulemd defaults).
-
-Anything else is a violation:
-
-- One row by a unique filter → detail-by-href when the href is known (extra fields via
-  `fields`), or no `limit` at all in a raw request whose filter is unique
-  (`artifacts/?sha256=`).
-- One row "per" table row → a `use*Queries` count probe (`limit: 1`) on the linking
-  filter (`signed_collection`, `manifest`).
-
-```ts
-// ✗ magic sizes
-useRepositoriesListQuery({ params: { limit: 20, name__icontains: term } });
-useRepositoryVersionsListQuery({ repositoryHref, params: { limit: 50 } });
-
-// ✓ count, table, dropdown
-useGroupUsersListQuery({ groupHref, params: { limit: 1 } }); // reads .count
-useUsersListQuery({ params: { limit: perPage, offset: (page - 1) * perPage } });
-useRepositoriesListQuery({
-  params: { limit: DROPDOWN_PAGE_SIZE, offset: 0, name__icontains: term },
-});
-```
-
-## Never fetch every page
-
-Every read is one page; there is no fetch-all helper and no `useAll*` query. Design the
-UI for paging: a list the user scrolls through gets a pager, a picker searches
-server-side, a value the API can't search is typed in (free text), and data the API
-can't link to a row by a filter moves to that row's detail view instead of being
-joined client-side over the whole set.
+- No per-use-case query (`use<X>By<Y>Query`, `use<X>For<Z>Query`) that bakes params in: it
+  duplicates the generic hook and its key bypasses `<x>Keys.listQuery(domain, params)`.
+- Polling or `enabled` on a list goes through `options`. Params shared by several callers are
+  an exported constant or params builder (`ACTIVE_WIDGET_STATES`), not a hook.
+- Separate queries are fine for a different endpoint or sub-resource, or a `use*Queries`
+  fan-out. Anything else needs real evidence and a comment on the hook saying why.
 
 ## Precondition-guard detail queries
 
-For a detail/nested query that runs once an `href` exists. Reference:
-`distributionDetailQueryOptions` + `useDistributionDetailQuery` (`distributions.ts`).
+- `*QueryOptions` accepts `options?`, spreads it first and sets **no `enabled`**: route loaders
+  and `prefetchQuery` own their guard.
+- The `use*Query` hook takes only the identifying args (no `options`) and re-asserts
+  `enabled: !!href`; without an href the queryFn would request `toProxyHref("")`:
+  `useQuery({ ...widgetDetailQueryOptions({ href }), enabled: !!href })`.
+- Variant: when `enabled` is a caller preference rather than a precondition (fetch only once
+  the user picks a type), keep `options` on both factory and hook and forward it.
 
-- **`*QueryOptions`**: accepts `options?`, spreads it first, sets **no `enabled`**
-  — bare composable config for route loaders / `prefetchQuery`, which own their
-  guard. Without an href the queryFn would request `toProxyHref("")`, so `!!href` is a
-  precondition, not a caller preference.
+## Error and response typing
 
-  ```ts
-  export const distributionDetailQueryOptions = ({
-    href,
-    options,
-  }: {
-    href: string | null;
-    options?: Omit<
-      UseQueryOptions<DistributionResponse, DrfAxiosError>,
-      "queryKey" | "queryFn"
-    >;
-  }) =>
-    queryOptions<DistributionResponse, DrfAxiosError>({
-      ...options,
-      queryKey: distributionKeys.detail(href ?? ""),
-      queryFn: async () =>
-        (await axiosInstance.get<DistributionResponse>(toProxyHref(href ?? "")))
-          .data,
-    });
-  ```
+RQ v5 doesn't infer `TError`; declare it on every `queryOptions` / `useMutation` /
+`UseQueryOptions`, from `queries/utils/openapiErrorTypes.ts`:
 
-- **`use*Query` hook** owns the guard: takes only the identifying args (no
-  `options`), spreads the bare options, re-asserts `enabled`. Callers pass only
-  the nullable href. Behaviour every caller needs (e.g. task polling) is set inside
-  the hook.
+- `DrfAxiosError` by default (every `queries/` endpoint is a stock-DRF route).
+- `PulpAxiosError` only when the shape is genuinely unknown; it is the fallback default of
+  `IMutationCallbacks`, so pass `DrfAxiosError` as its 3rd arg.
 
-  ```ts
-  export const useDistributionDetailQuery = ({
-    href,
-  }: {
-    href: string | null;
-  }) =>
-    useQuery({ ...distributionDetailQueryOptions({ href }), enabled: !!href });
-  ```
-
-**Variant — caller-preference lists (no guard):** when `enabled` is a caller
-preference, not a queryFn precondition (e.g. `contentListQueryOptions`, fetch only
-once a type is chosen), keep `options` on **both** factory and hook and have the
-hook forward it, typed and spread as in [Object fields](#one-inline-object-arg).
-Reference: `content.ts`.
-
-## Error typing (`TError`) — always explicit
-
-RQ v5 does not infer `TError`; thread it. Types live in
-`queries/utils/openapiErrorTypes.ts`:
-
-- **`DrfAxiosError`** (`= AxiosError<IDrfValidationErrorData>`) — **default** for
-  every hook; all `queries/` endpoints hit stock-DRF `/pulp/api/v3/…` routes
-  (validation dict / `non_field_errors` / scalar `detail`).
-- **`PulpAxiosError`** (wide `PulpErrorData` union) — only when the shape is
-  genuinely unknown; it is the fallback default of `IMutationCallbacks`.
-
-```ts
-queryOptions<TData, DrfAxiosError>({ … });
-useMutation<TData, DrfAxiosError, TVariables>({ … });
-// IMutationCallbacks<TData, TVariables> defaults TError = PulpAxiosError — pass
-// DrfAxiosError as the 3rd arg so onError is granular.
-```
-
-## Response typing (`TData`) — mirror the 2xx response
-
-Never `any`/`unknown`:
-
-- One success code → that type (create `201` → entity; async create/delete `202`
-  → `AsyncOperationResponse`; sync delete `204` → `void`).
-- Both `200` **and** `202` (e.g. repository/remote/distribution/domain **PATCH**
-  may finish sync or dispatch) → `EntityResponse | AsyncOperationResponse`. Admin
-  PATCH (user/group/role) is `200`-only → single type.
-- A plugin-neutral write body stays `Record<string, unknown>` (not `any`); it is
-  not a `TData`/`TError`.
+`TData` mirrors the declared 2xx response, never `any`/`unknown`: one code → that type (`201`
+entity, `202` `AsyncOperationResponse`, `204` `void`); `200` **and** `202` (e.g. a PATCH that
+may finish inline or dispatch a task) → `EntityResponse | AsyncOperationResponse`. A
+plugin-neutral write body stays `Record<string, unknown>`.
 
 ## No `throw` in a `queryFn`
 
-Errors propagate from the HTTP layer (a rejected axios request carries the
-status/shape the app expects); a manual `throw` triggers RQ retry/backoff on a
-non-recoverable condition. A non-HTTP "empty/not found" returns a **falsy sentinel**
-(`""`/`null`, matching the field's `enabled: !!value`) and is handled where the throw
-belongs — the route `loader` (→ `errorComponent`) or the consumer. Reference:
-`buildContentHref` (`queries/content.ts`) returns `null` for a `pulp_type` with no
-`apiPath`, and the content detail route `loader` throws on it → `DetailRouteError`.
+Errors propagate from the HTTP layer; a manual `throw` triggers RQ retry on a non-recoverable
+condition. A non-HTTP "not found" returns a falsy sentinel (`""`/`null`) and the route loader
+or consumer throws: an href builder returns `null` for an unknown type and the detail loader
+throws on it, which renders `DetailRouteError`.
 
-## Family query file layout (plugin axis)
+## Family file layout (plugin axis)
 
-Families (repositories, remotes, distributions, content, …) split their query modules
-along a **plugin axis**. Keep the two sides distinct — don't let plugin specifics leak
-into the neutral base, and don't duplicate generic reads in the plugin file.
-
-- **`queries/<family>.ts`** (e.g. `distributions.ts`) is **plugin-neutral**. It
-  owns the cross-type list over the un-typed aggregate collection
-  (`pulpApiPath("<family>/", domain)`), the `*QueryKey` constant and the `*Keys`
-  factory (`*Keys.all()` is the family's root key). It also owns per-item
-  actions **and sub-resources that are uniform across plugins** — e.g. repository
-  `sync` (`useRepositorySyncMutation`) and `versions`
-  (`useRepositoryVersionsListQuery`): one hook serves every plugin.
-  - Actions and sub-resources on an existing object take its href
-    ([href only](#href-only-pure-keys); sync posts to `${toProxyHref(href)}sync/`).
-    Only create, which has no href yet, builds the endpoint from the catalog `apiPath`
-    (``pulpApiPath(`repositories/${apiPath}/`, domain)``).
-  - A sub-resource counts as uniform when its response type is generic and its query
-    params are identical across plugins (the per-plugin generated type differs only in
-    a `path` param, which `ListParams` drops).
-  - Per-plugin body/field shape is modelled in the catalog (`form.createFields`,
-    `compatibleRemoteTypes`, …), not by separate hooks; write bodies are plugin-neutral
-    ([Response typing](#response-typing-tdata--mirror-the-2xx-response)).
-- **`queries/<plugin>-<family>.ts`** (e.g. `python-repositories.ts`) holds **only
-  plugin-specific** queries: sub-resources that genuinely vary by plugin, or a
-  typed list when the aggregate returns a union type. Reuse the base's `*Keys`
-  factory for keys and invalidation so cache slots stay unified.
-- **Typed detail-by-href is NOT plugin-specific** — it's a generic GET on
-  `toProxyHref(href)`. It lives in the **base family file** as that family's own
-  `<family>DetailQueryOptions` + `use<Family>DetailQuery` /
-  `useSuspense<Family>DetailQuery` (e.g. `contentDetailQueryOptions` /
-  `useContentDetailQuery` in `queries/content.ts`; `repositoryDetailQueryOptions` /
-  `useSuspenseRepositoryDetailQuery` in `queries/repositories.ts`), keyed on the
-  family's `<name>Keys.detail(href)` so the slot is unified. When the response type
-  varies by plugin it is generic over it — each caller passes the concrete generated
-  type (`useContentDetailQuery<FileFileContentResponse>`), never a union. Do **not**
-  add a `<plugin><Family>DetailQueryOptions` to the plugin file.
+- **`queries/<family>.ts`** is plugin-neutral: the cross-type list over the aggregate
+  collection, the `*QueryKey` constant and `*Keys` factory, per-item actions and sub-resources
+  uniform across plugins (a `sync/` action, a `versions/` sub-resource), and the typed
+  detail-by-href (`<family>DetailQueryOptions`, generic over the response type when
+  it varies by plugin; callers pass the concrete generated type, never a union).
+- Actions on an existing object take its href; only create builds the endpoint from the
+  catalog `apiPath`. Per-plugin body shape is modelled in the catalog, not by separate hooks.
+- **`queries/<plugin>-<family>.ts`** holds only genuinely plugin-specific queries and reuses
+  the base `*Keys`. No `<plugin><Family>DetailQueryOptions`.
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check changed `queries/` files: the query-reading
-surface in full, mutations only for typing and file placement.
+Pass/fail rubric for `/eval`. Check changed `queries/` files: the query-reading surface in full,
+mutations only for typing and file placement.
 
-- [ ] Every `*QueryOptions` factory and `use*Query` / `use*Queries` hook takes
-      **exactly one inline-typed object arg** (even with a single field). Key
-      factories, `use*Mutation` (and their call signatures) and href builders
-      (`build*Href`) stay **positional**.
-- [ ] List `params` are required and derive from the generated `*ListData` via
-      `ListParams`.
+- [ ] Every `*QueryOptions` factory and `use*Query` / `use*Queries` hook takes **exactly one
+      inline-typed object arg**. Key factories, `use*Mutation` and `build*Href` stay
+      **positional**.
+- [ ] List `params` are required and derive from the generated `*ListData` via `ListParams`.
 - [ ] `domain` is passed explicitly to `*QueryOptions`; the **hook** injects it via
       `useDefaultDomain()` / `useSelectedDomain()` — callers never pass `domain`.
 - [ ] `options` is typed `Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">`
-      and **spread first** so the factory's `queryKey` / `queryFn` win.
-- [ ] Every `*QueryOptions` / `use*Query` targeting one resource takes an **href**,
-      never an id (nested lists take the parent's href). id→href building
-      (`build*Href`, server form via `pulpHref`) happens **only in route loaders**,
-      which return `{ href }`. Key factories stay **pure**; no `toProxyHref` in keys
-      or invalidation call sites. Sub-resource keys nest under the parent's
-      `detail(href)`.
-- [ ] One generic query per list endpoint; callers pass their own `params`. No
-      per-use-case query with built-in params (allowed only for a different
-      endpoint/sub-resource or `use*Queries`, or a documented exception backed by
-      real evidence); list polling/`enabled` go through `options`.
-- [ ] Every `limit` (in `queries/` and in callers) is `1` for a count-only read,
-      `perPage` from pagination, `DROPDOWN_PAGE_SIZE` for a dropdown, or `keys.length`
-      for a per-page `__in` lookup — no other literal, and no `limit: 1` read for
-      `results[0]` except an ordered active-item probe that pairs it with `.count`.
-- [ ] No read fetches every page: no fetch-all loop, no `useAll*` query, no
-      client-side join/filter/sort over a whole collection.
-- [ ] Precondition-guard detail queries: `*QueryOptions` sets **no `enabled`**; the
-      `use*Query` hook owns the `enabled: !!href` guard and does **not** accept
-      `options`. (Caller-preference lists keep `options` on both and forward it.)
-- [ ] Every `queryOptions` / `useMutation` / `UseQueryOptions` declares its `TError`
-      explicitly — `DrfAxiosError` by default, `PulpAxiosError` only when the shape
-      is unknown. Error types come from `queries/utils/openapiErrorTypes.ts`.
-- [ ] `TData` matches the endpoint's declared 2xx response(s) — single type, or the
-      `Entity | AsyncOperationResponse` union when the spec declares both `200` and
-      `202`. No `any` / `unknown` as a `TData` or `TError`.
-- [ ] No `throw` inside a `queryFn` — errors propagate from the HTTP layer; non-HTTP
-      empty results return a falsy sentinel handled in the loader/consumer.
-- [ ] Plugin-neutral reads, uniform sub-resources and generic actions live in
-      `queries/<family>.ts`; actions on an existing object take its href, only create
-      builds from the catalog `apiPath`; `queries/<plugin>-<family>.ts` holds only
-      genuinely plugin-specific queries and reuses the base `*Keys`; typed
-      detail-by-href stays in the base file (`<family>DetailQueryOptions`), generic
-      over the response type when it varies by plugin.
+      and **spread first**.
+- [ ] Queries targeting one resource take an **href**, never an id (nested lists take the
+      parent's href); id→href building happens **only in route loaders**. Key factories stay
+      **pure**; no `toProxyHref` in keys or invalidation call sites. Sub-resource keys nest
+      under the parent's `detail(href)`.
+- [ ] One generic query per list endpoint; no per-use-case query with built-in params (except
+      a different endpoint/sub-resource, `use*Queries`, or a documented exception); list
+      polling/`enabled` go through `options`.
+- [ ] Precondition-guard detail queries: `*QueryOptions` sets **no `enabled`**; the hook owns
+      `enabled: !!href` and does **not** accept `options`. Caller-preference lists keep
+      `options` on both and forward it.
+- [ ] Every `queryOptions` / `useMutation` / `UseQueryOptions` declares `TError` explicitly —
+      `DrfAxiosError` by default, `PulpAxiosError` only when the shape is unknown.
+- [ ] `TData` matches the declared 2xx response(s); no `any` / `unknown` as `TData` or
+      `TError`.
+- [ ] No `throw` inside a `queryFn`; non-HTTP empty results return a falsy sentinel.
+- [ ] Plugin-neutral reads, uniform sub-resources, generic actions and typed detail-by-href
+      live in `queries/<family>.ts`; `queries/<plugin>-<family>.ts` holds only plugin-specific
+      queries and reuses the base `*Keys`.

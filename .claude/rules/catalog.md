@@ -8,8 +8,8 @@ paths:
 # Catalog and per-plugin UI
 
 The catalog (`client/src/catalog`, `@catalog`) is the single place plugin differences are
-declared. See [docs/development/architecture.md](../../docs/development/architecture.md) for
-its shape and [adding-a-plugin.md](../../docs/development/adding-a-plugin.md) for the steps.
+declared: each plugin is one `plugins/<plugin>.ts` definition (its `pulp_type`s, endpoint paths,
+entity form fields, capabilities and actions), and generic pages read it.
 
 ## Data only
 
@@ -23,16 +23,27 @@ its shape and [adding-a-plugin.md](../../docs/development/adding-a-plugin.md) fo
 
 ## Per-type presentation
 
-- Lives in UI registries keyed by `pulp_type`: `PANEL_BY_TYPE` (`PluginContentPanel`),
-  `RepositoryContent/browseRegistry.ts`, `repository-detail/components/pluginTabs.ts`.
-- Each registry has a generic fallback (`BaseContent`, All content only, no extra tabs).
+- Lives in UI registries keyed by `pulp_type`: `PANEL_BY_TYPE` (content detail panels),
+  `BROWSE_BY_REPOSITORY_TYPE` (repository Browse sections), `TAB_BY_REPOSITORY_TYPE` (extra
+  repository tabs).
+- Each registry has a generic fallback (`BaseContent`, All content only, no extra tabs), so a
+  lookup never branches on the plugin:
+
+```tsx
+const PANEL_BY_TYPE: Record<string, React.FC<IPluginContentProps>> = {
+  "foo.widget": FooWidgetContent,
+};
+
+const Panel = PANEL_BY_TYPE[pulpType] ?? BaseContent;
+return <Panel href={href} />;
+```
 
 ## Generic pages
 
 - Pages decide what to offer from catalog data (`getPlugin(pulpType)?.entities.repository?.…`,
   `getAvailablePlugins`, `getContentType`) or a registry lookup — not from `pulp_type`
   string comparisons or plugin `if`/`switch` chains.
-- Plugin actions render through `TaskActionModal` (`RepositoryActionModal`) from
+- Plugin actions render through the shared `RepositoryActionModal` (`TaskActionModal`) from
   `entities.repository.actions`; no per-action modal.
 - Create/edit offer only installed plugins (`getAvailablePlugins` / `useCreatablePlugins`).
 

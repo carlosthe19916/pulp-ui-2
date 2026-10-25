@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: Playwright e2e — specs import test/expect from ./fixtures, page objects in pom/ via fixtures, role/label locators (no CSS), web-first assertions, no fixed waits, API-backed test data and cleanup, capability-gated skips.
+description: "Apply when writing or changing Playwright specs, page objects or helpers in e2e/: tests act like a user and stay stable, through fixtures and page objects, role-based locators, retrying assertions and API-backed data with cleanup."
 root: false
 targets: ["claudecode", "cursor"]
 globs: ["e2e/**"]
@@ -10,7 +10,6 @@ globs: ["e2e/**"]
 
 Run with `npm run test:e2e` (or `npm run test:local -w e2e` against a local Pulp). The `e2e`
 workspace has no lint script, so nothing type-checks it for you: keep it strict by hand.
-Reference spec: `e2e/tests/users.spec.ts`.
 
 ## Structure
 
@@ -20,8 +19,46 @@ Reference spec: `e2e/tests/users.spec.ts`.
   `expect` from `@playwright/test`.
 - Page objects are classes in `tests/pom/`. List screens extend `DataViewList` (heading,
   grid, `filterBy`, `row`, `rowAction`) and add only their own modal-form helpers. A spec
-  gets them as fixtures (`async ({ usersPage }) => …`), registered in `fixtures.ts`.
+  gets them as fixtures (`async ({ widgetsPage }) => …`), registered in `fixtures.ts`.
 - Shared logic goes in `tests/helpers/`. Authentication happens once in `auth.setup.ts`.
+
+```ts
+// pom/WidgetsPage.ts
+export class WidgetsPage extends DataViewList {
+  constructor(page: Page) {
+    super(page, "Widgets", "Widgets table"); // h1 name, grid aria-label
+  }
+
+  async goto(): Promise<void> {
+    await this.page.goto("/inventory/widgets");
+    await expect(this.heading).toBeVisible();
+  }
+
+  async create({ name }: { name: string }): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Create widget", exact: true })
+      .click();
+    const dialog = this.page.getByRole("dialog", { name: "Create Widget" });
+    await dialog.getByLabel("Name").fill(name);
+    await dialog.getByRole("button", { name: "Create", exact: true }).click();
+    await expect(dialog).toBeHidden();
+  }
+}
+
+// widgets.spec.ts
+import { expect, test } from "./fixtures";
+import { uniqueName } from "./helpers/unique";
+
+test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
+  const name = cleanup.widget(uniqueName("widget"));
+  await widgetsPage.goto();
+  await widgetsPage.create({ name });
+  await widgetsPage.filterBy("Name", name);
+  await widgetsPage.expectRowVisible(name);
+  // server-side state: poll the API instead of asserting once
+  await expect.poll(() => api.widgetExists(name)).toBe(true);
+});
+```
 
 ## Locators and assertions
 
@@ -39,13 +76,13 @@ Reference spec: `e2e/tests/users.spec.ts`.
 
 ## Data
 
-- Names come from `uniqueName("user")` and are registered with `cleanup.*(…)`, which deletes
+- Names come from `uniqueName("widget")` and are registered with `cleanup.*(…)`, which deletes
   leftovers in teardown through the worker-scoped `PulpApi`.
 - Set up or verify server state through `api` (`PulpApi`) when the UI path isn't what the
   test is about.
 - Gate on backend capabilities with a reason:
   `test.skip(!api.domainEnabled, "domains are disabled on this backend")`.
-- `page.route` is only for task-poll mocks (`helpers/taskMock.ts`); everything else runs
+- `page.route` is only for task-poll mocks (the task-mock helper); everything else runs
   against the real backend.
 
 ## Checklist

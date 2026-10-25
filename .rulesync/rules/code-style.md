@@ -1,6 +1,6 @@
 ---
 name: code-style
-description: TypeScript and React style for client/src that lint can't check — React.FC components, named-object parameters, .ts vs .tsx and file naming, generated API types, satisfies, memoization, effects vs render/handlers/queries, component-folder index.ts imports, and comments.
+description: "Apply when writing any TypeScript or React in client/src: the style choices ESLint can't enforce (component and props shape, object parameters, file naming, generated API types, effects, imports, comments)."
 root: false
 targets: ["claudecode", "cursor"]
 globs: ["client/src/**/*.ts", "client/src/**/*.tsx"]
@@ -37,13 +37,14 @@ export const RepositoryCard: React.FC<IRepositoryCardProps> = ({ repository }) =
 
 A function with two or more params, any `boolean` param, or optional params after the first
 takes one destructured object, so each argument names itself at the call site:
-`notifyTaskStarted({ addNotification, taskHref: data.task, title })` (`utils/taskNotify.tsx`).
+`notifyTaskStarted({ addNotification, taskHref: data.task, title })`.
 
 - Type a one-off object of up to two fields inline (`({ href }: { href: string })`); name it
   `I<Name>Options` / `I<Name>Params` when it's reused or has three or more fields.
 - Stay positional for a single obvious arg (`extractTaskId(href)`), comparators
   (`(a, b)`), signatures a library dictates (React handlers, TanStack Query callbacks,
-  array callbacks), and the query-module items `queries.md` keeps positional.
+  array callbacks), query key factories (`widgetKeys.detail(href)`), `use*Mutation` call
+  signatures and `build*Href` href builders.
 
 ## Types
 

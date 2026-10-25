@@ -28,16 +28,16 @@ import { describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 
-it("adds the typed permission on Enter", async () => {
+it("adds the typed tag on Enter", async () => {
   const onChange = vi.fn();
   const screen = await render(
-    <PermissionInput id="perms" value={[]} onChange={onChange} />,
+    <TagInput id="tags" value={[]} onChange={onChange} />,
   );
 
-  await screen.getByRole("textbox", { name: "Add permission" }).click();
-  await userEvent.keyboard("core.view_task{Enter}");
+  await screen.getByRole("textbox", { name: "Add tag" }).click();
+  await userEvent.keyboard("blue{Enter}");
 
-  expect(onChange).toHaveBeenCalledExactlyOnceWith(["core.view_task"]);
+  expect(onChange).toHaveBeenCalledExactlyOnceWith(["blue"]);
 });
 ```
 
@@ -53,9 +53,22 @@ it("adds the typed permission on Enter", async () => {
 
 ## Mocks
 
-- Module mocks use the `import()` form, then set return values per test:
-  `vi.mock(import("@app/hooks/useDefaultDomain"), () => ({ useDefaultDomain: vi.fn() }))`
-  and `vi.mocked(useDefaultDomain).mockReturnValue(…)` (`DomainsGuard.test.tsx`).
+- Module mocks use the `import()` form, then set return values per test with `vi.mocked`:
+
+  ```tsx
+  vi.mock(import("@app/hooks/useDefaultDomain"), () => ({
+    useDefaultDomain: vi.fn(),
+  }));
+
+  it("shows the domain name", async () => {
+    vi.mocked(useDefaultDomain).mockReturnValue({
+      name: "default",
+    } as IPulpDomain);
+    const screen = await render(<DomainBadge />);
+    await expect.element(screen.getByText("default")).toBeVisible();
+  });
+  ```
+
 - `vi.spyOn` on a module namespace throws in the browser; use `vi.mock(import(…), { spy: true })`.
 - Mock at the module boundary (query hooks, context hooks). Don't mock PatternFly or React.
 

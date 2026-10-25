@@ -83,8 +83,8 @@ copy, timeout, judge and report are shared and compose around it.
 
 1. Create `cases/<kind>/<name>.ts`, or `cases/<kind>/<name>/<case>.ts` when the guidance needs
    several cases (copy `cases/rules/file-placement/role-detail.ts`).
-2. Set `target` to the guidance it tests: `rules` and `skills` by name, `paths` for anything else. Add the
-   ADRs a rule `implements:` only when the rule depends on them.
+2. Set `target` to the guidance it tests: `rules` and `skills` by name, `paths` for anything
+   else. A rule is self-contained, so its target needs nothing besides the rule.
 3. Write a task that needs the guidance but doesn't name it, so it loads the way it does in real
    use (a rule loads when the agent reads a file its `globs` match).
 4. Take the `expect` criteria from the guidance itself; for a rule, its `## Checklist`.

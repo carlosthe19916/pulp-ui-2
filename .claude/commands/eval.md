@@ -32,9 +32,10 @@ directories). If none matches, say so.
 
 Each rule ends with a `## Checklist` — use those items as the pass/fail rubric.
 
-A rule whose frontmatter has `implements:` realises those ADRs in code. Also give
-the subagent the `## Rules` of each listed ADR: when a change does something the
-rule's checklist doesn't cover, judge it against those rules (the ADR wins).
+Also pick the ADRs whose `description` matches the screens or flows the change touches
+(`grep -H '^description:' docs/adr/0*.md`) and give the subagent their `## Rules`: when a
+change does something no rule's checklist covers, judge it against those rules (the ADR
+wins).
 
 ## Generated rules
 

@@ -9,7 +9,7 @@ export interface ITarget {
   rules?: string[];
   // Skill names, as in .agents/skills/<name>/; every vendor's link to it is kept too.
   skills?: string[];
-  // Any other guidance to keep, e.g. AGENTS.md or the ADRs a rule implements.
+  // Any other guidance to keep, e.g. AGENTS.md or an ADR.
   paths?: string[];
 }
 

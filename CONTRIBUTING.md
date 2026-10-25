@@ -43,7 +43,7 @@ pulp-ui-2/
 
 ## Adding a plugin
 
-See [docs/development/adding-a-plugin.md](docs/development/adding-a-plugin.md).
+See the [add-plugin skill](.rulesync/skills/add-plugin/SKILL.md); AI agents load it on their own.
 
 ## Running tests
 
@@ -95,5 +95,5 @@ docs: update contributing guide
 
 ## Architecture
 
-- Developer docs: [docs/development/](docs/development/)
+- How the code works: [docs/internals/](docs/internals/)
 - Design decisions: [docs/adr/](docs/adr/)

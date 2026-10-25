@@ -4,16 +4,14 @@ Repository-specific guidance for AI coding agents working in the **Pulp UI** rep
 
 ## Where guidance lives
 
-Three layers, each with one job. Don't restate one layer's rules in another; link to them.
+| Layer                              | Answers                                    | Use it                                                                                    |
+| ---------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [docs/adr/](docs/adr/)             | **What** the UI does and why (code-free)   | Before changing a screen or flow, match ADRs by `description` and follow their `## Rules` |
+| [.rulesync/](.rulesync/)           | **How** code is written: rules and skills  | Loaded automatically by your tool; see [Coding Standards](#coding-standards)              |
+| [docs/internals/](docs/internals/) | How the code works (data flow, API quirks) | Orientation; it explains, it doesn't set rules                                            |
 
-| Layer                                  | Answers                                                                          | Use it                                                                                    |
-| -------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [docs/adr/](docs/adr/)                 | **What** the UI does and why (code-free)                                         | Before changing a screen or flow, match ADRs by `description` and follow their `## Rules` |
-| [.rulesync/rules/](.rulesync/rules/)   | **How** code must be written; rules with `implements:` realise ADR rules in code | Loaded when you read a matching file; see [Coding Standards](#coding-standards)           |
-| [docs/development/](docs/development/) | How the code works (data flow, API quirks)                                       | Orientation; it explains, it doesn't set rules                                            |
-
-A design change needs a new or superseding ADR, and the rules that `implements:` it updated in
-the same change.
+A design change needs a new or superseding ADR, and the rules that cover it updated in the same
+change.
 
 ## Repository Architecture
 
@@ -78,7 +76,7 @@ npm run test:ui -w e2e   # Playwright UI mode
 # Regenerate OpenAPI client from spec
 npm run generate
 
-# Regenerate .claude/rules and .cursor/rules from .rulesync/rules
+# Regenerate .claude/ and .cursor/ rules and skills from .rulesync/
 npm run rules
 
 # Production builds
@@ -101,29 +99,14 @@ npm workspaces.
 
 ## Coding Standards
 
-Rules are written once in `.rulesync/rules/<name>.md` (frontmatter `globs` lists the files a
-rule covers) and `npm run rules` ([rulesync](https://github.com/dyoshikawa/rulesync)) generates
-`.claude/rules/` (Claude Code, `paths:`) and `.cursor/rules/` (Cursor, `globs:`) from them, so
-each tool loads a rule when it reads a matching file (a file you only create may not trigger
-it). Never edit the generated folders: change the source and run `npm run rules`;
-`npm run lint` fails while they are stale. When you rename or remove a rule, delete its
-generated `.claude/rules/` and `.cursor/rules/` files by hand.
+Rules and skills are written once in `.rulesync/rules/` and `.rulesync/skills/`;
+`npm run rules` ([rulesync](https://github.com/dyoshikawa/rulesync)) generates the
+`.claude/` and `.cursor/` copies each tool discovers. Never edit the generated copies: change
+the source and run `npm run rules` (`npm run lint` fails while they are stale). When you rename
+or remove a rule or skill, delete its generated copies by hand.
 
-Before creating or changing a file, read the rules whose `globs` match it:
-`grep -H '^globs:' .rulesync/rules/*.md` (each rule's `description` says what it covers).
-
-Before finishing a change, check it against every rule whose `globs` match the changed files
-(its `## Checklist` is the rubric) and the `## Rules` of each ADR its `implements:` lists; the
-generated rules drop `implements:`, so read it from `.rulesync/rules/`. In Claude Code, `/eval`
-does this.
-
-### API endpoints
-
-Before wiring any REST call, check the OpenAPI spec at `client/openapi/pulp.json` (the source of
-truth; ~4 MB, grep it by path or `operationId`). The generated `client/src/app/client/` mirrors it
-and is often faster: `sdk.gen.ts` for the endpoint (URL, method, params), `types.gen.ts` for its
-types (e.g. `UsersListData["query"]` lists every query param). Known API quirks:
-[docs/development/pulp-api-notes.md](docs/development/pulp-api-notes.md).
+Before finishing a change, check it against the `## Checklist` of every rule matching the
+changed files. In Claude Code, `/eval` does this.
 
 ## Development
 
@@ -160,14 +143,13 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 - Test files colocated with source code (`.test.ts`, `.test.tsx`)
 - Config in `client/vite.config.ts` (test block)
 - Runs in Vitest Browser Mode (locally your installed Google Chrome, Playwright Chromium in CI)
-  with `vitest-browser-react`; see [.rulesync/rules/unit-tests.md](.rulesync/rules/unit-tests.md)
+  with `vitest-browser-react`
 
 ### E2E Tests (Playwright)
 
 - Plain Playwright `.spec.ts` files in `e2e/tests/`, one per area (`remotes`, `repositories`, `publications`, `distributions`, `content`, `domains`, `users`, `groups`, `roles`, `task-status`, …).
 - `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/tests/helpers/`, `fixtures.ts` and the page objects in `pom/`.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
-- Conventions: [.rulesync/rules/e2e.md](.rulesync/rules/e2e.md).
 
 ## Branding
 

@@ -35,13 +35,14 @@ export const RepositoryCard: React.FC<IRepositoryCardProps> = ({ repository }) =
 
 A function with two or more params, any `boolean` param, or optional params after the first
 takes one destructured object, so each argument names itself at the call site:
-`notifyTaskStarted({ addNotification, taskHref: data.task, title })` (`utils/taskNotify.tsx`).
+`notifyTaskStarted({ addNotification, taskHref: data.task, title })`.
 
 - Type a one-off object of up to two fields inline (`({ href }: { href: string })`); name it
   `I<Name>Options` / `I<Name>Params` when it's reused or has three or more fields.
 - Stay positional for a single obvious arg (`extractTaskId(href)`), comparators
   (`(a, b)`), signatures a library dictates (React handlers, TanStack Query callbacks,
-  array callbacks), and the query-module items `queries.md` keeps positional.
+  array callbacks), query key factories (`widgetKeys.detail(href)`), `use*Mutation` call
+  signatures and `build*Href` href builders.
 
 ## Types
 

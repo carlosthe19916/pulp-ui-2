@@ -1,7 +1,6 @@
 ---
 name: pulp-api
-description: How UI code must treat the Pulp REST API — response unions (object vs 202 task), task states and cancel, error bodies, list params and q filters, permissions from my_permissions, labels, deprecated fields.
-implements: docs/adr/0008-async-task-feedback.md, docs/adr/0010-rest-api-only.md, docs/adr/0011-permission-aware-actions.md
+description: "Apply when code calls or interprets the Pulp REST API: follow what the spec declares (sync vs 202 task, filters, ordering) and use the shared helpers for task state, errors and permissions."
 root: false
 targets: ["claudecode", "cursor"]
 globs:
@@ -14,77 +13,56 @@ globs:
 
 # Pulp API usage
 
-The facts behind these rules, verified against a backend, are in
-[docs/development/pulp-api-notes.md](../../docs/development/pulp-api-notes.md). Before wiring
-an endpoint, read its operation in `client/src/app/client/sdk.gen.ts` / `types.gen.ts` (or
-`client/openapi/pulp.json`).
+Before wiring an endpoint, read its operation in the OpenAPI spec (`client/openapi/pulp.json`)
+or the generated client: its params, filters, `ordering` enum and declared responses.
 
-## Writes
+## Writes and tasks
 
-- Type a write by the responses its operation declares; don't assume a task. Repository and
-  remote create answer `201` + object; distribution and publication create answer `202` +
-  task; updates answer `200 | 202`; deletes `202` (publication delete `204`). Code that
-  needs the task checks for `task` in the response.
-- A `202` result's new object is `created_resources[0]` on the finished task (empty for a
-  no-op `modify/`).
-
-## Tasks
-
-- Final states are `completed`, `failed`, `canceled` and `skipped`. Use
-  `isTerminalTaskState` (`queries/tasks.ts`); never test `state === "completed"` alone to
-  decide a task is over.
-- Cancel with `PATCH {task_href}` `{ state: "canceled" }` (it passes through `canceling`).
-  `DELETE` on a task removes its record and is not a cancel.
-- Show a failed task's `error.description` as returned, via `getMutationErrorMessage` or the
-  task-error helpers; don't rewrite it.
-- Find work running on an object with `tasks/?reserved_resources=<prn>` and `state__in`
-  of the active states, as `useTasksByPrnQueries` (`queries/tasks.ts`) does.
+- Type a write by the responses its operation declares; don't assume a task. Code that needs
+  the task checks for `task` in the response; a `202`'s new object is `created_resources[0]` on
+  the finished task.
+- Task completion uses `isTerminalTaskState` (`queries/tasks.ts`), which includes `skipped`;
+  never `state === "completed"` alone.
+- Cancel is `PATCH {task_href}` `{ state: "canceled" }`; `DELETE` removes the task record and
+  is not a cancel.
+- Show a failed task's `error.description` as returned; don't rewrite it.
 
 ## Errors
 
-- The spec omits error bodies; they are DRF shapes typed in
-  `queries/utils/openapiErrorTypes.ts`: `400 { field: [msg], non_field_errors: [msg] }`,
-  `403` / `404 { detail }`. Turn any of them into UI text with
-  `getMutationErrorMessage({ error, fallback })`; don't parse `error.response.data` ad hoc.
-- RBAC also filters lists and details, so a `404` can mean "no permission". `isNotFoundError`
-  / `isForbiddenError` (`utils/isHttpError.ts`) classify them.
+- Turn API errors into UI text with `getMutationErrorMessage({ error, fallback })`; don't parse
+  `error.response.data` ad hoc. Error body types live in `queries/utils/openapiErrorTypes.ts`.
+- RBAC filters lists and details, so a `404` can mean "no permission": classify with
+  `isNotFoundError` / `isForbiddenError` (`utils/isHttpError.ts`).
 
 ## Lists and filters
 
-- Lists page with `limit` / `offset` and read `count` (see `queries.md` for `ListParams`).
-- Sortable columns come only from the endpoint's `ordering` enum (`OrderingField`); a
-  filter must exist in the operation's query params, or Pulp answers `400 Invalid Filter`.
-- `q` expressions quote their values and stay within Pulp's complexity cap of 8 (each
-  filter, `NOT` and `AND`/`OR` chain counts one). Ordering can't go inside `q`.
-- Label filters use `pulp_label_select` syntax (`k=v`, `k!=v`, `k~sub`, `k`, `!k`, comma =
-  AND). Edit labels with `set_label/` / `unset_label/`.
-- Batch related lookups per page with `pulp_href__in` (`id__in` for users and groups) and
-  guard an empty list, which Pulp ignores.
+- Sortable columns come only from the endpoint's `ordering` enum (`OrderingField`); a filter
+  must exist in the operation's query params, or Pulp answers `400 Invalid Filter`.
+- `q` expressions quote their values and stay within the complexity cap of 8.
+- Batch related lookups per page with `pulp_href__in` (`id__in` for users and groups) and guard
+  an empty list, which Pulp ignores.
 
 ## Permissions
 
-- Object actions read `my_permissions/` through `useObjectPermissions({ href })`;
-  codenames are `<app>.<action>_<model>` (`file.change_filerepository`).
+- Object actions read `my_permissions/` through `useObjectPermissions({ href })`.
 - There is no "can I create?" endpoint: create buttons stay enabled and a `403` shows as the
   form's submission error.
 
 ## Deprecated API
 
 Don't build new UI on deprecated fields or endpoints (`deprecated: true` in the spec; ESLint
-`no-deprecated` flags generated-client usage). Current examples: rpm `gpgcheck`,
-`repo_gpgcheck`, `sqlite_metadata`, checksum-type fields; python `publications/python/pypi/`
-and `autopublish`; `TaskGroup.all_tasks_dispatched`; `DELETE artifacts/`.
+`no-deprecated` flags generated-client usage).
 
 ## Checklist
 
 Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and `catalog/`.
 
-- [ ] Write responses are typed from the operation's declared statuses; task handling
-      doesn't assume every write returns `202`.
-- [ ] Task completion uses `isTerminalTaskState` (includes `skipped`); cancel is a
-      `PATCH` with `state: "canceled"`.
+- [ ] Write responses are typed from the operation's declared statuses; task handling doesn't
+      assume every write returns `202`.
+- [ ] Task completion uses `isTerminalTaskState` (includes `skipped`); cancel is a `PATCH` with
+      `state: "canceled"`.
 - [ ] API errors become text via `getMutationErrorMessage`; no ad hoc error parsing.
-- [ ] Sort keys come from the `ordering` enum; filters exist in the operation's params;
-      `q` values are quoted and within the complexity cap; empty `__in` lists are guarded.
+- [ ] Sort keys come from the `ordering` enum; filters exist in the operation's params; `q`
+      values are quoted and within the complexity cap; empty `__in` lists are guarded.
 - [ ] Object permissions come from `useObjectPermissions`; creates aren't pre-checked.
 - [ ] No new use of deprecated fields or endpoints.

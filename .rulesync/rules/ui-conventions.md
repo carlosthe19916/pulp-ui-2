@@ -1,7 +1,6 @@
 ---
 name: ui-conventions
-description: UI code in components/pages — where the project departs from PatternFly defaults (no red actions, no empty-state actions, disabled-not-hidden), the shared table/modal/detail helpers, server-derived task status and the repository write lock.
-implements: docs/adr/0003-detail-pages-and-expandable-rows.md, docs/adr/0008-async-task-feedback.md, docs/adr/0011-permission-aware-actions.md, docs/adr/0012-visual-conventions.md
+description: "Apply when building or changing UI in pages/ or components/: use the shared table, modal and detail helpers, and follow where this project departs from PatternFly defaults (no red actions, no empty-state actions, disabled not hidden)."
 root: false
 targets: ["claudecode", "cursor"]
 globs: ["client/src/app/pages/**", "client/src/app/components/**"]
@@ -9,19 +8,99 @@ globs: ["client/src/app/pages/**", "client/src/app/components/**"]
 
 # UI conventions (`components/`, `pages/`)
 
-Generic PatternFly compliance (imports, composition, tokens, no custom CSS) is the PF tooling's
-job (`pf-review`). This rule covers where the project departs from PatternFly defaults and which
-shared helpers to use. Toast wording and task-start toasts: `toastr.md`. When a case isn't
-covered, the ADR's `## Rules` win.
+This rule covers where the project departs from PatternFly defaults and which shared helpers
+to use; generic PatternFly usage (imports, composition, tokens) is out of its scope.
 
 ## Layout
 
 - Tables: `@patternfly/react-data-view` with `dataViewBodyStates`, `ListPagination`,
-  `useColumnSort` / `buildThSort` (reference: `UserList`); paging, sorting and filtering are
+  `useColumnSort` / `buildThSort` (sketch below); paging, sorting and filtering are
   server-side. `useDataViewPagination({ perPage: 10 })` by default, never above 20
   (`ListPagination` caps it to bound per-row task probes).
 - Text filters go through `useDebouncedValue`; long cells use the column's
   `modifier: "truncate"`; data column `width`s sum to 100, action columns stay unsized.
+
+```tsx
+const pagination = useDataViewPagination({ perPage: 10 });
+const { ordering, sortProps } = useColumnSort({
+  columnKeys: SORTABLE_COLUMN_KEYS, // from the endpoint's ordering enum
+  initialSort: { sortBy: "name", direction: "asc" },
+  onSortChange: () => pagination.onSetPage(undefined, 1),
+});
+const { filters, onSetFilters, clearAllFilters } =
+  useDataViewFilters<IWidgetFilters>({});
+const debouncedName = useDebouncedValue({ value: filters.name });
+
+const { data, isLoading, error } = useWidgetsListQuery({
+  params: {
+    limit: pagination.perPage,
+    offset: (pagination.page - 1) * pagination.perPage,
+    ordering,
+    name__icontains: debouncedName || undefined,
+  },
+});
+
+const columns: DataViewTh[] = [
+  { cell: "Name", props: { sort: sortProps("name"), width: 60 } },
+  { cell: "Owner", props: { width: 40 } },
+  { cell: "" }, // actions: unsized
+];
+
+const { activeState, bodyStates } = dataViewBodyStates({
+  columnCount: columns.length,
+  isLoading,
+  error,
+  isEmpty: (data?.results ?? []).length === 0,
+  emptyState: (
+    <TableEmptyState
+      title="No widgets found"
+      isFiltered={Boolean(debouncedName)}
+      onClearFilters={clearAllFilters}
+    />
+  ),
+});
+
+return (
+  <>
+    <DocumentTitle title="Widgets" />
+    <PageSection>
+      <Content component={ContentVariants.h1}>Widgets</Content>
+    </PageSection>
+    <PageSection>
+      <DataView activeState={activeState}>
+        <DataViewToolbar
+          clearAllFilters={clearAllFilters}
+          filters={
+            <DataViewFilters
+              values={filters}
+              onChange={(_key, next) => {
+                onSetFilters(next);
+                pagination.onSetPage(undefined, 1);
+              }}
+            >
+              <DataViewTextFilter filterId="name" title="Name" />
+            </DataViewFilters>
+          }
+          pagination={
+            <ListPagination
+              variant={PaginationVariant.top}
+              itemCount={data?.count ?? 0}
+              pagination={pagination}
+            />
+          }
+        />
+        <DataViewTable
+          aria-label="Widgets table"
+          columns={columns}
+          rows={rows}
+          bodyStates={bodyStates}
+        />
+      </DataView>
+    </PageSection>
+  </>
+);
+```
+
 - List and detail pages put the header in its own `<PageSection>` and render
   `<DocumentTitle>`. A tab's content never renders a `<PageSection>`; `Tabs` whose content
   runs queries set `mountOnEnter`.

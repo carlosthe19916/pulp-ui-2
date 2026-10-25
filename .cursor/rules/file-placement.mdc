@@ -1,5 +1,5 @@
 ---
-description: 'Checks which directory each file under client/src/app belongs in: narrowest scope that contains every file using it (component folder → page directory → app root), flat component folders, no components/hooks/utils/context under area or entity directories, context folder layout. Apply when a change adds, moves, renames or deletes a file or directory, makes a module used from a new place, or adds a React context.'
+description: 'Apply when creating, moving, renaming or deleting a file under client/src/app, using a module from a new place, or adding a React context: each module sits at the narrowest scope that contains all its users (component folder, page directory, app root), so ownership is clear from the path.'
 globs: client/src/app/**
 ---
 
@@ -41,21 +41,21 @@ area goes to the app root.
 ```
 client/src/app/
   components/  hooks/  context/  utils/   # app root
-    EntityModal/                          # component folder
-      EntityModal.tsx  EntityForm.tsx  useEntityForm.ts  index.ts
+    StatusBadge/                          # component folder
+      StatusBadge.tsx  statusLabel.ts  index.ts
   pages/
-    content-management/                   # area: page directories only
-      repositories/                       # entity: page directories only
-        repository-list/                  # page directory
-          RepositoryList.tsx              # main component
+    inventory/                            # area: page directories only
+      widgets/                            # entity: page directories only
+        widget-list/                      # page directory
+          WidgetList.tsx                  # main component
           components/                     # used only by this page
-            RepositoryModal/              # component folder
-              RepositoryModal.tsx  useRepositoryForm.ts  index.ts
+            WidgetModal/                  # component folder
+              WidgetModal.tsx  useWidgetForm.ts  index.ts
           hooks/                          # used by several modules of this page
-            useRepositoryFilters.ts
-        repository-detail/                # page directory
-          RepositoryDetail.tsx
-          RepositoryDetailRoute.tsx       # route → component adapter
+            useWidgetFilters.ts
+        widget-detail/                    # page directory
+          WidgetDetail.tsx
+          WidgetDetailRoute.tsx           # route → component adapter
 ```
 
 ## React Context
