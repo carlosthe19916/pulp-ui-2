@@ -1,6 +1,6 @@
-import { renderToStaticMarkup } from "react-dom/server";
-
 import { describe, expect, it, vi } from "vitest";
+import { userEvent } from "vitest/browser";
+import { render } from "vitest-browser-react";
 
 import { PermissionInput } from "./PermissionInput";
 import { addPermission } from "./permissionList";
@@ -25,16 +25,47 @@ describe("addPermission", () => {
 });
 
 describe("PermissionInput", () => {
-  it("renders each permission as a removable label", () => {
-    const html = renderToStaticMarkup(
+  it("renders each permission as a removable label", async () => {
+    const screen = await render(
       <PermissionInput
         id="perms"
         value={["core.view_task", "core.change_task"]}
         onChange={vi.fn()}
       />,
     );
-    expect(html).toContain("core.view_task");
-    expect(html).toContain('aria-label="Remove core.change_task"');
-    expect(html).toContain('aria-label="Add permission"');
+    await expect.element(screen.getByText("core.view_task")).toBeVisible();
+    await expect
+      .element(screen.getByRole("button", { name: "Remove core.change_task" }))
+      .toBeVisible();
+    await expect
+      .element(screen.getByRole("textbox", { name: "Add permission" }))
+      .toBeVisible();
+  });
+
+  it("adds the typed permission on Enter", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <PermissionInput id="perms" value={[]} onChange={onChange} />,
+    );
+
+    await screen.getByRole("textbox", { name: "Add permission" }).click();
+    await userEvent.keyboard("core.view_task{Enter}");
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(["core.view_task"]);
+  });
+
+  it("removes a permission when its label is closed", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <PermissionInput
+        id="perms"
+        value={["core.view_task", "core.change_task"]}
+        onChange={onChange}
+      />,
+    );
+
+    await screen.getByRole("button", { name: "Remove core.view_task" }).click();
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(["core.change_task"]);
   });
 });

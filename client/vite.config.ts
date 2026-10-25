@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vite";
 import { ViteEjsPlugin } from "vite-plugin-ejs";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -105,6 +106,11 @@ export default defineConfig({
       "@catalog": path.resolve(__dirname, "./src/catalog"),
     },
   },
+  // Scan every source file for deps up front: coverage transforms untested files late,
+  // and a dep found then makes Vite re-optimize mid-run and hang the browser tests.
+  optimizeDeps: {
+    entries: ["src/**/*.{ts,tsx}"],
+  },
   build: {
     rollupOptions: {
       output: {
@@ -142,10 +148,14 @@ export default defineConfig({
     },
   },
   test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: "./test-setup.ts",
     browser: {
+      enabled: true,
+      // Locally use the installed Google Chrome, as `e2e/playwright.local.ts` does
+      // (Playwright's Chromium has no Fedora build); CI installs Playwright's Chromium.
+      provider: playwright({
+        launchOptions: process.env.CI ? {} : { channel: "chrome" },
+      }),
+      headless: true,
       instances: [{ browser: "chromium" }],
     },
     server: {
@@ -168,7 +178,6 @@ export default defineConfig({
         "**/dist/**",
         "**/coverage/**",
         "**/*.d.ts",
-        "**/test-setup.ts",
         "**/vite.config.ts",
         "**/config/**",
         "**/types/**",

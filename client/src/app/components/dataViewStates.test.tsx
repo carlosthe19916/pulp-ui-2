@@ -1,19 +1,15 @@
-import { renderToStaticMarkup } from "react-dom/server";
-
 import { describe, expect, it } from "vitest";
+import { render } from "vitest-browser-react";
 
-import { css } from "@patternfly/react-styles";
 import checkStyles from "@patternfly/react-styles/css/components/Check/check";
 import tableStyles from "@patternfly/react-styles/css/components/Table/table";
 import { Table } from "@patternfly/react-table";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 
-const emptyMarkup = (
-  args: Parameters<typeof dataViewBodyStates>[0],
-): string => {
+const renderEmpty = (args: Parameters<typeof dataViewBodyStates>[0]) => {
   const { bodyStates } = dataViewBodyStates(args);
-  return renderToStaticMarkup(<Table>{bodyStates.empty}</Table>);
+  return render(<Table aria-label="Results">{bodyStates.empty}</Table>);
 };
 
 describe("dataViewBodyStates empty state", () => {
@@ -23,19 +19,27 @@ describe("dataViewBodyStates empty state", () => {
     emptyState: <span>No results found</span>,
   };
 
-  it("keeps the selection column narrow without rendering a checkbox", () => {
-    const html = emptyMarkup({ ...base, hasSelectionColumn: true });
-    expect(html).toContain(tableStyles.tableCheck);
-    expect(html).not.toContain(tableStyles.tableToggle);
-    expect(html).toContain(
-      css(checkStyles.check, checkStyles.modifiers.standalone),
-    );
-    expect(html).not.toContain('type="checkbox"');
+  it("keeps the selection column narrow without rendering a checkbox", async () => {
+    const screen = await renderEmpty({ ...base, hasSelectionColumn: true });
+    const selectionCell = screen.getByRole("gridcell").first();
+
+    await expect.element(selectionCell).toHaveClass(tableStyles.tableCheck);
+    await expect
+      .element(selectionCell)
+      .not.toHaveClass(tableStyles.tableToggle);
+    // The empty standalone check carries the checkbox's footprint.
+    await expect
+      .element(selectionCell.element().firstElementChild as HTMLElement)
+      .toHaveClass(checkStyles.check, checkStyles.modifiers.standalone);
+    await expect.element(screen.getByRole("checkbox")).not.toBeInTheDocument();
   });
 
-  it("renders no control cells when the table has neither", () => {
-    const html = emptyMarkup(base);
-    expect(html).not.toContain(tableStyles.tableCheck);
-    expect(html).not.toContain(tableStyles.tableToggle);
+  it("renders no control cells when the table has neither", async () => {
+    const screen = await renderEmpty(base);
+
+    expect(screen.getByRole("gridcell").elements()).toHaveLength(1);
+    await expect
+      .element(screen.getByRole("gridcell"))
+      .not.toHaveClass(tableStyles.tableCheck, tableStyles.tableToggle);
   });
 });

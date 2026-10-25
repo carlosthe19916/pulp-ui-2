@@ -1,8 +1,8 @@
 import type React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 
 import type { EntityType } from "@catalog";
 import { describe, expect, it } from "vitest";
+import { renderHook } from "vitest-browser-react";
 
 import type { VersionResponse } from "@app/client";
 import {
@@ -12,8 +12,12 @@ import {
 
 import { useCreatablePlugins } from "./useCreatablePlugins";
 
-/** Render the hook through a probe and return the pulp_types it yields. */
-const creatableTypes = ({
+interface IWrapperProps {
+  children: React.ReactNode;
+}
+
+/** Render the hook with the given installed plugins and return the pulp_types it yields. */
+const creatableTypes = async ({
   kind,
   plugins,
 }: {
@@ -28,35 +32,36 @@ const creatableTypes = ({
     isPluginInstalled: () => false,
     getPluginVersion: () => undefined,
   };
-  const Probe: React.FC = () => (
-    <>{useCreatablePlugins(kind).map((p) => `[${p.pulpType}]`)}</>
+  const wrapper: React.FC<IWrapperProps> = ({ children }) => (
+    <ApiStatusContext value={value}>{children}</ApiStatusContext>
   );
-  return renderToStaticMarkup(
-    <ApiStatusContext value={value}>
-      <Probe />
-    </ApiStatusContext>,
-  );
+  const { result } = await renderHook(() => useCreatablePlugins(kind), {
+    wrapper,
+  });
+  return result.current.map((p) => p.pulpType);
 };
 
 describe("useCreatablePlugins", () => {
-  it("returns nothing when no plugin is installed", () => {
-    expect(creatableTypes({ kind: "distribution", plugins: [] })).toBe("");
+  it("returns nothing when no plugin is installed", async () => {
+    expect(await creatableTypes({ kind: "distribution", plugins: [] })).toEqual(
+      [],
+    );
   });
 
-  it("returns the installed plugin's distribution types", () => {
-    const html = creatableTypes({
+  it("returns the installed plugin's distribution types", async () => {
+    const types = await creatableTypes({
       kind: "distribution",
       plugins: [{ component: "file" } as VersionResponse],
     });
-    expect(html).toContain("[file.file]");
+    expect(types).toContain("file.file");
   });
 
-  it("filters out non-creatable types (push repositories)", () => {
-    const html = creatableTypes({
+  it("filters out non-creatable types (push repositories)", async () => {
+    const types = await creatableTypes({
       kind: "repository",
       plugins: [{ component: "container" } as VersionResponse],
     });
-    expect(html).toContain("[container.container]");
-    expect(html).not.toContain("[container.container-push]");
+    expect(types).toContain("container.container");
+    expect(types).not.toContain("container.container-push");
   });
 });

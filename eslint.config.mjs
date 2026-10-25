@@ -130,7 +130,6 @@ export default defineConfig([
       "client/types/**",
       "client/src/vite-env.d.ts",
       "client/src/routeTree.gen.ts",
-      "client/test-setup.ts",
     ],
   },
   {

@@ -159,8 +159,8 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 - Run with `npm test`
 - Test files colocated with source code (`.test.ts`, `.test.tsx`)
 - Config in `client/vite.config.ts` (test block)
-- New component and hook tests use React Testing Library + user-event; see
-  [.rulesync/rules/unit-tests.md](.rulesync/rules/unit-tests.md)
+- Runs in Vitest Browser Mode (locally your installed Google Chrome, Playwright Chromium in CI)
+  with `vitest-browser-react`; see [.rulesync/rules/unit-tests.md](.rulesync/rules/unit-tests.md)
 
 ### E2E Tests (Playwright)
 

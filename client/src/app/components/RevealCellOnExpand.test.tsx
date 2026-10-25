@@ -1,49 +1,31 @@
 import type React from "react";
-import { act, useEffect } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { useEffect } from "react";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { render } from "vitest-browser-react";
 
 import { Table, Tbody, Td, Tr } from "@patternfly/react-table";
 
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 
-// The repo has no @testing-library/dom, so render with react-dom/client directly.
-let container: HTMLElement;
-let root: Root;
-
-beforeEach(() => {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
-});
-
-afterEach(() => {
-  act(() => root.unmount());
-  container.remove();
-});
-
-const renderRow = async ({
+const row = ({
   isExpanded,
   children,
 }: {
   isExpanded: boolean;
   children: () => React.ReactNode;
-}) =>
-  act(async () => {
-    // `isExpanded` drives PatternFly's native `hidden` attribute, the signal watched.
-    root.render(
-      <Table>
-        <Tbody>
-          <Tr isExpanded={isExpanded}>
-            <Td>
-              <RevealCellOnExpand>{children}</RevealCellOnExpand>
-            </Td>
-          </Tr>
-        </Tbody>
-      </Table>,
-    );
-  });
+}) => (
+  // `isExpanded` drives PatternFly's native `hidden` attribute, the signal watched.
+  <Table aria-label="Rows">
+    <Tbody>
+      <Tr isExpanded={isExpanded}>
+        <Td>
+          <RevealCellOnExpand>{children}</RevealCellOnExpand>
+        </Td>
+      </Tr>
+    </Tbody>
+  </Table>
+);
 
 interface IMarkerProps {
   onMount: () => void;
@@ -58,35 +40,38 @@ const Marker: React.FC<IMarkerProps> = ({ onMount }) => {
 describe("RevealCellOnExpand", () => {
   it("does not build or render content while the row stays collapsed", async () => {
     const build = vi.fn(() => <span>detail</span>);
-    await renderRow({ isExpanded: false, children: build });
+    const screen = await render(row({ isExpanded: false, children: build }));
 
-    expect(container.textContent).not.toContain("detail");
+    await expect.element(screen.getByText("detail")).not.toBeInTheDocument();
     expect(build).not.toHaveBeenCalled();
   });
 
   it("renders content when the row starts expanded", async () => {
-    await renderRow({ isExpanded: true, children: () => <span>detail</span> });
+    const screen = await render(
+      row({ isExpanded: true, children: () => <span>detail</span> }),
+    );
 
-    expect(container.textContent).toContain("detail");
+    await expect.element(screen.getByText("detail")).toBeVisible();
   });
 
   it("mounts content on first expand, then keeps it mounted when re-collapsed", async () => {
     const onMount = vi.fn();
     const children = () => <Marker onMount={onMount} />;
 
-    await renderRow({ isExpanded: false, children });
-    expect(container.textContent).not.toContain("detail");
+    const screen = await render(row({ isExpanded: false, children }));
+    await expect.element(screen.getByText("detail")).not.toBeInTheDocument();
     expect(onMount).not.toHaveBeenCalled();
 
     // Expand: `hidden` clears and the content mounts once.
-    await renderRow({ isExpanded: true, children });
-    expect(container.textContent).toContain("detail");
+    await screen.rerender(row({ isExpanded: true, children }));
+    await expect.element(screen.getByText("detail")).toBeVisible();
     expect(onMount).toHaveBeenCalledTimes(1);
 
     // Re-collapse then re-expand: content persists, never remounts (keep-alive).
-    await renderRow({ isExpanded: false, children });
-    expect(container.textContent).toContain("detail");
-    await renderRow({ isExpanded: true, children });
+    await screen.rerender(row({ isExpanded: false, children }));
+    await expect.element(screen.getByText("detail")).toBeInTheDocument();
+    await screen.rerender(row({ isExpanded: true, children }));
+    await expect.element(screen.getByText("detail")).toBeVisible();
     expect(onMount).toHaveBeenCalledTimes(1);
   });
 });

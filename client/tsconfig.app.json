@@ -23,5 +23,5 @@
     },
     "esModuleInterop": true
   },
-  "include": ["src", "test-setup.ts", "types/**/*"]
+  "include": ["src", "types/**/*"]
 }
