@@ -1,18 +1,19 @@
 import type React from "react";
 
-import { Label, LabelGroup } from "@patternfly/react-core";
+import { Label, LabelGroup, PaginationVariant } from "@patternfly/react-core";
+import { useDataViewPagination } from "@patternfly/react-data-view";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
+import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
 
-const LIMIT = 20;
-
 interface ICollectionVersionsProps {
   namespace: string;
   name: string;
-  tags: string[];
+  /** Comma-separated tags a version must have; empty shows every version. */
+  tags: string;
 }
 
 /** A collection's versions (newest first), optionally only those with some tags. */
@@ -21,14 +22,16 @@ export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
   name,
   tags,
 }) => {
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { data, isLoading } = useContentTypeListQuery({
     pulpType: "ansible.collection_version",
     params: {
       namespace,
       name,
-      tags: tags.length ? tags.join(",") : undefined,
+      tags: tags || undefined,
       ordering: ["-pulp_created"],
-      limit: LIMIT,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
       fields: ["pulp_href", "version", "tags", "pulp_created"],
     },
   });
@@ -37,43 +40,50 @@ export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
   if (isLoading) return <>Loading versions…</>;
   if (versions.length === 0) return <>No versions match.</>;
   return (
-    <Table aria-label={`${namespace}.${name} versions`} variant="compact">
-      <Thead>
-        <Tr>
-          <Th>Version</Th>
-          <Th>Tags</Th>
-          <Th>Created</Th>
-        </Tr>
-      </Thead>
-      <Tbody>
-        {versions.map((version) => (
-          <Tr key={version.pulp_href}>
-            <Td dataLabel="Version">
-              <ResourceHrefLink
-                kind="content"
-                href={version.pulp_href}
-                label={version.version}
-              />
-            </Td>
-            <Td dataLabel="Tags">
-              {version.tags?.length ? (
-                <LabelGroup numLabels={6} isCompact>
-                  {version.tags.map((tag) => (
-                    <Label key={tag.name} isCompact>
-                      {tag.name}
-                    </Label>
-                  ))}
-                </LabelGroup>
-              ) : (
-                "—"
-              )}
-            </Td>
-            <Td dataLabel="Created">
-              {formatDateTime(version.pulp_created) ?? "—"}
-            </Td>
+    <>
+      <Table aria-label={`${namespace}.${name} versions`} variant="compact">
+        <Thead>
+          <Tr>
+            <Th>Version</Th>
+            <Th>Tags</Th>
+            <Th>Created</Th>
           </Tr>
-        ))}
-      </Tbody>
-    </Table>
+        </Thead>
+        <Tbody>
+          {versions.map((version) => (
+            <Tr key={version.pulp_href}>
+              <Td dataLabel="Version">
+                <ResourceHrefLink
+                  kind="content"
+                  href={version.pulp_href}
+                  label={version.version}
+                />
+              </Td>
+              <Td dataLabel="Tags">
+                {version.tags?.length ? (
+                  <LabelGroup numLabels={6} isCompact>
+                    {version.tags.map((tag) => (
+                      <Label key={tag.name} isCompact>
+                        {tag.name}
+                      </Label>
+                    ))}
+                  </LabelGroup>
+                ) : (
+                  "—"
+                )}
+              </Td>
+              <Td dataLabel="Created">
+                {formatDateTime(version.pulp_created) ?? "—"}
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+      <ListPagination
+        variant={PaginationVariant.bottom}
+        itemCount={data?.count ?? 0}
+        pagination={pagination}
+      />
+    </>
   );
 };

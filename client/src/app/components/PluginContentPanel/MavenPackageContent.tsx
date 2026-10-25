@@ -1,6 +1,10 @@
 import type React from "react";
 
+import { PaginationVariant } from "@patternfly/react-core";
+import { useDataViewPagination } from "@patternfly/react-data-view";
+
 import type { MavenMavenPackageResponse } from "@app/client";
+import { ListPagination } from "@app/components/ListPagination";
 import {
   useContentDetailQuery,
   useContentTypeListQuery,
@@ -37,13 +41,15 @@ export const MavenPackageContent: React.FC<IPluginContentProps> = ({
 }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<MavenMavenPackageResponse>({ href });
+  const filesPagination = useDataViewPagination({ perPage: 10 });
   const files = useContentTypeListQuery({
     pulpType: "maven.artifact",
     params: {
       group_id: data?.group_id,
       artifact_id: data?.artifact_id,
       version: data?.version,
-      limit: 50,
+      limit: filesPagination.perPage,
+      offset: (filesPagination.page - 1) * filesPagination.perPage,
       fields: ["pulp_href", "filename"],
     },
     options: { enabled: !!data?.version },
@@ -90,11 +96,18 @@ export const MavenPackageContent: React.FC<IPluginContentProps> = ({
         artifactId={data?.artifact_id ?? ""}
         version={data?.version ?? ""}
       />
-      <ContentSection title={`Files (${files.data?.results.length ?? 0})`}>
+      <ContentSection title={`Files (${files.data?.count ?? 0})`}>
         <LabelList
           items={(files.data?.results ?? []).map((file) => file.filename ?? "")}
           emptyText="No files"
         />
+        {files.data?.count ? (
+          <ListPagination
+            variant={PaginationVariant.bottom}
+            itemCount={files.data.count}
+            pagination={filesPagination}
+          />
+        ) : null}
       </ContentSection>
       <ContentSection title={`Dependencies (${dependencies.length})`}>
         <LabelList

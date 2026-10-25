@@ -11,13 +11,13 @@ import {
 } from "@patternfly/react-core";
 
 import { AsyncResourceSelect } from "@app/components/AsyncResourceSelect";
+import { VersionSelect } from "@app/components/VersionSelect";
 
 import {
   decodeVersionDiff,
   type DiffRelation,
   encodeVersionDiff,
 } from "../utils/versionFilterCodec";
-import { VersionSelect } from "./VersionSelect";
 
 const RELATION_LABEL: Record<DiffRelation, string> = {
   added: "Added between",

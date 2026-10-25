@@ -15,6 +15,10 @@ interface IVersionSelectProps {
   /** Selected repository-version href. */
   value: string;
   onChange: (versionHref: string) => void;
+  /** The repository's latest version, labelled "Latest" (also before the menu loads). */
+  latestVersionHref?: string;
+  /** Whether the toggle stretches to its container (default false). */
+  isToggleFullWidth?: boolean;
 }
 
 /**
@@ -27,6 +31,8 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
   repositoryHref,
   value,
   onChange,
+  latestVersionHref,
+  isToggleFullWidth = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -53,7 +59,10 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
 
   const options = (data?.results ?? []).map((version) => ({
     value: version.pulp_href ?? "",
-    label: `Version ${version.number}`,
+    label:
+      version.pulp_href === latestVersionHref
+        ? `Latest (version ${version.number})`
+        : `Version ${version.number}`,
   }));
 
   return (
@@ -68,7 +77,10 @@ export const VersionSelect: React.FC<IVersionSelectProps> = ({
       onOpenChange={setIsOpen}
       isLoading={isFetching}
       isDisabled={!repositoryHref}
-      isToggleFullWidth={false}
+      isToggleFullWidth={isToggleFullWidth}
+      selectedLabel={
+        value && value === latestVersionHref ? "Latest" : undefined
+      }
     />
   );
 };

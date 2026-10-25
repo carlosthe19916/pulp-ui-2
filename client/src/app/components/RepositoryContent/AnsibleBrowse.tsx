@@ -12,6 +12,7 @@ import {
 
 import {
   useContentTypeAllQuery,
+  useContentTypeListQueries,
   useContentTypeListQuery,
 } from "@app/queries/content";
 
@@ -57,18 +58,27 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
       ],
     },
   });
-  // Signatures link to a collection version and deprecations to a collection, with no
-  // `__in` filter, so fetch the version's (small) sets once and match here.
-  const signatures = useContentTypeAllQuery({
+  const collections = data?.results ?? [];
+  // `signed_collection` takes one href (no `__in`), so probe each row's signature count.
+  const signatureProbes = useContentTypeListQueries({
     pulpType: "ansible.collection_signature",
-    params: { repository_version: versionHref, fields: ["signed_collection"] },
+    paramsList: collections.map((collection) => ({
+      repository_version: versionHref,
+      signed_collection: collection.pulp_href,
+      limit: 1,
+      fields: ["pulp_href"],
+    })),
   });
+  // Deprecations link to a collection with no `__in` filter, so fetch the version's
+  // (small) set once and match here.
   const deprecations = useContentTypeAllQuery({
     pulpType: "ansible.collection_deprecation",
     params: { repository_version: versionHref, fields: ["namespace", "name"] },
   });
   const signed = new Set(
-    signatures.data?.results.map((s) => s.signed_collection),
+    collections
+      .filter((_, index) => (signatureProbes[index]?.data?.count ?? 0) > 0)
+      .map((collection) => collection.pulp_href),
   );
   const deprecated = new Set(deprecations.data?.results.map(fqcn));
 
@@ -76,7 +86,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
     <BrowseDataList
       ariaLabel="Collections"
       list={list}
-      rows={data?.results ?? []}
+      rows={collections}
       count={data?.count ?? 0}
       isLoading={isLoading}
       error={error}

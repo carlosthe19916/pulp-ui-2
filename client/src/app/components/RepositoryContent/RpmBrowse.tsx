@@ -5,10 +5,7 @@ import prettyBytes from "pretty-bytes";
 import { Label } from "@patternfly/react-core";
 
 import { Snippet } from "@app/components/Snippet";
-import {
-  useContentTypeAllQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
+import { useContentTypeListQuery } from "@app/queries/content";
 import { nevra } from "@app/utils/pluginContentFormat";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -209,9 +206,17 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
       fields: ["pulp_href", "name", "stream", "version", "context", "arch"],
     },
   });
-  const defaults = useContentTypeAllQuery({
+  // A version holds at most one defaults unit per module, so one per page module.
+  const pageModules = [...new Set((data?.results ?? []).map((m) => m.name))];
+  const defaults = useContentTypeListQuery({
     pulpType: "rpm.modulemd_defaults",
-    params: { repository_version: versionHref, fields: ["module", "stream"] },
+    params: {
+      repository_version: versionHref,
+      module__in: pageModules,
+      limit: pageModules.length,
+      fields: ["module", "stream"],
+    },
+    options: { enabled: pageModules.length > 0 },
   });
   const defaultStream = new Map(
     defaults.data?.results.map((d) => [d.module, d.stream]),

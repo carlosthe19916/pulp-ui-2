@@ -8,7 +8,6 @@ import {
   useAcsCreateMutation,
   useAcsUpdateMutation,
 } from "@app/queries/acs";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -71,9 +70,7 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
       initialValues={
         acs ? buildDefaultValues({ fields: ACS_FIELDS, source: acs }) : {}
       }
-      resourceFilter={{
-        remote: (href) => resolvePulpType(href) === acsType.remoteType,
-      }}
+      resourceFilter={{ remote: [acsType.remoteType] }}
       isSubmitting={createMutation.isPending || updateMutation.isPending}
       submitError={submitError}
       onSubmit={(body) => {

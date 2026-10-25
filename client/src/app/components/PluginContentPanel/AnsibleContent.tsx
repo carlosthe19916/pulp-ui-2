@@ -1,10 +1,7 @@
 import type React from "react";
 
 import type { AnsibleCollectionVersionResponse } from "@app/client";
-import {
-  useContentDetailQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
+import { useContentDetailQuery } from "@app/queries/content";
 
 import type { IPluginContentProps } from "./contentFields";
 import { facts, links } from "./contentFields";
@@ -33,14 +30,12 @@ interface ICollectionContentsProps {
  * `contents` unless it's requested with `fields`, so ask for it explicitly.
  */
 const CollectionContents: React.FC<ICollectionContentsProps> = ({ href }) => {
-  const { data } = useContentTypeListQuery({
-    pulpType: "ansible.collection_version",
-    params: { pulp_href__in: [href], limit: 1, fields: ["contents"] },
+  // `contents` is only returned when requested, so the generated type omits it.
+  const { data } = useContentDetailQuery<{ contents?: ICollectionContent[] }>({
+    href,
+    fields: ["contents"],
   });
-  // `contents` is only returned when requested, so the generated row type omits it.
-  const row = data?.results[0] as
-    { contents?: ICollectionContent[] } | undefined;
-  const contents = row?.contents ?? [];
+  const contents = data?.contents ?? [];
   const byType = Object.entries(
     contents.reduce<Record<string, string[]>>((groups, content) => {
       (groups[content.content_type] ??= []).push(content.name);

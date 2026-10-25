@@ -1,19 +1,16 @@
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import {
   type EntityType,
-  getPlugin,
+  getRepositoryTypesForPublication,
   type IPlugin,
   type ResourceKind,
 } from "@catalog";
 
-/** Per-resource-kind predicate limiting which hrefs an `asyncResource` field offers. */
-export type ResourceFilterMap = Partial<
-  Record<ResourceKind, (href: string) => boolean>
->;
+/** Per-resource-kind compatible pulp_types an `asyncResource` field offers. */
+export type ResourceFilterMap = Partial<Record<ResourceKind, string[]>>;
 
 /**
- * Client-side compatibility predicates for a modal's `asyncResource` pickers, mirroring
- * the backend; kinds without a restriction are absent.
+ * Compatible pulp_types for a modal's `asyncResource` pickers, mirroring the backend;
+ * kinds without a restriction are absent.
  */
 export const buildResourceFilter = ({
   kind,
@@ -28,24 +25,12 @@ export const buildResourceFilter = ({
     const compatibleRemoteTypes =
       plugin?.entities.repository?.compatibleRemoteTypes;
     if (compatibleRemoteTypes) {
-      filters.remote = (href) =>
-        compatibleRemoteTypes.includes(resolvePulpType(href) ?? "");
+      filters.remote = compatibleRemoteTypes;
     }
   }
 
-  if (kind === "publication") {
-    const publicationType = plugin?.pulpType;
-    if (publicationType) {
-      filters.repository = (href) => {
-        const repoType = resolvePulpType(href);
-        const repoPlugin = repoType ? getPlugin(repoType) : undefined;
-        return (
-          repoPlugin?.entities.repository?.compatiblePublicationTypes.includes(
-            publicationType,
-          ) ?? false
-        );
-      };
-    }
+  if (kind === "publication" && plugin) {
+    filters.repository = getRepositoryTypesForPublication(plugin.pulpType);
   }
 
   return filters;

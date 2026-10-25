@@ -11,13 +11,13 @@ import {
 } from "@patternfly/react-core";
 
 import { AsyncResourceSelect } from "@app/components/AsyncResourceSelect";
+import { VersionSelect } from "@app/components/VersionSelect";
 
 import {
   decodeRepositoryVersion,
   encodeRepositoryVersion,
   type VersionRelation,
 } from "../utils/versionFilterCodec";
-import { VersionSelect } from "./VersionSelect";
 
 const RELATION_LABEL: Record<VersionRelation, string> = {
   in: "In version",

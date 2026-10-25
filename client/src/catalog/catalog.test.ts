@@ -11,6 +11,7 @@ import {
   getRemoteEditFields,
   getRepositoryContentTypes,
   getRepositoryTypesForContent,
+  getRepositoryTypesForPublication,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "./index";
@@ -354,6 +355,19 @@ describe("repository content changes", () => {
       "container.container",
     ]);
     expect(getRepositoryTypesForContent("nope.nope")).toEqual([]);
+  });
+
+  it("getRepositoryTypesForPublication lists repositories that publish a type", () => {
+    expect(getRepositoryTypesForPublication("file.file")).toEqual([
+      "file.file",
+    ]);
+    expect(getRepositoryTypesForPublication("python.pypi")).toEqual([
+      "python.python",
+    ]);
+    expect(
+      getRepositoryTypesForPublication("deb.verbatim-publication"),
+    ).toEqual(["deb.deb"]);
+    expect(getRepositoryTypesForPublication("nope.nope")).toEqual([]);
   });
 });
 

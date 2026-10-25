@@ -16,8 +16,8 @@ interface IAsyncResourceSelectProps {
   resourceKind: ResourceKind;
   value: string;
   onChange: (value: string) => void;
-  /** Compatibility predicate restricting which hrefs are offered. */
-  filter?: (href: string) => boolean;
+  /** Compatible pulp_types, filtered server-side; unset offers every type. */
+  pulpTypes?: string[];
 }
 
 /**
@@ -30,7 +30,7 @@ export const AsyncResourceSelect: React.FC<IAsyncResourceSelectProps> = ({
   resourceKind,
   value,
   onChange,
-  filter,
+  pulpTypes,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -41,7 +41,7 @@ export const AsyncResourceSelect: React.FC<IAsyncResourceSelectProps> = ({
     term: debouncedTerm,
     selectedHref: value,
     enabled: isOpen,
-    filter,
+    pulpTypes,
   });
 
   return (
@@ -66,7 +66,8 @@ interface IAsyncResourceMultiSelectProps {
   resourceKind: ResourceKind;
   value: string[];
   onChange: (value: string[]) => void;
-  filter?: (href: string) => boolean;
+  /** Compatible pulp_types, filtered server-side; unset offers every type. */
+  pulpTypes?: string[];
 }
 
 /**
@@ -75,20 +76,24 @@ interface IAsyncResourceMultiSelectProps {
  */
 export const AsyncResourceMultiSelect: React.FC<
   IAsyncResourceMultiSelectProps
-> = ({ id, label, resourceKind, value, onChange, filter }) => {
+> = ({ id, label, resourceKind, value, onChange, pulpTypes }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
   const debouncedTerm = useDebouncedValue({ value: term });
   // Names of the picks, remembered when picked (a pick may leave the search page).
   const [names, setNames] = useState<Record<string, string>>({});
 
-  const { options, isLoading } = useResourceSearch({
+  const search = useResourceSearch({
     resourceKind,
     term: debouncedTerm,
     selectedHref: "",
     enabled: isOpen,
-    filter: (href) => !value.includes(href) && (!filter || filter(href)),
+    pulpTypes,
   });
+  // Already-picked items stay out of the menu.
+  const options = search.options.filter(
+    (option) => !value.includes(option.value),
+  );
 
   return (
     <Stack hasGutter>
@@ -110,7 +115,7 @@ export const AsyncResourceMultiSelect: React.FC<
           }}
           onFilterChange={setTerm}
           onOpenChange={setIsOpen}
-          isLoading={isLoading}
+          isLoading={search.isLoading}
         />
       </StackItem>
       {value.length > 0 && (

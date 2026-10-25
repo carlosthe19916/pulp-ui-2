@@ -1,19 +1,25 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
+  ContentMavenPackageListData,
   MavenPathIndexStatusResponse,
   MavenRepositoryMetricsResponse,
+  PaginatedmavenMavenPackageResponseList,
   PaginatedMavenRepositoryPackageListResponse,
   RepositoriesMavenMavenMetricsData,
   RepositoriesMavenMavenPackagesData,
 } from "@app/client";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getContentType } from "@catalog";
 
+import { contentKeys } from "./content";
 import { repositoryKeys } from "./repositories";
 import type { MultiOrderListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import type { IPulpDomain } from "./utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 /**
  * Params for a Maven repository's `packages/` catalog. Its `ordering` takes several
@@ -150,3 +156,49 @@ export const useMavenPathIndexStatusQuery = ({
     ...mavenPathIndexStatusQueryOptions({ repositoryHref }),
     enabled: !!repositoryHref,
   });
+
+/** One MavenPackage in a repository version: the GAV is unique there. */
+export type IMavenPackageGav = Required<
+  Pick<
+    NonNullable<ContentMavenPackageListData["query"]>,
+    "repository_version" | "group_id" | "artifact_id" | "version"
+  >
+>;
+
+/**
+ * The `pulp_href` of the MavenPackage a `packages/` row version stands for (`packages/`
+ * rows aren't content), or `null` when there's none. The GAV filter matches at most one
+ * unit, so the request sends no `limit`.
+ */
+export const mavenPackageHrefQueryOptions = ({
+  domain,
+  gav,
+}: {
+  domain: IPulpDomain;
+  gav: IMavenPackageGav;
+}) =>
+  queryOptions<string | null, DrfAxiosError>({
+    queryKey: [
+      ...contentKeys.typeListQuery(domain, "maven.package", gav),
+      "href",
+    ],
+    queryFn: async (): Promise<string | null> => {
+      const { data } =
+        await axiosInstance.get<PaginatedmavenMavenPackageResponseList>(
+          pulpApiPath(
+            `content/${getContentType("maven.package")?.apiPath}/`,
+            domain,
+          ),
+          { params: { ...gav, fields: ["pulp_href"] } },
+        );
+      return data.results[0]?.pulp_href ?? null;
+    },
+  });
+
+/** Resolves a `packages/` row version to its MavenPackage href on demand (a row click). */
+export const useMavenPackageHrefLookup = () => {
+  const domain = useSelectedDomain();
+  const queryClient = useQueryClient();
+  return (gav: IMavenPackageGav) =>
+    queryClient.fetchQuery(mavenPackageHrefQueryOptions({ domain, gav }));
+};

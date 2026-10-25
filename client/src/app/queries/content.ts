@@ -3,6 +3,7 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
@@ -53,7 +54,11 @@ export const contentKeys = {
     [...contentKeys.list(), domain, pulpType, params] as const,
   typeAllListQuery: (domain: IPulpDomain, pulpType: string, params: object) =>
     [...contentKeys.list(), "all", domain, pulpType, params] as const,
-  detailQuery: (contentHref: string) => contentKeys.detail(contentHref),
+  /** A `fields` subset gets its own slot under the full detail, so invalidation covers both. */
+  detailQuery: (contentHref: string, fields?: string[]) =>
+    fields
+      ? ([...contentKeys.detail(contentHref), { fields }] as const)
+      : contentKeys.detail(contentHref),
 };
 
 export const contentListQueryOptions = ({
@@ -161,6 +166,26 @@ export const useContentTypeListQuery = <K extends ContentTypeKey>({
 };
 
 /**
+ * One list query per entry of `paramsList` (a `use*Queries` fan-out), e.g. a per-row
+ * `limit: 1` count probe on a link filter the endpoint can't OR across rows.
+ */
+export const useContentTypeListQueries = <K extends ContentTypeKey>({
+  pulpType,
+  paramsList,
+}: {
+  pulpType: K;
+  paramsList: IContentTypeListParams<K>[];
+}) => {
+  const domain = useSelectedDomain();
+  return useQueries({
+    queries: paramsList.map((params) => ({
+      ...contentTypeListQueryOptions({ domain, pulpType, params }),
+      enabled: !!getContentType(pulpType)?.apiPath,
+    })),
+  });
+};
+
+/**
  * Every page of one content type's list, for small sets matched in the browser
  * (e.g. a version's signatures) when the endpoint has no `__in` filter for the link.
  */
@@ -215,27 +240,40 @@ export const useContentTypeAllQuery = <K extends ContentTypeKey>({
 
 /**
  * Typed per-unit GET (the aggregate list is sparse). Callers pass the concrete generated
- * type for the pulp_type, never a union.
+ * type for the pulp_type, never a union; `fields` narrows the response or requests
+ * fields the API omits by default.
  */
 export const contentDetailQueryOptions = <T = MultipleArtifactContentResponse>({
   href,
+  fields,
   options,
 }: {
   href: string | null;
+  fields?: string[];
   options?: Omit<UseQueryOptions<T, DrfAxiosError>, "queryKey" | "queryFn">;
 }) =>
   queryOptions<T, DrfAxiosError>({
     ...options,
-    queryKey: contentKeys.detail(href ?? ""),
+    queryKey: contentKeys.detailQuery(href ?? "", fields),
     queryFn: async (): Promise<T> =>
-      (await axiosInstance.get<T>(toProxyHref(href ?? ""))).data,
+      (
+        await axiosInstance.get<T>(toProxyHref(href ?? ""), {
+          params: fields ? { fields } : undefined,
+        })
+      ).data,
   });
 
 export const useContentDetailQuery = <T = MultipleArtifactContentResponse>({
   href,
+  fields,
 }: {
   href: string | null;
-}) => useQuery({ ...contentDetailQueryOptions<T>({ href }), enabled: !!href });
+  fields?: string[];
+}) =>
+  useQuery({
+    ...contentDetailQueryOptions<T>({ href, fields }),
+    enabled: !!href,
+  });
 
 export const useSuspenseContentDetailQuery = <
   T = MultipleArtifactContentResponse,

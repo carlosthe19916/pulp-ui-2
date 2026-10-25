@@ -4,7 +4,6 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AnsibleCollectionsListData,
   PaginatedansibleCollectionResponseList,
-  PaginatedTagResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
@@ -18,15 +17,12 @@ export const AnsibleCollectionsQueryKey = "ansible-collections";
 export type IAnsibleCollectionListParams =
   ListParams<AnsibleCollectionsListData>;
 
-/** Plugin-only reads: collections (namespace + name groups) and version tags. */
+/** Plugin-only reads: collections (namespace + name groups). */
 export const ansibleCollectionKeys = {
   all: () => [AnsibleCollectionsQueryKey] as const,
   list: () => [...ansibleCollectionKeys.all(), "list"] as const,
-  tags: () => [...ansibleCollectionKeys.all(), "tags"] as const,
   listQuery: (domain: IPulpDomain, params: IAnsibleCollectionListParams) =>
     [...ansibleCollectionKeys.list(), domain, params] as const,
-  tagsQuery: (domain: IPulpDomain) =>
-    [...ansibleCollectionKeys.tags(), domain] as const,
 };
 
 export const ansibleCollectionsListQueryOptions = ({
@@ -59,22 +55,4 @@ export const useAnsibleCollectionsListQuery = ({
 }) => {
   const domain = useSelectedDomain();
   return useQuery(ansibleCollectionsListQueryOptions({ domain, params }));
-};
-
-/** Every collection version tag with its use count (one page holds them all). */
-export const ansibleTagsQueryOptions = ({ domain }: { domain: IPulpDomain }) =>
-  queryOptions<PaginatedTagResponseList, DrfAxiosError>({
-    queryKey: ansibleCollectionKeys.tagsQuery(domain),
-    queryFn: async () =>
-      (
-        await axiosInstance.get<PaginatedTagResponseList>(
-          pulpApiPath("pulp_ansible/tags/", domain),
-          { params: { limit: 1000 } },
-        )
-      ).data,
-  });
-
-export const useAnsibleTagsQuery = () => {
-  const domain = useSelectedDomain();
-  return useQuery(ansibleTagsQueryOptions({ domain }));
 };

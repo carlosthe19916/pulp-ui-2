@@ -36,9 +36,8 @@ interface IEntityFormFieldsProps<
   control: Control<TFieldValues>;
   idPrefix: string;
   /**
-   * Compatibility predicates for `type: "asyncResource"` fields, keyed by the
-   * field's resourceKind. The pickers fetch their own options on demand; this only
-   * restricts which fetched hrefs are offered.
+   * Compatible pulp_types for `type: "asyncResource"` fields, keyed by the field's
+   * resourceKind; the pickers send them as a server-side type filter.
    */
   resourceFilter?: ResourceFilterMap;
 }
@@ -235,7 +234,7 @@ export const EntityFormFields = <
                       resourceKind={field.resourceKind}
                       value={(rhfField.value as string[]) ?? []}
                       onChange={(value) => rhfField.onChange(value)}
-                      filter={resourceFilter?.[field.resourceKind]}
+                      pulpTypes={resourceFilter?.[field.resourceKind]}
                     />
                     {helper}
                   </FormGroup>
@@ -256,7 +255,7 @@ export const EntityFormFields = <
                       resourceKind={field.resourceKind}
                       value={(rhfField.value as string) ?? ""}
                       onChange={(value) => rhfField.onChange(value)}
-                      filter={resourceFilter?.[field.resourceKind]}
+                      pulpTypes={resourceFilter?.[field.resourceKind]}
                     />
                     {helper}
                   </FormGroup>

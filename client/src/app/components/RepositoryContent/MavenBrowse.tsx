@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
-
 import {
   Content,
   ContentVariants,
@@ -11,10 +9,9 @@ import {
 } from "@patternfly/react-core";
 
 import type { MavenRepositoryPackageResponse } from "@app/client";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { contentTypeListQueryOptions } from "@app/queries/content";
 import {
   useMavenMetricsQuery,
+  useMavenPackageHrefLookup,
   useMavenPackagesListQuery,
 } from "@app/queries/maven-repositories";
 import { formatDateTime } from "@app/utils/utils";
@@ -38,8 +35,7 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
   selectedHref,
   onSelect,
 }) => {
-  const domain = useSelectedDomain();
-  const queryClient = useQueryClient();
+  const lookupPackageHref = useMavenPackageHrefLookup();
   // The artifact whose version is open in the drawer, for the row highlight.
   const [openedArtifact, setOpenedArtifact] = useState<string | null>(null);
   const list = useBrowseListState({
@@ -73,21 +69,12 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
     row: MavenRepositoryPackageResponse;
     version: string;
   }) => {
-    const page = await queryClient.fetchQuery(
-      contentTypeListQueryOptions({
-        domain,
-        pulpType: "maven.package",
-        params: {
-          repository_version: versionHref,
-          group_id: row.group_id,
-          artifact_id: row.artifact_id,
-          version,
-          limit: 1,
-          fields: ["pulp_href"],
-        },
-      }),
-    );
-    const href = page.results[0]?.pulp_href;
+    const href = await lookupPackageHref({
+      repository_version: versionHref,
+      group_id: row.group_id,
+      artifact_id: row.artifact_id,
+      version,
+    });
     if (href) {
       setOpenedArtifact(artifactKey(row));
       onSelect(href);

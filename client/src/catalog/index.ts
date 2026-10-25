@@ -127,6 +127,18 @@ export const getRepositoryTypesForContent = (
     })
     .map((plugin) => plugin.pulpType);
 
+/** Repository pulp_types that publish to a publication pulp_type. */
+export const getRepositoryTypesForPublication = (
+  publicationType: PulpType,
+): PulpType[] =>
+  Object.values(catalog)
+    .filter((plugin) =>
+      plugin.entities.repository?.compatiblePublicationTypes.includes(
+        publicationType,
+      ),
+    )
+    .map((plugin) => plugin.pulpType);
+
 /** Resolve a content pulp_type from its `<app>/<slug>` collection apiPath. */
 export const resolveContentTypeByApiPath = ({
   apiPath,

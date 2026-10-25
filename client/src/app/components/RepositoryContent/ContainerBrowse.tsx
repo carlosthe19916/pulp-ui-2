@@ -9,7 +9,7 @@ import type { ContainerManifestResponse } from "@app/client";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { Snippet } from "@app/components/Snippet";
 import {
-  useContentTypeAllQuery,
+  useContentTypeListQueries,
   useContentTypeListQuery,
 } from "@app/queries/content";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
@@ -33,13 +33,34 @@ const MANIFEST_FIELDS = [
   "compressed_image_size",
 ];
 
-/** The version's signed manifests, matched by href (signatures have no `__in` link filter). */
-const useSignedManifests = (versionHref: string) => {
-  const { data } = useContentTypeAllQuery({
+interface IUseSignedManifestsOptions {
+  versionHref: string;
+  /** The manifests on screen; only these are probed. */
+  manifests: Pick<ContainerManifestResponse, "pulp_href" | "digest">[];
+}
+
+/**
+ * Hrefs of the given manifests that have a signature in the version: one `limit: 1`
+ * count probe per manifest on the signature list's `manifest` (digest) filter.
+ */
+const useSignedManifests = ({
+  versionHref,
+  manifests,
+}: IUseSignedManifestsOptions) => {
+  const probes = useContentTypeListQueries({
     pulpType: "container.signature",
-    params: { repository_version: versionHref, fields: ["signed_manifest"] },
+    paramsList: manifests.map((manifest) => ({
+      repository_version: versionHref,
+      manifest: [manifest.digest],
+      limit: 1,
+      fields: ["pulp_href"],
+    })),
   });
-  return new Set(data?.results.map((s) => s.signed_manifest));
+  return new Set(
+    manifests
+      .filter((_, index) => (probes[index]?.data?.count ?? 0) > 0)
+      .map((manifest) => manifest.pulp_href),
+  );
 };
 
 /** Quay / Docker Hub "Tags": each tag with its image's digest, platforms, size and signature. */
@@ -100,7 +121,10 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
     },
     options: { enabled: listed.length > 0 },
   });
-  const signed = useSignedManifests(versionHref);
+  const signed = useSignedManifests({
+    versionHref,
+    manifests: manifests.data?.results ?? [],
+  });
 
   const byHref = new Map(
     [
@@ -236,7 +260,10 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
       fields: [...MANIFEST_FIELDS, "is_bootable", "is_flatpak"],
     },
   });
-  const signed = useSignedManifests(versionHref);
+  const signed = useSignedManifests({
+    versionHref,
+    manifests: data?.results ?? [],
+  });
 
   return (
     <BrowseTable

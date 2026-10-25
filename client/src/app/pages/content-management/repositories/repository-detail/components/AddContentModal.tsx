@@ -7,8 +7,6 @@ import {
   Content,
   Form,
   FormGroup,
-  FormSelect,
-  FormSelectOption,
   Label,
   LabelGroup,
   Modal,
@@ -26,6 +24,7 @@ import {
 import type { RepositoryResponse } from "@app/client";
 import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
+import { VersionSelect } from "@app/components/VersionSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
@@ -35,7 +34,6 @@ import {
   type IRepositoryListParams,
   useRepositoriesListQuery,
   useRepositoryModifyMutation,
-  useRepositoryVersionsListQuery,
 } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getRepositoryContentTypes } from "@catalog";
@@ -74,11 +72,6 @@ const SourcePicker: React.FC<ISourcePickerProps> = ({
   const repositories = (data?.results ?? []).filter(
     (repo) => repo.pulp_href && repo.pulp_href !== excludeHref,
   );
-  const { data: versions } = useRepositoryVersionsListQuery({
-    repositoryHref: source?.pulp_href ?? "",
-    params: { limit: 50, ordering: "-number" },
-    options: { enabled: !!source },
-  });
 
   return (
     <Form isHorizontal onSubmit={(event) => event.preventDefault()}>
@@ -105,26 +98,20 @@ const SourcePicker: React.FC<ISourcePickerProps> = ({
       </FormGroup>
       {source && (
         <FormGroup label="Version" fieldId="add-content-source-version">
-          <FormSelect
+          <VersionSelect
+            // A new source starts a fresh search.
+            key={source.pulp_href}
             id="add-content-source-version"
+            label="Version"
+            repositoryHref={source.pulp_href ?? ""}
+            latestVersionHref={source.latest_version_href ?? undefined}
             value={versionHref}
-            onChange={(_event, value) => {
+            onChange={(value) => {
               setVersionHref(value);
               onChange(value);
             }}
-          >
-            {(versions?.results ?? []).map((version) => (
-              <FormSelectOption
-                key={version.pulp_href}
-                value={version.pulp_href ?? ""}
-                label={
-                  version.pulp_href === source.latest_version_href
-                    ? `Latest (version ${version.number})`
-                    : `Version ${version.number}`
-                }
-              />
-            ))}
-          </FormSelect>
+            isToggleFullWidth
+          />
         </FormGroup>
       )}
     </Form>

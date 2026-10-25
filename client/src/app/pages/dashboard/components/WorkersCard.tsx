@@ -14,25 +14,33 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   Label,
+  PaginationVariant,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
+import { useDataViewPagination } from "@patternfly/react-data-view";
 
+import { ListPagination } from "@app/components/ListPagination";
 import { useWorkersListQuery } from "@app/queries/workers";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
-const LIMIT = 20;
-
 /** Online workers with the task each one runs, and how many went missing. */
 export const WorkersCard: React.FC = () => {
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { data: online } = useWorkersListQuery({
-    params: { limit: LIMIT, offset: 0, online: true, ordering: "name" },
+    params: {
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+      online: true,
+      ordering: "name",
+    },
   });
   const { data: missing } = useWorkersListQuery({
     params: { limit: 1, offset: 0, missing: true },
   });
   const workers = online?.results ?? [];
   const missingCount = missing?.count ?? 0;
+  const onlineCount = online?.count ?? 0;
 
   return (
     <Card>
@@ -78,9 +86,14 @@ export const WorkersCard: React.FC = () => {
               </DescriptionList>
             )}
           </StackItem>
-          {(online?.count ?? 0) > LIMIT && (
+          {/* 10 is the smallest page size: below it every worker fits on one page. */}
+          {onlineCount > 10 && (
             <StackItem>
-              {online?.count} online; showing the first {LIMIT}.
+              <ListPagination
+                variant={PaginationVariant.bottom}
+                itemCount={onlineCount}
+                pagination={pagination}
+              />
             </StackItem>
           )}
         </Stack>

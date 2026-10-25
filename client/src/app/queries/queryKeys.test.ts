@@ -186,6 +186,17 @@ describe("query-key factories", () => {
   });
 
   describe("contentKeys", () => {
+    it("nests a fields-subset detail under the full detail", () => {
+      const href = "/pulp/api/v3/content/file/files/abc/";
+      expect(contentKeys.detailQuery(href)).toEqual(contentKeys.detail(href));
+      expect(
+        startsWith({
+          key: contentKeys.detailQuery(href, ["contents"]),
+          prefix: contentKeys.detail(href),
+        }),
+      ).toBe(true);
+    });
+
     it("keeps typed list queries (page and fetch-all) under the list folder", () => {
       expect(
         startsWith({

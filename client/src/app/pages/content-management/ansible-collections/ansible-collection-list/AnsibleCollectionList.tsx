@@ -21,7 +21,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
-import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
@@ -29,7 +28,6 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import {
   type IAnsibleCollectionListParams,
   useAnsibleCollectionsListQuery,
-  useAnsibleTagsQuery,
 } from "@app/queries/ansible-collections";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -44,7 +42,7 @@ const SORTABLE_COLUMN_KEYS = [
 interface ICollectionFilters {
   namespace: string;
   name: string;
-  tags: string[];
+  tags: string;
 }
 
 /** Ansible collections (namespace + name), each expanding to its versions. */
@@ -57,13 +55,12 @@ export const AnsibleCollectionList: React.FC = () => {
   });
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<ICollectionFilters>({
-      initialFilters: { namespace: "", name: "", tags: [] },
+      initialFilters: { namespace: "", name: "", tags: "" },
     });
   const namespace = useDebouncedValue({ value: filters.namespace });
   const name = useDebouncedValue({ value: filters.name });
-  const tags = filters.tags ?? [];
+  const tags = useDebouncedValue({ value: filters.tags });
 
-  const { data: tagData } = useAnsibleTagsQuery();
   const { data, isLoading, error } = useAnsibleCollectionsListQuery({
     params: {
       limit: pagination.perPage,
@@ -96,6 +93,7 @@ export const AnsibleCollectionList: React.FC = () => {
       <RevealCellOnExpand>
         {() => (
           <CollectionVersions
+            key={tags}
             namespace={collection.namespace}
             name={collection.name}
             tags={tags}
@@ -105,7 +103,7 @@ export const AnsibleCollectionList: React.FC = () => {
     ),
   }));
 
-  const isFiltered = !!namespace || !!name || tags.length > 0;
+  const isFiltered = !!namespace || !!name || !!tags;
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     isLoading,
@@ -145,14 +143,10 @@ export const AnsibleCollectionList: React.FC = () => {
               >
                 <DataViewTextFilter filterId="namespace" title="Namespace" />
                 <DataViewTextFilter filterId="name" title="Name" />
-                <MultiSelectFilter
+                <DataViewTextFilter
                   filterId="tags"
                   title="Version tags"
-                  searchPlaceholder="Search tags"
-                  options={(tagData?.results ?? []).map((tag) => ({
-                    value: tag.name ?? "",
-                    label: `${tag.name} (${tag.count ?? 0})`,
-                  }))}
+                  placeholder="Comma-separated tags"
                 />
               </DataViewFilters>
             }
