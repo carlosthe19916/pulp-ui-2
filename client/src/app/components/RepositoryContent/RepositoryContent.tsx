@@ -41,7 +41,7 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
   const browse = getPluginBrowse(repositoryType);
   const [activeTab, setActiveTab] = useState<string | number>("browse");
   const [selectedHref, setSelectedHref] = useState<string | null>(null);
-  const served = useServedAt({ repositoryHref, repositoryType });
+  const served = useServedAt({ repositoryHref });
 
   if (!browse) {
     return (
@@ -65,6 +65,7 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
         {/* PatternFly subtabs sit directly in the primary tab, so both tab bars align. */}
         <ContentDrawer
           selectedHref={selectedHref}
+          versionHref={versionHref}
           onClose={() => setSelectedHref(null)}
         >
           <PluginBrowse

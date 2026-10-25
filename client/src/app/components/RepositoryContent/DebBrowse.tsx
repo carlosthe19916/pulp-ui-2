@@ -2,14 +2,10 @@ import type React from "react";
 
 import { Label, LabelGroup } from "@patternfly/react-core";
 
-import type { DebReleaseResponse } from "@app/client";
 import { Snippet } from "@app/components/Snippet";
-import {
-  useContentTypeAllQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
+import { useContentTypeListQuery } from "@app/queries/content";
 
-import { sourcesLine, valuesByDistribution } from "./browseHelpers";
+import { sourcesLine } from "./browseHelpers";
 import { BrowseTable } from "./BrowseTable";
 import type { IBrowseContext } from "./browseTypes";
 import { useBrowseListState } from "./useBrowseListState";
@@ -48,40 +44,9 @@ export const DebReleases: React.FC<IBrowseContext> = ({
     pulpType: "deb.release",
     params: { ...list.params, repository_version: versionHref },
   });
-  // Releases may leave `components`/`architectures` empty; the release's component and
-  // architecture content carry them, linked by distribution name.
-  // TODO: drop this fallback once pulp_deb fills the release's own lists (see DebReleaseContent).
-  const components = useContentTypeAllQuery({
-    pulpType: "deb.release_component",
-    params: {
-      repository_version: versionHref,
-      fields: ["component", "distribution"],
-    },
-  });
-  const architectures = useContentTypeAllQuery({
-    pulpType: "deb.release_architecture",
-    params: {
-      repository_version: versionHref,
-      fields: ["architecture", "distribution"],
-    },
-  });
-  const componentsByRelease = valuesByDistribution({
-    rows: components.data?.results ?? [],
-    value: (c) => c.component,
-  });
-  const architecturesByRelease = valuesByDistribution({
-    rows: architectures.data?.results ?? [],
-    value: (a) => a.architecture,
-  });
-  const componentsOf = (release: DebReleaseResponse) =>
-    release.components?.length
-      ? release.components
-      : (componentsByRelease.get(release.distribution) ?? []);
-  const architecturesOf = (release: DebReleaseResponse) =>
-    release.architectures?.length
-      ? release.architectures
-      : (architecturesByRelease.get(release.distribution) ?? []);
-
+  // Releases may leave `components`/`architectures` empty and carry them as
+  // `deb.release_component` / `deb.release_architecture` units linked only by
+  // distribution name (no `__in` filter), so the release's detail panel reads those.
   const { baseUrl } = served;
   const first = data?.results[0];
 
@@ -100,7 +65,7 @@ export const DebReleases: React.FC<IBrowseContext> = ({
             code={sourcesLine({
               baseUrl,
               codename: first.codename,
-              components: componentsOf(first),
+              components: first.components,
             })}
           />
         ) : undefined
@@ -116,11 +81,11 @@ export const DebReleases: React.FC<IBrowseContext> = ({
         { title: "Version", cell: (r) => r.version || "—" },
         {
           title: "Components",
-          cell: (r) => <Labels items={componentsOf(r)} />,
+          cell: (r) => <Labels items={r.components} />,
         },
         {
           title: "Architectures",
-          cell: (r) => <Labels items={architecturesOf(r)} />,
+          cell: (r) => <Labels items={r.architectures} />,
         },
       ]}
     />

@@ -24,6 +24,7 @@ export const VersionContent: React.FC<IVersionContentProps> = ({
   return (
     <ContentDrawer
       selectedHref={selectedHref}
+      versionHref={versionHref}
       onClose={() => setSelectedHref(null)}
     >
       <VersionContentList

@@ -3,12 +3,9 @@ import type React from "react";
 import prettyBytes from "pretty-bytes";
 
 import { Snippet } from "@app/components/Snippet";
-import {
-  useContentTypeAllQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
+import { useContentTypeListQuery } from "@app/queries/content";
 
-import { normalizeProjectName, pipInstall } from "./browseHelpers";
+import { pipInstall } from "./browseHelpers";
 import { BrowseTable } from "./BrowseTable";
 import type { IBrowseContext } from "./browseTypes";
 import { StatusBadges } from "./StatusBadges";
@@ -42,16 +39,6 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
       ],
     },
   });
-  const yanks = useContentTypeAllQuery({
-    pulpType: "python.python_yank",
-    params: {
-      repository_version: versionHref,
-      fields: ["name_normalized", "version"],
-    },
-  });
-  const yanked = new Set(
-    yanks.data?.results.map((y) => `${y.name_normalized}@${y.version}`),
-  );
   const hrefs = (data?.results ?? []).map((p) => p.pulp_href ?? "");
   const provenance = useContentTypeListQuery({
     pulpType: "python.provenance",
@@ -92,14 +79,56 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
           title: "Status",
           cell: (p) => (
             <StatusBadges
-              statuses={[
-                yanked.has(
-                  `${normalizeProjectName(p.name ?? "")}@${p.version}`,
-                ) && "yanked",
-                attested.has(p.pulp_href ?? "") && "attested",
-              ]}
+              statuses={[attested.has(p.pulp_href ?? "") && "attested"]}
             />
           ),
+        },
+      ]}
+    />
+  );
+};
+
+/**
+ * Yanked releases (PEP 592). A yank names a release only by project and version, and the
+ * endpoint can't filter by either, so it is listed here rather than as a badge.
+ */
+export const PythonYanks: React.FC<IBrowseContext> = ({
+  versionHref,
+  selectedHref,
+  onSelect,
+  writes,
+}) => {
+  const list = useBrowseListState();
+  const { data, isLoading, error } = useContentTypeListQuery({
+    pulpType: "python.python_yank",
+    params: {
+      ...list.params,
+      repository_version: versionHref,
+      fields: ["pulp_href", "name_normalized", "version", "yanked_reason"],
+    },
+  });
+
+  return (
+    <BrowseTable
+      ariaLabel="Yanked releases"
+      list={list}
+      rows={data?.results ?? []}
+      count={data?.count ?? 0}
+      isLoading={isLoading}
+      error={error}
+      emptyTitle="No yanked releases"
+      rowHref={(yank) => yank.pulp_href}
+      selectedHref={selectedHref}
+      onSelect={onSelect}
+      writes={writes}
+      columns={[
+        { title: "Project", width: 30, cell: (y) => y.name_normalized },
+        { title: "Version", width: 20, cell: (y) => y.version },
+        {
+          title: "Reason",
+          isTruncated: true,
+          width: 50,
+          cell: (y) => y.yanked_reason || "—",
         },
       ]}
     />

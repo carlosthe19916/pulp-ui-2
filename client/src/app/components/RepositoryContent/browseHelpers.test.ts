@@ -4,13 +4,11 @@ import {
   fqcn,
   groupStarts,
   isMultiArch,
-  normalizeProjectName,
   pathSegments,
   pullCommand,
   severityColor,
   snapshotBuild,
   sourcesLine,
-  valuesByDistribution,
 } from "./browseHelpers";
 
 describe("Browse helpers", () => {
@@ -50,23 +48,6 @@ describe("Browse helpers", () => {
         components: ["main", "universe"],
       }),
     ).toBe("deb https://host/deb/ noble main universe");
-  });
-
-  it("groups release content by distribution", () => {
-    const byDistribution = valuesByDistribution({
-      rows: [
-        { distribution: "noble", component: "main" },
-        { distribution: "noble", component: "universe" },
-        { distribution: "jammy", component: "main" },
-      ],
-      value: (row) => row.component,
-    });
-    expect(byDistribution.get("noble")).toEqual(["main", "universe"]);
-    expect(byDistribution.get("jammy")).toEqual(["main"]);
-  });
-
-  it("normalizes Python project names like PEP 503", () => {
-    expect(normalizeProjectName("Shelf_Reader.Lib")).toBe("shelf-reader-lib");
   });
 
   it("extracts the newest SNAPSHOT build", () => {

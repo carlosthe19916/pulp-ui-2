@@ -15,8 +15,7 @@ import type {
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
-import { fetchAllPages } from "./utils/fetchAllPages";
-import type { AllListParams, ListParams } from "./utils/listParams";
+import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
@@ -25,8 +24,6 @@ import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 export const RolesQueryKey = "roles";
 
 export type IRoleListParams = ListParams<RolesListData>;
-
-export type IAllRoleListParams = AllListParams<RolesListData>;
 
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede params so a
@@ -40,8 +37,6 @@ export const roleKeys = {
 
   listQuery: (domain: IPulpDomain, params: IRoleListParams) =>
     [...roleKeys.list(), domain, params] as const,
-  listAllQuery: (domain: IPulpDomain, params: IAllRoleListParams) =>
-    [...roleKeys.list(), domain, "all", params] as const,
 };
 
 export const rolesListQueryOptions = ({
@@ -67,49 +62,9 @@ export const rolesListQueryOptions = ({
     },
   });
 
-/** Fetch every role at once (e.g. dual-list picker). Prefer server-side paging for single pages. */
-export const allRolesListQueryOptions = ({
-  domain,
-  params = {},
-}: {
-  domain: IPulpDomain;
-  params?: IAllRoleListParams;
-}) =>
-  queryOptions<PaginatedRoleResponseList, DrfAxiosError>({
-    queryKey: roleKeys.listAllQuery(domain, params),
-    queryFn: async (): Promise<PaginatedRoleResponseList> => {
-      const { results, count } = await fetchAllPages<RoleResponse>(
-        async (offset, limit) => {
-          const response = await axiosInstance.get<PaginatedRoleResponseList>(
-            pulpApiPath("roles/", domain),
-            {
-              params: {
-                ...params,
-                offset,
-                limit,
-                ordering: params.ordering ? [params.ordering] : undefined,
-              },
-            },
-          );
-          return response.data;
-        },
-      );
-      return { count, next: null, previous: null, results };
-    },
-  });
-
 export const useRolesListQuery = ({ params }: { params: IRoleListParams }) => {
   const domain = useDefaultDomain();
   return useQuery(rolesListQueryOptions({ domain, params }));
-};
-
-export const useAllRolesListQuery = ({
-  params = {},
-}: {
-  params?: IAllRoleListParams;
-} = {}) => {
-  const domain = useDefaultDomain();
-  return useQuery(allRolesListQueryOptions({ domain, params }));
 };
 
 export const useRoleCreateMutation = (

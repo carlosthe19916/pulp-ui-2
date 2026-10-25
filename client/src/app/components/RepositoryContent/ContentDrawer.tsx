@@ -10,6 +10,7 @@ import { ContentDrawerPanel } from "./ContentDrawerPanel";
 
 interface IContentDrawerProps {
   selectedHref: string | null;
+  versionHref: string;
   onClose: () => void;
   children: React.ReactNode;
 }
@@ -17,13 +18,18 @@ interface IContentDrawerProps {
 /** Inline side drawer showing the selected content unit's detail next to a list. */
 export const ContentDrawer: React.FC<IContentDrawerProps> = ({
   selectedHref,
+  versionHref,
   onClose,
   children,
 }) => (
   <Drawer isExpanded={selectedHref != null} isInline>
     <DrawerContent
       panelContent={
-        <ContentDrawerPanel href={selectedHref} onClose={onClose} />
+        <ContentDrawerPanel
+          href={selectedHref}
+          versionHref={versionHref}
+          onClose={onClose}
+        />
       }
     >
       <DrawerContentBody>{children}</DrawerContentBody>

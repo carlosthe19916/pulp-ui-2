@@ -72,29 +72,7 @@ export const sourcesLine = ({
 }: ISourcesLineParams) =>
   `deb ${baseUrl} ${codename} ${(components ?? []).join(" ")}`.trim();
 
-/** Values of the release content that names a distribution, keyed by that name. */
-export const valuesByDistribution = <T extends { distribution: string }>({
-  rows,
-  value,
-}: {
-  rows: T[];
-  value: (row: T) => string;
-}): Map<string, string[]> => {
-  const byDistribution = new Map<string, string[]>();
-  for (const row of rows) {
-    byDistribution.set(row.distribution, [
-      ...(byDistribution.get(row.distribution) ?? []),
-      value(row),
-    ]);
-  }
-  return byDistribution;
-};
-
 // --- Python / npm / gems ---
-
-/** PEP 503 project-name normalization, which yanks are keyed by. */
-export const normalizeProjectName = (name: string) =>
-  name.toLowerCase().replace(/[-_.]+/g, "-");
 
 export const pipInstall = (baseUrl: string) =>
   `pip install --index-url ${baseUrl}simple/ <package>`;

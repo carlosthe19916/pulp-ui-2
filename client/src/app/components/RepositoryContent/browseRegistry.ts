@@ -3,6 +3,7 @@ import { summaryEntries } from "@app/utils/contentSummary";
 
 import {
   AnsibleCollections,
+  AnsibleDeprecations,
   AnsibleNamespaces,
   AnsibleRoles,
 } from "./AnsibleBrowse";
@@ -19,7 +20,7 @@ import {
 import { MavenArtifacts } from "./MavenBrowse";
 import { NpmPackages } from "./NpmBrowse";
 import { OstreeBranches } from "./OstreeBrowse";
-import { PythonPackages } from "./PythonBrowse";
+import { PythonPackages, PythonYanks } from "./PythonBrowse";
 import {
   RpmAdvisories,
   RpmModuleStreams,
@@ -58,6 +59,12 @@ const BROWSE_BY_REPOSITORY_TYPE: Record<string, IPluginBrowse> = {
         title: "Collections",
         pulpTypes: ["ansible.collection_version"],
         View: AnsibleCollections,
+      },
+      {
+        key: "deprecations",
+        title: "Deprecated",
+        pulpTypes: ["ansible.collection_deprecation"],
+        View: AnsibleDeprecations,
       },
       {
         key: "namespaces",
@@ -132,6 +139,12 @@ const BROWSE_BY_REPOSITORY_TYPE: Record<string, IPluginBrowse> = {
         title: "Packages",
         pulpTypes: ["python.python"],
         View: PythonPackages,
+      },
+      {
+        key: "yanks",
+        title: "Yanked",
+        pulpTypes: ["python.python_yank"],
+        View: PythonYanks,
       },
     ],
   },

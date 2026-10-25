@@ -31,12 +31,6 @@ export type MultiOrderListParams<TData extends { query?: object }> = Omit<
   limit: number;
 };
 
-/** Params for a fetch-all query: `limit`/`offset` are managed by the paging loop, only filtering/ordering remain. */
-export type AllListParams<TData extends { query?: object }> = Omit<
-  ListParams<TData>,
-  "limit" | "offset"
->;
-
 /** Distributes over an ordering union, dropping the "-" descending variants. */
 type AscendingOrdering<O extends string> = O extends `-${string}` ? never : O;
 

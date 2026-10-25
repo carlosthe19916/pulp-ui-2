@@ -88,7 +88,6 @@ export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
         <TitledCard title="Use this repository">
           <RepositoryUsage
             repositoryHref={repository.pulp_href ?? ""}
-            pulpType={pulpType}
             onViewDistributions={onViewDistributions}
           />
         </TitledCard>

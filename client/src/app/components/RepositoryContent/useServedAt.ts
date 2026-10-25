@@ -1,5 +1,8 @@
-import { useServingDistributions } from "@app/hooks/useServingDistributions";
-import { useDistributionDetailQuery } from "@app/queries/distributions";
+import {
+  repositoryDistributionsPickerParams,
+  useDistributionDetailQuery,
+  useDistributionsListQuery,
+} from "@app/queries/distributions";
 
 import type { IServedAt } from "./browseTypes";
 
@@ -7,21 +10,19 @@ const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";
 
 /**
- * Where a repository's content is served (`base_url`, `registry_path`), from the first
- * distribution serving it; empty strings when none does.
+ * Where a repository's content is served (`base_url`, `registry_path`), from the default
+ * of its "Use this repository" distributions picker; empty strings when none serves it
+ * directly.
  */
 export const useServedAt = ({
   repositoryHref,
-  repositoryType,
 }: {
   repositoryHref: string;
-  repositoryType: string;
 }): IServedAt => {
-  const { distributions } = useServingDistributions({
-    repositoryHref,
-    pulpType: repositoryType,
+  const { data } = useDistributionsListQuery({
+    params: repositoryDistributionsPickerParams(repositoryHref),
   });
-  const listed = distributions[0];
+  const listed = data?.results[0];
   // `registry_path` is only on the typed detail; the aggregate list omits it.
   const { data: detail } = useDistributionDetailQuery({
     href: listed?.pulp_href ?? null,

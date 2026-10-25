@@ -5,11 +5,9 @@ import { Form, FormGroup } from "@patternfly/react-core";
 
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import { HookFormPFTextInput } from "@app/components/HookFormPFTextInput";
-import { useAllRolesListQuery } from "@app/queries/roles";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
-import { PermissionMultiSelect } from "./PermissionMultiSelect";
-import { collectPermissionOptions } from "./permissionOptions";
+import { PermissionInput } from "./PermissionInput";
 import type { IRoleFormValues } from "./useRoleForm";
 
 interface IRoleFormProps {
@@ -27,16 +25,7 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
   formId,
   submitError,
 }) => {
-  const { control, watch } = form;
-  const { data: rolesData } = useAllRolesListQuery();
-
-  const permissions = watch("permissions");
-  const permissionOptions = collectPermissionOptions({
-    rolePermissionLists: (rolesData?.results ?? []).map(
-      (role) => role.permissions,
-    ),
-    selected: permissions ?? [],
-  });
+  const { control } = form;
 
   return (
     <Form
@@ -66,9 +55,8 @@ export const RoleForm: React.FC<IRoleFormProps> = ({
           name="permissions"
           control={control}
           render={({ field }) => (
-            <PermissionMultiSelect
+            <PermissionInput
               id="role-permissions"
-              options={permissionOptions}
               value={field.value ?? []}
               onChange={field.onChange}
             />

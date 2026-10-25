@@ -44,16 +44,13 @@ const startsWith = ({
 
 describe("query-key factories", () => {
   describe("groupKeys", () => {
-    it("nests both user-query variants under the group's users folder", () => {
+    it("nests the user query under the group's users folder", () => {
       const folder = groupKeys.users(href);
       expect(
         startsWith({
           key: groupKeys.usersQuery(href, { limit: 10 }),
           prefix: folder,
         }),
-      ).toBe(true);
-      expect(
-        startsWith({ key: groupKeys.usersAllQuery(href), prefix: folder }),
       ).toBe(true);
     });
 
@@ -169,16 +166,10 @@ describe("query-key factories", () => {
   });
 
   describe("roleKeys", () => {
-    it("keeps both list-query variants under the list folder", () => {
+    it("keeps the list query under the list folder", () => {
       expect(
         startsWith({
           key: roleKeys.listQuery(domain, { limit: 10 }),
-          prefix: roleKeys.list(),
-        }),
-      ).toBe(true);
-      expect(
-        startsWith({
-          key: roleKeys.listAllQuery(domain, {}),
           prefix: roleKeys.list(),
         }),
       ).toBe(true);
@@ -197,16 +188,10 @@ describe("query-key factories", () => {
       ).toBe(true);
     });
 
-    it("keeps typed list queries (page and fetch-all) under the list folder", () => {
+    it("keeps typed list queries under the list folder", () => {
       expect(
         startsWith({
           key: contentKeys.typeListQuery(domain, "file.file", { limit: 10 }),
-          prefix: contentKeys.list(),
-        }),
-      ).toBe(true);
-      expect(
-        startsWith({
-          key: contentKeys.typeAllListQuery(domain, "file.file", {}),
           prefix: contentKeys.list(),
         }),
       ).toBe(true);

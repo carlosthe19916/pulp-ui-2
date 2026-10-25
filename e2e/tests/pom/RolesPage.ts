@@ -36,10 +36,12 @@ export class RolesPage extends DataViewList {
     if (description !== undefined)
       await dialog.getByLabel("Description").fill(description);
     if (permission) {
-      await dialog
-        .getByRole("textbox", { name: "Add custom permission" })
-        .fill(permission);
-      await dialog.getByRole("button", { name: "Add", exact: true }).click();
+      const input = dialog.getByRole("textbox", { name: "Add permission" });
+      await input.fill(permission);
+      await input.press("Enter");
+      await expect(
+        dialog.getByRole("button", { name: `Remove ${permission}` }),
+      ).toBeVisible();
     }
     await dialog.getByRole("button", { name: "Create", exact: true }).click();
     await expect(dialog).toBeHidden();

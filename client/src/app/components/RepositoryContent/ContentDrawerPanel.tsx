@@ -22,11 +22,13 @@ import { resolvePulpType } from "@app/queries/utils/pulpHref";
 
 interface IContentDrawerPanelProps {
   href: string | null;
+  versionHref: string;
   onClose: () => void;
 }
 
 export const ContentDrawerPanel: React.FC<IContentDrawerPanelProps> = ({
   href,
+  versionHref,
   onClose,
 }) => {
   const { data } = useContentDetailQuery({ href });
@@ -73,7 +75,7 @@ export const ContentDrawerPanel: React.FC<IContentDrawerPanelProps> = ({
             </DrawerActions>
           </DrawerHead>
           <DrawerPanelBody>
-            <PluginContentPanel href={href} />
+            <PluginContentPanel href={href} versionHref={versionHref} />
           </DrawerPanelBody>
         </>
       )}

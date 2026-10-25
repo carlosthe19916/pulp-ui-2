@@ -22,12 +22,9 @@ import { getContentType } from "@catalog";
 import type {
   ContentTypeKey,
   ContentTypePage,
-  ContentTypeRow,
-  IContentTypeAllListParams,
   IContentTypeListParams,
 } from "./contentTypes";
 import { waitForTask } from "./tasks";
-import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -52,8 +49,6 @@ export const contentKeys = {
     [...contentKeys.list(), domain, params] as const,
   typeListQuery: (domain: IPulpDomain, pulpType: string, params: object) =>
     [...contentKeys.list(), domain, pulpType, params] as const,
-  typeAllListQuery: (domain: IPulpDomain, pulpType: string, params: object) =>
-    [...contentKeys.list(), "all", domain, pulpType, params] as const,
   /** A `fields` subset gets its own slot under the full detail, so invalidation covers both. */
   detailQuery: (contentHref: string, fields?: string[]) =>
     fields
@@ -182,59 +177,6 @@ export const useContentTypeListQueries = <K extends ContentTypeKey>({
       ...contentTypeListQueryOptions({ domain, pulpType, params }),
       enabled: !!getContentType(pulpType)?.apiPath,
     })),
-  });
-};
-
-/**
- * Every page of one content type's list, for small sets matched in the browser
- * (e.g. a version's signatures) when the endpoint has no `__in` filter for the link.
- */
-export const allContentTypeListQueryOptions = <K extends ContentTypeKey>({
-  domain,
-  pulpType,
-  params,
-  options,
-}: {
-  domain: IPulpDomain;
-  pulpType: K;
-  params: IContentTypeAllListParams<K>;
-  options?: ContentTypeListOptions<K>;
-}) =>
-  queryOptions<ContentTypePage<K>, DrfAxiosError>({
-    ...options,
-    queryKey: contentKeys.typeAllListQuery(domain, pulpType, params),
-    queryFn: async (): Promise<ContentTypePage<K>> => {
-      const { results, count } = await fetchAllPages<ContentTypeRow<K>>(
-        async (offset, limit) => {
-          const response = await axiosInstance.get<ContentTypePage<K>>(
-            contentTypeUrl(pulpType, domain),
-            { params: { ...params, offset, limit } },
-          );
-          return response.data;
-        },
-      );
-      return {
-        count,
-        next: null,
-        previous: null,
-        results,
-      } as ContentTypePage<K>;
-    },
-  });
-
-export const useContentTypeAllQuery = <K extends ContentTypeKey>({
-  pulpType,
-  params,
-  options,
-}: {
-  pulpType: K;
-  params: IContentTypeAllListParams<K>;
-  options?: ContentTypeListOptions<K>;
-}) => {
-  const domain = useSelectedDomain();
-  return useQuery({
-    ...allContentTypeListQueryOptions({ domain, pulpType, params, options }),
-    enabled: !!getContentType(pulpType)?.apiPath && options?.enabled !== false,
   });
 };
 

@@ -11,7 +11,6 @@ import {
 } from "@patternfly/react-core";
 
 import {
-  useContentTypeAllQuery,
   useContentTypeListQueries,
   useContentTypeListQuery,
 } from "@app/queries/content";
@@ -69,18 +68,11 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
       fields: ["pulp_href"],
     })),
   });
-  // Deprecations link to a collection with no `__in` filter, so fetch the version's
-  // (small) set once and match here.
-  const deprecations = useContentTypeAllQuery({
-    pulpType: "ansible.collection_deprecation",
-    params: { repository_version: versionHref, fields: ["namespace", "name"] },
-  });
   const signed = new Set(
     collections
       .filter((_, index) => (signatureProbes[index]?.data?.count ?? 0) > 0)
       .map((collection) => collection.pulp_href),
   );
-  const deprecated = new Set(deprecations.data?.results.map(fqcn));
 
   return (
     <BrowseDataList
@@ -116,10 +108,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
             </FlexItem>
             <FlexItem>
               <StatusBadges
-                statuses={[
-                  signed.has(collection.pulp_href ?? "") && "signed",
-                  deprecated.has(fqcn(collection)) && "deprecated",
-                ]}
+                statuses={[signed.has(collection.pulp_href ?? "") && "signed"]}
               />
             </FlexItem>
           </Flex>
@@ -153,6 +142,47 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
           </Flex>
         </Flex>
       )}
+    />
+  );
+};
+
+/**
+ * Deprecated collections. A deprecation names a collection only by namespace and name,
+ * and the endpoint can't filter by either, so it is listed here rather than as a badge.
+ */
+export const AnsibleDeprecations: React.FC<IBrowseContext> = ({
+  versionHref,
+  selectedHref,
+  onSelect,
+  writes,
+}) => {
+  const list = useBrowseListState();
+  const { data, isLoading, error } = useContentTypeListQuery({
+    pulpType: "ansible.collection_deprecation",
+    params: {
+      ...list.params,
+      repository_version: versionHref,
+      fields: ["pulp_href", "namespace", "name"],
+    },
+  });
+
+  return (
+    <BrowseTable
+      ariaLabel="Deprecated collections"
+      list={list}
+      rows={data?.results ?? []}
+      count={data?.count ?? 0}
+      isLoading={isLoading}
+      error={error}
+      emptyTitle="No deprecated collections"
+      rowHref={(deprecation) => deprecation.pulp_href}
+      selectedHref={selectedHref}
+      onSelect={onSelect}
+      writes={writes}
+      columns={[
+        { title: "Collection", cell: (d) => fqcn(d) },
+        { title: "Namespace", cell: (d) => d.namespace },
+      ]}
     />
   );
 };

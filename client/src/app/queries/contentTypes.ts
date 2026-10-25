@@ -253,9 +253,3 @@ export type ContentTypePage<K extends ContentTypeKey> =
 /** A page of one content type's list: the spec's filters, multi-field `ordering`, required `limit`. */
 export type IContentTypeListParams<K extends ContentTypeKey> =
   MultiOrderListParams<IContentTypeMap[K]["data"]>;
-
-/** The same params for a fetch-all query (paging is managed by the loop). */
-export type IContentTypeAllListParams<K extends ContentTypeKey> = Omit<
-  IContentTypeListParams<K>,
-  "limit" | "offset"
->;

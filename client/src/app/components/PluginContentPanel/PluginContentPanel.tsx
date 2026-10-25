@@ -59,7 +59,10 @@ const PANEL_BY_TYPE: Record<string, React.FC<IPluginContentProps>> = {
 };
 
 /** Registry-style view of a content unit (PyPI for Python, Maven Central for Maven, ...). */
-export const PluginContentPanel: React.FC<IPluginContentProps> = ({ href }) => {
+export const PluginContentPanel: React.FC<IPluginContentProps> = ({
+  href,
+  versionHref,
+}) => {
   const Panel = PANEL_BY_TYPE[resolvePulpType(href) ?? ""] ?? BaseContent;
-  return <Panel href={href} />;
+  return <Panel href={href} versionHref={versionHref} />;
 };

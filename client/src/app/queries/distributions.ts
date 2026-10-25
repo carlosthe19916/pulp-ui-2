@@ -13,6 +13,7 @@ import type {
   DistributionsListData,
   PaginatedDistributionResponseList,
 } from "@app/client";
+import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
@@ -25,6 +26,21 @@ import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 export const DistributionsQueryKey = "distributions";
 
 export type IDistributionListParams = ListParams<DistributionsListData>;
+
+/**
+ * The distributions picker of a repository ("Use this repository"): the first page of
+ * those serving it directly. Browse reuses the page (same cache slot) and takes the
+ * picker's default for its install commands. Distributions serving one of its
+ * publications can't be found by a filter, so they aren't listed.
+ */
+export const repositoryDistributionsPickerParams = (
+  repositoryHref: string,
+): IDistributionListParams => ({
+  repository: repositoryHref,
+  ordering: "name",
+  limit: DROPDOWN_PAGE_SIZE,
+  offset: 0,
+});
 
 /**
  * Query-key factory mirroring the REST paths; identifying segments precede params so a

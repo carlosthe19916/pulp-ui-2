@@ -1,7 +1,14 @@
 import type React from "react";
 
+import { PaginationVariant } from "@patternfly/react-core";
+import { useDataViewPagination } from "@patternfly/react-data-view";
+
 import type { DebReleaseResponse, DebSourcePackageResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
+import { ListPagination } from "@app/components/ListPagination";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
 
 import type { IPluginContentProps } from "./contentFields";
 import { facts, links } from "./contentFields";
@@ -15,17 +22,98 @@ import {
   StorageFacts,
 } from "./ContentPanelLayout";
 
+interface IReleaseValuesProps {
+  /** The release's `distribution` name, which its component/architecture units carry. */
+  distribution: string;
+  versionHref: string;
+}
+
+/** The version's `deb.release_component` units for one release, paged. */
+const ReleaseComponents: React.FC<IReleaseValuesProps> = ({
+  distribution,
+  versionHref,
+}) => {
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { data } = useContentTypeListQuery({
+    pulpType: "deb.release_component",
+    params: {
+      repository_version: versionHref,
+      distribution,
+      ordering: ["component"],
+      fields: ["component"],
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
+  });
+  return (
+    <ContentSection title={`Components (${data?.count ?? 0})`}>
+      <LabelList
+        items={(data?.results ?? []).map((c) => c.component)}
+        emptyText="No components"
+      />
+      {data?.count ? (
+        <ListPagination
+          variant={PaginationVariant.bottom}
+          itemCount={data.count}
+          pagination={pagination}
+        />
+      ) : null}
+    </ContentSection>
+  );
+};
+
+/** The version's `deb.release_architecture` units for one release, paged. */
+const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
+  distribution,
+  versionHref,
+}) => {
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { data } = useContentTypeListQuery({
+    pulpType: "deb.release_architecture",
+    params: {
+      repository_version: versionHref,
+      distribution,
+      ordering: ["architecture"],
+      fields: ["architecture"],
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
+  });
+  return (
+    <ContentSection title={`Architectures (${data?.count ?? 0})`}>
+      <LabelList
+        items={(data?.results ?? []).map((a) => a.architecture)}
+        emptyText="No architectures"
+      />
+      {data?.count ? (
+        <ListPagination
+          variant={PaginationVariant.bottom}
+          itemCount={data.count}
+          pagination={pagination}
+        />
+      ) : null}
+    </ContentSection>
+  );
+};
+
 /**
  * A dist (`dists/<codename>/Release`): suite, origin, components and architectures.
  */
-export const DebReleaseContent: React.FC<IPluginContentProps> = ({ href }) => {
-  // TODO: pulp_deb leaves the release's `components` / `architectures` empty and
-  // stores them only as `deb.release_component` / `deb.release_architecture` content
-  // (linked by distribution name), so this shows "No components" while Browse shows
-  // them. Fix in pulp_deb by filling the release's own lists.
+export const DebReleaseContent: React.FC<IPluginContentProps> = ({
+  href,
+  versionHref,
+}) => {
   const { data, isLoading, error } = useContentDetailQuery<DebReleaseResponse>({
     href,
   });
+  // pulp_deb usually leaves the release's own `components` / `architectures` empty and
+  // stores them as `deb.release_component` / `deb.release_architecture` units linked by
+  // distribution name. Those units are shared across repositories, so they are read
+  // only within a repository version (Browse), never domain-wide.
+  const unitsScope =
+    versionHref && data?.distribution
+      ? { versionHref, distribution: data.distribution }
+      : null;
 
   return (
     <ContentPanelLayout
@@ -57,15 +145,23 @@ export const DebReleaseContent: React.FC<IPluginContentProps> = ({ href }) => {
         </>
       }
     >
-      <ContentSection title="Components">
-        <LabelList items={data?.components ?? []} emptyText="No components" />
-      </ContentSection>
-      <ContentSection title="Architectures">
-        <LabelList
-          items={data?.architectures ?? []}
-          emptyText="No architectures"
-        />
-      </ContentSection>
+      {unitsScope && !data?.components?.length ? (
+        <ReleaseComponents {...unitsScope} />
+      ) : (
+        <ContentSection title="Components">
+          <LabelList items={data?.components ?? []} emptyText="No components" />
+        </ContentSection>
+      )}
+      {unitsScope && !data?.architectures?.length ? (
+        <ReleaseArchitectures {...unitsScope} />
+      ) : (
+        <ContentSection title="Architectures">
+          <LabelList
+            items={data?.architectures ?? []}
+            emptyText="No architectures"
+          />
+        </ContentSection>
+      )}
     </ContentPanelLayout>
   );
 };

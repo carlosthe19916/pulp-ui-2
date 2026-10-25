@@ -14,7 +14,6 @@ import type {
   GroupsListData,
   GroupsRolesListData,
   GroupsUsersListData,
-  GroupUserResponse,
   PaginatedGroupResponseList,
   PaginatedGroupUserResponseList,
   PatchedGroup,
@@ -22,7 +21,6 @@ import type {
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { userKeys } from "./users";
-import { fetchAllPages } from "./utils/fetchAllPages";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -56,8 +54,6 @@ export const groupKeys = {
   detailQuery: (groupHref: string) => groupKeys.detail(groupHref),
   usersQuery: (groupHref: string, params: IGroupUserListParams) =>
     [...groupKeys.users(groupHref), params] as const,
-  usersAllQuery: (groupHref: string) =>
-    [...groupKeys.users(groupHref), "all"] as const,
   rolesQuery: (groupHref: string, params: IGroupRoleListParams) =>
     [...groupKeys.roles(groupHref), params] as const,
 };
@@ -141,35 +137,6 @@ export const groupUsersListQueryOptions = ({
     },
   });
 
-/** `groups_users_list` supports only limit/offset, so fetch all and sort/filter in memory. */
-export const allGroupUsersListQueryOptions = ({
-  groupHref,
-  options,
-}: {
-  groupHref: string;
-  options?: Omit<
-    UseQueryOptions<PaginatedGroupUserResponseList, DrfAxiosError>,
-    "queryKey" | "queryFn"
-  >;
-}) =>
-  queryOptions<PaginatedGroupUserResponseList, DrfAxiosError>({
-    ...options,
-    queryKey: groupKeys.usersAllQuery(groupHref),
-    queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
-      const { results, count } = await fetchAllPages<GroupUserResponse>(
-        async (offset, limit) => {
-          const response =
-            await axiosInstance.get<PaginatedGroupUserResponseList>(
-              `${toProxyHref(groupHref)}users/`,
-              { params: { offset, limit } },
-            );
-          return response.data;
-        },
-      );
-      return { count, next: null, previous: null, results };
-    },
-  });
-
 export const useGroupsListQuery = ({
   params,
   options,
@@ -196,16 +163,6 @@ export const useGroupUsersListQuery = ({
 }) =>
   useQuery({
     ...groupUsersListQueryOptions({ groupHref, params }),
-    enabled: !!groupHref,
-  });
-
-export const useAllGroupUsersListQuery = ({
-  groupHref,
-}: {
-  groupHref: string;
-}) =>
-  useQuery({
-    ...allGroupUsersListQueryOptions({ groupHref }),
     enabled: !!groupHref,
   });
 

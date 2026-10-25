@@ -5,8 +5,6 @@ import { Label, LabelGroup } from "@patternfly/react-core";
 const STATUS = {
   signed: { text: "Signed", color: "green" },
   attested: { text: "Provenance", color: "green" },
-  deprecated: { text: "Deprecated", color: "orange" },
-  yanked: { text: "Yanked", color: "orange" },
   prerelease: { text: "Prerelease", color: "purple" },
   multiArch: { text: "Multi-arch", color: "blue" },
 } as const;
