@@ -57,8 +57,10 @@ backend. Paths drop the `/api/pulp/{domain}/api/v3/` prefix.
 "non_field_errors": [...]}`, `403` / `404 {"detail": "..."}`.
 - RBAC scopes querysets, so an object the user can't see answers `404`, not `403`.
 - `{href}my_permissions/` returns the user's codenames on one object
-  (`file.change_filerepository`), including those from domain- and model-level roles. No
-  endpoint answers "may I create?".
+  (`file.change_filerepository`) from roles held on that object only, directly or through
+  their groups. Global (model-level) and domain-level roles, and superuser status, are left
+  out, although Pulp honours them: a user with a global owner role gets `[]` there yet may
+  change the object. No endpoint answers "may I create?".
 
 ## Filters
 
