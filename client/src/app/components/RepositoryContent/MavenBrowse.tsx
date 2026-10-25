@@ -125,6 +125,7 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
         },
         {
           title: "Latest",
+          width: 15,
           cell: (row) => {
             const latest = row.latest_releases[0];
             const build = latest ? snapshotBuild(latest) : "";
@@ -166,6 +167,7 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
         {
           title: "Updated",
           sort: list.sortProps("last_updated"),
+          width: 20,
           cell: (row) => formatDateTime(row.last_updated) ?? "—",
         },
       ]}

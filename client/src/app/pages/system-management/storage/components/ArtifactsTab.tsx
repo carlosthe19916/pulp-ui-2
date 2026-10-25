@@ -82,10 +82,10 @@ export const ArtifactsTab: React.FC = () => {
   const artifacts = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "File" },
-    { cell: "SHA-256" },
-    { cell: "Size", props: { sort: sortProps("size") } },
-    { cell: "Created", props: { sort: sortProps("pulp_created") } },
+    { cell: "File", props: { width: 30 } },
+    { cell: "SHA-256", props: { width: 40 } },
+    { cell: "Size", props: { sort: sortProps("size"), width: 10 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = artifacts.map((artifact) => ({

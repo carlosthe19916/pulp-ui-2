@@ -57,7 +57,12 @@ export const OstreeBranches: React.FC<IBrowseContext> = ({
           width: 50,
           cell: (ref) => ref.name,
         },
-        { title: "Commit", isTruncated: true, cell: (ref) => ref.checksum },
+        {
+          title: "Commit",
+          isTruncated: true,
+          width: 50,
+          cell: (ref) => ref.checksum,
+        },
       ]}
     />
   );

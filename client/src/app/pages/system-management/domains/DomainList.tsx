@@ -143,13 +143,13 @@ export const DomainList: React.FC = () => {
     { cell: "Name", props: { sort: sortProps("name"), width: 20 } },
     {
       cell: "Description",
-      props: { sort: sortProps("description"), width: 25 },
+      props: { sort: sortProps("description"), width: 20 },
     },
     { cell: "Storage", props: { sort: sortProps("storage_class"), width: 15 } },
     { cell: "Redirect", props: { width: 10 } },
-    { cell: "Hide guarded", props: { width: 15 } },
+    { cell: "Hide guarded", props: { width: 10 } },
     { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
-    { cell: "Status" },
+    { cell: "Status", props: { width: 10 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 

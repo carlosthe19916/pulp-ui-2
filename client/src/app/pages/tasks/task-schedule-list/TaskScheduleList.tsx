@@ -72,11 +72,14 @@ export const TaskScheduleList: React.FC = () => {
   const schedules = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "Task", props: { sort: sortProps("task_name") } },
-    { cell: "Interval" },
-    { cell: "Next dispatch", props: { sort: sortProps("next_dispatch") } },
-    { cell: "Last task" },
+    { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
+    { cell: "Task", props: { sort: sortProps("task_name"), width: 30 } },
+    { cell: "Interval", props: { width: 15 } },
+    {
+      cell: "Next dispatch",
+      props: { sort: sortProps("next_dispatch"), width: 15 },
+    },
+    { cell: "Last task", props: { width: 15 } },
   ];
   const rows: DataViewTr[] = schedules.map((schedule) => ({
     id: schedule.pulp_href,

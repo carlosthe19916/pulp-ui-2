@@ -43,10 +43,10 @@ export const RepositoryPublicationsTab: React.FC<
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Publication" },
-    { cell: "Type" },
-    { cell: "Repository Version" },
-    { cell: "Created" },
+    { cell: "Publication", props: { width: 30 } },
+    { cell: "Type", props: { width: 15 } },
+    { cell: "Repository Version", props: { width: 35 } },
+    { cell: "Created", props: { width: 20 } },
   ];
 
   const rows: DataViewTr[] = publications.map((pub) => {

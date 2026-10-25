@@ -71,9 +71,9 @@ export const UploadsTab: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Size", props: { sort: sortProps("size") } },
-    { cell: "Status" },
-    { cell: "Started", props: { sort: sortProps("pulp_created") } },
+    { cell: "Size", props: { sort: sortProps("size"), width: 30 } },
+    { cell: "Status", props: { width: 40 } },
+    { cell: "Started", props: { sort: sortProps("pulp_created"), width: 30 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = uploads.map((upload) => ({

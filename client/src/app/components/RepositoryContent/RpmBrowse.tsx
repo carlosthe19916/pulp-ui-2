@@ -81,15 +81,18 @@ export const RpmPackages: React.FC<IBrowseContext> = ({
         {
           title: "Summary",
           isTruncated: true,
+          width: 35,
           cell: (pkg) => pkg.summary || "—",
         },
         {
           title: "Arch",
           sort: list.sortProps("arch"),
+          width: 15,
           cell: (pkg) => pkg.arch,
         },
         {
           title: "Size",
+          width: 15,
           cell: (pkg) =>
             pkg.size_package ? prettyBytes(pkg.size_package) : "—",
         },
@@ -153,11 +156,13 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
         {
           title: "Type",
           sort: list.sortProps("type"),
+          width: 15,
           cell: (a) => a.type || "—",
         },
         {
           title: "Severity",
           sort: list.sortProps("severity"),
+          width: 15,
           cell: (a) =>
             a.severity ? (
               <Label isCompact color={severityColor(a.severity)}>
@@ -176,6 +181,7 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
         {
           title: "Issued",
           sort: list.sortProps("issued_date"),
+          width: 15,
           cell: (a) => formatDateTime(a.issued_date) ?? "—",
         },
       ]}
@@ -239,6 +245,7 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
         {
           title: "Module stream",
           sort: list.sortProps("name"),
+          width: 40,
           cell: (m) => (
             <>
               {m.name}:{m.stream}{" "}
@@ -253,10 +260,11 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
         {
           title: "Version",
           sort: list.sortProps("version"),
+          width: 20,
           cell: (m) => m.version,
         },
-        { title: "Context", cell: (m) => m.context },
-        { title: "Arch", cell: (m) => m.arch },
+        { title: "Context", width: 20, cell: (m) => m.context },
+        { title: "Arch", width: 20, cell: (m) => m.arch },
       ]}
     />
   );
@@ -300,15 +308,17 @@ export const RpmPackageGroups: React.FC<IBrowseContext> = ({
       onSelect={onSelect}
       writes={writes}
       columns={[
-        { title: "ID", cell: (g) => g.id },
-        { title: "Name", cell: (g) => g.name || "—" },
+        { title: "ID", width: 20, cell: (g) => g.id },
+        { title: "Name", width: 25, cell: (g) => g.name || "—" },
         {
           title: "Packages",
+          width: 10,
           cell: (g) => (Array.isArray(g.packages) ? g.packages.length : "—"),
         },
         {
           title: "Description",
           isTruncated: true,
+          width: 45,
           cell: (g) => g.description || "—",
         },
       ]}

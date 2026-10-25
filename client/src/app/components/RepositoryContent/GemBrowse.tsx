@@ -50,11 +50,16 @@ export const GemGems: React.FC<IBrowseContext> = ({
       writes={writes}
       columns={[
         { title: "Gem", width: 25, cell: (g) => g.name },
-        { title: "Version", cell: (g) => g.version },
-        { title: "Platform", cell: (g) => g.platform || "—" },
-        { title: "Requires Ruby", cell: (g) => g.required_ruby_version || "—" },
+        { title: "Version", width: 15, cell: (g) => g.version },
+        { title: "Platform", width: 20, cell: (g) => g.platform || "—" },
+        {
+          title: "Requires Ruby",
+          width: 20,
+          cell: (g) => g.required_ruby_version || "—",
+        },
         {
           title: "Status",
+          width: 20,
           cell: (g) => (
             <StatusBadges statuses={[!!g.prerelease && "prerelease"]} />
           ),

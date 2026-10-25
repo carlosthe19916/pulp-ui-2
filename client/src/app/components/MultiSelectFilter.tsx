@@ -144,7 +144,6 @@ export const MultiSelectFilter: React.FC<IMultiSelectFilterProps> = ({
             }
             onClick={() => setIsOpen((open) => !open)}
             isExpanded={isOpen}
-            style={{ width: "220px" }}
           >
             {title}
           </MenuToggle>

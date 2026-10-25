@@ -38,10 +38,10 @@ export const RepositoryDistributionsTab: React.FC<
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Name" },
-    { cell: "Base Path" },
-    { cell: "Base URL" },
-    { cell: "Type" },
+    { cell: "Name", props: { width: 25 } },
+    { cell: "Base Path", props: { width: 25 } },
+    { cell: "Base URL", props: { width: 35 } },
+    { cell: "Type", props: { width: 15 } },
   ];
 
   const rows: DataViewTr[] = distributions.map((distribution) => {

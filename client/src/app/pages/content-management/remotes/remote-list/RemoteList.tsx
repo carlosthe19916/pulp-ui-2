@@ -154,7 +154,7 @@ export const RemoteList: React.FC = () => {
       cell: "URL",
       props: {
         sort: sortProps("url"),
-        width: 50,
+        width: 40,
       },
     },
     {
@@ -170,7 +170,7 @@ export const RemoteList: React.FC = () => {
         width: 10,
       },
     },
-    { cell: "Status" },
+    { cell: "Status", props: { width: 10 } },
     {
       cell: "",
       props: {

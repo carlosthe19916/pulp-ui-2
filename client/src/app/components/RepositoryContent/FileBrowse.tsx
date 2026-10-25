@@ -127,12 +127,12 @@ export const FileFiles: React.FC<IBrowseContext> = ({
         {
           title: "SHA256",
           isTruncated: true,
+          width: 40,
           cell: (file) => file.sha256 ?? "—",
         },
         {
           title: "",
           screenReaderText: "Download",
-          width: 10,
           cell: (file) =>
             baseUrl ? (
               <Button

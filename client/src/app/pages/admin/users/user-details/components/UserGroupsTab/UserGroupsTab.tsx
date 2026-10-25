@@ -103,7 +103,7 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 100 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 

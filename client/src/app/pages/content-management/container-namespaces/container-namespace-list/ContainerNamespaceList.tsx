@@ -128,9 +128,9 @@ export const ContainerNamespaceList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "Labels" },
-    { cell: "Created", props: { sort: sortProps("pulp_created") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 35 } },
+    { cell: "Labels", props: { width: 45 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = namespaces.map((namespace) => ({

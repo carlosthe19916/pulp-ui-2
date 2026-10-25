@@ -127,10 +127,10 @@ export const AcsList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name" },
-    { cell: "Remote" },
-    { cell: "Paths" },
-    { cell: "Last refreshed" },
+    { cell: "Name", props: { width: 25 } },
+    { cell: "Remote", props: { width: 25 } },
+    { cell: "Paths", props: { width: 30 } },
+    { cell: "Last refreshed", props: { width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = sources.map((acs) => ({
@@ -139,11 +139,11 @@ export const AcsList: React.FC = () => {
       { cell: acs.name, props: { dataLabel: "Name" } },
       {
         cell: <NamedResourceHrefLink kind="remote" href={acs.remote} />,
-        props: { dataLabel: "Remote" },
+        props: { dataLabel: "Remote", modifier: "truncate" },
       },
       {
         cell: acs.paths?.length ? acs.paths.join(", ") : "—",
-        props: { dataLabel: "Paths" },
+        props: { dataLabel: "Paths", modifier: "truncate" },
       },
       {
         cell: formatDateTime(acs.last_refreshed) ?? "Never",

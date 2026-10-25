@@ -180,8 +180,8 @@ export const AnsibleDeprecations: React.FC<IBrowseContext> = ({
       onSelect={onSelect}
       writes={writes}
       columns={[
-        { title: "Collection", cell: (d) => fqcn(d) },
-        { title: "Namespace", cell: (d) => d.namespace },
+        { title: "Collection", width: 60, cell: (d) => fqcn(d) },
+        { title: "Namespace", width: 40, cell: (d) => d.namespace },
       ]}
     />
   );
@@ -224,16 +224,23 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
       onSelect={onSelect}
       writes={writes}
       columns={[
-        { title: "Name", sort: list.sortProps("name"), cell: (n) => n.name },
+        {
+          title: "Name",
+          width: 20,
+          sort: list.sortProps("name"),
+          cell: (n) => n.name,
+        },
         {
           title: "Company",
           sort: list.sortProps("company"),
+          width: 20,
           cell: (n) => n.company || "—",
         },
-        { title: "Email", cell: (n) => n.email || "—" },
+        { title: "Email", width: 20, cell: (n) => n.email || "—" },
         {
           title: "Description",
           isTruncated: true,
+          width: 40,
           cell: (n) => n.description || "—",
         },
       ]}
@@ -284,16 +291,19 @@ export const AnsibleRoles: React.FC<IBrowseContext> = ({
         {
           title: "Role",
           sort: list.sortProps("name"),
+          width: 50,
           cell: (role) => fqcn(role),
         },
         {
           title: "Namespace",
           sort: list.sortProps("namespace"),
+          width: 30,
           cell: (role) => role.namespace,
         },
         {
           title: "Version",
           sort: list.sortProps("version"),
+          width: 20,
           cell: (role) => role.version,
         },
       ]}

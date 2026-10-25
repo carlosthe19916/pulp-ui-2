@@ -157,13 +157,13 @@ export const RepositoryList: React.FC = () => {
       cell: "Description",
       props: {
         sort: sortProps("description"),
-        width: 35,
+        width: 30,
       },
     },
     {
       cell: "Type",
       props: {
-        width: 20,
+        width: 15,
       },
     },
     {
@@ -172,7 +172,7 @@ export const RepositoryList: React.FC = () => {
         width: 20,
       },
     },
-    { cell: "Status" },
+    { cell: "Status", props: { width: 10 } },
     {
       cell: "",
       props: {

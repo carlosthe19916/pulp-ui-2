@@ -75,16 +75,18 @@ export const DebReleases: React.FC<IBrowseContext> = ({
       onSelect={onSelect}
       writes={writes}
       columns={[
-        { title: "Codename", cell: (r) => r.codename },
-        { title: "Suite", cell: (r) => r.suite },
-        { title: "Origin", cell: (r) => r.origin || "—" },
-        { title: "Version", cell: (r) => r.version || "—" },
+        { title: "Codename", width: 15, cell: (r) => r.codename },
+        { title: "Suite", width: 15, cell: (r) => r.suite },
+        { title: "Origin", width: 15, cell: (r) => r.origin || "—" },
+        { title: "Version", width: 15, cell: (r) => r.version || "—" },
         {
           title: "Components",
+          width: 20,
           cell: (r) => <Labels items={r.components} />,
         },
         {
           title: "Architectures",
+          width: 20,
           cell: (r) => <Labels items={r.architectures} />,
         },
       ]}
@@ -146,23 +148,27 @@ export const DebPackages: React.FC<IBrowseContext> = ({
         {
           title: "Package",
           sort: list.sortProps("package"),
+          width: 25,
           cell: (p) => p.package,
         },
         {
           title: "Version",
           sort: list.sortProps("version"),
+          width: 15,
           cell: (p) => p.version,
         },
         {
           title: "Architecture",
           sort: list.sortProps("architecture"),
+          width: 15,
           cell: (p) => p.architecture,
         },
-        { title: "Section", cell: (p) => p.section || "—" },
-        { title: "Priority", cell: (p) => p.priority || "—" },
+        { title: "Section", width: 10, cell: (p) => p.section || "—" },
+        { title: "Priority", width: 10, cell: (p) => p.priority || "—" },
         {
           title: "Maintainer",
           isTruncated: true,
+          width: 25,
           cell: (p) => p.maintainer || "—",
         },
       ]}
@@ -219,18 +225,26 @@ export const DebSourcePackages: React.FC<IBrowseContext> = ({
         {
           title: "Source",
           sort: list.sortProps("source"),
+          width: 25,
           cell: (s) => s.source,
         },
         {
           title: "Version",
           sort: list.sortProps("version"),
+          width: 15,
           cell: (s) => s.version,
         },
-        { title: "Format", cell: (s) => s.format || "—" },
-        { title: "Binaries", isTruncated: true, cell: (s) => s.binary || "—" },
+        { title: "Format", width: 10, cell: (s) => s.format || "—" },
+        {
+          title: "Binaries",
+          width: 25,
+          isTruncated: true,
+          cell: (s) => s.binary || "—",
+        },
         {
           title: "Maintainer",
           isTruncated: true,
+          width: 25,
           cell: (s) => s.maintainer || "—",
         },
       ]}

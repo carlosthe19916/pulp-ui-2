@@ -8,6 +8,7 @@ import {
   DataListItem,
   DataListItemCells,
   DataListItemRow,
+  Flex,
   Skeleton,
 } from "@patternfly/react-core";
 
@@ -74,8 +75,16 @@ export const ContentDataList: React.FC<IContentDataListProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell key="skeleton">
-                    <Skeleton width="40%" screenreaderText="Loading content" />
-                    <Skeleton width="25%" style={{ marginBlockStart: "8px" }} />
+                    <Flex
+                      direction={{ default: "column" }}
+                      spaceItems={{ default: "spaceItemsSm" }}
+                    >
+                      <Skeleton
+                        width="40%"
+                        screenreaderText="Loading content"
+                      />
+                      <Skeleton width="25%" />
+                    </Flex>
                   </DataListCell>,
                 ]}
               />

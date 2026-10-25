@@ -166,15 +166,18 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
           {
             title: "Tag",
             sort: list.sortProps("name"),
+            width: 25,
             cell: (tag) => tag.name,
           },
           {
             title: "Digest",
             isTruncated: true,
+            width: 30,
             cell: (tag) => byHref.get(tag.tagged_manifest)?.digest ?? "—",
           },
           {
             title: "Platforms",
+            width: 20,
             cell: (tag) => {
               const manifest = byHref.get(tag.tagged_manifest);
               return platformsOf(manifest).join(", ") || "—";
@@ -182,6 +185,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
           },
           {
             title: "Size",
+            width: 10,
             cell: (tag) => {
               const size = byHref.get(
                 tag.tagged_manifest,
@@ -191,6 +195,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
           },
           {
             title: "Status",
+            width: 15,
             cell: (tag) => (
               <StatusBadges
                 statuses={[
@@ -205,7 +210,6 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
                 {
                   title: "",
                   screenReaderText: "Untag",
-                  width: 10 as const,
                   cell: (tag: { name: string }) => (
                     <GatedButton
                       variant="link"
@@ -291,6 +295,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
           title: "Media type",
           sort: list.sortProps("media_type"),
           isTruncated: true,
+          width: 25,
           cell: (manifest) => (
             <Content component={ContentVariants.small}>
               {manifest.media_type}
@@ -300,6 +305,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
         {
           title: "Platform",
           sort: list.sortProps("architecture"),
+          width: 20,
           cell: (manifest) =>
             isMultiArch(manifest)
               ? `${manifest.listed_manifests.length} platforms`
@@ -307,6 +313,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
         },
         {
           title: "Size",
+          width: 10,
           cell: (manifest) =>
             manifest.compressed_image_size
               ? prettyBytes(manifest.compressed_image_size)
@@ -314,6 +321,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
         },
         {
           title: "Status",
+          width: 15,
           cell: (manifest) => (
             <StatusBadges
               statuses={[

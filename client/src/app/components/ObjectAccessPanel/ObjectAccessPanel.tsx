@@ -153,7 +153,10 @@ export const ObjectAccessPanel: React.FC<IObjectAccessPanelProps> = ({
         </Toolbar>
         <DataViewTable
           aria-label="Object roles"
-          columns={["Role", "Users and groups"]}
+          columns={[
+            { cell: "Role", props: { width: 40 } },
+            { cell: "Users and groups", props: { width: 60 } },
+          ]}
           rows={rows}
           bodyStates={bodyStates}
         />

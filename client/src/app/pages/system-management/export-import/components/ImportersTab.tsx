@@ -157,8 +157,8 @@ export const ImportersTab: React.FC = () => {
   const importers = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name" },
-    { cell: "Repository mapping" },
+    { cell: "Name", props: { width: 40 } },
+    { cell: "Repository mapping", props: { width: 60 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = importers.map((importer) => ({

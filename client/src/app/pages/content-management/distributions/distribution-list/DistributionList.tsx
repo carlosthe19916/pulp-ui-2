@@ -146,10 +146,10 @@ export const DistributionList: React.FC = () => {
 
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
-    { cell: "Base Path", props: { width: 30 } },
-    { cell: "Type", props: { width: 20 } },
+    { cell: "Base Path", props: { width: 25 } },
+    { cell: "Type", props: { width: 15 } },
     { cell: "Repository", props: { width: 25 } },
-    { cell: "Status" },
+    { cell: "Status", props: { width: 10 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 

@@ -153,11 +153,11 @@ export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
         <DataViewTable
           aria-label="Blocklist"
           columns={[
-            "Name",
-            "Version",
-            "Filename",
-            "Added by",
-            "Added",
+            { cell: "Name", props: { width: 25 } },
+            { cell: "Version", props: { width: 15 } },
+            { cell: "Filename", props: { width: 30 } },
+            { cell: "Added by", props: { width: 15 } },
+            { cell: "Added", props: { width: 15 } },
             { cell: "", props: { screenReaderText: "Actions" } },
           ]}
           rows={rows}

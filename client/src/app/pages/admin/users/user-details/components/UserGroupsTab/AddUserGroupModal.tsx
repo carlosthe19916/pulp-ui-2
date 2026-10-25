@@ -92,7 +92,7 @@ const AddUserGroupModalInner: React.FC<IAddUserGroupModalInnerProps> = ({
   const memberHrefs = new Set(user.groups?.map((group) => group.pulp_href));
 
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 100 } },
   ];
 
   const rows: GroupRow[] = (data?.results ?? []).flatMap((group) =>

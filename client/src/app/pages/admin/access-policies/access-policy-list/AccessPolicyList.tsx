@@ -137,9 +137,9 @@ export const AccessPolicyList: React.FC = () => {
   const policies = data?.results ?? [];
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Viewset", props: { sort: sortProps("viewset_name") } },
-    { cell: "Statements" },
-    { cell: "Status", props: { sort: sortProps("customized") } },
+    { cell: "Viewset", props: { sort: sortProps("viewset_name"), width: 60 } },
+    { cell: "Statements", props: { width: 20 } },
+    { cell: "Status", props: { sort: sortProps("customized"), width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = policies.map((policy) => ({

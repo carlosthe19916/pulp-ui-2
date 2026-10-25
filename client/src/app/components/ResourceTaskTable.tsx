@@ -6,7 +6,6 @@ import dayjs from "dayjs";
 import {
   Flex,
   FlexItem,
-  Pagination,
   PaginationVariant,
   Tooltip,
 } from "@patternfly/react-core";
@@ -20,6 +19,8 @@ import {
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { GatedButton } from "@app/components/GatedButton";
+import { ListPagination } from "@app/components/ListPagination";
+import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
@@ -53,9 +54,8 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
   prn,
 }) => {
   const { addNotification } = useNotifications();
-  const { page, perPage, onSetPage, onPerPageSelect } = useDataViewPagination({
-    perPage: 5,
-  });
+  const pagination = useDataViewPagination({ perPage: 10 });
+  const { page, perPage } = pagination;
   const { data, isLoading, error } = useTasksListQuery({
     params: {
       reserved_resources: prn,
@@ -96,9 +96,9 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Action" },
-    { cell: "State" },
-    { cell: "Created" },
+    { cell: "Action", props: { width: 40 } },
+    { cell: "State", props: { width: 30 } },
+    { cell: "Created", props: { width: 30 } },
     { cell: "", props: { screenReaderText: "Task actions" } },
   ];
 
@@ -167,7 +167,7 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
     isLoading,
     error,
     isEmpty: tasks.length === 0,
-    emptyState: "No tasks found for this resource.",
+    emptyState: <TableEmptyState title="No tasks for this resource" />,
   });
 
   return (
@@ -180,18 +180,10 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
       />
       <DataViewToolbar
         pagination={
-          <Pagination
+          <ListPagination
             variant={PaginationVariant.bottom}
-            isCompact
             itemCount={totalCount}
-            page={page}
-            perPage={perPage}
-            perPageOptions={[
-              { title: "5", value: 5 },
-              { title: "10", value: 10 },
-            ]}
-            onSetPage={onSetPage}
-            onPerPageSelect={onPerPageSelect}
+            pagination={pagination}
           />
         }
       />

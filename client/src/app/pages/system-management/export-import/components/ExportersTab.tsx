@@ -143,10 +143,11 @@ export const ExportersTab: React.FC = () => {
   const exporters = (data?.results ?? []) as Exporter[];
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name" },
-    { cell: "Path" },
+    { cell: "Name", props: { width: 30 } },
+    { cell: "Path", props: { width: 40 } },
     {
       cell: exporterType.apiPath === "core/pulp" ? "Repositories" : "Method",
+      props: { width: 30 },
     },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
@@ -154,7 +155,10 @@ export const ExportersTab: React.FC = () => {
     id: exporter.pulp_href,
     row: [
       { cell: exporter.name, props: { dataLabel: "Name" } },
-      { cell: exporter.path, props: { dataLabel: "Path" } },
+      {
+        cell: exporter.path,
+        props: { dataLabel: "Path", modifier: "truncate" },
+      },
       {
         cell: Array.isArray(exporter.repositories)
           ? exporter.repositories.length

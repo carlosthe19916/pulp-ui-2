@@ -116,10 +116,10 @@ export const ContentGuardList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name", props: { sort: sortProps("name") } },
-    { cell: "Type", props: { sort: sortProps("pulp_type") } },
-    { cell: "Description" },
-    { cell: "Created", props: { sort: sortProps("pulp_created") } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
+    { cell: "Type", props: { sort: sortProps("pulp_type"), width: 20 } },
+    { cell: "Description", props: { width: 35 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = guards.map((guard) => {
@@ -132,7 +132,10 @@ export const ContentGuardList: React.FC = () => {
           cell: <Label isCompact>{type?.label ?? "Unknown"}</Label>,
           props: { dataLabel: "Type" },
         },
-        { cell: guard.description || "—", props: { dataLabel: "Description" } },
+        {
+          cell: guard.description || "—",
+          props: { dataLabel: "Description", modifier: "truncate" },
+        },
         {
           cell: formatDateTime(guard.pulp_created) ?? "—",
           props: { dataLabel: "Created" },

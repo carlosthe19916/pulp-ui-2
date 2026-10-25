@@ -76,8 +76,8 @@ export const AnsibleCollectionList: React.FC = () => {
     `${collection.namespace}.${collection.name}`;
 
   const columns: DataViewTh[] = [
-    { cell: "Namespace", props: { sort: sortProps("namespace") } },
-    { cell: "Name", props: { sort: sortProps("name") } },
+    { cell: "Namespace", props: { sort: sortProps("namespace"), width: 50 } },
+    { cell: "Name", props: { sort: sortProps("name"), width: 50 } },
   ];
   const rows: DataViewTr[] = collections.map((collection) => ({
     id: idOf(collection),

@@ -63,11 +63,11 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
-    { cell: "Version" },
-    { cell: "Content" },
-    { cell: "Added" },
-    { cell: "Removed" },
-    { cell: "Created" },
+    { cell: "Version", props: { width: 15 } },
+    { cell: "Content", props: { width: 25 } },
+    { cell: "Added", props: { width: 20 } },
+    { cell: "Removed", props: { width: 20 } },
+    { cell: "Created", props: { width: 20 } },
     ...(onVersionAction
       ? [{ cell: "", props: { screenReaderText: "Actions" } }]
       : []),

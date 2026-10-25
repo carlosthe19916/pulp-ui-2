@@ -48,8 +48,13 @@ export const NpmPackages: React.FC<IBrowseContext> = ({
       writes={writes}
       columns={[
         { title: "Package", width: 30, cell: (p) => p.name },
-        { title: "Version", cell: (p) => p.version },
-        { title: "Tarball", isTruncated: true, cell: (p) => p.relative_path },
+        { title: "Version", width: 20, cell: (p) => p.version },
+        {
+          title: "Tarball",
+          isTruncated: true,
+          width: 50,
+          cell: (p) => p.relative_path,
+        },
       ]}
     />
   );

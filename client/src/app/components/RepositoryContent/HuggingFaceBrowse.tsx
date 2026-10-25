@@ -64,6 +64,7 @@ const RepoTypeFiles: React.FC<IBrowseContext & { repoType: RepoTypeEnum }> = ({
         },
         {
           title: "Revision",
+          width: 15,
           isTruncated: true,
           cell: (f) => f.revision || "—",
         },
@@ -77,11 +78,13 @@ const RepoTypeFiles: React.FC<IBrowseContext & { repoType: RepoTypeEnum }> = ({
         {
           title: "Size",
           sort: list.sortProps("size"),
+          width: 10,
           cell: (f) => (f.size ? prettyBytes(f.size) : "—"),
         },
         {
           title: "Modified",
           sort: list.sortProps("last_modified"),
+          width: 15,
           cell: (f) => formatDateTime(f.last_modified) ?? "—",
         },
       ]}

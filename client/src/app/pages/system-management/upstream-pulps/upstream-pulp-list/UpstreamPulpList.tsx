@@ -138,10 +138,10 @@ export const UpstreamPulpList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
-    { cell: "Name" },
-    { cell: "URL" },
-    { cell: "Policy" },
-    { cell: "Last replication" },
+    { cell: "Name", props: { width: 25 } },
+    { cell: "URL", props: { width: 40 } },
+    { cell: "Policy", props: { width: 15 } },
+    { cell: "Last replication", props: { width: 20 } },
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
   const rows: DataViewTr[] = upstreams.map((upstream) => ({
@@ -150,7 +150,7 @@ export const UpstreamPulpList: React.FC = () => {
       { cell: upstream.name, props: { dataLabel: "Name" } },
       {
         cell: `${upstream.base_url}${upstream.api_root}${upstream.domain ? `${upstream.domain}/` : ""}`,
-        props: { dataLabel: "URL" },
+        props: { dataLabel: "URL", modifier: "truncate" },
       },
       { cell: upstream.policy ?? "all", props: { dataLabel: "Policy" } },
       {

@@ -65,18 +65,27 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
       writes={writes}
       columns={[
         { title: "Project", width: 20, cell: (p) => p.name },
-        { title: "Version", cell: (p) => p.version },
+        { title: "Version", width: 10, cell: (p) => p.version },
         {
           title: "File",
           isTruncated: true,
-          width: 35,
+          width: 30,
           cell: (p) => p.filename,
         },
-        { title: "Type", cell: (p) => p.packagetype || "—" },
-        { title: "Requires Python", cell: (p) => p.requires_python || "—" },
-        { title: "Size", cell: (p) => (p.size ? prettyBytes(p.size) : "—") },
+        { title: "Type", width: 10, cell: (p) => p.packagetype || "—" },
+        {
+          title: "Requires Python",
+          width: 10,
+          cell: (p) => p.requires_python || "—",
+        },
+        {
+          title: "Size",
+          width: 10,
+          cell: (p) => (p.size ? prettyBytes(p.size) : "—"),
+        },
         {
           title: "Status",
+          width: 10,
           cell: (p) => (
             <StatusBadges
               statuses={[attested.has(p.pulp_href ?? "") && "attested"]}
