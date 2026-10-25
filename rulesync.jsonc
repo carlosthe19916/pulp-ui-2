@@ -1,6 +1,10 @@
 {
   "targets": {
-    "claudecode": { "rules": { "includeRoot": false } },
-    "cursor": ["rules"]
-  }
+    "claudecode": {
+      "rules": { "includeRoot": false },
+      "mcp": {},
+      "skills": {},
+    },
+    "cursor": ["rules", "mcp", "skills"],
+  },
 }
