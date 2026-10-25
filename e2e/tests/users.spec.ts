@@ -175,28 +175,8 @@ test.describe("Users", () => {
 
   // --- Create -------------------------------------------------------------
 
-  test("USR-CRE-01 form fields and defaults", async ({ page, usersPage }) => {
-    const modal = await openCreate(page, usersPage);
-    const textboxes = modal.dialog.getByRole("textbox");
-    await expect(textboxes).toHaveCount(5);
-    for (const [index, name] of [
-      "Username",
-      "Password",
-      "Email",
-      "First name",
-      "Last name",
-    ].entries()) {
-      await expect(textboxes.nth(index)).toHaveAccessibleName(name);
-    }
-    await expect(modal.field("Username")).toHaveAttribute("required", "");
-    await expect(modal.field("Password")).toHaveAttribute("required", "");
-    await expect(modal.field("Password")).toHaveAttribute("type", "password");
-    const checkboxes = modal.dialog.getByRole("checkbox");
-    await expect(checkboxes.nth(0)).toHaveAccessibleName("Active");
-    await expect(checkboxes.nth(1)).toHaveAccessibleName("Staff status");
-    await expect(modal.checkbox("Active")).toBeChecked();
-    await expect(modal.checkbox("Staff status")).not.toBeChecked();
-  });
+  // USR-CRE-01 (form fields and defaults) is a component test:
+  // client/src/app/components/UserModal/UserModal.test.tsx.
 
   type Outcome =
     { created: string } | { clientError: string } | { serverError: string };
@@ -207,16 +187,9 @@ test.describe("Users", () => {
     seed?: (base: string) => string;
     outcome: (base: string) => Outcome;
   }[] = [
-    {
-      label: "(empty)",
-      make: () => "",
-      outcome: () => ({ clientError: "Username is required" }),
-    },
-    {
-      label: "only spaces",
-      make: () => "        ",
-      outcome: () => ({ serverError: "This field may not be blank." }),
-    },
+    // Client "required" validation is a component test; these are the main
+    // real-backend outcomes: created, trimmed, accepted characters, and the
+    // server's own rejections.
     {
       label: "a new, simple name",
       make: (base) => base,
@@ -228,41 +201,20 @@ test.describe("Users", () => {
       outcome: (base) => ({ created: base }),
     },
     {
+      label: "with symbols, spaces and unicode",
+      make: (base) => `${base}.b-c_d é/f`,
+      outcome: (base) => ({ created: `${base}.b-c_d é/f` }),
+    },
+    {
+      label: "only spaces",
+      make: () => "        ",
+      outcome: () => ({ serverError: "This field may not be blank." }),
+    },
+    {
       label: "an existing username",
       make: (base) => base,
       seed: (base) => base,
       outcome: () => ({ serverError: "This field must be unique." }),
-    },
-    {
-      label: "the existing username in different case",
-      make: (base) => base.toUpperCase(),
-      seed: (base) => base,
-      outcome: (base) => ({ created: base.toUpperCase() }),
-    },
-    {
-      label: "with symbols",
-      make: (base) => `${base}.b-c_d@e+f`,
-      outcome: (base) => ({ created: `${base}.b-c_d@e+f` }),
-    },
-    {
-      label: "with a space inside",
-      make: (base) => `${base} b`,
-      outcome: (base) => ({ created: `${base} b` }),
-    },
-    {
-      label: "with a slash",
-      make: (base) => `${base}/b`,
-      outcome: (base) => ({ created: `${base}/b` }),
-    },
-    {
-      label: "unicode",
-      make: (base) => `${base}-josé`,
-      outcome: (base) => ({ created: `${base}-josé` }),
-    },
-    {
-      label: "exactly 150 characters",
-      make: (base) => base.padEnd(150, "x"),
-      outcome: (base) => ({ created: base.padEnd(150, "x") }),
     },
     {
       label: "151 characters",
@@ -337,29 +289,11 @@ test.describe("Users", () => {
     make: (username: string) => string;
     outcome: Outcome | "created";
   }[] = [
-    {
-      label: "(empty)",
-      make: () => "",
-      outcome: { clientError: "Password is required" },
-    },
-    {
-      label: "1 character",
-      make: () => "x",
-      outcome: { clientError: "Password must be at least 8 characters" },
-    },
-    {
-      label: "7 characters",
-      make: () => "Qz7!pLm",
-      outcome: { clientError: "Password must be at least 8 characters" },
-    },
+    // Client "required" / "min length" validation is a component test; these are
+    // the real-backend outcomes (a valid password, and the server's own rules).
     {
       label: "8 characters, strong",
       make: () => "Qz7!pLm2",
-      outcome: "created",
-    },
-    {
-      label: "128 characters, strong",
-      make: () => "Qz7!pLm2".repeat(16),
       outcome: "created",
     },
     {
@@ -371,11 +305,6 @@ test.describe("Users", () => {
       label: "8 digits",
       make: () => "12345678",
       outcome: { serverError: "This password is entirely numeric." },
-    },
-    {
-      label: "similar to the username",
-      make: (username) => `${username}1`,
-      outcome: "created",
     },
     {
       label: "only spaces, 8 long",
@@ -410,23 +339,15 @@ test.describe("Users", () => {
     outcome: "created" | Outcome;
     duplicate?: boolean;
   }[] = [
+    // Client "invalid format" validation is a component test; these are the
+    // real-backend outcomes (what the server stores or rejects).
     { email: "", label: "(empty)", outcome: "created" },
     { email: "alice@example.com", outcome: "created" },
-    { email: "alice", outcome: { clientError: "Invalid email address" } },
-    { email: "alice@", outcome: { clientError: "Invalid email address" } },
-    {
-      email: "@example.com",
-      outcome: { clientError: "Invalid email address" },
-    },
     {
       email: "alice@example",
       outcome: { serverError: "Enter a valid email address." },
     },
     { email: "alice@localhost", outcome: "created" },
-    {
-      email: "alice @example.com",
-      outcome: { clientError: "Invalid email address" },
-    },
     {
       email: "e2e-shared@example.com",
       label: "an email already used",
@@ -469,61 +390,64 @@ test.describe("Users", () => {
     });
   }
 
-  for (const active of [true, false]) {
-    for (const staff of [false, true]) {
-      test(`USR-CRE-05 Active ${active ? "checked" : "unchecked"}, Staff status ${staff ? "checked" : "unchecked"}`, async ({
-        page,
-        usersPage,
-        api,
-        cleanup,
-      }) => {
-        const username = cleanup.user(uniqueName("user"));
-        const modal = await openCreate(page, usersPage);
-        await modal.field("Username").fill(username);
-        await modal.field("Password").fill(STRONG_PASSWORD);
-        await modal.checkbox("Active").setChecked(active);
-        await modal.checkbox("Staff status").setChecked(staff);
-        await modal.button("Create").click();
-        await modal.expectClosed();
-        await usersPage.list.filter("Username", username);
-        await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
-          active ? "Active" : "Inactive",
-        );
-        const saved = await api.user(username);
-        expect(saved?.is_active).toBe(active);
-        expect(saved?.is_staff).toBe(staff);
-      });
-    }
+  // Both status labels and both staff values in two cases, not the 4-way product.
+  for (const { active, staff } of [
+    { active: true, staff: false },
+    { active: false, staff: true },
+  ]) {
+    test(`USR-CRE-05 Active ${active ? "checked" : "unchecked"}, Staff status ${staff ? "checked" : "unchecked"}`, async ({
+      page,
+      usersPage,
+      api,
+      cleanup,
+    }) => {
+      const username = cleanup.user(uniqueName("user"));
+      const modal = await openCreate(page, usersPage);
+      await modal.field("Username").fill(username);
+      await modal.field("Password").fill(STRONG_PASSWORD);
+      await modal.checkbox("Active").setChecked(active);
+      await modal.checkbox("Staff status").setChecked(staff);
+      await modal.button("Create").click();
+      await modal.expectClosed();
+      await usersPage.list.filter("Username", username);
+      await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
+        active ? "Active" : "Inactive",
+      );
+      const saved = await api.user(username);
+      expect(saved?.is_active).toBe(active);
+      expect(saved?.is_staff).toBe(staff);
+    });
   }
 
-  for (const email of [false, true]) {
-    for (const first of [false, true]) {
-      for (const last of [false, true]) {
-        const label = (on: boolean) => (on ? "filled" : "empty");
-        test(`USR-CRE-06 email ${label(email)}, first ${label(first)}, last ${label(last)}`, async ({
-          page,
-          usersPage,
-          api,
-          cleanup,
-        }) => {
-          const username = cleanup.user(uniqueName("user"));
-          const expected = {
-            email: email ? "ada@example.com" : "",
-            first_name: first ? "Ada" : "",
-            last_name: last ? "Lovelace" : "",
-          };
-          const modal = await openCreate(page, usersPage);
-          await modal.field("Username").fill(username);
-          await modal.field("Password").fill(STRONG_PASSWORD);
-          await modal.field("Email").fill(expected.email);
-          await modal.field("First name").fill(expected.first_name);
-          await modal.field("Last name").fill(expected.last_name);
-          await modal.button("Create").click();
-          await modal.expectClosed();
-          await expect.poll(() => api.user(username)).toMatchObject(expected);
-        });
-      }
-    }
+  // Main cases of the independent optional fields, not the full 8-way product.
+  for (const { email, first, last } of [
+    { email: false, first: false, last: false },
+    { email: true, first: true, last: true },
+    { email: true, first: false, last: false },
+  ]) {
+    const label = (on: boolean) => (on ? "filled" : "empty");
+    test(`USR-CRE-06 email ${label(email)}, first ${label(first)}, last ${label(last)}`, async ({
+      page,
+      usersPage,
+      api,
+      cleanup,
+    }) => {
+      const username = cleanup.user(uniqueName("user"));
+      const expected = {
+        email: email ? "ada@example.com" : "",
+        first_name: first ? "Ada" : "",
+        last_name: last ? "Lovelace" : "",
+      };
+      const modal = await openCreate(page, usersPage);
+      await modal.field("Username").fill(username);
+      await modal.field("Password").fill(STRONG_PASSWORD);
+      await modal.field("Email").fill(expected.email);
+      await modal.field("First name").fill(expected.first_name);
+      await modal.field("Last name").fill(expected.last_name);
+      await modal.button("Create").click();
+      await modal.expectClosed();
+      await expect.poll(() => api.user(username)).toMatchObject(expected);
+    });
   }
 
   test(
@@ -751,18 +675,12 @@ test.describe("Users", () => {
     });
   }
 
+  // Representative transitions that flip each independent flag both ways, rather
+  // than all 12 combinations.
   const transitions: [boolean, boolean, boolean, boolean][] = [
     [true, false, false, false],
-    [true, false, true, true],
-    [true, false, false, true],
-    [true, true, true, false],
-    [true, true, false, true],
-    [true, true, false, false],
-    [false, false, true, false],
-    [false, false, false, true],
     [false, false, true, true],
-    [false, true, false, false],
-    [false, true, true, true],
+    [true, true, false, false],
     [false, true, true, false],
   ];
   const onOff = (on: boolean) => (on ? "on" : "off");

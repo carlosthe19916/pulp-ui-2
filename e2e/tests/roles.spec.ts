@@ -591,17 +591,8 @@ test.describe("Roles", () => {
   });
 
   test.describe("Create", () => {
-    test("ROL-CRE-01 form", async ({ rolesPage }) => {
-      await rolesPage.goto();
-      const modal = await rolesPage.openCreate();
-      await expect(modal.field("Name")).toHaveJSProperty("required", true);
-      await expect(modal.field("Description")).toBeVisible();
-      const tags = new PermissionTags(modal.dialog);
-      await expect(tags.input).toHaveAttribute(
-        "placeholder",
-        "Type a permission (e.g. core.view_task) and press Enter",
-      );
-    });
+    // ROL-CRE-01 (form fields) and the client "required" validation are component
+    // tests: .../RoleModal/RoleModal.test.tsx.
 
     const nameRows: {
       label: string;
@@ -612,12 +603,8 @@ test.describe("Roles", () => {
         | { kind: "required" }
         | { kind: "error"; text: string };
     }[] = [
-      { label: "(empty)", name: () => "", outcome: { kind: "required" } },
-      {
-        label: "only spaces",
-        name: () => "   ",
-        outcome: { kind: "error", text: "This field may not be blank." },
-      },
+      // Client "required" validation is a component test; these are the main
+      // real-backend outcomes (plugin prefix, length, and the server's rules).
       {
         label: "custom.reader (with a plugin prefix)",
         name: () => roleName((u) => `custom.${u}`),
@@ -629,6 +616,16 @@ test.describe("Roles", () => {
         outcome: { kind: "created", plugin: "other" },
       },
       {
+        label: "very long (1000 characters)",
+        name: () => roleName((u) => `${u}${"x".repeat(1000 - u.length)}`),
+        outcome: { kind: "created", plugin: "other" },
+      },
+      {
+        label: "only spaces",
+        name: () => "   ",
+        outcome: { kind: "error", text: "This field may not be blank." },
+      },
+      {
         label: "an existing custom role's name",
         name: (existing) => existing,
         seed: true,
@@ -638,16 +635,6 @@ test.describe("Roles", () => {
         label: `a locked role's name (${LOCKED_ROLE})`,
         name: () => LOCKED_ROLE,
         outcome: { kind: "error", text: "This field must be unique." },
-      },
-      {
-        label: "with symbols (custom.read-only_v2)",
-        name: () => roleName((u) => `custom.read-only_v2-${u}`),
-        outcome: { kind: "created", plugin: "custom" },
-      },
-      {
-        label: "very long (1000 characters)",
-        name: () => roleName((u) => `${u}${"x".repeat(1000 - u.length)}`),
-        outcome: { kind: "created", plugin: "other" },
       },
     ];
 
@@ -746,23 +733,12 @@ test.describe("Roles", () => {
       permissions: string[];
       outcome: { count: number } | { error: string };
     }[] = [
-      { label: "none", permissions: [], outcome: { count: 0 } },
+      // Main real-backend outcomes: a created count, and the server's two
+      // permission rejections. (The tag input itself is a component test.)
       { label: VIEW_TASK, permissions: [VIEW_TASK], outcome: { count: 1 } },
-      {
-        label: `${VIEW_TASK}, ${CHANGE_TASK}`,
-        permissions: [VIEW_TASK, CHANGE_TASK],
-        outcome: { count: 2 },
-      },
       {
         label: "core.not_a_permission",
         permissions: ["core.not_a_permission"],
-        outcome: {
-          error: "Permission 'core.not_a_permission' does not exist.",
-        },
-      },
-      {
-        label: `${VIEW_TASK}, core.not_a_permission`,
-        permissions: [VIEW_TASK, "core.not_a_permission"],
         outcome: {
           error: "Permission 'core.not_a_permission' does not exist.",
         },
@@ -825,52 +801,6 @@ test.describe("Roles", () => {
       return { modal, tags: new PermissionTags(modal.dialog) };
     };
 
-    test(`ROL-PERM-01 type ${VIEW_TASK} and press Enter → one tag, not submitted`, async ({
-      rolesPage,
-    }) => {
-      const { modal, tags } = await openTags(rolesPage);
-      await modal.field("Name").fill(uniqueName("role"));
-      await tags.add(VIEW_TASK);
-      await expect.poll(() => tags.visible()).toEqual([VIEW_TASK]);
-      await expect(modal.dialog).toBeVisible();
-    });
-
-    for (const row of [
-      {
-        label: "press Enter with the input empty",
-        typed: [""],
-        tags: [] as string[],
-      },
-      { label: "type only spaces and press Enter", typed: ["   "], tags: [] },
-      {
-        label: `type "  ${VIEW_TASK}  " and press Enter`,
-        typed: [`  ${VIEW_TASK}  `],
-        tags: [VIEW_TASK],
-      },
-      {
-        label: `add ${VIEW_TASK} twice`,
-        typed: [VIEW_TASK, VIEW_TASK],
-        tags: [VIEW_TASK],
-      },
-      {
-        label: `add ${VIEW_TASK}, then " ${VIEW_TASK}"`,
-        typed: [VIEW_TASK, ` ${VIEW_TASK}`],
-        tags: [VIEW_TASK],
-      },
-      {
-        label: "add b.x, a.x, c.x",
-        typed: ["b.x", "a.x", "c.x"],
-        tags: ["a.x", "b.x", "c.x"],
-      },
-    ]) {
-      test(`ROL-PERM-01 ${row.label}`, async ({ rolesPage }) => {
-        const { tags } = await openTags(rolesPage);
-        await tags.add(...row.typed);
-        await expect.poll(() => tags.visible()).toEqual(row.tags);
-        await expect(tags.input).toHaveValue("");
-      });
-    }
-
     test(`ROL-PERM-01 add ${VIEW_TASK}, then Core.view_task → two tags; saving fails`, async ({
       rolesPage,
       cleanup,
@@ -895,80 +825,6 @@ test.describe("Roles", () => {
         "Open: the typed text is not added on submit; decide if it should be",
       );
     });
-
-    for (const row of [
-      { label: "click × on b.x", action: "remove b.x", tags: ["a.x", "c.x"] },
-      {
-        label: "Backspace with the input empty",
-        action: "backspace 1",
-        tags: ["a.x", "b.x"],
-      },
-      {
-        label: "Backspace three times with the input empty",
-        action: "backspace 3",
-        tags: [] as string[],
-      },
-      {
-        label: "Backspace with text in the input",
-        action: "backspace text",
-        tags: ["a.x", "b.x", "c.x"],
-      },
-    ]) {
-      test(`ROL-PERM-02 ${row.label}`, async ({ rolesPage }) => {
-        const { tags } = await openTags(rolesPage);
-        await tags.add("a.x", "b.x", "c.x");
-        await expect.poll(() => tags.visible()).toEqual(["a.x", "b.x", "c.x"]);
-        if (row.action === "remove b.x") {
-          await tags.removeButton("b.x").click();
-        } else if (row.action === "backspace text") {
-          await tags.input.fill("d.x");
-          await tags.input.press("Backspace");
-          await expect(tags.input).toHaveValue("d.");
-        } else {
-          const times = row.action === "backspace 3" ? 3 : 1;
-          for (let i = 0; i < times; i++) await tags.input.press("Backspace");
-        }
-        await expect.poll(() => tags.visible()).toEqual(row.tags);
-      });
-    }
-
-    test("ROL-PERM-02 Backspace with the input empty and no tags", async ({
-      rolesPage,
-    }) => {
-      const { modal, tags } = await openTags(rolesPage);
-      await tags.input.press("Backspace");
-      await expect.poll(() => tags.visible()).toEqual([]);
-      await expect(modal.dialog).toBeVisible();
-    });
-
-    for (const row of [
-      { n: 0, shown: 0, more: null },
-      { n: 1, shown: 1, more: null },
-      { n: 10, shown: 10, more: null },
-      { n: 11, shown: 10, more: "1 more" },
-      { n: 15, shown: 10, more: "5 more" },
-    ]) {
-      test(`ROL-PERM-03 ${row.n} permissions fold to ${row.shown} tags${row.more ? ` and "${row.more}"` : ""}`, async ({
-        rolesPage,
-      }) => {
-        const { tags } = await openTags(rolesPage);
-        const permissions = Array.from(
-          { length: row.n },
-          (_, i) => `p.x${String(i).padStart(2, "0")}`,
-        );
-        await tags.add(...permissions);
-        await expect
-          .poll(async () => (await tags.visible()).length)
-          .toBe(row.shown);
-        if (row.more) {
-          await tags.overflow(row.more).click();
-          await expect.poll(() => tags.visible()).toEqual(permissions);
-          await expect(tags.overflow(/show less/i)).toBeVisible();
-        } else {
-          await expect(tags.overflow(/\d+ more/)).toHaveCount(0);
-        }
-      });
-    }
   });
 
   test.describe("Edit", () => {

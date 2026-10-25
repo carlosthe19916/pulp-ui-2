@@ -4,6 +4,25 @@ High-level use cases the e2e suite must cover. **These files are the source of t
 Playwright code under `e2e/tests/` is derived from them and may be rewritten at any time; a
 scenario changes here first.
 
+## Test layering
+
+These specs describe **e2e** (real-backend) behaviour only. Pure client-side behaviour is
+covered by faster, isolated **Vitest component tests** colocated with the components
+(`client/src/app/**/*.test.tsx`), not here. The split:
+
+- **Component test (Vitest):** form validation messages, modal defaults and submit wiring,
+  confirm-dialog content/style/dismissal, the permission tag input, and permission-gated
+  disabling + tooltips. These mock the data hooks and need no server.
+- **E2E (this spec):** anything that needs the real backend — create/edit/delete round-trips,
+  the server's own validation (duplicate, password/email rules, length), RBAC and permission
+  effects, cross-page sync, navigation/404s, and full workflows.
+
+So a validation scenario keeps only its **server** rows here (the client-side rows live in the
+component test), and generic table/form/dialog behaviour is exercised against one reference
+surface rather than every screen. Cover the **main** cases, not every permutation: each value
+of an independent dimension at least once (not the full cross-product), and one representative
+per free-text equivalence class plus the boundaries.
+
 | File                                                   | Prefix               | Covers                                                  |
 | ------------------------------------------------------ | -------------------- | ------------------------------------------------------- |
 | [shared/navigation.md](shared/navigation.md)           | `NAV`                | Administration nav, titles, breadcrumbs, route errors   |
@@ -36,11 +55,13 @@ Then <outcome>
   files and are never renumbered or reused; a retired scenario is deleted, not recycled.
 - **Language**: what a user sees and does. Quote visible labels, titles, toasts and messages
   exactly. No selectors, component names, endpoints or code.
-- **Permutations**: a scenario that varies over inputs carries one table, one row per
-  permutation; `<placeholders>` in the steps name its columns. Finite inputs (checkboxes,
-  sort column × direction, filter options, permissions, entry points) list **every**
-  combination. Free-text inputs list every equivalence class and boundary (empty, whitespace
-  only, boundary length, invalid format, duplicate, special characters, very long).
+- **Permutations (main cases, not exhaustive)**: a scenario that varies over inputs carries one
+  table; `<placeholders>` in the steps name its columns. For independent finite inputs
+  (checkboxes, status transitions, optional fields), cover **each value at least once**, not the
+  full cross-product; take the full combination only when the inputs interact (the outcome
+  depends on the combination, e.g. a permission gate). For free text, keep one representative per
+  equivalence class plus the boundaries (empty, whitespace only, max and max+1 length, duplicate)
+  — and only the **server-side** rejections (client-side validation is a component test).
 - **Shared behaviour** is written once in `shared/` with a table naming every screen it
   applies to, instead of being repeated per area. An area file points to it rather than
   restating it.

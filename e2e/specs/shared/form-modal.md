@@ -4,6 +4,12 @@ area: form-modal
 
 # Create and edit modals
 
+> **Layering:** the generic modal lifecycle and client-side validation (FORM-01..08, FORM-11 —
+> fields/defaults, open/close/reset, validation messages, Enter-submit, double-submit) are
+> **component tests** (`client/src/app/**/*Modal.test.tsx`), not e2e. Only the real-backend
+> scenarios remain here: FORM-09 (server rejection text), FORM-10 (permission denied) and
+> FORM-12 (success round-trip shows the change).
+
 Scenarios in this file run once per modal:
 
 | modal               | opened from                           | title                   | submit |

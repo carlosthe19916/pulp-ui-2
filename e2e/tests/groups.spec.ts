@@ -529,17 +529,8 @@ test.describe("Groups", () => {
 
   // --- Create -------------------------------------------------------------
 
-  test("GRP-CRE-01 the Create Group modal has a single required Name field", async ({
-    groupsPage,
-  }) => {
-    await groupsPage.goto();
-    const modal = await groupsPage.openCreate();
-    await expect(modal.dialog.getByRole("textbox")).toHaveCount(1);
-    await expect(modal.field("Name")).toBeVisible();
-    await expect(modal.dialog.getByText("Name", { exact: true })).toBeVisible();
-    // PatternFly marks a required label with an asterisk.
-    await expect(modal.dialog.getByText("*", { exact: true })).toBeVisible();
-  });
+  // GRP-CRE-01 (form fields) and the client "required" validation are component
+  // tests: client/src/app/components/GroupModal/GroupModal.test.tsx.
 
   interface ICreateNameRow {
     name: string;
@@ -552,17 +543,10 @@ test.describe("Groups", () => {
       | { serverError: string };
   }
 
+  // Client "required" validation is a component test; these are the main
+  // real-backend outcomes: created, trimmed, accepted characters, and the
+  // server's own rejections.
   const createNames: ICreateNameRow[] = [
-    {
-      name: "(empty)",
-      input: async () => "",
-      outcome: { fieldError: "Name is required" },
-    },
-    {
-      name: "only spaces",
-      input: async () => "     ",
-      outcome: { serverError: "This field may not be blank." },
-    },
     {
       name: "a new simple name",
       input: async () => uniqueName("group"),
@@ -574,35 +558,19 @@ test.describe("Groups", () => {
       outcome: { created: (input) => input.trim() },
     },
     {
+      name: "with symbols, spaces and unicode",
+      input: async () => `${uniqueName("group")} ops-team_2.0 日本`,
+      outcome: { created: (input) => input },
+    },
+    {
+      name: "only spaces",
+      input: async () => "     ",
+      outcome: { serverError: "This field may not be blank." },
+    },
+    {
       name: "an existing group's name",
       input: async ({ api, cleanup }) => (await seedGroup(api, cleanup)).name,
       outcome: { serverError: "This field must be unique." },
-    },
-    {
-      name: "an existing name in different case",
-      input: async ({ api, cleanup }) =>
-        (await seedGroup(api, cleanup)).name.toUpperCase(),
-      outcome: { created: (input) => input },
-    },
-    {
-      name: "with symbols (ops-team_2.0)",
-      input: async () => `${uniqueName("group")}-ops-team_2.0`,
-      outcome: { created: (input) => input },
-    },
-    {
-      name: "with spaces inside (ops team)",
-      input: async () => `${uniqueName("group")} ops team`,
-      outcome: { created: (input) => input },
-    },
-    {
-      name: "unicode (équipe 日本)",
-      input: async () => `${uniqueName("group")} équipe 日本`,
-      outcome: { created: (input) => input },
-    },
-    {
-      name: "exactly 150 characters",
-      input: async () => uniqueName("group").padEnd(150, "x"),
-      outcome: { created: (input) => input },
     },
     {
       name: "151 characters",

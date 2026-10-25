@@ -4,6 +4,11 @@ area: confirm-dialog
 
 # Confirmation dialogs
 
+> **Layering:** the dialog's content, button styling and dismissal (CONF-01, CONF-02) are a
+> **component test** (`client/src/app/components/ConfirmActionModal/ConfirmActionModal.test.tsx`).
+> Only the real-backend scenarios remain here: CONF-03 (confirm round-trip), CONF-04/05 (server
+> failures) and CONF-06 (no stale request).
+
 Scenarios in this file run once per dialog:
 
 | dialog                 | opened from                                           | title               | body                                                                             | confirm | style   |

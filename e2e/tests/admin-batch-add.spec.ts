@@ -246,17 +246,10 @@ async function expectAddedToasts(
 for (const modal of MODALS) {
   test.describe(modal.name, () => {
     // --- BATCH-01 ---------------------------------------------------------
+    // Main cases: none, one, and one-then-deselected (not every count).
     const batch01 = [
       { n: "0", label: "Add", enabled: false, select: 0, deselect: false },
       { n: "1", label: "Add (1)", enabled: true, select: 1, deselect: false },
-      { n: "2", label: "Add (2)", enabled: true, select: 2, deselect: false },
-      {
-        n: "every row on the page",
-        label: "Add (3)",
-        enabled: true,
-        select: 3,
-        deselect: false,
-      },
       {
         n: "1, then deselect it",
         label: "Add",
@@ -306,11 +299,10 @@ for (const modal of MODALS) {
     });
 
     // --- BATCH-03 ---------------------------------------------------------
+    // Main cases: selection survives a filter that hides it and a sort change.
     const batch03 = [
       "filter so the selected row is hidden",
-      "clear the filter",
       "change the sort",
-      "change the page size",
     ] as const;
     for (const change of batch03) {
       test(`BATCH-03 ${modal.name}: selection survives "${change}"`, async ({
@@ -330,25 +322,8 @@ for (const modal of MODALS) {
           await expect(dialog.addButton()).toHaveText("Add (1)");
           return;
         }
-        if (change === "clear the filter") {
-          await dialog.table.filter(modal.filter, other);
-          await dialog.table.filterInput(modal.filter).fill("");
-          // Clearing shows every row again, so the selection (not the row set) is
-          // what must survive: the Add count stays at 1.
-          await expect(dialog.addButton()).toHaveText("Add (1)");
-          // The unfiltered list may not show the row on page 1; bring it back.
-          await refilter(dialog, {
-            filter: modal.filter,
-            value: seeded.token,
-            expectRow: selected,
-          });
-        } else if (change === "change the sort") {
-          await dialog.table.sortBy(modal.sortColumn);
-          await dialog.table.expectSorted(modal.sortColumn, "descending");
-        } else {
-          await dialog.table.paginator().setPerPage(20);
-          await dialog.table.paginator().expectRange("1 - 3 of 3");
-        }
+        await dialog.table.sortBy(modal.sortColumn);
+        await dialog.table.expectSorted(modal.sortColumn, "descending");
         await expect(dialog.addButton()).toHaveText("Add (1)");
         await expect(dialog.table.selectRow(selected)).toBeChecked();
       });
@@ -393,13 +368,12 @@ for (const modal of MODALS) {
     });
 
     // --- BATCH-07 ---------------------------------------------------------
+    // Main outcomes: all succeed, partial success (mixed toasts), and all fail
+    // (modal stays open) — not every count.
     const batch07 = [
       { selection: "1 row, which succeeds", rows: 1, fail: 0 },
-      { selection: "2 rows, both succeed", rows: 2, fail: 0 },
       { selection: "2 rows, one fails", rows: 2, fail: 1 },
-      { selection: "3 rows, two fail", rows: 3, fail: 2 },
       { selection: "1 row, which fails", rows: 1, fail: 1 },
-      { selection: "2 rows, both fail", rows: 2, fail: 2 },
     ];
     for (const row of batch07) {
       test(`BATCH-07 ${modal.name}: ${row.selection}`, async ({
@@ -541,7 +515,9 @@ for (const modal of MODALS) {
     });
 
     // --- BATCH-11 ---------------------------------------------------------
-    for (const how of ["Cancel", "×", "Escape"] as const) {
+    // One close path is enough here (× / Escape share it); dismissal variants are
+    // covered generically by the confirm-dialog component test.
+    for (const how of ["Cancel"] as const) {
       test(`BATCH-11 ${modal.name}: closing with ${how} discards the selection`, async ({
         page,
         api,

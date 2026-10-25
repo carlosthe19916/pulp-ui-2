@@ -139,6 +139,8 @@ interface ISortColumn {
 
 interface ITable {
   name: TableName;
+  /** One reference table per shape runs the full LIST suite; the rest get a smoke check. */
+  reference?: boolean;
   grid: string;
   /** Navigate to where the table lives, short of the step that loads it. */
   prepare: (page: Page) => Promise<void>;
@@ -230,6 +232,7 @@ const tokenScope = () => `e2e-ls${seed.token}-`;
 const TABLES: ITable[] = [
   {
     name: "Users",
+    reference: true,
     grid: "Users table",
     prepare: async () => {},
     reveal: (page) => gotoHeading(page, "/admin/users", "Users"),
@@ -348,6 +351,7 @@ const TABLES: ITable[] = [
   },
   {
     name: "User roles",
+    reference: true,
     grid: "User roles table",
     prepare: userPage,
     reveal: (page) => clickTab(page, "Roles"),
@@ -430,6 +434,7 @@ const TABLES: ITable[] = [
   },
   {
     name: "Select users",
+    reference: true,
     grid: "Select users",
     prepare: groupPage,
     reveal: (page) => clickButton(page, "Add User"),
@@ -589,8 +594,12 @@ async function expectAllRowsContain(
 const expectPage = (dataTable: DataTable, pageNumber: number) =>
   expect(dataTable.paginator().currentPage()).toHaveValue(String(pageNumber));
 
-const filtered = TABLES.filter((t) => t.filter);
-const sortable = TABLES.filter((t) => t.sort.length > 0);
+// One reference table per shape (main list, detail tab, select modal) runs the full
+// LIST suite; every other table gets a single LIST-SMOKE wiring check.
+const REFERENCE = TABLES.filter((t) => t.reference);
+const SMOKE = TABLES.filter((t) => !t.reference);
+const filtered = REFERENCE.filter((t) => t.filter);
+const sortable = REFERENCE.filter((t) => t.sort.length > 0);
 
 // --- Tests --------------------------------------------------------------------
 
@@ -606,10 +615,40 @@ test.describe("Data lists", () => {
   });
 
   // LIST-01
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     test(`LIST-01 ${t.name}: column headers`, async ({ page }) => {
       const dataTable = await open(page, t);
       expect(await dataTable.headerTexts()).toEqual(t.headers);
+    });
+  }
+
+  // LIST-SMOKE: the full filter/sort/paging suite runs on one reference table per
+  // shape (above); every other table just needs to wire the shared table up —
+  // right columns, and its filter/sort work if it has them.
+  for (const t of SMOKE) {
+    test(`LIST-SMOKE ${t.name}: renders, filters and sorts`, async ({
+      page,
+      api,
+    }) => {
+      const dataTable = t.scopeFilter
+        ? await openScoped(page, t)
+        : await open(page, t);
+      await expect(dataTable.grid).toBeVisible();
+      await expect.poll(() => dataTable.headerTexts()).toEqual(t.headers);
+      // Sort first (expectOrder compares the scoped view), then apply the filter
+      // last so it doesn't change the rows the sort check reads.
+      if (t.sort.length > 0 && !t.sort[0].rank) {
+        await dataTable.sortBy(t.sort[0].column);
+        await dataTable.expectSorted(t.sort[0].column, "descending");
+        await expectOrder(api, t, dataTable, {
+          column: t.sort[0],
+          ordering: `-${t.sort[0].key}`,
+        });
+      }
+      if (t.filter && t.values) {
+        await dataTable.filter(t.filter.title, t.values().middle);
+        await expectAllRowsContain(t, dataTable, t.values().middle);
+      }
     });
   }
 
@@ -1026,7 +1065,7 @@ test.describe("Data lists", () => {
   }
 
   // LIST-13
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     test(`LIST-13 ${t.name}: skeleton rows until the rows load`, async ({
       page,
     }) => {
@@ -1043,7 +1082,7 @@ test.describe("Data lists", () => {
   }
 
   // LIST-14
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     test(`LIST-14 ${t.name}: server error state`, () => {
       test.skip(true, "Manual: needs the server to fail while loading");
     });
@@ -1150,7 +1189,7 @@ test.describe("Data lists", () => {
       expectPageNumber: () => 2,
     },
   ];
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     // One page load per table; each action resets to a known page in its setup,
     // so the actions are independent steps on the same table.
     test(`LIST-15 ${t.name}: paging from the top and the bottom paginator`, async ({
@@ -1193,7 +1232,7 @@ test.describe("Data lists", () => {
   }
 
   // LIST-16
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     test(`LIST-16 ${t.name}: page size`, async ({ page }) => {
       const dataTable = await openForPaging(page, t);
       const { total } = await dataTable.paginator().range();
@@ -1212,7 +1251,7 @@ test.describe("Data lists", () => {
   }
 
   // LIST-17
-  for (const t of TABLES) {
+  for (const t of REFERENCE) {
     test(`LIST-17 ${t.name}: the total matches the rows, also after a filter`, async ({
       page,
       api,

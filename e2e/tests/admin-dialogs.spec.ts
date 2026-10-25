@@ -444,40 +444,9 @@ const forEachDialog = (body: (dialog: IDialog) => void): void => {
   policyTests.push(() => body(resetPolicy));
 };
 
-// --- CONF-01..03 -------------------------------------------------------------
+// --- CONF-03: confirming (real backend) ------------------------------------
 
 forEachDialog((dialog) => {
-  test(`CONF-01 ${dialog.name}: content`, async ({ page, api, cleanup }) => {
-    const fx = { page, api, cleanup };
-    const ctx = await dialog.seed(fx);
-    const modal = await dialog.open(fx, ctx);
-    await expect(modal.dialog).toBeVisible();
-    await expect(modal.dialog).toContainText(dialog.body(ctx));
-    const confirm = modal.button(dialog.confirm);
-    await expect(confirm).toBeVisible();
-    // PatternFly's variant class is the only signal of the button's style.
-    await expect(confirm).toHaveClass(new RegExp(`pf-m-${dialog.style}`));
-    await expect(modal.button("Cancel")).toBeVisible();
-  });
-
-  test(`CONF-02 ${dialog.name}: dismissing changes nothing`, async ({
-    page,
-    api,
-    cleanup,
-    toasts,
-  }) => {
-    const fx = { page, api, cleanup };
-    const ctx = await dialog.seed(fx);
-    for (const how of ["Cancel", "×", "Escape"] as const) {
-      await test.step(`dismissing with ${how}`, async () => {
-        const modal = await dialog.open(fx, ctx);
-        await modal.dismiss(how);
-        await toasts.expectNone();
-        await dialog.expectUnchanged(fx, ctx);
-      });
-    }
-  });
-
   test(`CONF-03 ${dialog.name}: confirming spins, then succeeds`, async ({
     page,
     api,

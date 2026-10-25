@@ -4,6 +4,12 @@ area: data-list
 
 # Data lists (every admin table)
 
+> **Layering:** the full filter/sort/paging suite (LIST-01..19) runs against **one reference
+> table per shape** — **Users** (main list), **User roles** (detail tab) and **Select users**
+> (select modal). Every other table gets a single **LIST-SMOKE** check that it wires the shared
+> table up (right columns, and its filter/sort work). So a table's row below is exercised in
+> full only on its reference; elsewhere it is smoke-covered.
+
 Every table below is server-paged, server-sorted and server-filtered. Scenarios in this file
 run once per applicable table; the tables are:
 

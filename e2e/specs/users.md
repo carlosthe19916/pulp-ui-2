@@ -67,6 +67,10 @@ Then "Create user" is enabled, and submitting fails with the server's reason ([F
 
 ## Create
 
+> **Layering:** form fields/defaults and client-side validation (the "required" and format
+> rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
+> **server** outcomes and the **main** cases, not every permutation.
+
 ### USR-CRE-01 Form fields and defaults
 
 When I click "Create user"
@@ -79,20 +83,17 @@ Given I open "Create User" with a valid password
 When I enter the username <username> and submit
 Then <outcome>
 
-| username                                | outcome                                                            |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| (empty)                                 | "Username is required"; nothing is sent                            |
-| only spaces                             | in-form error "This field may not be blank."                       |
-| a new, simple name                      | the user is created                                                |
-| with spaces around it (`  alice  `)     | the user is created as `alice` (Pulp trims the spaces)             |
-| an existing username                    | in-form error "This field must be unique."; the modal stays open   |
-| the existing username in different case | the user is created (usernames are case-sensitive)                 |
-| with symbols (`a.b-c_d@e+f`)            | the user is created                                                |
-| with a space inside (`a b`)             | the user is created (Pulp does not check the characters)           |
-| with a slash (`a/b`)                    | the user is created                                                |
-| unicode (`josé`)                        | the user is created                                                |
-| exactly 150 characters                  | the user is created                                                |
-| 151 characters                          | in-form error "Ensure this field has no more than 150 characters." |
+The client "required" check is a component test; these are the server outcomes and the main
+cases.
+
+| username                            | outcome                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| a new, simple name                  | the user is created                                                |
+| with spaces around it (`  alice  `) | the user is created as `alice` (Pulp trims the spaces)             |
+| with symbols, spaces and unicode    | the user is created (Pulp does not check the characters)           |
+| only spaces                         | in-form error "This field may not be blank."                       |
+| an existing username                | in-form error "This field must be unique."; the modal stays open   |
+| 151 characters                      | in-form error "Ensure this field has no more than 150 characters." |
 
 ### USR-CRE-03 Password
 
@@ -100,17 +101,14 @@ Given I open "Create User" with a valid new username
 When I enter the password <password> and submit
 Then <outcome>
 
-| password                          | outcome                                              |
-| --------------------------------- | ---------------------------------------------------- |
-| (empty)                           | "Password is required"; nothing is sent              |
-| 1 character                       | "Password must be at least 8 characters"             |
-| 7 characters                      | "Password must be at least 8 characters"             |
-| 8 characters, strong              | the user is created                                  |
-| 128 characters, strong            | the user is created                                  |
-| 8 characters, common (`password`) | in-form error "This password is too common."         |
-| 8 digits (`12345678`)             | in-form error "This password is entirely numeric."   |
-| similar to the username           | the user is created (Pulp does not check similarity) |
-| only spaces, 8 long               | in-form error "This field may not be blank."         |
+The client "required" / "min length" checks are a component test; these are the server outcomes.
+
+| password                          | outcome                                            |
+| --------------------------------- | -------------------------------------------------- |
+| 8 characters, strong              | the user is created                                |
+| 8 characters, common (`password`) | in-form error "This password is too common."       |
+| 8 digits (`12345678`)             | in-form error "This password is entirely numeric." |
+| only spaces, 8 long               | in-form error "This field may not be blank."       |
 
 The password input hides what is typed.
 
@@ -120,48 +118,43 @@ Given I open "Create User" with a valid username and password
 When I enter the email <email> and submit
 Then <outcome>
 
+The client "invalid format" check is a component test; these are the server outcomes.
+
 | email                 | outcome                                         |
 | --------------------- | ----------------------------------------------- |
 | (empty)               | the user is created with no email (shows "—")   |
 | `alice@example.com`   | the user is created with that email             |
-| `alice`               | "Invalid email address"                         |
-| `alice@`              | "Invalid email address"                         |
-| `@example.com`        | "Invalid email address"                         |
 | `alice@example`       | in-form error "Enter a valid email address."    |
 | `alice@localhost`     | the user is created                             |
-| `alice @example.com`  | "Invalid email address"                         |
 | an email already used | the user is created (emails need not be unique) |
 
-### USR-CRE-05 Every combination of Active and Staff status
+### USR-CRE-05 Active and Staff status
 
 Given I open "Create User" with a valid username and password
 When I set Active <active> and Staff status <staff> and submit
 Then the user is created, the list shows <label>, and the saved user has active <active> and
 staff <staff>
 
+Main cases (each flag set once), not the full grid:
+
 | active    | staff     | label    |
 | --------- | --------- | -------- |
 | checked   | unchecked | Active   |
-| checked   | checked   | Active   |
-| unchecked | unchecked | Inactive |
 | unchecked | checked   | Inactive |
 
-### USR-CRE-06 Every combination of optional text fields
+### USR-CRE-06 Optional text fields
 
 Given I open "Create User" with a valid username and password
 When I fill Email <email>, First name <first> and Last name <last> and submit
 Then the user is created with exactly the fields I filled, and the empty ones are blank
 
+Main cases (all empty, all filled, mixed), not the full 8-way grid:
+
 | email  | first  | last   |
 | ------ | ------ | ------ |
 | empty  | empty  | empty  |
-| filled | empty  | empty  |
-| empty  | filled | empty  |
-| empty  | empty  | filled |
-| filled | filled | empty  |
-| filled | empty  | filled |
-| empty  | filled | filled |
 | filled | filled | filled |
+| filled | empty  | empty  |
 
 ### USR-CRE-07 The new user appears
 
@@ -234,19 +227,13 @@ Given a user with Active <from active> and Staff status <from staff>
 When I edit them to Active <to active> and Staff status <to staff>
 Then the change is saved and the list label matches <to active>
 
+Representative transitions that flip each flag both ways, not all 12:
+
 | from active | from staff | to active | to staff |
 | ----------- | ---------- | --------- | -------- |
 | on          | off        | off       | off      |
-| on          | off        | on        | on       |
-| on          | off        | off       | on       |
-| on          | on         | on        | off      |
-| on          | on         | off       | on       |
-| on          | on         | off       | off      |
-| off         | off        | on        | off      |
-| off         | off        | off       | on       |
 | off         | off        | on        | on       |
-| off         | on         | off       | off      |
-| off         | on         | on        | on       |
+| on          | on         | off       | off      |
 | off         | on         | on        | off      |
 
 ### USR-EDT-05 Clearing a text field

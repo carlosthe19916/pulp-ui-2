@@ -117,6 +117,10 @@ Then locked roles are listed and selectable, and adding one succeeds
 
 ## Create
 
+> **Layering:** form fields/defaults and client-side validation (the "required" and format
+> rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
+> **server** outcomes and the **main** cases, not every permutation.
+
 ### ROL-CRE-01 Form
 
 When I click "Create Role"
@@ -128,16 +132,16 @@ with the hint "Type a permission (e.g. core.view_task) and press Enter")
 When I enter the name <name> and submit
 Then <outcome>
 
+The client "required" check is a component test; these are the server outcomes and main cases.
+
 | name                                     | outcome                                         |
 | ---------------------------------------- | ----------------------------------------------- |
-| (empty)                                  | "Name is required"; nothing is sent             |
-| only spaces                              | in-form error "This field may not be blank."    |
 | `custom.reader` (with a plugin prefix)   | the role is created, Plugin "custom"            |
 | `reader` (no dot)                        | the role is created, Plugin "other"             |
+| very long (1000 characters)              | the role is created (Pulp sets no length limit) |
+| only spaces                              | in-form error "This field may not be blank."    |
 | an existing custom role's name           | in-form error "This field must be unique."      |
 | a locked role's name (`core.task_owner`) | in-form error "This field must be unique."      |
-| with symbols (`custom.read-only_v2`)     | the role is created                             |
-| very long (1000 characters)              | the role is created (Pulp sets no length limit) |
 
 ### ROL-CRE-03 Description
 
@@ -155,14 +159,13 @@ Then <outcome>
 When I create a role with permissions <permissions>
 Then <outcome>
 
-| permissions                               | outcome                                                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| none                                      | created with Permissions 0                                                                 |
-| `core.view_task`                          | created with Permissions 1                                                                 |
-| `core.view_task`, `core.change_task`      | created with Permissions 2                                                                 |
-| `core.not_a_permission`                   | in-form error "Permission 'core.not_a_permission' does not exist."                         |
-| `core.view_task`, `core.not_a_permission` | the same error; nothing is created                                                         |
-| `not-a-codename` (no dot)                 | in-form error "Permission 'not-a-codename' is not in the format '<app_label>.<codename>'." |
+The tag input itself is a component test; these are the server outcomes and main cases.
+
+| permissions               | outcome                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------ |
+| `core.view_task`          | created with Permissions 1                                                                 |
+| `core.not_a_permission`   | in-form error "Permission 'core.not_a_permission' does not exist."                         |
+| `not-a-codename` (no dot) | in-form error "Permission 'not-a-codename' is not in the format '<app_label>.<codename>'." |
 
 ### ROL-CRE-05 The new role appears
 
@@ -170,6 +173,12 @@ When I create a role
 Then the toast `Role "<name>" created` appears and the role is in the Roles list, Locked No
 
 ## Permission input
+
+> **Layering:** the tag input's own behaviour (ROL-PERM-01/02/03 — adding on Enter, trimming,
+> dedupe, sorting, removing with × or Backspace, and folding past 10 behind "N more") is a
+> component test (`.../RoleModal/PermissionInput.test.tsx`). e2e keeps only the parts that need
+> the server: the case-sensitive permission that saves with an error, and the Open decision
+> below.
 
 ### ROL-PERM-01 Typing permissions
 

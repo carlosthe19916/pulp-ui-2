@@ -132,6 +132,10 @@ Then "Create Group" is enabled, and submitting fails with the server's reason ([
 
 ## Create
 
+> **Layering:** form fields/defaults and client-side validation (the "required" and format
+> rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
+> **server** outcomes and the **main** cases, not every permutation.
+
 ### GRP-CRE-01 Form
 
 When I click "Create Group"
@@ -142,19 +146,16 @@ Then the "Create Group" modal shows a single required field, Name
 When I enter the name <name> and submit
 Then <outcome>
 
-| name                               | outcome                                                            |
-| ---------------------------------- | ------------------------------------------------------------------ |
-| (empty)                            | "Name is required"; nothing is sent                                |
-| only spaces                        | in-form error "This field may not be blank."                       |
-| a new simple name                  | the group is created                                               |
-| with spaces around it (`  ops  `)  | the group is created as `ops` (Pulp trims the spaces)              |
-| an existing group's name           | in-form error "This field must be unique."                         |
-| an existing name in different case | the group is created (names are case-sensitive)                    |
-| with symbols (`ops-team_2.0`)      | the group is created                                               |
-| with spaces inside (`ops team`)    | the group is created                                               |
-| unicode (`équipe 日本`)            | the group is created                                               |
-| exactly 150 characters             | the group is created                                               |
-| 151 characters                     | in-form error "Ensure this field has no more than 150 characters." |
+The client "required" check is a component test; these are the server outcomes and main cases.
+
+| name                              | outcome                                                            |
+| --------------------------------- | ------------------------------------------------------------------ |
+| a new simple name                 | the group is created                                               |
+| with spaces around it (`  ops  `) | the group is created as `ops` (Pulp trims the spaces)              |
+| with symbols, spaces and unicode  | the group is created                                               |
+| only spaces                       | in-form error "This field may not be blank."                       |
+| an existing group's name          | in-form error "This field must be unique."                         |
+| 151 characters                    | in-form error "Ensure this field has no more than 150 characters." |
 
 ### GRP-CRE-03 The new group appears
 
