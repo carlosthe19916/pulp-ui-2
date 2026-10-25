@@ -37,6 +37,19 @@ export default defineConfig({
       },
       dependencies: ["setup"],
       testMatch: /.*\.spec\.ts/,
+      // The access-policy suite changes server-wide behaviour (it edits and
+      // resets policies, and tightens who may list tasks/repositories), so it
+      // runs on its own after everything else, never in parallel with them.
+      testIgnore: /access-policies\.spec\.ts/,
+    },
+    {
+      name: "access-policies",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: authFile,
+      },
+      dependencies: ["chromium"],
+      testMatch: /access-policies\.spec\.ts/,
     },
   ],
   webServer: {

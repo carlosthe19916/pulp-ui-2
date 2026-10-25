@@ -107,6 +107,10 @@ test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   requests to observe loading states, spinners and double-submit guards — it delays, never
   fakes a body); everything else runs against the real backend.
 - A group's members have no guaranteed order; never assert their row order.
+- A spec that changes server-wide state for everyone (the access-policy suite edits and resets
+  policies and tightens who may list a resource) runs as its own Playwright project that
+  `dependencies` on the main `chromium` project, so it runs after all other specs instead of in
+  parallel with them. Mark its describe blocks serial and always restore state in teardown.
 - Seed in parallel (`Promise.all`) and mark a test `test.slow()` when it seeds a lot or logs
   in a second user; the first page load needs longer than the default 5s.
 

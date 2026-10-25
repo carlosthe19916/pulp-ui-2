@@ -24,6 +24,18 @@ export default defineConfig({
       },
       dependencies: ["setup"],
       testMatch: /.*\.spec\.ts/,
+      // The access-policy suite changes server-wide behaviour, so it runs on its
+      // own after everything else (see playwright.config.ts).
+      testIgnore: /access-policies\.spec\.ts/,
+    },
+    {
+      name: "access-policies",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: authFile,
+      },
+      dependencies: ["chromium"],
+      testMatch: /access-policies\.spec\.ts/,
     },
   ],
   webServer: {
