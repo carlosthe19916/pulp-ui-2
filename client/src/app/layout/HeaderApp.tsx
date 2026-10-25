@@ -1,277 +1,45 @@
 import type React from "react";
-import { useReducer, useState } from "react";
 
 import {
-  Brand,
-  Dropdown,
-  DropdownItem,
-  DropdownList,
-  Icon,
   Masthead,
   MastheadBrand,
-  MastheadContent,
   MastheadLogo,
   MastheadMain,
   MastheadToggle,
-  MenuToggle,
-  type MenuToggleElement,
   PageToggleButton,
-  Split,
-  SplitItem,
-  Title,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
 } from "@patternfly/react-core";
-import BarsIcon from "@patternfly/react-icons/dist/esm/icons/bars-icon";
-import EllipsisVIcon from "@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon";
-import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
-import HelpIcon from "@patternfly/react-icons/dist/esm/icons/help-icon";
-import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 
-import { ThemeSelector } from "@app/components/ThemeSelector";
-import { ENV } from "@app/env";
-import { useAuth } from "@app/hooks/useAuth";
-import { getBranding } from "@app/utils/branding";
+import { BrandLogo } from "./BrandLogo";
 
-import { AboutApp } from "./AboutApp";
+export const MOBILE_DOCK_TOGGLE_ID = "mobile-masthead-toggle";
 
-export const HeaderApp: React.FC = () => {
-  const auth = useAuth();
+interface IHeaderAppProps {
+  isDockExpanded: boolean;
+  onToggleDock: () => void;
+}
 
-  const {
-    masthead: { leftBrand, leftTitle, rightBrand, supportUrl },
-  } = getBranding();
-
-  const [isAboutModalOpen, toggleIsAboutModalOpen] = useReducer(
-    (state) => !state,
-    false,
-  );
-  const [isHelpDropdownOpen, setIsHelpDropdownOpen] = useState(false);
-  const [isKebabDropdownOpen, setIsKebabDropdownOpen] = useState(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-
-  const onHelpDropdownToggle = () => {
-    setIsHelpDropdownOpen(!isHelpDropdownOpen);
-  };
-
-  const onKebabDropdownToggle = () => {
-    setIsKebabDropdownOpen(!isKebabDropdownOpen);
-  };
-
-  const onLogout = () => {
-    auth?.logout();
-  };
-
-  return (
-    <>
-      <AboutApp isOpen={isAboutModalOpen} onClose={toggleIsAboutModalOpen} />
-
-      <Masthead>
-        <MastheadMain>
-          <MastheadToggle>
-            <PageToggleButton variant="plain" aria-label="Global navigation">
-              <BarsIcon />
-            </PageToggleButton>
-          </MastheadToggle>
-          <MastheadBrand>
-            <MastheadLogo>
-              <Split hasGutter>
-                <SplitItem>
-                  {leftBrand ? (
-                    <Brand
-                      src={leftBrand.src}
-                      alt={leftBrand.alt}
-                      heights={{ default: leftBrand.height }}
-                    />
-                  ) : null}
-                </SplitItem>
-                <SplitItem isFilled>
-                  {leftTitle ? (
-                    <Title
-                      headingLevel={leftTitle?.heading ?? "h1"}
-                      size={leftTitle?.size ?? "2xl"}
-                    >
-                      {leftTitle.text}
-                    </Title>
-                  ) : null}
-                </SplitItem>
-              </Split>
-            </MastheadLogo>
-          </MastheadBrand>
-        </MastheadMain>
-        <MastheadContent>
-          <Toolbar id="toolbar" isFullHeight isStatic>
-            <ToolbarContent>
-              <ToolbarGroup
-                id="header-toolbar-tasks"
-                variant="action-group-plain"
-                align={{ default: "alignEnd" }}
-              />
-
-              <ToolbarGroup
-                id="header-toolbar-desktop"
-                variant="action-group-plain"
-                gap={{ default: "gapNone", md: "gapMd" }}
-                visibility={{
-                  default: "hidden",
-                  "2xl": "visible",
-                  xl: "visible",
-                  lg: "visible",
-                  md: "hidden",
-                }}
-              >
-                <ToolbarItem>
-                  <Dropdown
-                    isOpen={isHelpDropdownOpen}
-                    onSelect={onHelpDropdownToggle}
-                    onOpenChange={(isOpen: boolean) =>
-                      setIsHelpDropdownOpen(isOpen)
-                    }
-                    popperProps={{ position: "right" }}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        onClick={onHelpDropdownToggle}
-                        isExpanded={isHelpDropdownOpen}
-                        variant="plain"
-                        aria-label="About"
-                      >
-                        <HelpIcon />
-                      </MenuToggle>
-                    )}
-                  >
-                    <DropdownList>
-                      {supportUrl && (
-                        <DropdownItem
-                          key="support"
-                          component="a"
-                          to={supportUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Support{" "}
-                          <Icon isInline iconSize="sm">
-                            <ExternalLinkAltIcon />
-                          </Icon>
-                        </DropdownItem>
-                      )}
-                      <DropdownItem
-                        key="about"
-                        onClick={toggleIsAboutModalOpen}
-                      >
-                        About
-                      </DropdownItem>
-                    </DropdownList>
-                  </Dropdown>
-                </ToolbarItem>
-                <ToolbarItem>
-                  <ThemeSelector id="theme-selector-desktop" />
-                </ToolbarItem>
-              </ToolbarGroup>
-
-              {ENV.AUTH !== "none" && auth?.isAuthenticated() && (
-                <ToolbarGroup variant="action-group-plain">
-                  <ToolbarItem>
-                    <Dropdown
-                      isOpen={isUserDropdownOpen}
-                      onSelect={() => setIsUserDropdownOpen(false)}
-                      onOpenChange={setIsUserDropdownOpen}
-                      popperProps={{ position: "right" }}
-                      toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                        <MenuToggle
-                          ref={toggleRef}
-                          onClick={() =>
-                            setIsUserDropdownOpen(!isUserDropdownOpen)
-                          }
-                          isExpanded={isUserDropdownOpen}
-                          icon={<UserIcon />}
-                        >
-                          {auth.user?.username}
-                        </MenuToggle>
-                      )}
-                    >
-                      <DropdownList>
-                        <DropdownItem key="logout" onClick={onLogout}>
-                          Log out
-                        </DropdownItem>
-                      </DropdownList>
-                    </Dropdown>
-                  </ToolbarItem>
-                </ToolbarGroup>
-              )}
-
-              <ToolbarGroup
-                id="header-toolbar-mobile"
-                variant="action-group-plain"
-                gap={{ default: "gapNone", md: "gapMd" }}
-                visibility={{ lg: "hidden" }}
-              >
-                <ToolbarItem>
-                  <ThemeSelector id="theme-selector-mobile" />
-                </ToolbarItem>
-                <ToolbarItem>
-                  <Dropdown
-                    isOpen={isKebabDropdownOpen}
-                    onSelect={onKebabDropdownToggle}
-                    onOpenChange={(isOpen: boolean) =>
-                      setIsKebabDropdownOpen(isOpen)
-                    }
-                    popperProps={{ position: "right" }}
-                    toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        onClick={onKebabDropdownToggle}
-                        isExpanded={isKebabDropdownOpen}
-                        variant="plain"
-                        aria-label="About"
-                      >
-                        <EllipsisVIcon />
-                      </MenuToggle>
-                    )}
-                  >
-                    <DropdownList>
-                      {supportUrl && (
-                        <DropdownItem
-                          key="support"
-                          component="a"
-                          to={supportUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Support{" "}
-                          <Icon isInline iconSize="sm">
-                            <ExternalLinkAltIcon />
-                          </Icon>
-                        </DropdownItem>
-                      )}
-                      <DropdownItem
-                        key="about"
-                        onClick={toggleIsAboutModalOpen}
-                      >
-                        About
-                      </DropdownItem>
-                    </DropdownList>
-                  </Dropdown>
-                </ToolbarItem>
-              </ToolbarGroup>
-
-              {rightBrand ? (
-                <ToolbarGroup>
-                  <ToolbarItem>
-                    <Brand
-                      src={rightBrand.src}
-                      alt={rightBrand.alt}
-                      heights={{ default: rightBrand.height }}
-                    />
-                  </ToolbarItem>
-                </ToolbarGroup>
-              ) : null}
-            </ToolbarContent>
-          </Toolbar>
-        </MastheadContent>
-      </Masthead>
-    </>
-  );
-};
+/** Masthead for mobile viewports, where the page hides the dock behind this toggle. */
+export const HeaderApp: React.FC<IHeaderAppProps> = ({
+  isDockExpanded,
+  onToggleDock,
+}) => (
+  <Masthead display={{ default: "inline" }}>
+    <MastheadMain>
+      <MastheadToggle>
+        <PageToggleButton
+          id={MOBILE_DOCK_TOGGLE_ID}
+          variant="plain"
+          aria-label="Global navigation"
+          isSidebarOpen={isDockExpanded}
+          onSidebarToggle={onToggleDock}
+          isHamburgerButton
+        />
+      </MastheadToggle>
+      <MastheadBrand>
+        <MastheadLogo>
+          <BrandLogo />
+        </MastheadLogo>
+      </MastheadBrand>
+    </MastheadMain>
+  </Masthead>
+);

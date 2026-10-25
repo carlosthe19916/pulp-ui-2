@@ -76,10 +76,13 @@ const eventButtonId = (
 
 interface IThemeSelectorProps {
   id?: string;
+  /** Style the toggle for the docked nav, labelled when the dock is expanded. */
+  isDocked?: boolean;
 }
 
 export const ThemeSelector: React.FC<IThemeSelectorProps> = ({
   id = "theme-selector",
+  isDocked,
 }) => {
   const { mode, setMode, variant, setVariant, contrast, setContrast } =
     useTheme();
@@ -127,7 +130,10 @@ export const ThemeSelector: React.FC<IThemeSelectorProps> = ({
           isExpanded={isOpen}
           icon={<Icon size="lg">{colorSchemeIcons[mode]}</Icon>}
           aria-label={`Theme selection, current: ${colorSchemeLabels[mode]}`}
-        />
+          {...(isDocked && { variant: "plain", isDocked })}
+        >
+          {isDocked ? "Theme" : undefined}
+        </MenuToggle>
       )}
       shouldFocusToggleOnSelect
       onOpenChangeKeys={["Escape"]}

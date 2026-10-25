@@ -88,11 +88,11 @@ test.describe("Groups", () => {
     const userDetail = await usersPage.openDetail(username);
     await expect(userDetail.groupsTab).toHaveText("Groups (0)");
 
-    // Navigate in-app (no reload) so the cache survives.
-    await page
-      .getByRole("navigation")
-      .getByRole("link", { name: "Groups", exact: true })
-      .click();
+    // Navigate in-app (no reload) so the cache survives. The collapsed dock
+    // shows only group icons: opening the group reveals its pages.
+    const nav = page.getByRole("navigation", { name: "Nav" });
+    await nav.getByRole("button", { name: "Administration" }).click();
+    await nav.getByRole("link", { name: "Groups", exact: true }).click();
     // The user page also has a "Filter by Name" box; wait for the list first.
     await expect(groupsPage.heading).toBeVisible();
     await groupsPage.filterBy("Name", name);
