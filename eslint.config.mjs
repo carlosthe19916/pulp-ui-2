@@ -1,3 +1,4 @@
+// `.oxlintrc.json` is derived from this file: run `npm run oxlint:sync` after changing it.
 import eslintReact from "@eslint-react/eslint-plugin";
 import eslintJs from "@eslint/js";
 import pluginQuery from "@tanstack/eslint-plugin-query";

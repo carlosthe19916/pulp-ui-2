@@ -70,6 +70,11 @@ npm run lint        # ESLint
 npm run format      # Prettier check
 npm run lint:fix    # ESLint auto-fix
 npm run format:fix  # Prettier auto-fix
+
+# Fast inner loop, mostly for coding agents (CI still runs the commands above)
+npm run lint:fast        # oxlint (subset of the ESLint rules)
+npm run format:fast:fix  # oxfmt (Prettier-compatible)
+npm run oxlint:sync      # regenerate .oxlintrc.json after editing eslint.config.mjs
 ```
 
 Commit hooks (husky + lint-staged) run lint and format on staged files automatically.

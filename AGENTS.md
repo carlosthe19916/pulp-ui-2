@@ -58,12 +58,22 @@ npm ci
 # Development server (builds common, runs client on :3000)
 npm run start:dev
 
-# Type check and lint
+# Type check and lint (the gate: ESLint + tsc), format check (Prettier)
 npm run lint
+npm run format
 
 # Auto-fix lint and format
 npm run lint:fix
 npm run format:fix
+
+# Fast inner loop (oxlint, oxfmt); see "Linting and formatting for agents"
+npm run lint:fast
+npm run lint:fast:fix
+npm run format:fast
+npm run format:fast:fix
+
+# Regenerate .oxlintrc.json after changing eslint.config.mjs
+npm run oxlint:sync
 
 # Unit tests (Vitest)
 npm test
@@ -87,6 +97,18 @@ Claude Code loads project guidance via `CLAUDE.md` (symlink to `AGENTS.md` in th
 
 `npm run lint` is the real type check (ESLint + `tsc -p tsconfig.app.json` per workspace); a
 bare `tsc --noEmit` at the root checks nothing.
+
+### Linting and formatting for agents
+
+Agents use the fast oxc tools (`lint:fast`, `format:fast`) while working, for speed (about 4 s
+compared with about 30 s for ESLint), and run the full ESLint and Prettier gate once at the end.
+
+- While iterating: `npm run lint:fast` (oxlint) and `npm run format:fast:fix` (oxfmt).
+- Before finishing: `npm run format:fix && npm run lint && npm run format`.
+  ESLint, tsc and Prettier are the gate (CI, pre-commit); oxlint misses some
+  ESLint rules and oxfmt differs slightly from Prettier.
+- After changing `eslint.config.mjs`, run `npm run oxlint:sync`; after changing
+  `.prettierrc.mjs`, update `.oxfmtrc.json`.
 
 ## Tech Stack
 
