@@ -242,38 +242,36 @@ test.describe("Roles", () => {
       );
     });
 
-    for (const [option, expected] of [
-      ["All roles", ["Yes", "No"]],
-      ["Locked", ["Yes"]],
-      ["Unlocked", ["No"]],
-    ] as const) {
-      test(`ROL-LIST-02 Locked filter "${option}"`, async ({
-        rolesPage,
-        api,
-        cleanup,
-      }) => {
-        // "task" matches the locked core.task_* roles and this unlocked seed, so
-        // page 1 holds both kinds unless the Locked filter removes one.
-        const name = cleanup.role(roleName((u) => `custom.task-${u}`));
-        await api.createRole({ name });
-        await rolesPage.goto();
-        await rolesPage.filterBy("Name", "task");
-        await rolesPage.filterLocked(option);
-        await expect(rolesPage.lockedToggle()).toHaveText(option);
-        if (option === "Locked") {
-          // Only built-in roles are locked, so their count is stable.
-          const { count } = await apiRolesPage(api, {
-            locked: "true",
-            name__icontains: "task",
-          });
-          await rolesPage.list
-            .paginator()
-            .expectRange(new RegExp(`of ${count}\\s*$`));
-        }
-        const labels = await rolesPage.list.columnTexts("Locked");
-        expect([...new Set(labels)].sort()).toEqual([...expected].sort());
-      });
-    }
+    test("ROL-LIST-02 Locked filter", async ({ rolesPage, api, cleanup }) => {
+      for (const [option, expected] of [
+        ["All roles", ["Yes", "No"]],
+        ["Locked", ["Yes"]],
+        ["Unlocked", ["No"]],
+      ] as const) {
+        await test.step(`Locked filter "${option}"`, async () => {
+          // "task" matches the locked core.task_* roles and this unlocked seed, so
+          // page 1 holds both kinds unless the Locked filter removes one.
+          const name = cleanup.role(roleName((u) => `custom.task-${u}`));
+          await api.createRole({ name });
+          await rolesPage.goto();
+          await rolesPage.filterBy("Name", "task");
+          await rolesPage.filterLocked(option);
+          await expect(rolesPage.lockedToggle()).toHaveText(option);
+          if (option === "Locked") {
+            // Only built-in roles are locked, so their count is stable.
+            const { count } = await apiRolesPage(api, {
+              locked: "true",
+              name__icontains: "task",
+            });
+            await rolesPage.list
+              .paginator()
+              .expectRange(new RegExp(`of ${count}\\s*$`));
+          }
+          const labels = await rolesPage.list.columnTexts("Locked");
+          expect([...new Set(labels)].sort()).toEqual([...expected].sort());
+        });
+      }
+    });
 
     const comboRows: {
       option: "All roles" | "Locked" | "Unlocked";
@@ -365,110 +363,108 @@ test.describe("Roles", () => {
       },
     ];
 
-    test.describe("ROL-LIST-03 combinations", () => {
-      // Every row seeds a role matching the same built-in locked role's codename, so
-      // they must not overlap.
-      test.describe.configure({ mode: "serial" });
-
+    test("ROL-LIST-03 combinations", async ({ rolesPage, api, cleanup }) => {
+      test.slow();
       for (const row of comboRows) {
-        test(`ROL-LIST-03 ${row.option}, filter "${row.filter || "(empty)"}", ${row.sort} → ${row.rows}`, async ({
-          rolesPage,
-          api,
-          cleanup,
-        }) => {
+        await test.step(`${row.option}, filter "${row.filter || "(empty)"}", ${row.sort} → ${row.rows}`, async () => {
           // The locked half of the seed is the built-in file.filerepository_owner:
           // Pulp can't create locked roles, so the shared text is its codename.
           const match = "filerepository_owner";
           const lockedSeed = "file.filerepository_owner";
           const unlockedSeed = cleanup.role(roleName((u) => `${u}.${match}`));
           await api.createRole({ name: unlockedSeed });
-          const filter =
-            row.filter === "match"
-              ? match
-              : row.filter === "no-match"
-                ? uniqueName("none")
-                : "";
+          try {
+            const filter =
+              row.filter === "match"
+                ? match
+                : row.filter === "no-match"
+                  ? uniqueName("none")
+                  : "";
 
-          await rolesPage.goto();
-          await rolesPage.filterLocked(row.option);
-          if (filter) await rolesPage.filterBy("Name", filter);
-          await rolesPage.list.expectLoaded();
-          const [column, direction] = row.sort.split(" ") as [string, string];
-          const clicks =
-            column === "Name"
-              ? direction === "descending"
-                ? 1
-                : 0
-              : direction === "ascending"
-                ? 1
-                : 2;
-          const header = rolesPage.list.columnHeader(column);
-          for (let click = 1; click <= clicks; click++) {
-            await header.getByRole("button").click();
-            await rolesPage.list.expectSorted(
-              column,
-              click === 1 && column === "Locked"
-                ? "ascending"
-                : (direction as "ascending"),
-            );
-          }
-          await rolesPage.list.expectSorted(column, direction as "ascending");
-          await rolesPage.list.expectLoaded();
-
-          if (row.filter === "no-match") {
-            await expect(
-              rolesPage.list.stateHeading("No results found"),
-            ).toBeVisible();
-            return;
-          }
-
-          const params: Record<string, string> = {
-            ordering: `${direction === "descending" ? "-" : ""}${column.toLowerCase()}`,
-          };
-          if (row.option !== "All roles")
-            params.locked = String(row.option === "Locked");
-          if (filter) params.name__icontains = filter;
-          if (row.option === "Locked") {
-            const { count } = await apiRolesPage(api, params);
-            await rolesPage.list
-              .paginator()
-              .expectRange(new RegExp(`of ${count}\\s*$`));
-          }
-
-          if (row.filter === "match") {
-            const seeded =
-              row.option === "Locked"
-                ? [lockedSeed]
-                : row.option === "Unlocked"
-                  ? [unlockedSeed]
-                  : column === "Locked"
-                    ? [unlockedSeed, lockedSeed]
-                    : [lockedSeed, unlockedSeed].sort();
-            await expect
-              .poll(() => rolesPage.list.columnTexts("Name"))
-              .toEqual(seeded);
-          } else if (column === "Name") {
-            // Other tests add and remove roles meanwhile, so compare the order of the
-            // rows shown with the server's order of those same names.
-            const names = await rolesPage.list.columnTexts("Name");
-            const labels = await rolesPage.list.columnTexts("Locked");
-            if (row.option !== "All roles") {
-              expect(new Set(labels)).toEqual(
-                new Set([row.option === "Locked" ? "Yes" : "No"]),
+            await rolesPage.goto();
+            await rolesPage.filterLocked(row.option);
+            if (filter) await rolesPage.filterBy("Name", filter);
+            await rolesPage.list.expectLoaded();
+            const [column, direction] = row.sort.split(" ") as [string, string];
+            const clicks =
+              column === "Name"
+                ? direction === "descending"
+                  ? 1
+                  : 0
+                : direction === "ascending"
+                  ? 1
+                  : 2;
+            const header = rolesPage.list.columnHeader(column);
+            for (let click = 1; click <= clicks; click++) {
+              await header.getByRole("button").click();
+              await rolesPage.list.expectSorted(
+                column,
+                click === 1 && column === "Locked"
+                  ? "ascending"
+                  : (direction as "ascending"),
               );
             }
-            const ordered = await apiRolesPage(api, {
-              ordering: params.ordering,
-              name__in: names.join(","),
-            });
-            expect(names).toEqual(ordered.results.map((role) => role.name));
-          } else {
-            // Ties within a Locked value have no fixed order: check the grouping only.
-            const labels = await rolesPage.list.columnTexts("Locked");
-            const sorted = [...labels].sort();
-            expect(labels).toEqual(
-              direction === "ascending" ? sorted : sorted.reverse(),
-            );
+            await rolesPage.list.expectSorted(column, direction as "ascending");
+            await rolesPage.list.expectLoaded();
+
+            if (row.filter === "no-match") {
+              await expect(
+                rolesPage.list.stateHeading("No results found"),
+              ).toBeVisible();
+              return;
+            }
+
+            const params: Record<string, string> = {
+              ordering: `${direction === "descending" ? "-" : ""}${column.toLowerCase()}`,
+            };
+            if (row.option !== "All roles")
+              params.locked = String(row.option === "Locked");
+            if (filter) params.name__icontains = filter;
+            if (row.option === "Locked") {
+              const { count } = await apiRolesPage(api, params);
+              await rolesPage.list
+                .paginator()
+                .expectRange(new RegExp(`of ${count}\\s*$`));
+            }
+
+            if (row.filter === "match") {
+              const seeded =
+                row.option === "Locked"
+                  ? [lockedSeed]
+                  : row.option === "Unlocked"
+                    ? [unlockedSeed]
+                    : column === "Locked"
+                      ? [unlockedSeed, lockedSeed]
+                      : [lockedSeed, unlockedSeed].sort();
+              await expect
+                .poll(() => rolesPage.list.columnTexts("Name"))
+                .toEqual(seeded);
+            } else if (column === "Name") {
+              // Other tests add and remove roles meanwhile, so compare the order
+              // of the rows shown with the server's order of those same names.
+              const names = await rolesPage.list.columnTexts("Name");
+              const labels = await rolesPage.list.columnTexts("Locked");
+              if (row.option !== "All roles") {
+                expect(new Set(labels)).toEqual(
+                  new Set([row.option === "Locked" ? "Yes" : "No"]),
+                );
+              }
+              const ordered = await apiRolesPage(api, {
+                ordering: params.ordering,
+                name__in: names.join(","),
+              });
+              expect(names).toEqual(ordered.results.map((role) => role.name));
+            } else {
+              // Ties within a Locked value have no fixed order: check grouping.
+              const labels = await rolesPage.list.columnTexts("Locked");
+              const sorted = [...labels].sort();
+              expect(labels).toEqual(
+                direction === "ascending" ? sorted : sorted.reverse(),
+              );
+            }
+          } finally {
+            // Remove this row's seed so a later "match" step sees only its own.
+            await api.deleteRole(unlockedSeed);
           }
         });
       }
@@ -486,30 +482,32 @@ test.describe("Roles", () => {
       { option: "All roles", filter: "no-match", clear: "empty state" },
     ];
 
-    for (const row of clearRows) {
-      test(`ROL-LIST-04 ${row.option}, filter "${row.filter || "(empty)"}", "Clear all filters" in the ${row.clear}`, async ({
-        rolesPage,
-      }) => {
-        const filter =
-          row.filter === "match"
-            ? "task"
-            : row.filter === "no-match"
-              ? uniqueName("none")
-              : "";
-        await rolesPage.goto();
-        await rolesPage.filterLocked(row.option);
-        if (filter) await rolesPage.filterBy("Name", filter);
-        const button =
-          row.clear === "toolbar"
-            ? rolesPage.list.clearAllFiltersInToolbar()
-            : rolesPage.list.clearAllFiltersInEmptyState();
-        await button.click();
-        await expect(rolesPage.list.filterInput("Name")).toHaveValue("");
-        await expect(rolesPage.lockedToggle()).toHaveText("All roles");
-        await rolesPage.list.paginator().expectRange(/^1 - 10 of \d+\s*$/);
-        await expect(rolesPage.list.clearAllFiltersInToolbar()).toHaveCount(0);
-      });
-    }
+    test("ROL-LIST-04 Clearing both filters", async ({ rolesPage }) => {
+      for (const row of clearRows) {
+        await test.step(`${row.option}, filter "${row.filter || "(empty)"}", "Clear all filters" in the ${row.clear}`, async () => {
+          const filter =
+            row.filter === "match"
+              ? "task"
+              : row.filter === "no-match"
+                ? uniqueName("none")
+                : "";
+          await rolesPage.goto();
+          await rolesPage.filterLocked(row.option);
+          if (filter) await rolesPage.filterBy("Name", filter);
+          const button =
+            row.clear === "toolbar"
+              ? rolesPage.list.clearAllFiltersInToolbar()
+              : rolesPage.list.clearAllFiltersInEmptyState();
+          await button.click();
+          await expect(rolesPage.list.filterInput("Name")).toHaveValue("");
+          await expect(rolesPage.lockedToggle()).toHaveText("All roles");
+          await rolesPage.list.paginator().expectRange(/^1 - 10 of \d+\s*$/);
+          await expect(rolesPage.list.clearAllFiltersInToolbar()).toHaveCount(
+            0,
+          );
+        });
+      }
+    });
 
     test("ROL-LIST-05 Unlocked with a locked role's name gives the filtered empty state", async ({
       rolesPage,
@@ -563,31 +561,37 @@ test.describe("Roles", () => {
       }
     });
 
-    for (const kind of ["user", "group"] as const) {
-      test(`ROL-LOCK-02 a locked role can be added to a ${kind}`, async ({
-        page,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        const owner = await seedOwner({ api, cleanup, kind });
-        const tab = await openRolesTab({ page, api, kind, owner });
-        const modal = await tab.openAdd();
-        await modal.table.filter("Role", LOCKED_ROLE);
-        const checkbox = modal.table.rows
-          .filter({
-            has: page.getByRole("gridcell", { name: LOCKED_ROLE, exact: true }),
-          })
-          .getByRole("checkbox");
-        await expect(checkbox).toBeEnabled();
-        await checkbox.check();
-        await modal.addButton().click();
-        await expect(
-          toasts.success(`1 role added to ${kind} "${owner}"`),
-        ).toBeVisible();
-        await expect(tab.rows(LOCKED_ROLE)).toHaveCount(1);
-      });
-    }
+    test("ROL-LOCK-02 a locked role can be added to an owner", async ({
+      page,
+      api,
+      cleanup,
+      toasts,
+    }) => {
+      test.slow();
+      for (const kind of ["user", "group"] as const) {
+        await test.step(`added to a ${kind}`, async () => {
+          const owner = await seedOwner({ api, cleanup, kind });
+          const tab = await openRolesTab({ page, api, kind, owner });
+          const modal = await tab.openAdd();
+          await modal.table.filter("Role", LOCKED_ROLE);
+          const checkbox = modal.table.rows
+            .filter({
+              has: page.getByRole("gridcell", {
+                name: LOCKED_ROLE,
+                exact: true,
+              }),
+            })
+            .getByRole("checkbox");
+          await expect(checkbox).toBeEnabled();
+          await checkbox.check();
+          await modal.addButton().click();
+          await expect(
+            toasts.success(`1 role added to ${kind} "${owner}"`),
+          ).toBeVisible();
+          await expect(tab.rows(LOCKED_ROLE)).toHaveCount(1);
+        });
+      }
+    });
   });
 
   test.describe("Create", () => {
@@ -624,95 +628,101 @@ test.describe("Roles", () => {
       // tests/api/roles.api.spec.ts.
     ];
 
-    for (const row of nameRows) {
-      test(`ROL-CRE-02 name ${row.label}`, async ({
-        rolesPage,
-        api,
-        cleanup,
-        page,
-        toasts,
-      }) => {
-        const existing = cleanup.role(roleName((u) => `custom.${u}`));
-        if (row.seed) await api.createRole({ name: existing });
-        const name = row.name(existing);
-        if (row.outcome.kind === "created") cleanup.role(name);
+    test("ROL-CRE-02 name", async ({
+      rolesPage,
+      api,
+      cleanup,
+      page,
+      toasts,
+    }) => {
+      test.slow();
+      for (const row of nameRows) {
+        await test.step(`name ${row.label}`, async () => {
+          const existing = cleanup.role(roleName((u) => `custom.${u}`));
+          if (row.seed) await api.createRole({ name: existing });
+          const name = row.name(existing);
+          if (row.outcome.kind === "created") cleanup.role(name);
 
-        await rolesPage.goto();
-        const modal = await rolesPage.openCreate();
-        const posts: string[] = [];
-        page.on("request", (request) => {
-          if (
-            request.method() === "POST" &&
-            request.url().includes("/roles/")
-          ) {
-            posts.push(request.url());
-          }
-        });
-        await modal.field("Name").fill(name);
-        await modal.button("Create").click();
+          await rolesPage.goto();
+          const modal = await rolesPage.openCreate();
+          const posts: string[] = [];
+          page.on("request", (request) => {
+            if (
+              request.method() === "POST" &&
+              request.url().includes("/roles/")
+            ) {
+              posts.push(request.url());
+            }
+          });
+          await modal.field("Name").fill(name);
+          await modal.button("Create").click();
 
-        if (row.outcome.kind === "required") {
-          await expect(
-            modal.dialog.getByText("Name is required"),
-          ).toBeVisible();
-          await expect(modal.dialog).toBeVisible();
-          expect(posts).toEqual([]);
-        } else if (row.outcome.kind === "error") {
-          await modal.expectSubmitError(row.outcome.text);
-          await expect(modal.dialog).toBeVisible();
-        } else {
-          await modal.expectClosed();
-          await expect(toasts.success(`Role "${name}" created`)).toBeVisible();
-          await expect
-            .poll(async () => (await api.role(name))?.name)
-            .toBe(name);
-          if (name.length < 200) {
-            await rolesPage.filterBy("Name", name);
+          if (row.outcome.kind === "required") {
             await expect(
-              rolesPage.exactRow(name).getByRole("gridcell").nth(PLUGIN),
-            ).toHaveText(row.outcome.plugin ?? "");
+              modal.dialog.getByText("Name is required"),
+            ).toBeVisible();
+            await expect(modal.dialog).toBeVisible();
+            expect(posts).toEqual([]);
+          } else if (row.outcome.kind === "error") {
+            await modal.expectSubmitError(row.outcome.text);
+            await expect(modal.dialog).toBeVisible();
+          } else {
+            await modal.expectClosed();
+            await expect(
+              toasts.success(`Role "${name}" created`),
+            ).toBeVisible();
+            await expect
+              .poll(async () => (await api.role(name))?.name)
+              .toBe(name);
+            if (name.length < 200) {
+              await rolesPage.filterBy("Name", name);
+              await expect(
+                rolesPage.exactRow(name).getByRole("gridcell").nth(PLUGIN),
+              ).toHaveText(row.outcome.plugin ?? "");
+            }
           }
-        }
-      });
-    }
-
-    for (const row of [
-      { label: "(empty)", description: "", cell: "—" },
-      {
-        label: "one line",
-        description: "Reads every task",
-        cell: "Reads every task",
-      },
-      {
-        label: "500 characters",
-        description: "d".repeat(500),
-        cell: "truncated",
-      },
-    ]) {
-      test(`ROL-CRE-03 description ${row.label}`, async ({
-        rolesPage,
-        cleanup,
-      }) => {
-        const name = cleanup.role(roleName((u) => `custom.${u}`));
-        await rolesPage.goto();
-        await rolesPage.create({
-          name,
-          description: row.description || undefined,
         });
-        await rolesPage.filterBy("Name", name);
-        const cell = rolesPage
-          .exactRow(name)
-          .getByRole("gridcell")
-          .nth(DESCRIPTION);
-        if (row.cell === "truncated") {
-          await expect
-            .poll(() => cell.evaluate((td) => td.scrollWidth > td.clientWidth))
-            .toBe(true);
-        } else {
-          await expect(cell).toHaveText(row.cell);
-        }
-      });
-    }
+      }
+    });
+
+    test("ROL-CRE-03 description", async ({ rolesPage, cleanup }) => {
+      for (const row of [
+        { label: "(empty)", description: "", cell: "—" },
+        {
+          label: "one line",
+          description: "Reads every task",
+          cell: "Reads every task",
+        },
+        {
+          label: "500 characters",
+          description: "d".repeat(500),
+          cell: "truncated",
+        },
+      ]) {
+        await test.step(`description ${row.label}`, async () => {
+          const name = cleanup.role(roleName((u) => `custom.${u}`));
+          await rolesPage.goto();
+          await rolesPage.create({
+            name,
+            description: row.description || undefined,
+          });
+          await rolesPage.filterBy("Name", name);
+          const cell = rolesPage
+            .exactRow(name)
+            .getByRole("gridcell")
+            .nth(DESCRIPTION);
+          if (row.cell === "truncated") {
+            await expect
+              .poll(() =>
+                cell.evaluate((td) => td.scrollWidth > td.clientWidth),
+              )
+              .toBe(true);
+          } else {
+            await expect(cell).toHaveText(row.cell);
+          }
+        });
+      }
+    });
 
     const permissionRows: {
       label: string;
@@ -725,30 +735,28 @@ test.describe("Roles", () => {
       { label: VIEW_TASK, permissions: [VIEW_TASK], outcome: { count: 1 } },
     ];
 
-    for (const row of permissionRows) {
-      test(`ROL-CRE-04 permissions ${row.label}`, async ({
-        rolesPage,
-        api,
-        cleanup,
-      }) => {
-        const name = cleanup.role(roleName((u) => `custom.${u}`));
-        await rolesPage.goto();
-        const modal = await rolesPage.openCreate();
-        await modal.field("Name").fill(name);
-        await new PermissionTags(modal.dialog).add(...row.permissions);
-        await modal.button("Create").click();
-        if ("error" in row.outcome) {
-          await modal.expectSubmitError(row.outcome.error);
-          expect(await api.role(name)).toBeUndefined();
-        } else {
-          await modal.expectClosed();
-          await rolesPage.filterBy("Name", name);
-          await expect(
-            rolesPage.exactRow(name).getByRole("gridcell").nth(PERMISSIONS),
-          ).toHaveText(String(row.outcome.count));
-        }
-      });
-    }
+    test("ROL-CRE-04 permissions", async ({ rolesPage, api, cleanup }) => {
+      for (const row of permissionRows) {
+        await test.step(`permissions ${row.label}`, async () => {
+          const name = cleanup.role(roleName((u) => `custom.${u}`));
+          await rolesPage.goto();
+          const modal = await rolesPage.openCreate();
+          await modal.field("Name").fill(name);
+          await new PermissionTags(modal.dialog).add(...row.permissions);
+          await modal.button("Create").click();
+          if ("error" in row.outcome) {
+            await modal.expectSubmitError(row.outcome.error);
+            expect(await api.role(name)).toBeUndefined();
+          } else {
+            await modal.expectClosed();
+            await rolesPage.filterBy("Name", name);
+            await expect(
+              rolesPage.exactRow(name).getByRole("gridcell").nth(PERMISSIONS),
+            ).toHaveText(String(row.outcome.count));
+          }
+        });
+      }
+    });
 
     test(
       "ROL-CRE-05 the new role appears",
@@ -841,50 +849,54 @@ test.describe("Roles", () => {
       { description: "keep", add: false, remove: "both" },
     ];
 
-    for (const row of editRows) {
-      test(`ROL-EDT-02 ${row.description} the description, add ${row.add ? "c.x" : "nothing"}, remove ${row.remove === "a" ? "a.x" : row.remove}`, async ({
-        rolesPage,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        // a.x, b.x, c.x of the spec: real codenames, a.x = view, b.x = change.
-        const name = await seedRole(api, cleanup);
-        await findRole(rolesPage, name);
-        const modal = await rolesPage.openEdit(name);
-        const tags = new PermissionTags(modal.dialog);
-        if (row.description === "change")
-          await modal.field("Description").fill("After");
-        if (row.add) await tags.add(DELETE_TASK);
-        if (row.remove !== "nothing")
-          await tags.removeButton(VIEW_TASK).click();
-        if (row.remove === "both") await tags.removeButton(CHANGE_TASK).click();
-        await modal.button("Save").click();
-        await modal.expectClosed();
-        await expect(toasts.success(`Role "${name}" updated`)).toBeVisible();
+    test("ROL-EDT-02 every combination of changes", async ({
+      rolesPage,
+      api,
+      cleanup,
+      toasts,
+    }) => {
+      test.slow();
+      for (const row of editRows) {
+        await test.step(`${row.description} the description, add ${row.add ? "c.x" : "nothing"}, remove ${row.remove === "a" ? "a.x" : row.remove}`, async () => {
+          // a.x, b.x, c.x of the spec: real codenames, a.x = view, b.x = change.
+          const name = await seedRole(api, cleanup);
+          await findRole(rolesPage, name);
+          const modal = await rolesPage.openEdit(name);
+          const tags = new PermissionTags(modal.dialog);
+          if (row.description === "change")
+            await modal.field("Description").fill("After");
+          if (row.add) await tags.add(DELETE_TASK);
+          if (row.remove !== "nothing")
+            await tags.removeButton(VIEW_TASK).click();
+          if (row.remove === "both")
+            await tags.removeButton(CHANGE_TASK).click();
+          await modal.button("Save").click();
+          await modal.expectClosed();
+          await expect(toasts.success(`Role "${name}" updated`)).toBeVisible();
 
-        const expected = [VIEW_TASK, CHANGE_TASK]
-          .filter(
-            (p) =>
-              row.remove === "nothing" ||
-              (row.remove === "a" && p !== VIEW_TASK),
-          )
-          .concat(row.add ? [DELETE_TASK] : [])
-          .sort();
-        await expect
-          .poll(async () => {
-            const role = await api.role(name);
-            return {
-              description: role?.description,
-              permissions: [...(role?.permissions ?? [])].sort(),
-            };
-          })
-          .toEqual({
-            description: row.description === "change" ? "After" : "Before",
-            permissions: expected,
-          });
-      });
-    }
+          const expected = [VIEW_TASK, CHANGE_TASK]
+            .filter(
+              (p) =>
+                row.remove === "nothing" ||
+                (row.remove === "a" && p !== VIEW_TASK),
+            )
+            .concat(row.add ? [DELETE_TASK] : [])
+            .sort();
+          await expect
+            .poll(async () => {
+              const role = await api.role(name);
+              return {
+                description: role?.description,
+                permissions: [...(role?.permissions ?? [])].sort(),
+              };
+            })
+            .toEqual({
+              description: row.description === "change" ? "After" : "Before",
+              permissions: expected,
+            });
+        });
+      }
+    });
 
     test("ROL-EDT-03 clearing the description", async ({
       rolesPage,
@@ -955,190 +967,196 @@ test.describe("Roles", () => {
   });
 
   test.describe("Delete", () => {
-    for (const assigned of [
-      "not assigned to anyone",
-      "assigned to a user",
-      "assigned to a group",
-      "assigned on one object only",
-    ] as const) {
-      test(`ROL-DEL-01 delete a role ${assigned}`, async ({
-        rolesPage,
-        api,
-        cleanup,
-        page,
-        toasts,
-      }) => {
-        const name = cleanup.role(roleName((u) => `file.${u}`));
-        await api.createRole({
-          name,
-          permissions: ["file.view_filerepository"],
-        });
-        let owner: { kind: RoleOwnerKind; name: string } | undefined;
-        if (
-          assigned === "assigned to a user" ||
-          assigned === "assigned on one object only"
-        ) {
-          owner = {
-            kind: "user",
-            name: await seedOwner({ api, cleanup, kind: "user" }),
-          };
-        } else if (assigned === "assigned to a group") {
-          owner = {
-            kind: "group",
-            name: await seedOwner({ api, cleanup, kind: "group" }),
-          };
-        }
-        if (owner) {
-          let contentObject: string | null = null;
-          if (assigned === "assigned on one object only") {
-            const repo = cleanup.repository(uniqueName("repo"));
-            contentObject = (await api.createFileRepository(repo)).pulp_href;
+    test("ROL-DEL-01 delete a role", async ({
+      rolesPage,
+      api,
+      cleanup,
+      page,
+      toasts,
+    }) => {
+      test.slow();
+      for (const assigned of [
+        "not assigned to anyone",
+        "assigned to a user",
+        "assigned to a group",
+        "assigned on one object only",
+      ] as const) {
+        await test.step(`delete a role ${assigned}`, async () => {
+          const name = cleanup.role(roleName((u) => `file.${u}`));
+          await api.createRole({
+            name,
+            permissions: ["file.view_filerepository"],
+          });
+          let owner: { kind: RoleOwnerKind; name: string } | undefined;
+          if (
+            assigned === "assigned to a user" ||
+            assigned === "assigned on one object only"
+          ) {
+            owner = {
+              kind: "user",
+              name: await seedOwner({ api, cleanup, kind: "user" }),
+            };
+          } else if (assigned === "assigned to a group") {
+            owner = {
+              kind: "group",
+              name: await seedOwner({ api, cleanup, kind: "group" }),
+            };
           }
-          await api.assignRole(ownerRef(owner.kind, owner.name), {
-            role: name,
-            contentObject,
-          });
-        }
+          if (owner) {
+            let contentObject: string | null = null;
+            if (assigned === "assigned on one object only") {
+              const repo = cleanup.repository(uniqueName("repo"));
+              contentObject = (await api.createFileRepository(repo)).pulp_href;
+            }
+            await api.assignRole(ownerRef(owner.kind, owner.name), {
+              role: name,
+              contentObject,
+            });
+          }
 
-        await findRole(rolesPage, name);
-        await rolesPage.delete(name);
-        await expect(toasts.success(`Role "${name}" deleted`)).toBeVisible();
-        await rolesPage.expectRowGone(name);
-        expect(await api.role(name)).toBeUndefined();
+          await findRole(rolesPage, name);
+          await rolesPage.delete(name);
+          await expect(toasts.success(`Role "${name}" deleted`)).toBeVisible();
+          await rolesPage.expectRowGone(name);
+          expect(await api.role(name)).toBeUndefined();
 
-        if (owner) {
-          // Pulp deletes the role's assignments with it.
-          expect(
-            await api.roleAssignments(ownerRef(owner.kind, owner.name)),
-          ).toEqual([]);
-          const tab = await openRolesTab({
-            page,
-            api,
-            kind: owner.kind,
-            owner: owner.name,
-          });
-          await expect(
-            tab.table.stateHeading(`No roles assigned to this ${owner.kind}`),
-          ).toBeVisible();
-        }
-      });
-    }
+          if (owner) {
+            // Pulp deletes the role's assignments with it.
+            expect(
+              await api.roleAssignments(ownerRef(owner.kind, owner.name)),
+            ).toEqual([]);
+            const tab = await openRolesTab({
+              page,
+              api,
+              kind: owner.kind,
+              owner: owner.name,
+            });
+            await expect(
+              tab.table.stateHeading(`No roles assigned to this ${owner.kind}`),
+            ).toBeVisible();
+          }
+        });
+      }
+    });
   });
 
   test.describe("Role assignments", () => {
-    for (const kind of ["user", "group"] as const) {
-      for (const scope of [
-        "globally",
-        "on one repository",
-        "in one domain",
-      ] as const) {
-        test(`ROLE-ASSIGN-01 ${kind} has a role assigned ${scope}`, async ({
-          page,
-          api,
-          cleanup,
-        }) => {
-          if (scope === "in one domain") {
-            test.skip(
-              !api.domainEnabled,
-              "domains are disabled on this backend",
+    const assignKinds = ["user", "group"] as const;
+
+    test("ROLE-ASSIGN-01 row content", async ({ page, api, cleanup }) => {
+      test.slow();
+      for (const kind of assignKinds) {
+        for (const scope of [
+          "globally",
+          "on one repository",
+          "in one domain",
+        ] as const) {
+          await test.step(`${kind} has a role assigned ${scope}`, async (step) => {
+            if (scope === "in one domain") {
+              step.skip(
+                !api.domainEnabled,
+                "domains are disabled on this backend",
+              );
+            }
+            const role = cleanup.role(roleName((u) => `file.${u}`));
+            await api.createRole({
+              name: role,
+              description: "Views repositories",
+              permissions: ["file.view_filerepository"],
+            });
+            const owner = await seedOwner({ api, cleanup, kind });
+            let contentObject: string | null = null;
+            let domain: string | null = null;
+            if (scope === "on one repository") {
+              const repo = cleanup.repository(uniqueName("repo"));
+              contentObject = (await api.createFileRepository(repo)).pulp_href;
+            } else if (scope === "in one domain") {
+              domain = await api.defaultDomainHref();
+            }
+            await api.assignRole(ownerRef(kind, owner), {
+              role,
+              contentObject,
+              domain,
+            });
+
+            const tab = await openRolesTab({ page, api, kind, owner });
+            const cells = tab.rows(role).getByRole("gridcell");
+            await expect(cells.nth(0)).toHaveText(role);
+            await expect(cells.nth(1)).toHaveText("Views repositories");
+            await expect(cells.nth(2)).toHaveText("1");
+            await expect(cells.nth(3)).not.toHaveText("—");
+            await expect(cells.nth(3)).toHaveText(/\d/);
+          });
+        }
+      }
+      // Open: Pulp returns each assignment's object or domain but the row hides
+      // it, so a role assigned twice (globally and on an object) shows as two
+      // identical rows; decide whether the row should show the scope.
+      await test.step.skip("the row shows the assignment's scope", () => {});
+    });
+
+    test("ROLE-ASSIGN-02 add roles", async ({ page, api, cleanup, toasts }) => {
+      test.slow();
+      for (const kind of assignKinds) {
+        for (const n of [1, 2]) {
+          await test.step(`add ${n} role(s) to a ${kind}`, async () => {
+            const roles = Array.from({ length: n }, () =>
+              cleanup.role(roleName((u) => `custom.${u}`)),
             );
-          }
+            for (const name of roles) await api.createRole({ name });
+            const owner = await seedOwner({ api, cleanup, kind });
+            const tab = await openRolesTab({ page, api, kind, owner });
+            await tab.add(roles);
+            await expect(
+              toasts.success(
+                `${n} ${n === 1 ? "role" : "roles"} added to ${kind} "${owner}"`,
+              ),
+            ).toBeVisible();
+            for (const name of roles) {
+              await expect(
+                tab.rows(name).getByRole("gridcell").nth(3),
+              ).toHaveText(/\d/);
+            }
+          });
+        }
+      }
+    });
+
+    test("ROLE-ASSIGN-03 remove one assignment of a role held twice", async ({
+      page,
+      api,
+      cleanup,
+    }) => {
+      test.slow();
+      for (const kind of assignKinds) {
+        await test.step(`a ${kind} holds it twice`, async () => {
           const role = cleanup.role(roleName((u) => `file.${u}`));
           await api.createRole({
             name: role,
-            description: "Views repositories",
             permissions: ["file.view_filerepository"],
           });
           const owner = await seedOwner({ api, cleanup, kind });
-          let contentObject: string | null = null;
-          let domain: string | null = null;
-          if (scope === "on one repository") {
-            const repo = cleanup.repository(uniqueName("repo"));
-            contentObject = (await api.createFileRepository(repo)).pulp_href;
-          } else if (scope === "in one domain") {
-            domain = await api.defaultDomainHref();
-          }
+          const repo = cleanup.repository(uniqueName("repo"));
+          const { pulp_href } = await api.createFileRepository(repo);
+          await api.assignRole(ownerRef(kind, owner), { role });
           await api.assignRole(ownerRef(kind, owner), {
             role,
-            contentObject,
-            domain,
+            contentObject: pulp_href,
           });
 
           const tab = await openRolesTab({ page, api, kind, owner });
-          const cells = tab.rows(role).getByRole("gridcell");
-          await expect(cells.nth(0)).toHaveText(role);
-          await expect(cells.nth(1)).toHaveText("Views repositories");
-          await expect(cells.nth(2)).toHaveText("1");
-          await expect(cells.nth(3)).not.toHaveText("—");
-          await expect(cells.nth(3)).toHaveText(/\d/);
+          await expect(tab.rows(role)).toHaveCount(2);
+          await tab.remove(tab.rows(role).first());
+          await expect(tab.rows(role)).toHaveCount(1);
+          await expect
+            .poll(
+              async () =>
+                (await api.roleAssignments(ownerRef(kind, owner))).length,
+            )
+            .toBe(1);
         });
       }
-
-      test(`ROLE-ASSIGN-01 ${kind} row shows the assignment's scope`, async () => {
-        test.fixme(
-          true,
-          "Open: Pulp returns each assignment's object or domain but the row hides it; decide whether to show the scope",
-        );
-      });
-
-      for (const n of [1, 2]) {
-        test(`ROLE-ASSIGN-02 add ${n} role(s) to a ${kind}`, async ({
-          page,
-          api,
-          cleanup,
-          toasts,
-        }) => {
-          const roles = Array.from({ length: n }, () =>
-            cleanup.role(roleName((u) => `custom.${u}`)),
-          );
-          for (const name of roles) await api.createRole({ name });
-          const owner = await seedOwner({ api, cleanup, kind });
-          const tab = await openRolesTab({ page, api, kind, owner });
-          await tab.add(roles);
-          await expect(
-            toasts.success(
-              `${n} ${n === 1 ? "role" : "roles"} added to ${kind} "${owner}"`,
-            ),
-          ).toBeVisible();
-          for (const name of roles) {
-            await expect(
-              tab.rows(name).getByRole("gridcell").nth(3),
-            ).toHaveText(/\d/);
-          }
-        });
-      }
-
-      test(`ROLE-ASSIGN-03 remove one assignment of a role a ${kind} holds twice`, async ({
-        page,
-        api,
-        cleanup,
-      }) => {
-        const role = cleanup.role(roleName((u) => `file.${u}`));
-        await api.createRole({
-          name: role,
-          permissions: ["file.view_filerepository"],
-        });
-        const owner = await seedOwner({ api, cleanup, kind });
-        const repo = cleanup.repository(uniqueName("repo"));
-        const { pulp_href } = await api.createFileRepository(repo);
-        await api.assignRole(ownerRef(kind, owner), { role });
-        await api.assignRole(ownerRef(kind, owner), {
-          role,
-          contentObject: pulp_href,
-        });
-
-        const tab = await openRolesTab({ page, api, kind, owner });
-        await expect(tab.rows(role)).toHaveCount(2);
-        await tab.remove(tab.rows(role).first());
-        await expect(tab.rows(role)).toHaveCount(1);
-        await expect
-          .poll(
-            async () =>
-              (await api.roleAssignments(ownerRef(kind, owner))).length,
-          )
-          .toBe(1);
-      });
-    }
+    });
 
     test("ROLE-ASSIGN-04 a non-superuser who may view a group cannot read its role assignments", async ({
       api,
@@ -1195,94 +1213,100 @@ test.describe("Roles", () => {
       },
     ];
 
-    for (const row of effectRows) {
-      test(`ROLE-ASSIGN-05 a role granted ${row.how} takes effect`, async ({
-        api,
-        cleanup,
-        secondUser,
-      }) => {
-        test.slow();
-        test.fail(
-          row.scope === "global",
-          "UI gap: my_permissions/ leaves out global roles and Pulp exposes them to no non-superuser endpoint",
-        );
-        const user = await secondUser.create();
-        // Two repositories they can see but not change; the role targets the first.
-        const target = cleanup.repository(uniqueName("repo"));
-        const other = cleanup.repository(uniqueName("repo"));
-        const targetHref = (await api.createFileRepository(target)).pulp_href;
-        const otherHref = (await api.createFileRepository(other)).pulp_href;
-        for (const href of [targetHref, otherHref]) {
-          await api.assignRole(
-            { user: user.username },
-            {
-              role: "file.filerepository_viewer",
-              contentObject: href,
-            },
+    test("ROLE-ASSIGN-05 a role takes effect", async ({
+      api,
+      cleanup,
+      secondUser,
+    }) => {
+      test.slow();
+      for (const row of effectRows) {
+        await test.step(`a role granted ${row.how} takes effect`, async (step) => {
+          // UI gap: my_permissions/ leaves out global roles and Pulp exposes
+          // them to no non-superuser endpoint, so a global role never takes
+          // effect in the UI; skip those rows until an endpoint supports it.
+          step.skip(
+            row.scope === "global",
+            "UI gap: my_permissions/ leaves out global roles and Pulp exposes them to no non-superuser endpoint",
           );
-        }
-        let holder: { user: string } | { group: string } = {
-          user: user.username,
-        };
-        if (row.through === "group") {
-          const group = cleanup.group(uniqueName("group"));
-          await api.createGroup(group);
-          await api.addGroupMember(group, user.username);
-          holder = { group };
-        }
+          const user = await secondUser.create();
+          // Two repositories they can see but not change; the role targets the
+          // first.
+          const target = cleanup.repository(uniqueName("repo"));
+          const other = cleanup.repository(uniqueName("repo"));
+          const targetHref = (await api.createFileRepository(target)).pulp_href;
+          const otherHref = (await api.createFileRepository(other)).pulp_href;
+          for (const href of [targetHref, otherHref]) {
+            await api.assignRole(
+              { user: user.username },
+              {
+                role: "file.filerepository_viewer",
+                contentObject: href,
+              },
+            );
+          }
+          let holder: { user: string } | { group: string } = {
+            user: user.username,
+          };
+          if (row.through === "group") {
+            const group = cleanup.group(uniqueName("group"));
+            await api.createGroup(group);
+            await api.addGroupMember(group, user.username);
+            holder = { group };
+          }
 
-        const page = await secondUser.login(user);
-        const repositories = new DataTable(
-          page.getByRole("main"),
-          "Repositories table",
-        );
-        const editState = async (repo: string) => {
-          await page.goto("/content-management/default/repositories");
-          // The repository list probes each row's tasks and permissions: slow.
-          await expect(repositories.rows.first()).not.toHaveText(/^\s*$/, {
-            timeout: 20_000,
-          });
-          await repositories.filter("Name", repo);
-          // Wait for the filtered page, so the menu isn't re-rendered away.
-          await expect(repositories.rows).toHaveCount(1);
-          await repositories
-            .row(repo)
-            .getByRole("button", { name: "Kebab toggle" })
-            .click();
-          const edit = page.getByRole("menuitem", {
-            name: "Edit",
-            exact: true,
-          });
-          await expect(edit).toBeVisible();
-          return edit;
-        };
+          const page = await secondUser.login(user);
+          const repositories = new DataTable(
+            page.getByRole("main"),
+            "Repositories table",
+          );
+          const editState = async (repo: string) => {
+            await page.goto("/content-management/default/repositories");
+            // The repository list probes each row's tasks and permissions: slow.
+            await expect(repositories.rows.first()).not.toHaveText(/^\s*$/, {
+              timeout: 20_000,
+            });
+            await repositories.filter("Name", repo);
+            // Wait for the filtered page, so the menu isn't re-rendered away.
+            await expect(repositories.rows).toHaveCount(1);
+            await repositories
+              .row(repo)
+              .getByRole("button", { name: "Kebab toggle" })
+              .click();
+            const edit = page.getByRole("menuitem", {
+              name: "Edit",
+              exact: true,
+            });
+            await expect(edit).toBeVisible();
+            return edit;
+          };
 
-        await expect(await editState(target)).toHaveAttribute(
-          "aria-disabled",
-          "true",
-        );
-
-        const assignment = await api.assignRole(holder, {
-          role: "file.filerepository_owner",
-          contentObject: row.scope === "object" ? targetHref : null,
-        });
-        await expect(await editState(target)).not.toHaveAttribute(
-          "aria-disabled",
-          "true",
-        );
-        if (row.scope === "object") {
-          await expect(await editState(other)).toHaveAttribute(
+          await expect(await editState(target)).toHaveAttribute(
             "aria-disabled",
             "true",
           );
-        }
 
-        await api.removeRoleAssignment(assignment.pulp_href);
-        await expect(await editState(target)).toHaveAttribute(
-          "aria-disabled",
-          "true",
-        );
-      });
-    }
+          const assignment = await api.assignRole(holder, {
+            role: "file.filerepository_owner",
+            contentObject: row.scope === "object" ? targetHref : null,
+          });
+          await expect(await editState(target)).not.toHaveAttribute(
+            "aria-disabled",
+            "true",
+          );
+          if (row.scope === "object") {
+            await expect(await editState(other)).toHaveAttribute(
+              "aria-disabled",
+              "true",
+            );
+          }
+
+          await api.removeRoleAssignment(assignment.pulp_href);
+          await expect(await editState(target)).toHaveAttribute(
+            "aria-disabled",
+            "true",
+          );
+        });
+      }
+    });
   });
 });

@@ -132,22 +132,23 @@ test.describe("Users", () => {
     }
   });
 
-  for (const staff of [false, true]) {
-    test(`USR-LIST-03 a non-superuser ${staff ? "with" : "without"} Staff status gets 403`, async ({
-      secondUser,
-    }) => {
-      const user = await secondUser.create({ is_staff: staff });
-      const page = await secondUser.login(user);
-      await page.goto("/admin/users");
-      const grid = page.getByRole("grid", { name: "Users table" });
-      await expect(
-        grid.getByRole("heading", { name: "403: Access denied" }),
-      ).toBeVisible();
-      await expect(
-        grid.getByRole("button", { name: "Kebab toggle" }),
-      ).toHaveCount(0);
-    });
-  }
+  test("USR-LIST-03 a non-superuser gets 403", async ({ secondUser }) => {
+    test.slow(); // logs in a second user per step
+    for (const staff of [false, true]) {
+      await test.step(`${staff ? "with" : "without"} Staff status`, async () => {
+        const user = await secondUser.create({ is_staff: staff });
+        const page = await secondUser.login(user);
+        await page.goto("/admin/users");
+        const grid = page.getByRole("grid", { name: "Users table" });
+        await expect(
+          grid.getByRole("heading", { name: "403: Access denied" }),
+        ).toBeVisible();
+        await expect(
+          grid.getByRole("button", { name: "Kebab toggle" }),
+        ).toHaveCount(0);
+      });
+    }
+  });
 
   test("USR-LIST-04 Create user is enabled for a non-superuser and fails with the server's reason", async ({
     secondUser,
@@ -182,64 +183,68 @@ test.describe("Users", () => {
   // validation). The UI create happy-path is covered by USR-CRE-07 below.
 
   // Both status labels and both staff values in two cases, not the 4-way product.
-  for (const { active, staff } of [
-    { active: true, staff: false },
-    { active: false, staff: true },
-  ]) {
-    test(`USR-CRE-05 Active ${active ? "checked" : "unchecked"}, Staff status ${staff ? "checked" : "unchecked"}`, async ({
-      page,
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      const modal = await openCreate(page, usersPage);
-      await modal.field("Username").fill(username);
-      await modal.field("Password").fill(STRONG_PASSWORD);
-      await modal.checkbox("Active").setChecked(active);
-      await modal.checkbox("Staff status").setChecked(staff);
-      await modal.button("Create").click();
-      await modal.expectClosed();
-      await usersPage.list.filter("Username", username);
-      await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
-        active ? "Active" : "Inactive",
-      );
-      const saved = await api.user(username);
-      expect(saved?.is_active).toBe(active);
-      expect(saved?.is_staff).toBe(staff);
-    });
-  }
+  test("USR-CRE-05 Active and Staff status are saved", async ({
+    page,
+    usersPage,
+    api,
+    cleanup,
+  }) => {
+    for (const { active, staff } of [
+      { active: true, staff: false },
+      { active: false, staff: true },
+    ]) {
+      await test.step(`Active ${active ? "checked" : "unchecked"}, Staff ${staff ? "checked" : "unchecked"}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        const modal = await openCreate(page, usersPage);
+        await modal.field("Username").fill(username);
+        await modal.field("Password").fill(STRONG_PASSWORD);
+        await modal.checkbox("Active").setChecked(active);
+        await modal.checkbox("Staff status").setChecked(staff);
+        await modal.button("Create").click();
+        await modal.expectClosed();
+        await usersPage.list.filter("Username", username);
+        await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
+          active ? "Active" : "Inactive",
+        );
+        const saved = await api.user(username);
+        expect(saved?.is_active).toBe(active);
+        expect(saved?.is_staff).toBe(staff);
+      });
+    }
+  });
 
   // Main cases of the independent optional fields, not the full 8-way product.
-  for (const { email, first, last } of [
-    { email: false, first: false, last: false },
-    { email: true, first: true, last: true },
-    { email: true, first: false, last: false },
-  ]) {
+  test("USR-CRE-06 optional text fields are saved", async ({
+    page,
+    usersPage,
+    api,
+    cleanup,
+  }) => {
     const label = (on: boolean) => (on ? "filled" : "empty");
-    test(`USR-CRE-06 email ${label(email)}, first ${label(first)}, last ${label(last)}`, async ({
-      page,
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      const expected = {
-        email: email ? "ada@example.com" : "",
-        first_name: first ? "Ada" : "",
-        last_name: last ? "Lovelace" : "",
-      };
-      const modal = await openCreate(page, usersPage);
-      await modal.field("Username").fill(username);
-      await modal.field("Password").fill(STRONG_PASSWORD);
-      await modal.field("Email").fill(expected.email);
-      await modal.field("First name").fill(expected.first_name);
-      await modal.field("Last name").fill(expected.last_name);
-      await modal.button("Create").click();
-      await modal.expectClosed();
-      await expect.poll(() => api.user(username)).toMatchObject(expected);
-    });
-  }
+    for (const { email, first, last } of [
+      { email: false, first: false, last: false },
+      { email: true, first: true, last: true },
+      { email: true, first: false, last: false },
+    ]) {
+      await test.step(`email ${label(email)}, first ${label(first)}, last ${label(last)}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        const expected = {
+          email: email ? "ada@example.com" : "",
+          first_name: first ? "Ada" : "",
+          last_name: last ? "Lovelace" : "",
+        };
+        const modal = await openCreate(page, usersPage);
+        await modal.field("Username").fill(username);
+        await modal.field("Password").fill(STRONG_PASSWORD);
+        await modal.field("Email").fill(expected.email);
+        await modal.field("First name").fill(expected.first_name);
+        await modal.field("Last name").fill(expected.last_name);
+        await modal.button("Create").click();
+        await modal.expectClosed();
+        await expect.poll(() => api.user(username)).toMatchObject(expected);
+      });
+    }
+  });
 
   test(
     "USR-CRE-07 the new user appears with a toast and Groups 0",
@@ -258,32 +263,35 @@ test.describe("Users", () => {
     },
   );
 
-  for (const active of [true, false]) {
-    test(`USR-CRE-08 a user created ${active ? "active" : "inactive"} ${active ? "can" : "cannot"} log in`, async ({
-      page,
-      usersPage,
-      cleanup,
-      secondUser,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      const modal = await openCreate(page, usersPage);
-      await modal.field("Username").fill(username);
-      await modal.field("Password").fill(STRONG_PASSWORD);
-      await modal.checkbox("Active").setChecked(active);
-      await modal.button("Create").click();
-      await modal.expectClosed();
+  test("USR-CRE-08 a user created active can log in and inactive cannot", async ({
+    page,
+    usersPage,
+    cleanup,
+    secondUser,
+  }) => {
+    test.slow(); // creates a user and logs in a second user per step
+    for (const active of [true, false]) {
+      await test.step(`created ${active ? "active" : "inactive"} ${active ? "can" : "cannot"} log in`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        const modal = await openCreate(page, usersPage);
+        await modal.field("Username").fill(username);
+        await modal.field("Password").fill(STRONG_PASSWORD);
+        await modal.checkbox("Active").setChecked(active);
+        await modal.button("Create").click();
+        await modal.expectClosed();
 
-      const credentials = { username, password: STRONG_PASSWORD };
-      if (active) {
-        await secondUser.login(credentials);
-      } else {
-        const userPage = await secondUser.attemptLogin(credentials);
-        await expect(
-          userPage.getByText("Invalid login credentials."),
-        ).toBeVisible();
-      }
-    });
-  }
+        const credentials = { username, password: STRONG_PASSWORD };
+        if (active) {
+          await secondUser.login(credentials);
+        } else {
+          const userPage = await secondUser.attemptLogin(credentials);
+          await expect(
+            userPage.getByText("Invalid login credentials."),
+          ).toBeVisible();
+        }
+      });
+    }
+  });
 
   // --- Edit ---------------------------------------------------------------
 
@@ -295,36 +303,41 @@ test.describe("Users", () => {
     is_staff: false,
   };
 
-  for (const entry of ["list", "detail"] as const) {
-    test(`USR-EDT-01 form fields from ${entry}`, async ({
-      page,
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({ username, ...filledUser, is_staff: true });
-      let modal: FormModal;
-      if (entry === "list") {
-        await usersPage.goto();
-        modal = await usersPage.openEdit(username);
-      } else {
-        modal = await (
-          await openDetail(page, api, username)
-        ).openEdit(username);
-      }
-      await expect(modal.field("Email")).toHaveValue(filledUser.email);
-      await expect(modal.field("First name")).toHaveValue(
-        filledUser.first_name,
-      );
-      await expect(modal.field("Last name")).toHaveValue(filledUser.last_name);
-      await expect(modal.checkbox("Active")).toBeChecked();
-      await expect(modal.checkbox("Staff status")).toBeChecked();
-      await expect(modal.field("Username")).toHaveCount(0);
-      await expect(modal.field("Password")).toHaveCount(0);
-      await expect(modal.button("Save")).toBeVisible();
-    });
-  }
+  test("USR-EDT-01 form fields from each entry point", async ({
+    page,
+    usersPage,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    for (const entry of ["list", "detail"] as const) {
+      await test.step(`from ${entry}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username, ...filledUser, is_staff: true });
+        let modal: FormModal;
+        if (entry === "list") {
+          await usersPage.goto();
+          modal = await usersPage.openEdit(username);
+        } else {
+          modal = await (
+            await openDetail(page, api, username)
+          ).openEdit(username);
+        }
+        await expect(modal.field("Email")).toHaveValue(filledUser.email);
+        await expect(modal.field("First name")).toHaveValue(
+          filledUser.first_name,
+        );
+        await expect(modal.field("Last name")).toHaveValue(
+          filledUser.last_name,
+        );
+        await expect(modal.checkbox("Active")).toBeChecked();
+        await expect(modal.checkbox("Staff status")).toBeChecked();
+        await expect(modal.field("Username")).toHaveCount(0);
+        await expect(modal.field("Password")).toHaveCount(0);
+        await expect(modal.button("Save")).toBeVisible();
+      });
+    }
+  });
 
   const textFields = [
     { label: "Email", key: "email", value: "after@example.com" },
@@ -353,47 +366,56 @@ test.describe("Users", () => {
     return (await openDetail(page, api, username)).openEdit(username);
   };
 
-  for (const field of textFields) {
-    for (const entry of ["list", "detail"] as const) {
-      test(`USR-EDT-02 change ${field.label} from ${entry}`, async ({
-        page,
-        usersPage,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        const username = cleanup.user(uniqueName("user"));
-        await api.createUser({ username, ...filledUser });
-        const modal = await openEdit({ entry, page, usersPage, api, username });
-        await modal.field(field.label).fill(field.value);
-        await modal.button("Save").click();
-        await modal.expectClosed();
-        await expect(
-          toasts.success(`User "${username}" updated`),
-        ).toBeVisible();
-        await expect
-          .poll(() => api.user(username))
-          .toMatchObject({
-            ...filledUser,
-            [field.key]: field.value,
+  test("USR-EDT-02 change a field from each entry point", async ({
+    page,
+    usersPage,
+    api,
+    cleanup,
+    toasts,
+  }) => {
+    test.slow();
+    for (const field of textFields) {
+      for (const entry of ["list", "detail"] as const) {
+        await test.step(`change ${field.label} from ${entry}`, async () => {
+          const username = cleanup.user(uniqueName("user"));
+          await api.createUser({ username, ...filledUser });
+          const modal = await openEdit({
+            entry,
+            page,
+            usersPage,
+            api,
+            username,
           });
+          await modal.field(field.label).fill(field.value);
+          await modal.button("Save").click();
+          await modal.expectClosed();
+          await expect(
+            toasts.success(`User "${username}" updated`),
+          ).toBeVisible();
+          await expect
+            .poll(() => api.user(username))
+            .toMatchObject({
+              ...filledUser,
+              [field.key]: field.value,
+            });
 
-        // The new value shows in the Users list (Email is its only text column)
-        // and in the detail page's edit form, without a reload.
-        await usersPage.goto();
-        await usersPage.list.filter("Username", username);
-        await expect(cell(usersPage.list.row(username), COL.email)).toHaveText(
-          field.key === "email" ? field.value : filledUser.email,
-        );
-        const detail = await (async () => {
-          await usersPage.openDetail(username);
-          return new UserDetailPage(page, username);
-        })();
-        const again = await detail.openEdit(username);
-        await expect(again.field(field.label)).toHaveValue(field.value);
-      });
+          // The new value shows in the Users list (Email is its only text
+          // column) and in the detail page's edit form, without a reload.
+          await usersPage.goto();
+          await usersPage.list.filter("Username", username);
+          await expect(
+            cell(usersPage.list.row(username), COL.email),
+          ).toHaveText(field.key === "email" ? field.value : filledUser.email);
+          const detail = await (async () => {
+            await usersPage.openDetail(username);
+            return new UserDetailPage(page, username);
+          })();
+          const again = await detail.openEdit(username);
+          await expect(again.field(field.label)).toHaveValue(field.value);
+        });
+      }
     }
-  }
+  });
 
   const multiRows: {
     label: string;
@@ -441,30 +463,33 @@ test.describe("Users", () => {
     Active: "is_active",
     "Staff status": "is_staff",
   };
-  for (const row of multiRows) {
-    test(`USR-EDT-03 change ${row.label}`, async ({
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({ username, ...filledUser });
-      await usersPage.goto();
-      const modal = await usersPage.openEdit(username);
-      const expected: Record<string, string | boolean> = { ...filledUser };
-      for (const [label, value] of Object.entries(row.changes)) {
-        if (typeof value === "boolean") {
-          await modal.checkbox(label).setChecked(value);
-        } else {
-          await modal.field(label).fill(value);
+  test("USR-EDT-03 change multiple fields at once", async ({
+    usersPage,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    for (const row of multiRows) {
+      await test.step(`change ${row.label}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username, ...filledUser });
+        await usersPage.goto();
+        const modal = await usersPage.openEdit(username);
+        const expected: Record<string, string | boolean> = { ...filledUser };
+        for (const [label, value] of Object.entries(row.changes)) {
+          if (typeof value === "boolean") {
+            await modal.checkbox(label).setChecked(value);
+          } else {
+            await modal.field(label).fill(value);
+          }
+          expected[keyOf[label]] = value;
         }
-        expected[keyOf[label]] = value;
-      }
-      await modal.button("Save").click();
-      await modal.expectClosed();
-      await expect.poll(() => api.user(username)).toMatchObject(expected);
-    });
-  }
+        await modal.button("Save").click();
+        await modal.expectClosed();
+        await expect.poll(() => api.user(username)).toMatchObject(expected);
+      });
+    }
+  });
 
   // Representative transitions that flip each independent flag both ways, rather
   // than all 12 combinations.
@@ -475,56 +500,58 @@ test.describe("Users", () => {
     [false, true, true, false],
   ];
   const onOff = (on: boolean) => (on ? "on" : "off");
-  for (const [fromActive, fromStaff, toActive, toStaff] of transitions) {
-    test(`USR-EDT-04 Active ${onOff(fromActive)}→${onOff(toActive)}, Staff ${onOff(fromStaff)}→${onOff(toStaff)}`, async ({
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({
-        username,
-        is_active: fromActive,
-        is_staff: fromStaff,
-      });
-      await usersPage.goto();
-      const modal = await usersPage.openEdit(username);
-      await modal.checkbox("Active").setChecked(toActive);
-      await modal.checkbox("Staff status").setChecked(toStaff);
-      await modal.button("Save").click();
-      await modal.expectClosed();
-      await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
-        toActive ? "Active" : "Inactive",
-      );
-      await expect
-        .poll(() => api.user(username))
-        .toMatchObject({ is_active: toActive, is_staff: toStaff });
-    });
-  }
-
-  for (const field of textFields) {
-    test(`USR-EDT-05 clearing ${field.label}`, async ({
-      usersPage,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({ username, ...filledUser });
-      await usersPage.goto();
-      const modal = await usersPage.openEdit(username);
-      await modal.field(field.label).fill("");
-      await modal.button("Save").click();
-      await modal.expectClosed();
-      await expect
-        .poll(async () => (await api.user(username))?.[field.key])
-        .toBe("");
-      if (field.key === "email") {
-        await expect(cell(usersPage.list.row(username), COL.email)).toHaveText(
-          "—",
+  test("USR-EDT-04 Active and Staff transitions", async ({
+    usersPage,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    for (const [fromActive, fromStaff, toActive, toStaff] of transitions) {
+      await test.step(`Active ${onOff(fromActive)}→${onOff(toActive)}, Staff ${onOff(fromStaff)}→${onOff(toStaff)}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({
+          username,
+          is_active: fromActive,
+          is_staff: fromStaff,
+        });
+        await usersPage.goto();
+        const modal = await usersPage.openEdit(username);
+        await modal.checkbox("Active").setChecked(toActive);
+        await modal.checkbox("Staff status").setChecked(toStaff);
+        await modal.button("Save").click();
+        await modal.expectClosed();
+        await expect(cell(usersPage.list.row(username), COL.active)).toHaveText(
+          toActive ? "Active" : "Inactive",
         );
-      }
-    });
-  }
+        await expect
+          .poll(() => api.user(username))
+          .toMatchObject({ is_active: toActive, is_staff: toStaff });
+      });
+    }
+  });
+
+  test("USR-EDT-05 clearing a field", async ({ usersPage, api, cleanup }) => {
+    test.slow();
+    for (const field of textFields) {
+      await test.step(`clearing ${field.label}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username, ...filledUser });
+        await usersPage.goto();
+        const modal = await usersPage.openEdit(username);
+        await modal.field(field.label).fill("");
+        await modal.button("Save").click();
+        await modal.expectClosed();
+        await expect
+          .poll(async () => (await api.user(username))?.[field.key])
+          .toBe("");
+        if (field.key === "email") {
+          await expect(
+            cell(usersPage.list.row(username), COL.email),
+          ).toHaveText("—");
+        }
+      });
+    }
+  });
 
   test("USR-EDT-06 invalid email on edit shows an error and sends nothing", async ({
     page,
@@ -613,74 +640,83 @@ test.describe("Users", () => {
     { memberships: "with global and object roles", entry: "list" },
     { memberships: "with global and object roles", entry: "detail" },
   ] as const;
-  for (const row of deleteRows) {
-    test(`USR-DEL-01 delete a user ${row.memberships} from ${row.entry}`, async ({
-      page,
-      usersPage,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({ username });
-      const groups: string[] = [];
-      let repositoryHref = "";
-      if (row.memberships === "in two groups") {
-        // Each group keeps another member, so its count drops from 2 to 1.
-        const other = cleanup.user(uniqueName("user"));
-        await api.createUser({ username: other });
-        for (let i = 0; i < 2; i++) {
-          const group = cleanup.group(uniqueName("group"));
-          await api.createGroup(group);
-          await api.addGroupMember(group, username);
-          await api.addGroupMember(group, other);
-          groups.push(group);
+  test("USR-DEL-01 delete a user", async ({
+    page,
+    usersPage,
+    api,
+    cleanup,
+    toasts,
+  }) => {
+    test.slow();
+    for (const row of deleteRows) {
+      await test.step(`${row.memberships} from ${row.entry}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username });
+        const groups: string[] = [];
+        let repositoryHref = "";
+        if (row.memberships === "in two groups") {
+          // Each group keeps another member, so its count drops from 2 to 1.
+          const other = cleanup.user(uniqueName("user"));
+          await api.createUser({ username: other });
+          for (let i = 0; i < 2; i++) {
+            const group = cleanup.group(uniqueName("group"));
+            await api.createGroup(group);
+            await api.addGroupMember(group, username);
+            await api.addGroupMember(group, other);
+            groups.push(group);
+          }
         }
-      }
-      if (row.memberships === "with global and object roles") {
-        const role = cleanup.role(uniqueName("role"));
-        await api.createRole({ name: role, permissions: ["core.view_task"] });
-        await api.assignRole({ user: username }, { role });
-        const repository = cleanup.repository(uniqueName("repo"));
-        repositoryHref = (await api.createFileRepository(repository)).pulp_href;
-        await api.assignRole(
-          { user: username },
-          { role: "file.filerepository_viewer", contentObject: repositoryHref },
-        );
-      }
+        if (row.memberships === "with global and object roles") {
+          const role = cleanup.role(uniqueName("role"));
+          await api.createRole({ name: role, permissions: ["core.view_task"] });
+          await api.assignRole({ user: username }, { role });
+          const repository = cleanup.repository(uniqueName("repo"));
+          repositoryHref = (await api.createFileRepository(repository))
+            .pulp_href;
+          await api.assignRole(
+            { user: username },
+            {
+              role: "file.filerepository_viewer",
+              contentObject: repositoryHref,
+            },
+          );
+        }
 
-      if (row.entry === "list") {
-        await usersPage.goto();
-        await usersPage.list.filter("Username", username);
-        await usersPage.delete(username);
-        await usersPage.expectRowGone(username);
-      } else {
-        const detail = await openDetail(page, api, username);
-        await detail.deleteUser();
-        await expect(page).toHaveURL(/\/admin\/users$/);
-      }
-      await expect(toasts.success(`User "${username}" deleted`)).toBeVisible();
-      await expect.poll(() => api.user(username)).toBeUndefined();
-
-      for (const group of groups) {
-        await page.goto(`/admin/groups/${await groupId(api, group)}`);
+        if (row.entry === "list") {
+          await usersPage.goto();
+          await usersPage.list.filter("Username", username);
+          await usersPage.delete(username);
+          await usersPage.expectRowGone(username);
+        } else {
+          const detail = await openDetail(page, api, username);
+          await detail.deleteUser();
+          await expect(page).toHaveURL(/\/admin\/users$/);
+        }
         await expect(
-          page.getByRole("tab", { name: "Users (1)" }),
+          toasts.success(`User "${username}" deleted`),
         ).toBeVisible();
-        await expect(
-          page
-            .getByRole("grid", { name: "Group users table" })
-            .getByRole("link", { name: username, exact: true }),
-        ).toHaveCount(0);
-      }
-      if (repositoryHref) {
-        const { roles } = await api.getJson<{
-          roles: { role: string; users: string[] }[];
-        }>(`${repositoryHref}list_roles/`);
-        expect(roles.flatMap((r) => r.users)).not.toContain(username);
-      }
-    });
-  }
+        await expect.poll(() => api.user(username)).toBeUndefined();
+
+        for (const group of groups) {
+          await page.goto(`/admin/groups/${await groupId(api, group)}`);
+          await expect(
+            page.getByRole("tab", { name: "Users (1)" }),
+          ).toBeVisible();
+          await expect(
+            page
+              .getByRole("grid", { name: "Group users table" })
+              .getByRole("link", { name: username, exact: true }),
+          ).toHaveCount(0);
+        }
+        if (repositoryHref) {
+          const { roles } = await api.getJson<{
+            roles: { role: string; users: string[] }[];
+          }>(`${repositoryHref}list_roles/`);
+          expect(roles.flatMap((r) => r.users)).not.toContain(username);
+        }
+      });
+    }
+  });
 
   test("USR-DEL-02 deleting the logged-in user", () => {
     test.skip(
@@ -727,37 +763,24 @@ test.describe("Users", () => {
     await expect(page.getByRole("tab", { name: "Roles (0)" })).toBeVisible();
   });
 
-  test.describe("USR-DET-02 tab counts", () => {
+  test("USR-DET-02 tab counts", async ({ page, api, cleanup }) => {
+    // Nine detail loads, each seeding up to 24 memberships: very slow.
+    test.setTimeout(300_000);
     // Twelve groups and roles, more than a page, shared by every row.
-    const seededGroups = Array.from({ length: 12 }, () => uniqueName("group"));
-    const seededRoles = Array.from({ length: 12 }, () => uniqueName("role"));
-
-    // Seeding and removing 24 records outlasts the default hook timeout.
-    test.beforeAll(async ({ api }) => {
-      test.setTimeout(120_000);
-      await Promise.all([
-        ...seededGroups.map((group) => api.createGroup(group)),
-        ...seededRoles.map((role) => api.createRole({ name: role })),
-      ]);
-    });
-
-    test.afterAll(async ({ api }) => {
-      test.setTimeout(120_000);
-      await Promise.all([
-        ...seededGroups.map((group) => api.deleteGroup(group)),
-        ...seededRoles.map((role) => api.deleteRole(role)),
-      ]);
-    });
+    const seededGroups = Array.from({ length: 12 }, () =>
+      cleanup.group(uniqueName("group")),
+    );
+    const seededRoles = Array.from({ length: 12 }, () =>
+      cleanup.role(uniqueName("role")),
+    );
+    await Promise.all([
+      ...seededGroups.map((group) => api.createGroup(group)),
+      ...seededRoles.map((role) => api.createRole({ name: role })),
+    ]);
 
     for (const groups of [0, 1, 12]) {
       for (const roles of [0, 1, 12]) {
-        test(`USR-DET-02 ${groups} groups and ${roles} roles`, async ({
-          page,
-          api,
-          cleanup,
-        }) => {
-          // Up to 24 seeding requests: slow on a busy backend.
-          test.setTimeout(120_000);
+        await test.step(`${groups} groups and ${roles} roles`, async () => {
           const username = cleanup.user(uniqueName("user"));
           await api.createUser({ username });
           await Promise.all([
@@ -788,63 +811,66 @@ test.describe("Users", () => {
     { action: "add two roles", tab: "Roles", change: 2 },
     { action: "remove one role", tab: "Roles", change: -1 },
   ] as const;
-  for (const row of countRows) {
-    test(`USR-DET-03 ${row.action} updates ${row.tab} (n) by ${row.change}`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({ username });
-      const isGroup = row.tab === "Groups";
-      const names = [0, 1].map(() =>
-        isGroup
-          ? cleanup.group(uniqueName("group"))
-          : cleanup.role(uniqueName("role")),
-      );
-      for (const name of names) {
-        if (isGroup) await api.createGroup(name);
-        else await api.createRole({ name });
-      }
-      const removing = row.change < 0;
-      const start = removing ? 2 : 0;
-      if (removing) {
-        for (const name of names) {
-          if (isGroup) await api.addGroupMember(name, username);
-          else await api.assignRole({ user: username }, { role: name });
-        }
-      }
-
-      const detail = await openDetail(page, api, username);
-      const tab = isGroup ? detail.groupsTab : detail.rolesTab;
-      await tab.click();
-      await expect(tab).toHaveText(`${row.tab} (${start})`);
-
-      if (removing) {
-        if (isGroup) await detail.removeGroup(names[0]);
-        else await detail.removeRole(names[0]);
-      } else {
-        await page
-          .getByRole("button", {
-            name: isGroup ? "Add Group" : "Add Role",
-            exact: true,
-          })
-          .click();
-        const modal = new BatchAddModal(
-          page,
+  test("USR-DET-03 adding and removing updates the tab count", async ({
+    page,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    for (const row of countRows) {
+      await test.step(`${row.action} updates ${row.tab} (n) by ${row.change}`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username });
+        const isGroup = row.tab === "Groups";
+        const names = [0, 1].map(() =>
           isGroup
-            ? { title: "Add User to Group", grid: "Select groups" }
-            : { title: "Add Role to User", grid: "Select roles" },
+            ? cleanup.group(uniqueName("group"))
+            : cleanup.role(uniqueName("role")),
         );
-        for (const name of names.slice(0, row.change)) {
-          await modal.select(isGroup ? "Name" : "Role", name);
+        for (const name of names) {
+          if (isGroup) await api.createGroup(name);
+          else await api.createRole({ name });
         }
-        await modal.addButton().click();
-        await expect(modal.dialog).toBeHidden();
-      }
-      await expect(tab).toHaveText(`${row.tab} (${start + row.change})`);
-    });
-  }
+        const removing = row.change < 0;
+        const start = removing ? 2 : 0;
+        if (removing) {
+          for (const name of names) {
+            if (isGroup) await api.addGroupMember(name, username);
+            else await api.assignRole({ user: username }, { role: name });
+          }
+        }
+
+        const detail = await openDetail(page, api, username);
+        const tab = isGroup ? detail.groupsTab : detail.rolesTab;
+        await tab.click();
+        await expect(tab).toHaveText(`${row.tab} (${start})`);
+
+        if (removing) {
+          if (isGroup) await detail.removeGroup(names[0]);
+          else await detail.removeRole(names[0]);
+        } else {
+          await page
+            .getByRole("button", {
+              name: isGroup ? "Add Group" : "Add Role",
+              exact: true,
+            })
+            .click();
+          const modal = new BatchAddModal(
+            page,
+            isGroup
+              ? { title: "Add User to Group", grid: "Select groups" }
+              : { title: "Add Role to User", grid: "Select roles" },
+          );
+          for (const name of names.slice(0, row.change)) {
+            await modal.select(isGroup ? "Name" : "Role", name);
+          }
+          await modal.addButton().click();
+          await expect(modal.dialog).toBeHidden();
+        }
+        await expect(tab).toHaveText(`${row.tab} (${start + row.change})`);
+      });
+    }
+  });
 
   test("USR-DET-04 edit from the actions menu shows the new values without a reload", async ({
     page,
@@ -1043,52 +1069,55 @@ test.describe("Users", () => {
     await expect(page.getByRole("tab", { name: "Users (0)" })).toBeVisible();
   });
 
-  for (const action of ["add", "remove"] as const) {
-    test(`USR-GRP-05 G › Users › ${action} the user shows on the open user page`, async ({
-      page,
-      api,
-      cleanup,
-      groupsPage,
-    }) => {
-      const username = cleanup.user(uniqueName("user"));
-      const group = cleanup.group(uniqueName("group"));
-      await api.createUser({ username });
-      await api.createGroup(group);
-      if (action === "remove") await api.addGroupMember(group, username);
+  test("USR-GRP-05 G › Users › add or remove the user shows on the open user page", async ({
+    page,
+    api,
+    cleanup,
+    groupsPage,
+  }) => {
+    test.slow();
+    for (const action of ["add", "remove"] as const) {
+      await test.step(`${action} the user`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        const group = cleanup.group(uniqueName("group"));
+        await api.createUser({ username });
+        await api.createGroup(group);
+        if (action === "remove") await api.addGroupMember(group, username);
 
-      // Visit the user page first so its record is cached, then move in-app.
-      const userDetail = await openDetail(page, api, username);
-      await expect(userDetail.groupsTab).toHaveText(
-        `Groups (${action === "add" ? 0 : 1})`,
-      );
-      const nav = page.getByRole("navigation", { name: "Nav" });
-      await nav.getByRole("button", { name: "Administration" }).click();
-      await nav.getByRole("link", { name: "Groups", exact: true }).click();
-      await expect(groupsPage.heading).toBeVisible();
-      await groupsPage.filterBy("Name", group);
-      const groupDetail = await groupsPage.openDetail(group);
-      if (action === "add") {
-        await groupDetail.addUser(username);
-        await groupDetail.usersTable
-          .getByRole("link", { name: username, exact: true })
-          .click();
-        await expect(userDetail.groupsTab).toHaveText("Groups (1)");
-        await expect(userDetail.groups.row(group)).toBeVisible();
-      } else {
-        await groupDetail.removeUser(username);
+        // Visit the user page first so its record is cached, then move in-app.
+        const userDetail = await openDetail(page, api, username);
+        await expect(userDetail.groupsTab).toHaveText(
+          `Groups (${action === "add" ? 0 : 1})`,
+        );
+        const nav = page.getByRole("navigation", { name: "Nav" });
         await nav.getByRole("button", { name: "Administration" }).click();
-        await nav.getByRole("link", { name: "Users", exact: true }).click();
-        await page.getByPlaceholder("Filter by Username").fill(username);
-        await page
-          .getByRole("grid", { name: "Users table" })
-          .getByRole("link", { name: username, exact: true })
-          .click();
-        await expect(userDetail.title).toBeVisible();
-        await expect(userDetail.groupsTab).toHaveText("Groups (0)");
-        await expect(userDetail.groups.row(group)).toHaveCount(0);
-      }
-    });
-  }
+        await nav.getByRole("link", { name: "Groups", exact: true }).click();
+        await expect(groupsPage.heading).toBeVisible();
+        await groupsPage.filterBy("Name", group);
+        const groupDetail = await groupsPage.openDetail(group);
+        if (action === "add") {
+          await groupDetail.addUser(username);
+          await groupDetail.usersTable
+            .getByRole("link", { name: username, exact: true })
+            .click();
+          await expect(userDetail.groupsTab).toHaveText("Groups (1)");
+          await expect(userDetail.groups.row(group)).toBeVisible();
+        } else {
+          await groupDetail.removeUser(username);
+          await nav.getByRole("button", { name: "Administration" }).click();
+          await nav.getByRole("link", { name: "Users", exact: true }).click();
+          await page.getByPlaceholder("Filter by Username").fill(username);
+          await page
+            .getByRole("grid", { name: "Users table" })
+            .getByRole("link", { name: username, exact: true })
+            .click();
+          await expect(userDetail.title).toBeVisible();
+          await expect(userDetail.groupsTab).toHaveText("Groups (0)");
+          await expect(userDetail.groups.row(group)).toHaveCount(0);
+        }
+      });
+    }
+  });
 
   test("USR-GRP-06 Add Group is always enabled", async ({
     page,

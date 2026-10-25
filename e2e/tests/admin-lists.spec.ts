@@ -615,12 +615,15 @@ test.describe("Data lists", () => {
   });
 
   // LIST-01
-  for (const t of REFERENCE) {
-    test(`LIST-01 ${t.name}: column headers`, async ({ page }) => {
-      const dataTable = await open(page, t);
-      expect(await dataTable.headerTexts()).toEqual(t.headers);
-    });
-  }
+  test("LIST-01 column headers", async ({ page }) => {
+    test.slow();
+    for (const t of REFERENCE) {
+      await test.step(t.name, async () => {
+        const dataTable = await open(page, t);
+        expect(await dataTable.headerTexts()).toEqual(t.headers);
+      });
+    }
+  });
 
   // LIST-SMOKE: the full filter/sort/paging suite runs on one reference table per
   // shape (above); every other table just needs to wire the shared table up —
@@ -659,28 +662,7 @@ test.describe("Data lists", () => {
     { table: "User groups", destination: "group" },
     { table: "Group users", destination: "user" },
   ];
-  for (const { table: tableName, destination } of linkCases) {
-    test(`LIST-02 ${tableName}: the name links to the ${destination} detail page`, async ({
-      page,
-    }) => {
-      const t = table(tableName);
-      const dataTable = await open(page, t);
-      if (t.filter) {
-        const target = destination === "user" ? seed.users[0] : seed.groups[0];
-        await dataTable.filter(t.filter.title, target);
-        await dataTable.expectLoaded();
-      }
-      // Group users can't be filtered (and has no stable order): use the first row.
-      const link = dataTable.rows.first().getByRole("link");
-      const target = (await link.innerText()).trim();
-      await link.click();
-      await expect(page).toHaveURL(new RegExp(`/admin/${destination}s/\\d+$`));
-      await expect(
-        page.getByRole("heading", { level: 1, name: target, exact: true }),
-      ).toBeVisible();
-    });
-  }
-  for (const tableName of [
+  const plainTextTables = [
     "Roles",
     "Access policies",
     "User roles",
@@ -689,73 +671,105 @@ test.describe("Data lists", () => {
     "Select users",
     "Select roles (user)",
     "Select roles (group)",
-  ] as const) {
-    test(`LIST-02 ${tableName}: cells are plain text, not links`, async ({
-      page,
-    }) => {
-      const dataTable = await openScoped(page, table(tableName));
-      await expect(dataTable.rows.first()).toBeVisible();
-      await expect(dataTable.rows.getByRole("link")).toHaveCount(0);
-    });
-  }
+  ] as const;
+  test("LIST-02 name cells link where they navigate, plain text elsewhere", async ({
+    page,
+  }) => {
+    test.slow();
+    for (const { table: tableName, destination } of linkCases) {
+      await test.step(`${tableName}: the name links to the ${destination} detail page`, async () => {
+        const t = table(tableName);
+        const dataTable = await open(page, t);
+        if (t.filter) {
+          const target =
+            destination === "user" ? seed.users[0] : seed.groups[0];
+          await dataTable.filter(t.filter.title, target);
+          await dataTable.expectLoaded();
+        }
+        // Group users can't be filtered (and has no stable order): use the first row.
+        const link = dataTable.rows.first().getByRole("link");
+        const target = (await link.innerText()).trim();
+        await link.click();
+        await expect(page).toHaveURL(
+          new RegExp(`/admin/${destination}s/\\d+$`),
+        );
+        await expect(
+          page.getByRole("heading", { level: 1, name: target, exact: true }),
+        ).toBeVisible();
+      });
+    }
+    for (const tableName of plainTextTables) {
+      await test.step(`${tableName}: cells are plain text, not links`, async () => {
+        const dataTable = await openScoped(page, table(tableName));
+        await expect(dataTable.rows.first()).toBeVisible();
+        await expect(dataTable.rows.getByRole("link")).toHaveCount(0);
+      });
+    }
+  });
 
   // LIST-03
-  for (const t of sortable) {
-    test(`LIST-03 ${t.name}: sorted by ${t.sort[0].column} ascending by default`, async ({
-      page,
-      api,
-    }) => {
-      const dataTable = await openScoped(page, t);
-      await dataTable.expectSorted(t.sort[0].column, "ascending");
-      await expectOrder(api, t, dataTable, {
-        column: t.sort[0],
-        ordering: t.sort[0].key,
+  test("LIST-03 sorted by the default column ascending", async ({
+    page,
+    api,
+  }) => {
+    test.slow();
+    for (const t of sortable) {
+      await test.step(`${t.name}: sorted by ${t.sort[0].column} ascending`, async () => {
+        const dataTable = await openScoped(page, t);
+        await dataTable.expectSorted(t.sort[0].column, "ascending");
+        await expectOrder(api, t, dataTable, {
+          column: t.sort[0],
+          ordering: t.sort[0].key,
+        });
       });
-    });
-  }
+    }
+  });
 
   // LIST-04
-  for (const t of sortable) {
+  test("LIST-04 every sortable column, both directions", async ({
+    page,
+    api,
+  }) => {
+    test.slow();
     // One page load per table; each column is a step. Non-rank columns compare
     // against the scoped API page so the view is scoped with the filter; rank
     // columns (e.g. Locked) check rank order on the full list, so the filter is
     // cleared. Toggling the filter keeps the sort, so the first click on a column
     // not yet sorted goes ascending, and the default column (pre-sorted ascending)
     // turns around on its first click.
-    test(`LIST-04 ${t.name}: every sortable column, both directions`, async ({
-      page,
-      api,
-    }) => {
-      const dataTable = await open(page, t);
-      for (const [index, column] of t.sort.entries()) {
-        await test.step(column.column, async () => {
-          if (t.scopeFilter && t.filter) {
-            if (column.rank) {
-              await dataTable.filterInput(t.filter.title).fill("");
-            } else {
-              await dataTable.filter(t.filter.title, t.scopeFilter());
+    for (const t of sortable) {
+      await test.step(t.name, async () => {
+        const dataTable = await open(page, t);
+        for (const [index, column] of t.sort.entries()) {
+          await test.step(column.column, async () => {
+            if (t.scopeFilter && t.filter) {
+              if (column.rank) {
+                await dataTable.filterInput(t.filter.title).fill("");
+              } else {
+                await dataTable.filter(t.filter.title, t.scopeFilter());
+              }
+              await dataTable.expectLoaded();
             }
-            await dataTable.expectLoaded();
-          }
-          for (const clicks of [1, 2]) {
-            const descending = index === 0 ? clicks === 1 : clicks === 2;
-            const direction = descending ? "descending" : "ascending";
-            await dataTable.sortBy(column.column);
-            await dataTable.expectSorted(column.column, direction);
-            if (column.column === "Locked") {
-              await expect
-                .poll(async () => (await dataTable.columnTexts("Locked"))[0])
-                .toBe(descending ? "Yes" : "No");
+            for (const clicks of [1, 2]) {
+              const descending = index === 0 ? clicks === 1 : clicks === 2;
+              const direction = descending ? "descending" : "ascending";
+              await dataTable.sortBy(column.column);
+              await dataTable.expectSorted(column.column, direction);
+              if (column.column === "Locked") {
+                await expect
+                  .poll(async () => (await dataTable.columnTexts("Locked"))[0])
+                  .toBe(descending ? "Yes" : "No");
+              }
+              await expectOrder(api, t, dataTable, {
+                column,
+                ordering: `${descending ? "-" : ""}${column.key}`,
+              });
             }
-            await expectOrder(api, t, dataTable, {
-              column,
-              ordering: `${descending ? "-" : ""}${column.key}`,
-            });
-          }
-        });
-      }
-    });
-  }
+          });
+        }
+      });
+    }
+  });
 
   // LIST-05
   const nonSortable: [TableName, string[]][] = [
@@ -769,32 +783,36 @@ test.describe("Data lists", () => {
     ["Select roles (user)", ["Permissions"]],
     ["Select roles (group)", ["Permissions"]],
   ];
-  for (const [tableName, columns] of nonSortable) {
-    test(`LIST-05 ${tableName}: ${columns.join(", ")} show no sort control`, async ({
-      page,
-    }) => {
-      const dataTable = await open(page, table(tableName));
-      for (const column of columns) {
-        await expect(dataTable.columnHeader(column)).toBeVisible();
-        await expect(
-          dataTable.columnHeader(column).getByRole("button"),
-        ).toHaveCount(0);
-      }
-    });
-  }
+  test("LIST-05 non-sortable columns show no sort control", async ({
+    page,
+  }) => {
+    test.slow();
+    for (const [tableName, columns] of nonSortable) {
+      await test.step(`${tableName}: ${columns.join(", ")}`, async () => {
+        const dataTable = await open(page, table(tableName));
+        for (const column of columns) {
+          await expect(dataTable.columnHeader(column)).toBeVisible();
+          await expect(
+            dataTable.columnHeader(column).getByRole("button"),
+          ).toHaveCount(0);
+        }
+      });
+    }
+  });
 
   // LIST-06
-  for (const t of sortable) {
-    test(`LIST-06 ${t.name}: changing the sort returns to page 1`, async ({
-      page,
-    }) => {
-      const dataTable = await openScoped(page, t);
-      await dataTable.paginator().next().click();
-      await expectPage(dataTable, 2);
-      await dataTable.sortBy(t.sort[t.sort.length - 1].column);
-      await expectPage(dataTable, 1);
-    });
-  }
+  test("LIST-06 changing the sort returns to page 1", async ({ page }) => {
+    test.slow();
+    for (const t of sortable) {
+      await test.step(t.name, async () => {
+        const dataTable = await openScoped(page, t);
+        await dataTable.paginator().next().click();
+        await expectPage(dataTable, 2);
+        await dataTable.sortBy(t.sort[t.sort.length - 1].column);
+        await expectPage(dataTable, 1);
+      });
+    }
+  });
 
   // LIST-07
   const filterClasses: {
@@ -888,69 +906,74 @@ test.describe("Data lists", () => {
       },
     },
   ];
-  for (const t of filtered) {
+  test("LIST-07 text filter equivalence classes", async ({ page, api }) => {
+    test.slow();
     // One page load per table; each equivalence class is a step (it sets its own
     // filter, so the classes are independent on the same page).
-    test(`LIST-07 ${t.name}: text filter equivalence classes`, async ({
-      page,
-      api,
-    }) => {
-      const dataTable = await open(page, t);
-      for (const { input, check } of filterClasses) {
-        await test.step(`filter by ${input}`, () => check(t, dataTable, api));
-      }
-    });
-  }
-
-  // LIST-08
-  for (const t of filtered) {
-    test(`LIST-08 ${t.name}: the filter waits for typing to stop`, async ({
-      page,
-    }) => {
-      const dataTable = await open(page, t);
-      const value = t.values!().middle;
-      const filterRequests: string[] = [];
-      page.on("request", (request) => {
-        if (request.method() === "GET" && /__icontains=/.test(request.url())) {
-          filterRequests.push(request.url());
+    for (const t of filtered) {
+      await test.step(t.name, async () => {
+        const dataTable = await open(page, t);
+        for (const { input, check } of filterClasses) {
+          await test.step(`filter by ${input}`, () => check(t, dataTable, api));
         }
       });
-      const settled = page.waitForResponse(
-        (response) =>
-          /__icontains=/.test(response.url()) &&
-          decodeURIComponent(response.url()).includes(value),
-      );
-      // Faster than the 300 ms debounce, so only the final value is requested.
-      await dataTable.filterInput(t.filter!.title).pressSequentially(value, {
-        delay: 40,
+    }
+  });
+
+  // LIST-08
+  test("LIST-08 the filter waits for typing to stop", async ({ page }) => {
+    test.slow();
+    for (const t of filtered) {
+      await test.step(t.name, async () => {
+        const dataTable = await open(page, t);
+        const value = t.values!().middle;
+        const filterRequests: string[] = [];
+        page.on("request", (request) => {
+          if (
+            request.method() === "GET" &&
+            /__icontains=/.test(request.url())
+          ) {
+            filterRequests.push(request.url());
+          }
+        });
+        const settled = page.waitForResponse(
+          (response) =>
+            /__icontains=/.test(response.url()) &&
+            decodeURIComponent(response.url()).includes(value),
+        );
+        // Faster than the 300 ms debounce, so only the final value is requested.
+        await dataTable.filterInput(t.filter!.title).pressSequentially(value, {
+          delay: 40,
+        });
+        await settled;
+        await dataTable.expectLoaded();
+        expect(filterRequests).toHaveLength(1);
       });
-      await settled;
-      await dataTable.expectLoaded();
-      expect(filterRequests).toHaveLength(1);
-    });
-  }
+    }
+  });
 
   // LIST-09
-  for (const t of filtered) {
-    test(`LIST-09 ${t.name}: typing a filter returns to page 1`, async ({
-      page,
-    }) => {
-      const dataTable = await open(page, t);
-      await dataTable.paginator().next().click();
-      await expectPage(dataTable, 2);
-      await dataTable.filter(t.filter!.title, t.values!().middle);
-      await expectPage(dataTable, 1);
-    });
-  }
-  test("LIST-09 Roles: choosing a Locked option returns to page 1", async ({
+  test("LIST-09 choosing a filter returns to page 1", async ({
     page,
     rolesPage,
   }) => {
-    const dataTable = await open(page, table("Roles"));
-    await dataTable.paginator().next().click();
-    await expectPage(dataTable, 2);
-    await rolesPage.filterLocked("Unlocked");
-    await expectPage(dataTable, 1);
+    test.slow();
+    for (const t of filtered) {
+      await test.step(`${t.name}: typing a filter`, async () => {
+        const dataTable = await open(page, t);
+        await dataTable.paginator().next().click();
+        await expectPage(dataTable, 2);
+        await dataTable.filter(t.filter!.title, t.values!().middle);
+        await expectPage(dataTable, 1);
+      });
+    }
+    await test.step("Roles: choosing a Locked option", async () => {
+      const dataTable = await open(page, table("Roles"));
+      await dataTable.paginator().next().click();
+      await expectPage(dataTable, 2);
+      await rolesPage.filterLocked("Unlocked");
+      await expectPage(dataTable, 1);
+    });
   });
 
   // LIST-10
@@ -971,27 +994,34 @@ test.describe("Data lists", () => {
       run: (t, dataTable) => dataTable.filter(t.filter!.title, ""),
     },
   ];
-  for (const t of filtered) {
-    for (const { action, run } of removals) {
-      test(`LIST-10 ${t.name}: ${action} clears the filter`, async ({
-        page,
-      }) => {
-        const dataTable = await open(page, t);
-        const value = t.values!().full;
-        await dataTable.filter(t.filter!.title, value);
-        await dataTable.expectLoaded();
-        const filteredTotal = (await dataTable.paginator().range()).total;
-        await run(t, dataTable, value);
-        await expect(dataTable.filterInput(t.filter!.title)).toHaveValue("");
-        await expect(
-          dataTable.scope.getByRole("button", { name: `Close ${value}` }),
-        ).toHaveCount(0);
-        await expect
-          .poll(async () => (await dataTable.paginator().range()).total)
-          .toBeGreaterThan(filteredTotal);
+  test("LIST-10 clearing the filter restores the rows", async ({ page }) => {
+    test.slow();
+    for (const t of filtered) {
+      await test.step(t.name, async () => {
+        for (const { action, run } of removals) {
+          await test.step(action, async () => {
+            const dataTable = await open(page, t);
+            const value = t.values!().full;
+            await dataTable.filter(t.filter!.title, value);
+            await dataTable.expectLoaded();
+            const filteredTotal = (await dataTable.paginator().range()).total;
+            await run(t, dataTable, value);
+            await expect(dataTable.filterInput(t.filter!.title)).toHaveValue(
+              "",
+            );
+            await expect(
+              dataTable.scope.getByRole("button", { name: `Close ${value}` }),
+            ).toHaveCount(0);
+            // A cleared filter can be served from cache with no network request,
+            // so poll the settled total rather than reading it once.
+            await expect
+              .poll(async () => (await dataTable.paginator().range()).total)
+              .toBeGreaterThan(filteredTotal);
+          });
+        }
       });
     }
-  }
+  });
 
   // LIST-11
   const emptyCases: {
@@ -1016,70 +1046,75 @@ test.describe("Data lists", () => {
       owner: "group",
     },
   ];
-  for (const { table: tableName, title, owner } of emptyCases) {
-    test(`LIST-11 ${tableName}: "${title}" with no action button`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const t = table(tableName);
-      let heading: string;
-      if (owner === "user") {
-        const created = await api.createUser({
-          username: cleanup.user(uniqueName("user")),
-        });
-        heading = created.username;
-        await gotoHeading(page, `/admin/users/${created.id}`, heading);
-      } else {
-        const created = await api.createGroup(
-          cleanup.group(uniqueName("group")),
-        );
-        heading = created.name;
-        await gotoHeading(page, `/admin/groups/${created.id}`, heading);
-      }
-      if (tableName.endsWith("roles")) await clickTab(page, "Roles");
-      const dataTable = new DataTable(t.scope(page), t.grid);
-      await expect(dataTable.stateHeading(title)).toBeVisible();
-      // No action button in the empty body; a sortable column still has its header
-      // sort button, so scope the check to the body rows.
-      await expect(dataTable.rows.getByRole("button")).toHaveCount(0);
-    });
-  }
+  test("LIST-11 empty-state heading with no action button", async ({
+    page,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    for (const { table: tableName, title, owner } of emptyCases) {
+      await test.step(`${tableName}: "${title}"`, async () => {
+        const t = table(tableName);
+        let heading: string;
+        if (owner === "user") {
+          const created = await api.createUser({
+            username: cleanup.user(uniqueName("user")),
+          });
+          heading = created.username;
+          await gotoHeading(page, `/admin/users/${created.id}`, heading);
+        } else {
+          const created = await api.createGroup(
+            cleanup.group(uniqueName("group")),
+          );
+          heading = created.name;
+          await gotoHeading(page, `/admin/groups/${created.id}`, heading);
+        }
+        if (tableName.endsWith("roles")) await clickTab(page, "Roles");
+        const dataTable = new DataTable(t.scope(page), t.grid);
+        await expect(dataTable.stateHeading(title)).toBeVisible();
+        // No action button in the empty body; a sortable column still has its header
+        // sort button, so scope the check to the body rows.
+        await expect(dataTable.rows.getByRole("button")).toHaveCount(0);
+      });
+    }
+  });
 
   // LIST-12
-  for (const t of filtered) {
-    test(`LIST-12 ${t.name}: filtered empty state "${t.filteredEmpty}"`, async ({
-      page,
-    }) => {
-      const dataTable = await open(page, t);
-      await dataTable.filter(t.filter!.title, `nomatch-${seed.token}-zz`);
-      await expect(dataTable.stateHeading(t.filteredEmpty!)).toBeVisible();
-      await expect(dataTable.grid).toContainText(
-        "No results match the current filter. Try adjusting or clearing your filters.",
-      );
-      await dataTable.clearAllFiltersInEmptyState().click();
-      await expect(dataTable.filterInput(t.filter!.title)).toHaveValue("");
-      await dataTable.expectLoaded();
-      await expect(dataTable.stateHeading(t.filteredEmpty!)).toBeHidden();
-    });
-  }
+  test("LIST-12 filtered empty state", async ({ page }) => {
+    test.slow();
+    for (const t of filtered) {
+      await test.step(`${t.name}: "${t.filteredEmpty}"`, async () => {
+        const dataTable = await open(page, t);
+        await dataTable.filter(t.filter!.title, `nomatch-${seed.token}-zz`);
+        await expect(dataTable.stateHeading(t.filteredEmpty!)).toBeVisible();
+        await expect(dataTable.grid).toContainText(
+          "No results match the current filter. Try adjusting or clearing your filters.",
+        );
+        await dataTable.clearAllFiltersInEmptyState().click();
+        await expect(dataTable.filterInput(t.filter!.title)).toHaveValue("");
+        await dataTable.expectLoaded();
+        await expect(dataTable.stateHeading(t.filteredEmpty!)).toBeHidden();
+      });
+    }
+  });
 
   // LIST-13
-  for (const t of REFERENCE) {
-    test(`LIST-13 ${t.name}: skeleton rows until the rows load`, async ({
-      page,
-    }) => {
-      await t.prepare(page);
-      const held = await delayApi(page, { url: t.request, method: "GET" });
-      await t.reveal(page);
-      const dataTable = new DataTable(t.scope(page), t.grid);
-      await expect.poll(() => held.held()).toBeGreaterThan(0);
-      await expect(dataTable.rows.first()).toBeVisible();
-      await expect(dataTable.rows.first()).toHaveText(/^\s*$/);
-      held.release();
-      await dataTable.expectLoaded();
-    });
-  }
+  test("LIST-13 skeleton rows until the rows load", async ({ page }) => {
+    test.slow();
+    for (const t of REFERENCE) {
+      await test.step(t.name, async () => {
+        await t.prepare(page);
+        const held = await delayApi(page, { url: t.request, method: "GET" });
+        await t.reveal(page);
+        const dataTable = new DataTable(t.scope(page), t.grid);
+        await expect.poll(() => held.held()).toBeGreaterThan(0);
+        await expect(dataTable.rows.first()).toBeVisible();
+        await expect(dataTable.rows.first()).toHaveText(/^\s*$/);
+        held.release();
+        await dataTable.expectLoaded();
+      });
+    }
+  });
 
   // LIST-14
   for (const t of REFERENCE) {
@@ -1127,26 +1162,32 @@ test.describe("Data lists", () => {
         },
       },
     ];
-    for (const { table: tableName, role, reach } of cases) {
-      test(`LIST-20 ${tableName}: "403: Access denied" for a non-superuser`, async ({
-        api,
-        cleanup,
-        secondUser,
-      }) => {
-        const group = await api.createGroup(cleanup.group(uniqueName("group")));
-        const user = await secondUser.create();
-        await api.assignRole(
-          { user: user.username },
-          { role, contentObject: group.pulp_href },
-        );
-        const page = await secondUser.login(user);
-        await gotoHeading(page, `/admin/groups/${group.id}`, group.name);
-        const dataTable = await reach(page);
-        await expect(
-          dataTable.stateHeading("403: Access denied"),
-        ).toBeVisible();
-      });
-    }
+    test('LIST-20 "403: Access denied" for a non-superuser', async ({
+      api,
+      cleanup,
+      secondUser,
+    }) => {
+      // Each step logs in its own second user in a fresh browser context.
+      test.slow();
+      for (const { table: tableName, role, reach } of cases) {
+        await test.step(tableName, async () => {
+          const group = await api.createGroup(
+            cleanup.group(uniqueName("group")),
+          );
+          const user = await secondUser.create();
+          await api.assignRole(
+            { user: user.username },
+            { role, contentObject: group.pulp_href },
+          );
+          const page = await secondUser.login(user);
+          await gotoHeading(page, `/admin/groups/${group.id}`, group.name);
+          const dataTable = await reach(page);
+          await expect(
+            dataTable.stateHeading("403: Access denied"),
+          ).toBeVisible();
+        });
+      }
+    });
   });
 
   // LIST-15
@@ -1189,87 +1230,96 @@ test.describe("Data lists", () => {
       expectPageNumber: () => 2,
     },
   ];
-  for (const t of REFERENCE) {
-    // One page load per table; each action resets to a known page in its setup,
-    // so the actions are independent steps on the same table.
-    test(`LIST-15 ${t.name}: paging from the top and the bottom paginator`, async ({
-      page,
-    }) => {
-      const dataTable = await openForPaging(page, t);
-      const { total } = await dataTable.paginator().range();
-      const lastPage = Math.ceil(total / t.pageSize);
-      expect(lastPage).toBeGreaterThan(2);
-      for (const { action, setup, act, expectPageNumber } of pagingActions) {
-        await test.step(action, async () => {
-          for (const which of ["top", "bottom"] as const) {
-            const paginator = dataTable.paginator(which);
-            // Start every action from page 1: a previous action may have left the
-            // table on the last page, where a setup that clicks "last" is disabled.
-            await dataTable.paginator().goToPage(1);
-            await dataTable.expectLoaded();
-            if (setup) {
-              await setup(paginator);
+  // One page load per table; each action resets to a known page in its setup,
+  // so the actions are independent steps on the same table.
+  test("LIST-15 paging from the top and the bottom paginator", async ({
+    page,
+  }) => {
+    test.slow();
+    for (const t of REFERENCE) {
+      await test.step(t.name, async () => {
+        const dataTable = await openForPaging(page, t);
+        const { total } = await dataTable.paginator().range();
+        const lastPage = Math.ceil(total / t.pageSize);
+        expect(lastPage).toBeGreaterThan(2);
+        for (const { action, setup, act, expectPageNumber } of pagingActions) {
+          await test.step(action, async () => {
+            for (const which of ["top", "bottom"] as const) {
+              const paginator = dataTable.paginator(which);
+              // Start every action from page 1: a previous action may have left the
+              // table on the last page, where a setup that clicks "last" is disabled.
+              await dataTable.paginator().goToPage(1);
               await dataTable.expectLoaded();
+              if (setup) {
+                await setup(paginator);
+                await dataTable.expectLoaded();
+              }
+              const before = await dataTable.rows.first().innerText();
+              await act(paginator);
+              const pageNumber = expectPageNumber(lastPage);
+              await expectPage(dataTable, pageNumber);
+              await expect(
+                dataTable.paginator("bottom").currentPage(),
+              ).toHaveValue(String(pageNumber));
+              const first = (pageNumber - 1) * t.pageSize + 1;
+              const last = Math.min(pageNumber * t.pageSize, total);
+              const range = `${first} - ${last} of ${total}`;
+              await dataTable.paginator("top").expectRange(range);
+              await dataTable.paginator("bottom").expectRange(range);
+              await expect(dataTable.rows).toHaveCount(last - first + 1);
+              await expect(dataTable.rows.first()).not.toHaveText(before);
             }
-            const before = await dataTable.rows.first().innerText();
-            await act(paginator);
-            const pageNumber = expectPageNumber(lastPage);
-            await expectPage(dataTable, pageNumber);
-            await expect(
-              dataTable.paginator("bottom").currentPage(),
-            ).toHaveValue(String(pageNumber));
-            const first = (pageNumber - 1) * t.pageSize + 1;
-            const last = Math.min(pageNumber * t.pageSize, total);
-            const range = `${first} - ${last} of ${total}`;
-            await dataTable.paginator("top").expectRange(range);
-            await dataTable.paginator("bottom").expectRange(range);
-            await expect(dataTable.rows).toHaveCount(last - first + 1);
-            await expect(dataTable.rows.first()).not.toHaveText(before);
-          }
-        });
-      }
-    });
-  }
+          });
+        }
+      });
+    }
+  });
 
   // LIST-16
-  for (const t of REFERENCE) {
-    test(`LIST-16 ${t.name}: page size`, async ({ page }) => {
-      const dataTable = await openForPaging(page, t);
-      const { total } = await dataTable.paginator().range();
-      expect(total).toBeGreaterThan(20);
-      for (const size of [10, 20] as const) {
-        await test.step(`${size} per page`, async () => {
-          await dataTable.paginator().next().click();
-          await expectPage(dataTable, 2);
-          await dataTable.paginator().setPerPage(size);
-          await expectPage(dataTable, 1);
-          await dataTable.paginator().expectRange(`1 - ${size} of ${total}`);
-          await expect(dataTable.rows).toHaveCount(size);
-        });
-      }
-    });
-  }
+  test("LIST-16 page size", async ({ page }) => {
+    test.slow();
+    for (const t of REFERENCE) {
+      await test.step(t.name, async () => {
+        const dataTable = await openForPaging(page, t);
+        const { total } = await dataTable.paginator().range();
+        expect(total).toBeGreaterThan(20);
+        for (const size of [10, 20] as const) {
+          await test.step(`${size} per page`, async () => {
+            await dataTable.paginator().next().click();
+            await expectPage(dataTable, 2);
+            await dataTable.paginator().setPerPage(size);
+            await expectPage(dataTable, 1);
+            await dataTable.paginator().expectRange(`1 - ${size} of ${total}`);
+            await expect(dataTable.rows).toHaveCount(size);
+          });
+        }
+      });
+    }
+  });
 
   // LIST-17
-  for (const t of REFERENCE) {
-    test(`LIST-17 ${t.name}: the total matches the rows, also after a filter`, async ({
-      page,
-      api,
-    }) => {
-      const dataTable = await openForPaging(page, t);
-      const { count } = await apiPage(api, t, {
-        filter: t.stable ? undefined : t.scopeFilter?.(),
+  test("LIST-17 the total matches the rows, also after a filter", async ({
+    page,
+    api,
+  }) => {
+    test.slow();
+    for (const t of REFERENCE) {
+      await test.step(t.name, async () => {
+        const dataTable = await openForPaging(page, t);
+        const { count } = await apiPage(api, t, {
+          filter: t.stable ? undefined : t.scopeFilter?.(),
+        });
+        expect((await dataTable.paginator().range()).total).toBe(count);
+        if (!t.filter) return;
+        const { middle } = t.values!();
+        await dataTable.filter(t.filter.title, middle);
+        const filteredCount = (await apiPage(api, t, { filter: middle })).count;
+        await expect
+          .poll(async () => (await dataTable.paginator().range()).total)
+          .toBe(filteredCount);
       });
-      expect((await dataTable.paginator().range()).total).toBe(count);
-      if (!t.filter) return;
-      const { middle } = t.values!();
-      await dataTable.filter(t.filter.title, middle);
-      const filteredCount = (await apiPage(api, t, { filter: middle })).count;
-      await expect
-        .poll(async () => (await dataTable.paginator().range()).total)
-        .toBe(filteredCount);
-    });
-  }
+    }
+  });
 
   // LIST-18
   const orders: { order: string; steps: ("filter" | "sort" | "page2")[] }[] = [
@@ -1284,50 +1334,50 @@ test.describe("Data lists", () => {
       steps: ["page2", "sort", "filter"],
     },
   ];
-  for (const t of sortable.filter((s) => s.filter)) {
+  test("LIST-18 filter, sort and page order all settle on page 1", async ({
+    page,
+    api,
+  }) => {
+    test.slow();
     // Each order re-navigates (its steps include "go to page 2" and the end state
-    // must be page 1 regardless of order), so it stays a test per order.
-    for (const { order, steps } of orders) {
-      test(`LIST-18 ${t.name}: ${order}`, async ({ page, api }) => {
-        const dataTable = await open(page, t);
-        const value = t.scopeFilter?.() ?? t.values!().middle;
-        for (const step of steps) {
-          if (step === "filter") await dataTable.filter(t.filter!.title, value);
-          else if (step === "sort") await dataTable.sortBy(t.sort[0].column);
-          else {
-            await dataTable.paginator().next().click();
-            await expectPage(dataTable, 2);
-          }
-          await dataTable.expectLoaded();
+    // must be page 1 regardless of order), so each order is its own step.
+    for (const t of sortable.filter((s) => s.filter)) {
+      await test.step(t.name, async () => {
+        for (const { order, steps } of orders) {
+          await test.step(order, async () => {
+            const dataTable = await open(page, t);
+            const value = t.scopeFilter?.() ?? t.values!().middle;
+            for (const step of steps) {
+              if (step === "filter")
+                await dataTable.filter(t.filter!.title, value);
+              else if (step === "sort")
+                await dataTable.sortBy(t.sort[0].column);
+              else {
+                await dataTable.paginator().next().click();
+                await expectPage(dataTable, 2);
+              }
+              await dataTable.expectLoaded();
+            }
+            await expectPage(dataTable, 1);
+            await dataTable.expectSorted(t.sort[0].column, "descending");
+            const { names } = await apiPage(api, t, {
+              filter: value,
+              ordering: `-${t.sort[0].key}`,
+            });
+            await expect
+              .poll(() => dataTable.columnTexts(t.nameColumn))
+              .toEqual(names);
+          });
         }
-        await expectPage(dataTable, 1);
-        await dataTable.expectSorted(t.sort[0].column, "descending");
-        const { names } = await apiPage(api, t, {
-          filter: value,
-          ordering: `-${t.sort[0].key}`,
-        });
-        await expect
-          .poll(() => dataTable.columnTexts(t.nameColumn))
-          .toEqual(names);
       });
     }
-  }
+  });
 
   // LIST-19
-  for (const tableName of [
-    "Users",
-    "Groups",
-    "Roles",
-    "User groups",
-    "User roles",
-    "Group users",
-    "Group roles",
-  ] as const) {
-    test(`LIST-19 ${tableName}: removing the last row on a page`, () => {
-      test.fixme(
-        true,
-        "Open: decide whether the list moves to page 1 or shows an empty page 2",
-      );
-    });
-  }
+  test("LIST-19 removing the last row on a page", () => {
+    test.fixme(
+      true,
+      "Open: decide whether the list moves to page 1 or shows an empty page 2",
+    );
+  });
 });

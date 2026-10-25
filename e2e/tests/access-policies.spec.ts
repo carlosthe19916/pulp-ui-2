@@ -102,33 +102,39 @@ test.describe("Access policies", () => {
       { status: "customized", n: 1, label: "Customized" },
       { status: "customized", n: 3, label: "Customized" },
     ] as const;
-    for (const { status, n, label } of rowCases) {
-      test(`ACP-LIST-02 row content: ${status} with ${n ?? "≥1"} statements`, async ({
-        accessPoliciesPage: acp,
-        api,
-        cleanup,
-        page,
-      }) => {
-        cleanup.accessPolicy(V_LIST);
-        if (n !== undefined) {
-          await api.updateAccessPolicy(V_LIST, { statements: statements(n) });
-        }
-        await acp.find(V_LIST);
-        const viewsetCell = cell(acp, V_LIST, 0);
-        await expect(viewsetCell).toHaveText(V_LIST);
-        await expect(viewsetCell.getByRole("link")).toHaveCount(0);
-        if (n === undefined) {
-          const count = Number(await cell(acp, V_LIST, 1).innerText());
-          expect(count).toBeGreaterThanOrEqual(1);
-        }
-        await expectStatus(acp, V_LIST, { status: label, statements: n });
-        await openRowMenu(acp, V_LIST);
-        await expect(page.getByRole("menuitem")).toHaveText([
-          "Edit",
-          "Reset to default",
-        ]);
-      });
-    }
+    test("ACP-LIST-02 row content", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      page,
+    }) => {
+      test.slow();
+      cleanup.accessPolicy(V_LIST);
+      for (const { status, n, label } of rowCases) {
+        await test.step(`${status} with ${n ?? "≥1"} statements`, async () => {
+          if (n !== undefined) {
+            await api.updateAccessPolicy(V_LIST, { statements: statements(n) });
+          }
+          // Reload so the list reflects this row's policy state and the filter
+          // from the previous step is cleared.
+          await acp.page.reload();
+          await acp.find(V_LIST);
+          const viewsetCell = cell(acp, V_LIST, 0);
+          await expect(viewsetCell).toHaveText(V_LIST);
+          await expect(viewsetCell.getByRole("link")).toHaveCount(0);
+          if (n === undefined) {
+            const count = Number(await cell(acp, V_LIST, 1).innerText());
+            expect(count).toBeGreaterThanOrEqual(1);
+          }
+          await expectStatus(acp, V_LIST, { status: label, statements: n });
+          await openRowMenu(acp, V_LIST);
+          await expect(page.getByRole("menuitem")).toHaveText([
+            "Edit",
+            "Reset to default",
+          ]);
+        });
+      }
+    });
 
     test("ACP-LIST-03 status sort ascending: customized after every default", async ({
       accessPoliciesPage: acp,
@@ -199,9 +205,11 @@ test.describe("Access policies", () => {
         "Queryset scoping": "How lists are narrowed to what the user may see.",
       };
       for (const [label, text] of Object.entries(help)) {
-        await modal.button(`More info for ${label}`).click();
-        await expect(page.getByText(text, { exact: true })).toBeVisible();
-        await modal.button(`More info for ${label}`).click();
+        await test.step(label, async () => {
+          await modal.button(`More info for ${label}`).click();
+          await expect(page.getByText(text, { exact: true })).toBeVisible();
+          await modal.button(`More info for ${label}`).click();
+        });
       }
       await modal.close("Cancel");
 
@@ -333,79 +341,96 @@ test.describe("Access policies", () => {
       },
     ];
 
-    for (const row of validationRows) {
-      test(`ACP-EDT-02 ${row.field} = ${row.label}`, async ({
-        accessPoliciesPage: acp,
-        api,
-        cleanup,
-        page,
-        toasts,
-      }) => {
-        cleanup.accessPolicy(row.viewset);
-        const saved = await api.accessPolicy(row.viewset);
-        await acp.find(row.viewset);
-        const modal = await acp.openEdit(row.viewset);
-        const writes = recordPolicyWrites(page);
-        await modal.field(row.field).fill(row.value(saved));
-        await modal.button("Save").click();
+    test("ACP-EDT-02 JSON validation for every field", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      page,
+      toasts,
+    }) => {
+      test.slow();
+      cleanup.accessPolicy(V_BREAK);
+      cleanup.accessPolicy(V_HOOKS);
+      for (const row of validationRows) {
+        await test.step(`${row.field} = ${row.label}`, async () => {
+          const saved = await api.accessPolicy(row.viewset);
+          // Reload so each row edits from fresh state and no modal is left open.
+          await acp.page.reload();
+          await acp.find(row.viewset);
+          const modal = await acp.openEdit(row.viewset);
+          const writes = recordPolicyWrites(page);
+          await modal.field(row.field).fill(row.value(saved));
+          await modal.button("Save").click();
 
-        const { outcome } = row;
-        if (outcome.kind === "client") {
-          await expect(modal.dialog.getByText(outcome.error)).toBeVisible();
-          await expect(modal.dialog).toBeVisible();
-          expect(writes.count).toBe(0);
-          return;
-        }
-        if (outcome.kind === "server") {
-          await modal.expectSubmitError(outcome.error);
-          await toasts.expectNone();
-          return;
-        }
-        await expect(
-          toasts.success(`Policy "${row.viewset}" saved`),
-        ).toBeVisible();
-        await modal.expectClosed();
-        const after = await api.accessPolicy(row.viewset);
-        expect(after.customized).toBe(true);
-        if (outcome.kind === "broken") {
-          // Pulp accepts the value; the damage shows on the endpoint it guards.
-          await expect
-            .poll(() => api.listStatus(V_BREAK))
-            .toBe(outcome.listStatus);
-          await api.resetAccessPolicy(row.viewset);
-        } else if (outcome.kind === "kept") {
-          expect(after[outcome.field]).toEqual(saved[outcome.field]);
-        } else if (outcome.kind === "emptied") {
-          expect(after.creation_hooks).toEqual([]);
-        }
-      });
-    }
-
-    for (const k of [1, 3]) {
-      test(`ACP-EDT-03 a successful save with ${k} statements`, async ({
-        accessPoliciesPage: acp,
-        cleanup,
-        page,
-        toasts,
-      }) => {
-        cleanup.accessPolicy(V_EDIT);
-        await acp.find(V_EDIT);
-        await expectStatus(acp, V_EDIT, { status: "Default" });
-        const modal = await acp.openEdit(V_EDIT);
-        await modal.field("Statements").fill(json(statements(k)));
-        await modal.button("Save").click();
-        await expect(toasts.success(`Policy "${V_EDIT}" saved`)).toBeVisible();
-        await modal.expectClosed();
-        await expectStatus(acp, V_EDIT, {
-          status: "Customized",
-          statements: k,
+          const { outcome } = row;
+          if (outcome.kind === "client") {
+            await expect(modal.dialog.getByText(outcome.error)).toBeVisible();
+            await expect(modal.dialog).toBeVisible();
+            expect(writes.count).toBe(0);
+            await modal.close("Cancel");
+            return;
+          }
+          if (outcome.kind === "server") {
+            await modal.expectSubmitError(outcome.error);
+            await toasts.expectNone();
+            await modal.close("Cancel");
+            return;
+          }
+          await expect(
+            toasts.success(`Policy "${row.viewset}" saved`),
+          ).toBeVisible();
+          await modal.expectClosed();
+          const after = await api.accessPolicy(row.viewset);
+          expect(after.customized).toBe(true);
+          if (outcome.kind === "broken") {
+            // Pulp accepts the value; the damage shows on the endpoint it guards.
+            await expect
+              .poll(() => api.listStatus(V_BREAK))
+              .toBe(outcome.listStatus);
+            await api.resetAccessPolicy(row.viewset);
+          } else if (outcome.kind === "kept") {
+            expect(after[outcome.field]).toEqual(saved[outcome.field]);
+          } else if (outcome.kind === "emptied") {
+            expect(after.creation_hooks).toEqual([]);
+          }
         });
-        await openRowMenu(acp, V_EDIT);
-        await expect(
-          page.getByRole("menuitem", { name: "Reset to default" }),
-        ).not.toHaveAttribute("aria-disabled", "true");
-      });
-    }
+      }
+    });
+
+    test("ACP-EDT-03 a successful save", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      page,
+      toasts,
+    }) => {
+      test.slow();
+      cleanup.accessPolicy(V_EDIT);
+      for (const k of [1, 3]) {
+        await test.step(`${k} statements`, async () => {
+          // Each row edits from the default, so reset first (steps are independent).
+          await api.resetAccessPolicy(V_EDIT);
+          await acp.page.reload();
+          await acp.find(V_EDIT);
+          await expectStatus(acp, V_EDIT, { status: "Default" });
+          const modal = await acp.openEdit(V_EDIT);
+          await modal.field("Statements").fill(json(statements(k)));
+          await modal.button("Save").click();
+          await expect(
+            toasts.success(`Policy "${V_EDIT}" saved`),
+          ).toBeVisible();
+          await modal.expectClosed();
+          await expectStatus(acp, V_EDIT, {
+            status: "Customized",
+            statements: k,
+          });
+          await openRowMenu(acp, V_EDIT);
+          await expect(
+            page.getByRole("menuitem", { name: "Reset to default" }),
+          ).not.toHaveAttribute("aria-disabled", "true");
+        });
+      }
+    });
 
     test("ACP-EDT-04 several invalid fields at once", async ({
       accessPoliciesPage: acp,
@@ -428,44 +453,54 @@ test.describe("Access policies", () => {
       { field: "Creation hooks", key: "creation_hooks" },
       { field: "Queryset scoping", key: "queryset_scoping" },
     ] as const;
-    for (const { field, key } of clearCases) {
-      test(`ACP-EDT-05 clearing ${field} keeps the saved value`, async ({
-        accessPoliciesPage: acp,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        cleanup.accessPolicy(V_HOOKS);
-        const saved = await api.accessPolicy(V_HOOKS);
-        expect(saved[key]).not.toBeNull();
-        await acp.find(V_HOOKS);
-        const modal = await acp.openEdit(V_HOOKS);
-        await modal.field(field).fill("");
-        await modal.button("Save").click();
-        await expect(toasts.success(`Policy "${V_HOOKS}" saved`)).toBeVisible();
-        expect((await api.accessPolicy(V_HOOKS))[key]).toEqual(saved[key]);
-
-        if (key === "creation_hooks") {
-          // Typing [] instead removes the hooks.
-          const again = await acp.openEdit(V_HOOKS);
-          await again.field(field).fill("[]");
-          await again.button("Save").click();
-          await again.expectClosed();
-          await expect
-            .poll(async () => (await api.accessPolicy(V_HOOKS)).creation_hooks)
-            .toEqual([]);
-        } else {
-          // Only "Reset to default" restores the default scoping.
-          await api.updateAccessPolicy(V_HOOKS, {
-            queryset_scoping: { function: "scope_queryset" },
-          });
+    test("ACP-EDT-05 clearing an optional field keeps the saved value", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      toasts,
+    }) => {
+      test.slow();
+      cleanup.accessPolicy(V_HOOKS);
+      for (const { field, key } of clearCases) {
+        await test.step(`clearing ${field}`, async () => {
+          // Steps share V_HOOKS, so reset to the default before each.
           await api.resetAccessPolicy(V_HOOKS);
-          expect((await api.accessPolicy(V_HOOKS)).queryset_scoping).toEqual(
-            saved.queryset_scoping,
-          );
-        }
-      });
-    }
+          const saved = await api.accessPolicy(V_HOOKS);
+          expect(saved[key]).not.toBeNull();
+          await acp.page.reload();
+          await acp.find(V_HOOKS);
+          const modal = await acp.openEdit(V_HOOKS);
+          await modal.field(field).fill("");
+          await modal.button("Save").click();
+          await expect(
+            toasts.success(`Policy "${V_HOOKS}" saved`),
+          ).toBeVisible();
+          expect((await api.accessPolicy(V_HOOKS))[key]).toEqual(saved[key]);
+
+          if (key === "creation_hooks") {
+            // Typing [] instead removes the hooks.
+            const again = await acp.openEdit(V_HOOKS);
+            await again.field(field).fill("[]");
+            await again.button("Save").click();
+            await again.expectClosed();
+            await expect
+              .poll(
+                async () => (await api.accessPolicy(V_HOOKS)).creation_hooks,
+              )
+              .toEqual([]);
+          } else {
+            // Only "Reset to default" restores the default scoping.
+            await api.updateAccessPolicy(V_HOOKS, {
+              queryset_scoping: { function: "scope_queryset" },
+            });
+            await api.resetAccessPolicy(V_HOOKS);
+            expect((await api.accessPolicy(V_HOOKS)).queryset_scoping).toEqual(
+              saved.queryset_scoping,
+            );
+          }
+        });
+      }
+    });
 
     test("ACP-EDT-06 the server error clears on close", async ({
       accessPoliciesPage: acp,
@@ -488,41 +523,48 @@ test.describe("Access policies", () => {
       { status: "customized", change: "nothing changed" },
       { status: "default", change: "nothing changed" },
     ] as const;
-    for (const { status, change } of editCases) {
-      test(`ACP-EDT-07 editing a ${status} policy, ${change}`, async ({
-        accessPoliciesPage: acp,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        cleanup.accessPolicy(V_EDIT);
-        if (status === "customized") {
-          await api.updateAccessPolicy(V_EDIT, { statements: statements(1) });
-        }
-        await acp.page.reload();
-        await acp.find(V_EDIT);
-        const modal = await acp.openEdit(V_EDIT);
-        const target =
-          change === "new statements"
-            ? statements(3)
-            : (await api.accessPolicy(V_EDIT)).statements;
-        if (change === "new statements") {
-          await modal.field("Statements").fill(json(target));
-        }
-        await modal.button("Save").click();
-        await expect(toasts.success(`Policy "${V_EDIT}" saved`)).toBeVisible();
-        await expectStatus(acp, V_EDIT, {
-          status: "Customized",
-          statements: target.length,
+    test("ACP-EDT-07 editing an already customized policy", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      toasts,
+    }) => {
+      test.slow();
+      cleanup.accessPolicy(V_EDIT);
+      for (const { status, change } of editCases) {
+        await test.step(`${status} policy, ${change}`, async () => {
+          // Steps share V_EDIT; reset first so each starts from a known state.
+          await api.resetAccessPolicy(V_EDIT);
+          if (status === "customized") {
+            await api.updateAccessPolicy(V_EDIT, { statements: statements(1) });
+          }
+          await acp.page.reload();
+          await acp.find(V_EDIT);
+          const modal = await acp.openEdit(V_EDIT);
+          const target =
+            change === "new statements"
+              ? statements(3)
+              : (await api.accessPolicy(V_EDIT)).statements;
+          if (change === "new statements") {
+            await modal.field("Statements").fill(json(target));
+          }
+          await modal.button("Save").click();
+          await expect(
+            toasts.success(`Policy "${V_EDIT}" saved`),
+          ).toBeVisible();
+          await expectStatus(acp, V_EDIT, {
+            status: "Customized",
+            statements: target.length,
+          });
+          const reopened = await acp.openEdit(V_EDIT);
+          // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
+          expect(
+            JSON.parse(await reopened.field("Statements").inputValue()),
+          ).toEqual(target);
+          await reopened.close("Cancel");
         });
-        const reopened = await acp.openEdit(V_EDIT);
-        // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
-        expect(
-          JSON.parse(await reopened.field("Statements").inputValue()),
-        ).toEqual(target);
-        await reopened.close("Cancel");
-      });
-    }
+      }
+    });
   });
 
   test.describe("Reset", () => {
@@ -643,40 +685,45 @@ test.describe("Access policies", () => {
         grid: "Repositories table",
       },
     ];
-    for (const row of effectCases) {
-      test(`ACP-EFF-01 a policy change takes effect on ${row.page}`, async ({
-        accessPoliciesPage: acp,
-        api,
-        cleanup,
-        secondUser,
-      }) => {
-        // Briefly tightens a viewset other tests' second users may list; reset
-        // right after (and again in teardown).
-        cleanup.accessPolicy(row.viewset);
-        const user = await secondUser.create();
-        const userPage = await secondUser.login(user);
-        const table = new DataTable(userPage.getByRole("main"), row.grid);
-        await userPage.goto(row.path);
-        await table.expectLoaded();
-        await expect(table.stateHeading("403: Access denied")).toHaveCount(0);
+    test("ACP-EFF-01 a policy change takes effect", async ({
+      accessPoliciesPage: acp,
+      api,
+      cleanup,
+      secondUser,
+    }) => {
+      test.slow();
+      for (const row of effectCases) {
+        await test.step(row.page, async () => {
+          // Briefly tightens a viewset other tests' second users may list; reset
+          // right after (and again in teardown).
+          cleanup.accessPolicy(row.viewset);
+          const user = await secondUser.create();
+          const userPage = await secondUser.login(user);
+          const table = new DataTable(userPage.getByRole("main"), row.grid);
+          await userPage.goto(row.path);
+          await table.expectLoaded();
+          await expect(table.stateHeading("403: Access denied")).toHaveCount(0);
 
-        const tightened = await adminOnlyList(api, row.viewset);
-        await acp.find(row.viewset);
-        const modal = await acp.openEdit(row.viewset);
-        await modal.field("Statements").fill(json(tightened));
-        await modal.button("Save").click();
-        await modal.expectClosed();
+          const tightened = await adminOnlyList(api, row.viewset);
+          // Reload the admin list so the filter from the previous step is cleared.
+          await acp.goto();
+          await acp.find(row.viewset);
+          const modal = await acp.openEdit(row.viewset);
+          await modal.field("Statements").fill(json(tightened));
+          await modal.button("Save").click();
+          await modal.expectClosed();
 
-        await userPage.reload();
-        await expect(table.stateHeading("403: Access denied")).toBeVisible();
+          await userPage.reload();
+          await expect(table.stateHeading("403: Access denied")).toBeVisible();
 
-        const dialog = await acp.openReset(row.viewset);
-        await dialog.confirm("Reset");
-        await userPage.reload();
-        await table.expectLoaded();
-        await expect(table.stateHeading("403: Access denied")).toHaveCount(0);
-      });
-    }
+          const dialog = await acp.openReset(row.viewset);
+          await dialog.confirm("Reset");
+          await userPage.reload();
+          await table.expectLoaded();
+          await expect(table.stateHeading("403: Access denied")).toHaveCount(0);
+        });
+      }
+    });
   });
 });
 

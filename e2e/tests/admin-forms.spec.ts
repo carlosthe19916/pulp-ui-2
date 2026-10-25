@@ -8,6 +8,7 @@ import { AccessPoliciesPage } from "./pom/AccessPoliciesPage";
 import { FormModal } from "./pom/FormModal";
 import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
+import type { Toasts } from "./pom/Toasts";
 import { UsersPage } from "./pom/UsersPage";
 
 // Scenarios: e2e/specs/shared/form-modal.md (FORM-*), run once per modal.
@@ -572,28 +573,54 @@ const FORM_09: {
   },
 ];
 
-for (const row of FORM_09) {
-  const modal = byName(row.modal);
-  const define = () =>
-    test(`FORM-09 ${row.modal}: ${row.input} → "${row.reason}"`, async ({
+/** One FORM-09 row as a step: the submit is rejected and the form keeps its value. */
+const runForm09 = async (
+  row: (typeof FORM_09)[number],
+  fx: IFx,
+  toasts: Toasts,
+): Promise<void> => {
+  await test.step(`${row.modal}: ${row.input} → "${row.reason}"`, async () => {
+    const modal = byName(row.modal);
+    const ctx = await modal.seed(fx);
+    const form = await modal.open(fx, ctx);
+    await row.enter(form, ctx);
+    await form.button(modal.submit).click();
+    await form.expectSubmitError(row.reason);
+    await toasts.expectNone();
+    await expect(form.dialog).toBeVisible();
+    await expect(form.field(row.kept.field)).toHaveValue(row.kept.value(ctx));
+  });
+};
+
+// Edit policy mutates a server-wide record, so its rows run in the serial block
+// at the end; every other row runs as a step in this one parallel test.
+const form09Parallel = FORM_09.filter(
+  (row) => byName(row.modal) !== editPolicy,
+);
+const form09Policy = FORM_09.filter((row) => byName(row.modal) === editPolicy);
+
+test("FORM-09 a server rejection surfaces in the form", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  const fx = { page, api, cleanup };
+  for (const row of form09Parallel) await runForm09(row, fx, toasts);
+});
+
+if (form09Policy.length > 0)
+  policyTests.push(() =>
+    test("FORM-09 a server rejection surfaces in the policy form", async ({
       page,
       api,
       cleanup,
       toasts,
     }) => {
       const fx = { page, api, cleanup };
-      const ctx = await modal.seed(fx);
-      const form = await modal.open(fx, ctx);
-      await row.enter(form, ctx);
-      await form.button(modal.submit).click();
-      await form.expectSubmitError(row.reason);
-      await toasts.expectNone();
-      await expect(form.dialog).toBeVisible();
-      await expect(form.field(row.kept.field)).toHaveValue(row.kept.value(ctx));
-    });
-  if (modal === editPolicy) policyTests.push(define);
-  else define();
-}
+      for (const row of form09Policy) await runForm09(row, fx, toasts);
+    }),
+  );
 
 // --- FORM-10: permission denied ----------------------------------------------
 
@@ -647,24 +674,26 @@ const FORM_10: {
   },
 ];
 
-for (const row of FORM_10) {
-  test(`FORM-10 ${row.modal}: permission denied shows "${row.fallback}"`, async ({
-    secondUser,
-  }) => {
-    // Logs a second user in through the login form first.
-    test.slow();
-    const user = await secondUser.create();
-    const page = await secondUser.login(user);
-    const form = await row.open(page);
-    await form.button("Create").click();
-    await expect(
-      form.dialog.getByRole("heading", {
-        name: `Danger alert: ${row.fallback}`,
-      }),
-    ).toBeVisible();
-    await expect(form.dialog).toContainText(PERMISSION_DENIED);
-  });
-}
+test("FORM-10 create permission denied shows a fallback alert", async ({
+  secondUser,
+}) => {
+  // Logs one second user in through the login form, then tries each create.
+  test.slow();
+  const user = await secondUser.create();
+  const page = await secondUser.login(user);
+  for (const row of FORM_10) {
+    await test.step(`${row.modal}: permission denied shows "${row.fallback}"`, async () => {
+      const form = await row.open(page);
+      await form.button("Create").click();
+      await expect(
+        form.dialog.getByRole("heading", {
+          name: `Danger alert: ${row.fallback}`,
+        }),
+      ).toBeVisible();
+      await expect(form.dialog).toContainText(PERMISSION_DENIED);
+    });
+  }
+});
 
 test('FORM-10 Edit group: permission denied shows "Failed to update group"', async ({
   api,

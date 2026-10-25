@@ -447,39 +447,43 @@ test.describe("Groups", () => {
     });
   }
 
-  for (const where of ["Groups list", "group detail"] as const) {
-    test(`GRP-PERM-05 nothing is disabled while permissions load: ${where}`, async ({
-      api,
-      cleanup,
-      secondUser,
-    }) => {
-      const user = await secondUser.create();
-      const group = await seedGroup(api, cleanup);
-      await grantOnGroup(api, cleanup, {
-        username: user.username,
-        group,
-        permissions: permissionsFor({ change: false, del: false }),
+  test("GRP-PERM-05 nothing is disabled while permissions load", async ({
+    api,
+    cleanup,
+    secondUser,
+  }) => {
+    // One second-user login; each step seeds its own group and grants it to the
+    // same user, so the steps are order-independent.
+    const user = await secondUser.create();
+    const page = await secondUser.login(user);
+    for (const where of ["Groups list", "group detail"] as const) {
+      await test.step(where, async () => {
+        const group = await seedGroup(api, cleanup);
+        await grantOnGroup(api, cleanup, {
+          username: user.username,
+          group,
+          permissions: permissionsFor({ change: false, del: false }),
+        });
+        const held = await delayApi(page, { url: /my_permissions\// });
+        const item = await locateAction(page, {
+          action:
+            where === "Groups list"
+              ? 'Groups list › row "Edit"'
+              : 'detail › actions › "Edit Group"',
+          group,
+          member: user.username,
+          awaitPermissions: false,
+        });
+        await expect(item).toBeVisible();
+        await expect(item).not.toHaveAttribute("aria-disabled", "true");
+        held.release();
+        // Both the released my_permissions/ and the superuser probe must answer.
+        await expect(item).toHaveAttribute("aria-disabled", "true", {
+          timeout: 15_000,
+        });
       });
-      const page = await secondUser.login(user);
-      const held = await delayApi(page, { url: /my_permissions\// });
-      const item = await locateAction(page, {
-        action:
-          where === "Groups list"
-            ? 'Groups list › row "Edit"'
-            : 'detail › actions › "Edit Group"',
-        group,
-        member: user.username,
-        awaitPermissions: false,
-      });
-      await expect(item).toBeVisible();
-      await expect(item).not.toHaveAttribute("aria-disabled", "true");
-      held.release();
-      // Both the released my_permissions/ and the superuser probe must answer.
-      await expect(item).toHaveAttribute("aria-disabled", "true", {
-        timeout: 15_000,
-      });
-    });
-  }
+    }
+  });
 
   for (const creator of ["the admin", "someone else"] as const) {
     test(`GRP-PERM-06 the admin sees gated actions enabled on a group created by ${creator}`, async ({
@@ -566,43 +570,45 @@ test.describe("Groups", () => {
     // tests/api/groups.api.spec.ts.
   ];
 
-  for (const row of createNames) {
-    test(`GRP-CRE-02 name ${row.name}`, async ({
-      groupsPage,
-      api,
-      cleanup,
-      page,
-      toasts,
-    }) => {
-      const input = await row.input({ api, cleanup });
-      await groupsPage.goto();
-      const writes = recordGroupWrites(page);
-      const modal = await groupsPage.openCreate();
-      if (input) await modal.field("Name").fill(input);
-      if ("created" in row.outcome) {
-        const created = cleanup.group(row.outcome.created(input));
-        await modal.button("Create").click();
-        await modal.expectClosed();
-        await expect(
-          toasts.success(`Group "${created}" created`),
-        ).toBeVisible();
-        await expect
-          .poll(async () => (await api.group(created))?.name)
-          .toBe(created);
-      } else if ("fieldError" in row.outcome) {
-        await modal.button("Create").click();
-        await expect(
-          modal.dialog.getByText(row.outcome.fieldError),
-        ).toBeVisible();
-        expect(writes).toEqual([]);
-      } else {
-        cleanup.group(input.trim());
-        await modal.button("Create").click();
-        await modal.expectSubmitError(row.outcome.serverError);
-        await expect(modal.dialog).toBeVisible();
-      }
-    });
-  }
+  test("GRP-CRE-02 create with various names", async ({
+    groupsPage,
+    api,
+    cleanup,
+    page,
+    toasts,
+  }) => {
+    for (const row of createNames) {
+      await test.step(`name ${row.name}`, async () => {
+        const input = await row.input({ api, cleanup });
+        await groupsPage.goto();
+        const writes = recordGroupWrites(page);
+        const modal = await groupsPage.openCreate();
+        if (input) await modal.field("Name").fill(input);
+        if ("created" in row.outcome) {
+          const created = cleanup.group(row.outcome.created(input));
+          await modal.button("Create").click();
+          await modal.expectClosed();
+          await expect(
+            toasts.success(`Group "${created}" created`),
+          ).toBeVisible();
+          await expect
+            .poll(async () => (await api.group(created))?.name)
+            .toBe(created);
+        } else if ("fieldError" in row.outcome) {
+          await modal.button("Create").click();
+          await expect(
+            modal.dialog.getByText(row.outcome.fieldError),
+          ).toBeVisible();
+          expect(writes).toEqual([]);
+        } else {
+          cleanup.group(input.trim());
+          await modal.button("Create").click();
+          await modal.expectSubmitError(row.outcome.serverError);
+          await expect(modal.dialog).toBeVisible();
+        }
+      });
+    }
+  });
 
   test(
     "GRP-CRE-03 the new group appears with a toast",
@@ -619,47 +625,44 @@ test.describe("Groups", () => {
 
   // --- Edit ---------------------------------------------------------------
 
-  test("GRP-EDT-01 rename from Groups › row › Edit shows in the Groups list", async ({
-    groupsPage,
-    api,
-    cleanup,
-    toasts,
-  }) => {
-    const group = await seedGroup(api, cleanup);
-    const renamed = cleanup.group(uniqueName("renamed"));
-    await groupsPage.goto();
-    await groupsPage.filterBy("Name", group.name);
-    await groupsPage.rename(group.name, renamed);
-    await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
-    await groupsPage.filterBy("Name", renamed);
-    await groupsPage.expectRowVisible(renamed);
-  });
-
-  test('GRP-EDT-01 rename from group detail › actions › "Edit Group" shows in header, breadcrumb, tab title and list', async ({
+  test("GRP-EDT-01 rename from the Groups list and from group detail", async ({
     groupsPage,
     api,
     cleanup,
     page,
     toasts,
   }) => {
-    const group = await seedGroup(api, cleanup);
-    const renamed = cleanup.group(uniqueName("renamed"));
-    const detail = await GroupDetailPage.open(page, group);
-    const modal = await detail.openEdit(group.name);
-    await modal.field("Name").fill(renamed);
-    await modal.button("Save").click();
-    await modal.expectClosed();
-    await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
-    await expect(
-      page.getByRole("heading", { level: 1, name: renamed, exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "Breadcrumb" }),
-    ).toContainText(renamed);
-    await expect(page).toHaveTitle(new RegExp(`Group · ${renamed}`));
-    await navigateInApp(page, "Groups");
-    await groupsPage.filterBy("Name", renamed);
-    await groupsPage.expectRowVisible(renamed);
+    await test.step("from Groups › row › Edit shows in the Groups list", async () => {
+      const group = await seedGroup(api, cleanup);
+      const renamed = cleanup.group(uniqueName("renamed"));
+      await groupsPage.goto();
+      await groupsPage.filterBy("Name", group.name);
+      await groupsPage.rename(group.name, renamed);
+      await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
+      await groupsPage.filterBy("Name", renamed);
+      await groupsPage.expectRowVisible(renamed);
+    });
+
+    await test.step('from group detail › actions › "Edit Group" shows in header, breadcrumb, tab title and list', async () => {
+      const group = await seedGroup(api, cleanup);
+      const renamed = cleanup.group(uniqueName("renamed"));
+      const detail = await GroupDetailPage.open(page, group);
+      const modal = await detail.openEdit(group.name);
+      await modal.field("Name").fill(renamed);
+      await modal.button("Save").click();
+      await modal.expectClosed();
+      await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 1, name: renamed, exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("navigation", { name: "Breadcrumb" }),
+      ).toContainText(renamed);
+      await expect(page).toHaveTitle(new RegExp(`Group · ${renamed}`));
+      await navigateInApp(page, "Groups");
+      await groupsPage.filterBy("Name", renamed);
+      await groupsPage.expectRowVisible(renamed);
+    });
   });
 
   test("GRP-EDT-02 a rename shows on a member's Groups tab", async ({
@@ -693,39 +696,41 @@ test.describe("Groups", () => {
     { name: "its own current name", target: "own", outcome: "updated" },
   ] as const;
 
-  for (const row of editNames) {
-    test(`GRP-EDT-03 rename to ${row.name}`, async ({
-      groupsPage,
-      api,
-      cleanup,
-      page,
-      toasts,
-    }) => {
-      const group = await seedGroup(api, cleanup);
-      const other =
-        row.target === "other" ? await seedGroup(api, cleanup) : null;
-      await groupsPage.goto();
-      await groupsPage.filterBy("Name", group.name);
-      const writes = recordGroupWrites(page);
-      const modal = await groupsPage.openEdit(group.name);
-      if (row.target === "empty") {
-        await modal.field("Name").fill("");
-        await modal.button("Save").click();
-        await expect(modal.dialog.getByText(row.outcome)).toBeVisible();
-        expect(writes).toEqual([]);
-      } else if (other) {
-        await modal.field("Name").fill(other.name);
-        await modal.button("Save").click();
-        await modal.expectSubmitError(row.outcome);
-      } else {
-        await modal.button("Save").click();
-        await modal.expectClosed();
-        await expect(
-          toasts.success(`Group "${group.name}" updated`),
-        ).toBeVisible();
-      }
-    });
-  }
+  test("GRP-EDT-03 rename validation", async ({
+    groupsPage,
+    api,
+    cleanup,
+    page,
+    toasts,
+  }) => {
+    for (const row of editNames) {
+      await test.step(`rename to ${row.name}`, async () => {
+        const group = await seedGroup(api, cleanup);
+        const other =
+          row.target === "other" ? await seedGroup(api, cleanup) : null;
+        await groupsPage.goto();
+        await groupsPage.filterBy("Name", group.name);
+        const writes = recordGroupWrites(page);
+        const modal = await groupsPage.openEdit(group.name);
+        if (row.target === "empty") {
+          await modal.field("Name").fill("");
+          await modal.button("Save").click();
+          await expect(modal.dialog.getByText(row.outcome)).toBeVisible();
+          expect(writes).toEqual([]);
+        } else if (other) {
+          await modal.field("Name").fill(other.name);
+          await modal.button("Save").click();
+          await modal.expectSubmitError(row.outcome);
+        } else {
+          await modal.button("Save").click();
+          await modal.expectClosed();
+          await expect(
+            toasts.success(`Group "${group.name}" updated`),
+          ).toBeVisible();
+        }
+      });
+    }
+  });
 
   test("GRP-EDT-04 the edit form shows the current name", async ({
     groupsPage,
@@ -751,80 +756,87 @@ test.describe("Groups", () => {
     { contents: "global and object roles", entry: "detail" },
   ] as const;
 
-  for (const row of deleteRows) {
-    test(`GRP-DEL-01 delete a group with ${row.contents} from the ${row.entry}`, async ({
-      groupsPage,
-      usersPage,
-      api,
-      cleanup,
-      page,
-      toasts,
-    }) => {
-      const group = await seedGroup(api, cleanup);
-      const members: string[] = [];
-      const assignments: string[] = [];
-      if (row.contents === "two users") {
-        for (let i = 0; i < 2; i++) {
-          const username = cleanup.user(uniqueName("user"));
-          await api.createUser({ username });
-          await api.addGroupMember(group.name, username);
-          members.push(username);
+  test("GRP-DEL-01 delete a group from the list and the detail page", async ({
+    groupsPage,
+    usersPage,
+    api,
+    cleanup,
+    page,
+    toasts,
+  }) => {
+    // Six full delete flows, each seeding users / roles: extra headroom.
+    test.slow();
+    for (const row of deleteRows) {
+      await test.step(`${row.contents} from the ${row.entry}`, async () => {
+        const group = await seedGroup(api, cleanup);
+        const members: string[] = [];
+        const assignments: string[] = [];
+        if (row.contents === "two users") {
+          for (let i = 0; i < 2; i++) {
+            const username = cleanup.user(uniqueName("user"));
+            await api.createUser({ username });
+            await api.addGroupMember(group.name, username);
+            members.push(username);
+          }
         }
-      }
-      if (row.contents === "global and object roles") {
-        const repo = cleanup.repository(uniqueName("repo"));
-        const { pulp_href } = await api.createFileRepository(repo);
-        assignments.push(
-          (
-            await api.assignRole(
-              { group: group.name },
-              { role: "core.task_viewer" },
-            )
-          ).pulp_href,
-          (
-            await api.assignRole(
-              { group: group.name },
-              { role: "file.filerepository_viewer", contentObject: pulp_href },
-            )
-          ).pulp_href,
-        );
-      }
+        if (row.contents === "global and object roles") {
+          const repo = cleanup.repository(uniqueName("repo"));
+          const { pulp_href } = await api.createFileRepository(repo);
+          assignments.push(
+            (
+              await api.assignRole(
+                { group: group.name },
+                { role: "core.task_viewer" },
+              )
+            ).pulp_href,
+            (
+              await api.assignRole(
+                { group: group.name },
+                {
+                  role: "file.filerepository_viewer",
+                  contentObject: pulp_href,
+                },
+              )
+            ).pulp_href,
+          );
+        }
 
-      if (row.entry === "list") {
-        await groupsPage.goto();
-        await groupsPage.filterBy("Name", group.name);
-        await groupsPage.delete(group.name);
-        await groupsPage.expectRowGone(group.name);
-      } else {
-        const detail = await GroupDetailPage.open(page, group);
-        const notFound = recordApiNotFound(page);
-        await detail.deleteGroup();
-        await expect(page).toHaveURL(/\/admin\/groups$/);
-        await expect(groupsPage.heading).toBeVisible();
-        expect(notFound).toEqual([]);
-      }
-      await expect(
-        toasts.success(`Group "${group.name}" deleted`),
-      ).toBeVisible();
-      await expect.poll(() => api.group(group.name)).toBeUndefined();
+        if (row.entry === "list") {
+          await groupsPage.goto();
+          await groupsPage.filterBy("Name", group.name);
+          await groupsPage.delete(group.name);
+          await groupsPage.expectRowGone(group.name);
+        } else {
+          const detail = await GroupDetailPage.open(page, group);
+          const notFound = recordApiNotFound(page);
+          await detail.deleteGroup();
+          await expect(page).toHaveURL(/\/admin\/groups$/);
+          await expect(groupsPage.heading).toBeVisible();
+          expect(notFound).toEqual([]);
+        }
+        await expect(
+          toasts.success(`Group "${group.name}" deleted`),
+        ).toBeVisible();
+        await expect.poll(() => api.group(group.name)).toBeUndefined();
 
-      for (const username of members) {
-        await usersPage.goto();
-        await usersPage.filterBy("Username", username);
-        await expect(
-          usersPage.row(username).getByRole("gridcell").nth(3),
-        ).toHaveText("0");
-        const userDetail = await usersPage.openDetail(username);
-        await expect(userDetail.groupsTab).toHaveText("Groups (0)");
-        await expect(
-          userDetail.groupsTable.getByRole("link", { name: group.name }),
-        ).toHaveCount(0);
-      }
-      for (const href of assignments) {
-        await expect.poll(() => api.status(href)).toBe(404);
-      }
-    });
-  }
+        for (const username of members) {
+          await usersPage.goto();
+          await usersPage.filterBy("Username", username);
+          await expect(
+            usersPage.row(username).getByRole("gridcell").nth(3),
+          ).toHaveText("0");
+          const userDetail = await usersPage.openDetail(username);
+          await expect(userDetail.groupsTab).toHaveText("Groups (0)");
+          await expect(
+            userDetail.groupsTable.getByRole("link", { name: group.name }),
+          ).toHaveCount(0);
+        }
+        for (const href of assignments) {
+          await expect.poll(() => api.status(href)).toBe(404);
+        }
+      });
+    }
+  });
 
   test("GRP-DEL-02 members lose permissions that came through the group", async ({
     groupsPage,
@@ -894,28 +906,31 @@ test.describe("Groups", () => {
       ]);
     });
 
-    for (const u of [0, 1, 12]) {
-      for (const r of [0, 1, 12]) {
-        test(`GRP-DET-02 ${u} users and ${r} role assignments`, async ({
-          api,
-          cleanup,
-          page,
-        }) => {
-          const group = await seedGroup(api, cleanup);
-          await Promise.all([
-            ...pool.users
-              .slice(0, u)
-              .map((username) => api.addGroupMember(group.name, username)),
-            ...pool.roles
-              .slice(0, r)
-              .map((role) => api.assignRole({ group: group.name }, { role })),
-          ]);
-          const detail = await GroupDetailPage.open(page, group);
-          await expect(detail.usersTab).toHaveText(`Users (${u})`);
-          await expect(detail.rolesTab).toHaveText(`Roles (${r})`);
-        });
+    test("GRP-DET-02 user and role assignment counts", async ({
+      api,
+      cleanup,
+      page,
+    }) => {
+      test.slow();
+      for (const u of [0, 1, 12]) {
+        for (const r of [0, 1, 12]) {
+          await test.step(`${u} users and ${r} role assignments`, async () => {
+            const group = await seedGroup(api, cleanup);
+            await Promise.all([
+              ...pool.users
+                .slice(0, u)
+                .map((username) => api.addGroupMember(group.name, username)),
+              ...pool.roles
+                .slice(0, r)
+                .map((role) => api.assignRole({ group: group.name }, { role })),
+            ]);
+            const detail = await GroupDetailPage.open(page, group);
+            await expect(detail.usersTab).toHaveText(`Users (${u})`);
+            await expect(detail.rolesTab).toHaveText(`Roles (${r})`);
+          });
+        }
       }
-    }
+    });
   });
 
   const countRows = [
@@ -927,60 +942,64 @@ test.describe("Groups", () => {
     { action: "remove one role", tab: "roles", change: -1 },
   ] as const;
 
-  for (const row of countRows) {
-    test(`GRP-DET-03 ${row.action} changes the ${row.tab} count by ${row.change} without a reload`, async ({
-      api,
-      cleanup,
-      page,
-    }) => {
-      const group = await seedGroup(api, cleanup);
-      const names: string[] = [];
-      for (let i = 0; i < 2; i++) {
-        if (row.tab === "users") {
-          const username = cleanup.user(uniqueName("user"));
-          await api.createUser({ username });
-          names.push(username);
-        } else {
-          const role = cleanup.role(uniqueName("role"));
-          await api.createRole({ name: role });
-          names.push(role);
+  test("GRP-DET-03 tab counts change without a reload", async ({
+    api,
+    cleanup,
+    page,
+  }) => {
+    test.slow();
+    for (const row of countRows) {
+      await test.step(`${row.action} changes the ${row.tab} count by ${row.change} without a reload`, async () => {
+        const group = await seedGroup(api, cleanup);
+        const names: string[] = [];
+        for (let i = 0; i < 2; i++) {
+          if (row.tab === "users") {
+            const username = cleanup.user(uniqueName("user"));
+            await api.createUser({ username });
+            names.push(username);
+          } else {
+            const role = cleanup.role(uniqueName("role"));
+            await api.createRole({ name: role });
+            names.push(role);
+          }
         }
-      }
-      if (row.change < 0) {
-        if (row.tab === "users") await api.addGroupMember(group.name, names[0]);
-        else await api.assignRole({ group: group.name }, { role: names[0] });
-      }
-      const before = row.change < 0 ? 1 : 0;
-      const detail = await GroupDetailPage.open(page, group);
-      const tab = row.tab === "users" ? detail.usersTab : detail.rolesTab;
-      const label = row.tab === "users" ? "Users" : "Roles";
-      await expect(tab).toHaveText(`${label} (${before})`);
-      await tab.click();
+        if (row.change < 0) {
+          if (row.tab === "users")
+            await api.addGroupMember(group.name, names[0]);
+          else await api.assignRole({ group: group.name }, { role: names[0] });
+        }
+        const before = row.change < 0 ? 1 : 0;
+        const detail = await GroupDetailPage.open(page, group);
+        const tab = row.tab === "users" ? detail.usersTab : detail.rolesTab;
+        const label = row.tab === "users" ? "Users" : "Roles";
+        await expect(tab).toHaveText(`${label} (${before})`);
+        await tab.click();
 
-      if (row.change < 0) {
-        if (row.tab === "users") await detail.removeUser(names[0]);
-        else await detail.removeRole(names[0]);
-      } else {
-        await page
-          .getByRole("button", {
-            name: row.tab === "users" ? "Add User" : "Add Role",
-            exact: true,
-          })
-          .click();
-        const modal = new BatchAddModal(
-          page,
-          row.tab === "users"
-            ? { title: "Add User to Group", grid: "Select users" }
-            : { title: "Add Role to Group", grid: "Select roles" },
-        );
-        for (const name of names.slice(0, row.change))
-          await modal.select(row.tab === "users" ? "Username" : "Role", name);
-        await modal.addButton().click();
-        await expect(modal.dialog).toBeHidden();
-      }
-      await expect(tab).toHaveText(`${label} (${before + row.change})`);
-    });
-  }
+        if (row.change < 0) {
+          if (row.tab === "users") await detail.removeUser(names[0]);
+          else await detail.removeRole(names[0]);
+        } else {
+          await page
+            .getByRole("button", {
+              name: row.tab === "users" ? "Add User" : "Add Role",
+              exact: true,
+            })
+            .click();
+          const modal = new BatchAddModal(
+            page,
+            row.tab === "users"
+              ? { title: "Add User to Group", grid: "Select users" }
+              : { title: "Add Role to Group", grid: "Select roles" },
+          );
+          for (const name of names.slice(0, row.change))
+            await modal.select(row.tab === "users" ? "Username" : "Role", name);
+          await modal.addButton().click();
+          await expect(modal.dialog).toBeHidden();
+        }
+        await expect(tab).toHaveText(`${label} (${before + row.change})`);
+      });
+    }
+  });
 
   // --- Users tab ----------------------------------------------------------
 
@@ -1017,32 +1036,34 @@ test.describe("Groups", () => {
     { first: "", last: "", cell: "—" },
   ];
 
-  for (const row of nameCells) {
-    test(`GRP-USR-02 Add User Name cell for first "${row.first}" and last "${row.last}" is ${row.cell}`, async ({
-      api,
-      cleanup,
-      page,
-    }) => {
-      const group = await seedGroup(api, cleanup);
-      const username = cleanup.user(uniqueName("user"));
-      await api.createUser({
-        username,
-        first_name: row.first,
-        last_name: row.last,
+  test("GRP-USR-02 Add User Name cell rendering", async ({
+    api,
+    cleanup,
+    page,
+  }) => {
+    for (const row of nameCells) {
+      await test.step(`first "${row.first}" and last "${row.last}" is ${row.cell}`, async () => {
+        const group = await seedGroup(api, cleanup);
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({
+          username,
+          first_name: row.first,
+          last_name: row.last,
+        });
+        const detail = await GroupDetailPage.open(page, group);
+        await detail.addUserButton().click();
+        const modal = new BatchAddModal(page, {
+          title: "Add User to Group",
+          grid: "Select users",
+        });
+        await modal.table.filter("Username", username);
+        await expect(modal.table.rows).toHaveCount(1);
+        expect(await modal.table.columnTexts("Name")).toEqual([row.cell]);
+        // The user has no email.
+        expect(await modal.table.columnTexts("Email")).toEqual(["—"]);
       });
-      const detail = await GroupDetailPage.open(page, group);
-      await detail.addUserButton().click();
-      const modal = new BatchAddModal(page, {
-        title: "Add User to Group",
-        grid: "Select users",
-      });
-      await modal.table.filter("Username", username);
-      await expect(modal.table.rows).toHaveCount(1);
-      expect(await modal.table.columnTexts("Name")).toEqual([row.cell]);
-      // The user has no email.
-      expect(await modal.table.columnTexts("Email")).toEqual(["—"]);
-    });
-  }
+    }
+  });
 
   test("GRP-USR-03 added users are listed in the Users tab", async ({
     api,
@@ -1085,86 +1106,82 @@ test.describe("Groups", () => {
     await expect.poll(() => api.groupMemberNames(group.name)).toEqual([]);
   });
 
-  test("GRP-USR-05 G › Users › add user U shows on U's open detail page and in the Users list", async ({
+  test("GRP-USR-05 G › Users add/remove reflects on U's open detail page and the Users list", async ({
     groupsPage,
     usersPage,
     api,
     cleanup,
     page,
   }) => {
-    const group = await seedGroup(api, cleanup);
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
+    await test.step("add user U shows on U's open detail page and in the Users list", async () => {
+      const group = await seedGroup(api, cleanup);
+      const username = cleanup.user(uniqueName("user"));
+      await api.createUser({ username });
 
-    // Visit the user page first so its record (with no groups) is cached.
-    await usersPage.goto();
-    await usersPage.filterBy("Username", username);
-    const userDetail = await usersPage.openDetail(username);
-    await expect(userDetail.groupsTab).toHaveText("Groups (0)");
+      // Visit the user page first so its record (with no groups) is cached.
+      await usersPage.goto();
+      await usersPage.filterBy("Username", username);
+      const userDetail = await usersPage.openDetail(username);
+      await expect(userDetail.groupsTab).toHaveText("Groups (0)");
 
-    await navigateInApp(page, "Groups");
-    await groupsPage.filterBy("Name", group.name);
-    const groupDetail = await groupsPage.openDetail(group.name);
-    await groupDetail.addUser(username);
+      await navigateInApp(page, "Groups");
+      await groupsPage.filterBy("Name", group.name);
+      const groupDetail = await groupsPage.openDetail(group.name);
+      await groupDetail.addUser(username);
 
-    await groupDetail.usersTable
-      .getByRole("link", { name: username, exact: true })
-      .click();
-    await expect(userDetail.groupsTab).toHaveText("Groups (1)");
-    await expect(
-      userDetail.groupsTable.getByRole("link", {
-        name: group.name,
-        exact: true,
-      }),
-    ).toBeVisible();
+      await groupDetail.usersTable
+        .getByRole("link", { name: username, exact: true })
+        .click();
+      await expect(userDetail.groupsTab).toHaveText("Groups (1)");
+      await expect(
+        userDetail.groupsTable.getByRole("link", {
+          name: group.name,
+          exact: true,
+        }),
+      ).toBeVisible();
 
-    // The same filter was fetched before, so it may answer from the cache without a
-    // request: type it and assert the (invalidated) count instead of waiting on one.
-    await navigateInApp(page, "Users");
-    await usersPage.list.filterInput("Username").fill(username);
-    await expect(
-      usersPage.row(username).getByRole("gridcell").nth(3),
-    ).toHaveText("1");
-  });
+      // The same filter was fetched before, so it may answer from the cache without a
+      // request: type it and assert the (invalidated) count instead of waiting on one.
+      await navigateInApp(page, "Users");
+      await usersPage.list.filterInput("Username").fill(username);
+      await expect(
+        usersPage.row(username).getByRole("gridcell").nth(3),
+      ).toHaveText("1");
+    });
 
-  test("GRP-USR-05 G › Users › remove user U shows on U's open detail page and in the Users list", async ({
-    groupsPage,
-    usersPage,
-    api,
-    cleanup,
-    page,
-  }) => {
-    const group = await seedGroup(api, cleanup);
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
-    await api.addGroupMember(group.name, username);
+    await test.step("remove user U shows on U's open detail page and in the Users list", async () => {
+      const group = await seedGroup(api, cleanup);
+      const username = cleanup.user(uniqueName("user"));
+      await api.createUser({ username });
+      await api.addGroupMember(group.name, username);
 
-    await usersPage.goto();
-    await usersPage.filterBy("Username", username);
-    await expect(
-      usersPage.row(username).getByRole("gridcell").nth(3),
-    ).toHaveText("1");
-    const userDetail = await usersPage.openDetail(username);
-    await expect(userDetail.groupsTab).toHaveText("Groups (1)");
+      await usersPage.goto();
+      await usersPage.filterBy("Username", username);
+      await expect(
+        usersPage.row(username).getByRole("gridcell").nth(3),
+      ).toHaveText("1");
+      const userDetail = await usersPage.openDetail(username);
+      await expect(userDetail.groupsTab).toHaveText("Groups (1)");
 
-    await navigateInApp(page, "Groups");
-    await groupsPage.filterBy("Name", group.name);
-    const groupDetail = await groupsPage.openDetail(group.name);
-    await groupDetail.removeUser(username);
+      await navigateInApp(page, "Groups");
+      await groupsPage.filterBy("Name", group.name);
+      const groupDetail = await groupsPage.openDetail(group.name);
+      await groupDetail.removeUser(username);
 
-    await page.goBack();
-    await page.goBack();
-    await expect(userDetail.title).toBeVisible();
-    await expect(userDetail.groupsTab).toHaveText("Groups (0)");
-    await expect(
-      userDetail.groupsTable.getByRole("link", { name: group.name }),
-    ).toHaveCount(0);
+      await page.goBack();
+      await page.goBack();
+      await expect(userDetail.title).toBeVisible();
+      await expect(userDetail.groupsTab).toHaveText("Groups (0)");
+      await expect(
+        userDetail.groupsTable.getByRole("link", { name: group.name }),
+      ).toHaveCount(0);
 
-    await navigateInApp(page, "Users");
-    await usersPage.list.filterInput("Username").fill(username);
-    await expect(
-      usersPage.row(username).getByRole("gridcell").nth(3),
-    ).toHaveText("0");
+      await navigateInApp(page, "Users");
+      await usersPage.list.filterInput("Username").fill(username);
+      await expect(
+        usersPage.row(username).getByRole("gridcell").nth(3),
+      ).toHaveText("0");
+    });
   });
 
   test("GRP-USR-06 adding a user grants the group's roles, removing takes them away", async ({

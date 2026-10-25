@@ -539,25 +539,6 @@ const GONE: {
   },
 ];
 
-for (const row of GONE) {
-  test(`CONF-04 ${row.dialog.name}: ${row.trigger} keeps the dialog open`, async ({
-    page,
-    api,
-    cleanup,
-    toasts,
-  }) => {
-    const fx = { page, api, cleanup };
-    const ctx = await row.dialog.seed(fx);
-    const modal = await row.dialog.open(fx, ctx);
-    await row.remove(api, ctx);
-    await modal.button(row.dialog.confirm).click();
-    await expectFailure(toasts, modal, {
-      title: row.fallback(ctx),
-      reason: row.reason,
-    });
-  });
-}
-
 /**
  * Group rows: a second user holds view plus `perm` on the group through two
  * assignments, opens the dialog, and loses `perm` before confirming.
@@ -605,52 +586,72 @@ const REVOKED: {
   },
 ];
 
-for (const row of REVOKED) {
-  test(`CONF-04 ${row.dialog}: a revoked permission keeps the dialog open, a retry succeeds`, async ({
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    // Seeds roles, logs a second user in, then confirms twice.
-    test.slow();
-    const member = cleanup.user(uniqueName("user"));
-    const group = cleanup.group(uniqueName("group"));
-    const viewer = cleanup.role(uniqueName("role"));
-    const granted = cleanup.role(uniqueName("role"));
-    await api.createUser({ username: member });
-    const { id: groupId, pulp_href: groupHref } = await api.createGroup(group);
-    await api.addGroupMember(group, member);
-    await api.createRole({ name: viewer, permissions: ["core.view_group"] });
-    await api.createRole({ name: granted, permissions: [row.perm] });
-    const user = await secondUser.create();
-    const owner = { user: user.username };
-    await api.assignRole(owner, { role: viewer, contentObject: groupHref });
-    const grant = await api.assignRole(owner, {
-      role: granted,
-      contentObject: groupHref,
+test("CONF-04 a failure keeps the dialog open", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+  secondUser,
+}) => {
+  // The "gone elsewhere" rows run as admin; the revoked-permission rows log a
+  // second user in, so this test does many round-trips.
+  test.slow();
+  const fx = { page, api, cleanup };
+  for (const row of GONE) {
+    await test.step(`${row.dialog.name}: ${row.trigger}`, async () => {
+      const ctx = await row.dialog.seed(fx);
+      const modal = await row.dialog.open(fx, ctx);
+      await row.remove(api, ctx);
+      await modal.button(row.dialog.confirm).click();
+      await expectFailure(toasts, modal, {
+        title: row.fallback(ctx),
+        reason: row.reason,
+      });
     });
+  }
+  for (const row of REVOKED) {
+    await test.step(`${row.dialog}: a revoked permission, then a retry succeeds`, async () => {
+      // Seeds roles, logs a second user in, then confirms twice.
+      const member = cleanup.user(uniqueName("user"));
+      const group = cleanup.group(uniqueName("group"));
+      const viewer = cleanup.role(uniqueName("role"));
+      const granted = cleanup.role(uniqueName("role"));
+      await api.createUser({ username: member });
+      const { id: groupId, pulp_href: groupHref } =
+        await api.createGroup(group);
+      await api.addGroupMember(group, member);
+      await api.createRole({ name: viewer, permissions: ["core.view_group"] });
+      await api.createRole({ name: granted, permissions: [row.perm] });
+      const user = await secondUser.create();
+      const owner = { user: user.username };
+      await api.assignRole(owner, { role: viewer, contentObject: groupHref });
+      const grant = await api.assignRole(owner, {
+        role: granted,
+        contentObject: groupHref,
+      });
 
-    const page = await secondUser.login(user);
-    const toasts = new Toasts(page);
-    const ctx = { ...blankCtx, username: member, group, groupId };
-    const modal = await row.open(page, ctx);
-    await expect(modal.dialog).toBeVisible();
-    await api.removeRoleAssignment(grant.pulp_href);
-    const confirm = modal.button(
-      row.dialog.startsWith("Remove") ? "Remove" : "Delete",
-    );
-    await confirm.click();
-    await expectFailure(toasts, modal, {
-      title: row.fallback(ctx),
-      reason: "You do not have permission to perform this action.",
+      const secondPage = await secondUser.login(user);
+      const secondToasts = new Toasts(secondPage);
+      const ctx = { ...blankCtx, username: member, group, groupId };
+      const modal = await row.open(secondPage, ctx);
+      await expect(modal.dialog).toBeVisible();
+      await api.removeRoleAssignment(grant.pulp_href);
+      const confirm = modal.button(
+        row.dialog.startsWith("Remove") ? "Remove" : "Delete",
+      );
+      await confirm.click();
+      await expectFailure(secondToasts, modal, {
+        title: row.fallback(ctx),
+        reason: "You do not have permission to perform this action.",
+      });
+
+      await api.assignRole(owner, { role: granted, contentObject: groupHref });
+      await confirm.click();
+      await expect(modal.dialog).toBeHidden();
+      await expect(secondToasts.success(/.*/)).not.toHaveCount(0);
     });
-
-    await api.assignRole(owner, { role: granted, contentObject: groupHref });
-    await confirm.click();
-    await expect(modal.dialog).toBeHidden();
-    await expect(toasts.success(/.*/)).not.toHaveCount(0);
-  });
-}
+  }
+});
 
 // --- CONF-05: the object was already gone ------------------------------------
 
@@ -721,49 +722,56 @@ const CONF_05: {
   },
 ];
 
-for (const row of CONF_05) {
-  test(`CONF-05 ${row.dialog.name}: ${row.change} → ${row.outcome} toast`, async ({
-    page,
-    api,
-    cleanup,
-    toasts,
-  }) => {
-    const fx = { page, api, cleanup };
-    const ctx = await row.dialog.seed(fx);
-    const modal = await row.dialog.open(fx, ctx);
-    await row.apply(api, ctx);
-    await modal.button(row.dialog.confirm).click();
-    if (row.outcome === "success") {
-      await expect(modal.dialog).toBeHidden();
-      await expect(toasts.success(row.dialog.toast(ctx))).toBeVisible();
-    } else {
-      await expectFailure(toasts, modal, {
-        title: row.fallback(ctx),
-        reason: /No .* matches the given query\./,
-      });
-    }
-  });
-}
+test("CONF-05 an object already gone yields the right toast", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  // Each step seeds and acts on its own records, so it does many round-trips.
+  test.slow();
+  const fx = { page, api, cleanup };
+  for (const row of CONF_05) {
+    await test.step(`${row.dialog.name}: ${row.change} → ${row.outcome} toast`, async () => {
+      const ctx = await row.dialog.seed(fx);
+      const modal = await row.dialog.open(fx, ctx);
+      await row.apply(api, ctx);
+      await modal.button(row.dialog.confirm).click();
+      if (row.outcome === "success") {
+        await expect(modal.dialog).toBeHidden();
+        await expect(toasts.success(row.dialog.toast(ctx))).toBeVisible();
+      } else {
+        await expectFailure(toasts, modal, {
+          title: row.fallback(ctx),
+          reason: /No .* matches the given query\./,
+        });
+      }
+    });
+  }
+});
 
 // --- CONF-06: no stale requests ----------------------------------------------
 
-for (const dialog of [deleteUserDetail, deleteGroupDetail]) {
-  test(`CONF-06 ${dialog.name}: no request for the deleted object answers 404`, async ({
-    page,
-    api,
-    cleanup,
-    toasts,
-  }) => {
-    const fx = { page, api, cleanup };
-    const ctx = await dialog.seed(fx);
-    const modal = await dialog.open(fx, ctx);
-    const notFound = recordApiNotFound(page);
-    await modal.confirm(dialog.confirm);
-    await expect(toasts.success(dialog.toast(ctx))).toBeVisible();
-    await dialog.expectDone(fx, ctx);
-    expect(notFound).toEqual([]);
-  });
-}
+test("CONF-06 no request for the deleted object answers 404", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  test.slow();
+  const fx = { page, api, cleanup };
+  for (const dialog of [deleteUserDetail, deleteGroupDetail]) {
+    await test.step(`${dialog.name}: no request for the deleted object answers 404`, async () => {
+      const ctx = await dialog.seed(fx);
+      const modal = await dialog.open(fx, ctx);
+      const notFound = recordApiNotFound(page);
+      await modal.confirm(dialog.confirm);
+      await expect(toasts.success(dialog.toast(ctx))).toBeVisible();
+      await dialog.expectDone(fx, ctx);
+      expect(notFound).toEqual([]);
+    });
+  }
+});
 
 test.describe("Reset policy", () => {
   test.describe.configure({ mode: "serial" });

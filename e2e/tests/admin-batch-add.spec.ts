@@ -243,50 +243,59 @@ async function expectAddedToasts(
   ).toBeVisible();
 }
 
-for (const modal of MODALS) {
-  test.describe(modal.name, () => {
-    // --- BATCH-01 ---------------------------------------------------------
-    // Main cases: none, one, and one-then-deselected (not every count).
-    const batch01 = [
-      { n: "0", label: "Add", enabled: false, select: 0, deselect: false },
-      { n: "1", label: "Add (1)", enabled: true, select: 1, deselect: false },
-      {
-        n: "1, then deselect it",
-        label: "Add",
-        enabled: false,
-        select: 1,
-        deselect: true,
-      },
-    ];
-    for (const row of batch01) {
-      test(`BATCH-01 ${modal.name}: select ${row.n} → "${row.label}"`, async ({
-        page,
-        api,
-        cleanup,
-      }) => {
-        const ctx = { api, cleanup };
-        const seeded = await seed(ctx, modal, 3);
-        const dialog = await openFiltered(page, ctx, modal, seeded);
-        await expect(dialog.table.rows).toHaveCount(3);
-        for (const item of seeded.items.slice(0, row.select)) {
-          await dialog.table.selectRow(item).check();
-        }
-        if (row.deselect) {
-          await dialog.table.selectRow(seeded.items[0]).uncheck();
-        }
-        await expect(dialog.addButton()).toHaveText(row.label);
-        if (row.enabled) await expect(dialog.addButton()).toBeEnabled();
-        else await expect(dialog.addButton()).toBeDisabled();
-      });
-    }
+// Each BATCH scenario is one test that walks the four modals as steps, so a
+// scenario ID appears exactly once in a test title. Every modal/row step seeds
+// its own owner and items, so the steps are order-independent.
 
-    // --- BATCH-02 ---------------------------------------------------------
-    test(`BATCH-02 ${modal.name}: selection spans pages`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const ctx = { api, cleanup };
+// --- BATCH-01 -------------------------------------------------------------
+// Main cases: none, one, and one-then-deselected (not every count).
+const batch01 = [
+  { n: "0", label: "Add", enabled: false, select: 0, deselect: false },
+  { n: "1", label: "Add (1)", enabled: true, select: 1, deselect: false },
+  {
+    n: "1, then deselect it",
+    label: "Add",
+    enabled: false,
+    select: 1,
+    deselect: true,
+  },
+];
+
+test("BATCH-01 selecting rows drives the Add button", async ({
+  page,
+  api,
+  cleanup,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
+      for (const row of batch01) {
+        await test.step(`select ${row.n} → "${row.label}"`, async () => {
+          const seeded = await seed(ctx, modal, 3);
+          const dialog = await openFiltered(page, ctx, modal, seeded);
+          await expect(dialog.table.rows).toHaveCount(3);
+          for (const item of seeded.items.slice(0, row.select)) {
+            await dialog.table.selectRow(item).check();
+          }
+          if (row.deselect) {
+            await dialog.table.selectRow(seeded.items[0]).uncheck();
+          }
+          await expect(dialog.addButton()).toHaveText(row.label);
+          if (row.enabled) await expect(dialog.addButton()).toBeEnabled();
+          else await expect(dialog.addButton()).toBeDisabled();
+        });
+      }
+    });
+  }
+});
+
+// --- BATCH-02 -------------------------------------------------------------
+test("BATCH-02 selection spans pages", async ({ page, api, cleanup }) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
       const seeded = await seed(ctx, modal, 11);
       const dialog = await openFiltered(page, ctx, modal, seeded);
       await dialog.table.selectRow(seeded.items[0]).check();
@@ -297,45 +306,58 @@ for (const modal of MODALS) {
       await dialog.table.paginator().previous().click();
       await expect(dialog.table.selectRow(seeded.items[0])).toBeChecked();
     });
+  }
+});
 
-    // --- BATCH-03 ---------------------------------------------------------
-    // Main cases: selection survives a filter that hides it and a sort change.
-    const batch03 = [
-      "filter so the selected row is hidden",
-      "change the sort",
-    ] as const;
-    for (const change of batch03) {
-      test(`BATCH-03 ${modal.name}: selection survives "${change}"`, async ({
-        page,
-        api,
-        cleanup,
-      }) => {
-        const ctx = { api, cleanup };
-        const seeded = await seed(ctx, modal, 3);
-        const [selected, other] = seeded.items;
-        const dialog = await openFiltered(page, ctx, modal, seeded);
-        await dialog.table.selectRow(selected).check();
+// --- BATCH-03 -------------------------------------------------------------
+// Main cases: selection survives a filter that hides it and a sort change.
+const batch03 = [
+  "filter so the selected row is hidden",
+  "change the sort",
+] as const;
 
-        if (change === "filter so the selected row is hidden") {
-          await dialog.table.filter(modal.filter, other);
-          await expect(dialog.table.row(selected)).toHaveCount(0);
+test("BATCH-03 selection survives filter and sort changes", async ({
+  page,
+  api,
+  cleanup,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
+      for (const change of batch03) {
+        await test.step(change, async () => {
+          const seeded = await seed(ctx, modal, 3);
+          const [selected, other] = seeded.items;
+          const dialog = await openFiltered(page, ctx, modal, seeded);
+          await dialog.table.selectRow(selected).check();
+
+          if (change === "filter so the selected row is hidden") {
+            await dialog.table.filter(modal.filter, other);
+            await expect(dialog.table.row(selected)).toHaveCount(0);
+            await expect(dialog.addButton()).toHaveText("Add (1)");
+            return;
+          }
+          await dialog.table.sortBy(modal.sortColumn);
+          await dialog.table.expectSorted(modal.sortColumn, "descending");
           await expect(dialog.addButton()).toHaveText("Add (1)");
-          return;
-        }
-        await dialog.table.sortBy(modal.sortColumn);
-        await dialog.table.expectSorted(modal.sortColumn, "descending");
-        await expect(dialog.addButton()).toHaveText("Add (1)");
-        await expect(dialog.table.selectRow(selected)).toBeChecked();
-      });
-    }
+          await expect(dialog.table.selectRow(selected)).toBeChecked();
+        });
+      }
+    });
+  }
+});
 
-    // --- BATCH-04 ---------------------------------------------------------
-    test(`BATCH-04 ${modal.name}: the existing ${modal.item} cannot be selected`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const ctx = { api, cleanup };
+// --- BATCH-04 -------------------------------------------------------------
+test("BATCH-04 the existing item cannot be selected", async ({
+  page,
+  api,
+  cleanup,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
       const seeded = await seed(ctx, modal, 11);
       // Sorts after every "-NN" item, so it sits on page 2.
       const existing = `${seeded.token}-zz`;
@@ -366,78 +388,87 @@ for (const modal of MODALS) {
         await expect(dialog.table.selectRow(item)).toBeChecked();
       }
     });
+  }
+});
 
-    // --- BATCH-07 ---------------------------------------------------------
-    // Main outcomes: all succeed, partial success (mixed toasts), and all fail
-    // (modal stays open) — not every count.
-    const batch07 = [
-      { selection: "1 row, which succeeds", rows: 1, fail: 0 },
-      { selection: "2 rows, one fails", rows: 2, fail: 1 },
-      { selection: "1 row, which fails", rows: 1, fail: 1 },
-    ];
-    for (const row of batch07) {
-      test(`BATCH-07 ${modal.name}: ${row.selection}`, async ({
-        page,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        const ctx = { api, cleanup };
-        const seeded = await seed(ctx, modal, row.rows);
-        const dialog = await openFiltered(page, ctx, modal, seeded);
-        for (const item of seeded.items) {
-          await dialog.table.selectRow(item).check();
-        }
-        const failing = seeded.items.slice(0, row.fail);
-        const passing = seeded.items.slice(row.fail);
-        for (const item of failing) {
-          await modal.breakItem(ctx, seeded.owner, item);
-        }
-        await dialog.addButton().click();
+// --- BATCH-07 -------------------------------------------------------------
+// Main outcomes: all succeed, partial success (mixed toasts), and all fail
+// (modal stays open) — not every count.
+const batch07 = [
+  { selection: "1 row, which succeeds", rows: 1, fail: 0 },
+  { selection: "2 rows, one fails", rows: 2, fail: 1 },
+  { selection: "1 row, which fails", rows: 1, fail: 1 },
+];
 
-        const to = target(modal, seeded.owner);
-        if (passing.length > 0) {
-          await expectAddedToasts(toasts, {
-            count: passing.length,
-            item: modal.item,
-            to,
-          });
-        }
-        if (failing.length > 0) {
-          const title = new RegExp(
-            `Failed to add ${plural(failing.length, modal.item)} to ${escapeRe(to)}: `,
-          );
-          await expect(toasts.danger(title)).toBeVisible();
-          const body = toasts.dangerBody(title);
-          for (const item of failing) await expect(body).toContainText(item);
-          // The first failure's reason; which one is first depends on timing.
-          await expect(body).toContainText(
-            new RegExp(
-              failing
-                .map((item) => escapeRe(modal.reason(seeded.owner, item)))
-                .join("|"),
-            ),
-          );
-        } else {
-          await expect(toasts.danger(/Failed to add/)).toHaveCount(0);
-        }
-        if (passing.length === 0) {
-          await expect(toasts.success(/ added to /)).toHaveCount(0);
-          await expect(dialog.dialog).toBeVisible();
-          await expect(dialog.addButton()).toHaveText(`Add (${row.rows})`);
-        } else {
-          await expect(dialog.dialog).toBeHidden();
-        }
-      });
-    }
+test("BATCH-07 add results produce the right toasts", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
+      for (const row of batch07) {
+        await test.step(row.selection, async () => {
+          const seeded = await seed(ctx, modal, row.rows);
+          const dialog = await openFiltered(page, ctx, modal, seeded);
+          for (const item of seeded.items) {
+            await dialog.table.selectRow(item).check();
+          }
+          const failing = seeded.items.slice(0, row.fail);
+          const passing = seeded.items.slice(row.fail);
+          for (const item of failing) {
+            await modal.breakItem(ctx, seeded.owner, item);
+          }
+          await dialog.addButton().click();
 
-    // --- BATCH-08 ---------------------------------------------------------
-    test(`BATCH-08 ${modal.name}: the Add button while saving`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const ctx = { api, cleanup };
+          const to = target(modal, seeded.owner);
+          if (passing.length > 0) {
+            await expectAddedToasts(toasts, {
+              count: passing.length,
+              item: modal.item,
+              to,
+            });
+          }
+          if (failing.length > 0) {
+            const title = new RegExp(
+              `Failed to add ${plural(failing.length, modal.item)} to ${escapeRe(to)}: `,
+            );
+            await expect(toasts.danger(title)).toBeVisible();
+            const body = toasts.dangerBody(title);
+            for (const item of failing) await expect(body).toContainText(item);
+            // The first failure's reason; which one is first depends on timing.
+            await expect(body).toContainText(
+              new RegExp(
+                failing
+                  .map((item) => escapeRe(modal.reason(seeded.owner, item)))
+                  .join("|"),
+              ),
+            );
+          } else {
+            await expect(toasts.danger(/Failed to add/)).toHaveCount(0);
+          }
+          if (passing.length === 0) {
+            await expect(toasts.success(/ added to /)).toHaveCount(0);
+            await expect(dialog.dialog).toBeVisible();
+            await expect(dialog.addButton()).toHaveText(`Add (${row.rows})`);
+          } else {
+            await expect(dialog.dialog).toBeHidden();
+          }
+        });
+      }
+    });
+  }
+});
+
+// --- BATCH-08 -------------------------------------------------------------
+test("BATCH-08 the Add button while saving", async ({ page, api, cleanup }) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
       const seeded = await seed(ctx, modal, 2);
       const dialog = await openFiltered(page, ctx, modal, seeded);
       for (const item of seeded.items) {
@@ -454,15 +485,20 @@ for (const modal of MODALS) {
       held.release();
       await expect(dialog.dialog).toBeHidden();
     });
+  }
+});
 
-    // --- BATCH-09 ---------------------------------------------------------
-    test(`BATCH-09 ${modal.name}: retry after a full failure`, async ({
-      page,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      const ctx = { api, cleanup };
+// --- BATCH-09 -------------------------------------------------------------
+test("BATCH-09 retry after a full failure", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
       const seeded = await seed(ctx, modal, 2);
       const dialog = await openFiltered(page, ctx, modal, seeded);
       for (const item of seeded.items) {
@@ -482,14 +518,19 @@ for (const modal of MODALS) {
       });
       await expect(dialog.dialog).toBeHidden();
     });
+  }
+});
 
-    // --- BATCH-10 ---------------------------------------------------------
-    test(`BATCH-10 ${modal.name}: the owner tab updates after adding`, async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      const ctx = { api, cleanup };
+// --- BATCH-10 -------------------------------------------------------------
+test("BATCH-10 the owner tab updates after adding", async ({
+  page,
+  api,
+  cleanup,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
       const seeded = await seed(ctx, modal, 3);
       const [existing, ...added] = seeded.items;
       await modal.attach(ctx, seeded.owner, existing);
@@ -513,42 +554,46 @@ for (const modal of MODALS) {
         ).toBeVisible();
       }
     });
+  }
+});
 
-    // --- BATCH-11 ---------------------------------------------------------
-    // One close path is enough here (× / Escape share it); dismissal variants are
-    // covered generically by the confirm-dialog component test.
-    for (const how of ["Cancel"] as const) {
-      test(`BATCH-11 ${modal.name}: closing with ${how} discards the selection`, async ({
-        page,
-        api,
-        cleanup,
-        toasts,
-      }) => {
-        const ctx = { api, cleanup };
-        const seeded = await seed(ctx, modal, 11);
-        const dialog = await openFiltered(page, ctx, modal, seeded);
-        await dialog.table.sortBy(modal.sortColumn);
-        await dialog.table.paginator().next().click();
-        await expect(dialog.table.paginator().currentPage()).toHaveValue("2");
-        // Sorted descending, page 2 holds the first item.
-        await dialog.table.selectRow(seeded.items[0]).check();
-        await expect(dialog.addButton()).toHaveText("Add (1)");
+// --- BATCH-11 -------------------------------------------------------------
+// One close path is enough here (× / Escape share it); dismissal variants are
+// covered generically by the confirm-dialog component test.
+test("BATCH-11 closing with Cancel discards the selection", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  test.slow();
+  const how = "Cancel" as const;
+  const ctx = { api, cleanup };
+  for (const modal of MODALS) {
+    await test.step(modal.name, async () => {
+      const seeded = await seed(ctx, modal, 11);
+      const dialog = await openFiltered(page, ctx, modal, seeded);
+      await dialog.table.sortBy(modal.sortColumn);
+      await dialog.table.paginator().next().click();
+      await expect(dialog.table.paginator().currentPage()).toHaveValue("2");
+      // Sorted descending, page 2 holds the first item.
+      await dialog.table.selectRow(seeded.items[0]).check();
+      await expect(dialog.addButton()).toHaveText("Add (1)");
 
-        await dialog.close(how);
-        await toasts.expectNone();
-        // Checked before reopening: an open modal hides the page from the a11y tree.
-        await expect(tabLocator(page, modal)).toHaveText(`${modal.tab} (0)`);
+      await dialog.close(how);
+      await toasts.expectNone();
+      // Checked before reopening: an open modal hides the page from the a11y tree.
+      await expect(tabLocator(page, modal)).toHaveText(`${modal.tab} (0)`);
 
-        const reopened = await openModal(page, modal);
-        await expect(reopened.addButton()).toHaveText("Add");
-        await expect(reopened.addButton()).toBeDisabled();
-        await expect(reopened.table.filterInput(modal.filter)).toHaveValue("");
-        await reopened.table.expectSorted(modal.sortColumn, "ascending");
-        await expect(reopened.table.paginator().currentPage()).toHaveValue("1");
-      });
-    }
-  });
-}
+      const reopened = await openModal(page, modal);
+      await expect(reopened.addButton()).toHaveText("Add");
+      await expect(reopened.addButton()).toBeDisabled();
+      await expect(reopened.table.filterInput(modal.filter)).toHaveValue("");
+      await reopened.table.expectSorted(modal.sortColumn, "ascending");
+      await expect(reopened.table.paginator().currentPage()).toHaveValue("1");
+    });
+  }
+});
 
 // --- BATCH-05 -------------------------------------------------------------
 
@@ -560,74 +605,91 @@ const batch05 = [
   { scope: "not at all", selectable: true },
 ] as const;
 
-for (const owner of ["user", "group"] as const) {
-  const modal = roleModal(owner);
-  for (const row of batch05) {
-    test(`BATCH-05 ${modal.name}: role assigned ${row.scope} → ${
-      row.selectable ? "selectable" : "not selectable"
-    }`, async ({ page, api, cleanup, toasts }) => {
-      if (row.scope === "only in one domain") {
-        test.skip(!api.domainEnabled, "domains are disabled on this backend");
-      }
-      const ctx = { api, cleanup };
-      const token = uniqueName("batch");
-      const ownerName = `${token}-owner`;
-      const ownerRef =
-        owner === "user" ? { user: ownerName } : { group: ownerName };
-      if (owner === "user") await seedUser(ctx, ownerName);
-      else await seedGroup(ctx, ownerName);
-      // Object and domain scopes need a permission on the object's model.
-      const role = cleanup.role(`${token}-role`);
-      await api.createRole({
-        name: role,
-        permissions: ["file.view_filerepository"],
-      });
-      const repository = cleanup.repository(`${token}-repo`);
-      const { pulp_href: repositoryHref } =
-        await api.createFileRepository(repository);
+test("BATCH-05 role selectability by existing assignment scope", async ({
+  page,
+  api,
+  cleanup,
+  toasts,
+}) => {
+  test.slow();
+  const ctx = { api, cleanup };
+  for (const owner of ["user", "group"] as const) {
+    const modal = roleModal(owner);
+    await test.step(modal.name, async () => {
+      for (const row of batch05) {
+        const label = `role assigned ${row.scope} → ${
+          row.selectable ? "selectable" : "not selectable"
+        }`;
+        await test.step(label, async (step) => {
+          if (row.scope === "only in one domain") {
+            step.skip(
+              !api.domainEnabled,
+              "domains are disabled on this backend",
+            );
+          }
+          const token = uniqueName("batch");
+          const ownerName = `${token}-owner`;
+          const ownerRef =
+            owner === "user" ? { user: ownerName } : { group: ownerName };
+          if (owner === "user") await seedUser(ctx, ownerName);
+          else await seedGroup(ctx, ownerName);
+          // Object and domain scopes need a permission on the object's model.
+          const role = cleanup.role(`${token}-role`);
+          await api.createRole({
+            name: role,
+            permissions: ["file.view_filerepository"],
+          });
+          const repository = cleanup.repository(`${token}-repo`);
+          const { pulp_href: repositoryHref } =
+            await api.createFileRepository(repository);
 
-      if (row.scope.includes("globally")) {
-        await api.assignRole(ownerRef, { role });
-      }
-      if (row.scope.includes("object")) {
-        await api.assignRole(ownerRef, { role, contentObject: repositoryHref });
-      }
-      if (row.scope.includes("domain")) {
-        await api.assignRole(ownerRef, {
-          role,
-          domain: await api.defaultDomainHref(),
+          if (row.scope.includes("globally")) {
+            await api.assignRole(ownerRef, { role });
+          }
+          if (row.scope.includes("object")) {
+            await api.assignRole(ownerRef, {
+              role,
+              contentObject: repositoryHref,
+            });
+          }
+          if (row.scope.includes("domain")) {
+            await api.assignRole(ownerRef, {
+              role,
+              domain: await api.defaultDomainHref(),
+            });
+          }
+
+          await openOwner(page, ctx, modal, ownerName);
+          const dialog = await openModal(page, modal);
+          await dialog.table.filter(modal.filter, role);
+          const checkbox = dialog.table.selectRow(role);
+          if (!row.selectable) {
+            await expect(checkbox).toBeDisabled();
+            return;
+          }
+          await expect(checkbox).toBeEnabled();
+          await checkbox.check();
+          await dialog.addButton().click();
+          await expect(
+            toasts.success(`1 role added to ${owner} "${ownerName}"`),
+          ).toBeVisible();
+          // The add is global, so it shows next to any scoped assignment.
+          const scoped = row.scope === "not at all" ? 0 : 1;
+          await expect(
+            page
+              .getByRole("grid", { name: modal.tabTable, exact: true })
+              .getByRole("row")
+              .filter({ hasText: role }),
+          ).toHaveCount(scoped + 1);
+          const global = (await api.roleAssignments(ownerRef)).filter(
+            (a) => a.role === role && !a.content_object && !a.domain,
+          );
+          expect(global).toHaveLength(1);
         });
       }
-
-      await openOwner(page, ctx, modal, ownerName);
-      const dialog = await openModal(page, modal);
-      await dialog.table.filter(modal.filter, role);
-      const checkbox = dialog.table.selectRow(role);
-      if (!row.selectable) {
-        await expect(checkbox).toBeDisabled();
-        return;
-      }
-      await expect(checkbox).toBeEnabled();
-      await checkbox.check();
-      await dialog.addButton().click();
-      await expect(
-        toasts.success(`1 role added to ${owner} "${ownerName}"`),
-      ).toBeVisible();
-      // The add is global, so it shows next to any scoped assignment.
-      const scoped = row.scope === "not at all" ? 0 : 1;
-      await expect(
-        page
-          .getByRole("grid", { name: modal.tabTable, exact: true })
-          .getByRole("row")
-          .filter({ hasText: role }),
-      ).toHaveCount(scoped + 1);
-      const global = (await api.roleAssignments(ownerRef)).filter(
-        (a) => a.role === role && !a.content_object && !a.domain,
-      );
-      expect(global).toHaveLength(1);
     });
   }
-}
+});
 
 // --- BATCH-06 -------------------------------------------------------------
 
