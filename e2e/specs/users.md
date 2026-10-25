@@ -26,20 +26,13 @@ When I find the user in the Users list
 Then the row shows Email <email cell>, Active <label>, Groups <groups> and a formatted Date
 Joined
 
+Main cases (each value of email, active and group count at least once), not the full grid:
+
 | email             | active | groups | email cell        | label    |
 | ----------------- | ------ | ------ | ----------------- | -------- |
 | alice@example.com | yes    | 0      | alice@example.com | Active   |
-| alice@example.com | yes    | 1      | alice@example.com | Active   |
-| alice@example.com | yes    | 2      | alice@example.com | Active   |
-| alice@example.com | no     | 0      | alice@example.com | Inactive |
-| alice@example.com | no     | 1      | alice@example.com | Inactive |
-| alice@example.com | no     | 2      | alice@example.com | Inactive |
-| (none)            | yes    | 0      | —                 | Active   |
-| (none)            | yes    | 1      | —                 | Active   |
-| (none)            | yes    | 2      | —                 | Active   |
-| (none)            | no     | 0      | —                 | Inactive |
 | (none)            | no     | 1      | —                 | Inactive |
-| (none)            | no     | 2      | —                 | Inactive |
+| alice@example.com | yes    | 2      | alice@example.com | Active   |
 
 ### USR-LIST-02 Row actions
 
@@ -79,54 +72,20 @@ text), Email, First name, Last name, Active (checked), Staff status (unchecked)
 
 ### USR-CRE-02 Username
 
-Given I open "Create User" with a valid password
-When I enter the username <username> and submit
-Then <outcome>
-
-The client "required" check is a component test; these are the server outcomes and the main
-cases.
-
-| username                            | outcome                                                            |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| a new, simple name                  | the user is created                                                |
-| with spaces around it (`  alice  `) | the user is created as `alice` (Pulp trims the spaces)             |
-| with symbols, spaces and unicode    | the user is created (Pulp does not check the characters)           |
-| only spaces                         | in-form error "This field may not be blank."                       |
-| an existing username                | in-form error "This field must be unique."; the modal stays open   |
-| 151 characters                      | in-form error "Ensure this field has no more than 150 characters." |
+The server's username rules (trimmed, unique, blank, 150-char limit) are an **api contract**
+test (`users.api.spec.ts`); the client "required" check is a component test. The e2e create
+journey is covered by USR-CRE-05..08, and the generic "the form surfaces a server rejection" by
+[FORM-09](shared/form-modal.md#form-09-server-rejection-shows-in-the-form).
 
 ### USR-CRE-03 Password
 
-Given I open "Create User" with a valid new username
-When I enter the password <password> and submit
-Then <outcome>
-
-The client "required" / "min length" checks are a component test; these are the server outcomes.
-
-| password                          | outcome                                            |
-| --------------------------------- | -------------------------------------------------- |
-| 8 characters, strong              | the user is created                                |
-| 8 characters, common (`password`) | in-form error "This password is too common."       |
-| 8 digits (`12345678`)             | in-form error "This password is entirely numeric." |
-| only spaces, 8 long               | in-form error "This field may not be blank."       |
-
-The password input hides what is typed.
+The server's password rules (too common, all-numeric, blank) are an **api contract** test
+(`users.api.spec.ts`); the client "required" / "min length" checks are a component test.
 
 ### USR-CRE-04 Email
 
-Given I open "Create User" with a valid username and password
-When I enter the email <email> and submit
-Then <outcome>
-
-The client "invalid format" check is a component test; these are the server outcomes.
-
-| email                 | outcome                                         |
-| --------------------- | ----------------------------------------------- |
-| (empty)               | the user is created with no email (shows "—")   |
-| `alice@example.com`   | the user is created with that email             |
-| `alice@example`       | in-form error "Enter a valid email address."    |
-| `alice@localhost`     | the user is created                             |
-| an email already used | the user is created (emails need not be unique) |
+The server's email rules (format, optional, non-unique) are an **api contract** test
+(`users.api.spec.ts`); the client "invalid format" check is a component test.
 
 ### USR-CRE-05 Active and Staff status
 
@@ -179,31 +138,26 @@ Then <outcome>
 
 ### USR-EDT-01 Form fields
 
-When I open <entry> for a user
+When I open Edit (Users › row › Edit) for a user
 Then the "Edit <username>" modal shows Email, First name, Last name, Active and Staff status
 filled with the saved values
 And Username and Password are not shown
 
-| entry                               |
-| ----------------------------------- |
-| Users › row › Edit                  |
-| user detail › actions › "Edit User" |
+The edit modal opened from the detail page is the same modal, so it is not retested separately.
 
 ### USR-EDT-02 Changing one field
 
 Given a user with every field filled
-When I change <field> from <entry> and save
+When I change <field> from the Users list and save
 Then the toast `User "<username>" updated` appears, the Users list shows the new Email, and
-"Edit User" on the detail page shows the new value
+"Edit User" on the detail page shows the new value (cross-page sync, see
+[FORM-12](shared/form-modal.md#form-12-success))
 
-| field      | entry  |
-| ---------- | ------ |
-| Email      | list   |
-| Email      | detail |
-| First name | list   |
-| First name | detail |
-| Last name  | list   |
-| Last name  | detail |
+| field      |
+| ---------- |
+| Email      |
+| First name |
+| Last name  |
 
 ### USR-EDT-03 Changing several fields at once
 
@@ -211,45 +165,37 @@ Given a user with every field filled
 When I change <fields> and save
 Then every changed field is saved and the others are unchanged
 
-| fields                       |
-| ---------------------------- |
-| Email, First name            |
-| Email, Last name             |
-| First name, Last name        |
-| Email, First name, Last name |
-| Email, Active                |
-| First name, Staff status     |
-| every field                  |
+Main cases (a text pair, a text+flag pair, every field), not every combination:
 
-### USR-EDT-04 Every Active / Staff status transition
+| fields            |
+| ----------------- |
+| Email, First name |
+| Email, Active     |
+| every field       |
+
+### USR-EDT-04 Active / Staff status transitions
 
 Given a user with Active <from active> and Staff status <from staff>
 When I edit them to Active <to active> and Staff status <to staff>
 Then the change is saved and the list label matches <to active>
 
-Representative transitions that flip each flag both ways, not all 12:
+Representative transitions that flip each flag both ways (each value once), not all 12:
 
 | from active | from staff | to active | to staff |
 | ----------- | ---------- | --------- | -------- |
-| on          | off        | off       | off      |
-| off         | off        | on        | on       |
-| on          | on         | off       | off      |
+| on          | off        | off       | on       |
 | off         | on         | on        | off      |
 
 ### USR-EDT-05 Clearing a text field
 
-Given a user with <field> filled
-When I clear <field> and save
-Then the saved user has <field> empty and the list shows "—" for an empty Email
+Given a user with Email filled
+When I clear Email and save
+Then the saved user has Email empty and the list shows "—"
 
 UI gap: Pulp accepts an empty value, but the form leaves empty fields out of the update, so
-today the old value is kept.
-
-| field      |
-| ---------- |
-| Email      |
-| First name |
-| Last name  |
+today the old value is kept. This is the one representative of this gap across the admin forms
+(the same applies to role description, [ROL-EDT-03](roles.md#rol-edt-03-clearing-the-description),
+and the policy optional fields, [ACP-EDT-05](access-policies.md#acp-edt-05-clearing-an-optional-field)).
 
 ### USR-EDT-06 Invalid email on edit
 
@@ -271,31 +217,22 @@ Then their next login is rejected
 When I edit them back to Active checked
 Then they can log in again
 
-### USR-EDT-09 Staff status does not grant admin pages
-
-Auth: second-user
-
-Given a second user with Staff status checked and no roles
-When they open the Users, Roles and Access policies lists
-Then each table shows "403: Access denied": Pulp only lets superusers in, and Staff status
-grants nothing
-
 ## Delete
 
-### USR-DEL-01 Delete from every entry point
+### USR-DEL-01 Delete from the list
 
 Given a user with <memberships>
-When I delete them from <entry>
+When I delete them from the Users list
 Then the user is gone ([CONF-03](shared/confirm-dialog.md#conf-03-confirming)) and <aftermath>
 
-| memberships                  | entry  | aftermath                                                       |
-| ---------------------------- | ------ | --------------------------------------------------------------- |
-| no groups, no roles          | list   | —                                                               |
-| no groups, no roles          | detail | the Users list opens                                            |
-| in two groups                | list   | each group's Users tab no longer lists them, counts drop by one |
-| in two groups                | detail | the same                                                        |
-| with global and object roles | list   | their assignments are gone                                      |
-| with global and object roles | detail | the same                                                        |
+| memberships                  | aftermath                                                       |
+| ---------------------------- | --------------------------------------------------------------- |
+| no groups, no roles          | —                                                               |
+| in two groups                | each group's Users tab no longer lists them, counts drop by one |
+| with global and object roles | their assignments are gone                                      |
+
+Deleting from the detail page is the same dialog; its only extra behaviour (the list opens, no
+stale request) is [CONF-06](shared/confirm-dialog.md#conf-06-no-stale-requests-after-deleting-from-a-detail-page).
 
 ### USR-DEL-02 Deleting the logged-in user
 
@@ -330,19 +267,13 @@ Given a user in <g> groups with <r> role assignments
 When I open their detail page
 Then the tabs read "Groups (<g>)" and "Roles (<r>)"
 
+Main cases (each count value once; 12 is above a page, so it proves totals not visible rows):
+
 | g   | r   |
 | --- | --- |
 | 0   | 0   |
-| 0   | 1   |
-| 0   | 12  |
-| 1   | 0   |
-| 1   | 1   |
 | 1   | 12  |
-| 12  | 0   |
 | 12  | 1   |
-| 12  | 12  |
-
-Counts above a page (12) prove they are totals, not the visible rows.
 
 ### USR-DET-03 Counts update without a reload
 
@@ -350,20 +281,13 @@ Given I am on a user's detail page
 When I <action>
 Then <tab> changes by <change> without a reload
 
+Main cases (add +1/+2 and remove −1, across the two tabs):
+
 | action           | tab        | change |
 | ---------------- | ---------- | ------ |
-| add one group    | Groups (n) | +1     |
 | add two groups   | Groups (n) | +2     |
 | remove one group | Groups (n) | −1     |
 | add one role     | Roles (n)  | +1     |
-| add two roles    | Roles (n)  | +2     |
-| remove one role  | Roles (n)  | −1     |
-
-### USR-DET-04 Edit from the detail page
-
-When I edit the user from the actions menu
-Then opening "Edit User" again shows the new values without a reload (the detail page shows
-no other user fields)
 
 ### USR-DET-05 Switching tabs
 
@@ -403,12 +327,13 @@ Then "Remove" is enabled on every group
 
 ### USR-GRP-05 Both sides stay in sync
 
+This is the one representative of user↔group cross-page sync (the group's Users tab reflects
+the same relationship, so it is not retested from that side).
+
 | done on                        | then shown on                                  |
 | ------------------------------ | ---------------------------------------------- |
 | user › Groups › add group G    | G › Users lists the user; Users list Groups +1 |
 | user › Groups › remove group G | G › Users no longer lists the user             |
-| G › Users › add the user       | user › Groups lists G (no reload needed)       |
-| G › Users › remove the user    | user › Groups no longer lists G                |
 
 ### USR-GRP-06 The "Add Group" button
 

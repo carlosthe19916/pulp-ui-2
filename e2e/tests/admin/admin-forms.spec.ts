@@ -241,18 +241,6 @@ const editUserList: IModal = {
   expectPlaces: expectUserPlaces,
 };
 
-const editUserDetail: IModal = {
-  ...editUserFields,
-  name: "Edit user (detail)",
-  open: ({ page }, { target, id }) =>
-    openFromHeader(page, {
-      url: `/admin/users/${id}`,
-      item: "Edit User",
-      title: `Edit ${target}`,
-    }),
-  expectPlaces: expectUserPlaces,
-};
-
 const createGroup: IModal = {
   name: "Create group",
   kind: "create",
@@ -323,33 +311,6 @@ const editGroupList: IModal = {
       title: `Edit ${target}`,
     }),
   expectPlaces: async ({ page }, { fresh }) => {
-    const groups = new GroupsPage(page);
-    await groups.filterBy("Name", fresh);
-    await groups.expectRowVisible(fresh);
-  },
-};
-
-const editGroupDetail: IModal = {
-  ...editGroupFields,
-  name: "Edit group (detail)",
-  open: ({ page }, { target, id }) =>
-    openFromHeader(page, {
-      url: `/admin/groups/${id}`,
-      item: "Edit Group",
-      title: `Edit ${target}`,
-    }),
-  expectPlaces: async ({ page }, { fresh }) => {
-    await expect(
-      page.getByRole("heading", { level: 1, name: fresh, exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("navigation", { name: "Breadcrumb" }),
-    ).toContainText(fresh);
-    await expect(page).toHaveTitle(new RegExp(`Group · ${fresh}`));
-    await page
-      .getByRole("navigation", { name: "Breadcrumb" })
-      .getByRole("link", { name: "Groups", exact: true })
-      .click();
     const groups = new GroupsPage(page);
     await groups.filterBy("Name", fresh);
     await groups.expectRowVisible(fresh);
@@ -494,13 +455,13 @@ const editPolicy: IModal = {
   },
 };
 
+// A modal opened from a detail page is the same as from the list, so each edit
+// modal is covered once (from the list).
 const MODALS: IModal[] = [
   createUser,
   editUserList,
-  editUserDetail,
   createGroup,
   editGroupList,
-  editGroupDetail,
   createRole,
   editRole,
   editPolicy,

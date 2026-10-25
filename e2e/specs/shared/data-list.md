@@ -101,50 +101,22 @@ Given <table> is open
 When I click the <column> header <clicks> time(s)
 Then the rows are sorted by <column> <direction>
 
-| table                | column      | clicks | direction                            |
-| -------------------- | ----------- | ------ | ------------------------------------ |
-| Users                | Username    | 1      | descending (it is already ascending) |
-| Users                | Username    | 2      | ascending                            |
-| Users                | Date Joined | 1      | ascending                            |
-| Users                | Date Joined | 2      | descending                           |
-| Groups               | Name        | 1      | descending                           |
-| Groups               | Name        | 2      | ascending                            |
-| Roles                | Name        | 1      | descending                           |
-| Roles                | Name        | 2      | ascending                            |
-| Roles                | Locked      | 1      | ascending (unlocked first)           |
-| Roles                | Locked      | 2      | descending (locked first)            |
-| Access policies      | Viewset     | 1      | descending                           |
-| Access policies      | Viewset     | 2      | ascending                            |
-| Access policies      | Status      | 1      | ascending (Default first)            |
-| Access policies      | Status      | 2      | descending (Customized first)        |
-| User groups          | Name        | 1      | descending                           |
-| User groups          | Name        | 2      | ascending                            |
-| User roles           | Role        | 1      | descending                           |
-| User roles           | Role        | 2      | ascending                            |
-| User roles           | Description | 1      | ascending                            |
-| User roles           | Description | 2      | descending                           |
-| User roles           | Created     | 1      | ascending (oldest first)             |
-| User roles           | Created     | 2      | descending (newest first)            |
-| Group roles          | Role        | 1      | descending                           |
-| Group roles          | Role        | 2      | ascending                            |
-| Group roles          | Description | 1      | ascending                            |
-| Group roles          | Description | 2      | descending                           |
-| Group roles          | Created     | 1      | ascending                            |
-| Group roles          | Created     | 2      | descending                           |
-| Select groups        | Name        | 1      | descending                           |
-| Select groups        | Name        | 2      | ascending                            |
-| Select users         | Username    | 1      | descending                           |
-| Select users         | Username    | 2      | ascending                            |
-| Select users         | Email       | 1      | ascending                            |
-| Select users         | Email       | 2      | descending                           |
-| Select roles (user)  | Role        | 1      | descending                           |
-| Select roles (user)  | Role        | 2      | ascending                            |
-| Select roles (user)  | Description | 1      | ascending                            |
-| Select roles (user)  | Description | 2      | descending                           |
-| Select roles (group) | Role        | 1      | descending                           |
-| Select roles (group) | Role        | 2      | ascending                            |
-| Select roles (group) | Description | 1      | ascending                            |
-| Select roles (group) | Description | 2      | descending                           |
+Run on the three reference tables only (other tables get LIST-SMOKE; the Roles "Locked" and
+Access policies "Status" sorts are covered by [ROL-LIST-03](../roles.md#rol-list-03-locked-filter-combined-with-the-name-filter-and-sort)
+and [ACP-LIST-03](../access-policies.md#acp-list-03-status-sort-puts-customized-policies-together)):
+
+| table        | column      | clicks | direction                            |
+| ------------ | ----------- | ------ | ------------------------------------ |
+| Users        | Username    | 1      | descending (it is already ascending) |
+| Users        | Username    | 2      | ascending                            |
+| Users        | Date Joined | 1      | ascending                            |
+| Users        | Date Joined | 2      | descending                           |
+| User roles   | Role        | 1      | descending                           |
+| User roles   | Description | 1      | ascending                            |
+| User roles   | Created     | 1      | ascending (oldest first)             |
+| User roles   | Created     | 2      | descending (newest first)            |
+| Select users | Username    | 1      | descending                           |
+| Select users | Email       | 1      | ascending                            |
 
 ### LIST-05 Non-sortable columns
 

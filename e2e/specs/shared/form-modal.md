@@ -12,17 +12,19 @@ area: form-modal
 
 Scenarios in this file run once per modal:
 
-| modal               | opened from                           | title                   | submit |
-| ------------------- | ------------------------------------- | ----------------------- | ------ |
-| Create user         | Users › "Create user"                 | Create User             | Create |
-| Edit user (list)    | Users › row › Edit                    | Edit <username>         | Save   |
-| Edit user (detail)  | user detail › actions › "Edit User"   | Edit <username>         | Save   |
-| Create group        | Groups › "Create Group"               | Create Group            | Create |
-| Edit group (list)   | Groups › row › Edit                   | Edit <name>             | Save   |
-| Edit group (detail) | group detail › actions › "Edit Group" | Edit <name>             | Save   |
-| Create role         | Roles › "Create Role"                 | Create Role             | Create |
-| Edit role           | Roles › unlocked row › Edit           | Edit Role: <name>       | Save   |
-| Edit policy         | Access policies › row › Edit          | Edit policy "<viewset>" | Save   |
+A modal opened from a detail page is the same modal as the one opened from the list, so each is
+tested once (from the list). FORM-12's "places" column still proves the detail/breadcrumb/title
+sync in that single run.
+
+| modal        | opened from                  | title                   | submit |
+| ------------ | ---------------------------- | ----------------------- | ------ |
+| Create user  | Users › "Create user"        | Create User             | Create |
+| Edit user    | Users › row › Edit           | Edit <username>         | Save   |
+| Create group | Groups › "Create Group"      | Create Group            | Create |
+| Edit group   | Groups › row › Edit          | Edit <name>             | Save   |
+| Create role  | Roles › "Create Role"        | Create Role             | Create |
+| Edit role    | Roles › unlocked row › Edit  | Edit Role: <name>       | Save   |
+| Edit policy  | Access policies › row › Edit | Edit policy "<viewset>" | Save   |
 
 ## Opening and closing
 
@@ -110,7 +112,7 @@ When I press Enter in a text field
 Then the form is submitted as if I clicked <submit>
 
 Run for every modal. Exceptions: in the role form's permission input, Enter adds a permission
-and does not submit (see [ROL-PERM-01](../roles.md#rol-perm-01-typing-permissions)); Edit
+and does not submit (see [ROL-PERM-01](../roles.md#rol-perm-01-a-permission-that-saves-with-a-server-error)); Edit
 policy has only JSON text areas, where Enter adds a line and does not submit.
 
 ### FORM-08 The submit button while saving
@@ -130,30 +132,18 @@ When I submit <input> that the server rejects
 Then an in-form error shows the server's reason, no toast appears, and the modal stays open
 with my values kept
 
-| modal        | input                                                           | server reason                                                        |
-| ------------ | --------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Create user  | a username that already exists                                  | This field must be unique.                                           |
-| Create user  | a username longer than 150 characters                           | Ensure this field has no more than 150 characters.                   |
-| Create user  | only spaces as username                                         | This field may not be blank.                                         |
-| Create user  | a password the server finds too common (for example `password`) | This password is too common.                                         |
-| Create user  | a password that is entirely numeric (`12345678`)                | This password is entirely numeric.                                   |
-| Create user  | 8 spaces as password                                            | This field may not be blank.                                         |
-| Create user  | an email without a top-level domain (`alice@example`)           | Enter a valid email address.                                         |
-| Create group | a name that already exists                                      | This field must be unique.                                           |
-| Create group | a name longer than 150 characters                               | Ensure this field has no more than 150 characters.                   |
-| Create group | only spaces as name                                             | This field may not be blank.                                         |
-| Edit group   | the name of another existing group                              | This field must be unique.                                           |
-| Create role  | a name that already exists                                      | This field must be unique.                                           |
-| Create role  | a permission that does not exist (`core.not_a_permission`)      | Permission 'core.not_a_permission' does not exist.                   |
-| Create role  | a permission without a dot (`viewtask`)                         | Permission 'viewtask' is not in the format '<app_label>.<codename>'. |
-| Edit role    | a permission that does not exist                                | Permission '<permission>' does not exist.                            |
-| Edit policy  | statements that are valid JSON but not a list (`{}`)            | Expected a list of items but got type "dict".                        |
-| Edit policy  | a statement that is not an object (`["x"]`)                     | Expected a dictionary of items but got type "str".                   |
-| Edit policy  | creation hooks that are not a list (`{}`)                       | Expected a list of items but got type "dict".                        |
+This scenario proves only that the UI **surfaces** a server rejection; the full set of server
+reasons per entity is the api contract layer (`*.api.spec.ts`). Keep a few representatives across
+a create modal, an edit modal and a non-text field:
 
-Pulp does not check username characters (`a b`, `a/b` and `josé` are accepted) or password
-similarity to the username. It also accepts some policy values that break the endpoint
-afterwards; those are in [ACP-EDT-02](../access-policies.md#acp-edt-02-json-validation-for-every-field).
+| modal       | input                                                      | server reason                                      |
+| ----------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| Create user | a username that already exists                             | This field must be unique.                         |
+| Create role | a permission that does not exist (`core.not_a_permission`) | Permission 'core.not_a_permission' does not exist. |
+| Edit role   | a permission that does not exist                           | Permission '<permission>' does not exist.          |
+
+Pulp also accepts some policy values that break the endpoint afterwards; those are in
+[ACP-EDT-02](../access-policies.md#acp-edt-02-values-pulp-accepts-but-that-break-the-endpoint).
 
 ### FORM-10 Permission denied on submit
 
@@ -174,7 +164,7 @@ permission to perform this action. Ask an administrator to grant the required ro
 Only these modals are reachable by a non-superuser: users, roles and access policies are
 superuser-only, so their lists show "403: Access denied" and no row can be edited, but the
 "Create" buttons stay. Edit group is disabled without the permission
-([GRP-PERM-01](../groups.md#grp-perm-01-every-permission-combination-on-every-gated-action));
+([GRP-PERM-01](../groups.md#grp-perm-01-gated-actions-follow-the-users-permission-on-the-group));
 reach it by revoking the permission after the page has loaded.
 
 ### FORM-11 The error clears on the next submit
@@ -192,12 +182,12 @@ When I click <submit>
 Then the modal closes, the success toast <toast> appears, and the change shows without a
 reload in <places>
 
-| modal        | toast                     | places                                                  |
-| ------------ | ------------------------- | ------------------------------------------------------- |
-| Create user  | User "<username>" created | Users list                                              |
-| Edit user    | User "<username>" updated | Users list, user detail                                 |
-| Create group | Group "<name>" created    | Groups list                                             |
-| Edit group   | Group "<name>" updated    | Groups list, group detail header, breadcrumb, tab title |
-| Create role  | Role "<name>" created     | Roles list, Add Role modals                             |
-| Edit role    | Role "<name>" updated     | Roles list, user and group Roles tabs                   |
-| Edit policy  | Policy "<viewset>" saved  | Access policies list                                    |
+| modal        | toast                     | places                                |
+| ------------ | ------------------------- | ------------------------------------- |
+| Create user  | User "<username>" created | Users list                            |
+| Edit user    | User "<username>" updated | Users list, user detail               |
+| Create group | Group "<name>" created    | Groups list                           |
+| Edit group   | Group "<name>" updated    | Groups list                           |
+| Create role  | Role "<name>" created     | Roles list, Add Role modals           |
+| Edit role    | Role "<name>" updated     | Roles list, user and group Roles tabs |
+| Edit policy  | Policy "<viewset>" saved  | Access policies list                  |

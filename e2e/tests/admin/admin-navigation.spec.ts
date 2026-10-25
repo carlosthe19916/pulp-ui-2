@@ -150,28 +150,27 @@ test.describe("Administration navigation", () => {
     }
   });
 
+  // Main cases (each kind once, via a new tab and via reload).
   test("NAV-05 a detail URL opens directly (new tab and reload)", async ({
     page,
     context,
     api,
     cleanup,
   }) => {
-    for (const kind of kinds) {
-      await test.step(`${kind} in a new tab`, async () => {
-        const { name, path } = await seed(api, cleanup, kind);
-        const tab = await context.newPage();
-        await tab.goto(path);
-        await expect(detailHeading(tab, name)).toBeVisible();
-        await tab.close();
-      });
-      await test.step(`${kind} on reload`, async () => {
-        const { name, path } = await seed(api, cleanup, kind);
-        await page.goto(path);
-        await expect(detailHeading(page, name)).toBeVisible();
-        await page.reload();
-        await expect(detailHeading(page, name)).toBeVisible();
-      });
-    }
+    await test.step("user in a new tab", async () => {
+      const { name, path } = await seed(api, cleanup, "user");
+      const tab = await context.newPage();
+      await tab.goto(path);
+      await expect(detailHeading(tab, name)).toBeVisible();
+      await tab.close();
+    });
+    await test.step("group on reload", async () => {
+      const { name, path } = await seed(api, cleanup, "group");
+      await page.goto(path);
+      await expect(detailHeading(page, name)).toBeVisible();
+      await page.reload();
+      await expect(detailHeading(page, name)).toBeVisible();
+    });
   });
 
   test("NAV-06 a detail page shows a loading state, then the content", async ({

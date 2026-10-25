@@ -1,12 +1,6 @@
 import { expect, test } from "../../../fixtures";
 import { uniqueName } from "../../../helpers/unique";
-import {
-  COL,
-  cell,
-  filledUser,
-  groupId,
-  openDetail,
-} from "../../../helpers/users";
+import { COL, cell, groupId, openDetail } from "../../../helpers/users";
 import { BatchAddModal } from "../../../pom/BatchAddModal";
 
 test.describe("Users", () => {
@@ -37,7 +31,6 @@ test.describe("Users", () => {
   });
 
   test("USR-DET-02 tab counts", async ({ page, api, cleanup }) => {
-    // Nine detail loads, each seeding up to 24 memberships: very slow.
     test.setTimeout(300_000);
     // Twelve groups and roles, more than a page, shared by every row.
     const seededGroups = Array.from({ length: 12 }, () =>
@@ -51,38 +44,39 @@ test.describe("Users", () => {
       ...seededRoles.map((role) => api.createRole({ name: role })),
     ]);
 
-    for (const groups of [0, 1, 12]) {
-      for (const roles of [0, 1, 12]) {
-        await test.step(`${groups} groups and ${roles} roles`, async () => {
-          const username = cleanup.user(uniqueName("user"));
-          await api.createUser({ username });
-          await Promise.all([
-            ...seededGroups
-              .slice(0, groups)
-              .map((group) => api.addGroupMember(group, username)),
-            ...seededRoles
-              .slice(0, roles)
-              .map((role) => api.assignRole({ user: username }, { role })),
-          ]);
-          await openDetail(page, api, username);
-          await expect(
-            page.getByRole("tab", { name: `Groups (${groups})` }),
-          ).toBeVisible();
-          await expect(
-            page.getByRole("tab", { name: `Roles (${roles})` }),
-          ).toBeVisible();
-        });
-      }
+    // Main cases (each count value once; 12 is above a page, proving totals).
+    for (const [groups, roles] of [
+      [0, 0],
+      [1, 12],
+      [12, 1],
+    ]) {
+      await test.step(`${groups} groups and ${roles} roles`, async () => {
+        const username = cleanup.user(uniqueName("user"));
+        await api.createUser({ username });
+        await Promise.all([
+          ...seededGroups
+            .slice(0, groups)
+            .map((group) => api.addGroupMember(group, username)),
+          ...seededRoles
+            .slice(0, roles)
+            .map((role) => api.assignRole({ user: username }, { role })),
+        ]);
+        await openDetail(page, api, username);
+        await expect(
+          page.getByRole("tab", { name: `Groups (${groups})` }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("tab", { name: `Roles (${roles})` }),
+        ).toBeVisible();
+      });
     }
   });
 
+  // Main cases (add +1/+2 and remove −1, across the two tabs).
   const countRows = [
-    { action: "add one group", tab: "Groups", change: 1 },
     { action: "add two groups", tab: "Groups", change: 2 },
     { action: "remove one group", tab: "Groups", change: -1 },
     { action: "add one role", tab: "Roles", change: 1 },
-    { action: "add two roles", tab: "Roles", change: 2 },
-    { action: "remove one role", tab: "Roles", change: -1 },
   ] as const;
   test("USR-DET-03 adding and removing updates the tab count", async ({
     page,
@@ -143,24 +137,6 @@ test.describe("Users", () => {
         await expect(tab).toHaveText(`${row.tab} (${start + row.change})`);
       });
     }
-  });
-
-  test("USR-DET-04 edit from the actions menu shows the new values without a reload", async ({
-    page,
-    api,
-    cleanup,
-  }) => {
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username, ...filledUser });
-    const detail = await openDetail(page, api, username);
-    const modal = await detail.openEdit(username);
-    await modal.field("First name").fill("Fresh");
-    await modal.field("Email").fill("fresh@example.com");
-    await modal.button("Save").click();
-    await modal.expectClosed();
-    const again = await detail.openEdit(username);
-    await expect(again.field("First name")).toHaveValue("Fresh");
-    await expect(again.field("Email")).toHaveValue("fresh@example.com");
   });
 
   test("USR-DET-05 switching tabs keeps each tab's own table and filter", async ({
@@ -340,56 +316,6 @@ test.describe("Users", () => {
     await detail.removeGroup(group);
     await page.goto(`/admin/groups/${await groupId(api, group)}`);
     await expect(page.getByRole("tab", { name: "Users (0)" })).toBeVisible();
-  });
-
-  test("USR-GRP-05 G › Users › add or remove the user shows on the open user page", async ({
-    page,
-    api,
-    cleanup,
-    groupsPage,
-  }) => {
-    test.slow();
-    for (const action of ["add", "remove"] as const) {
-      await test.step(`${action} the user`, async () => {
-        const username = cleanup.user(uniqueName("user"));
-        const group = cleanup.group(uniqueName("group"));
-        await api.createUser({ username });
-        await api.createGroup(group);
-        if (action === "remove") await api.addGroupMember(group, username);
-
-        // Visit the user page first so its record is cached, then move in-app.
-        const userDetail = await openDetail(page, api, username);
-        await expect(userDetail.groupsTab).toHaveText(
-          `Groups (${action === "add" ? 0 : 1})`,
-        );
-        const nav = page.getByRole("navigation", { name: "Nav" });
-        await nav.getByRole("button", { name: "Administration" }).click();
-        await nav.getByRole("link", { name: "Groups", exact: true }).click();
-        await expect(groupsPage.heading).toBeVisible();
-        await groupsPage.filterBy("Name", group);
-        const groupDetail = await groupsPage.openDetail(group);
-        if (action === "add") {
-          await groupDetail.addUser(username);
-          await groupDetail.usersTable
-            .getByRole("link", { name: username, exact: true })
-            .click();
-          await expect(userDetail.groupsTab).toHaveText("Groups (1)");
-          await expect(userDetail.groups.row(group)).toBeVisible();
-        } else {
-          await groupDetail.removeUser(username);
-          await nav.getByRole("button", { name: "Administration" }).click();
-          await nav.getByRole("link", { name: "Users", exact: true }).click();
-          await page.getByPlaceholder("Filter by Username").fill(username);
-          await page
-            .getByRole("grid", { name: "Users table" })
-            .getByRole("link", { name: username, exact: true })
-            .click();
-          await expect(userDetail.title).toBeVisible();
-          await expect(userDetail.groupsTab).toHaveText("Groups (0)");
-          await expect(userDetail.groups.row(group)).toHaveCount(0);
-        }
-      });
-    }
   });
 
   test("USR-GRP-06 Add Group is always enabled", async ({

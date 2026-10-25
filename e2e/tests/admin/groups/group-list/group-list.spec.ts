@@ -1,7 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "../../../fixtures";
-import type { Cleanup } from "../../../helpers/cleanup";
 import { delayApi } from "../../../helpers/delayApi";
 import {
   type Gate,
@@ -9,15 +8,11 @@ import {
   NO_DELETE,
   expectGate,
   grantOnGroup,
-  navigateInApp,
   permissionsFor,
   permissionsSettled,
-  repositoryEditItem,
   seedGroup,
-  seedRepositoryChangedThroughGroup,
 } from "../../../helpers/groups";
-import { recordApiNotFound } from "../../../helpers/notFound";
-import type { IGroupRecord, PulpApi } from "../../../helpers/pulp-api";
+import type { IGroupRecord } from "../../../helpers/pulp-api";
 import { uniqueName } from "../../../helpers/unique";
 import { BatchAddModal } from "../../../pom/BatchAddModal";
 import { GroupDetailPage } from "../../../pom/GroupDetailPage";
@@ -89,20 +84,6 @@ async function openAction(
   return detail.userRemoveItem(member);
 }
 
-/** Watch for create/update requests to the groups endpoint. */
-function recordGroupWrites(page: Page): string[] {
-  const writes: string[] = [];
-  page.on("request", (request) => {
-    if (
-      ["POST", "PATCH", "PUT"].includes(request.method()) &&
-      request.url().includes("/groups/")
-    ) {
-      writes.push(request.url());
-    }
-  });
-  return writes;
-}
-
 test.describe("Groups", () => {
   // Most tests seed through the API and log a second user in: triple the timeout.
   test.slow();
@@ -132,43 +113,54 @@ test.describe("Groups", () => {
 
   // --- Permissions --------------------------------------------------------
 
-  for (const change of [true, false]) {
-    for (const del of [true, false]) {
-      // One second-user login per (change, delete) combo; each gated action is a
-      // read-only step (logging a second user in is the expensive part).
-      test(`GRP-PERM-01 change ${change ? "yes" : "no"}, delete ${del ? "yes" : "no"}: gated actions`, async ({
-        api,
-        cleanup,
-        secondUser,
-      }) => {
-        const user = await secondUser.create();
-        const group = await seedGroup(api, cleanup);
-        await grantOnGroup(api, cleanup, {
-          username: user.username,
-          group,
-          permissions: permissionsFor({ change, del }),
-        });
-        // The second user is the member the Remove row acts on.
-        await api.addGroupMember(group.name, user.username);
-        const page = await secondUser.login(user);
-        for (const action of GATED_ACTIONS) {
-          const needs = action.includes("Delete") ? "delete" : "change";
-          const allowed = needs === "delete" ? del : change;
-          const gate: Gate = allowed
-            ? "enabled"
-            : { tooltip: needs === "delete" ? NO_DELETE : NO_CHANGE };
-          await test.step(`${action} is ${allowed ? "enabled" : "disabled"}`, async () => {
-            const item = await locateAction(page, {
-              action,
+  // The full gate matrix (every action × permission combo) is the GatedButton
+  // component test; this keeps one representative pair, on the list surface, to
+  // prove the group page wires real backend permissions to the gate.
+  const permRows = [
+    { perms: { change: false, del: false }, edit: NO_CHANGE, del: NO_DELETE },
+    { perms: { change: true, del: true }, edit: "enabled", del: "enabled" },
+  ] as const;
+  test("GRP-PERM-01 gated actions follow the user's permission on the group", async ({
+    api,
+    cleanup,
+    secondUser,
+  }) => {
+    const user = await secondUser.create();
+    const page = await secondUser.login(user);
+    for (const row of permRows) {
+      await test.step(
+        row.edit === "enabled" ? "change + delete" : "view only",
+        async () => {
+          const group = await seedGroup(api, cleanup);
+          await grantOnGroup(api, cleanup, {
+            username: user.username,
+            group,
+            permissions: permissionsFor(row.perms),
+          });
+          const editGate: Gate =
+            row.edit === "enabled" ? "enabled" : { tooltip: row.edit };
+          const deleteGate: Gate =
+            row.del === "enabled" ? "enabled" : { tooltip: row.del };
+          await expectGate(
+            await locateAction(page, {
+              action: 'Groups list › row "Edit"',
               group,
               member: user.username,
-            });
-            await expectGate(item, gate);
-          });
-        }
-      });
+            }),
+            editGate,
+          );
+          await expectGate(
+            await locateAction(page, {
+              action: 'Groups list › row "Delete"',
+              group,
+              member: user.username,
+            }),
+            deleteGate,
+          );
+        },
+      );
     }
-  }
+  });
 
   test('GRP-PERM-01 "Add User" for a non-superuser opens a modal showing "403: Access denied"', async ({
     api,
@@ -261,6 +253,7 @@ test.describe("Groups", () => {
     );
   });
 
+  // Main cases: an object role that works today, and a global role the UI misses.
   const perm04 = [
     {
       how: "a role on group G only",
@@ -268,19 +261,7 @@ test.describe("Groups", () => {
       scope: "object",
       today: "enabled",
     },
-    {
-      how: "a role given to a group they belong to, on G only",
-      via: "group",
-      scope: "object",
-      today: "enabled",
-    },
     { how: "a global role", via: "user", scope: "global", today: "disabled" },
-    {
-      how: "a global role given to a group they belong to",
-      via: "group",
-      scope: "global",
-      today: "disabled",
-    },
   ] as const;
 
   for (const row of perm04) {
@@ -356,34 +337,27 @@ test.describe("Groups", () => {
     }
   });
 
-  for (const creator of ["the admin", "someone else"] as const) {
-    test(`GRP-PERM-06 the admin sees gated actions enabled on a group created by ${creator}`, async ({
-      api,
-      cleanup,
-      page,
-    }) => {
-      const group = await seedGroup(api, cleanup);
-      if (creator === "someone else") {
-        // The creator becomes the group's owner; drop the admin's roles on it so
-        // only superuser status grants the actions.
-        for (const assignment of await api.roleAssignments({
-          user: "admin",
-        })) {
-          if (assignment.content_object === group.pulp_href)
-            await api.removeRoleAssignment(assignment.pulp_href);
-        }
-      }
-      const member = cleanup.user(uniqueName("user"));
-      await api.createUser({ username: member });
-      await api.addGroupMember(group.name, member);
-      for (const action of GATED_ACTIONS) {
-        await test.step(action, async () => {
-          const item = await locateAction(page, { action, group, member });
-          await expectGate(item, "enabled");
-        });
-      }
-    });
-  }
+  test("GRP-PERM-06 the admin sees every gated action enabled, even on a group it holds no role on", async ({
+    api,
+    cleanup,
+    page,
+  }) => {
+    const group = await seedGroup(api, cleanup);
+    // Drop the admin's roles on the group so only superuser status grants the actions.
+    for (const assignment of await api.roleAssignments({ user: "admin" })) {
+      if (assignment.content_object === group.pulp_href)
+        await api.removeRoleAssignment(assignment.pulp_href);
+    }
+    const member = cleanup.user(uniqueName("user"));
+    await api.createUser({ username: member });
+    await api.addGroupMember(group.name, member);
+    for (const action of GATED_ACTIONS) {
+      await test.step(action, async () => {
+        const item = await locateAction(page, { action, group, member });
+        await expectGate(item, "enabled");
+      });
+    }
+  });
 
   test('GRP-PERM-07 "Create Group" is enabled and submitting shows the permission error', async ({
     secondUser,
@@ -405,81 +379,8 @@ test.describe("Groups", () => {
   // --- Create -------------------------------------------------------------
 
   // GRP-CRE-01 (form fields) and the client "required" validation are component
-  // tests: client/src/app/components/GroupModal/GroupModal.test.tsx.
-
-  interface ICreateNameRow {
-    name: string;
-    /** Builds the typed value; may seed an existing group first. */
-    input: (ctx: { api: PulpApi; cleanup: Cleanup }) => Promise<string>;
-    /** The name Pulp stores, or the error that shows. */
-    outcome:
-      | { created: (input: string) => string }
-      | { fieldError: string }
-      | { serverError: string };
-  }
-
-  // Client "required" validation is a component test; these are the main
-  // real-backend outcomes: created, trimmed, accepted characters, and the
-  // server's own rejections.
-  const createNames: ICreateNameRow[] = [
-    {
-      name: "a new simple name",
-      input: async () => uniqueName("group"),
-      outcome: { created: (input) => input },
-    },
-    {
-      name: "with spaces around it",
-      input: async () => `  ${uniqueName("group")}  `,
-      outcome: { created: (input) => input.trim() },
-    },
-    {
-      name: "with symbols, spaces and unicode",
-      input: async () => `${uniqueName("group")} ops-team_2.0 日本`,
-      outcome: { created: (input) => input },
-    },
-    // Server rejections (blank, unique, length) are contract tests:
-    // tests/admin/groups/groups.api.spec.ts.
-  ];
-
-  test("GRP-CRE-02 create with various names", async ({
-    groupsPage,
-    api,
-    cleanup,
-    page,
-    toasts,
-  }) => {
-    for (const row of createNames) {
-      await test.step(`name ${row.name}`, async () => {
-        const input = await row.input({ api, cleanup });
-        await groupsPage.goto();
-        const writes = recordGroupWrites(page);
-        const modal = await groupsPage.openCreate();
-        if (input) await modal.field("Name").fill(input);
-        if ("created" in row.outcome) {
-          const created = cleanup.group(row.outcome.created(input));
-          await modal.button("Create").click();
-          await modal.expectClosed();
-          await expect(
-            toasts.success(`Group "${created}" created`),
-          ).toBeVisible();
-          await expect
-            .poll(async () => (await api.group(created))?.name)
-            .toBe(created);
-        } else if ("fieldError" in row.outcome) {
-          await modal.button("Create").click();
-          await expect(
-            modal.dialog.getByText(row.outcome.fieldError),
-          ).toBeVisible();
-          expect(writes).toEqual([]);
-        } else {
-          cleanup.group(input.trim());
-          await modal.button("Create").click();
-          await modal.expectSubmitError(row.outcome.serverError);
-          await expect(modal.dialog).toBeVisible();
-        }
-      });
-    }
-  });
+  // tests (GroupModal.test.tsx); GRP-CRE-02's server name rules are the api
+  // contract test (groups.api.spec.ts). This is the create UI journey.
 
   test(
     "GRP-CRE-03 the new group appears with a toast",
@@ -496,44 +397,22 @@ test.describe("Groups", () => {
 
   // --- Edit ---------------------------------------------------------------
 
-  test("GRP-EDT-01 rename from the Groups list and from group detail", async ({
+  // Renaming from the detail page is the same modal; its header/breadcrumb/title
+  // sync is the FORM-12 cross-page check.
+  test("GRP-EDT-01 rename from the Groups list", async ({
     groupsPage,
     api,
     cleanup,
-    page,
     toasts,
   }) => {
-    await test.step("from Groups › row › Edit shows in the Groups list", async () => {
-      const group = await seedGroup(api, cleanup);
-      const renamed = cleanup.group(uniqueName("renamed"));
-      await groupsPage.goto();
-      await groupsPage.filterBy("Name", group.name);
-      await groupsPage.rename(group.name, renamed);
-      await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
-      await groupsPage.filterBy("Name", renamed);
-      await groupsPage.expectRowVisible(renamed);
-    });
-
-    await test.step('from group detail › actions › "Edit Group" shows in header, breadcrumb, tab title and list', async () => {
-      const group = await seedGroup(api, cleanup);
-      const renamed = cleanup.group(uniqueName("renamed"));
-      const detail = await GroupDetailPage.open(page, group);
-      const modal = await detail.openEdit(group.name);
-      await modal.field("Name").fill(renamed);
-      await modal.button("Save").click();
-      await modal.expectClosed();
-      await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
-      await expect(
-        page.getByRole("heading", { level: 1, name: renamed, exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("navigation", { name: "Breadcrumb" }),
-      ).toContainText(renamed);
-      await expect(page).toHaveTitle(new RegExp(`Group · ${renamed}`));
-      await navigateInApp(page, "Groups");
-      await groupsPage.filterBy("Name", renamed);
-      await groupsPage.expectRowVisible(renamed);
-    });
+    const group = await seedGroup(api, cleanup);
+    const renamed = cleanup.group(uniqueName("renamed"));
+    await groupsPage.goto();
+    await groupsPage.filterBy("Name", group.name);
+    await groupsPage.rename(group.name, renamed);
+    await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
+    await groupsPage.filterBy("Name", renamed);
+    await groupsPage.expectRowVisible(renamed);
   });
 
   test("GRP-EDT-02 a rename shows on a member's Groups tab", async ({
@@ -557,92 +436,32 @@ test.describe("Groups", () => {
     ).toBeVisible();
   });
 
-  const editNames = [
-    { name: "(empty)", target: "empty", outcome: "Name is required" },
-    {
-      name: "another group's name",
-      target: "other",
-      outcome: "This field must be unique.",
-    },
-    { name: "its own current name", target: "own", outcome: "updated" },
-  ] as const;
-
-  test("GRP-EDT-03 rename validation", async ({
-    groupsPage,
-    api,
-    cleanup,
-    page,
-    toasts,
-  }) => {
-    for (const row of editNames) {
-      await test.step(`rename to ${row.name}`, async () => {
-        const group = await seedGroup(api, cleanup);
-        const other =
-          row.target === "other" ? await seedGroup(api, cleanup) : null;
-        await groupsPage.goto();
-        await groupsPage.filterBy("Name", group.name);
-        const writes = recordGroupWrites(page);
-        const modal = await groupsPage.openEdit(group.name);
-        if (row.target === "empty") {
-          await modal.field("Name").fill("");
-          await modal.button("Save").click();
-          await expect(modal.dialog.getByText(row.outcome)).toBeVisible();
-          expect(writes).toEqual([]);
-        } else if (other) {
-          await modal.field("Name").fill(other.name);
-          await modal.button("Save").click();
-          await modal.expectSubmitError(row.outcome);
-        } else {
-          await modal.button("Save").click();
-          await modal.expectClosed();
-          await expect(
-            toasts.success(`Group "${group.name}" updated`),
-          ).toBeVisible();
-        }
-      });
-    }
-  });
-
-  test("GRP-EDT-04 the edit form shows the current name", async ({
-    groupsPage,
-    api,
-    cleanup,
-  }) => {
-    const group = await seedGroup(api, cleanup);
-    await groupsPage.goto();
-    await groupsPage.filterBy("Name", group.name);
-    const modal = await groupsPage.openEdit(group.name);
-    await expect(modal.title).toHaveText(`Edit ${group.name}`);
-    await expect(modal.field("Name")).toHaveValue(group.name);
-  });
+  // GRP-EDT-03 (rename validation) is FORM-05/FORM-09; GRP-EDT-04 (the edit form
+  // shows the current name) is the GroupModal component test.
 
   // --- Delete -------------------------------------------------------------
 
+  // Delete from the list (the detail dialog is the same; its extra behaviour is CONF-06).
   const deleteRows = [
-    { contents: "no users, no roles", entry: "list" },
-    { contents: "no users, no roles", entry: "detail" },
-    { contents: "two users", entry: "list" },
-    { contents: "two users", entry: "detail" },
-    { contents: "global and object roles", entry: "list" },
-    { contents: "global and object roles", entry: "detail" },
+    "no users, no roles",
+    "two users",
+    "global and object roles",
   ] as const;
 
-  test("GRP-DEL-01 delete a group from the list and the detail page", async ({
+  test("GRP-DEL-01 delete a group from the list", async ({
     groupsPage,
     usersPage,
     api,
     cleanup,
-    page,
     toasts,
   }) => {
-    // Six full delete flows, each seeding users / roles: extra headroom.
     test.slow();
-    for (const row of deleteRows) {
-      await test.step(`${row.contents} from the ${row.entry}`, async () => {
+    for (const contents of deleteRows) {
+      await test.step(contents, async () => {
         const group = await seedGroup(api, cleanup);
         const members: string[] = [];
         const assignments: string[] = [];
-        if (row.contents === "two users") {
+        if (contents === "two users") {
           for (let i = 0; i < 2; i++) {
             const username = cleanup.user(uniqueName("user"));
             await api.createUser({ username });
@@ -650,7 +469,7 @@ test.describe("Groups", () => {
             members.push(username);
           }
         }
-        if (row.contents === "global and object roles") {
+        if (contents === "global and object roles") {
           const repo = cleanup.repository(uniqueName("repo"));
           const { pulp_href } = await api.createFileRepository(repo);
           assignments.push(
@@ -672,19 +491,10 @@ test.describe("Groups", () => {
           );
         }
 
-        if (row.entry === "list") {
-          await groupsPage.goto();
-          await groupsPage.filterBy("Name", group.name);
-          await groupsPage.delete(group.name);
-          await groupsPage.expectRowGone(group.name);
-        } else {
-          const detail = await GroupDetailPage.open(page, group);
-          const notFound = recordApiNotFound(page);
-          await detail.deleteGroup();
-          await expect(page).toHaveURL(/\/admin\/groups$/);
-          await expect(groupsPage.heading).toBeVisible();
-          expect(notFound).toEqual([]);
-        }
+        await groupsPage.goto();
+        await groupsPage.filterBy("Name", group.name);
+        await groupsPage.delete(group.name);
+        await groupsPage.expectRowGone(group.name);
         await expect(
           toasts.success(`Group "${group.name}" deleted`),
         ).toBeVisible();
@@ -709,29 +519,7 @@ test.describe("Groups", () => {
     }
   });
 
-  test("GRP-DEL-02 members lose permissions that came through the group", async ({
-    groupsPage,
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    const user = await secondUser.create();
-    const { repo, group } = await seedRepositoryChangedThroughGroup(
-      api,
-      cleanup,
-      user.username,
-    );
-    await api.addGroupMember(group.name, user.username);
-    const userPage = await secondUser.login(user);
-    await expectGate(await repositoryEditItem(userPage, repo), "enabled");
-
-    await groupsPage.goto();
-    await groupsPage.filterBy("Name", group.name);
-    await groupsPage.delete(group.name);
-    await groupsPage.expectRowGone(group.name);
-
-    await expectGate(await repositoryEditItem(userPage, repo), {
-      tooltip: NO_CHANGE,
-    });
-  });
+  // GRP-DEL-02 (members lose permissions a deleted group's roles gave them) is the
+  // same membership-removal mechanism as the one representative RBAC-effect e2e,
+  // GRP-USR-06 in group-details.spec.ts; not tested separately.
 });

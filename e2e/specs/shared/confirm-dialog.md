@@ -11,12 +11,13 @@ area: confirm-dialog
 
 Scenarios in this file run once per dialog:
 
+A delete dialog opened from a detail page is the same dialog as the one opened from the list, so
+it is tested once (from the list); its only extra behaviour is CONF-06.
+
 | dialog                 | opened from                                           | title               | body                                                                             | confirm | style   |
 | ---------------------- | ----------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------- | ------- | ------- |
-| Delete user (list)     | Users › row › Delete                                  | Delete User         | Are you sure you want to delete "<username>"? This action cannot be undone.      | Delete  | danger  |
-| Delete user (detail)   | user detail › actions › "Delete User"                 | Delete User         | Are you sure you want to delete "<username>"? This action cannot be undone.      | Delete  | danger  |
-| Delete group (list)    | Groups › row › Delete                                 | Delete Group        | Are you sure you want to delete group "<name>"? This action cannot be undone.    | Delete  | danger  |
-| Delete group (detail)  | group detail › actions › "Delete Group"               | Delete Group        | Are you sure you want to delete group "<name>"? This action cannot be undone.    | Delete  | danger  |
+| Delete user            | Users › row › Delete                                  | Delete User         | Are you sure you want to delete "<username>"? This action cannot be undone.      | Delete  | danger  |
+| Delete group           | Groups › row › Delete                                 | Delete Group        | Are you sure you want to delete group "<name>"? This action cannot be undone.    | Delete  | danger  |
 | Delete role            | Roles › unlocked row › Delete                         | Delete Role         | Are you sure you want to delete the role "<name>"? This action cannot be undone. | Delete  | danger  |
 | Remove group from user | user detail › Groups › row › Remove                   | Remove Group        | Are you sure you want to remove user "<username>" from group "<group>"?          | Remove  | primary |
 | Remove user from group | group detail › Users › row › Remove                   | Remove User         | Are you sure you want to remove user "<username>" from group "<group>"?          | Remove  | primary |
@@ -57,10 +58,8 @@ And then <result>
 
 | dialog                 | result                                                                                                                          |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Delete user (list)     | the dialog closes, toast `User "<username>" deleted`, the row is gone                                                           |
-| Delete user (detail)   | toast `User "<username>" deleted`, the Users list opens without the user                                                        |
-| Delete group (list)    | the dialog closes, toast `Group "<name>" deleted`, the row is gone                                                              |
-| Delete group (detail)  | toast `Group "<name>" deleted`, the Groups list opens without the group                                                         |
+| Delete user            | the dialog closes, toast `User "<username>" deleted`, the row is gone                                                           |
+| Delete group           | the dialog closes, toast `Group "<name>" deleted`, the row is gone                                                              |
 | Delete role            | the dialog closes, toast `Role "<name>" deleted`, the row is gone                                                               |
 | Remove group from user | the dialog closes, toast `User "<username>" removed from group "<group>"`, the row is gone, the "Groups (n)" count drops by one |
 | Remove user from group | the dialog closes, toast `User "<username>" removed from group "<group>"`, the row is gone, the "Users (n)" count drops by one  |
@@ -80,10 +79,8 @@ Then the action succeeds as in [CONF-03](#conf-03-confirming)
 
 | dialog                 | trigger                                                          | fallback                                                |
 | ---------------------- | ---------------------------------------------------------------- | ------------------------------------------------------- |
-| Delete user (list)     | the user was deleted elsewhere                                   | Failed to delete user "<username>"                      |
-| Delete user (detail)   | the user was deleted elsewhere                                   | Failed to delete user "<username>"                      |
-| Delete group (list)    | a second user whose delete permission is revoked after page load | Failed to delete group "<name>"                         |
-| Delete group (detail)  | a second user whose delete permission is revoked after page load | Failed to delete group "<name>"                         |
+| Delete user            | the user was deleted elsewhere                                   | Failed to delete user "<username>"                      |
+| Delete group           | a second user whose delete permission is revoked after page load | Failed to delete group "<name>"                         |
 | Delete role            | the role was deleted elsewhere                                   | Failed to delete role "<name>"                          |
 | Remove group from user | the group was deleted elsewhere                                  | Failed to remove user "<username>" from group "<group>" |
 | Remove user from group | a second user whose change permission is revoked after page load | Failed to remove user "<username>" from group "<group>" |

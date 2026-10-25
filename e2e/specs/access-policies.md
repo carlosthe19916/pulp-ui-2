@@ -67,32 +67,23 @@ Then the modal "Edit policy "<viewset>"" shows:
 - Queryset scoping, filled with the saved scoping as JSON (or empty), help text "How lists
   are narrowed to what the user may see."
 
-### ACP-EDT-02 JSON validation for every field
+### ACP-EDT-02 Values Pulp accepts but that break the endpoint
 
 Serial
+
+Client JSON validation (empty, `[`) is a component test ([FORM-05](shared/form-modal.md#form-05-validation-appears-while-typing));
+the server's 400-shape rejections (not-a-list, item-not-an-object) are an **api contract** test
+(`access-policies.api.spec.ts`). Only e2e can show the ⚠ values Pulp saves without checking,
+whose damage shows on the endpoint afterwards — keep the main representatives:
 
 When I set <field> to <value> and click "Save"
 Then <outcome>
 
-| field            | value                                       | outcome                                                                                  |
-| ---------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Statements       | (empty)                                     | "Statements is required"; nothing is sent                                                |
-| Statements       | `[`                                         | "Statements must be valid JSON"; nothing is sent                                         |
-| Statements       | `{}` (valid JSON, not a list)               | in-form error `Expected a list of items but got type "dict".`                            |
-| Statements       | `["x"]` (an item that is not an object)     | in-form error `Expected a dictionary of items but got type "str".`                       |
-| Statements       | the saved value, unchanged                  | saved ([ACP-EDT-03](#acp-edt-03-a-successful-save))                                      |
-| Statements       | one valid allow statement                   | saved ([ACP-EDT-03](#acp-edt-03-a-successful-save))                                      |
-| Statements       | `[]`                                        | ⚠ saved; afterwards everyone, admin included, gets "403: Access denied" on that endpoint |
-| Statements       | a statement with an unknown condition       | ⚠ saved; afterwards requests to that endpoint fail with a server error                   |
-| Statements       | a statement without `principal` or `action` | ⚠ saved; afterwards requests to that endpoint fail with a server error                   |
-| Creation hooks   | (empty)                                     | saved; the old hooks are kept ([ACP-EDT-05](#acp-edt-05-clearing-an-optional-field))     |
-| Creation hooks   | `[`                                         | "Creation hooks must be valid JSON"; nothing is sent                                     |
-| Creation hooks   | `[]`                                        | saved; the policy has no creation hooks                                                  |
-| Creation hooks   | `{}` (not a list)                           | in-form error `Expected a list of items but got type "dict".`                            |
-| Queryset scoping | (empty)                                     | saved; the old scoping is kept ([ACP-EDT-05](#acp-edt-05-clearing-an-optional-field))    |
-| Queryset scoping | `[`                                         | "Queryset scoping must be valid JSON"; nothing is sent                                   |
-| Queryset scoping | `{}`                                        | ⚠ saved; afterwards the endpoint's list fails with a server error                        |
-| Queryset scoping | `{"function": "not_a_function"}`            | ⚠ saved; afterwards the endpoint's list fails with a server error                        |
+| field            | value                            | outcome                                                                                  |
+| ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------- |
+| Statements       | `[]`                             | ⚠ saved; afterwards everyone, admin included, gets "403: Access denied" on that endpoint |
+| Statements       | a statement without `principal`  | ⚠ saved; afterwards requests to that endpoint fail with a server error                   |
+| Queryset scoping | `{"function": "not_a_function"}` | ⚠ saved; afterwards the endpoint's list fails with a server error                        |
 
 ⚠ Pulp accepts these values without checking them, and the damage only shows on the endpoint
 the policy guards. Use a viewset nothing else in the run needs, and reset it right after.
@@ -102,60 +93,29 @@ the policy guards. Use a viewset nothing else in the run needs, and reset it rig
 Serial
 
 Given a policy with Status Default
-When I change its statements to a valid list of <k> statements and save
+When I change its statements to a valid list and save
 Then the toast `Policy "<viewset>" saved` appears, the modal closes, the row's Status is
-Customized and Statements is <k>
+Customized and the Statements count matches
 And "Reset to default" becomes enabled
-
-| k   |
-| --- |
-| 1   |
-| 3   |
-
-### ACP-EDT-04 Several invalid fields at once
-
-When Statements and Creation hooks are both invalid JSON
-Then both errors show at the same time
 
 ### ACP-EDT-05 Clearing an optional field
 
-Serial
+Clearing Creation hooks or Queryset scoping exposes the same "the form omits an empty field" UI
+gap kept once as [USR-EDT-05](users.md#usr-edt-05-clearing-a-text-field) (Pulp refuses an
+empty/null value, so the saved value stays); not tested separately per entity.
 
-Given a policy with saved Creation hooks or Queryset scoping
-When I clear <field> and save
-Then <outcome>
-
-| field            | outcome                                                                          |
-| ---------------- | -------------------------------------------------------------------------------- |
-| Creation hooks   | the old hooks are kept; typing `[]` instead removes them                         |
-| Queryset scoping | the old scoping is kept; only "Reset to default" can restore the default scoping |
-
-Pulp refuses an empty (null) value for both fields, so leaving the box empty keeps the saved
-value.
-
-### ACP-EDT-06 The server error clears on close
-
-Serial
-
-Given an in-form error from the server
-When I close the modal and open Edit again
-Then the error is gone
+ACP-EDT-04 (several invalid fields at once) and ACP-EDT-06 (the server error clears on close) are
+generic modal behaviour, covered by the component tests ([FORM-05](shared/form-modal.md#form-05-validation-appears-while-typing),
+[FORM-04](shared/form-modal.md#form-04-reopening-after-a-server-error-starts-fresh)).
 
 ### ACP-EDT-07 Editing an already customized policy
 
 Serial
 
-Given a <status> policy
-When I open Edit and save <change>
-Then Status is Customized and the statements shown are the ones saved
-
-| status     | change          |
-| ---------- | --------------- |
-| customized | new statements  |
-| customized | nothing changed |
-| default    | nothing changed |
-
-Pulp marks a policy Customized on every save, even when nothing changed.
+Given a customized policy
+When I open Edit and save (even with nothing changed)
+Then Status stays Customized and the statements shown are the ones saved (Pulp marks a policy
+Customized on every save)
 
 ## Reset
 
@@ -210,13 +170,11 @@ Then the table shows "403: Access denied" and there is no row to edit or reset
 Auth: second-user
 Serial
 
-Given a second user who can see the <page> list today
-When I change the policy of <viewset> so that only admins may list it
-Then the second user sees "403: Access denied" on <page>
+Given a second user who can see the Tasks list today
+When I change the `tasks` policy so that only admins may list it
+Then the second user sees "403: Access denied" on Tasks
 When I reset the policy
 Then the second user sees the list again
 
-| page         | viewset                                          |
-| ------------ | ------------------------------------------------ |
-| Tasks        | `tasks`                                          |
-| Repositories | `repositories` (the list of every type it reads) |
+This one representative proves a policy change takes effect end to end; other endpoints use the
+same mechanism and are not retested.

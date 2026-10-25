@@ -74,11 +74,11 @@ Then the <list> list opens
 When I open the detail URL of an existing <kind> <how>
 Then the detail page shows its name in the header
 
+Main cases (each kind once, via new tab and via reload):
+
 | kind  | how                            |
 | ----- | ------------------------------ |
 | user  | by typing the URL in a new tab |
-| user  | by reloading the detail page   |
-| group | by typing the URL in a new tab |
 | group | by reloading the detail page   |
 
 ### NAV-06 A detail page shows a loading state, then the content

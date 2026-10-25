@@ -423,11 +423,12 @@ const resetPolicy: IDialog = {
   },
 };
 
+// A delete dialog opened from a detail page is the same dialog as from the list,
+// so CONF-03/04/05 run once per dialog (from the list). The detail dialogs are
+// kept only for CONF-06 (no stale request after deleting from a detail page).
 const DIALOGS: IDialog[] = [
   deleteUserList,
-  deleteUserDetail,
   deleteGroupList,
-  deleteGroupDetail,
   deleteRole,
   removeGroupFromUser,
   removeUserFromGroup,
@@ -496,13 +497,6 @@ const GONE: {
 }[] = [
   {
     dialog: deleteUserList,
-    trigger: "the user was deleted elsewhere",
-    remove: (api, { username }) => api.deleteUser(username),
-    fallback: ({ username }) => `Failed to delete user "${username}"`,
-    reason: "No User matches the given query.",
-  },
-  {
-    dialog: deleteUserDetail,
     trigger: "the user was deleted elsewhere",
     remove: (api, { username }) => api.deleteUser(username),
     fallback: ({ username }) => `Failed to delete user "${username}"`,

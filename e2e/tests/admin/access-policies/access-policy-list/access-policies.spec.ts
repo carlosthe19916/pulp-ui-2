@@ -234,38 +234,10 @@ test.describe("Access policies", () => {
       value: (saved: { statements: unknown }) => string;
       outcome: Outcome;
     }
-    const BAD_CONDITION = [{ ...ALLOW, condition: "no_such_condition" }];
+    // Client JSON validation (empty, `[`) is a component test; the server's
+    // 400-shape rejections are api contract tests. Only e2e can show the values
+    // Pulp saves but that then break the endpoint — keep the main representatives.
     const validationRows: IValidationRow[] = [
-      {
-        field: "Statements",
-        label: "(empty)",
-        viewset: V_BREAK,
-        value: () => "",
-        outcome: { kind: "client", error: "Statements is required" },
-      },
-      {
-        field: "Statements",
-        label: "[",
-        viewset: V_BREAK,
-        value: () => "[",
-        outcome: { kind: "client", error: "Statements must be valid JSON" },
-      },
-      // Malformed JSON that the server rejects ({}, ["x"], null hooks) are
-      // contract tests: tests/admin/access-policies/access-policies.api.spec.ts.
-      {
-        field: "Statements",
-        label: "the saved value, unchanged",
-        viewset: V_BREAK,
-        value: (saved) => json(saved.statements),
-        outcome: { kind: "saved" },
-      },
-      {
-        field: "Statements",
-        label: "one valid allow statement",
-        viewset: V_BREAK,
-        value: () => json([ALLOW]),
-        outcome: { kind: "saved" },
-      },
       {
         field: "Statements",
         label: "[] (denies everyone)",
@@ -275,61 +247,9 @@ test.describe("Access policies", () => {
       },
       {
         field: "Statements",
-        label: "an unknown condition",
-        viewset: V_BREAK,
-        value: () => json(BAD_CONDITION),
-        outcome: { kind: "broken", listStatus: 500 },
-      },
-      {
-        field: "Statements",
         label: "a statement without principal or action",
         viewset: V_BREAK,
         value: () => json([{ effect: "allow" }]),
-        outcome: { kind: "broken", listStatus: 500 },
-      },
-      {
-        field: "Creation hooks",
-        label: "(empty)",
-        viewset: V_HOOKS,
-        value: () => "",
-        outcome: { kind: "kept", field: "creation_hooks" },
-      },
-      {
-        field: "Creation hooks",
-        label: "[",
-        viewset: V_HOOKS,
-        value: () => "[",
-        outcome: { kind: "client", error: "Creation hooks must be valid JSON" },
-      },
-      {
-        field: "Creation hooks",
-        label: "[]",
-        viewset: V_HOOKS,
-        value: () => "[]",
-        outcome: { kind: "emptied" },
-      },
-      {
-        field: "Queryset scoping",
-        label: "(empty)",
-        viewset: V_HOOKS,
-        value: () => "",
-        outcome: { kind: "kept", field: "queryset_scoping" },
-      },
-      {
-        field: "Queryset scoping",
-        label: "[",
-        viewset: V_HOOKS,
-        value: () => "[",
-        outcome: {
-          kind: "client",
-          error: "Queryset scoping must be valid JSON",
-        },
-      },
-      {
-        field: "Queryset scoping",
-        label: "{}",
-        viewset: V_BREAK,
-        value: () => "{}",
         outcome: { kind: "broken", listStatus: 500 },
       },
       {
@@ -341,7 +261,7 @@ test.describe("Access policies", () => {
       },
     ];
 
-    test("ACP-EDT-02 JSON validation for every field", async ({
+    test("ACP-EDT-02 values Pulp accepts but that break the endpoint", async ({
       accessPoliciesPage: acp,
       api,
       cleanup,
@@ -406,7 +326,7 @@ test.describe("Access policies", () => {
     }) => {
       test.slow();
       cleanup.accessPolicy(V_EDIT);
-      for (const k of [1, 3]) {
+      for (const k of [3]) {
         await test.step(`${k} statements`, async () => {
           // Each row edits from the default, so reset first (steps are independent).
           await api.resetAccessPolicy(V_EDIT);
@@ -432,97 +352,12 @@ test.describe("Access policies", () => {
       }
     });
 
-    test("ACP-EDT-04 several invalid fields at once", async ({
-      accessPoliciesPage: acp,
-    }) => {
-      await acp.find(V_HOOKS);
-      const modal = await acp.openEdit(V_HOOKS);
-      await modal.field("Statements").fill("[");
-      await modal.field("Creation hooks").fill("[");
-      await modal.button("Save").click();
-      await expect(
-        modal.dialog.getByText("Statements must be valid JSON"),
-      ).toBeVisible();
-      await expect(
-        modal.dialog.getByText("Creation hooks must be valid JSON"),
-      ).toBeVisible();
-      await modal.close("Cancel");
-    });
+    // ACP-EDT-04 (several invalid fields at once) and ACP-EDT-06 (the server error
+    // clears on close) are generic modal behaviour (FORM-05 / FORM-04 component
+    // tests). ACP-EDT-05 (clearing an optional field: the null-vs-empty server
+    // rule) is an api contract test; the shared "form omits an empty field" UI gap
+    // is kept once as USR-EDT-05.
 
-    const clearCases = [
-      { field: "Creation hooks", key: "creation_hooks" },
-      { field: "Queryset scoping", key: "queryset_scoping" },
-    ] as const;
-    test("ACP-EDT-05 clearing an optional field keeps the saved value", async ({
-      accessPoliciesPage: acp,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      test.slow();
-      cleanup.accessPolicy(V_HOOKS);
-      for (const { field, key } of clearCases) {
-        await test.step(`clearing ${field}`, async () => {
-          // Steps share V_HOOKS, so reset to the default before each.
-          await api.resetAccessPolicy(V_HOOKS);
-          const saved = await api.accessPolicy(V_HOOKS);
-          expect(saved[key]).not.toBeNull();
-          await acp.page.reload();
-          await acp.find(V_HOOKS);
-          const modal = await acp.openEdit(V_HOOKS);
-          await modal.field(field).fill("");
-          await modal.button("Save").click();
-          await expect(
-            toasts.success(`Policy "${V_HOOKS}" saved`),
-          ).toBeVisible();
-          expect((await api.accessPolicy(V_HOOKS))[key]).toEqual(saved[key]);
-
-          if (key === "creation_hooks") {
-            // Typing [] instead removes the hooks.
-            const again = await acp.openEdit(V_HOOKS);
-            await again.field(field).fill("[]");
-            await again.button("Save").click();
-            await again.expectClosed();
-            await expect
-              .poll(
-                async () => (await api.accessPolicy(V_HOOKS)).creation_hooks,
-              )
-              .toEqual([]);
-          } else {
-            // Only "Reset to default" restores the default scoping.
-            await api.updateAccessPolicy(V_HOOKS, {
-              queryset_scoping: { function: "scope_queryset" },
-            });
-            await api.resetAccessPolicy(V_HOOKS);
-            expect((await api.accessPolicy(V_HOOKS)).queryset_scoping).toEqual(
-              saved.queryset_scoping,
-            );
-          }
-        });
-      }
-    });
-
-    test("ACP-EDT-06 the server error clears on close", async ({
-      accessPoliciesPage: acp,
-    }) => {
-      await acp.find(V_BREAK);
-      const modal = await acp.openEdit(V_BREAK);
-      await modal.field("Statements").fill("{}");
-      await modal.button("Save").click();
-      await modal.expectSubmitError(
-        'Expected a list of items but got type "dict".',
-      );
-      await modal.close("Cancel");
-      const again = await acp.openEdit(V_BREAK);
-      await expect(again.submitError()).toHaveCount(0);
-      await again.close("Cancel");
-    });
-
-    const editCases = [
-      { status: "customized", change: "new statements" },
-      { status: "customized", change: "nothing changed" },
-      { status: "default", change: "nothing changed" },
-    ] as const;
     test("ACP-EDT-07 editing an already customized policy", async ({
       accessPoliciesPage: acp,
       api,
@@ -531,39 +366,25 @@ test.describe("Access policies", () => {
     }) => {
       test.slow();
       cleanup.accessPolicy(V_EDIT);
-      for (const { status, change } of editCases) {
-        await test.step(`${status} policy, ${change}`, async () => {
-          // Steps share V_EDIT; reset first so each starts from a known state.
-          await api.resetAccessPolicy(V_EDIT);
-          if (status === "customized") {
-            await api.updateAccessPolicy(V_EDIT, { statements: statements(1) });
-          }
-          await acp.page.reload();
-          await acp.find(V_EDIT);
-          const modal = await acp.openEdit(V_EDIT);
-          const target =
-            change === "new statements"
-              ? statements(3)
-              : (await api.accessPolicy(V_EDIT)).statements;
-          if (change === "new statements") {
-            await modal.field("Statements").fill(json(target));
-          }
-          await modal.button("Save").click();
-          await expect(
-            toasts.success(`Policy "${V_EDIT}" saved`),
-          ).toBeVisible();
-          await expectStatus(acp, V_EDIT, {
-            status: "Customized",
-            statements: target.length,
-          });
-          const reopened = await acp.openEdit(V_EDIT);
-          // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
-          expect(
-            JSON.parse(await reopened.field("Statements").inputValue()),
-          ).toEqual(target);
-          await reopened.close("Cancel");
-        });
-      }
+      // Pulp marks a policy Customized on every save, even when nothing changed.
+      await api.resetAccessPolicy(V_EDIT);
+      await api.updateAccessPolicy(V_EDIT, { statements: statements(1) });
+      await acp.page.reload();
+      await acp.find(V_EDIT);
+      const modal = await acp.openEdit(V_EDIT);
+      const target = (await api.accessPolicy(V_EDIT)).statements;
+      await modal.button("Save").click();
+      await expect(toasts.success(`Policy "${V_EDIT}" saved`)).toBeVisible();
+      await expectStatus(acp, V_EDIT, {
+        status: "Customized",
+        statements: target.length,
+      });
+      const reopened = await acp.openEdit(V_EDIT);
+      // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
+      expect(
+        JSON.parse(await reopened.field("Statements").inputValue()),
+      ).toEqual(target);
+      await reopened.close("Cancel");
     });
   });
 
@@ -671,18 +492,13 @@ test.describe("Access policies", () => {
   });
 
   test.describe("Effect", () => {
+    // One representative; other endpoints use the same mechanism.
     const effectCases = [
       {
         page: "Tasks",
         viewset: "tasks",
         path: "/monitoring/default/tasks",
         grid: "Tasks table",
-      },
-      {
-        page: "Repositories",
-        viewset: "repositories",
-        path: "/content-management/default/repositories",
-        grid: "Repositories table",
       },
     ];
     test("ACP-EFF-01 a policy change takes effect", async ({

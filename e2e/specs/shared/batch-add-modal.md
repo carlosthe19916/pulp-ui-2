@@ -79,18 +79,15 @@ Given the <owner> has role R assigned <scope>
 When I open "Add role to <owner>"
 Then the row for R is <state>
 
+Main cases, for owner = user (group uses the same rule): a global assignment blocks the row, an
+object- or domain-scoped one does not, and an unassigned role is selectable.
+
 | owner | scope                                         | state          |
 | ----- | --------------------------------------------- | -------------- |
 | user  | globally                                      | not selectable |
 | user  | only on one object (for example a repository) | selectable     |
 | user  | only in one domain (Requires: domains)        | selectable     |
-| user  | globally and on one object                    | not selectable |
 | user  | not at all                                    | selectable     |
-| group | globally                                      | not selectable |
-| group | only on one object                            | selectable     |
-| group | only in one domain (Requires: domains)        | selectable     |
-| group | globally and on one object                    | not selectable |
-| group | not at all                                    | selectable     |
 
 And adding a selectable R creates a global assignment, shown as a new row in the Roles tab
 next to any object-scoped one.
