@@ -2,7 +2,6 @@ import type React from "react";
 import { useState } from "react";
 
 import {
-  Button,
   Content,
   ContentVariants,
   PageSection,
@@ -22,6 +21,7 @@ import { ContentBulkSelect } from "@app/components/ContentBulkSelect";
 import { ContentDataList } from "@app/components/ContentDataList";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { GatedButton } from "@app/components/GatedButton";
 import { ListPagination } from "@app/components/ListPagination";
 import {
   type IMultiSelectOption,
@@ -36,6 +36,7 @@ import {
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
 import type { IContentUnit } from "@app/utils/contentUnit";
@@ -72,6 +73,7 @@ export const ContentList: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   // One change at a time: actions wait until the running one settles.
   const isChanging = !!contentChange.task;
+  const lockedProps = isChanging ? REPOSITORY_LOCKED_PROPS : {};
 
   const { filters, onSetFilters, clearAllFilters } =
     useDataViewFilters<IContentFilters>({ initialFilters: { pulp_type: [] } });
@@ -159,21 +161,22 @@ export const ContentList: React.FC = () => {
             actions={
               <>
                 {uploadableTypes.length > 0 && (
-                  <Button
+                  <GatedButton
                     variant="primary"
-                    isDisabled={isChanging}
                     onClick={() => setIsUploadOpen(true)}
+                    {...lockedProps}
                   >
                     Upload content
-                  </Button>
+                  </GatedButton>
                 )}
-                <Button
+                <GatedButton
                   variant="secondary"
-                  isDisabled={isChanging || selection.selected.length === 0}
+                  isDisabled={!isChanging && selection.selected.length === 0}
                   onClick={() => setAddUnits(selection.selected)}
+                  {...lockedProps}
                 >
                   Add to repository
-                </Button>
+                </GatedButton>
               </>
             }
             filters={
@@ -229,7 +232,7 @@ export const ContentList: React.FC = () => {
                 dropdownItemProps: {
                   children: "Add to repository…",
                   onClick: () => setAddUnits([contentUnitRef(unit)]),
-                  isDisabled: isChanging,
+                  ...lockedProps,
                 },
               },
             ]}

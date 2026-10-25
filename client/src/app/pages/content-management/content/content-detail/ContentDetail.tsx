@@ -22,6 +22,7 @@ import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useSuspenseContentDetailQuery } from "@app/queries/content";
 import { getRepositoryTypesForContent } from "@catalog";
 
@@ -81,7 +82,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
                 dropdownItemProps: {
                   children: "Add to repository…",
                   onClick: () => setIsAddOpen(true),
-                  isDisabled: isChanging,
+                  ...(isChanging ? REPOSITORY_LOCKED_PROPS : {}),
                 },
               },
             ]}

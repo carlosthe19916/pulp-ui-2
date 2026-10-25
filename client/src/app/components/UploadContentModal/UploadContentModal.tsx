@@ -10,8 +10,10 @@ import {
 } from "@patternfly/react-core";
 
 import type { RepositoryResponse } from "@app/client";
+import { GatedButton } from "@app/components/GatedButton";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getContentType, type IContentType } from "@catalog";
@@ -58,6 +60,7 @@ export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
   const [chosenRepository, setChosenRepository] =
     useState<RepositoryResponse>();
   const repository = inferredRepository ?? chosenRepository;
+  const { lockedProps } = useRepositoryActivity({ repository });
   const [hasStarted, setHasStarted] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
 
@@ -110,16 +113,17 @@ export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
   const footer = {
     pick: (
       <>
-        <Button
+        <GatedButton
           variant="primary"
           isDisabled={items.length === 0 || errors.size > 0}
           onClick={() => {
             setHasStarted(true);
             void queue.start().then(finishIfAllDone);
           }}
+          {...lockedProps}
         >
           Upload
-        </Button>
+        </GatedButton>
         <Button variant="link" onClick={onClose}>
           Cancel
         </Button>
@@ -155,14 +159,15 @@ export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
           Retry failed
         </Button>
         {doneCount > 0 && (
-          <Button
+          <GatedButton
             variant="secondary"
             isLoading={modifyMutation.isPending}
             isDisabled={modifyMutation.isPending}
             onClick={() => finish(items)}
+            {...lockedProps}
           >
             {repository ? `Add ${doneCount} to "${repository.name}"` : "Done"}
-          </Button>
+          </GatedButton>
         )}
         <Button variant="link" onClick={onClose}>
           Cancel
@@ -172,9 +177,13 @@ export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
     adding: (
       <>
         {modifyMutation.isError && (
-          <Button variant="primary" onClick={() => finish(items)}>
+          <GatedButton
+            variant="primary"
+            onClick={() => finish(items)}
+            {...lockedProps}
+          >
             Retry
-          </Button>
+          </GatedButton>
         )}
         <Button variant="link" onClick={onClose}>
           Close

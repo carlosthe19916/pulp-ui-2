@@ -35,9 +35,7 @@ interface IRepositoryVersionsTabProps {
   }) => void;
   latestHref?: string;
   canRestore?: boolean;
-  /** A task runs on the repository: actions are disabled. */
-  isLocked?: boolean;
-  /** Per-action disabled props (permissions), merged into each row item. */
+  /** Per-action disabled props (lock, permissions), merged into each row item. */
   actionProps?: (action: VersionAction) => object;
 }
 
@@ -49,7 +47,6 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   onVersionAction,
   latestHref,
   canRestore,
-  isLocked,
   actionProps,
 }) => {
   const pagination = useDataViewPagination({ perPage: 10 });
@@ -141,12 +138,7 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
         ...(onVersionAction
           ? [
               {
-                cell: (
-                  <ActionsColumn
-                    isDisabled={isLocked}
-                    items={actionsFor(version)}
-                  />
-                ),
+                cell: <ActionsColumn items={actionsFor(version)} />,
                 props: { isActionCell: true },
               },
             ]

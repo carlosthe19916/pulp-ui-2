@@ -5,6 +5,12 @@ import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { repositoryKeys } from "@app/queries/repositories";
 
+/** Disables a repository write while a task runs on it, with the reason as tooltip. */
+export const REPOSITORY_LOCKED_PROPS = {
+  isAriaDisabled: true,
+  tooltipProps: { content: "Wait for the running task to finish" },
+};
+
 /**
  * What runs on a repository (its active task or this page's content change); while
  * anything runs, content changes are paused and `lockedProps` says why.
@@ -39,11 +45,6 @@ export const useRepositoryActivity = ({
           kind: activeTask?.kind ?? (changeTaskHref ? "modify" : undefined),
         }
       : undefined,
-    lockedProps: isRunning
-      ? {
-          isAriaDisabled: true,
-          tooltipProps: { content: "Wait for the running task to finish" },
-        }
-      : {},
+    lockedProps: isRunning ? REPOSITORY_LOCKED_PROPS : {},
   };
 };

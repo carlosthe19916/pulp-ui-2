@@ -5,13 +5,14 @@ import {
   BulkSelect,
   BulkSelectValue,
 } from "@patternfly/react-component-groups/dist/dynamic/BulkSelect";
-import { Button } from "@patternfly/react-core";
 
+import { GatedButton } from "@app/components/GatedButton";
 import type {
   IContentUnitRef,
   IContentUnitSelection,
   IContentWrites,
 } from "@app/hooks/useContentUnitSelection";
+import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 
 interface IContentBulkSelectProps {
   /** The units on the current page. */
@@ -69,11 +70,13 @@ export const RemoveSelectedButton: React.FC<IRemoveSelectedButtonProps> = ({
   selection,
   writes,
 }) => (
-  <Button
+  <GatedButton
     variant="secondary"
-    isDisabled={writes.isLocked || selection.selected.length === 0}
+    // Locked keeps the reason tooltip; a plain-disabled button can't show it.
+    isDisabled={!writes.isLocked && selection.selected.length === 0}
     onClick={() => writes.onRemove(selection.selected)}
+    {...(writes.isLocked ? REPOSITORY_LOCKED_PROPS : {})}
   >
     Remove
-  </Button>
+  </GatedButton>
 );

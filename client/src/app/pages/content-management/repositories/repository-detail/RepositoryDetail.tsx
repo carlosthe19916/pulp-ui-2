@@ -181,6 +181,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Edit",
                   onClick: () => setIsEditOpen(true),
+                  ...lockedProps,
                   ...disabledProps("change"),
                 },
               },
@@ -189,6 +190,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Sync",
                   onClick: () => setIsSyncOpen(true),
+                  ...lockedProps,
                   ...disabledProps("sync"),
                 },
               },
@@ -243,6 +245,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Publish",
                   onClick: () => setIsPublishOpen(true),
+                  ...lockedProps,
                 },
               },
               {
@@ -250,6 +253,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 dropdownItemProps: {
                   children: "Delete",
                   onClick: () => setIsDeleteOpen(true),
+                  ...lockedProps,
                   ...disabledProps("delete"),
                 },
               },
@@ -307,10 +311,10 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                     onVersionAction={setVersionAction}
                     latestHref={repository.latest_version_href ?? undefined}
                     canRestore={repoEntity?.contentChanges === "modify"}
-                    isLocked={isRunning}
-                    actionProps={(action) =>
-                      disabledProps(VERSION_ACTION_VERBS[action])
-                    }
+                    actionProps={(action) => ({
+                      ...lockedProps,
+                      ...disabledProps(VERSION_ACTION_VERBS[action]),
+                    })}
                     repositoryHref={href}
                     id={id}
                     pulpType={pulpType}

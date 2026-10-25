@@ -1,5 +1,6 @@
 import type React from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { PaginationVariant } from "@patternfly/react-core";
@@ -21,8 +22,13 @@ import { ListPagination } from "@app/components/ListPagination";
 import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useRepositoriesListQuery } from "@app/queries/repositories";
+import {
+  repositoryKeys,
+  useRepositoriesListQuery,
+} from "@app/queries/repositories";
 import {
   extractIdFromHref,
   resolvePulpType,
@@ -34,7 +40,7 @@ interface IContentRepositoriesTabProps {
   href: string;
   /** Asks to remove the content from a repository (the page confirms and runs it). */
   onRemoveFromRepository: (repository: RepositoryResponse) => void;
-  /** A content change is running: row actions wait for it. */
+  /** This page's content change is running: row actions wait for it. */
   isLocked: boolean;
 }
 
@@ -68,6 +74,15 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
 
   const repositories = data?.results ?? [];
   const totalCount = data?.count ?? 0;
+
+  // A task on a row's repository (e.g. a sync started elsewhere) locks that row too.
+  const queryClient = useQueryClient();
+  const { getActiveCount } = useResourceTasks({
+    entities: repositories,
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+    },
+  });
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: COLUMNS.length + 1,
@@ -149,11 +164,13 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                     {getPlugin(pulpType ?? "")?.entities.repository
                       ?.contentChanges && (
                       <ActionsColumn
-                        isDisabled={isLocked}
                         items={[
                           {
                             title: "Remove from this repository",
                             onClick: () => onRemoveFromRepository(repository),
+                            ...(isLocked || getActiveCount(repository.prn) > 0
+                              ? REPOSITORY_LOCKED_PROPS
+                              : {}),
                           },
                         ]}
                       />

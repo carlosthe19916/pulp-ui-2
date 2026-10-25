@@ -3,11 +3,13 @@ import { useState } from "react";
 
 import prettyBytes from "pretty-bytes";
 
-import { Button, Content, ContentVariants } from "@patternfly/react-core";
+import { Content, ContentVariants } from "@patternfly/react-core";
 
 import type { ContainerManifestResponse } from "@app/client";
+import { GatedButton } from "@app/components/GatedButton";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { Snippet } from "@app/components/Snippet";
+import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import {
   useContentTypeListQueries,
   useContentTypeListQuery,
@@ -206,17 +208,17 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
                   screenReaderText: "Untag",
                   width: 10 as const,
                   cell: (tag: { name: string }) => (
-                    <Button
+                    <GatedButton
                       variant="link"
                       isInline
-                      isDisabled={writes?.isLocked}
                       onClick={(event: React.MouseEvent) => {
                         event.stopPropagation();
                         setUntagName(tag.name);
                       }}
+                      {...(writes?.isLocked ? REPOSITORY_LOCKED_PROPS : {})}
                     >
                       Untag
-                    </Button>
+                    </GatedButton>
                   ),
                 },
               ]

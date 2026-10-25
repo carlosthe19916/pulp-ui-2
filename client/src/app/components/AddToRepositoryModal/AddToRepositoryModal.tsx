@@ -22,11 +22,13 @@ import {
 
 import type { RepositoryResponse } from "@app/client";
 import { FormSubmitError } from "@app/components/FormSubmitError";
+import { GatedButton } from "@app/components/GatedButton";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   type IRepositoryListParams,
@@ -84,6 +86,9 @@ export const AddToRepositoryModal: React.FC<IAddToRepositoryModalProps> = ({
     },
   });
   const repositories = (data?.results ?? []).filter((repo) => repo.pulp_href);
+  const { isRunning, lockedProps } = useRepositoryActivity({
+    repository: selected,
+  });
 
   const {
     handleSubmit,
@@ -99,7 +104,7 @@ export const AddToRepositoryModal: React.FC<IAddToRepositoryModalProps> = ({
 
   const onSubmit = handleSubmit(async (values) => {
     clearSubmitError();
-    if (!selected) return;
+    if (!selected || isRunning) return;
     const body = {
       add_content_units: units.map((unit) => unit.href),
       overwrite: values.overwrite,
@@ -192,7 +197,7 @@ export const AddToRepositoryModal: React.FC<IAddToRepositoryModalProps> = ({
         </Form>
       </ModalBody>
       <ModalFooter>
-        <Button
+        <GatedButton
           variant="primary"
           type="submit"
           form="add-to-repository-form"
@@ -202,9 +207,10 @@ export const AddToRepositoryModal: React.FC<IAddToRepositoryModalProps> = ({
             isSubmitting ||
             modifyMutation.isPending
           }
+          {...lockedProps}
         >
           Add
-        </Button>
+        </GatedButton>
         <Button variant="link" onClick={onClose}>
           Cancel
         </Button>
