@@ -9,6 +9,8 @@ type Kind =
   | "repository"
   | "distribution"
   | "contentGuard"
+  // An access policy's viewset name: reset to its default, never deleted.
+  | "accessPolicy"
   // A full pulp_href, for resources without a unique name (e.g. publications).
   | "href";
 
@@ -61,6 +63,12 @@ export class Cleanup {
     return name;
   }
 
+  /** Reset a policy (by viewset name) to its default in teardown. */
+  accessPolicy(viewset: string): string {
+    this.items.push({ kind: "accessPolicy", name: viewset });
+    return viewset;
+  }
+
   /** Track a resource by its full `pulp_href` (e.g. a publication). */
   href(href: string): string {
     this.items.push({ kind: "href", name: href });
@@ -79,6 +87,7 @@ export class Cleanup {
       else if (kind === "distribution") await api.deleteDistribution(name);
       else if (kind === "contentGuard") await api.deleteContentGuard(name);
       else if (kind === "href") await api.deleteByHref(name);
+      else if (kind === "accessPolicy") await api.resetAccessPolicy(name);
     }
   }
 }

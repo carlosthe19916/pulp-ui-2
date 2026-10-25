@@ -1,6 +1,7 @@
 import { request, type APIRequestContext } from "@playwright/test";
 
 import { E2E_PASSWORD, E2E_USERNAME } from "./auth";
+import { STRONG_PASSWORD } from "./unique";
 
 const PULP_API_URL = process.env.PULP_API_URL ?? "http://localhost:8080";
 
@@ -25,13 +26,58 @@ interface ITaskResponse {
 
 const TERMINAL_TASK_STATES = ["completed", "failed", "canceled", "skipped"];
 
-interface IRoleAssignment {
+export interface IRoleAssignment {
+  pulp_href: string;
   role: string;
+  content_object: string | null;
+  domain: string | null;
 }
 
-interface IRoleRecord {
-  pulp_href?: string;
-  description?: string | null;
+export interface IRoleRecord {
+  pulp_href: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+  locked: boolean;
+}
+
+export interface ISeedUser {
+  username: string;
+  password?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  is_active?: boolean;
+  is_staff?: boolean;
+}
+
+export interface IUserRecord {
+  pulp_href: string;
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  is_staff: boolean;
+  groups: { name: string; pulp_href: string }[];
+}
+
+export interface IGroupRecord {
+  pulp_href: string;
+  id: number;
+  name: string;
+}
+
+export type IRoleOwner = { user: string } | { group: string };
+
+export interface IAccessPolicyRecord {
+  pulp_href: string;
+  viewset_name: string;
+  statements: Record<string, unknown>[];
+  creation_hooks: Record<string, unknown>[] | null;
+  queryset_scoping: Record<string, unknown> | null;
+  customized: boolean;
 }
 
 /**
@@ -78,6 +124,8 @@ export class PulpApi {
     param: string,
     value: string,
   ): Promise<void> {
+    // Pulp ignores an empty filter, which would list (and delete) everything.
+    if (!value) return;
     const res = await this.ctx.get(this.collectionUrl(collection), {
       params: { [param]: value, limit: 100 },
     });
@@ -430,12 +478,220 @@ export class PulpApi {
     param: string,
     value: string,
   ): Promise<T | undefined> {
+    // An empty filter is ignored by Pulp and would return an arbitrary record.
+    if (!value) return undefined;
     const res = await this.ctx.get(this.collectionUrl(collection), {
       params: { [param]: value, limit: 1 },
     });
     if (!res.ok()) return undefined;
     const { results = [] } = (await res.json()) as { results?: T[] };
     return results[0];
+  }
+
+  // --- Admin: users, groups, roles, role assignments, access policies -------
+  // Seed and inspect admin records without the UI. All of them are synchronous.
+
+  /** GET any href (or collection path) as admin and return the parsed body. */
+  async getJson<T>(
+    href: string,
+    params?: Record<string, string | number>,
+  ): Promise<T> {
+    const res = await this.ctx.get(href, { params });
+    if (!res.ok()) {
+      throw new Error(
+        `GET ${href} failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    return (await res.json()) as T;
+  }
+
+  /** The HTTP status of a GET on an href (e.g. 404 once a record is gone). */
+  async status(href: string): Promise<number> {
+    return (await this.ctx.get(href)).status();
+  }
+
+  private async send<T>(
+    method: "post" | "patch" | "put" | "delete",
+    href: string,
+    data?: unknown,
+  ): Promise<T> {
+    const res = await this.ctx[method](href, { data });
+    if (!res.ok()) {
+      throw new Error(
+        `${method.toUpperCase()} ${href} failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    return (res.status() === 204 ? undefined : await res.json()) as T;
+  }
+
+  async createUser(input: ISeedUser): Promise<IUserRecord> {
+    return this.send("post", this.collectionUrl("users"), {
+      password: STRONG_PASSWORD,
+      ...input,
+    });
+  }
+
+  async user(username: string): Promise<IUserRecord | undefined> {
+    return this.findOne<IUserRecord>("users", "username", username);
+  }
+
+  async updateUser(
+    username: string,
+    patch: Partial<ISeedUser>,
+  ): Promise<IUserRecord> {
+    const user = await this.requireOne<IUserRecord>(
+      "users",
+      "username",
+      username,
+    );
+    return this.send("patch", user.pulp_href, patch);
+  }
+
+  async createGroup(name: string): Promise<IGroupRecord> {
+    return this.send("post", this.collectionUrl("groups"), { name });
+  }
+
+  async group(name: string): Promise<IGroupRecord | undefined> {
+    return this.findOne<IGroupRecord>("groups", "name", name);
+  }
+
+  async addGroupMember(group: string, username: string): Promise<void> {
+    const { pulp_href } = await this.requireOne<IGroupRecord>(
+      "groups",
+      "name",
+      group,
+    );
+    await this.send("post", `${pulp_href}users/`, { username });
+  }
+
+  async removeGroupMember(group: string, username: string): Promise<void> {
+    const { pulp_href } = await this.requireOne<IGroupRecord>(
+      "groups",
+      "name",
+      group,
+    );
+    const user = await this.requireOne<IUserRecord>(
+      "users",
+      "username",
+      username,
+    );
+    await this.send("delete", `${pulp_href}users/${user.id}/`);
+  }
+
+  /** Usernames of a group's members (unordered: Pulp keeps no stable order). */
+  async groupMemberNames(group: string): Promise<string[]> {
+    const found = await this.group(group);
+    if (!found) return [];
+    const { results = [] } = await this.getJson<{
+      results?: { username: string }[];
+    }>(`${found.pulp_href}users/`, { limit: 1000 });
+    return results.map((user) => user.username).sort();
+  }
+
+  async createRole(input: {
+    name: string;
+    permissions?: string[];
+    description?: string | null;
+  }): Promise<IRoleRecord> {
+    return this.send("post", this.collectionUrl("roles"), {
+      permissions: [],
+      ...input,
+    });
+  }
+
+  async role(name: string): Promise<IRoleRecord | undefined> {
+    return this.findOne<IRoleRecord>("roles", "name", name);
+  }
+
+  private async ownerHref(owner: IRoleOwner): Promise<string> {
+    return "user" in owner
+      ? (await this.requireOne<IUserRecord>("users", "username", owner.user))
+          .pulp_href
+      : (await this.requireOne<IGroupRecord>("groups", "name", owner.group))
+          .pulp_href;
+  }
+
+  /**
+   * Assign a role to a user or group: globally (default), on one object
+   * (`contentObject`: its href) or in one domain (`domain`: its href).
+   */
+  async assignRole(
+    owner: IRoleOwner,
+    {
+      role,
+      contentObject = null,
+      domain = null,
+    }: { role: string; contentObject?: string | null; domain?: string | null },
+  ): Promise<IRoleAssignment> {
+    const href = await this.ownerHref(owner);
+    return this.send("post", `${href}roles/`, {
+      role,
+      content_object: contentObject,
+      domain,
+    });
+  }
+
+  async roleAssignments(owner: IRoleOwner): Promise<IRoleAssignment[]> {
+    const href = await this.ownerHref(owner);
+    const { results = [] } = await this.getJson<{
+      results?: IRoleAssignment[];
+    }>(`${href}roles/`, { limit: 1000 });
+    return results;
+  }
+
+  async removeRoleAssignment(assignmentHref: string): Promise<void> {
+    await this.send("delete", assignmentHref);
+  }
+
+  /** The default domain's href, for domain-scoped role assignments. */
+  async defaultDomainHref(): Promise<string> {
+    return (
+      await this.requireOne<{ pulp_href: string }>("domains", "name", "default")
+    ).pulp_href;
+  }
+
+  async accessPolicy(viewset: string): Promise<IAccessPolicyRecord> {
+    return this.requireOne<IAccessPolicyRecord>(
+      "access_policies",
+      "viewset_name",
+      viewset,
+    );
+  }
+
+  async updateAccessPolicy(
+    viewset: string,
+    patch: Partial<
+      Pick<
+        IAccessPolicyRecord,
+        "statements" | "creation_hooks" | "queryset_scoping"
+      >
+    >,
+  ): Promise<IAccessPolicyRecord> {
+    const { pulp_href } = await this.accessPolicy(viewset);
+    return this.send("patch", pulp_href, patch);
+  }
+
+  async resetAccessPolicy(viewset: string): Promise<void> {
+    const { pulp_href } = await this.accessPolicy(viewset);
+    await this.send("post", `${pulp_href}reset/`);
+  }
+
+  /** The HTTP status the admin gets listing a collection (e.g. after a policy change). */
+  async listStatus(collection: string): Promise<number> {
+    const res = await this.ctx.get(this.collectionUrl(collection), {
+      params: { limit: 1 },
+    });
+    return res.status();
+  }
+
+  private async requireOne<T>(
+    collection: string,
+    param: string,
+    value: string,
+  ): Promise<T> {
+    const found = await this.findOne<T>(collection, param, value);
+    if (!found) throw new Error(`No ${collection} with ${param}=${value}`);
+    return found;
   }
 
   /** The names of every role currently assigned to a user (by username). */

@@ -101,7 +101,8 @@ for those groups
 | a global role given to a group they belong to     | every group  | disabled on every group |
 
 UI gap: the UI reads `my_permissions/`, which only returns roles held on that group, so a
-global role is not seen and the actions stay disabled although Pulp allows them.
+global role is not seen and the actions stay disabled although Pulp allows them. No endpoint
+exposes a non-superuser's global roles, so these rows are expected to fail.
 
 ### GRP-PERM-05 Nothing is disabled while permissions load
 
@@ -114,13 +115,13 @@ Then the gated actions are enabled until the check finishes, then follow [GRP-PE
 Given the admin (a superuser), who may do anything in Pulp
 Then every action in [GRP-PERM-01](#grp-perm-01-every-permission-combination-on-every-gated-action) is enabled, on <group>
 
-| group                           | UI today                                |
-| ------------------------------- | --------------------------------------- |
-| a group the admin created       | enabled (the creator becomes its owner) |
-| a group created by someone else | disabled                                |
+| group                                       |
+| ------------------------------------------- |
+| a group the admin created (it is the owner) |
+| a group the admin holds no role on          |
 
-UI gap: `my_permissions/` ignores superuser status and global roles, so the admin's actions
-are disabled on groups it holds no role on, although Pulp allows them.
+`my_permissions/` ignores superuser status, so the UI checks it separately
+([ADR 0011](../../docs/adr/0011-permission-aware-actions.md)).
 
 ### GRP-PERM-07 Create is not gated
 

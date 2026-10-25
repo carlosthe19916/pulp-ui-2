@@ -217,11 +217,11 @@ Given <table> has a text filter applied
 When I <action>
 Then the filter is cleared and the unfiltered rows are back
 
-| action                                   |
-| ---------------------------------------- |
-| remove the filter chip                   |
-| click "Clear all filters" in the toolbar |
-| delete the text from the filter input    |
+| action                                |
+| ------------------------------------- |
+| remove the filter chip                |
+| click "Clear filters" in the toolbar  |
+| delete the text from the filter input |
 
 Run each action for every table with a text filter.
 

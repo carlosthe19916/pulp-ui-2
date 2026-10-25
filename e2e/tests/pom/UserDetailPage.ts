@@ -1,6 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
+import { DataTable } from "./DataTable";
+import { FormModal } from "./FormModal";
 import { clickRowMenuItem } from "./rowMenu";
 
 /** Page object for a user's detail page (`/admin/users/$userId`). */
@@ -11,6 +13,9 @@ export class UserDetailPage {
   readonly rolesTab: Locator;
   readonly groupsTable: Locator;
   readonly rolesTable: Locator;
+  /** The Groups / Roles tab tables with their toolbars and paginators. */
+  readonly groups: DataTable;
+  readonly roles: DataTable;
 
   constructor(page: Page, username: string) {
     this.page = page;
@@ -19,6 +24,29 @@ export class UserDetailPage {
     this.rolesTab = page.getByRole("tab", { name: /^Roles \(\d+\)$/ });
     this.groupsTable = page.getByRole("grid", { name: "User groups table" });
     this.rolesTable = page.getByRole("grid", { name: "User roles table" });
+    const panel = page.getByRole("tabpanel");
+    this.groups = new DataTable(panel, "User groups table");
+    this.roles = new DataTable(panel, "User roles table");
+  }
+
+  async goto(id: number): Promise<void> {
+    await this.page.goto(`/admin/users/${id}`);
+    // The route loads the user before rendering ("Loading user"), which can take
+    // a while on a busy backend.
+    await expect(this.title).toBeVisible({ timeout: 15_000 });
+  }
+
+  /** Open the header's actions menu and choose an item ("Edit User", "Delete User"). */
+  async headerAction(item: string): Promise<void> {
+    await this.page.getByRole("button", { name: "Actions" }).click();
+    await this.page.getByRole("menuitem", { name: item, exact: true }).click();
+  }
+
+  async openEdit(username: string): Promise<FormModal> {
+    await this.headerAction("Edit User");
+    const modal = new FormModal(this.page, `Edit ${username}`);
+    await expect(modal.dialog).toBeVisible();
+    return modal;
   }
 
   // --- Groups tab ---

@@ -69,7 +69,8 @@ Given <trigger>
 When I confirm <dialog>
 Then a danger toast <fallback> appears with the server's reason, the dialog stays open, and
 the row is unchanged
-When the cause is removed and I click <confirm> again
+When the cause is removed and I click <confirm> again (permission rows only; an object
+deleted elsewhere stays gone)
 Then the action succeeds as in [CONF-03](#conf-03-confirming)
 
 | dialog                 | trigger                                                          | fallback                                                |

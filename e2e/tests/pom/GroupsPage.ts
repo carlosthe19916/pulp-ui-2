@@ -1,7 +1,8 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
 import { DataViewList } from "./DataViewList";
+import { FormModal } from "./FormModal";
 import { GroupDetailPage } from "./GroupDetailPage";
 
 /** Page object for `/admin/groups`. */
@@ -13,6 +14,28 @@ export class GroupsPage extends DataViewList {
   async goto(): Promise<void> {
     await this.page.goto("/admin/groups");
     await expect(this.heading).toBeVisible();
+  }
+
+  /** Open a row's kebab and return one of its items (not clicked). */
+  async rowMenuItem(name: string, item: "Edit" | "Delete"): Promise<Locator> {
+    await this.row(name).getByRole("button", { name: "Kebab toggle" }).click();
+    return this.page.getByRole("menuitem", { name: item, exact: true });
+  }
+
+  async openCreate(): Promise<FormModal> {
+    await this.page
+      .getByRole("button", { name: "Create Group", exact: true })
+      .click();
+    const modal = new FormModal(this.page, "Create Group");
+    await expect(modal.dialog).toBeVisible();
+    return modal;
+  }
+
+  async openEdit(name: string): Promise<FormModal> {
+    await (await this.rowMenuItem(name, "Edit")).click();
+    const modal = new FormModal(this.page, `Edit ${name}`);
+    await expect(modal.dialog).toBeVisible();
+    return modal;
   }
 
   async create(name: string): Promise<void> {

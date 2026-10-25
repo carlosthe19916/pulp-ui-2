@@ -129,7 +129,7 @@ shows it:
 
 | modal             | change                                    | server reason                               |
 | ----------------- | ----------------------------------------- | ------------------------------------------- |
-| Add group to user | delete the group                          | not found                                   |
+| Add group to user | delete the group                          | No Group matches the given query.           |
 | Add user to group | delete the user                           | Could not find user <username>              |
 | Add role to user  | assign the same role to the user already  | The role is already assigned to this user.  |
 | Add role to group | assign the same role to the group already | The role is already assigned to this group. |

@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
 import { DataViewList } from "./DataViewList";
+import { FormModal } from "./FormModal";
 import { UserDetailPage } from "./UserDetailPage";
 
 export interface ICreateUserInput {
@@ -34,6 +35,22 @@ export class UsersPage extends DataViewList {
       .getByRole("button", { name: "Create user", exact: true })
       .click();
     return this.page.getByRole("dialog", { name: "Create User" });
+  }
+
+  /** Filter to the user and open its row's Edit modal. */
+  async openEdit(username: string): Promise<FormModal> {
+    // Re-typing the same filter sends no request (the page is cached), so only
+    // filter when it isn't applied yet.
+    if (
+      (await this.page.getByPlaceholder("Filter by Username").inputValue()) !==
+      username
+    ) {
+      await this.filterBy("Username", username);
+    }
+    await this.rowAction(username, "Edit");
+    const modal = new FormModal(this.page, `Edit ${username}`);
+    await expect(modal.dialog).toBeVisible();
+    return modal;
   }
 
   async create(input: ICreateUserInput): Promise<void> {

@@ -38,10 +38,22 @@ export async function authenticate(page: Page): Promise<void> {
   await expectAuthenticated(page);
 }
 
-async function loginBasic(page: Page): Promise<void> {
+export interface ICredentials {
+  username: string;
+  password: string;
+}
+
+/**
+ * Submit the basic-auth login form. Doesn't assert the outcome, so a test can also
+ * expect a rejected login ("Invalid login credentials.").
+ */
+export async function submitBasicLogin(
+  page: Page,
+  { username, password }: ICredentials,
+): Promise<void> {
   await page.goto("/login");
-  await page.getByRole("textbox", { name: /username/i }).fill(E2E_USERNAME);
-  await page.getByRole("textbox", { name: /^password$/i }).fill(E2E_PASSWORD);
+  await page.getByRole("textbox", { name: /username/i }).fill(username);
+  await page.getByRole("textbox", { name: /^password$/i }).fill(password);
   // Playwright's storageState persists cookies + localStorage but NOT
   // sessionStorage; basic mode only writes credentials to localStorage when this
   // box is checked, so ticking it is what carries auth into the spec projects.
@@ -49,6 +61,13 @@ async function loginBasic(page: Page): Promise<void> {
     .getByRole("checkbox", { name: /keep credentials in localstorage/i })
     .check();
   await page.getByRole("button", { name: /log in/i }).click();
+}
+
+async function loginBasic(page: Page): Promise<void> {
+  await submitBasicLogin(page, {
+    username: E2E_USERNAME,
+    password: E2E_PASSWORD,
+  });
 }
 
 async function loginOidc(page: Page): Promise<void> {
@@ -61,6 +80,6 @@ async function loginOidc(page: Page): Promise<void> {
   await page.locator("#kc-login").click();
 }
 
-async function expectAuthenticated(page: Page): Promise<void> {
+export async function expectAuthenticated(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 }

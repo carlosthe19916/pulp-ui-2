@@ -216,7 +216,7 @@ Then the second user sees "403: Access denied" on <page>
 When I reset the policy
 Then the second user sees the list again
 
-| page         | viewset                     |
-| ------------ | --------------------------- |
-| Tasks        | the tasks viewset           |
-| Repositories | a repository viewset (file) |
+| page         | viewset                                          |
+| ------------ | ------------------------------------------------ |
+| Tasks        | `tasks`                                          |
+| Repositories | `repositories` (the list of every type it reads) |

@@ -1,7 +1,8 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
 import { DataViewList } from "./DataViewList";
+import { FormModal } from "./FormModal";
 
 export interface ICreateRoleInput {
   name: string;
@@ -63,15 +64,70 @@ export class RolesPage extends DataViewList {
     await new ConfirmModal(this.page, "Delete Role").confirm("Delete");
   }
 
+  /** A body row whose Name cell is exactly the role name. */
+  exactRow(name: string): Locator {
+    return this.list.rows.filter({
+      has: this.page.getByRole("gridcell", { name, exact: true }),
+    });
+  }
+
+  async openCreate(): Promise<FormModal> {
+    await this.page
+      .getByRole("button", { name: "Create Role", exact: true })
+      .click();
+    const modal = new FormModal(this.page, "Create Role");
+    await expect(modal.dialog).toBeVisible();
+    return modal;
+  }
+
+  async openEdit(name: string): Promise<FormModal> {
+    await this.openRowMenu(name);
+    await this.page
+      .getByRole("menuitem", { name: "Edit", exact: true })
+      .click();
+    const modal = new FormModal(this.page, `Edit Role: ${name}`);
+    await expect(modal.dialog).toBeVisible();
+    return modal;
+  }
+
+  /** Open a row's kebab; menu items are then `page.getByRole("menuitem")`. */
+  async openRowMenu(name: string): Promise<void> {
+    await this.exactRow(name)
+      .getByRole("button", { name: "Kebab toggle" })
+      .click();
+  }
+
+  menuItem(name: string): Locator {
+    return this.page.getByRole("menuitem", { name, exact: true });
+  }
+
+  /** The Locked filter toggle (shows the current option). */
+  lockedToggle(): Locator {
+    // The toolbar precedes the grid, so the first match is the toggle, not the
+    // "Locked" column's sort button.
+    return this.page
+      .getByRole("main")
+      .getByRole("button", { name: /^(All roles|Locked|Unlocked)$/ })
+      .first();
+  }
+
   /** Choose an option in the locked-status select (toggle shows the current label). */
   async filterLocked(label: LockedFilter): Promise<void> {
-    // The MenuToggle shows the current selection; scope to it (via OUIA type) so
-    // it isn't confused with the "Locked" column-header sort button.
-    await this.page
-      .locator('[data-ouia-component-type="PF6/MenuToggle"]')
-      .filter({ hasText: /^(All roles|Locked|Unlocked)$/ })
-      .click();
-    await this.page.getByRole("option", { name: label, exact: true }).click();
+    if ((await this.lockedToggle().innerText()).trim() === label) return;
+    await this.lockedToggle().click();
+    // A new Locked value is a new query: wait for its page so callers read it.
+    await Promise.all([
+      this.page.waitForResponse(
+        (response) =>
+          response.request().method() === "GET" &&
+          response.url().includes("/roles/") &&
+          (label === "All roles"
+            ? !response.url().includes("locked=")
+            : response.url().includes(`locked=${label === "Locked"}`)),
+      ),
+      this.page.getByRole("option", { name: label, exact: true }).click(),
+    ]);
+    await expect(this.lockedToggle()).toHaveText(label);
   }
 
   /** Assert the first row's Edit/Delete actions are disabled (used for a locked role). */

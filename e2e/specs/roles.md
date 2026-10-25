@@ -29,8 +29,8 @@ Then the row shows Name <name> (plain text), Plugin <plugin>, Description <cell>
 
 | name                      | description    | n   | locked | plugin                    | cell                     | label |
 | ------------------------- | -------------- | --- | ------ | ------------------------- | ------------------------ | ----- |
-| core.task_owner           | (built-in)     | ≥1  | yes    | core                      | the description          | Yes   |
-| file.filerepository_owner | (built-in)     | ≥1  | yes    | file                      | the description          | Yes   |
+| core.task_owner           | (built-in)     | ≥1  | yes    | core                      | the description, or —    | Yes   |
+| file.filerepository_owner | (built-in)     | ≥1  | yes    | file                      | the description, or —    | Yes   |
 | custom.reader             | Reads things   | 1   | no     | custom                    | Reads things             | No    |
 | reader                    | (empty)        | 0   | no     | other                     | —                        | No    |
 | a.b.c                     | (empty)        | 2   | no     | a                         | —                        | No    |
@@ -52,7 +52,8 @@ Then <rows> are listed and the filter shows <option>
 
 ### ROL-LIST-03 Locked filter combined with the name filter and sort
 
-Seed: a locked and an unlocked role whose names share the text `e2e-match`
+Seed: an unlocked role whose name shares a text with a built-in locked role (`e2e-match`
+below); Pulp can't create locked roles, so the locked one is built in
 
 When I choose Locked <option>, type <name filter> and sort by <sort>
 Then the listed rows are exactly <rows>, in the sort order
@@ -81,8 +82,8 @@ Then the name filter is empty, Locked shows "All roles", page 1 shows every role
 
 | option    | name filter | clear                                  |
 | --------- | ----------- | -------------------------------------- |
-| Locked    | (empty)     | "Clear all filters" in the toolbar     |
-| Unlocked  | e2e-match   | "Clear all filters" in the toolbar     |
+| Locked    | (empty)     | "Clear filters" in the toolbar         |
+| Unlocked  | e2e-match   | "Clear filters" in the toolbar         |
 | Locked    | no-match    | "Clear all filters" in the empty state |
 | Unlocked  | no-match    | "Clear all filters" in the empty state |
 | All roles | no-match    | "Clear all filters" in the empty state |

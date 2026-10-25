@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { DataTable } from "./DataTable";
 import { clickRowMenuItem } from "./rowMenu";
 
 /**
@@ -11,12 +12,14 @@ export abstract class DataViewList {
   readonly page: Page;
   readonly heading: Locator;
   readonly table: Locator;
+  /** The table with its toolbar and paginators (sort, chips, paging). */
+  readonly list: DataTable;
 
   protected constructor(page: Page, headingName: string, tableName: string) {
     this.page = page;
     this.heading = page.getByRole("heading", { level: 1, name: headingName });
-    // @patternfly/react-data-view renders an ARIA grid (role="grid"), not a table.
-    this.table = page.getByRole("grid", { name: tableName });
+    this.list = new DataTable(page.getByRole("main"), tableName);
+    this.table = this.list.grid;
   }
 
   /**

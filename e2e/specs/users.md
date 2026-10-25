@@ -200,8 +200,8 @@ And Username and Password are not shown
 
 Given a user with every field filled
 When I change <field> from <entry> and save
-Then the toast `User "<username>" updated` appears and the new value shows in the Users list
-and on the user detail page
+Then the toast `User "<username>" updated` appears, the Users list shows the new Email, and
+"Edit User" on the detail page shows the new value
 
 | field      | entry  |
 | ---------- | ------ |
@@ -312,7 +312,10 @@ Then the user is gone ([CONF-03](shared/confirm-dialog.md#conf-03-confirming)) a
 
 ### USR-DEL-02 Deleting the logged-in user
 
-Auth: second-user
+Manual
+
+Pulp's API can't create a superuser (it ignores `is_superuser`), so this needs one made with
+`pulpcore-manager`.
 
 Given a second superuser logged in (never the e2e admin)
 When they delete their own user
@@ -372,7 +375,8 @@ Then <tab> changes by <change> without a reload
 ### USR-DET-04 Edit from the detail page
 
 When I edit the user from the actions menu
-Then the detail page shows the new values without a reload
+Then opening "Edit User" again shows the new values without a reload (the detail page shows
+no other user fields)
 
 ### USR-DET-05 Switching tabs
 

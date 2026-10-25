@@ -1,18 +1,24 @@
 import { test as base } from "@playwright/test";
 
+import { E2E_AUTH } from "./helpers/auth";
 import { Cleanup } from "./helpers/cleanup";
 import { PulpApi } from "./helpers/pulp-api";
+import { SecondUsers } from "./helpers/secondUser";
+import { AccessPoliciesPage } from "./pom/AccessPoliciesPage";
 import { ContentListPage } from "./pom/ContentListPage";
 import { ContentPage } from "./pom/ContentPage";
 import { DomainsPage } from "./pom/DomainsPage";
 import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
+import { Toasts } from "./pom/Toasts";
 import { UsersPage } from "./pom/UsersPage";
 
 interface ITestFixtures {
   usersPage: UsersPage;
   rolesPage: RolesPage;
   groupsPage: GroupsPage;
+  accessPoliciesPage: AccessPoliciesPage;
+  toasts: Toasts;
   domainsPage: DomainsPage;
   remotesPage: ContentPage;
   repositoriesPage: ContentPage;
@@ -21,6 +27,8 @@ interface ITestFixtures {
   contentPage: ContentListPage;
   /** Register test-created names here; leftovers are removed in teardown. */
   cleanup: Cleanup;
+  /** Non-admin users logged in through the basic-auth form (skips other auth modes). */
+  secondUser: SecondUsers;
 }
 
 interface IWorkerFixtures {
@@ -51,6 +59,16 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
     await cleanup.run(api);
   },
 
+  secondUser: async ({ browser, baseURL, api, cleanup }, provide, testInfo) => {
+    testInfo.skip(
+      E2E_AUTH !== "basic",
+      "a second user logs in through the basic-auth form",
+    );
+    const users = new SecondUsers(browser, baseURL, api, cleanup);
+    await provide(users);
+    await users.close();
+  },
+
   usersPage: async ({ page }, provide) => {
     await provide(new UsersPage(page));
   },
@@ -59,6 +77,12 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   },
   groupsPage: async ({ page }, provide) => {
     await provide(new GroupsPage(page));
+  },
+  accessPoliciesPage: async ({ page }, provide) => {
+    await provide(new AccessPoliciesPage(page));
+  },
+  toasts: async ({ page }, provide) => {
+    await provide(new Toasts(page));
   },
   domainsPage: async ({ page }, provide) => {
     await provide(new DomainsPage(page));

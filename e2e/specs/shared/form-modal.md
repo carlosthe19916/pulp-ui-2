@@ -103,8 +103,9 @@ Given I open <modal> and fill it with valid values
 When I press Enter in a text field
 Then the form is submitted as if I clicked <submit>
 
-Run for every modal. Exception: in the role form's permission input, Enter adds a permission
-and does not submit (see [ROL-PERM-01](../roles.md#rol-perm-01-typing-permissions)).
+Run for every modal. Exceptions: in the role form's permission input, Enter adds a permission
+and does not submit (see [ROL-PERM-01](../roles.md#rol-perm-01-typing-permissions)); Edit
+policy has only JSON text areas, where Enter adds a line and does not submit.
 
 ### FORM-08 The submit button while saving
 

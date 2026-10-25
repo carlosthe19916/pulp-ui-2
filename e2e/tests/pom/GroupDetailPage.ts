@@ -1,6 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
+import { DataTable } from "./DataTable";
+import { FormModal } from "./FormModal";
 import { clickRowMenuItem } from "./rowMenu";
 
 /** Page object for a group's detail page (`/admin/groups/$groupId`). */
@@ -11,6 +13,8 @@ export class GroupDetailPage {
   readonly rolesTab: Locator;
   readonly usersTable: Locator;
   readonly rolesTable: Locator;
+  /** The Users tab's table with its toolbar and paginators. */
+  readonly users: DataTable;
 
   constructor(page: Page, groupName: string) {
     this.page = page;
@@ -19,6 +23,47 @@ export class GroupDetailPage {
     this.rolesTab = page.getByRole("tab", { name: /^Roles \(\d+\)$/ });
     this.usersTable = page.getByRole("grid", { name: "Group users table" });
     this.rolesTable = page.getByRole("grid", { name: "Group roles table" });
+    this.users = new DataTable(page.getByRole("tabpanel"), "Group users table");
+  }
+
+  /** Open a group's detail page by URL (`id` from the API) and wait for its header. */
+  static async open(
+    page: Page,
+    { id, name }: { id: number; name: string },
+  ): Promise<GroupDetailPage> {
+    await page.goto(`/admin/groups/${id}`);
+    const detail = new GroupDetailPage(page, name);
+    // A full load waits on /status, the auth check and the suspended detail query.
+    await expect(detail.title).toBeVisible({ timeout: 15_000 });
+    return detail;
+  }
+
+  /** Open the header "Actions" menu and return one of its items (not clicked). */
+  async actionsMenuItem(name: "Edit Group" | "Delete Group"): Promise<Locator> {
+    await this.page
+      .getByRole("button", { name: "Actions", exact: true })
+      .click();
+    return this.page.getByRole("menuitem", { name, exact: true });
+  }
+
+  async openEdit(name: string): Promise<FormModal> {
+    await (await this.actionsMenuItem("Edit Group")).click();
+    const modal = new FormModal(this.page, `Edit ${name}`);
+    await expect(modal.dialog).toBeVisible();
+    return modal;
+  }
+
+  addUserButton(): Locator {
+    return this.page.getByRole("button", { name: "Add User", exact: true });
+  }
+
+  /** Open a member row's kebab and return its "Remove" item (not clicked). */
+  async userRemoveItem(username: string): Promise<Locator> {
+    await this.users
+      .row(username)
+      .getByRole("button", { name: "Kebab toggle" })
+      .click();
+    return this.page.getByRole("menuitem", { name: "Remove", exact: true });
   }
 
   // --- Users tab ---
