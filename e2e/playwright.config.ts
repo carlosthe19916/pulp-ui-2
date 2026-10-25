@@ -18,7 +18,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // One shared Pulp backend on a 4-vCPU runner: a few workers speed the large
+  // suite up without the contention flakiness that more would bring.
+  workers: process.env.CI ? 3 : undefined,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",
