@@ -7,8 +7,7 @@ description: Use when adding support for a new Pulp plugin (or a new content typ
 
 A new Pulp plugin needs catalog data and, optionally, presentation. No new routes or nav
 entries. The constraints are in `.rulesync/rules/catalog.md` (data only; per-type UI in
-registries); the catalog's shape is explained in `docs/internals/architecture.md`. The
-snippets use a made-up `foo` plugin.
+registries). The snippets use a made-up `foo` plugin.
 
 ## 1. Spec
 

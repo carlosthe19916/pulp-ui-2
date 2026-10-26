@@ -1,77 +1,40 @@
 # Architecture
 
-The UI is **plugin-agnostic** ([ADR 0001](../adr/0001-plugin-agnostic-generic-pages.md)). There is
-one generic page per pulpcore concept, and every plugin difference comes from the **catalog**
-(`client/src/catalog`, imported as `@catalog`).
+A high-level map of how the UI is structured. For the design decisions behind it see
+[docs/adr/](../adr/); for the coding rules see [.rulesync/rules/](../../.rulesync/rules/).
 
 ```mermaid
-flowchart TB
-  Status["/status/ (installed plugins)"] --> Catalog["@catalog (pulp_type → plugin)"]
-  Catalog --> Pages[Generic pages]
-  Pages -->|read inventory| Agg["Aggregate lists (/repositories/, /content/, …)"]
-  Pages -->|create, sync, upload, actions| Typed["Plugin-typed paths (/repositories/file/file/, …)"]
+flowchart LR
+  Browser["Browser SPA (React, Vite, PatternFly)"] -->|REST| API["Pulp REST API"]
 ```
 
-## The catalog
+## What it is
 
-Data only, never UI. One file per plugin in `catalog/plugins/`, shared field groups in
-`baseFields.ts`, assembled by `catalog/index.ts` and resolved per `pulp_type`
-(`getPlugin`, `getAvailablePlugins`, `getContentType(s)`). Types are in `catalog/types.ts`.
+A React single-page app (Vite, TypeScript, PatternFly) that drives Pulp entirely through its
+public REST API — no private endpoints, no server-side rendering of app state
+([ADR 0010](../adr/0010-rest-api-only.md)).
 
-A plugin (`IPluginDefinition`) declares:
+## Plugin-agnostic by design
 
-| Key                                                                | What it drives                                           |
-| ------------------------------------------------------------------ | -------------------------------------------------------- |
-| `app.isAvailable`                                                  | Whether the plugin is installed (gates create and edit)  |
-| `rest.pulpType` / `rest.apiPath`                                   | Identity and the typed collection path used for writes   |
-| `entities.{repository,remote,distribution,publication}.form`       | Create/edit fields, wizard or plain modal (`isWizard`)   |
-| `entities.repository.compatibleRemoteTypes` / `…PublicationTypes`  | Whether Sync / Publish are offered, and with which types |
-| `entities.repository.contentChanges` (`modify`/`addRemove`/`null`) | How content is added and removed                         |
-| `entities.repository.archiveImport`                                | "Import archive" (OSTree)                                |
-| `entities.repository.actions`                                      | Plugin actions (sign, tag, copy…) rendered as task forms |
-| `content[]` → `apiPath`, `uploadable` (`upload` / `create`)        | Typed content endpoints and the upload form              |
+Pulp has many plugins (file, rpm, container, …) that share the same concepts: remotes,
+repositories, publications, distributions, content and tasks. The UI has **one generic screen
+per concept** rather than a screen per plugin. What differs between plugins — form fields, which
+capabilities exist, how content is presented — is **declared as data** and plugged into the
+generic screens. Supporting a new plugin is a data change, not a new section of the app
+([ADR 0001](../adr/0001-plugin-agnostic-generic-pages.md)).
 
-Variants (a second `pulp_type` for one entity, e.g. `file.git`, `rpm.uln`) are an array slot
-whose entries override `rest`; each resolves to its own plugin entry.
+## Domain-scoped
 
-Per-type **presentation** lives in UI registries keyed by `pulp_type`, never in the catalog:
+Most areas operate within a selected domain, Pulp's unit of multi-tenancy; the chosen domain is
+part of the URL and the navigation ([ADR 0002](../adr/0002-navigation-and-domains.md)).
 
-| Registry                                          | Maps                                |
-| ------------------------------------------------- | ----------------------------------- |
-| `components/PluginContentPanel` (`PANEL_BY_TYPE`) | content type → detail panel         |
-| `components/RepositoryContent/browseRegistry.ts`  | repository type → Browse sections   |
-| `repository-detail/components/pluginTabs.ts`      | repository type → extra detail tabs |
+## Asynchronous by nature
 
-## Data flow
+Many writes (sync, publish, content changes, …) don't finish inline — they return a background
+task. The UI tracks the task and refreshes the affected views once it settles, so the user sees
+progress and the eventual result without reloading ([ADR 0008](../adr/0008-async-task-feedback.md)).
 
-A detail route's `loader` builds the object's href from the URL ids and primes the query; the
-page reads queries by href. A write that answers with a task shows the task's status on the
-row or page, and when the task settles the affected queries are invalidated. Plugin actions
-(and sync) go through one shared action form, and object pages read `my_permissions/` to
-disable what the user can't run.
+## Permission-aware
 
-The rules for this layer are in [.rulesync/rules/](../../.rulesync/rules/) (`queries`, `toastr`, `forms`,
-`ui-conventions`); the design behind them is in [docs/adr/](../adr/).
-
-## Routing
-
-File-based routes in `client/src/routes/`. Domain-scoped areas carry `$pulpDomain`:
-
-| Prefix                              | Area                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------- |
-| `/content-management/$pulpDomain/…` | Remotes, Repositories, Publications, Distributions, Content, plugin pages |
-| `/monitoring/$pulpDomain/…`         | Tasks, task groups, task schedules, vulnerability reports                 |
-| `/system-management/$pulpDomain/…`  | Content guards, ACS, export/import, upstream Pulps, storage, maintenance  |
-| `/system-management/…`, `/admin/…`  | Domains, signing services; users, groups, roles, access policies          |
-
-## Code map
-
-| Path                           | What                                                                 |
-| ------------------------------ | -------------------------------------------------------------------- |
-| `client/src/catalog/`          | plugin catalog (data only)                                           |
-| `client/src/routes/`           | routes; loaders build hrefs                                          |
-| `client/src/app/pages/<area>/` | pages, grouped by nav area                                           |
-| `client/src/app/components/`   | shared UI (data-view helpers, EntityModalBody, RepositoryContent, …) |
-| `client/src/app/queries/`      | query and mutation hooks                                             |
-| `client/src/app/context/`      | ApiStatus (installed plugins), Auth, Notifications, Theme            |
-| `client/src/app/client/`       | generated OpenAPI client (do not edit)                               |
+Actions are shown and enabled according to what the current user is allowed to do, so the UI
+never offers an operation the server would reject ([ADR 0011](../adr/0011-permission-aware-actions.md)).

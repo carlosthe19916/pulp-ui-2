@@ -1,7 +1,7 @@
 # Docs
 
 - **[internals/](internals/)**: how the code works.
-  - [architecture.md](internals/architecture.md): the plugin catalog, data access, code map
+  - [architecture.md](internals/architecture.md): a high-level overview of how the UI is structured
   - [pulp-api-notes.md](internals/pulp-api-notes.md): Pulp API behaviour that shaped the code
 - **[adr/](adr/)**: architecture decision records. They describe how the UI is designed and
   why, without referring to code.
