@@ -8,15 +8,18 @@ export default defineConfig({
   // One shared Pulp backend: the backend, not the CPU, is the bottleneck, so cap
   // local workers. Left to Playwright's default (~half the cores) a many-core dev
   // box runs 8+ workers that oversaturate the single backend — responses slow to
-  // a crawl and the heaviest specs blow their timeout. Four keeps the backend
-  // responsive (measurably faster per test, and no saturation failures). Bump it
-  // with `--workers=N` on a beefier backend.
-  workers: 4,
+  // a crawl and the heaviest specs blow their timeout. Three keeps the backend
+  // responsive (measurably faster per test, and headroom against read-after-write
+  // lag flakes). Bump it with `--workers=N` on a beefier backend.
+  workers: 3,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     channel: "chrome",
+    // Cap navigations so a stuck page load fails with a clear navigation error
+    // rather than hanging to the (tripled, for test.slow) test timeout.
+    navigationTimeout: 30_000,
   },
   projects: [
     {

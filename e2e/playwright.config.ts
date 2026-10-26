@@ -23,11 +23,14 @@ export default defineConfig({
   // backend (not the CPU) is still the bottleneck, so cap workers rather than let
   // Playwright default to ~half the cores — 8+ workers oversaturate the single
   // backend and make the heaviest specs time out. Override with `--workers=N`.
-  workers: process.env.CI ? 2 : 4,
+  workers: process.env.CI ? 2 : 3,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
+    // Cap navigations so a stuck page load fails with a clear navigation error
+    // rather than hanging to the (tripled, for test.slow) test timeout.
+    navigationTimeout: 30_000,
   },
   projects: [
     {

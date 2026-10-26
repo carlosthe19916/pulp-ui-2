@@ -51,17 +51,23 @@ test.describe("Repository labels and access", () => {
     await page.getByRole("tab", { name: "Access" }).click();
     await page.getByRole("button", { name: "Add role" }).click();
     const dialog = page.getByRole("dialog");
+    // Each picker's options come from a debounced server-side search. Wait for the
+    // listbox to open before typing (filling while it is still opening drops the
+    // keystrokes, so the search never runs), then wait generously for the option —
+    // the fetch can land after the default 5s on a busy backend.
     await dialog.getByRole("button", { name: "Role", exact: true }).click();
+    await page.getByRole("listbox").waitFor({ state: "visible" });
     await page.getByRole("textbox", { name: "Role filter" }).fill("viewer");
     const role = page
       .getByRole("option")
       .filter({ hasText: "file.filerepository_viewer" });
-    await expect(role).toHaveCount(1);
+    await expect(role).toHaveCount(1, { timeout: 15_000 });
     await role.click();
     await dialog.getByRole("button", { name: "Users", exact: true }).click();
+    await page.getByRole("listbox").waitFor({ state: "visible" });
     await page.getByRole("textbox", { name: "Users filter" }).fill("admin");
     const user = page.getByRole("option").filter({ hasText: /^admin$/ });
-    await expect(user).toHaveCount(1);
+    await expect(user).toHaveCount(1, { timeout: 15_000 });
     await user.click();
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
     await expect(

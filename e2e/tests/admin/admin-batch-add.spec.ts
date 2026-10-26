@@ -270,9 +270,12 @@ test("BATCH-01 selecting rows drives the Add button", async ({
   const ctx = { api, cleanup };
   for (const modal of MODALS) {
     await test.step(modal.name, async () => {
+      // The rows only select/deselect and read the Add button — they never mutate
+      // the owner or items — so one seed serves all three (each reopens the modal
+      // fresh, resetting the selection).
+      const seeded = await seed(ctx, modal, 3);
       for (const row of batch01) {
         await test.step(`select ${row.n} → "${row.label}"`, async () => {
-          const seeded = await seed(ctx, modal, 3);
           const dialog = await openFiltered(page, ctx, modal, seeded);
           await expect(dialog.table.rows).toHaveCount(3);
           for (const item of seeded.items.slice(0, row.select)) {
@@ -325,10 +328,12 @@ test("BATCH-03 selection survives filter and sort changes", async ({
   const ctx = { api, cleanup };
   for (const modal of MODALS) {
     await test.step(modal.name, async () => {
+      // Both changes are read-only (they filter/sort and re-read the selection),
+      // so one seed serves both; each reopens the modal fresh.
+      const seeded = await seed(ctx, modal, 3);
+      const [selected, other] = seeded.items;
       for (const change of batch03) {
         await test.step(change, async () => {
-          const seeded = await seed(ctx, modal, 3);
-          const [selected, other] = seeded.items;
           const dialog = await openFiltered(page, ctx, modal, seeded);
           await dialog.table.selectRow(selected).check();
 
