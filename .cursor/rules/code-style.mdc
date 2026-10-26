@@ -19,8 +19,8 @@ interface IRepositoryCardProps {
 export const RepositoryCard: React.FC<IRepositoryCardProps> = ({ repository }) => (…);
 ```
 
-- `export const X: React.FC<IXProps>` (prop-less: `React.FC`), with `import type React`.
-  Props are always a named `I<Component>Props` interface, never inline (`React.FC<{ … }>`).
+- `export const X: React.FC<IXProps>`, prop-less `React.FC`. Props are always a named
+  `I<Component>Props` interface, never inline (`React.FC<{ … }>`).
 - No `useMemo` / `useCallback` without a measured reason or a lint rule that asks for one
   (context values).
 
@@ -70,8 +70,8 @@ takes one destructured object, so each argument names itself at the call site:
 
 Pass/fail rubric for `/eval`. Check changed `.ts` / `.tsx` files under `client/src/`.
 
-- [ ] Components are `export const X: React.FC<IXProps>` with `import type React` and a
-      named `I<Component>Props` interface; no speculative `useMemo` / `useCallback`.
+- [ ] Components are `export const X: React.FC<IXProps>` with a named `I<Component>Props`
+      interface, never an inline props type; no speculative `useMemo` / `useCallback`.
 - [ ] JSX-free files are `.ts`; file and directory names follow the casing above.
 - [ ] Functions with 2+ params, a `boolean`, or optional params after the first take one
       named object (inline type for ≤2 one-off fields, else `I<Name>Options`), unless they

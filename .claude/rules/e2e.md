@@ -16,10 +16,10 @@ Put each scenario in the **cheapest layer that can prove it** (`e2e/specs/README
 
 - **Component (Vitest)** — client-only behaviour with data mocked (form validation,
   permission **gating** via `useObjectPermissions` / `GatedButton`).
-- **Api contract (`*.api.spec.ts`, browserless)** — server accept/reject rules,
+- **API contract (`*.api.spec.ts`, browserless)** — server accept/reject rules,
   including RBAC **enforcement** via `api.attemptAs(...)`. The place to extend for
   every new entity.
-- **E2e (`chromium`)** — only the real-UI-against-real-backend journey; keep **one
+- **E2E (`chromium`)** — only the real-UI-against-real-backend journey; keep **one
   representative e2e per surface**. A browser second-user login is the slowest test —
   add one only when the UI journey itself is the point, not to re-check a rule a
   component or api test owns.
@@ -85,7 +85,7 @@ test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   `expect(await locator.isVisible()).toBe(true)`.
 - No `page.waitForTimeout`. Wait on a real event: `page.waitForResponse`, a web-first
   assertion, or `expect.poll(() => api.…)` for server state. A list refetch can be
-  served from the React Query cache with **no** network request, so make such waits
+  served from the TanStack Query cache with **no** network request, so make such waits
   tolerant (race a timeout) and assert settled rows with a retrying `expect`. Comment
   any wait that needs a reason (debounce, skeleton swap, cached modal).
 

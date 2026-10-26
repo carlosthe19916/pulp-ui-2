@@ -14,8 +14,9 @@ globs:
 # Reading lists
 
 Every list read is **one page** of a generic list query (`use<X>ListQuery({ params })`); the
-caller passes its own filters, `fields`, `ordering`, `limit` and `offset`. Don't add a hook
-that bakes params in (no `useWidgetsByOwnerQuery`); shared params are an exported constant.
+caller passes its own filters, `fields`, `ordering`, `limit` and `offset`. Pass new params to
+that one hook rather than a variant that bakes them in (no `useWidgetsByOwnerQuery`); shared
+params are an exported constant. [queries](queries.md) owns the one-query-per-endpoint rule.
 
 ## `limit` comes from the UI, never a literal
 

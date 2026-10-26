@@ -24,8 +24,8 @@ entity form fields, capabilities and actions), and generic pages read it.
 - Lives in UI registries keyed by `pulp_type`: `PANEL_BY_TYPE` (content detail panels),
   `BROWSE_BY_REPOSITORY_TYPE` (repository Browse sections), `TAB_BY_REPOSITORY_TYPE` (extra
   repository tabs).
-- Each registry has a generic fallback (`BaseContent`, All content only, no extra tabs), so a
-  lookup never branches on the plugin:
+- Each registry has a generic fallback (`BaseContent` — the All-content view, no extra tabs),
+  so a lookup never branches on the plugin:
 
 ```tsx
 const PANEL_BY_TYPE: Record<string, React.FC<IPluginContentProps>> = {
