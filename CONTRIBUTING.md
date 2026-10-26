@@ -41,10 +41,6 @@ pulp-ui-2/
   docs/            # Developer docs and architecture decision records
 ```
 
-## Adding a plugin
-
-See the [add-plugin skill](.rulesync/skills/add-plugin/SKILL.md); AI agents load it on their own.
-
 ## Running tests
 
 ```bash
