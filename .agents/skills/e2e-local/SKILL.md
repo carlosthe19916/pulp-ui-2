@@ -8,7 +8,7 @@ allowed-tools: Bash(curl:*) Bash(oci-env:*) Bash(npm:*) Bash(npx:*)
 
 The backend is the oci-env Pulp configured by [`compose.env`](../../../compose.env): API on
 `http://localhost:5003`, API root `/api/pulp/`, domains enabled, admin `admin` / `password`
-(the same defaults as `E2E_USERNAME` / `E2E_PASSWORD` in `e2e/tests/helpers/auth.ts`).
+(the same defaults as `E2E_USERNAME` / `E2E_PASSWORD` in `e2e/support/helpers/auth.ts`).
 
 Run every command from the repository root.
 

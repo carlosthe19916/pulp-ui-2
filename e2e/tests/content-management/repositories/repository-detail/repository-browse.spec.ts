@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 /**
  * A repository's latest version content renders as "Browse" (the plugin's own view, here

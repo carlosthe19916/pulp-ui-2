@@ -1,4 +1,4 @@
-import { test } from "./fixtures";
+import { test } from "@support/fixtures";
 
 // Starting point for the Playwright test agents (planner/generator in
 // .claude/agents/e2e/): they run this test to get a logged-in page, then explore from it.

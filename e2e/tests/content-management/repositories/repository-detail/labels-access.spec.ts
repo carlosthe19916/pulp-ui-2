@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
-import type { ContentPage } from "../../../pom/ContentPage";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
+import type { ContentPage } from "@support/pom/ContentPage";
 
 const openRepository = async (
   repositoriesPage: ContentPage,

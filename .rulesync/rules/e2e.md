@@ -48,26 +48,27 @@ Admin suites derive from the use cases in `e2e/specs/**/*.md`.
   detail goes in the `*-list` spec under one scenario ID.
 - An entity's **contract** test (`*.api.spec.ts`) and an entity with no surface split
   (`domains`) sit at the **entity root**. A whole-area spec sits at the **area root**
-  (`admin/admin-lists.spec.ts`); a cross-area spec (smoke sweep, seed) at the
-  `tests/` root.
-- Shared infra lives at the `tests/` root: `fixtures.ts`, `pom/`, `helpers/`,
-  `data/`, `auth.setup.ts`. Helpers both surfaces of a split entity use go in
-  `helpers/<entity>.ts`; single-surface helpers stay local to the spec.
-- A spec imports `test` / `expect` from `fixtures` (never `@playwright/test`) with
-  `../` matching its depth, so it gets the page objects, `api` and `cleanup`. Page
-  objects are classes in `pom/`; list screens extend `DataViewList` and add only
-  their own modal-form helpers.
+  (`content-management/creation-forms.spec.ts`); a cross-area spec (smoke sweep, seed)
+  and `auth.setup.ts` at the `tests/` root.
+- Shared infra lives in **`e2e/support/`**, not under `tests/`: `fixtures.ts`, `pom/`,
+  `helpers/`, `data/`. Helpers both surfaces of a split entity use go in
+  `support/helpers/<entity>.ts`; single-surface helpers stay local to the spec.
+- A spec imports `test` / `expect` from `@support/fixtures` (never `@playwright/test`
+  or a relative path), so it gets the page objects, `api` and `cleanup`. Infra is
+  reached through the **`@support/*`** alias (`@support/pom/…`, `@support/helpers/…`),
+  not `../../..`. Page objects are classes in `support/pom/`; list screens extend
+  `DataViewList` and add only their own modal-form helpers.
 
 ```ts
-// pom/WidgetsPage.ts
+// support/pom/WidgetsPage.ts
 export class WidgetsPage extends DataViewList {
   constructor(page: Page) {
     super(page, "Widgets", "Widgets table"); // h1 name, grid aria-label
   }
 }
 
-// inventory/widgets/widget-list/widget-list.spec.ts — ../ matches folder depth
-import { expect, test } from "../../../fixtures";
+// inventory/widgets/widget-list/widget-list.spec.ts
+import { expect, test } from "@support/fixtures";
 
 test("creates a widget", async ({ widgetsPage, cleanup, api }) => {
   const name = cleanup.widget(uniqueName("widget"));
@@ -115,8 +116,8 @@ Pass/fail rubric for `/eval`. Check changed files under `e2e/`.
       enforcement → `*.api.spec.ts`, one representative e2e per surface).
 - [ ] Specs mirror `pages/` to area/entity/surface (entity root for a contract test
       or unsplit entity, area root for a whole-area spec); a both-surfaces test is in
-      the `*-list` spec; `test` / `expect` come from `fixtures`, page objects from
-      fixtures extending `DataViewList`.
+      the `*-list` spec; `test` / `expect` and page objects come from `@support/*`
+      (no `../..` infra imports), page objects extending `DataViewList`.
 - [ ] An admin test's title starts with its `e2e/specs` ID; tables are looped as
       `test.step`, not copied; markers map to `fixme` / `skip` / `fail`.
 - [ ] Locators are role / label / text based (no CSS / `#id` / `.pf-*` in specs;

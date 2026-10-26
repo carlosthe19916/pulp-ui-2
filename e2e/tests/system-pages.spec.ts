@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, test } from "@support/fixtures";
 
 /** Every page added for the remaining REST endpoints opens and lists its data. */
 const PAGES = [

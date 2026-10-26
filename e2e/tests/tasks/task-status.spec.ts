@@ -1,9 +1,9 @@
 import { type Locator, type Page } from "@playwright/test";
 
-import { expect, test } from "../fixtures";
-import { mockInFlightTask } from "../helpers/taskMock";
-import { uniqueName } from "../helpers/unique";
-import type { DataViewList } from "../pom/DataViewList";
+import { expect, test } from "@support/fixtures";
+import { mockInFlightTask } from "@support/helpers/taskMock";
+import { uniqueName } from "@support/helpers/unique";
+import type { DataViewList } from "@support/pom/DataViewList";
 
 /**
  * End-to-end coverage for the server-derived per-row task status on the content

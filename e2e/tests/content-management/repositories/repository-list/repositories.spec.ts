@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 /**
  * Repositories are creatable with just a name for every plugin, so this is the

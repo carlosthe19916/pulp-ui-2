@@ -1,10 +1,10 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { openViaNav } from "../../../helpers/nav";
-import type { PulpApi } from "../../../helpers/pulp-api";
-import type { AccessPoliciesPage } from "../../../pom/AccessPoliciesPage";
-import { DataTable } from "../../../pom/DataTable";
+import { expect, test } from "@support/fixtures";
+import { openViaNav } from "@support/helpers/nav";
+import type { PulpApi } from "@support/helpers/pulp-api";
+import type { AccessPoliciesPage } from "@support/pom/AccessPoliciesPage";
+import { DataTable } from "@support/pom/DataTable";
 
 // Scenarios: e2e/specs/access-policies.md (ACP-*).
 

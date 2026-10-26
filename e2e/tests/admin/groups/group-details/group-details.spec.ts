@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { delayApi } from "../../../helpers/delayApi";
+import { expect, test } from "@support/fixtures";
+import { delayApi } from "@support/helpers/delayApi";
 import {
   NO_CHANGE,
   expectGate,
@@ -8,13 +8,13 @@ import {
   repositoryEditItem,
   seedGroup,
   seedRepositoryChangedThroughGroup,
-} from "../../../helpers/groups";
-import { recordApiNotFound } from "../../../helpers/notFound";
-import { uniqueName } from "../../../helpers/unique";
-import { BatchAddModal } from "../../../pom/BatchAddModal";
-import { GroupDetailPage } from "../../../pom/GroupDetailPage";
-import { RoleAssignmentsTab } from "../../../pom/RoleAssignmentsTab";
-import { UserDetailPage } from "../../../pom/UserDetailPage";
+} from "@support/helpers/groups";
+import { recordApiNotFound } from "@support/helpers/notFound";
+import { uniqueName } from "@support/helpers/unique";
+import { BatchAddModal } from "@support/pom/BatchAddModal";
+import { GroupDetailPage } from "@support/pom/GroupDetailPage";
+import { RoleAssignmentsTab } from "@support/pom/RoleAssignmentsTab";
+import { UserDetailPage } from "@support/pom/UserDetailPage";
 
 // Scenarios: e2e/specs/groups.md (detail page, Users tab, Roles tab).
 

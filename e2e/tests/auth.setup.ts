@@ -1,6 +1,6 @@
 import { test as setup } from "@playwright/test";
 
-import { authenticate } from "./helpers/auth";
+import { authenticate } from "@support/helpers/auth";
 
 const AUTH_STATE_PATH = ".auth/user.json";
 

@@ -1,10 +1,10 @@
-import { expect, test } from "../../../fixtures";
-import { delayApi } from "../../../helpers/delayApi";
-import { recordApiNotFound } from "../../../helpers/notFound";
-import { uniqueName } from "../../../helpers/unique";
-import { COL, cell, groupId, openDetail } from "../../../helpers/users";
-import { RoleAssignmentsTab } from "../../../pom/RoleAssignmentsTab";
-import { UserDetailPage } from "../../../pom/UserDetailPage";
+import { expect, test } from "@support/fixtures";
+import { delayApi } from "@support/helpers/delayApi";
+import { recordApiNotFound } from "@support/helpers/notFound";
+import { uniqueName } from "@support/helpers/unique";
+import { COL, cell, groupId, openDetail } from "@support/helpers/users";
+import { RoleAssignmentsTab } from "@support/pom/RoleAssignmentsTab";
+import { UserDetailPage } from "@support/pom/UserDetailPage";
 
 // Scenarios: e2e/specs/users.md (detail page, Groups tab, Roles tab).
 

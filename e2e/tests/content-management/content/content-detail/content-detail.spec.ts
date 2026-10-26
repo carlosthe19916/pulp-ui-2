@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 /**
  * Content-side writes from a content unit's detail page: add the unit to a

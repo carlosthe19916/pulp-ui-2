@@ -1,4 +1,4 @@
-import { expect, test } from "../fixtures";
+import { expect, test } from "@support/fixtures";
 
 /**
  * The OpenShift-style domain context selector is shown on content pages only when

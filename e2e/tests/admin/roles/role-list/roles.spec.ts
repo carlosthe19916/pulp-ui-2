@@ -1,16 +1,16 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { openViaNav } from "../../../helpers/nav";
-import type { PulpApi } from "../../../helpers/pulp-api";
-import { uniqueName } from "../../../helpers/unique";
-import { DataTable } from "../../../pom/DataTable";
-import { PermissionTags } from "../../../pom/PermissionTags";
+import { expect, test } from "@support/fixtures";
+import { openViaNav } from "@support/helpers/nav";
+import type { PulpApi } from "@support/helpers/pulp-api";
+import { uniqueName } from "@support/helpers/unique";
+import { DataTable } from "@support/pom/DataTable";
+import { PermissionTags } from "@support/pom/PermissionTags";
 import {
   RoleAssignmentsTab,
   type RoleOwnerKind,
-} from "../../../pom/RoleAssignmentsTab";
-import { RolesPage } from "../../../pom/RolesPage";
+} from "@support/pom/RoleAssignmentsTab";
+import { RolesPage } from "@support/pom/RolesPage";
 
 // Scenarios: e2e/specs/roles.md (ROL-*). Assigning roles to users/groups is on
 // those detail pages (users.md / groups.md Roles tab).

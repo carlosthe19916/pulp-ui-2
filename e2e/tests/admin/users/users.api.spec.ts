@@ -1,5 +1,5 @@
-import { expect, test } from "../../fixtures";
-import { STRONG_PASSWORD, uniqueName } from "../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { STRONG_PASSWORD, uniqueName } from "@support/helpers/unique";
 
 // Contract tests: the server's own accept/reject rules for users, checked over
 // REST (no browser). The UI only has to *show* a server error, which is a form

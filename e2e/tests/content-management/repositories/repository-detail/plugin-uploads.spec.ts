@@ -1,13 +1,9 @@
-import path from "node:path";
-
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
-import type { ContentPage } from "../../../pom/ContentPage";
-
-const data = (name: string) =>
-  path.join(__dirname, "..", "..", "..", "data", name);
+import { dataFile } from "@support/dataFile";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
+import type { ContentPage } from "@support/pom/ContentPage";
 
 const openRepository = async (
   repositoriesPage: ContentPage,
@@ -53,7 +49,7 @@ test.describe("Plugin uploads", () => {
 
       await headerAction(page, "Upload content…");
       const dialog = page.getByRole("dialog", { name: /Upload content to/ });
-      await dialog.locator('input[type="file"]').setInputFiles(data(file));
+      await dialog.locator('input[type="file"]').setInputFiles(dataFile(file));
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
 
       // The async create waits for two tasks (create, then modify).
@@ -79,7 +75,7 @@ test.describe("Plugin uploads", () => {
     const dialog = page.getByRole("dialog", { name: /Import an archive/ });
     await dialog
       .locator('input[type="file"]')
-      .setInputFiles(data("ostree-small.tar"));
+      .setInputFiles(dataFile("ostree-small.tar"));
     await dialog
       .getByRole("textbox", { name: "Repository name" })
       .fill("small");

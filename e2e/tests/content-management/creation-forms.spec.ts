@@ -1,5 +1,5 @@
-import { expect, test } from "../fixtures";
-import { uniqueName } from "../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 /** Last path segment of a pulp_href, e.g. the publication's UUID. */
 const idFromHref = (href: string): string =>

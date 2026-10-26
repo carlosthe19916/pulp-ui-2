@@ -7,7 +7,15 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@support/*": ["./support/*"]
+    }
   },
-  "include": ["playwright.config.ts", "playwright.local.ts", "tests/**/*.ts"]
+  "include": [
+    "playwright.config.ts",
+    "playwright.local.ts",
+    "tests/**/*.ts",
+    "support/**/*.ts"
+  ]
 }

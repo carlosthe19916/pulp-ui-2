@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { mockInFlightTask } from "../../../helpers/taskMock";
-import { uniqueName } from "../../../helpers/unique";
-import type { ContentPage } from "../../../pom/ContentPage";
+import { expect, test } from "@support/fixtures";
+import { mockInFlightTask } from "@support/helpers/taskMock";
+import { uniqueName } from "@support/helpers/unique";
+import type { ContentPage } from "@support/pom/ContentPage";
 
 /** Opens a repository's detail page from the list. */
 const openRepository = async (

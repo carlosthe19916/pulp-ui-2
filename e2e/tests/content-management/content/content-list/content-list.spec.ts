@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 /**
  * The global Content page is a read-only, cross-type list rendered as a PatternFly DataList

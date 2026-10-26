@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 test.describe("Content guards", () => {
   test("creates, edits and deletes a header guard", async ({

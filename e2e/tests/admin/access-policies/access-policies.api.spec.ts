@@ -1,4 +1,4 @@
-import { expect, test } from "../../fixtures";
+import { expect, test } from "@support/fixtures";
 
 // The server's validation of access-policy edits, over REST. Only the *rejected*
 // (400) shapes are tested here: they change nothing, so no policy is mutated and

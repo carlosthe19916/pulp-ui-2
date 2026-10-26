@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { delayApi } from "../../../helpers/delayApi";
+import { expect, test } from "@support/fixtures";
+import { delayApi } from "@support/helpers/delayApi";
 import {
   type Gate,
   NO_CHANGE,
@@ -11,15 +11,15 @@ import {
   permissionsFor,
   permissionsSettled,
   seedGroup,
-} from "../../../helpers/groups";
-import { openViaNav } from "../../../helpers/nav";
-import type { IGroupRecord } from "../../../helpers/pulp-api";
-import { uniqueName } from "../../../helpers/unique";
-import { BatchAddModal } from "../../../pom/BatchAddModal";
-import { ConfirmModal } from "../../../pom/ConfirmModal";
-import { GroupDetailPage } from "../../../pom/GroupDetailPage";
-import { GroupsPage } from "../../../pom/GroupsPage";
-import { UserDetailPage } from "../../../pom/UserDetailPage";
+} from "@support/helpers/groups";
+import { openViaNav } from "@support/helpers/nav";
+import type { IGroupRecord } from "@support/helpers/pulp-api";
+import { uniqueName } from "@support/helpers/unique";
+import { BatchAddModal } from "@support/pom/BatchAddModal";
+import { ConfirmModal } from "@support/pom/ConfirmModal";
+import { GroupDetailPage } from "@support/pom/GroupDetailPage";
+import { GroupsPage } from "@support/pom/GroupsPage";
+import { UserDetailPage } from "@support/pom/UserDetailPage";
 
 // Scenarios: e2e/specs/groups.md (list, permissions, create, edit, delete).
 

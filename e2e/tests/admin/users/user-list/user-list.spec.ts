@@ -1,14 +1,14 @@
 import type { Page } from "@playwright/test";
 
-import { expect, test } from "../../../fixtures";
-import { delayApi } from "../../../helpers/delayApi";
-import { openViaNav } from "../../../helpers/nav";
-import { STRONG_PASSWORD, uniqueName } from "../../../helpers/unique";
-import { COL, cell, filledUser } from "../../../helpers/users";
-import { ConfirmModal } from "../../../pom/ConfirmModal";
-import { FormModal } from "../../../pom/FormModal";
-import { UserDetailPage } from "../../../pom/UserDetailPage";
-import type { UsersPage } from "../../../pom/UsersPage";
+import { expect, test } from "@support/fixtures";
+import { delayApi } from "@support/helpers/delayApi";
+import { openViaNav } from "@support/helpers/nav";
+import { STRONG_PASSWORD, uniqueName } from "@support/helpers/unique";
+import { COL, cell, filledUser } from "@support/helpers/users";
+import { ConfirmModal } from "@support/pom/ConfirmModal";
+import { FormModal } from "@support/pom/FormModal";
+import { UserDetailPage } from "@support/pom/UserDetailPage";
+import type { UsersPage } from "@support/pom/UsersPage";
 
 // Scenarios: e2e/specs/users.md (list, create, edit, delete).
 

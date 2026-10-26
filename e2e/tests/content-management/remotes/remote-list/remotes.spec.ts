@@ -1,5 +1,5 @@
-import { expect, test } from "../../../fixtures";
-import { uniqueName } from "../../../helpers/unique";
+import { expect, test } from "@support/fixtures";
+import { uniqueName } from "@support/helpers/unique";
 
 const FILE_URL = "https://fixtures.pulpproject.org/file/PULP_MANIFEST";
 const FILE_URL_2 = "https://fixtures.pulpproject.org/file2/PULP_MANIFEST";
