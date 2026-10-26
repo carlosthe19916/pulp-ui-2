@@ -12,6 +12,8 @@ must restore the policy to its default afterwards, even when it fails.
 
 ### ACP-LIST-01 Page and row content
 
+Summary: The Access policies page shows its heading and description, 20 rows per page with viewset, statements, status and Edit/Reset, and no create or delete.
+
 When I open Access policies from the Administration navigation
 Then the heading is "Access policies", the nav item is highlighted, and the page text reads "Each
 policy decides who may call one API endpoint. Changing them is advanced; reset a policy to restore
@@ -23,6 +25,8 @@ Customized once edited — and row actions "Edit" and "Reset to default"
 ## Edit
 
 ### ACP-EDT-02 Values Pulp accepts but that break the endpoint
+
+Summary: Policy values Pulp saves without checking (empty statements, a missing principal, bad scoping) break the guarded endpoint afterwards.
 
 Serial
 
@@ -40,6 +44,8 @@ Then <outcome>
 
 ### ACP-EDT-03 A successful save
 
+Summary: Saving valid statements marks the policy Customized and enables Reset; re-saving keeps it Customized.
+
 Serial
 
 Given a policy with Status Default
@@ -54,6 +60,8 @@ every save)
 
 ### ACP-RST-01 Reset is only offered for customized policies
 
+Summary: “Reset to default” is disabled for a default policy and enabled for a customized one.
+
 When I open the row actions of a <status> policy
 Then "Reset to default" is <state>
 
@@ -65,6 +73,8 @@ Then "Reset to default" is <state>
 Serial (for the customized row)
 
 ### ACP-RST-02 Reset restores the default
+
+Summary: Resetting a customized policy restores its default statements, hooks and scoping and marks it Default again.
 
 Serial
 
@@ -79,6 +89,8 @@ Statements count is back to the default, Edit shows the default values for all t
 
 ### ACP-RST-03 A failed reset
 
+Summary: A reset the server rejects shows a danger toast and keeps the dialog open (manual: needs an uninstalled plugin).
+
 Manual
 
 Given a customized policy whose plugin is no longer installed
@@ -92,6 +104,8 @@ this is the only way a reset fails.
 
 ### ACP-PERM-01 Only superusers can see or change access policies
 
+Summary: A non-superuser opening Access policies sees “403: Access denied” with no editable rows.
+
 Auth: second-user
 
 Given a second user who is not a superuser
@@ -101,6 +115,8 @@ Then the table shows "403: Access denied" and there is no row to edit or reset
 ## Effect
 
 ### ACP-EFF-01 A policy change takes effect
+
+Summary: Tightening the tasks policy to admins-only blocks a non-superuser from the Tasks list until it is reset.
 
 Auth: second-user
 Serial

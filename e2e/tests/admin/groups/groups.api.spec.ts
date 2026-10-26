@@ -6,10 +6,7 @@ import { uniqueName } from "@support/helpers/unique";
 const errorText = (body: unknown): string => JSON.stringify(body);
 
 test.describe("Groups API contract", () => {
-  test("GRP-CRE-02 name rules (unique, bounded, non-blank)", async ({
-    api,
-    cleanup,
-  }) => {
+  test("name rules (unique, bounded, non-blank)", async ({ api, cleanup }) => {
     const existing = cleanup.group(uniqueName("group"));
     await api.createGroup(existing);
 
@@ -34,10 +31,7 @@ test.describe("Groups API contract", () => {
     });
   });
 
-  test("GRP-USR membership add, no-op and unknown user", async ({
-    api,
-    cleanup,
-  }) => {
+  test("membership add, no-op and unknown user", async ({ api, cleanup }) => {
     const group = await api.createGroup(cleanup.group(uniqueName("group")));
     const user = cleanup.user(uniqueName("user"));
     await api.createUser({ username: user });
@@ -63,7 +57,7 @@ test.describe("Groups API contract", () => {
     });
   });
 
-  test("GRP-DEL deleting a group cascades its memberships", async ({
+  test("deleting a group cascades its memberships", async ({
     api,
     cleanup,
   }) => {

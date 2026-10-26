@@ -8,10 +8,7 @@ const VIEW_TASK = "core.view_task";
 const LOCKED_ROLE = "core.task_owner";
 
 test.describe("Roles API contract", () => {
-  test("ROL-CRE-02 name is unique and has no length limit", async ({
-    api,
-    cleanup,
-  }) => {
+  test("name is unique and has no length limit", async ({ api, cleanup }) => {
     const existing = await api.createRole({
       name: cleanup.role(uniqueName("role")),
     });
@@ -41,7 +38,7 @@ test.describe("Roles API contract", () => {
     });
   });
 
-  test("ROL-CRE-04 permission validation", async ({ api, cleanup }) => {
+  test("permission validation", async ({ api, cleanup }) => {
     for (const [label, permission, message] of [
       [
         "unknown codename",
@@ -70,7 +67,7 @@ test.describe("Roles API contract", () => {
     }
   });
 
-  test("ROL-EDT-03 description clears only with null, not an empty string", async ({
+  test("description clears only with null, not an empty string", async ({
     api,
     cleanup,
   }) => {
@@ -92,9 +89,7 @@ test.describe("Roles API contract", () => {
     });
   });
 
-  test("ROL-LOCK-01 a locked role cannot be edited or deleted", async ({
-    api,
-  }) => {
+  test("a locked role cannot be edited or deleted", async ({ api }) => {
     const locked = await api.role(LOCKED_ROLE);
     expect(locked).toBeTruthy();
     await test.step("edit → 403 locked", async () => {

@@ -28,8 +28,11 @@ Put each scenario in the **cheapest layer that can prove it** (`e2e/specs/README
 
 Admin suites derive from the use cases in `e2e/specs/**/*.md`.
 
-- **One test per scenario ID**, title starting with the ID (`USR-CRE-02 username`);
-  the coverage check asserts every `### ID` appears in a title.
+- Each test is tagged `@<ID>` (`{ tag: "@USR-CRE-02" }`, `--grep` runs one scenario); its
+  title, `spec` annotation and inline JSDoc block are **generated** from the spec by
+  `npm run spec:links:fix -w e2e` — edit the spec's `Summary:`/body, not the generated parts.
+  `npm run spec:links` (CI) verifies them and that every `### ID` ↔ a tagged test. (Split or
+  `${…}`-template tests keep their own titles.)
 - Example-table rows are `test.step(row.label, …)` **inside** that one test, sharing a
   single page load; the report still pins failures to each step. Loop shared behaviour
   (lists, forms, dialogs) over one descriptor array, not a copy per screen.
@@ -115,8 +118,9 @@ Pass/fail rubric for `/eval`. Check changed files under `e2e/`.
       or unsplit entity, area root for a whole-area spec); a both-surfaces test is in
       the `*-list` spec; `test` / `expect` and page objects come from `@support/*`
       (no `../..` infra imports), page objects extending `DataViewList`.
-- [ ] An admin test's title starts with its `e2e/specs` ID; tables are looped as
-      `test.step`, not copied; markers map to `fixme` / `skip` / `fail`.
+- [ ] An admin test is tagged `@<ID>`, its title/annotation/JSDoc are generated from the
+      spec and `npm run spec:links` passes; tables are looped as `test.step`, not copied;
+      markers map to `fixme` / `skip` / `fail`.
 - [ ] Locators are role / label / text based (no CSS / `#id` / `.pf-*` in specs;
       required fields via `getByRole("textbox", …)`); web-first assertions, no
       `waitForTimeout`, waits tolerant of a cache-served refetch.

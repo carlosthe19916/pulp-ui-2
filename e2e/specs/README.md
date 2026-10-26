@@ -7,7 +7,9 @@ scenario changes here first.
 ## Test layering
 
 Tests live in **three layers**; these specs describe the e2e layer. Each scenario is covered by
-exactly one layer (its ID appears in that layer's test title):
+exactly one layer. In the e2e layer the scenario's ID is a Playwright **tag** (`@USR-CRE-01`) on
+the test, and this scenario's text is generated as a JSDoc block above it; `npm run spec:links`
+regenerates that block and enforces that every `### ID` here has a tagged test and vice versa.
 
 - **Component (Vitest)** — `client/src/app/**/*.test.tsx`: client-only behaviour with the data
   hooks mocked — form validation messages, modal defaults and submit wiring, confirm-dialog
@@ -41,7 +43,9 @@ navigation end to end:
 ## Writing a scenario
 
 ```markdown
-### EXAMPLE-01 Password length boundary
+### EXAMPLE-01 Password length
+
+Summary: Creating a user rejects a blank or too-short password and accepts an 8-character one.
 
 Given I open "Create user" and enter a valid username
 When I enter the password <password> and submit
@@ -56,6 +60,10 @@ Then <outcome>
 
 - **ID**: `<AREA>-<SECTION>-<NN>`. IDs are unique across all files and are never renumbered or
   reused; a retired scenario is deleted, not recycled.
+- **Summary** (required): a one-line sentence, directly under the heading, describing what the
+  scenario proves. It becomes the e2e **test title** (for a scenario realized by a single test);
+  `npm run spec:links` sets and verifies it. Keep the `### <ID> <label>` heading itself a short
+  label — the summary carries the full human description.
 - **Language**: what a user sees and does. Quote visible labels, titles, toasts and messages
   exactly. No selectors, component names, endpoints or code.
 - **Permutations (main cases, not exhaustive)**: a scenario that varies over inputs carries one

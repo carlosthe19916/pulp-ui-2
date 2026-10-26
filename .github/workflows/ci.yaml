@@ -28,6 +28,8 @@ jobs:
         run: npm run lint
       - name: Check formatting
         run: npm run format
+      - name: Check e2e spec links
+        run: npm run spec:links -w e2e
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Test

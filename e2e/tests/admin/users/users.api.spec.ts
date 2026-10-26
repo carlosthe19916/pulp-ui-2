@@ -9,7 +9,7 @@ import { STRONG_PASSWORD, uniqueName } from "@support/helpers/unique";
 const errorText = (body: unknown): string => JSON.stringify(body);
 
 test.describe("Users API contract", () => {
-  test("USR-CRE-02 username rules (unique, bounded, non-blank)", async ({
+  test("username rules (unique, bounded, non-blank)", async ({
     api,
     cleanup,
   }) => {
@@ -55,7 +55,7 @@ test.describe("Users API contract", () => {
     });
   });
 
-  test("USR-CRE-03 password rules", async ({ api, cleanup }) => {
+  test("password rules", async ({ api, cleanup }) => {
     for (const [label, password, message] of [
       ["too common", "password", "This password is too common."],
       ["entirely numeric", "12345678", "This password is entirely numeric."],
@@ -72,7 +72,7 @@ test.describe("Users API contract", () => {
     }
   });
 
-  test("USR-CRE-04 email rules", async ({ api, cleanup }) => {
+  test("email rules", async ({ api, cleanup }) => {
     await test.step("an address without a TLD is rejected", async () => {
       const r = await api.attemptCreate("users", {
         username: cleanup.user(uniqueName("user")),

@@ -19,9 +19,7 @@ const errorText = (body: unknown): string => {
 };
 
 test.describe("Access policies API contract", () => {
-  test("ACP-EDT-02 rejects malformed statements and creation hooks", async ({
-    api,
-  }) => {
+  test("rejects malformed statements and creation hooks", async ({ api }) => {
     const { results } = await api.getJson<{ results: { pulp_href: string }[] }>(
       api.hrefOf("access_policies"),
       { limit: 1 },

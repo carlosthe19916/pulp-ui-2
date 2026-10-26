@@ -5,7 +5,9 @@
   "scripts": {
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:local": "PULP_API_URL=${PULP_API_URL:-http://localhost:5003} playwright test --config playwright.local.ts"
+    "test:local": "PULP_API_URL=${PULP_API_URL:-http://localhost:5003} playwright test --config playwright.local.ts",
+    "spec:links": "node scripts/spec-links.mjs",
+    "spec:links:fix": "node scripts/spec-links.mjs --write"
   },
   "dependencies": {
     "@playwright/test": "^1.63.0"
