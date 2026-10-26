@@ -75,4 +75,4 @@ backend. Paths drop the `/api/pulp/{domain}/api/v3/` prefix.
 Galaxy (`/pulp_ansible/…`), the container registry (`/v2/`, bearer tokens), PyPI (`/pypi/…`)
 and the content app aren't under `/api`, so the dev proxy doesn't reach them. Galaxy search and
 the PyPI index only reflect served (latest) content. See
-[ADR 0010](../adr/0010-rest-api-only.md).
+[ADR 0007](../adr/0007-rest-api-only.md).

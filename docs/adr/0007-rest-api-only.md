@@ -4,7 +4,7 @@ description: The UI calls only the Pulp REST API — no proxies to Galaxy, regis
 status: Accepted
 ---
 
-# 0010. The UI uses only the Pulp REST API
+# 0007. The UI uses only the Pulp REST API
 
 ## Context
 

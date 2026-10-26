@@ -4,7 +4,7 @@ description: Async writes show started/finished toasts, server-derived task stat
 status: Accepted
 ---
 
-# 0008. Long-running work is shown as tasks
+# 0006. Long-running work is shown as tasks
 
 ## Context
 

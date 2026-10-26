@@ -12,20 +12,16 @@ and `/eval` checks both on every change.
 To change a decision, add a new record with the next number, set the old one's `status` to
 `Superseded by NNNN`, and update the code rules that cover the changed behaviour.
 
-| #                                                     | Decision                                                 |
-| ----------------------------------------------------- | -------------------------------------------------------- |
-| [0001](0001-plugin-agnostic-generic-pages.md)         | One generic page per Pulp concept, for every plugin      |
-| [0002](0002-navigation-and-domains.md)                | Navigation follows Pulp's areas; pages are domain-scoped |
-| [0003](0003-detail-pages-and-expandable-rows.md)      | Repository is the hub; which entities get a page         |
-| [0004](0004-content-surfaces.md)                      | Content is shown globally, per unit and per version      |
-| [0005](0005-per-plugin-browse.md)                     | Each plugin browses content the way its ecosystem does   |
-| [0006](0006-content-changes-target-latest-version.md) | Content changes create a version from the latest         |
-| [0007](0007-upload.md)                                | One upload flow for every uploadable content type        |
-| [0008](0008-async-task-feedback.md)                   | Long-running work is shown as tasks                      |
-| [0009](0009-plugin-actions.md)                        | Plugin actions share one action form                     |
-| [0010](0010-rest-api-only.md)                         | The UI uses only the Pulp REST API                       |
-| [0011](0011-permission-aware-actions.md)              | Actions the user can't run are disabled, not hidden      |
-| [0012](0012-visual-conventions.md)                    | Empty states, confirmations and colour                   |
+| #                                                | Decision                                                 |
+| ------------------------------------------------ | -------------------------------------------------------- |
+| [0001](0001-plugin-specifics-are-data.md)        | Plugin specifics are data, not screens                   |
+| [0002](0002-navigation-and-domains.md)           | Navigation follows Pulp's areas; pages are domain-scoped |
+| [0003](0003-detail-pages-and-expandable-rows.md) | Repository is the hub; which entities get a page         |
+| [0004](0004-how-content-is-viewed.md)            | How content is viewed                                    |
+| [0005](0005-how-content-is-changed.md)           | How content is changed                                   |
+| [0006](0006-async-task-feedback.md)              | Long-running work is shown as tasks                      |
+| [0007](0007-rest-api-only.md)                    | The UI uses only the Pulp REST API                       |
+| [0008](0008-permission-aware-actions.md)         | Actions the user can't run are disabled, not hidden      |
 
 ## Template
 

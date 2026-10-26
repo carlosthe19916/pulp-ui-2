@@ -7,7 +7,7 @@ description: Use when adding or changing a TanStack Query mutation (useMutation)
 
 Constraints: `.rulesync/rules/toastr.md` (toasts, callbacks, `mutate` vs `mutateAsync`) and
 `.rulesync/rules/forms.md` (in-form submission errors), realising
-`docs/adr/0008-async-task-feedback.md`. Read them first; this skill shows how. The snippets
+`docs/adr/0006-async-task-feedback.md`. Read them first; this skill shows how. The snippets
 use a made-up `widget` resource.
 
 ## Where each piece goes

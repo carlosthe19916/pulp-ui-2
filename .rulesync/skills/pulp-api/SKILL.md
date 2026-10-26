@@ -44,7 +44,7 @@ one that has it, then `npm run generate`.
   `publications/python/pypi/` and `autopublish`; `TaskGroup.all_tasks_dispatched`;
   `DELETE artifacts/`.
 - **Outside `/api`:** Galaxy, the container registry, PyPI and the content app aren't
-  reachable through the dev proxy; don't build on them (ADR 0010).
+  reachable through the dev proxy; don't build on them (ADR 0007).
 
 ## 3. Wire it
 

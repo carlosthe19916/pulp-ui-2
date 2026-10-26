@@ -1,10 +1,10 @@
 ---
 name: permission-aware-actions
-description: Actions the user lacks permission for are disabled with a tooltip, not hidden; nothing disabled until permissions load; Access tab / Manage access.
+description: Actions the user lacks permission for are disabled with a tooltip, not hidden; nothing disabled until permissions load; Access tab / Manage access; forbidden or unknown objects show an error state in place of the page.
 status: Accepted
 ---
 
-# 0011. Actions the user can't run are disabled, not hidden
+# 0008. Actions the user can't run are disabled, not hidden
 
 ## Context
 
@@ -23,6 +23,8 @@ fail with a permission error.
       still enforces.
 - [ ] Objects with roles offer an **Access** tab (repository, remote) or a **Manage access**
       action (distribution, publication and others) to grant users and groups roles on them.
+- [ ] A forbidden or unknown object shows an error or unauthorized state in place of the page,
+      rather than a broken or empty page.
 
 ## Consequences
 

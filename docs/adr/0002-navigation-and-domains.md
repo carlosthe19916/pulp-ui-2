@@ -17,8 +17,8 @@ access policies, signing services and domains themselves are global.
       Management**, **Monitoring**, **Administration**. New pages join one of them.
 - [ ] Pages for domain-owned objects carry the domain in the URL; a domain selector switches
       it. Global objects have no domain in the URL.
-- [ ] Plugin-specific pages live in Content Management and appear only when that plugin is
-      installed.
+- [ ] Plugin-specific pages live in Content Management (they appear only when the plugin is
+      installed — see [0001](0001-plugin-specifics-are-data.md)).
 - [ ] When domains are disabled on the server, the Domains page says so instead of failing.
 
 ## Consequences
