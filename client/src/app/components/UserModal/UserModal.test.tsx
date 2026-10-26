@@ -12,7 +12,7 @@ import { UserModal } from "./UserModal";
 // The create/edit form's client behaviour (fields, validation, modal lifecycle,
 // submit wiring, in-form error display) is a component test; the real round-trip
 // and the server's own rejections are covered by e2e. The create modal is the
-// reference form for the generic FORM-* lifecycle scenarios.
+// reference form for the generic create/edit modal lifecycle.
 //
 // Full factory (no importOriginal): the partial form hangs browser-mode RPC. The
 // user form only uses these two hooks from this module.
@@ -69,7 +69,7 @@ const fillValid = async (screen: Awaited<ReturnType<typeof openCreate>>) => {
 };
 
 describe("UserModal — create form", () => {
-  it("USR-CRE-01 shows the fields with their defaults", async () => {
+  it("shows the fields with their defaults", async () => {
     const screen = await openCreate();
     await expect
       .element(screen.getByRole("textbox", { name: "Username" }))
@@ -86,7 +86,7 @@ describe("UserModal — create form", () => {
       .not.toBeChecked();
   });
 
-  it("FORM-01 shows the title and the Create / Cancel buttons", async () => {
+  it("shows the title and the Create / Cancel buttons", async () => {
     const screen = await openCreate();
     await expect
       .element(screen.getByRole("heading", { name: "Create User" }))
@@ -99,7 +99,7 @@ describe("UserModal — create form", () => {
       .toBeVisible();
   });
 
-  it("FORM-02 closing with Cancel or Escape fires onClose and sends nothing", async () => {
+  it("closing with Cancel or Escape fires onClose and sends nothing", async () => {
     const onClose = vi.fn();
     const screen = await render(<UserModal isOpen onClose={onClose} />);
     await screen.getByRole("textbox", { name: "Username" }).fill("alice");
@@ -109,7 +109,7 @@ describe("UserModal — create form", () => {
     expect(createMutate).not.toHaveBeenCalled();
   });
 
-  it("FORM-03 a freshly opened create form starts empty", async () => {
+  it("a freshly opened create form starts empty", async () => {
     // The modal mounts its form only while open, so every open is a fresh form.
     const screen = await openCreate();
     await expect
@@ -118,7 +118,7 @@ describe("UserModal — create form", () => {
     await expect.element(password(screen)).toHaveValue("");
   });
 
-  it("FORM-06 shows the required errors when submitted untouched", async () => {
+  it("shows the required errors when submitted untouched", async () => {
     const screen = await openCreate();
     await screen.getByRole("button", { name: "Create", exact: true }).click();
     await expect
@@ -130,7 +130,7 @@ describe("UserModal — create form", () => {
     expect(createMutate).not.toHaveBeenCalled();
   });
 
-  it("FORM-05 flags a short password and clears the error when fixed", async () => {
+  it("flags a short password and clears the error when fixed", async () => {
     const screen = await openCreate();
     await password(screen).fill("short");
     await expect
@@ -142,7 +142,7 @@ describe("UserModal — create form", () => {
       .not.toBeInTheDocument();
   });
 
-  it("FORM-05 flags a malformed email while typing", async () => {
+  it("flags a malformed email while typing", async () => {
     const screen = await openCreate();
     await screen.getByRole("textbox", { name: "Email" }).fill("not-an-email");
     await expect
@@ -150,7 +150,7 @@ describe("UserModal — create form", () => {
       .toBeVisible();
   });
 
-  it("FORM-07 submits valid values (Enter) through the create mutation", async () => {
+  it("submits valid values (Enter) through the create mutation", async () => {
     const screen = await openCreate();
     await fillValid(screen);
     await password(screen).click();
@@ -159,7 +159,7 @@ describe("UserModal — create form", () => {
     expect(createMutate.mock.calls[0][0]).toMatchObject({ username: "alice" });
   });
 
-  it("FORM-08 disables the submit button while a save is pending", async () => {
+  it("disables the submit button while a save is pending", async () => {
     pending = true;
     const screen = await openCreate();
     await expect
@@ -167,7 +167,7 @@ describe("UserModal — create form", () => {
       .toBeDisabled();
   });
 
-  it("FORM-09 shows the server's rejection in the form", async () => {
+  it("shows the server's rejection in the form", async () => {
     nextResult = "error";
     const screen = await openCreate();
     await fillValid(screen);
@@ -177,7 +177,7 @@ describe("UserModal — create form", () => {
       .toBeVisible();
   });
 
-  it("FORM-11 the in-form error clears on the next submit", async () => {
+  it("the in-form error clears on the next submit", async () => {
     nextResult = "error";
     const onClose = vi.fn();
     const screen = await render(<UserModal isOpen onClose={onClose} />);
@@ -191,7 +191,7 @@ describe("UserModal — create form", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("FORM-04 reopening after a server error starts fresh", async () => {
+  it("reopening after a server error starts fresh", async () => {
     nextResult = "error";
     const screen = await render(<UserModal isOpen onClose={vi.fn()} />);
     await fillValid(screen);

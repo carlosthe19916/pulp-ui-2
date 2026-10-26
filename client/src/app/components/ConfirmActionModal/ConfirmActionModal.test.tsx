@@ -8,7 +8,7 @@ import { ConfirmActionModal } from "./ConfirmActionModal";
 // so its content, button styling and dismissal are component-tested here; the real
 // confirm round-trip and server failures stay in e2e.
 describe("ConfirmActionModal", () => {
-  it("CONF-01 shows the title, body and confirm/cancel buttons", async () => {
+  it("shows the title, body and confirm/cancel buttons", async () => {
     const screen = await render(
       <ConfirmActionModal
         isOpen
@@ -34,7 +34,7 @@ describe("ConfirmActionModal", () => {
       .toBeVisible();
   });
 
-  it("CONF-01 uses the given confirm label and a primary (non-danger) remove", async () => {
+  it("uses the given confirm label and a primary (non-danger) remove", async () => {
     const screen = await render(
       <ConfirmActionModal
         isOpen
@@ -51,7 +51,7 @@ describe("ConfirmActionModal", () => {
     await expect.element(remove).toHaveClass(/pf-m-primary/);
   });
 
-  it("CONF-03 calls onConfirm when the confirm button is clicked", async () => {
+  it("calls onConfirm when the confirm button is clicked", async () => {
     const onConfirm = vi.fn();
     const screen = await render(
       <ConfirmActionModal
@@ -66,7 +66,7 @@ describe("ConfirmActionModal", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
-  it("CONF-02 dismisses with Cancel, the × button and Escape", async () => {
+  it("dismisses with Cancel, the × button and Escape", async () => {
     for (const dismiss of ["Cancel", "Close"] as const) {
       const onCancel = vi.fn();
       const screen = await render(

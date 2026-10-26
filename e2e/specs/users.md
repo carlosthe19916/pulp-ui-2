@@ -64,12 +64,6 @@ Then "Create user" is enabled, and submitting fails with the server's reason ([F
 > rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
 > **server** outcomes and the **main** cases, not every permutation.
 
-### USR-CRE-01 Form fields and defaults
-
-When I click "Create user"
-Then the "Create User" modal shows, in order: Username (required), Password (required, hidden
-text), Email, First name, Last name, Active (checked), Staff status (unchecked)
-
 ### USR-CRE-02 Username
 
 The server's username rules (trimmed, unique, blank, 150-char limit) are an **api contract**

@@ -33,14 +33,14 @@ beforeEach(() => {
 });
 
 describe("GroupModal — create form", () => {
-  it("GRP-CRE-01 shows a single required Name field", async () => {
+  it("shows a single required Name field", async () => {
     const screen = await render(<GroupModal isOpen onClose={vi.fn()} />);
     await expect
       .element(screen.getByRole("textbox", { name: "Name" }))
       .toBeVisible();
   });
 
-  it("GRP-CRE-02 requires a name", async () => {
+  it("requires a name", async () => {
     const screen = await render(<GroupModal isOpen onClose={vi.fn()} />);
     await screen.getByRole("button", { name: "Create", exact: true }).click();
     await expect.element(screen.getByText("Name is required")).toBeVisible();

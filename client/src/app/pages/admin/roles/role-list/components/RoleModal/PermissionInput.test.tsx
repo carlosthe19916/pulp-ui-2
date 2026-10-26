@@ -69,7 +69,7 @@ describe("PermissionInput", () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith(["core.change_task"]);
   });
 
-  it("ROL-PERM-02 Backspace on an empty input removes the last permission", async () => {
+  it("Backspace on an empty input removes the last permission", async () => {
     const onChange = vi.fn();
     const screen = await render(
       <PermissionInput id="perms" value={["a.x", "b.x"]} onChange={onChange} />,
@@ -79,7 +79,7 @@ describe("PermissionInput", () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith(["a.x"]);
   });
 
-  it("ROL-PERM-02 Backspace with text only edits the text, keeping the tags", async () => {
+  it("Backspace with text only edits the text, keeping the tags", async () => {
     const onChange = vi.fn();
     const screen = await render(
       <PermissionInput id="perms" value={["a.x"]} onChange={onChange} />,
@@ -91,7 +91,7 @@ describe("PermissionInput", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("ROL-PERM-02 Backspace with no tags does nothing", async () => {
+  it("Backspace with no tags does nothing", async () => {
     const onChange = vi.fn();
     const screen = await render(
       <PermissionInput id="perms" value={[]} onChange={onChange} />,
@@ -101,7 +101,7 @@ describe("PermissionInput", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('ROL-PERM-03 folds past 10 permissions behind "N more"', async () => {
+  it('folds past 10 permissions behind "N more"', async () => {
     const many = Array.from(
       { length: 15 },
       (_, i) => `core.p${String(i).padStart(2, "0")}_task`,

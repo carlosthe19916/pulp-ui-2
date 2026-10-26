@@ -113,12 +113,6 @@ Then locked roles are listed and selectable, and adding one succeeds
 > rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
 > **server** outcomes and the **main** cases, not every permutation.
 
-### ROL-CRE-01 Form
-
-When I click "Create Role"
-Then the "Create Role" modal shows Name (required), Description and Permissions (an input
-with the hint "Type a permission (e.g. core.view_task) and press Enter")
-
 ### ROL-CRE-02 Name
 
 The server's name rules (plugin prefix, no length limit, blank, unique across custom and locked)

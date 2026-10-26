@@ -71,7 +71,7 @@ Then the modal "Edit policy "<viewset>"" shows:
 
 Serial
 
-Client JSON validation (empty, `[`) is a component test ([FORM-05](shared/form-modal.md#form-05-validation-appears-while-typing));
+Client JSON validation (empty, `[`) is a component test (the Edit policy modal's `*.test.tsx`);
 the server's 400-shape rejections (not-a-list, item-not-an-object) are an **api contract** test
 (`access-policies.api.spec.ts`). Only e2e can show the ⚠ values Pulp saves without checking,
 whose damage shows on the endpoint afterwards — keep the main representatives:
@@ -105,8 +105,7 @@ gap kept once as [USR-EDT-05](users.md#usr-edt-05-clearing-a-text-field) (Pulp r
 empty/null value, so the saved value stays); not tested separately per entity.
 
 ACP-EDT-04 (several invalid fields at once) and ACP-EDT-06 (the server error clears on close) are
-generic modal behaviour, covered by the component tests ([FORM-05](shared/form-modal.md#form-05-validation-appears-while-typing),
-[FORM-04](shared/form-modal.md#form-04-reopening-after-a-server-error-starts-fresh)).
+generic modal behaviour, covered by the form modal's component tests (`*Modal.test.tsx`).
 
 ### ACP-EDT-07 Editing an already customized policy
 

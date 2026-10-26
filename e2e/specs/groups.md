@@ -116,11 +116,6 @@ Then "Create Group" is enabled, and submitting fails with the server's reason ([
 > rows) are component tests (see the form modal's `*.test.tsx`). The rows below keep only the
 > **server** outcomes and the **main** cases, not every permutation.
 
-### GRP-CRE-01 Form
-
-When I click "Create Group"
-Then the "Create Group" modal shows a single required field, Name
-
 ### GRP-CRE-02 Name
 
 The server's name rules (trimmed, unique, blank, 150-char limit) are an **api contract** test

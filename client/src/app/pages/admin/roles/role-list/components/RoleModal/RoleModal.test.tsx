@@ -34,7 +34,7 @@ beforeEach(() => {
 });
 
 describe("RoleModal — create form", () => {
-  it("ROL-CRE-01 shows Name, Description and the permission input", async () => {
+  it("shows Name, Description and the permission input", async () => {
     const screen = await render(<RoleModal isOpen onClose={vi.fn()} />);
     await expect
       .element(screen.getByRole("textbox", { name: "Name" }))
@@ -44,14 +44,14 @@ describe("RoleModal — create form", () => {
       .toBeVisible();
   });
 
-  it("ROL-CRE-02 requires a name", async () => {
+  it("requires a name", async () => {
     const screen = await render(<RoleModal isOpen onClose={vi.fn()} />);
     await screen.getByRole("button", { name: "Create", exact: true }).click();
     await expect.element(screen.getByText("Name is required")).toBeVisible();
     expect(createMutate).not.toHaveBeenCalled();
   });
 
-  it("ROL-CRE-04 submits with the permissions added in the input", async () => {
+  it("submits with the permissions added in the input", async () => {
     const screen = await render(<RoleModal isOpen onClose={vi.fn()} />);
     await screen.getByRole("textbox", { name: "Name" }).fill("custom.reader");
     await screen.getByRole("textbox", { name: "Add permission" }).click();

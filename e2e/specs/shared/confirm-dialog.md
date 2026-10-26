@@ -27,28 +27,6 @@ it is tested once (from the list); its only extra behaviour is CONF-06.
 
 ## Scenarios
 
-### CONF-01 Content
-
-When I open <dialog>
-Then the title is <title>, the body is <body> with the real names filled in, and the buttons
-are <confirm> (styled <style>) and "Cancel"
-
-Run for every dialog.
-
-### CONF-02 Dismissing
-
-Given I open <dialog>
-When I dismiss it with <how>
-Then the dialog closes, nothing changes and no toast appears
-
-| how            |
-| -------------- |
-| "Cancel"       |
-| the × button   |
-| the Escape key |
-
-Run every way on every dialog.
-
 ### CONF-03 Confirming
 
 Given I open <dialog> on a slow network
