@@ -1,70 +1,77 @@
 # Pulp UI
 
-React admin + browse UI for Pulp (pulpcore + plugins).
+A web console for [Pulp](https://pulpproject.org/) — the open source platform for managing
+repositories of software packages (RPM, Python, container images, Ansible content, files, and
+more) and serving them to consumers.
+
+Pulp is API-first, and Pulp UI puts a modern, [PatternFly](https://www.patternfly.org/)-based
+interface on top of that API so you can manage your content from the browser instead of the
+command line.
+
+**With Pulp UI you can:**
+
+- Define **remotes** (upstream sources) and **sync** them into **repositories**.
+- Inspect repository versions and the **content** inside them.
+- Create **publications** and expose them through **distributions**.
+- Follow **tasks**, manage **domains**, and administer **users, groups, and roles**.
 
 ## Quick Start
 
 ```bash
 npm ci
-npm run start:dev
-```
-
-Customize [.env](.env) as per your needs
-
-Open http://localhost:3000 and sign in via the browser login form when `AUTH=basic` (HTTP Basic Auth with credentials stored in browser storage; no auth env vars beyond `AUTH`). Vite proxies
-`/api` to `PULP_API_URL`. Pulp domain is the client constant `PULP_DOMAIN` in `client/src/app/Constants.ts` (default
-`"default"`), not an env var.
-
-Local Pulp setup: [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Environment variables
-
-Typed app env: `common/src/environment.ts` (`PulpEnvType` / `PULP_ENV`). Also used by Vite, Express, `entrypoint.sh`,
-Playwright, and CI.
-
-| Variable                     | Default                                  | Purpose                                                                                         |
-| ---------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `PULP_API_URL`               | `http://localhost:8080` (proxy fallback) | Upstream Pulp for `/api` proxy. Required in Docker/`entrypoint.sh`; recommended for `start:dev` |
-| `PULP_API_ROOT`              | `/pulp`                                  | Pulp `API_ROOT` the proxy rewrites                                                              |
-| `AUTH`                       | none, basic, oidc                        | Enable/Disable authentication                                                                   |
-| `OIDC_CLIENT_ID`             | frontend                                 | Set OIDC client                                                                                 |
-| `OIDC_SERVER_URL`            | `http://localhost:8090/realms/pulp`      | Set OIDC Server URL                                                                             |
-| `OIDC_SCOPE`                 | openid                                   | Set OIDC Scope                                                                                  |
-| `PORT`                       | `8080`                                   | Express listen port                                                                             |
-| `NODE_ENV`                   | `production`                             | `development` \| `production` \| `test`                                                         |
-| `VERSION`                    | `99.0.0`                                 | UI version (About dialog via `_env`)                                                            |
-| `UI_INGRESS_PROXY_BODY_SIZE` | `500m`                                   | Upload body size limit                                                                          |
-| `BRANDING`                   | `./branding`                             | Branding assets path (server-only)                                                              |
-| `BASE_URL`                   | `/`                                      | SPA public base path (e.g. GH Pages)                                                            |
-| `COVERAGE`                   | unset                                    | `true` → Istanbul client instrumentation                                                        |
-| `DEBUG`                      | unset (`1` in Docker image)              | `1` → log `PULP_ENV` + verbose proxy                                                            |
-| `NODE_EXTRA_CA_CERTS`        | unset                                    | TLS CA bundle; entrypoint may append cluster CAs                                                |
-| `E2E_USERNAME`               | `admin`                                  | Playwright login user                                                                           |
-| `E2E_PASSWORD`               | `password`                               | Playwright login password                                                                       |
-| `CI`                         | unset                                    | Playwright: forbid `.only`, retry once, 1 worker, no server reuse                               |
-
-`PORT`, `PULP_API_URL`, `PULP_API_ROOT`, and `BRANDING` are server-only (`SERVER_ENV_KEYS`) and stripped from browser
-`_env`. E2e/CI pass `PULP_API_URL` into `start:dev`; see `.github/workflows/ci-e2e.yaml`. For a pulpcore default root:
-
-```bash
 PULP_API_URL="http://localhost:8080" PULP_API_ROOT="/pulp" npm run start:dev
 ```
 
+- `PULP_API_URL` — where your Pulp backend is running.
+- `PULP_API_ROOT` — Pulp's `API_ROOT` (the default for a stock pulpcore install is `/pulp`).
+
+Then open <http://localhost:3000>. With the default `AUTH=basic`, sign in through the browser
+login form. The Pulp domain defaults to `"default"` and is switched from within the app.
+
+Need a local Pulp backend to point at? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Environment variables
+
+The essentials to get started:
+
+| Variable        | Default | Purpose                                         |
+| --------------- | ------- | ----------------------------------------------- |
+| `PULP_API_URL`  | —       | Base URL of the Pulp server to connect to       |
+| `PULP_API_ROOT` | `/pulp` | Pulp's `API_ROOT`; must match the server config |
+| `AUTH`          | `basic` | Authentication mode: `none`, `basic`, or `oidc` |
+
+See the [full environment variables reference](website/docs/configuration/environment.md) for
+OIDC, deployment, branding, and testing options.
+
 ## Project Structure
 
-npm workspaces: `common/` (env + branding), `client/` (React/Vite SPA), `server/` (Express), `e2e/` (Playwright).
+npm workspaces:
 
-Stack: React 19, TypeScript, Vite/Vitest, PatternFly 6, TanStack Query/Router/Table, Playwright, OpenAPI via
-`@hey-api/openapi-ts`.
+| Workspace | Contents                    |
+| --------- | --------------------------- |
+| `common/` | Env config + branding       |
+| `client/` | React / Vite SPA            |
+| `server/` | Express production server   |
+| `e2e/`    | Playwright end-to-end tests |
 
-Developer docs and architecture decision records: [docs/](docs/README.md).
+## Tech Stack
+
+React 19, TypeScript, PatternFly 6, and TanStack Query & Router.
+
+See the [full tech stack](docs/tech-stack.md) for the complete list.
 
 ## Scripts
 
-- `npm run start:dev` — build common + Vite client
-- `npm run build` — all workspaces
-- `npm run lint` / `npm run format` — checks
-- `npm run test` — unit tests
-- `npm run test:e2e` — Playwright (needs Pulp; see CONTRIBUTING)
-- `npm run coverage -w client` — Vitest coverage
-- `npm run generate` — regenerate OpenAPI client
+| Command             | Description                               |
+| ------------------- | ----------------------------------------- |
+| `npm run start:dev` | Run the app for local development         |
+| `npm run build`     | Build all workspaces                      |
+| `npm run lint`      | Type check + lint                         |
+| `npm run format`    | Format check                              |
+| `npm run test`      | Unit tests (Vitest)                       |
+| `npm run test:e2e`  | Playwright (needs Pulp; see CONTRIBUTING) |
+| `npm run generate`  | Regenerate the OpenAPI client             |
+
+See the [full scripts reference](docs/scripts.md) for every available script.
+
+Developer docs and architecture decision records: [docs/](docs/README.md).
