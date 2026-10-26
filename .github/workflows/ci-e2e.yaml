@@ -22,7 +22,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.BACKEND_IMAGE }}
-          key: pulp-backend-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          # Bump vN when the image build changes so the cached image is rebuilt.
+          key: pulp-backend-v2-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
 
       - name: Set up oci-env
         if: steps.cache.outputs.cache-hit != 'true'
@@ -32,6 +33,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           oci-env -e compose.ci.env compose build
+          # pulp_ostree builds PyGObject/pycairo from source at container start; bake
+          # in the dev libs the base image's drifting :latest no longer reliably ships.
+          printf '%s\n' \
+            'FROM localhost/oci_env/pulp:base' \
+            'RUN dnf -y install cairo-devel cairo-gobject-devel gobject-introspection-devel ostree-devel && dnf clean all' \
+            | docker build -t localhost/oci_env/pulp:base -f - .
           # Save pulp images for the matrix to load; fall back to all if none match.
           ids=$(docker images --format '{{.ID}} {{.Repository}}' \
             | awk 'tolower($2) ~ /pulp/ {print $1}' | sort -u)
@@ -99,7 +106,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.BACKEND_IMAGE }}
-          key: pulp-backend-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          key: pulp-backend-v2-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
 
       - name: Load cached backend image
         run: |
