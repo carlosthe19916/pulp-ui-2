@@ -175,6 +175,7 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 - Plain Playwright `.spec.ts` files in `e2e/tests/`, nested to mirror `client/src/app/pages/` down to the list/detail surface folder (`content-management/remotes/remote-list/remotes.spec.ts`, `admin/users/user-list/user-list.spec.ts`, `admin/users/user-details/user-details.spec.ts`). An entity's contract test (`users.api.spec.ts`) and an entity with no surface split (`system-management/domains/domains.spec.ts`) sit at the entity root; area-wide specs at the area root (`content-management/creation-forms.spec.ts`); cross-area specs (`seed`, `system-pages`) at the `tests/` root.
 - `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/support/` (`helpers/`, `fixtures.ts`, the page objects in `pom/`), imported through the `@support/*` alias.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
+- **Backend:** CI (`.github/workflows/ci-e2e.yaml`) builds the oci-env backend from source so it has the same plugin set as local dev (`DEV_SOURCE_PATH` in `compose.env`, including `pulp_npm` and `pulp_hugging_face`). The cloned backend versions are pinned in `plugin-versions.txt` (its plugin rows must match `DEV_SOURCE_PATH`), and a `build-backend` job caches the built image for the test matrix. Run the local suite against the same backend with `npm run test:local -w e2e` (see the `e2e-local` skill); details in `docs/internals/e2e-backend.md`.
 
 ## Branding
 

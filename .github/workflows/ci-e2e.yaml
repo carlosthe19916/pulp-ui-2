@@ -6,8 +6,40 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  BACKEND_IMAGE: /tmp/pulp-backend-image.tar
+
 jobs:
+  # Build the oci-env backend once and cache it for the e2e matrix.
+  build-backend:
+    runs-on: ubuntu-latest
+    name: build oci-env backend
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Restore backend image cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BACKEND_IMAGE }}
+          key: pulp-backend-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+
+      - name: Set up oci-env
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/pulp-oci-env
+
+      - name: Build backend image and save it
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          oci-env -e compose.ci.env compose build
+          # Save pulp images for the matrix to load; fall back to all if none match.
+          ids=$(docker images --format '{{.ID}} {{.Repository}}' \
+            | awk 'tolower($2) ~ /pulp/ {print $1}' | sort -u)
+          [ -n "$ids" ] || ids=$(docker images -q | sort -u)
+          docker save -o "${BACKEND_IMAGE}" $ids
+
   e2e:
+    needs: build-backend
     runs-on: ubuntu-latest
     name: e2e (${{ matrix.name }})
     strategy:
@@ -51,20 +83,35 @@ jobs:
               args: "--project=chromium --grep @smoke",
             }
     env:
-      PULP_API_URL: http://localhost:8080
+      PULP_API_URL: http://localhost:5003
       E2E_USERNAME: admin
       E2E_PASSWORD: password
-      # Consumed by docker-compose.yml to toggle the Pulp domains feature.
       PULP_DOMAIN_ENABLED: ${{ matrix.domains == 'enabled' }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Start Pulp
-        run: docker compose -f docker-compose.yml up -d
+      - name: Set up oci-env
+        uses: ./.github/actions/pulp-oci-env
+        with:
+          domain-enabled: ${{ matrix.domains == 'enabled' }}
+
+      - name: Restore backend image cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BACKEND_IMAGE }}
+          key: pulp-backend-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+
+      - name: Load cached backend image
+        run: |
+          # Fast path; compose up rebuilds if absent.
+          [ -f "${BACKEND_IMAGE}" ] && docker load -i "${BACKEND_IMAGE}" || true
+
+      - name: Start Pulp (oci-env)
+        run: oci-env -e compose.ci.env compose up -d
 
       - name: Wait for Pulp API
         run: |
-          for i in $(seq 1 90); do
+          for i in $(seq 1 180); do
             if curl -fsS "${PULP_API_URL}/api/pulp/api/v3/status/" >/dev/null; then
               echo "Pulp is ready"
               exit 0
@@ -73,13 +120,13 @@ jobs:
             sleep 5
           done
           echo "Pulp did not become ready in time"
-          docker compose -f docker-compose.yml logs
+          oci-env -e compose.ci.env compose logs --tail=200
           exit 1
 
       - name: Set Pulp admin password
         run: >
-          docker compose -f docker-compose.yml exec -T pulp
-          pulpcore-manager reset-admin-password --password "${E2E_PASSWORD}"
+          oci-env -e compose.ci.env pulpcore-manager
+          reset-admin-password --password "${E2E_PASSWORD}"
 
       - uses: actions/setup-node@v6
         with:
@@ -102,4 +149,4 @@ jobs:
 
       - name: Stop Pulp
         if: always()
-        run: docker compose -f docker-compose.yml down -v
+        run: oci-env -e compose.ci.env compose down -v

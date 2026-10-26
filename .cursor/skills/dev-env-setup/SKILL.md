@@ -37,6 +37,10 @@ Otherwise, show the missing ones and ask before cloning each one from upstream:
 
     git clone https://github.com/pulp/<repo>.git ../<repo>
 
+To match the versions CI builds against, clone the ref pinned for each repo in
+`plugin-versions.txt` (`git clone --branch <ref> ...`); that file is the record of which backend
+versions we clone, and its plugin rows must stay in sync with `DEV_SOURCE_PATH`.
+
 Never re-clone, pull, or touch a checkout that already exists.
 
 ## Step 4 — Install oci-env
