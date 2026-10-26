@@ -33,8 +33,7 @@ export class GroupDetailPage {
   ): Promise<GroupDetailPage> {
     await page.goto(`/admin/groups/${id}`);
     const detail = new GroupDetailPage(page, name);
-    // A full load waits on /status, the auth check and the suspended detail query.
-    await expect(detail.title).toBeVisible({ timeout: 15_000 });
+    await expect(detail.title).toBeVisible();
     return detail;
   }
 

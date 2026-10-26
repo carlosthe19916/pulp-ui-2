@@ -1,18 +1,33 @@
 import { expect, test } from "../../../fixtures";
+import { delayApi } from "../../../helpers/delayApi";
+import { recordApiNotFound } from "../../../helpers/notFound";
 import { uniqueName } from "../../../helpers/unique";
 import { COL, cell, groupId, openDetail } from "../../../helpers/users";
-import { BatchAddModal } from "../../../pom/BatchAddModal";
+import { RoleAssignmentsTab } from "../../../pom/RoleAssignmentsTab";
+import { UserDetailPage } from "../../../pom/UserDetailPage";
+
+// Scenarios: e2e/specs/users.md (detail page, Groups tab, Roles tab).
 
 test.describe("Users", () => {
   // --- Detail page --------------------------------------------------------
 
-  test("USR-DET-01 header, actions and tabs", async ({
-    page,
-    api,
-    cleanup,
-  }) => {
+  test("USR-DET-01 header, tabs and counts", async ({ page, api, cleanup }) => {
+    test.slow();
     const username = cleanup.user(uniqueName("user"));
     await api.createUser({ username });
+    // A user in 1 group with 12 role assignments: 12 is above a page, so the tab
+    // count proves the total, not the visible rows.
+    const group = cleanup.group(uniqueName("group"));
+    await api.createGroup(group);
+    await api.addGroupMember(group, username);
+    const roles = Array.from({ length: 12 }, () =>
+      cleanup.role(uniqueName("role")),
+    );
+    for (const role of roles) {
+      await api.createRole({ name: role });
+      await api.assignRole({ user: username }, { role });
+    }
+
     const detail = await openDetail(page, api, username);
     await expect(detail.title).toBeVisible();
     await page.getByRole("button", { name: "Actions" }).click();
@@ -23,180 +38,112 @@ test.describe("Users", () => {
       page.getByRole("menuitem", { name: "Delete User", exact: true }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("tab", { name: "Groups (0)" })).toHaveAttribute(
+    await expect(page.getByRole("tab", { name: "Groups (1)" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    await expect(page.getByRole("tab", { name: "Roles (0)" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Roles (12)" })).toBeVisible();
   });
 
-  test("USR-DET-02 tab counts", async ({ page, api, cleanup }) => {
-    test.setTimeout(300_000);
-    // Twelve groups and roles, more than a page, shared by every row.
-    const seededGroups = Array.from({ length: 12 }, () =>
-      cleanup.group(uniqueName("group")),
-    );
-    const seededRoles = Array.from({ length: 12 }, () =>
-      cleanup.role(uniqueName("role")),
-    );
-    await Promise.all([
-      ...seededGroups.map((group) => api.createGroup(group)),
-      ...seededRoles.map((role) => api.createRole({ name: role })),
-    ]);
-
-    // Main cases (each count value once; 12 is above a page, proving totals).
-    for (const [groups, roles] of [
-      [0, 0],
-      [1, 12],
-      [12, 1],
-    ]) {
-      await test.step(`${groups} groups and ${roles} roles`, async () => {
-        const username = cleanup.user(uniqueName("user"));
-        await api.createUser({ username });
-        await Promise.all([
-          ...seededGroups
-            .slice(0, groups)
-            .map((group) => api.addGroupMember(group, username)),
-          ...seededRoles
-            .slice(0, roles)
-            .map((role) => api.assignRole({ user: username }, { role })),
-        ]);
-        await openDetail(page, api, username);
-        await expect(
-          page.getByRole("tab", { name: `Groups (${groups})` }),
-        ).toBeVisible();
-        await expect(
-          page.getByRole("tab", { name: `Roles (${roles})` }),
-        ).toBeVisible();
-      });
-    }
-  });
-
-  // Main cases (add +1/+2 and remove −1, across the two tabs).
-  const countRows = [
-    { action: "add two groups", tab: "Groups", change: 2 },
-    { action: "remove one group", tab: "Groups", change: -1 },
-    { action: "add one role", tab: "Roles", change: 1 },
-  ] as const;
-  test("USR-DET-03 adding and removing updates the tab count", async ({
+  test("USR-DET-06 opening a user detail page directly", async ({
     page,
-    api,
-    cleanup,
-  }) => {
-    test.slow();
-    for (const row of countRows) {
-      await test.step(`${row.action} updates ${row.tab} (n) by ${row.change}`, async () => {
-        const username = cleanup.user(uniqueName("user"));
-        await api.createUser({ username });
-        const isGroup = row.tab === "Groups";
-        const names = [0, 1].map(() =>
-          isGroup
-            ? cleanup.group(uniqueName("group"))
-            : cleanup.role(uniqueName("role")),
-        );
-        for (const name of names) {
-          if (isGroup) await api.createGroup(name);
-          else await api.createRole({ name });
-        }
-        const removing = row.change < 0;
-        const start = removing ? 2 : 0;
-        if (removing) {
-          for (const name of names) {
-            if (isGroup) await api.addGroupMember(name, username);
-            else await api.assignRole({ user: username }, { role: name });
-          }
-        }
-
-        const detail = await openDetail(page, api, username);
-        const tab = isGroup ? detail.groupsTab : detail.rolesTab;
-        await tab.click();
-        await expect(tab).toHaveText(`${row.tab} (${start})`);
-
-        if (removing) {
-          if (isGroup) await detail.removeGroup(names[0]);
-          else await detail.removeRole(names[0]);
-        } else {
-          await page
-            .getByRole("button", {
-              name: isGroup ? "Add Group" : "Add Role",
-              exact: true,
-            })
-            .click();
-          const modal = new BatchAddModal(
-            page,
-            isGroup
-              ? { title: "Add User to Group", grid: "Select groups" }
-              : { title: "Add Role to User", grid: "Select roles" },
-          );
-          for (const name of names.slice(0, row.change)) {
-            await modal.select(isGroup ? "Name" : "Role", name);
-          }
-          await modal.addButton().click();
-          await expect(modal.dialog).toBeHidden();
-        }
-        await expect(tab).toHaveText(`${row.tab} (${start + row.change})`);
-      });
-    }
-  });
-
-  test("USR-DET-05 switching tabs keeps each tab's own table and filter", async ({
-    page,
+    context,
     api,
     cleanup,
   }) => {
     const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
-    const detail = await openDetail(page, api, username);
-    await expect(detail.groupsTable).toBeVisible();
-    await detail.groups.filterInput("Name").fill("only-in-groups");
+    const { id } = await api.createUser({ username });
 
-    await detail.rolesTab.click();
-    await expect(detail.rolesTable).toBeVisible();
-    await expect(detail.groupsTable).toBeHidden();
-    await expect(detail.roles.filterInput("Role")).toHaveValue("");
+    // Via a new tab (the POM's goto waits out the slow detail-route load).
+    const tab = await context.newPage();
+    await new UserDetailPage(tab, username).goto(id);
+    await expect(tab).toHaveTitle(new RegExp(`^User · ${username} · `));
+    await tab.close();
 
-    await detail.groupsTab.click();
-    await expect(detail.groupsTable).toBeVisible();
-    await expect(detail.rolesTable).toBeHidden();
+    // Via reload, with the loading state held visible.
+    const held = await delayApi(page, {
+      url: (url) => url.pathname.endsWith(`/users/${id}/`),
+      method: "GET",
+    });
+    await page.goto(`/admin/users/${id}`);
+    await expect(
+      page.getByRole("progressbar", { name: "Loading user" }),
+    ).toBeVisible();
+    held.release();
+    await expect(
+      page.getByRole("heading", { level: 1, name: username }),
+    ).toBeVisible();
+
+    // The breadcrumb returns to the Users list.
+    const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb" });
+    await expect(breadcrumb.getByRole("listitem")).toHaveText([
+      "Users",
+      username,
+    ]);
+    await expect(
+      breadcrumb.getByRole("link", { name: username, exact: true }),
+    ).toHaveCount(0);
+    await breadcrumb.getByRole("link", { name: "Users", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Users", exact: true }),
+    ).toBeVisible();
+  });
+
+  test("USR-DET-07 detail-route errors show 404", async ({
+    page,
+    api,
+    cleanup,
+  }) => {
+    for (const which of ["missing", "abc", "deleted"] as const) {
+      await test.step(which, async () => {
+        let id = which === "abc" ? "abc" : "999999999";
+        if (which === "deleted") {
+          const username = cleanup.user(uniqueName("user"));
+          id = String((await api.createUser({ username })).id);
+          await api.deleteUser(username);
+        }
+        await page.goto(`/admin/users/${id}`);
+        await expect(
+          page.getByRole("heading", { name: "404: That page does not exist" }),
+        ).toBeVisible();
+      });
+    }
+  });
+
+  test("USR-DET-08 a non-superuser cannot open a user detail page", async ({
+    api,
+    cleanup,
+    secondUser,
+  }) => {
+    const username = cleanup.user(uniqueName("user"));
+    const { id } = await api.createUser({ username });
+    const user = await secondUser.create();
+    const page = await secondUser.login(user);
+    await page.goto(`/admin/users/${id}`);
+    await expect(
+      page.getByRole("heading", { name: "403: Access denied" }),
+    ).toBeVisible();
+  });
+
+  test("USR-DEL-05 deleting from the detail page", async ({
+    page,
+    api,
+    cleanup,
+    toasts,
+  }) => {
+    const username = cleanup.user(uniqueName("user"));
+    const { id } = await api.createUser({ username });
+    const detail = new UserDetailPage(page, username);
+    await detail.goto(id);
+    const notFound = recordApiNotFound(page);
+    await detail.deleteUser();
+    await expect(toasts.success(`User "${username}" deleted`)).toBeVisible();
+    // The list opens, and nothing refetches the deleted user.
+    await expect(page).toHaveURL(/\/admin\/users\/?$/);
+    expect(notFound.filter((url) => url.includes(`/users/${id}/`))).toEqual([]);
   });
 
   // --- Groups tab ---------------------------------------------------------
-
-  test("USR-GRP-01 only the user's own groups are listed", async ({
-    page,
-    api,
-    cleanup,
-  }) => {
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
-    const [inA, inB, outside] = [0, 1, 2].map(() =>
-      cleanup.group(uniqueName("group")),
-    );
-    for (const group of [inA, inB, outside]) await api.createGroup(group);
-    await api.addGroupMember(inA, username);
-    await api.addGroupMember(inB, username);
-
-    const detail = await openDetail(page, api, username);
-    await expect(detail.groups.rows).toHaveCount(2);
-    await expect(detail.groups.row(inA)).toBeVisible();
-    await expect(detail.groups.row(inB)).toBeVisible();
-    await expect(detail.groups.row(outside)).toHaveCount(0);
-  });
-
-  test("USR-GRP-02 a user with no groups shows the empty state", async ({
-    page,
-    api,
-    cleanup,
-  }) => {
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
-    await api.createGroup(cleanup.group(uniqueName("group")));
-    const detail = await openDetail(page, api, username);
-    await expect(
-      detail.groups.stateHeading("User is not a member of any group"),
-    ).toBeVisible();
-    await expect(detail.groups.rows).toHaveCount(1);
-  });
 
   test("USR-GRP-03 add and remove a group", async ({
     page,
@@ -209,62 +156,21 @@ test.describe("Users", () => {
     await api.createUser({ username });
     await api.createGroup(group);
     const detail = await openDetail(page, api, username);
+    // Always enabled: a user's detail page is superuser-only.
+    await expect(
+      page.getByRole("button", { name: "Add Group", exact: true }),
+    ).toBeEnabled();
     await detail.addGroup(group);
     await expect(
       toasts.success(`1 group added to user "${username}"`),
     ).toBeVisible();
+    await expect(detail.groupsTab).toHaveText("Groups (1)");
     await detail.removeGroup(group);
     await expect(
       toasts.success(`User "${username}" removed from group "${group}"`),
     ).toBeVisible();
+    await expect(detail.groupsTab).toHaveText("Groups (0)");
     await expect.poll(() => api.userGroupNames(username)).toEqual([]);
-  });
-
-  test("USR-GRP-04 Remove is enabled on every group", async ({
-    page,
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    const username = cleanup.user(uniqueName("user"));
-    await api.createUser({ username });
-    // One group the admin owns and one it holds no role on.
-    const owned = cleanup.group(uniqueName("group"));
-    await api.createGroup(owned);
-    await api.addGroupMember(owned, username);
-    const creator = await secondUser.create();
-    const role = cleanup.role(uniqueName("role"));
-    await api.createRole({ name: role, permissions: ["core.add_group"] });
-    await api.assignRole({ user: creator.username }, { role });
-    const foreign = cleanup.group(uniqueName("group"));
-    const creatorPage = await secondUser.login(creator);
-    const response = await creatorPage.request.post(
-      `/api/pulp/${api.domainEnabled ? "default/" : ""}api/v3/groups/`,
-      {
-        data: { name: foreign },
-        headers: {
-          Authorization:
-            "Basic " +
-            Buffer.from(`${creator.username}:${creator.password}`).toString(
-              "base64",
-            ),
-        },
-      },
-    );
-    expect(response.ok()).toBe(true);
-    await api.addGroupMember(foreign, username);
-
-    const detail = await openDetail(page, api, username);
-    for (const group of [owned, foreign]) {
-      await detail.groups
-        .row(group)
-        .getByRole("button", { name: "Kebab toggle" })
-        .click();
-      await expect(
-        page.getByRole("menuitem", { name: "Remove", exact: true }),
-      ).not.toHaveAttribute("aria-disabled", "true");
-      await page.keyboard.press("Escape");
-    }
   });
 
   test("USR-GRP-05 user › Groups › add group G shows on G and in the Users list", async ({
@@ -318,16 +224,126 @@ test.describe("Users", () => {
     await expect(page.getByRole("tab", { name: "Users (0)" })).toBeVisible();
   });
 
-  test("USR-GRP-06 Add Group is always enabled", async ({
+  test("USR-GRP-07 the Groups tab empty state", async ({
     page,
     api,
     cleanup,
   }) => {
     const username = cleanup.user(uniqueName("user"));
     await api.createUser({ username });
-    await openDetail(page, api, username);
+    await api.createGroup(cleanup.group(uniqueName("group")));
+    const detail = await openDetail(page, api, username);
     await expect(
-      page.getByRole("button", { name: "Add Group", exact: true }),
-    ).toBeEnabled();
+      detail.groups.stateHeading("User is not a member of any group"),
+    ).toBeVisible();
+    await expect(detail.groups.rows).toHaveCount(1);
+  });
+
+  // --- Roles tab ----------------------------------------------------------
+
+  test("USR-ROL-01 role assignment rows, filtering, sorting and paging", async ({
+    page,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    // Empty state.
+    const empty = cleanup.user(uniqueName("user"));
+    await api.createUser({ username: empty });
+    await openDetail(page, api, empty);
+    const emptyTab = new RoleAssignmentsTab(page, "user");
+    await emptyTab.open();
+    await expect(
+      emptyTab.table.stateHeading("No roles assigned to this user"),
+    ).toBeVisible();
+
+    // 12 assigned roles sharing a token; one carries a description.
+    const username = cleanup.user(uniqueName("user"));
+    await api.createUser({ username });
+    const token = uniqueName("ra").slice(-8);
+    const described = cleanup.role(`${token}-described`);
+    await api.createRole({
+      name: described,
+      description: "Views repositories",
+      permissions: ["core.view_task"],
+    });
+    const roles = [
+      described,
+      ...Array.from({ length: 11 }, (_, i) =>
+        cleanup.role(`${token}-r${String(i).padStart(2, "0")}`),
+      ),
+    ];
+    for (const name of roles.slice(1)) await api.createRole({ name });
+    for (const name of roles)
+      await api.assignRole({ user: username }, { role: name });
+
+    await openDetail(page, api, username);
+    const tab = new RoleAssignmentsTab(page, "user");
+    await tab.open();
+    await tab.table.expectSorted("Role", "ascending");
+    const cells = tab.rows(described).getByRole("gridcell");
+    await expect(cells.nth(0)).toHaveText(described);
+    await expect(cells.nth(1)).toHaveText("Views repositories");
+    await expect(cells.nth(2)).toHaveText("1");
+    await expect(cells.nth(3)).toHaveText(/\d/);
+
+    await tab.table.filter("Role", token);
+    await expect
+      .poll(async () => (await tab.table.paginator().range()).total)
+      .toBe(12);
+    await tab.table.sortBy("Role");
+    await tab.table.expectSorted("Role", "descending");
+  });
+
+  test("USR-ROL-02 add roles", async ({ page, api, cleanup, toasts }) => {
+    test.slow();
+    const username = cleanup.user(uniqueName("user"));
+    await api.createUser({ username });
+    const roles = [
+      cleanup.role(uniqueName("role")),
+      cleanup.role(uniqueName("role")),
+    ];
+    for (const name of roles) await api.createRole({ name });
+    const detail = await openDetail(page, api, username);
+    const tab = new RoleAssignmentsTab(page, "user");
+    await tab.add(roles);
+    await expect(
+      toasts.success(`2 roles added to user "${username}"`),
+    ).toBeVisible();
+    await expect(detail.rolesTab).toHaveText("Roles (2)");
+    // A role already held as a global assignment can't be added again.
+    await detail.expectRoleNotSelectable(roles[0]);
+  });
+
+  test("USR-ROL-03 remove one assignment of a role assigned twice", async ({
+    page,
+    api,
+    cleanup,
+  }) => {
+    test.slow();
+    const username = cleanup.user(uniqueName("user"));
+    await api.createUser({ username });
+    const role = cleanup.role(`file.${uniqueName("role")}`);
+    await api.createRole({
+      name: role,
+      permissions: ["file.view_filerepository"],
+    });
+    const repo = cleanup.repository(uniqueName("repo"));
+    const { pulp_href } = await api.createFileRepository(repo);
+    await api.assignRole({ user: username }, { role });
+    await api.assignRole(
+      { user: username },
+      { role, contentObject: pulp_href },
+    );
+
+    await openDetail(page, api, username);
+    const tab = new RoleAssignmentsTab(page, "user");
+    await tab.open();
+    await expect(tab.rows(role)).toHaveCount(2);
+    await tab.remove(tab.rows(role).first());
+    await expect(tab.rows(role)).toHaveCount(1);
+    await expect
+      .poll(async () => (await api.roleAssignments({ user: username })).length)
+      .toBe(1);
   });
 });

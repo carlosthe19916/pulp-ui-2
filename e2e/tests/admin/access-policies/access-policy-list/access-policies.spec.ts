@@ -1,9 +1,12 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../../fixtures";
+import { openViaNav } from "../../../helpers/nav";
 import type { PulpApi } from "../../../helpers/pulp-api";
 import type { AccessPoliciesPage } from "../../../pom/AccessPoliciesPage";
 import { DataTable } from "../../../pom/DataTable";
+
+// Scenarios: e2e/specs/access-policies.md (ACP-*).
 
 // Every test here edits or resets a policy, which changes server-wide behaviour:
 // run them in order in one worker ("default" opts out of fullyParallel without
@@ -15,7 +18,6 @@ test.describe.configure({ mode: "default" });
 const V_BREAK = "content/ostree/summaries"; // also its collection path
 const V_HOOKS = "remotes/ansible/role"; // has creation hooks and queryset scoping
 const V_EDIT = "remotes/ansible/git";
-const V_LIST = "publications/deb/verbatim";
 const V_RESET = "acs/deb/deb";
 
 const ALLOW = {
@@ -69,11 +71,13 @@ test.describe("Access policies", () => {
   });
 
   test.describe("List", () => {
-    test("ACP-LIST-01 page content", async ({
+    test("ACP-LIST-01 page and row content", async ({
       accessPoliciesPage: acp,
       page,
     }) => {
-      await expect(acp.heading).toBeVisible();
+      // Reached from the Administration nav, which highlights the item.
+      await openViaNav(page, "Access policies");
+      await expect(page).toHaveTitle(/^Access policies · /);
       await expect(
         page.getByText(
           "Each policy decides who may call one API endpoint. Changing them is advanced; reset a policy to restore its plugin's default.",
@@ -87,139 +91,24 @@ test.describe("Access policies", () => {
       await expect(
         page.getByRole("main").getByRole("button", { name: /create/i }),
       ).toHaveCount(0);
-      await acp.list.rows
-        .first()
-        .getByRole("button", { name: "Kebab toggle" })
-        .click();
+      // Row content: viewset is plain text, Status shows a label, Statements a count.
+      const firstRow = acp.list.rows.first();
+      await expect(firstRow.getByRole("gridcell").nth(0)).not.toHaveText("");
+      await expect(
+        firstRow.getByRole("gridcell").nth(0).getByRole("link"),
+      ).toHaveCount(0);
+      await expect(firstRow.getByRole("gridcell").nth(2)).toHaveText(
+        /Default|Customized/,
+      );
+      await firstRow.getByRole("button", { name: "Kebab toggle" }).click();
       await expect(page.getByRole("menuitem")).toHaveText([
         "Edit",
         "Reset to default",
       ]);
     });
-
-    const rowCases = [
-      { status: "default", n: undefined, label: "Default" },
-      { status: "customized", n: 1, label: "Customized" },
-      { status: "customized", n: 3, label: "Customized" },
-    ] as const;
-    test("ACP-LIST-02 row content", async ({
-      accessPoliciesPage: acp,
-      api,
-      cleanup,
-      page,
-    }) => {
-      test.slow();
-      cleanup.accessPolicy(V_LIST);
-      for (const { status, n, label } of rowCases) {
-        await test.step(`${status} with ${n ?? "≥1"} statements`, async () => {
-          if (n !== undefined) {
-            await api.updateAccessPolicy(V_LIST, { statements: statements(n) });
-          }
-          // Reload so the list reflects this row's policy state and the filter
-          // from the previous step is cleared.
-          await acp.page.reload();
-          await acp.find(V_LIST);
-          const viewsetCell = cell(acp, V_LIST, 0);
-          await expect(viewsetCell).toHaveText(V_LIST);
-          await expect(viewsetCell.getByRole("link")).toHaveCount(0);
-          if (n === undefined) {
-            const count = Number(await cell(acp, V_LIST, 1).innerText());
-            expect(count).toBeGreaterThanOrEqual(1);
-          }
-          await expectStatus(acp, V_LIST, { status: label, statements: n });
-          await openRowMenu(acp, V_LIST);
-          await expect(page.getByRole("menuitem")).toHaveText([
-            "Edit",
-            "Reset to default",
-          ]);
-        });
-      }
-    });
-
-    test("ACP-LIST-03 status sort ascending: customized after every default", async ({
-      accessPoliciesPage: acp,
-      api,
-      cleanup,
-    }) => {
-      cleanup.accessPolicy(V_LIST);
-      await api.updateAccessPolicy(V_LIST, { statements: statements(1) });
-      await acp.page.reload();
-      await acp.list.expectLoaded();
-      await acp.list.sortBy("Status");
-      await acp.list.expectSorted("Status", "ascending");
-      expect(new Set(await acp.list.columnTexts("Status"))).toEqual(
-        new Set(["Default"]),
-      );
-      await acp.list.paginator().last().click();
-      await expect(acp.exactRow(V_LIST)).toBeVisible();
-      const statuses = await acp.list.columnTexts("Status");
-      const firstCustomized = statuses.indexOf("Customized");
-      expect(statuses.slice(firstCustomized)).not.toContain("Default");
-    });
-
-    test("ACP-LIST-03 status sort descending: customized before every default", async ({
-      accessPoliciesPage: acp,
-      api,
-      cleanup,
-    }) => {
-      cleanup.accessPolicy(V_LIST);
-      await api.updateAccessPolicy(V_LIST, { statements: statements(1) });
-      await acp.page.reload();
-      await acp.list.expectLoaded();
-      await acp.list.sortBy("Status");
-      await acp.list.sortBy("Status");
-      await acp.list.expectSorted("Status", "descending");
-      await expect(acp.exactRow(V_LIST)).toBeVisible();
-      const statuses = await acp.list.columnTexts("Status");
-      expect(statuses[0]).toBe("Customized");
-      const firstDefault = statuses.indexOf("Default");
-      if (firstDefault >= 0) {
-        expect(statuses.slice(firstDefault)).not.toContain("Customized");
-      }
-    });
   });
 
   test.describe("Edit", () => {
-    test("ACP-EDT-01 form shows the saved values and help", async ({
-      accessPoliciesPage: acp,
-      api,
-      page,
-    }) => {
-      const saved = await api.accessPolicy(V_HOOKS);
-      await acp.find(V_HOOKS);
-      const modal = await acp.openEdit(V_HOOKS);
-      await expect(modal.field("Statements")).toHaveValue(
-        json(saved.statements),
-      );
-      await expect(modal.field("Creation hooks")).toHaveValue(
-        json(saved.creation_hooks),
-      );
-      await expect(modal.field("Queryset scoping")).toHaveValue(
-        json(saved.queryset_scoping),
-      );
-      const help = {
-        Statements:
-          "The list of allow/deny statements evaluated for each request.",
-        "Creation hooks":
-          "Roles granted when an object of this viewset is created.",
-        "Queryset scoping": "How lists are narrowed to what the user may see.",
-      };
-      for (const [label, text] of Object.entries(help)) {
-        await test.step(label, async () => {
-          await modal.button(`More info for ${label}`).click();
-          await expect(page.getByText(text, { exact: true })).toBeVisible();
-          await modal.button(`More info for ${label}`).click();
-        });
-      }
-      await modal.close("Cancel");
-
-      // A policy without creation hooks shows that field empty.
-      await acp.find(V_BREAK);
-      const empty = await acp.openEdit(V_BREAK);
-      await expect(empty.field("Creation hooks")).toHaveValue("");
-      await empty.close("Cancel");
-    });
-
     type Outcome =
       | { kind: "client"; error: string }
       | { kind: "server"; error: string }
@@ -350,41 +239,28 @@ test.describe("Access policies", () => {
           ).not.toHaveAttribute("aria-disabled", "true");
         });
       }
-    });
 
-    // ACP-EDT-04 (several invalid fields at once) and ACP-EDT-06 (the server error
-    // clears on close) are generic modal behaviour (FORM-05 / FORM-04 component
-    // tests). ACP-EDT-05 (clearing an optional field: the null-vs-empty server
-    // rule) is an api contract test; the shared "form omits an empty field" UI gap
-    // is kept once as USR-EDT-05.
-
-    test("ACP-EDT-07 editing an already customized policy", async ({
-      accessPoliciesPage: acp,
-      api,
-      cleanup,
-      toasts,
-    }) => {
-      test.slow();
-      cleanup.accessPolicy(V_EDIT);
-      // Pulp marks a policy Customized on every save, even when nothing changed.
-      await api.resetAccessPolicy(V_EDIT);
-      await api.updateAccessPolicy(V_EDIT, { statements: statements(1) });
-      await acp.page.reload();
-      await acp.find(V_EDIT);
-      const modal = await acp.openEdit(V_EDIT);
-      const target = (await api.accessPolicy(V_EDIT)).statements;
-      await modal.button("Save").click();
-      await expect(toasts.success(`Policy "${V_EDIT}" saved`)).toBeVisible();
-      await expectStatus(acp, V_EDIT, {
-        status: "Customized",
-        statements: target.length,
+      // Editing an already-customized policy keeps it Customized (Pulp marks a
+      // policy Customized on every save, even when nothing changed).
+      await test.step("re-saving a customized policy keeps it customized", async () => {
+        // Reload to a clean list (the previous step left a row menu open).
+        await acp.page.reload();
+        await acp.find(V_EDIT);
+        const target = (await api.accessPolicy(V_EDIT)).statements;
+        const modal = await acp.openEdit(V_EDIT);
+        await modal.button("Save").click();
+        await expect(toasts.success(`Policy "${V_EDIT}" saved`)).toBeVisible();
+        await expectStatus(acp, V_EDIT, {
+          status: "Customized",
+          statements: target.length,
+        });
+        const reopened = await acp.openEdit(V_EDIT);
+        // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
+        expect(
+          JSON.parse(await reopened.field("Statements").inputValue()),
+        ).toEqual(target);
+        await reopened.close("Cancel");
       });
-      const reopened = await acp.openEdit(V_EDIT);
-      // Pulp stores JSON as jsonb, which reorders keys: compare parsed values.
-      expect(
-        JSON.parse(await reopened.field("Statements").inputValue()),
-      ).toEqual(target);
-      await reopened.close("Cancel");
     });
   });
 

@@ -12,12 +12,16 @@ import {
   permissionsSettled,
   seedGroup,
 } from "../../../helpers/groups";
+import { openViaNav } from "../../../helpers/nav";
 import type { IGroupRecord } from "../../../helpers/pulp-api";
 import { uniqueName } from "../../../helpers/unique";
 import { BatchAddModal } from "../../../pom/BatchAddModal";
+import { ConfirmModal } from "../../../pom/ConfirmModal";
 import { GroupDetailPage } from "../../../pom/GroupDetailPage";
 import { GroupsPage } from "../../../pom/GroupsPage";
 import { UserDetailPage } from "../../../pom/UserDetailPage";
+
+// Scenarios: e2e/specs/groups.md (list, permissions, create, edit, delete).
 
 type GatedAction =
   | 'Groups list › row "Edit"'
@@ -97,7 +101,9 @@ test.describe("Groups", () => {
     page,
   }) => {
     const group = await seedGroup(api, cleanup);
-    await groupsPage.goto();
+    // Reached from the Administration nav, which highlights the Groups item.
+    await openViaNav(page, "Groups");
+    expect(await groupsPage.list.headerTexts()).toEqual(["Name", "Actions"]);
     await groupsPage.filterBy("Name", group.name);
     await expect(
       groupsPage
@@ -109,6 +115,40 @@ test.describe("Groups", () => {
       .getByRole("button", { name: "Kebab toggle" })
       .click();
     await expect(page.getByRole("menuitem")).toHaveText(["Edit", "Delete"]);
+    await page.keyboard.press("Escape");
+    // A no-match filter shows the empty state with "Clear all filters".
+    await groupsPage.filterBy("Name", `nomatch-${uniqueName("x")}`);
+    await expect(
+      groupsPage.list.stateHeading("No results found"),
+    ).toBeVisible();
+  });
+
+  test("GRP-LIST-02 a non-superuser sees only groups they may view", async ({
+    api,
+    cleanup,
+    secondUser,
+  }) => {
+    const user = await secondUser.create();
+    const viewable = await seedGroup(api, cleanup);
+    const hidden = await seedGroup(api, cleanup);
+    await grantOnGroup(api, cleanup, {
+      username: user.username,
+      group: viewable,
+      permissions: permissionsFor({ change: false, del: false }),
+    });
+    const page = await secondUser.login(user);
+    const groupsPage = new GroupsPage(page);
+    await groupsPage.goto();
+    // Groups are scoped, so the table lists what they may view, never "403".
+    await expect(
+      groupsPage.list.stateHeading("403: Access denied"),
+    ).toHaveCount(0);
+    await groupsPage.filterBy("Name", viewable.name);
+    await expect(groupsPage.row(viewable.name)).toBeVisible();
+    await groupsPage.filterBy("Name", hidden.name);
+    await expect(
+      groupsPage.list.stateHeading("No results found"),
+    ).toBeVisible();
   });
 
   // --- Permissions --------------------------------------------------------
@@ -184,75 +224,6 @@ test.describe("Groups", () => {
     await expect(modal.table.stateHeading("403: Access denied")).toBeVisible();
   });
 
-  test("GRP-PERM-02 disabled actions open nothing", async ({
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    const user = await secondUser.create();
-    const group = await seedGroup(api, cleanup);
-    await grantOnGroup(api, cleanup, {
-      username: user.username,
-      group,
-      permissions: permissionsFor({ change: false, del: false }),
-    });
-    await api.addGroupMember(group.name, user.username);
-    const page = await secondUser.login(user);
-    for (const action of GATED_ACTIONS) {
-      await test.step(action, async () => {
-        const item = await locateAction(page, {
-          action,
-          group,
-          member: user.username,
-        });
-        await expect(item).toHaveAttribute("aria-disabled", "true");
-        // force: Playwright won't click an aria-disabled element otherwise; the
-        // point is that the click does nothing.
-        await item.click({ force: true });
-        await expect(page.getByRole("dialog")).toHaveCount(0);
-      });
-    }
-  });
-
-  test("GRP-PERM-03 permissions are per group, on the same page", async ({
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    const user = await secondUser.create();
-    const base = uniqueName("perm");
-    const g1 = await api.createGroup(cleanup.group(`${base}-1`));
-    const g2 = await api.createGroup(cleanup.group(`${base}-2`));
-    await grantOnGroup(api, cleanup, {
-      username: user.username,
-      group: g1,
-      permissions: permissionsFor({ change: true, del: true }),
-    });
-    await grantOnGroup(api, cleanup, {
-      username: user.username,
-      group: g2,
-      permissions: permissionsFor({ change: false, del: false }),
-    });
-    const page = await secondUser.login(user);
-    const groupsPage = new GroupsPage(page);
-    await groupsPage.goto();
-    await groupsPage.filterBy("Name", base);
-    await expect(groupsPage.list.rows).toHaveCount(2);
-    await expectGate(await groupsPage.rowMenuItem(g1.name, "Edit"), "enabled");
-    await expectGate(
-      page.getByRole("menuitem", { name: "Delete", exact: true }),
-      "enabled",
-    );
-    await page.keyboard.press("Escape");
-    await expectGate(await groupsPage.rowMenuItem(g2.name, "Edit"), {
-      tooltip: NO_CHANGE,
-    });
-    await expectGate(
-      page.getByRole("menuitem", { name: "Delete", exact: true }),
-      { tooltip: NO_DELETE },
-    );
-  });
-
   // Main cases: an object role that works today, and a global role the UI misses.
   const perm04 = [
     {
@@ -299,44 +270,6 @@ test.describe("Groups", () => {
     });
   }
 
-  test("GRP-PERM-05 nothing is disabled while permissions load", async ({
-    api,
-    cleanup,
-    secondUser,
-  }) => {
-    // One second-user login; each step seeds its own group and grants it to the
-    // same user, so the steps are order-independent.
-    const user = await secondUser.create();
-    const page = await secondUser.login(user);
-    for (const where of ["Groups list", "group detail"] as const) {
-      await test.step(where, async () => {
-        const group = await seedGroup(api, cleanup);
-        await grantOnGroup(api, cleanup, {
-          username: user.username,
-          group,
-          permissions: permissionsFor({ change: false, del: false }),
-        });
-        const held = await delayApi(page, { url: /my_permissions\// });
-        const item = await locateAction(page, {
-          action:
-            where === "Groups list"
-              ? 'Groups list › row "Edit"'
-              : 'detail › actions › "Edit Group"',
-          group,
-          member: user.username,
-          awaitPermissions: false,
-        });
-        await expect(item).toBeVisible();
-        await expect(item).not.toHaveAttribute("aria-disabled", "true");
-        held.release();
-        // Both the released my_permissions/ and the superuser probe must answer.
-        await expect(item).toHaveAttribute("aria-disabled", "true", {
-          timeout: 15_000,
-        });
-      });
-    }
-  });
-
   test("GRP-PERM-06 the admin sees every gated action enabled, even on a group it holds no role on", async ({
     api,
     cleanup,
@@ -359,28 +292,7 @@ test.describe("Groups", () => {
     }
   });
 
-  test('GRP-PERM-07 "Create Group" is enabled and submitting shows the permission error', async ({
-    secondUser,
-    cleanup,
-  }) => {
-    const user = await secondUser.create();
-    const page = await secondUser.login(user);
-    const groupsPage = new GroupsPage(page);
-    await groupsPage.goto();
-    const modal = await groupsPage.openCreate();
-    await modal.field("Name").fill(cleanup.group(uniqueName("group")));
-    await modal.button("Create").click();
-    await modal.expectSubmitError(
-      "You do not have permission to perform this action.",
-    );
-    await expect(modal.dialog).toContainText("Failed to create group");
-  });
-
   // --- Create -------------------------------------------------------------
-
-  // GRP-CRE-01 (form fields) and the client "required" validation are component
-  // tests (GroupModal.test.tsx); GRP-CRE-02's server name rules are the api
-  // contract test (groups.api.spec.ts). This is the create UI journey.
 
   test(
     "GRP-CRE-03 the new group appears with a toast",
@@ -395,40 +307,60 @@ test.describe("Groups", () => {
     },
   );
 
-  // --- Edit ---------------------------------------------------------------
-
-  // Renaming from the detail page is the same modal; its header/breadcrumb/title
-  // sync is the FORM-12 cross-page check.
-  test("GRP-EDT-01 rename from the Groups list", async ({
+  test("GRP-CRE-04 a duplicate name is rejected in the form", async ({
     groupsPage,
     api,
     cleanup,
-    toasts,
   }) => {
     const group = await seedGroup(api, cleanup);
-    const renamed = cleanup.group(uniqueName("renamed"));
     await groupsPage.goto();
-    await groupsPage.filterBy("Name", group.name);
-    await groupsPage.rename(group.name, renamed);
-    await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
-    await groupsPage.filterBy("Name", renamed);
-    await groupsPage.expectRowVisible(renamed);
+    const modal = await groupsPage.openCreate();
+    await modal.field("Name").fill(group.name);
+    await modal.button("Create").click();
+    await modal.expectSubmitError(/already exists|must be unique/i);
+    await expect(modal.dialog).toBeVisible();
   });
 
-  test("GRP-EDT-02 a rename shows on a member's Groups tab", async ({
+  test("GRP-CRE-05 create is not gated for a non-superuser", async ({
+    secondUser,
+    cleanup,
+  }) => {
+    const user = await secondUser.create();
+    const page = await secondUser.login(user);
+    const groupsPage = new GroupsPage(page);
+    await groupsPage.goto();
+    const modal = await groupsPage.openCreate();
+    await modal.field("Name").fill(cleanup.group(uniqueName("group")));
+    await modal.button("Create").click();
+    await modal.expectSubmitError(
+      "You do not have permission to perform this action. Ask an administrator to grant the required role.",
+    );
+    await expect(modal.dialog).toContainText("Failed to create group");
+  });
+
+  // --- Edit ---------------------------------------------------------------
+
+  test("GRP-EDT-01 rename", async ({
     groupsPage,
     api,
     cleanup,
     page,
+    toasts,
   }) => {
     const group = await seedGroup(api, cleanup);
     const renamed = cleanup.group(uniqueName("renamed"));
     const username = cleanup.user(uniqueName("user"));
     const user = await api.createUser({ username });
     await api.addGroupMember(group.name, username);
+
     await groupsPage.goto();
     await groupsPage.filterBy("Name", group.name);
     await groupsPage.rename(group.name, renamed);
+    await expect(toasts.success(`Group "${renamed}" updated`)).toBeVisible();
+    await groupsPage.filterBy("Name", renamed);
+    await groupsPage.expectRowVisible(renamed);
+
+    // Cross-page sync: the member's Groups tab shows the new name.
     await page.goto(`/admin/users/${user.id}`);
     const detail = new UserDetailPage(page, username);
     await expect(
@@ -436,23 +368,16 @@ test.describe("Groups", () => {
     ).toBeVisible();
   });
 
-  // GRP-EDT-03 (rename validation) is FORM-05/FORM-09; GRP-EDT-04 (the edit form
-  // shows the current name) is the GroupModal component test.
-
   // --- Delete -------------------------------------------------------------
 
-  // Delete from the list (the detail dialog is the same; its extra behaviour is CONF-06).
-  const deleteRows = [
-    "no users, no roles",
-    "two users",
-    "global and object roles",
-  ] as const;
+  const deleteRows = ["no users, no roles", "two users"] as const;
 
-  test("GRP-DEL-01 delete a group from the list", async ({
+  test("GRP-DEL-01 delete from the list", async ({
     groupsPage,
     usersPage,
     api,
     cleanup,
+    page,
     toasts,
   }) => {
     test.slow();
@@ -460,7 +385,6 @@ test.describe("Groups", () => {
       await test.step(contents, async () => {
         const group = await seedGroup(api, cleanup);
         const members: string[] = [];
-        const assignments: string[] = [];
         if (contents === "two users") {
           for (let i = 0; i < 2; i++) {
             const username = cleanup.user(uniqueName("user"));
@@ -469,35 +393,27 @@ test.describe("Groups", () => {
             members.push(username);
           }
         }
-        if (contents === "global and object roles") {
-          const repo = cleanup.repository(uniqueName("repo"));
-          const { pulp_href } = await api.createFileRepository(repo);
-          assignments.push(
-            (
-              await api.assignRole(
-                { group: group.name },
-                { role: "core.task_viewer" },
-              )
-            ).pulp_href,
-            (
-              await api.assignRole(
-                { group: group.name },
-                {
-                  role: "file.filerepository_viewer",
-                  contentObject: pulp_href,
-                },
-              )
-            ).pulp_href,
-          );
-        }
 
         await groupsPage.goto();
         await groupsPage.filterBy("Name", group.name);
-        await groupsPage.delete(group.name);
-        await groupsPage.expectRowGone(group.name);
+        await groupsPage.rowAction(group.name, "Delete");
+        const dialog = new ConfirmModal(page, "Delete Group");
+        await expect(dialog.dialog).toContainText(
+          `Are you sure you want to delete group "${group.name}"? This action cannot be undone.`,
+        );
+        // Slow network: the dialog stays open until the request finishes.
+        const held = await delayApi(page, {
+          url: (url) => url.pathname.includes("/groups/"),
+          method: "DELETE",
+        });
+        await dialog.button("Delete").click();
+        await expect(dialog.dialog).toBeVisible();
+        held.release();
+        await expect(dialog.dialog).toBeHidden();
         await expect(
           toasts.success(`Group "${group.name}" deleted`),
         ).toBeVisible();
+        await groupsPage.expectRowGone(group.name);
         await expect.poll(() => api.group(group.name)).toBeUndefined();
 
         for (const username of members) {
@@ -508,18 +424,29 @@ test.describe("Groups", () => {
           ).toHaveText("0");
           const userDetail = await usersPage.openDetail(username);
           await expect(userDetail.groupsTab).toHaveText("Groups (0)");
-          await expect(
-            userDetail.groupsTable.getByRole("link", { name: group.name }),
-          ).toHaveCount(0);
-        }
-        for (const href of assignments) {
-          await expect.poll(() => api.status(href)).toBe(404);
         }
       });
     }
   });
 
-  // GRP-DEL-02 (members lose permissions a deleted group's roles gave them) is the
-  // same membership-removal mechanism as the one representative RBAC-effect e2e,
-  // GRP-USR-06 in group-details.spec.ts; not tested separately.
+  test("GRP-DEL-03 a failed delete keeps the dialog open", async ({
+    groupsPage,
+    api,
+    cleanup,
+    page,
+    toasts,
+  }) => {
+    const group = await seedGroup(api, cleanup);
+    await groupsPage.goto();
+    await groupsPage.filterBy("Name", group.name);
+    await groupsPage.rowAction(group.name, "Delete");
+    const dialog = new ConfirmModal(page, "Delete Group");
+    // The group is deleted elsewhere before confirming.
+    await api.deleteGroup(group.name);
+    await dialog.button("Delete").click();
+    await expect(
+      toasts.danger(`Failed to delete group "${group.name}"`),
+    ).toBeVisible();
+    await expect(dialog.dialog).toBeVisible();
+  });
 });

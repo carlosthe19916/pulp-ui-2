@@ -1,14 +1,19 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "../../../fixtures";
+import { openViaNav } from "../../../helpers/nav";
 import type { PulpApi } from "../../../helpers/pulp-api";
 import { uniqueName } from "../../../helpers/unique";
+import { DataTable } from "../../../pom/DataTable";
 import { PermissionTags } from "../../../pom/PermissionTags";
 import {
   RoleAssignmentsTab,
   type RoleOwnerKind,
 } from "../../../pom/RoleAssignmentsTab";
-import type { RolesPage } from "../../../pom/RolesPage";
+import { RolesPage } from "../../../pom/RolesPage";
+
+// Scenarios: e2e/specs/roles.md (ROL-*). Assigning roles to users/groups is on
+// those detail pages (users.md / groups.md Roles tab).
 
 // Real codenames for permission edits: Pulp rejects unknown ones.
 const VIEW_TASK = "core.view_task";
@@ -101,12 +106,9 @@ const openRolesTab = async ({
   owner: string;
 }): Promise<RoleAssignmentsTab> => {
   await page.goto(await ownerDetailUrl(api, kind, owner));
-  // The detail route suspends until its record loads, which is slow under load.
   await expect(
     page.getByRole("heading", { level: 1, name: owner }),
-  ).toBeVisible({
-    timeout: 15_000,
-  });
+  ).toBeVisible();
   const tab = new RoleAssignmentsTab(page, kind);
   await tab.open();
   return tab;
@@ -120,7 +122,11 @@ test.describe("Roles", () => {
     test("ROL-LIST-01 built-in locked roles show their plugin and Locked Yes", async ({
       rolesPage,
       api,
+      page,
     }) => {
+      // Reached from the Administration nav, which highlights the Roles item.
+      await openViaNav(page, "Roles");
+      await expect(page).toHaveTitle(/^Roles · /);
       for (const [name, plugin] of [["core.task_owner", "core"]]) {
         await findRole(rolesPage, name);
         const cells = rolesPage.exactRow(name).getByRole("gridcell");
@@ -154,22 +160,6 @@ test.describe("Roles", () => {
         permissions: [VIEW_TASK],
         plugin: () => "custom",
         cell: "Reads things",
-      },
-      {
-        label: "reader (no dot)",
-        name: () => roleName((u) => u),
-        description: null,
-        permissions: [],
-        plugin: () => "other",
-        cell: "—",
-      },
-      {
-        label: "custom.long with a 500-character description",
-        name: () => roleName((u) => `custom.${u}`),
-        description: "d".repeat(500),
-        permissions: [],
-        plugin: () => "custom",
-        cell: "truncated",
       },
     ];
 
@@ -211,37 +201,6 @@ test.describe("Roles", () => {
             String(row.permissions.length),
           );
           await expect(cells.nth(LOCKED)).toHaveText("No");
-        });
-      }
-    });
-
-    test("ROL-LIST-02 Locked filter", async ({ rolesPage, api, cleanup }) => {
-      for (const [option, expected] of [
-        ["All roles", ["Yes", "No"]],
-        ["Locked", ["Yes"]],
-        ["Unlocked", ["No"]],
-      ] as const) {
-        await test.step(`Locked filter "${option}"`, async () => {
-          // "task" matches the locked core.task_* roles and this unlocked seed, so
-          // page 1 holds both kinds unless the Locked filter removes one.
-          const name = cleanup.role(roleName((u) => `custom.task-${u}`));
-          await api.createRole({ name });
-          await rolesPage.goto();
-          await rolesPage.filterBy("Name", "task");
-          await rolesPage.filterLocked(option);
-          await expect(rolesPage.lockedToggle()).toHaveText(option);
-          if (option === "Locked") {
-            // Only built-in roles are locked, so their count is stable.
-            const { count } = await apiRolesPage(api, {
-              locked: "true",
-              name__icontains: "task",
-            });
-            await rolesPage.list
-              .paginator()
-              .expectRange(new RegExp(`of ${count}\\s*$`));
-          }
-          const labels = await rolesPage.list.columnTexts("Locked");
-          expect([...new Set(labels)].sort()).toEqual([...expected].sort());
         });
       }
     });
@@ -390,54 +349,14 @@ test.describe("Roles", () => {
       }
     });
 
-    const clearRows: {
-      option: "All roles" | "Locked" | "Unlocked";
-      filter: "" | "match" | "no-match";
-      clear: "toolbar" | "empty state";
-    }[] = [
-      // Main cases (clear from the toolbar, and clear from the empty state).
-      { option: "Unlocked", filter: "match", clear: "toolbar" },
-      { option: "Unlocked", filter: "no-match", clear: "empty state" },
-    ];
-
-    test("ROL-LIST-04 Clearing both filters", async ({ rolesPage }) => {
-      for (const row of clearRows) {
-        await test.step(`${row.option}, filter "${row.filter || "(empty)"}", "Clear all filters" in the ${row.clear}`, async () => {
-          const filter =
-            row.filter === "match"
-              ? "task"
-              : row.filter === "no-match"
-                ? uniqueName("none")
-                : "";
-          await rolesPage.goto();
-          await rolesPage.filterLocked(row.option);
-          if (filter) await rolesPage.filterBy("Name", filter);
-          const button =
-            row.clear === "toolbar"
-              ? rolesPage.list.clearAllFiltersInToolbar()
-              : rolesPage.list.clearAllFiltersInEmptyState();
-          await button.click();
-          await expect(rolesPage.list.filterInput("Name")).toHaveValue("");
-          await expect(rolesPage.lockedToggle()).toHaveText("All roles");
-          await rolesPage.list.paginator().expectRange(/^1 - 10 of \d+\s*$/);
-          await expect(rolesPage.list.clearAllFiltersInToolbar()).toHaveCount(
-            0,
-          );
-        });
-      }
-    });
-
-    test("ROL-LIST-05 Unlocked with a locked role's name gives the filtered empty state", async ({
-      rolesPage,
+    test("ROL-LIST-06 a non-superuser cannot read the Roles list", async ({
+      secondUser,
     }) => {
-      await rolesPage.goto();
-      await rolesPage.filterBy("Name", LOCKED_ROLE);
-      await expect(rolesPage.exactRow(LOCKED_ROLE)).toBeVisible();
-      await rolesPage.filterLocked("Unlocked");
-      await expect(
-        rolesPage.list.stateHeading("No results found"),
-      ).toBeVisible();
-      await expect(rolesPage.list.clearAllFiltersInEmptyState()).toBeVisible();
+      const user = await secondUser.create();
+      const page = await secondUser.login(user);
+      await page.goto("/admin/roles");
+      const table = new DataTable(page.getByRole("main"), "Roles table");
+      await expect(table.stateHeading("403: Access denied")).toBeVisible();
     });
   });
 
@@ -533,6 +452,24 @@ test.describe("Roles", () => {
         ).toHaveText("No");
       },
     );
+
+    test("ROL-CRE-06 create is not gated for a non-superuser", async ({
+      cleanup,
+      secondUser,
+    }) => {
+      const user = await secondUser.create();
+      const page = await secondUser.login(user);
+      const roles = new RolesPage(page);
+      await roles.goto();
+      const modal = await roles.openCreate();
+      await modal
+        .field("Name")
+        .fill(cleanup.role(roleName((u) => `custom.${u}`)));
+      await modal.button("Create").click();
+      await modal.expectSubmitError(
+        "You do not have permission to perform this action. Ask an administrator to grant the required role.",
+      );
+    });
   });
 
   test.describe("Permission input", () => {
@@ -731,159 +668,5 @@ test.describe("Roles", () => {
         });
       }
     });
-  });
-
-  test.describe("Role assignments", () => {
-    test("ROLE-ASSIGN-01 row content", async ({ page, api, cleanup }) => {
-      test.slow();
-      // Main cases (user global, group on an object, one domain scope).
-      const scopeRows = [
-        { kind: "user", scope: "globally" },
-        { kind: "group", scope: "on one repository" },
-        { kind: "user", scope: "in one domain" },
-      ] as const;
-      for (const { kind, scope } of scopeRows) {
-        await test.step(`${kind} has a role assigned ${scope}`, async (step) => {
-          if (scope === "in one domain") {
-            step.skip(
-              !api.domainEnabled,
-              "domains are disabled on this backend",
-            );
-          }
-          const role = cleanup.role(roleName((u) => `file.${u}`));
-          await api.createRole({
-            name: role,
-            description: "Views repositories",
-            permissions: ["file.view_filerepository"],
-          });
-          const owner = await seedOwner({ api, cleanup, kind });
-          let contentObject: string | null = null;
-          let domain: string | null = null;
-          if (scope === "on one repository") {
-            const repo = cleanup.repository(uniqueName("repo"));
-            contentObject = (await api.createFileRepository(repo)).pulp_href;
-          } else if (scope === "in one domain") {
-            domain = await api.defaultDomainHref();
-          }
-          await api.assignRole(ownerRef(kind, owner), {
-            role,
-            contentObject,
-            domain,
-          });
-
-          const tab = await openRolesTab({ page, api, kind, owner });
-          const cells = tab.rows(role).getByRole("gridcell");
-          await expect(cells.nth(0)).toHaveText(role);
-          await expect(cells.nth(1)).toHaveText("Views repositories");
-          await expect(cells.nth(2)).toHaveText("1");
-          await expect(cells.nth(3)).not.toHaveText("—");
-          await expect(cells.nth(3)).toHaveText(/\d/);
-        });
-      }
-      // Open: Pulp returns each assignment's object or domain but the row hides
-      // it, so a role assigned twice (globally and on an object) shows as two
-      // identical rows; decide whether the row should show the scope.
-      await test.step.skip("the row shows the assignment's scope", () => {});
-    });
-
-    // Run for owner = user; the group Roles tab uses the same tab and modal.
-    test("ROLE-ASSIGN-02 add roles", async ({ page, api, cleanup, toasts }) => {
-      test.slow();
-      for (const kind of ["user"] as const) {
-        for (const n of [1, 2]) {
-          await test.step(`add ${n} role(s) to a ${kind}`, async () => {
-            const roles = Array.from({ length: n }, () =>
-              cleanup.role(roleName((u) => `custom.${u}`)),
-            );
-            for (const name of roles) await api.createRole({ name });
-            const owner = await seedOwner({ api, cleanup, kind });
-            const tab = await openRolesTab({ page, api, kind, owner });
-            await tab.add(roles);
-            await expect(
-              toasts.success(
-                `${n} ${n === 1 ? "role" : "roles"} added to ${kind} "${owner}"`,
-              ),
-            ).toBeVisible();
-            for (const name of roles) {
-              await expect(
-                tab.rows(name).getByRole("gridcell").nth(3),
-              ).toHaveText(/\d/);
-            }
-          });
-        }
-      }
-    });
-
-    test("ROLE-ASSIGN-03 remove one assignment of a role held twice", async ({
-      page,
-      api,
-      cleanup,
-    }) => {
-      test.slow();
-      for (const kind of ["user"] as const) {
-        await test.step(`a ${kind} holds it twice`, async () => {
-          const role = cleanup.role(roleName((u) => `file.${u}`));
-          await api.createRole({
-            name: role,
-            permissions: ["file.view_filerepository"],
-          });
-          const owner = await seedOwner({ api, cleanup, kind });
-          const repo = cleanup.repository(uniqueName("repo"));
-          const { pulp_href } = await api.createFileRepository(repo);
-          await api.assignRole(ownerRef(kind, owner), { role });
-          await api.assignRole(ownerRef(kind, owner), {
-            role,
-            contentObject: pulp_href,
-          });
-
-          const tab = await openRolesTab({ page, api, kind, owner });
-          await expect(tab.rows(role)).toHaveCount(2);
-          await tab.remove(tab.rows(role).first());
-          await expect(tab.rows(role)).toHaveCount(1);
-          await expect
-            .poll(
-              async () =>
-                (await api.roleAssignments(ownerRef(kind, owner))).length,
-            )
-            .toBe(1);
-        });
-      }
-    });
-
-    test("ROLE-ASSIGN-04 a non-superuser who may view a group cannot read its role assignments", async ({
-      api,
-      cleanup,
-      secondUser,
-    }) => {
-      const group = cleanup.group(uniqueName("group"));
-      const { id } = await api.createGroup(group);
-      const viewer = await secondUser.create();
-      await api.assignRole(
-        { user: viewer.username },
-        {
-          role: "core.group_viewer",
-          contentObject: (await api.group(group))?.pulp_href,
-        },
-      );
-
-      const page = await secondUser.login(viewer);
-      await page.goto(`/admin/groups/${id}`);
-      await expect(
-        page.getByRole("heading", { level: 1, name: group }),
-      ).toBeVisible();
-      const tab = new RoleAssignmentsTab(page, "group");
-      await expect(tab.tab).toHaveText("Roles (0)");
-      await tab.open();
-      await expect(tab.table.stateHeading("403: Access denied")).toBeVisible();
-      await expect(tab.addButton()).toBeEnabled();
-      const modal = await tab.openAdd();
-      await expect(
-        modal.table.stateHeading("403: Access denied"),
-      ).toBeVisible();
-    });
-
-    // ROLE-ASSIGN-05 (a role takes effect) uses the same my_permissions/ mechanism
-    // as the one representative RBAC-effect e2e, GRP-USR-06 in
-    // group-details.spec.ts; not tested separately.
   });
 });

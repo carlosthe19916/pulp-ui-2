@@ -11,7 +11,9 @@ exactly one layer (its ID appears in that layer's test title):
 
 - **Component (Vitest)** — `client/src/app/**/*.test.tsx`: client-only behaviour with the data
   hooks mocked — form validation messages, modal defaults and submit wiring, confirm-dialog
-  content/style/dismissal, the permission tag input, permission-gated disabling + tooltips.
+  content/style/dismissal, the permission tag input, permission-gated disabling + tooltips, and
+  the shared-component mechanics that used to be checked per surface in e2e (the `DataViewList`
+  table's sort/paging/filter controls, the add-modal selection state, `DocumentTitle`).
 - **API / contract (Playwright `api` project)** — `e2e/tests/api/*.api.spec.ts`: the server's own
   accept/reject rules over REST, no browser — duplicate / length / blank, password and email
   rules, locked-role 403, permission format, malformed policy JSON, membership no-op / unknown
@@ -26,17 +28,15 @@ one reference surface, not every screen. Cover the **main** cases, not every per
 value of an independent dimension at least once (not the full cross-product), and one
 representative per free-text equivalence class plus the boundaries.
 
-| File                                                   | Prefix               | Covers                                                  |
-| ------------------------------------------------------ | -------------------- | ------------------------------------------------------- |
-| [shared/navigation.md](shared/navigation.md)           | `NAV`                | Administration nav, titles, breadcrumbs, route errors   |
-| [shared/data-list.md](shared/data-list.md)             | `LIST`               | Filter, sort, pagination and body states of every table |
-| [shared/form-modal.md](shared/form-modal.md)           | `FORM`               | Create / edit modal lifecycle                           |
-| [shared/confirm-dialog.md](shared/confirm-dialog.md)   | `CONF`               | Delete, remove and reset confirmations                  |
-| [shared/batch-add-modal.md](shared/batch-add-modal.md) | `BATCH`              | Multi-select "Add" modals                               |
-| [users.md](users.md)                                   | `USR`                | Users list, form, detail, Groups tab                    |
-| [groups.md](groups.md)                                 | `GRP`                | Groups list, form, detail, Users tab, permissions       |
-| [roles.md](roles.md)                                   | `ROL`, `ROLE-ASSIGN` | Roles list, form, locked roles, role assignments        |
-| [access-policies.md](access-policies.md)               | `ACP`                | Access policy list, edit, reset, effect                 |
+Each entity has one spec, describing its own list, create/edit/delete, detail, tabs and
+navigation end to end:
+
+| File                                     | Prefix | Covers                                                                 |
+| ---------------------------------------- | ------ | ---------------------------------------------------------------------- |
+| [users.md](users.md)                     | `USR`  | Users list, create/edit/delete, detail, Groups tab, Roles tab, nav     |
+| [groups.md](groups.md)                   | `GRP`  | Groups list, permissions, create/edit/delete, detail, Users/Roles tabs |
+| [roles.md](roles.md)                     | `ROL`  | Roles list, locked roles, create/edit/delete, permission input         |
+| [access-policies.md](access-policies.md) | `ACP`  | Access policy list, edit, reset, permissions, effect                   |
 
 ## Writing a scenario
 
@@ -54,8 +54,8 @@ Then <outcome>
 | 8 chars  | the user is created                                  |
 ```
 
-- **ID**: `<AREA>-<SECTION>-<NN>` (shared files: `<AREA>-<NN>`). IDs are unique across all
-  files and are never renumbered or reused; a retired scenario is deleted, not recycled.
+- **ID**: `<AREA>-<SECTION>-<NN>`. IDs are unique across all files and are never renumbered or
+  reused; a retired scenario is deleted, not recycled.
 - **Language**: what a user sees and does. Quote visible labels, titles, toasts and messages
   exactly. No selectors, component names, endpoints or code.
 - **Permutations (main cases, not exhaustive)**: a scenario that varies over inputs carries one
@@ -65,9 +65,10 @@ Then <outcome>
   depends on the combination, e.g. a permission gate). For free text, keep one representative per
   equivalence class plus the boundaries (empty, whitespace only, max and max+1 length, duplicate)
   — and only the **server-side** rejections (client-side validation is a component test).
-- **Shared behaviour** is written once in `shared/` with a table naming every screen it
-  applies to, instead of being repeated per area. An area file points to it rather than
-  restating it.
+- **Generic mechanics** shared by every screen (a data table's sort/paging/filter controls, a
+  modal's selection state) are a component test, not repeated per entity. e2e exercises the real
+  backend journey on one reference surface per shape (the Users list, the User roles tab, the
+  Add User modal), and each entity spec describes only its own behaviour.
 - **Markers** (one line under the heading, only when they apply):
   - `Auth: second-user` — needs a non-admin user created for the test, logged in in a
     separate browser context (basic auth).

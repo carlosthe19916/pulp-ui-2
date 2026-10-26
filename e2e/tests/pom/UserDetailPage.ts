@@ -31,9 +31,7 @@ export class UserDetailPage {
 
   async goto(id: number): Promise<void> {
     await this.page.goto(`/admin/users/${id}`);
-    // The route loads the user before rendering ("Loading user"), which can take
-    // a while on a busy backend.
-    await expect(this.title).toBeVisible({ timeout: 15_000 });
+    await expect(this.title).toBeVisible();
   }
 
   /** Open the header's actions menu and choose an item ("Edit User", "Delete User"). */
