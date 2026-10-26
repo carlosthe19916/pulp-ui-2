@@ -20,10 +20,7 @@ import type {
   TaskResponse,
   TasksListData,
 } from "@app/client";
-import {
-  DEFAULT_REFETCH_INTERVAL,
-  WATCHED_TASK_REFETCH_INTERVAL,
-} from "@app/constants";
+import { DEFAULT_REFETCH_INTERVAL } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getTaskErrorMessage } from "@app/utils/utils";
 
@@ -252,13 +249,11 @@ export const useTaskDetailQueries = ({
     queries: taskHrefs.map((taskHref) =>
       queryOptions<TaskResponse, DrfAxiosError>({
         ...taskDetailQueryOptions({ href: taskHref }),
-        // These are tasks the user just dispatched and is waiting on, so poll tight:
-        // the outcome surfaces within ~1s of the task finishing, not up to 5s later.
         refetchInterval: (query) =>
           isTerminalTaskState(query.state.data?.state) ||
           query.state.error?.response?.status === 404
             ? false
-            : WATCHED_TASK_REFETCH_INTERVAL,
+            : DEFAULT_REFETCH_INTERVAL,
       }),
     ),
     combine: (

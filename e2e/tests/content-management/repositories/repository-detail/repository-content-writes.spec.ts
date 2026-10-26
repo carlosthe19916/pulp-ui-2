@@ -31,6 +31,22 @@ const textFile = (name: string) => ({
 });
 
 /**
+ * Asserts the "Version N created" outcome toast. The UI only surfaces it once its task
+ * poll (every DEFAULT_REFETCH_INTERVAL = 5s) observes the dispatched change finishing, so
+ * the toast can lag the task by nearly a full poll cycle. Wait a whole cycle past the 5s
+ * default rather than racing the poll, which is why these assertions flaked on slow CI.
+ */
+const expectVersionCreated = async (
+  page: Page,
+  name: string,
+  version: number,
+): Promise<void> => {
+  await expect(
+    page.getByText(`Version ${version} of "${name}" created`),
+  ).toBeVisible({ timeout: 15_000 });
+};
+
+/**
  * Content changes on a repository: every one creates a new version, the outcome toast
  * names it, and the content block refreshes. Seeded through the API; File only.
  */
@@ -63,9 +79,7 @@ test.describe("Repository content writes", () => {
     await expect(dialog).toContainText("a.txt");
     await dialog.getByRole("button", { name: "Remove", exact: true }).click();
 
-    await expect(
-      page.getByText(`Version 4 of "${name}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, name, 4);
     await expect(files.getByRole("row")).toHaveCount(2); // header + c.txt
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["c.txt"]);
   });
@@ -87,9 +101,7 @@ test.describe("Repository content writes", () => {
     await dialog.getByRole("textbox").fill(name);
     await confirm.click();
 
-    await expect(
-      page.getByText(`Version 2 of "${name}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, name, 2);
     await expect(page.getByText(`No content in "${name}" yet`)).toBeVisible();
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual([]);
   });
@@ -123,9 +135,7 @@ test.describe("Repository content writes", () => {
       .check();
     await dialog.getByRole("button", { name: "Add 1 unit" }).click();
 
-    await expect(
-      page.getByText(`Version 2 of "${target}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, target, 2);
     expect(await api.latestFilePaths(targetRepository.pulp_href)).toEqual([
       "extra.txt",
       "shared.txt",
@@ -148,9 +158,7 @@ test.describe("Repository content writes", () => {
       .setInputFiles([textFile("one.txt"), textFile("two.txt")]);
     await dialog.getByRole("button", { name: "Upload", exact: true }).click();
 
-    await expect(
-      page.getByText(`Version 1 of "${name}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, name, 1);
     expect(await api.latestVersionNumber(repository.pulp_href)).toBe(1);
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual([
       "one.txt",
@@ -192,9 +200,7 @@ test.describe("Repository content writes", () => {
     expect(await api.latestVersionNumber(repository.pulp_href)).toBe(0);
     await dialog.getByRole("button", { name: `Add 1 to "${name}"` }).click();
 
-    await expect(
-      page.getByText(`Version 1 of "${name}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, name, 1);
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["ok.txt"]);
   });
 
@@ -240,9 +246,7 @@ test.describe("Repository content writes", () => {
       .getByRole("button", { name: "Restore", exact: true })
       .click();
 
-    await expect(
-      page.getByText(`Version 3 of "${name}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, name, 3);
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["a.txt"]);
   });
 });
