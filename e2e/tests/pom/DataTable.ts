@@ -137,8 +137,13 @@ export class DataTable {
 
   /** Wait until the body shows real rows (not the loading skeleton). */
   async expectLoaded(): Promise<void> {
-    // Skeleton rows carry no text; a data, empty or error row always does.
-    await expect(this.rows.first()).not.toHaveText(/^\s*$/);
+    // Skeleton rows carry no text; a data, empty or error row always does. This
+    // resolves the instant the rows render, so the generous timeout costs nothing
+    // on the happy path — it only absorbs a slow first fetch (a server-paged modal
+    // list against a busy shared backend), where the default 5s is too tight.
+    await expect(this.rows.first()).not.toHaveText(/^\s*$/, {
+      timeout: 15_000,
+    });
   }
 
   /** The body's single empty / error state row (its heading text). */

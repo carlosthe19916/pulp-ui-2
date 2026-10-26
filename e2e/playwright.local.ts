@@ -5,6 +5,13 @@ const authFile = ".auth/user.json";
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
+  // One shared Pulp backend: the backend, not the CPU, is the bottleneck, so cap
+  // local workers. Left to Playwright's default (~half the cores) a many-core dev
+  // box runs 8+ workers that oversaturate the single backend — responses slow to
+  // a crawl and the heaviest specs blow their timeout. Four keeps the backend
+  // responsive (measurably faster per test, and no saturation failures). Bump it
+  // with `--workers=N` on a beefier backend.
+  workers: 4,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",

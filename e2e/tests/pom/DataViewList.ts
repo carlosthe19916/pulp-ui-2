@@ -24,23 +24,13 @@ export abstract class DataViewList {
 
   /**
    * Type into a `DataViewTextFilter` and wait for the debounced, server-side
-   * filtered fetch to land.
-   *
-   * Applying a new filter value is a fresh query key with no cache, so the list
-   * flips to its loading state and swaps the whole body for a skeleton — briefly
-   * unmounting every row. Waiting on the network response (a real event, not a
-   * fixed delay) means the settled, filtered rows are mounted before any caller
-   * interacts with them, instead of racing the skeleton swap.
+   * filtered fetch to land. Delegates to {@link DataTable.filter}, whose wait is
+   * tolerant of a cache-served refetch (clearing a filter, or re-typing a value
+   * seen within the 10s stale time, fires no network request) so it falls back to
+   * the caller's retrying assertions instead of hanging to the test timeout.
    */
   async filterBy(title: string, value: string): Promise<void> {
-    await Promise.all([
-      this.page.waitForResponse(
-        (response) =>
-          response.request().method() === "GET" &&
-          response.url().includes(encodeURIComponent(value)),
-      ),
-      this.page.getByPlaceholder(`Filter by ${title}`).fill(value),
-    ]);
+    await this.list.filter(title, value);
   }
 
   /** A table body row that contains the given text (unique names make this exact). */

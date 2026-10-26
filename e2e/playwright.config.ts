@@ -19,8 +19,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   // One shared Pulp backend on a 4-vCPU runner: a few workers speed the large
-  // suite up without the contention flakiness that more would bring.
-  workers: process.env.CI ? 2 : undefined,
+  // suite up without the contention flakiness that more would bring. Locally the
+  // backend (not the CPU) is still the bottleneck, so cap workers rather than let
+  // Playwright default to ~half the cores — 8+ workers oversaturate the single
+  // backend and make the heaviest specs time out. Override with `--workers=N`.
+  workers: process.env.CI ? 2 : 4,
   reporter: "html",
   use: {
     baseURL: "http://localhost:3000",

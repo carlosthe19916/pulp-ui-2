@@ -72,7 +72,7 @@ export class ContentPage extends DataViewList {
     // never fill/navigate a not-yet-rendered form.
     await dialog
       .getByRole("button", { name: "Cancel", exact: true })
-      .waitFor({ state: "visible" });
+      .waitFor({ state: "visible", timeout: 10_000 });
 
     if (type) {
       const typeSelect = dialog.getByRole("combobox", { name: "Type" });
@@ -156,7 +156,7 @@ export class ContentPage extends DataViewList {
   ): Promise<Locator> {
     await dialog.getByRole("button", { name: fieldLabel, exact: true }).click();
     const listbox = this.page.getByRole("listbox");
-    await listbox.waitFor({ state: "visible" });
+    await listbox.waitFor({ state: "visible", timeout: 10_000 });
     return listbox;
   }
 
@@ -189,6 +189,8 @@ export class ContentPage extends DataViewList {
     fieldLabel: string,
   ): Promise<void> {
     await dialog.getByRole("button", { name: fieldLabel, exact: true }).click();
-    await this.page.getByRole("listbox").waitFor({ state: "hidden" });
+    await this.page
+      .getByRole("listbox")
+      .waitFor({ state: "hidden", timeout: 10_000 });
   }
 }

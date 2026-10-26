@@ -229,7 +229,9 @@ export class PulpApi {
     const { task } = (await res.json()) as { task?: string };
     if (!task) throw new Error(`create ${typedCollection} returned no task`);
 
-    for (let attempt = 0; attempt < 60; attempt++) {
+    // Poll at 200ms (not 500ms) so a fast seed task is picked up sooner; the 150
+    // attempts keep the same ~30s ceiling for a genuinely slow one.
+    for (let attempt = 0; attempt < 150; attempt++) {
       const taskRes = await this.ctx.get(task);
       const taskData = (await taskRes.json()) as {
         state?: string;
@@ -244,7 +246,7 @@ export class PulpApi {
           `task ${taskData.state}: ${JSON.stringify(taskData.error)}`,
         );
       }
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
     throw new Error(`task for ${typedCollection} did not complete in time`);
   }

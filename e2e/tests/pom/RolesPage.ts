@@ -115,16 +115,23 @@ export class RolesPage extends DataViewList {
   async filterLocked(label: LockedFilter): Promise<void> {
     if ((await this.lockedToggle().innerText()).trim() === label) return;
     await this.lockedToggle().click();
-    // A new Locked value is a new query: wait for its page so callers read it.
-    await Promise.all([
-      this.page.waitForResponse(
+    // A new Locked value is usually a new query, but switching back to a value
+    // seen within the 10s stale time is served from the React Query cache with no
+    // network request — so don't hang waiting for one; the toggle assertion below
+    // retries until the chosen page has settled.
+    const fetched = this.page
+      .waitForResponse(
         (response) =>
           response.request().method() === "GET" &&
           response.url().includes("/roles/") &&
           (label === "All roles"
             ? !response.url().includes("locked=")
             : response.url().includes(`locked=${label === "Locked"}`)),
-      ),
+        { timeout: 10_000 },
+      )
+      .catch(() => undefined);
+    await Promise.all([
+      fetched,
       this.page.getByRole("option", { name: label, exact: true }).click(),
     ]);
     await expect(this.lockedToggle()).toHaveText(label);
