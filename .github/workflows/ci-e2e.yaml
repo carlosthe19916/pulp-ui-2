@@ -23,7 +23,7 @@ jobs:
         with:
           path: ${{ env.BACKEND_IMAGE }}
           # Bump vN when the image build changes so the cached image is rebuilt.
-          key: pulp-backend-v2-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          key: pulp-backend-v3-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
 
       - name: Set up oci-env
         if: steps.cache.outputs.cache-hit != 'true'
@@ -39,11 +39,14 @@ jobs:
             'FROM localhost/oci_env/pulp:base' \
             'RUN dnf -y install cairo-devel cairo-gobject-devel gobject-introspection-devel ostree-devel && dnf clean all' \
             | docker build -t localhost/oci_env/pulp:base -f - .
-          # Save pulp images for the matrix to load; fall back to all if none match.
-          ids=$(docker images --format '{{.ID}} {{.Repository}}' \
-            | awk 'tolower($2) ~ /pulp/ {print $1}' | sort -u)
-          [ -n "$ids" ] || ids=$(docker images -q | sort -u)
-          docker save -o "${BACKEND_IMAGE}" $ids
+          # Save by name:tag, not image ID: saving by ID drops the tag, so the load
+          # leaves the image dangling and compose rebuilds it from scratch (without
+          # the packages above). Fall back to all pulp-tagged images, else every tag.
+          tags=$(docker images --format '{{.Repository}}:{{.Tag}}' \
+            | awk 'tolower($0) ~ /pulp/ && $0 !~ /<none>/' | sort -u)
+          [ -n "$tags" ] || tags=$(docker images --format '{{.Repository}}:{{.Tag}}' \
+            | awk '$0 !~ /<none>/' | sort -u)
+          docker save -o "${BACKEND_IMAGE}" $tags
 
   e2e:
     needs: build-backend
@@ -106,7 +109,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.BACKEND_IMAGE }}
-          key: pulp-backend-v2-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          key: pulp-backend-v3-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
 
       - name: Load cached backend image
         run: |
