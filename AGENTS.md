@@ -100,11 +100,6 @@ npm run rules
 npm run build
 ```
 
-Claude Code loads project guidance via `CLAUDE.md` (symlink to `AGENTS.md` in this repo).
-
-`npm run lint` is the real type check (ESLint + `tsc -p tsconfig.app.json` per workspace); a
-bare `tsc --noEmit` at the root checks nothing.
-
 ### Linting and formatting for agents
 
 Agents use the fast oxc tools (`lint:fast`, `format:fast`) while working, for speed (about 4 s
@@ -124,12 +119,7 @@ compared with about 30 s for ESLint), and run the full ESLint and Prettier gate 
 
 ## Tech Stack
 
-TypeScript, React, [PatternFly](https://www.patternfly.org/) (components,
-[Data view](https://www.patternfly.org/extensions/data-view/overview) tables), Vite (client) and
-Rollup (common, server), TanStack Router (file-based, code-split) and TanStack Query, Axios,
-[@hey-api/openapi-ts](https://heyapi.dev/) (generated client), react-hook-form + yup,
-react-oidc-context (auth modes `none` / `basic` / `oidc`), Vitest, Playwright, ESLint, Prettier,
-npm workspaces.
+See [tech-stack.md](./docs/tech-stack.md)
 
 ## Coding Standards
 
