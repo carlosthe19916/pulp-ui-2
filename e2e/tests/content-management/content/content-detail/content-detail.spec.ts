@@ -1,4 +1,5 @@
 import { expect, test } from "@support/fixtures";
+import { expectVersionCreated } from "@support/helpers/repositoryVersion";
 import { uniqueName } from "@support/helpers/unique";
 
 /**
@@ -28,9 +29,7 @@ test.describe("Content writes", () => {
       .fill(repository);
     await page.getByRole("option", { name: repository }).click();
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(
-      page.getByText(`Version 1 of "${repository}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, repository, 1);
 
     await page.getByRole("tab", { name: "Repositories" }).click();
     const row = page.getByRole("row", { name: new RegExp(repository) });
@@ -42,9 +41,7 @@ test.describe("Content writes", () => {
       .getByRole("dialog", { name: /Remove 1 unit from/ })
       .getByRole("button", { name: "Remove", exact: true })
       .click();
-    await expect(
-      page.getByText(`Version 2 of "${repository}" created`),
-    ).toBeVisible();
+    await expectVersionCreated(page, repository, 2);
     await expect(
       page.getByRole("heading", { name: "Not in any repository" }),
     ).toBeVisible();

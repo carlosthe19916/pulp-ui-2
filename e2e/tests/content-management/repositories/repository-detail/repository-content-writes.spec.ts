@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "@support/fixtures";
+import { expectVersionCreated } from "@support/helpers/repositoryVersion";
 import { mockInFlightTask } from "@support/helpers/taskMock";
 import { uniqueName } from "@support/helpers/unique";
 import type { ContentPage } from "@support/pom/ContentPage";
@@ -29,22 +30,6 @@ const textFile = (name: string) => ({
   mimeType: "text/plain",
   buffer: Buffer.from(`e2e upload ${name} ${Date.now()}\n`),
 });
-
-/**
- * Asserts the "Version N created" outcome toast. The UI only surfaces it once its task
- * poll (every DEFAULT_REFETCH_INTERVAL = 5s) observes the dispatched change finishing, so
- * the toast can lag the task by nearly a full poll cycle. Wait a whole cycle past the 5s
- * default rather than racing the poll, which is why these assertions flaked on slow CI.
- */
-const expectVersionCreated = async (
-  page: Page,
-  name: string,
-  version: number,
-): Promise<void> => {
-  await expect(
-    page.getByText(`Version ${version} of "${name}" created`),
-  ).toBeVisible({ timeout: 15_000 });
-};
 
 /**
  * Content changes on a repository: every one creates a new version, the outcome toast
