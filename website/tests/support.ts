@@ -1,16 +1,26 @@
-import type { Page, TestInfo } from "@playwright/test";
+import type { ConsoleMessage, Page, TestInfo } from "@playwright/test";
 
-// Console noise that isn't a sign of the app being broken: external resources
-// (web fonts) that may be blocked or rate-limited in CI, and the dev-only React
-// DevTools hint. Anything else counts as a real error.
-const IGNORED_ERROR_PATTERNS = [
-  /fonts\.googleapis\.com/i,
-  /fonts\.gstatic\.com/i,
-  /Download the React DevTools/i,
-];
+// External resources whose load failures aren't a sign of the app being broken:
+// web fonts may be blocked or rate-limited in CI. Matched by exact host (parsed
+// from the resource URL), so a lookalike host such as
+// "fonts.googleapis.com.evil.test" is never silently ignored.
+const IGNORED_ERROR_HOSTS = new Set([
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+]);
 
-function isIgnored(text: string): boolean {
-  return IGNORED_ERROR_PATTERNS.some((pattern) => pattern.test(text));
+function hostnameOf(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+/** True for `console.error`s that come from a known-ignorable external host. */
+export function isIgnoredConsoleError(message: ConsoleMessage): boolean {
+  const host = hostnameOf(message.location()?.url ?? "");
+  return host !== null && IGNORED_ERROR_HOSTS.has(host);
 }
 
 /**
@@ -35,9 +45,8 @@ export function collectPageErrors(page: Page): string[] {
 
   page.on("console", (message) => {
     if (message.type() !== "error") return;
-    const text = message.text();
-    if (isIgnored(text)) return;
-    errors.push(`console.error: ${text}`);
+    if (isIgnoredConsoleError(message)) return;
+    errors.push(`console.error: ${message.text()}`);
   });
 
   return errors;

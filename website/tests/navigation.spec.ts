@@ -39,7 +39,7 @@ test.describe("navigation", () => {
 
     await expect(navbar.getByRole("link", { name: /GitHub/ })).toHaveAttribute(
       "href",
-      /github\.com\//,
+      /^https:\/\/github\.com\//,
     );
   });
 

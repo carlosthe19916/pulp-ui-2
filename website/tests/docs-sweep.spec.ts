@@ -1,16 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { attachErrors } from "./support";
-
-const IGNORED_ERROR_PATTERNS = [
-  /fonts\.googleapis\.com/i,
-  /fonts\.gstatic\.com/i,
-  /Download the React DevTools/i,
-];
-
-function isIgnored(text: string): boolean {
-  return IGNORED_ERROR_PATTERNS.some((pattern) => pattern.test(text));
-}
+import { attachErrors, isIgnoredConsoleError } from "./support";
 
 /**
  * Visit every page the build generated (from sitemap.xml) and assert each one
@@ -27,9 +17,8 @@ test("every generated page renders cleanly", async ({ page }, testInfo) => {
   });
   page.on("console", (message) => {
     if (message.type() !== "error") return;
-    const text = message.text();
-    if (isIgnored(text)) return;
-    errors.push(`${currentUrl} — console.error: ${text}`);
+    if (isIgnoredConsoleError(message)) return;
+    errors.push(`${currentUrl} — console.error: ${message.text()}`);
   });
 
   // Relative path so it resolves under the site's baseUrl (/pulp-ui-2/).
