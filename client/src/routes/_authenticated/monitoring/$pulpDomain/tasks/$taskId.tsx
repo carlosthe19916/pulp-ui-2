@@ -15,7 +15,10 @@ export const Route = createFileRoute(
   }) => {
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
     const href = buildTaskHref(taskId, domain);
-    await queryClient.ensureQueryData(taskDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...taskDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading task" />,

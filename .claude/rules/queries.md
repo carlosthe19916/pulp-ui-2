@@ -54,7 +54,8 @@ Key factories (`widgetKeys.listQuery(domain, params)`, `widgetKeys.detail(href)`
 - A query that targets one resource takes an **href** (the resource's, or the parent's for a
   nested list, read as `${toProxyHref(parentHref)}child/`), never an id.
 - id→href building lives **only in route loaders**: the loader calls `build*Href(…)`, primes
-  the query with `ensureQueryData` and returns `{ href }` for the page.
+  the query with `query({ ...options, staleTime: "static" })` and returns `{ href }` for the
+  page.
 - `build*Href` returns the server form (`pulpHref()` → `{API_ROOT}…`), identical to the API's
   `pulp_href`, so a rebuilt href and a response href share one cache slot. Key factories stay
   pure: no `toProxyHref` in keys or at invalidation call sites; it is only for request URLs.
@@ -75,7 +76,7 @@ Each list endpoint has **one** generic `*QueryOptions` + `use*Query` typed with 
 ## Precondition-guard detail queries
 
 - `*QueryOptions` accepts `options?`, spreads it first and sets **no `enabled`**: route loaders
-  and `prefetchQuery` own their guard.
+  and their `query(...)` priming own their guard.
 - The `use*Query` hook takes only the identifying args (no `options`) and re-asserts
   `enabled: !!href`; without an href the queryFn would request `toProxyHref("")`:
   `useQuery({ ...widgetDetailQueryOptions({ href }), enabled: !!href })`.

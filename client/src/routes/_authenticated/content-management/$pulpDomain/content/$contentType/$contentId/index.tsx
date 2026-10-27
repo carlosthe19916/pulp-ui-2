@@ -19,7 +19,10 @@ export const Route = createFileRoute(
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
     const href = buildContentHref(contentType, contentId, domain);
     if (!href) throw new Error("Unknown content plugin type");
-    await queryClient.ensureQueryData(contentDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...contentDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading content" />,
