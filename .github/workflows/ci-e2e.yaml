@@ -10,8 +10,24 @@ env:
   BACKEND_IMAGE: /tmp/pulp-backend-image.tar
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      app: ${{ steps.areas.outputs.app }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: areas
+        uses: ./.github/actions/changed-areas
+
   # Build the oci-env backend once and cache it for the e2e matrix.
   build-backend:
+    needs: changes
+    # Skip the whole e2e pipeline for website-only changes. Each matrix leg's
+    # skipped status counts as a passing required check, so auto-merge isn't
+    # blocked and no Pulp backend is ever built.
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     name: build oci-env backend
     steps:
@@ -49,7 +65,8 @@ jobs:
           docker save -o "${BACKEND_IMAGE}" $tags
 
   e2e:
-    needs: build-backend
+    needs: [changes, build-backend]
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     name: e2e (${{ matrix.name }})
     strategy:
