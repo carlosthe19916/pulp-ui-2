@@ -39,13 +39,13 @@ Then the listed rows are exactly <rows>, in the sort order
 
 ### ROL-LIST-06 A non-superuser cannot read the Roles list
 
-Summary: A non-superuser opening the Roles list sees “403: Access denied”.
+Summary: A non-superuser opening the Roles list sees “Access permissions needed”.
 
 Auth: second-user
 
 Given a second user who is not a superuser
 When they open the Roles list
-Then the table shows "403: Access denied" (Pulp lets only superusers list roles)
+Then the table shows "Access permissions needed" (Pulp lets only superusers list roles)
 
 ## Locked roles
 

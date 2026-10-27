@@ -36,11 +36,11 @@ guards. Use a viewset nothing else in the run needs, and reset it right after.
 When I set <field> to <value> and click "Save"
 Then <outcome>
 
-| field            | value                            | outcome                                                                                |
-| ---------------- | -------------------------------- | -------------------------------------------------------------------------------------- |
-| Statements       | `[]`                             | saved; afterwards everyone, admin included, gets "403: Access denied" on that endpoint |
-| Statements       | a statement without `principal`  | saved; afterwards requests to that endpoint fail with a server error                   |
-| Queryset scoping | `{"function": "not_a_function"}` | saved; afterwards the endpoint's list fails with a server error                        |
+| field            | value                            | outcome                                                                                       |
+| ---------------- | -------------------------------- | --------------------------------------------------------------------------------------------- |
+| Statements       | `[]`                             | saved; afterwards everyone, admin included, gets "Access permissions needed" on that endpoint |
+| Statements       | a statement without `principal`  | saved; afterwards requests to that endpoint fail with a server error                          |
+| Queryset scoping | `{"function": "not_a_function"}` | saved; afterwards the endpoint's list fails with a server error                               |
 
 ### ACP-EDT-03 A successful save
 
@@ -104,13 +104,13 @@ this is the only way a reset fails.
 
 ### ACP-PERM-01 Only superusers can see or change access policies
 
-Summary: A non-superuser opening Access policies sees “403: Access denied” with no editable rows.
+Summary: A non-superuser opening Access policies sees “Access permissions needed” with no editable rows.
 
 Auth: second-user
 
 Given a second user who is not a superuser
 When they open Access policies
-Then the table shows "403: Access denied" and there is no row to edit or reset
+Then the table shows "Access permissions needed" and there is no row to edit or reset
 
 ## Effect
 
@@ -123,6 +123,6 @@ Serial
 
 Given a second user who can see the Tasks list today
 When I change the `tasks` policy so that only admins may list it
-Then the second user sees "403: Access denied" on Tasks
+Then the second user sees "Access permissions needed" on Tasks
 When I reset the policy
 Then the second user sees the list again
