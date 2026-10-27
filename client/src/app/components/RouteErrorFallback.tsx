@@ -2,15 +2,10 @@ import type React from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 
-import {
-  Button,
-  EmptyState,
-  EmptyStateActions,
-  EmptyStateBody,
-  EmptyStateFooter,
-  PageSection,
-} from "@patternfly/react-core";
+import { Button, PageSection } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
+
+import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 
 interface IRouteErrorFallbackProps {
   error: unknown;
@@ -29,14 +24,13 @@ export const RouteErrorFallback: React.FC<IRouteErrorFallbackProps> = ({
 
   return (
     <PageSection>
-      <EmptyState
+      <FullPageEmptyState
         titleText="Something went wrong"
-        headingLevel="h1"
         icon={ExclamationCircleIcon}
-      >
-        <EmptyStateBody>{message}</EmptyStateBody>
-        <EmptyStateFooter>
-          <EmptyStateActions>
+        status="danger"
+        body={message}
+        actions={
+          <>
             <Button
               variant="primary"
               onClick={() => {
@@ -44,7 +38,7 @@ export const RouteErrorFallback: React.FC<IRouteErrorFallbackProps> = ({
                 void navigate({ to: "/" });
               }}
             >
-              Go to Dashboard
+              Go to dashboard
             </Button>
             <Button
               variant="secondary"
@@ -52,9 +46,9 @@ export const RouteErrorFallback: React.FC<IRouteErrorFallbackProps> = ({
             >
               Reload page
             </Button>
-          </EmptyStateActions>
-        </EmptyStateFooter>
-      </EmptyState>
+          </>
+        }
+      />
     </PageSection>
   );
 };

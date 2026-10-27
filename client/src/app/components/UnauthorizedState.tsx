@@ -6,13 +6,12 @@ import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
 export const UnauthorizedState: React.FC = () => {
   return (
     <EmptyState
-      titleText="403: Access denied"
+      titleText="Access permissions needed"
       headingLevel="h4"
       icon={LockIcon}
     >
       <EmptyStateBody>
-        You do not have permission to view this page. Contact your administrator
-        if you believe this is an error.
+        To view this, ask your administrator to adjust your permissions.
       </EmptyStateBody>
     </EmptyState>
   );

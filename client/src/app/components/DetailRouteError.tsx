@@ -2,15 +2,12 @@ import type React from "react";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
 
-import {
-  EmptyState,
-  EmptyStateBody,
-  PageSection,
-} from "@patternfly/react-core";
+import { PageSection } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
+import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
+import PathMissingIcon from "@patternfly/react-icons/dist/esm/icons/path-missing-icon";
 
-import { NotFoundEmptyState } from "@app/components/NotFoundEmptyState";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
+import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 import { isForbiddenError, isNotFoundError } from "@app/utils/isHttpError";
 
 /** Shared route `errorComponent` for detail pages: 403 / 404 / generic states. */
@@ -18,7 +15,11 @@ export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
   if (isForbiddenError(error)) {
     return (
       <PageSection>
-        <UnauthorizedState />
+        <FullPageEmptyState
+          titleText="Access permissions needed"
+          icon={LockIcon}
+          body="To view this page, ask your administrator to adjust your permissions."
+        />
       </PageSection>
     );
   }
@@ -26,22 +27,23 @@ export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
   if (isNotFoundError(error)) {
     return (
       <PageSection>
-        <NotFoundEmptyState />
+        <FullPageEmptyState
+          titleText="404: That page no longer exists"
+          icon={PathMissingIcon}
+          body="Another page might have what you need."
+        />
       </PageSection>
     );
   }
 
   return (
     <PageSection>
-      <EmptyState
-        titleText="Unable to load resource"
-        headingLevel="h4"
+      <FullPageEmptyState
+        titleText="Unable to load this page"
         icon={ExclamationCircleIcon}
-      >
-        <EmptyStateBody>
-          Something went wrong while loading this page. Try again later.
-        </EmptyStateBody>
-      </EmptyState>
+        status="danger"
+        body="Check your connection and reload the page."
+      />
     </PageSection>
   );
 };
