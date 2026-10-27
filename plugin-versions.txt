@@ -1,15 +1,21 @@
 # Backend repos CI clones to build the oci-env Pulp; "<repo> <ref>" per line,
 # ref a branch/tag/SHA on github.com/pulp/<repo>. Plugin rows (all but oci_env)
 # must match DEV_SOURCE_PATH in compose.env or CI fails.
+#
+# Plugin rows are pinned to release tags so a given file content = one reproducible
+# backend image (the e2e CI tags the published image by this file's hash). They are
+# bumped automatically by the daily plugin-versions-update.yaml workflow, which opens
+# a PR to the latest release of each plugin and lets e2e gate the merge. oci_env has
+# no releases, so it tracks main and is bumped by hand.
 oci_env              main
-pulpcore             main
-pulp_rpm             main
-pulp_container       main
-pulp_python          main
-pulp_gem             main
-pulp_maven           main
-pulp_npm             main
-pulp_hugging_face    main
-pulp_ansible         main
-pulp_deb             main
-pulp_ostree          main
+pulpcore             3.123.1
+pulp_rpm             3.39.4
+pulp_container       2.30.0
+pulp_python          3.37.1
+pulp_gem             0.8.0
+pulp_maven           0.36.0
+pulp_npm             0.10.2
+pulp_hugging_face    0.3.2
+pulp_ansible         0.30.3
+pulp_deb             3.11.1
+pulp_ostree          2.6.1

@@ -1,0 +1,93 @@
+name: Update Pulp plugin versions
+
+# Daily, bump each plugin row in plugin-versions.txt to the plugin's latest GitHub
+# release and open a PR. The PR's e2e run clones those pinned tags into /src and
+# tests them; auto-merge lands it once the required checks pass — so we track the
+# latest Pulp without ever merging a breaking bump by hand. oci_env has no releases,
+# so it tracks main and is bumped manually.
+#
+# Setup required for the gate to work end to end:
+#   * Secret PLUGIN_BUMP_TOKEN — a PAT (or GitHub App token) with contents:write +
+#     pull-requests:write. A PR opened with the default GITHUB_TOKEN does NOT trigger
+#     other workflows (anti-recursion), so without this token e2e will not run on the
+#     PR. With GITHUB_TOKEN as fallback the PR is still opened, but a maintainer must
+#     kick e2e (e.g. close/reopen) and merge by hand.
+#   * If branch protection on main requires an approving review, auto-merge needs an
+#     approval from an identity other than the PR author (a bot cannot approve its own
+#     PR) — approve manually, or add a second-token approval step.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Bump plugin rows to latest releases
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          changed=0
+          tmp="$(mktemp)"
+          while IFS= read -r line; do
+            # Preserve comments and blank lines verbatim.
+            case "$line" in
+              '' | \#*)
+                printf '%s\n' "$line" >>"$tmp"
+                continue
+                ;;
+            esac
+            repo="$(printf '%s' "$line" | awk '{print $1}')"
+            ref="$(printf '%s' "$line" | awk '{print $2}')"
+            # oci_env has no releases — leave it (and anything unexpected) untouched.
+            if [ "$repo" = "oci_env" ]; then
+              printf '%s\n' "$line" >>"$tmp"
+              continue
+            fi
+            # Use releases/latest, not the tags list: some repos carry noisy,
+            # non-release tags that sort above the real latest release.
+            latest="$(gh api "repos/pulp/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")"
+            if [ -z "$latest" ] || [ "$latest" = "$ref" ]; then
+              printf '%s\n' "$line" >>"$tmp"
+              continue
+            fi
+            printf '%-20s %s\n' "$repo" "$latest" >>"$tmp"
+            echo "  $repo: $ref -> $latest"
+            changed=1
+          done <plugin-versions.txt
+          mv "$tmp" plugin-versions.txt
+          echo "changed=$changed" >>"$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        id: cpr
+        if: steps.bump.outputs.changed == '1'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # PAT so the PR triggers e2e; GITHUB_TOKEN fallback still opens the PR.
+          token: ${{ secrets.PLUGIN_BUMP_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: ci/bump-plugin-versions
+          delete-branch: true
+          commit-message: "ci(deps): bump Pulp plugin versions to latest releases"
+          title: "ci(deps): bump Pulp plugin versions to latest releases"
+          body: |
+            Automated bump of `plugin-versions.txt` to the latest GitHub release of
+            each Pulp plugin.
+
+            The e2e suite runs against these versions on this PR and gates the merge.
+          labels: dependencies
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+          REPO: ${{ github.repository }}
+        run: gh pr merge "$PR" --repo "$REPO" --auto --squash

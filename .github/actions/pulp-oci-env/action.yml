@@ -7,6 +7,14 @@ inputs:
     description: Value for PULP_DOMAIN_ENABLED in the generated compose.ci.env.
     required: false
     default: "true"
+  clone-plugins:
+    description: >-
+      Clone the plugin source repos into siblings. Set to "false" to clone only
+      oci_env, which is enough to build/publish the base image (plugins are NOT
+      baked in). A job that boots Pulp must keep "true": plugins install editable
+      from /src at container startup.
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
@@ -16,9 +24,16 @@ runs:
 
     - name: Clone backend repos as siblings (pinned to plugin-versions.txt)
       shell: bash
+      env:
+        CLONE_PLUGINS: ${{ inputs.clone-plugins }}
       run: |
+        # When the backend image is pulled prebuilt we only need oci_env (the
+        # oci-env client is pip-installed from it); skip the plugin source clones.
         while read -r repo ref _; do
           case "$repo" in '' | \#*) continue ;; esac
+          if [ "$CLONE_PLUGINS" != "true" ] && [ "$repo" != "oci_env" ]; then
+            continue
+          fi
           if [ -d "../$repo" ]; then
             echo "../$repo already present, skipping"
             continue
