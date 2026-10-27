@@ -74,7 +74,7 @@ jobs:
       matrix:
         # Each entry is its own job with its own Pulp backend, so the shards run
         # in parallel with no shared-backend contention. The main suite (the
-        # chromium project, which ignores access-policies) is split into 4 shards
+        # chromium project, which ignores access-policies) is split into 3 shards
         # under domains=enabled; access-policies runs on its own (serial); the
         # domains=disabled leg re-checks only the @smoke flows on the no-domains
         # code path.
@@ -82,22 +82,17 @@ jobs:
           - {
               name: main-1,
               domains: enabled,
-              args: "--project=chromium --shard=1/4",
+              args: "--project=chromium --shard=1/3",
             }
           - {
               name: main-2,
               domains: enabled,
-              args: "--project=chromium --shard=2/4",
+              args: "--project=chromium --shard=2/3",
             }
           - {
               name: main-3,
               domains: enabled,
-              args: "--project=chromium --shard=3/4",
-            }
-          - {
-              name: main-4,
-              domains: enabled,
-              args: "--project=chromium --shard=4/4",
+              args: "--project=chromium --shard=3/3",
             }
           - {
               name: access-policies,
