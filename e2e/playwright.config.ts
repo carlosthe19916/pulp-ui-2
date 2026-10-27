@@ -23,7 +23,7 @@ const authEnv = (authMode: string | undefined): Record<string, string> =>
 /** Options the local preset ([playwright.local.ts]) retargets; everything else is
  * identical between local and CI so it lives here, once. */
 export interface IE2EConfigOptions {
-  /** Pulp backend the dev server proxies to. CI: 8080; local oci-env: 5003. */
+  /** Pulp backend the dev server proxies to; defaults to oci-env on :5003. */
   pulpApiUrl?: string;
   /** App auth mode for the spawned dev server (kept in sync with `E2E_AUTH`). */
   authMode?: string;
@@ -38,7 +38,7 @@ export const createE2EConfig = (
   options: IE2EConfigOptions = {},
 ): PlaywrightTestConfig => {
   const pulpApiUrl =
-    options.pulpApiUrl ?? process.env.PULP_API_URL ?? "http://localhost:8080";
+    options.pulpApiUrl ?? process.env.PULP_API_URL ?? "http://localhost:5003";
   const authMode = options.authMode ?? process.env.E2E_AUTH;
   const channel = options.channel ?? process.env.E2E_BROWSER_CHANNEL;
 

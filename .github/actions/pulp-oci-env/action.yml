@@ -1,0 +1,63 @@
+name: Set up oci-env Pulp backend
+description: >-
+  Clone the pinned backend repos as siblings, install oci-env, validate the
+  plugin manifest against DEV_SOURCE_PATH, and write a CI compose env file.
+inputs:
+  domain-enabled:
+    description: Value for PULP_DOMAIN_ENABLED in the generated compose.ci.env.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Clone backend repos as siblings (pinned to plugin-versions.txt)
+      shell: bash
+      run: |
+        while read -r repo ref _; do
+          case "$repo" in '' | \#*) continue ;; esac
+          if [ -d "../$repo" ]; then
+            echo "../$repo already present, skipping"
+            continue
+          fi
+          echo "Cloning $repo @ $ref"
+          git clone --depth 1 --branch "$ref" \
+            "https://github.com/pulp/$repo.git" "../$repo"
+        done < plugin-versions.txt
+
+    - name: Check plugin-versions.txt matches DEV_SOURCE_PATH
+      shell: bash
+      run: |
+        manifest=$(grep -vE '^\s*#|^\s*$' plugin-versions.txt \
+          | awk '{print $1}' | grep -vx 'oci_env' | sort -u)
+        devsrc=$(grep '^DEV_SOURCE_PATH=' compose.env \
+          | cut -d= -f2- | tr ':' '\n' | sort -u)
+        if [ "$manifest" != "$devsrc" ]; then
+          echo "plugin-versions.txt plugins differ from compose.env DEV_SOURCE_PATH:"
+          diff <(echo "$devsrc") <(echo "$manifest") || true
+          exit 1
+        fi
+        echo "Plugin manifest matches DEV_SOURCE_PATH."
+
+    - name: Install oci-env
+      shell: bash
+      run: |
+        pip install -e ../oci_env/client
+        echo "OCI_ENV_PATH=$(realpath ../oci_env)" >> "$GITHUB_ENV"
+
+    - name: Write CI compose env file
+      shell: bash
+      env:
+        DOMAIN_ENABLED: ${{ inputs.domain-enabled }}
+      run: |
+        # Derive from compose.env to keep DEV_SOURCE_PATH single-sourced.
+        grep -vE '^(COMPOSE_PROFILE|COMPOSE_BINARY|PULP_DOMAIN_ENABLED)=' \
+          compose.env > compose.ci.env
+        {
+          echo 'COMPOSE_PROFILE='
+          echo 'COMPOSE_BINARY=docker'
+          echo "PULP_DOMAIN_ENABLED=\"${DOMAIN_ENABLED}\""
+        } >> compose.ci.env

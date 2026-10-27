@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { dataFile } from "@support/dataFile";
 import { expect, test } from "@support/fixtures";
+import { expectVersionCreated } from "@support/helpers/repositoryVersion";
 import { uniqueName } from "@support/helpers/unique";
 import type { ContentPage } from "@support/pom/ContentPage";
 
@@ -53,9 +54,7 @@ test.describe("Plugin uploads", () => {
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
 
       // The async create waits for two tasks (create, then modify).
-      await expect(
-        page.getByText(`Version 1 of "${name}" created`),
-      ).toBeVisible({ timeout: 30_000 });
+      await expectVersionCreated(page, name, 1, 30_000);
       expect(await api.latestContentCount(repositoryHref)).toBe(1);
     });
   }
@@ -81,9 +80,7 @@ test.describe("Plugin uploads", () => {
       .fill("small");
     await dialog.getByRole("button", { name: "Import", exact: true }).click();
 
-    await expect(page.getByText(`Version 1 of "${name}" created`)).toBeVisible({
-      timeout: 30_000,
-    });
+    await expectVersionCreated(page, name, 1, 30_000);
     expect(await api.latestContentCount(repositoryHref)).toBeGreaterThan(0);
   });
 });

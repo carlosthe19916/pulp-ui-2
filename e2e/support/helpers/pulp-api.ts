@@ -3,7 +3,7 @@ import { request, type APIRequestContext } from "@playwright/test";
 import { E2E_PASSWORD, E2E_USERNAME } from "./auth";
 import { STRONG_PASSWORD } from "./unique";
 
-const PULP_API_URL = process.env.PULP_API_URL ?? "http://localhost:8080";
+const PULP_API_URL = process.env.PULP_API_URL ?? "http://localhost:5003";
 
 const authHeader =
   "Basic " + Buffer.from(`${E2E_USERNAME}:${E2E_PASSWORD}`).toString("base64");

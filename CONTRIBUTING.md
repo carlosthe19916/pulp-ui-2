@@ -4,31 +4,26 @@
 
 - Node.js 22+
 - npm 10+
-- Docker (for e2e Pulp via `docker-compose.e2e.yml`)
+- Podman (+ `podman-compose`) for the local oci-env Pulp backend; see below
 
 ## Getting started
 
 ```bash
 npm ci
-PULP_API_URL="http://localhost:8080" npm run start:dev
+PULP_API_URL="http://localhost:5003" npm run start:dev
 ```
 
 The app starts at `http://localhost:3000`
 
 ### Local Pulp for UI / e2e
 
-```bash
-docker compose -f docker-compose.e2e.yml up -d
+The backend is an **oci-env** Pulp served on `http://localhost:5003`. The `DEV_SOURCE_PATH` plugins
+in `compose.env` are built from source, so it carries the full catalog plugin set (including
+`pulp_npm` and `pulp_hugging_face`) — the same backend the e2e CI job provisions, pinned to the
+versions in [`plugin-versions.txt`](plugin-versions.txt).
 
-# Wait until status is OK (first boot can take several minutes)
-curl -fsS http://localhost:8080/api/pulp/api/v3/status/
-
-# Default admin password used by e2e (override with E2E_PASSWORD)
-docker compose -f docker-compose.e2e.yml exec -T pulp \
-  pulpcore-manager reset-admin-password --password password
-```
-
-Compose mounts `e2e/pulp/settings/settings.py` (API root + domains). Default credentials: `admin` / `password` (`E2E_USERNAME` / `E2E_PASSWORD`).
+Set it up once with the `dev-env-setup` skill, then start it and run the suite with the `e2e-local`
+skill. Default credentials: `admin` / `password` (`E2E_USERNAME` / `E2E_PASSWORD`).
 
 ## Project structure
 
@@ -50,11 +45,11 @@ npm test
 # Unit tests (single run, CI mode)
 npm test -- --run
 
-# E2E — start Pulp compose first (see above), then:
-npm run test:e2e
+# E2E against the oci-env backend on :5003 (start it first, see above)
+npm run test:local -w e2e
 
 # E2E with UI
-npm run test -w e2e -- --ui
+npm run test:local -w e2e -- --ui
 ```
 
 Playwright starts `npm run start:dev` via `webServer` and passes `PULP_API_URL`. Authenticated specs reuse a saved storage state from `e2e/tests/auth.setup.ts`.

@@ -1,0 +1,15 @@
+# Backend repos CI clones to build the oci-env Pulp; "<repo> <ref>" per line,
+# ref a branch/tag/SHA on github.com/pulp/<repo>. Plugin rows (all but oci_env)
+# must match DEV_SOURCE_PATH in compose.env or CI fails.
+oci_env              main
+pulpcore             main
+pulp_rpm             main
+pulp_container       main
+pulp_python          main
+pulp_gem             main
+pulp_maven           main
+pulp_npm             main
+pulp_hugging_face    main
+pulp_ansible         main
+pulp_deb             main
+pulp_ostree          main
