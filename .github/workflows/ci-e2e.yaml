@@ -7,7 +7,14 @@ on:
     branches: [main]
 
 env:
+  # Fork-fallback tarball path (when we cannot push to / pull from ghcr).
   BACKEND_IMAGE: /tmp/pulp-backend-image.tar
+  # Bump when the base image build recipe changes in a way the oci_env base/ tree
+  # hash does not capture (e.g. a drift of the upstream pulp-ci-centos10:latest base).
+  BACKEND_RECIPE: r1
+  # Extra dev libs baked onto the base image for pulp_ostree (single-sourced: used
+  # both in the image-tag hash and the docker build below).
+  EXTRA_DEV_LIBS: cairo-devel cairo-gobject-devel gobject-introspection-devel ostree-devel
 
 jobs:
   changes:
@@ -21,7 +28,13 @@ jobs:
       - id: areas
         uses: $/.github/actions/changed-areas
 
-  # Build the oci-env backend once and cache it for the e2e matrix.
+  # Publish the oci-env base image to ghcr once, then reuse it across the e2e matrix.
+  #
+  # The base image (localhost/oci_env/pulp:base) bakes only the OS + deps from
+  # oci_env's base/ dir plus our extra dev libs — it has NO Pulp plugins. Plugins
+  # (including pulpcore) install editable from the /src mount at container startup,
+  # pinned by plugin-versions.txt. So the image tag tracks the oci_env base/ tree,
+  # NOT plugin-versions.txt: a daily plugin bump reuses the already-published image.
   build-backend:
     needs: changes
     # Skip the whole e2e pipeline for website-only changes. Each matrix leg's
@@ -30,45 +43,144 @@ jobs:
     if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     name: build oci-env backend
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      tag: ${{ steps.meta.outputs.tag }}
+      available: ${{ steps.availability.outputs.available }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Restore backend image cache
-        id: cache
-        uses: actions/cache@v4
+      - name: Determine push capability
+        id: perm
+        # Fork PRs get a read-only token, so they cannot push to ghcr; same-repo
+        # PRs and pushes can.
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "push" ] || [ "$HEAD_REPO" = "$REPO" ]; then
+            echo "can_push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can_push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to ghcr
+        if: steps.perm.outputs.can_push == 'true'
+        uses: docker/login-action@v3
         with:
-          path: ${{ env.BACKEND_IMAGE }}
-          # Bump vN when the image build changes so the cached image is rebuilt.
-          key: pulp-backend-v3-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute base image ref
+        id: meta
+        env:
+          REPO: ${{ github.repository }}
+          RECIPE: ${{ env.BACKEND_RECIPE }}
+          DEV_LIBS: ${{ env.EXTRA_DEV_LIBS }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/$(echo "$REPO" | tr '[:upper:]' '[:lower:]')/pulp-backend"
+          oci_ref="$(awk '$1=="oci_env"{print $2}' plugin-versions.txt)"
+          # Tag the base image by the oci_env base/ subtree (what actually goes into
+          # the image) + the extra dev libs + a manual recipe knob.
+          base_tree="$(gh api "repos/pulp/oci_env/git/trees/${oci_ref}" \
+            --jq '.tree[] | select(.path=="base").sha')"
+          hash="$(printf '%s\n' "$base_tree" "$DEV_LIBS" "$RECIPE" \
+            | sha256sum | cut -c1-16)"
+          tag="${RECIPE}-${hash}"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Backend base image: $image:$tag"
+
+      - name: Check whether base image is already published
+        id: check
+        env:
+          REF: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}
+        run: |
+          if docker buildx imagetools inspect "$REF" >/dev/null 2>&1; then
+            echo "$REF already published."
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$REF not found; will build from source."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only oci_env is needed to build the base image (plugins are not baked in).
       - name: Set up oci-env
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.check.outputs.needs_build == 'true'
         uses: $/.github/actions/pulp-oci-env
+        with:
+          clone-plugins: "false"
 
-      - name: Build backend image and save it
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Build base image
+        if: steps.check.outputs.needs_build == 'true'
         run: |
           oci-env -e compose.ci.env compose build
           # pulp_ostree builds PyGObject/pycairo from source at container start; bake
-          # in the dev libs the base image's drifting :latest no longer reliably ships.
+          # in the dev libs the upstream base image's drifting :latest no longer ships.
           printf '%s\n' \
             'FROM localhost/oci_env/pulp:base' \
-            'RUN dnf -y install cairo-devel cairo-gobject-devel gobject-introspection-devel ostree-devel && dnf clean all' \
+            "RUN dnf -y install ${EXTRA_DEV_LIBS} && dnf clean all" \
             | docker build -t localhost/oci_env/pulp:base -f - .
-          # Save by name:tag, not image ID: saving by ID drops the tag, so the load
-          # leaves the image dangling and compose rebuilds it from scratch (without
-          # the packages above). Fall back to all pulp-tagged images, else every tag.
-          tags=$(docker images --format '{{.Repository}}:{{.Tag}}' \
-            | awk 'tolower($0) ~ /pulp/ && $0 !~ /<none>/' | sort -u)
-          [ -n "$tags" ] || tags=$(docker images --format '{{.Repository}}:{{.Tag}}' \
-            | awk '$0 !~ /<none>/' | sort -u)
-          docker save -o "${BACKEND_IMAGE}" $tags
+
+      - name: Push base image
+        if: steps.check.outputs.needs_build == 'true' && steps.perm.outputs.can_push == 'true'
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          IS_MAIN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          SHA: ${{ github.sha }}
+        run: |
+          docker tag localhost/oci_env/pulp:base "$IMAGE:$TAG"
+          docker push "$IMAGE:$TAG"
+          # Also publish moving tags on main for traceability / manual pulls.
+          if [ "$IS_MAIN" = "true" ]; then
+            for extra in latest "sha-$SHA"; do
+              docker tag localhost/oci_env/pulp:base "$IMAGE:$extra"
+              docker push "$IMAGE:$extra"
+            done
+          fi
+
+      # Fork PRs cannot push; hand the freshly built image to the matrix via an artifact.
+      - name: Save base image for fork fallback
+        if: steps.check.outputs.needs_build == 'true' && steps.perm.outputs.can_push != 'true'
+        run: docker save -o "${BACKEND_IMAGE}" localhost/oci_env/pulp:base
+
+      - name: Upload base image artifact (fork fallback)
+        if: steps.check.outputs.needs_build == 'true' && steps.perm.outputs.can_push != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulp-backend-image
+          path: ${{ env.BACKEND_IMAGE }}
+          retention-days: 1
+
+      - name: Report image source for the matrix
+        id: availability
+        env:
+          NEEDS_BUILD: ${{ steps.check.outputs.needs_build }}
+          CAN_PUSH: ${{ steps.perm.outputs.can_push }}
+        run: |
+          # "registry": pull from ghcr (already published or just pushed).
+          # "artifact": download the fork-fallback tarball built above.
+          if [ "$NEEDS_BUILD" = "false" ] || [ "$CAN_PUSH" = "true" ]; then
+            echo "available=registry" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=artifact" >> "$GITHUB_OUTPUT"
+          fi
 
   e2e:
     needs: [changes, build-backend]
     if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     name: e2e (${{ matrix.name }})
+    permissions:
+      contents: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -109,24 +221,47 @@ jobs:
       E2E_USERNAME: admin
       E2E_PASSWORD: password
       PULP_DOMAIN_ENABLED: ${{ matrix.domains == 'enabled' }}
+      BACKEND_IMAGE_REF: ${{ needs.build-backend.outputs.image }}:${{ needs.build-backend.outputs.tag }}
     steps:
       - uses: actions/checkout@v6
 
+      # Plugins install from /src at container boot, so e2e needs all repos cloned.
       - name: Set up oci-env
         uses: $/.github/actions/pulp-oci-env
         with:
           domain-enabled: ${{ matrix.domains == 'enabled' }}
+          clone-plugins: "true"
 
-      - name: Restore backend image cache
-        uses: actions/cache@v4
+      - name: Log in to ghcr
+        if: needs.build-backend.outputs.available == 'registry'
+        uses: docker/login-action@v3
         with:
-          path: ${{ env.BACKEND_IMAGE }}
-          key: pulp-backend-v3-${{ hashFiles('plugin-versions.txt', 'compose.env') }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Load cached backend image
+      - name: Pull prebuilt base image (registry)
+        if: needs.build-backend.outputs.available == 'registry'
         run: |
-          # Fast path; compose up rebuilds if absent.
-          [ -f "${BACKEND_IMAGE}" ] && docker load -i "${BACKEND_IMAGE}" || true
+          # On a miss, compose up transparently rebuilds the base from source.
+          if docker pull "$BACKEND_IMAGE_REF"; then
+            docker tag "$BACKEND_IMAGE_REF" localhost/oci_env/pulp:base
+          else
+            echo "Pull failed; compose up will build the base from source."
+          fi
+
+      - name: Download prebuilt base image (fork fallback)
+        if: needs.build-backend.outputs.available == 'artifact'
+        uses: actions/download-artifact@v4
+        with:
+          name: pulp-backend-image
+          path: /tmp
+
+      - name: Load prebuilt base image (fork fallback)
+        if: needs.build-backend.outputs.available == 'artifact'
+        run: |
+          [ -f "${BACKEND_IMAGE}" ] && docker load -i "${BACKEND_IMAGE}" \
+            || echo "No artifact; compose up will build the base from source."
 
       - name: Start Pulp (oci-env)
         run: oci-env -e compose.ci.env compose up -d
