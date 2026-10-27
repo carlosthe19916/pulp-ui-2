@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
         "user-guide/access-management",
       ],
     },
+    "releases",
   ],
 };
 

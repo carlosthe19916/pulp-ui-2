@@ -37,6 +37,11 @@ LABEL name="pulp/pulp-ui" \
 
 COPY --from=builder /opt/app-root/src/dist /opt/app-root/dist/
 
+# Release version surfaced in the UI's About modal (ENV.VERSION). Supplied by the image
+# build from the release tag; defaults to the dev placeholder when unset.
+ARG VERSION=99.0.0
+ENV VERSION=$VERSION
+
 ENV DEBUG=1
 
 WORKDIR /opt/app-root/dist
