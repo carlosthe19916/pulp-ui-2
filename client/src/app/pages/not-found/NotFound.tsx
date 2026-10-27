@@ -9,9 +9,9 @@ export const NotFound: React.FC = () => {
   return (
     <Bullseye>
       <FullPageEmptyState
-        titleText="404: That page no longer exists"
+        titleText="404: That page does not exist"
         icon={PathMissingIcon}
-        body="Another page might have what you need."
+        body="Another page might have the information you need."
       />
     </Bullseye>
   );

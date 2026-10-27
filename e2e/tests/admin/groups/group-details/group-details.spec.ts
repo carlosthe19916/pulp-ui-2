@@ -127,16 +127,14 @@ test.describe("Groups", () => {
       for (const bad of ["999999999", "abc"]) {
         await page.goto(`/admin/groups/${bad}`);
         await expect(
-          page.getByRole("heading", {
-            name: "404: That page no longer exists",
-          }),
+          page.getByRole("heading", { name: "404: That page does not exist" }),
         ).toBeVisible();
       }
       const gone = await seedGroup(api, cleanup);
       await api.deleteGroup(gone.name);
       await page.goto(`/admin/groups/${gone.id}`);
       await expect(
-        page.getByRole("heading", { name: "404: That page no longer exists" }),
+        page.getByRole("heading", { name: "404: That page does not exist" }),
       ).toBeVisible();
     },
   );
@@ -150,7 +148,7 @@ test.describe("Groups", () => {
    *
    * Given a second user with no permission on a group
    * When they open that group's detail URL
-   * Then "404: That page no longer exists" is displayed (a group they can't see does not exist)
+   * Then "404: That page does not exist" is displayed (a group they can't see does not exist)
    * When they open the detail URL of a group they may view
    * Then the detail page opens
    */
@@ -175,7 +173,7 @@ test.describe("Groups", () => {
       const page = await secondUser.login(user);
       await page.goto(`/admin/groups/${hidden.id}`);
       await expect(
-        page.getByRole("heading", { name: "404: That page no longer exists" }),
+        page.getByRole("heading", { name: "404: That page does not exist" }),
       ).toBeVisible();
       // A group they may view opens (the POM waits out the detail-route load).
       await GroupDetailPage.open(page, viewable);
@@ -459,17 +457,17 @@ test.describe("Groups", () => {
   /**
    * GRP-ROL-02 · A non-superuser who may view a group cannot read its role assignments
    *
-   * Summary: A non-superuser who may view a group still sees “Access permissions needed” on its Roles tab and Add Role modal.
+   * Summary: A non-superuser who may view a group still sees “403: Access denied” on its Roles tab and Add Role modal.
    *
    * Auth: second-user
    *
    * Given a second user who may view group G but is not a superuser
    * When they open G's detail page
-   * Then the tab reads "Roles (0)" and the Roles tab table shows "Access permissions needed"
-   * And "Add Role" is enabled, but its modal table shows "Access permissions needed" too
+   * Then the tab reads "Roles (0)" and the Roles tab table shows "403: Access denied"
+   * And "Add Role" is enabled, but its modal table shows "403: Access denied" too
    */
   test(
-    "A non-superuser who may view a group still sees “Access permissions needed” on its Roles tab and Add Role modal.",
+    "A non-superuser who may view a group still sees “403: Access denied” on its Roles tab and Add Role modal.",
     {
       tag: "@GRP-ROL-02",
       annotation: {
@@ -492,13 +490,11 @@ test.describe("Groups", () => {
       const tab = new RoleAssignmentsTab(page, "group");
       await expect(tab.tab).toHaveText("Roles (0)");
       await tab.open();
-      await expect(
-        tab.table.stateHeading("Access permissions needed"),
-      ).toBeVisible();
+      await expect(tab.table.stateHeading("403: Access denied")).toBeVisible();
       await expect(tab.addButton()).toBeEnabled();
       const modal = await tab.openAdd();
       await expect(
-        modal.table.stateHeading("Access permissions needed"),
+        modal.table.stateHeading("403: Access denied"),
       ).toBeVisible();
     },
   );

@@ -16,9 +16,9 @@ export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
     return (
       <PageSection>
         <FullPageEmptyState
-          titleText="Access permissions needed"
+          titleText="403: Access denied"
           icon={LockIcon}
-          body="To view this page, ask your administrator to adjust your permissions."
+          body="You do not have permission to view this page. Contact your administrator if you believe this is an error."
         />
       </PageSection>
     );
@@ -28,9 +28,9 @@ export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
     return (
       <PageSection>
         <FullPageEmptyState
-          titleText="404: That page no longer exists"
+          titleText="404: That page does not exist"
           icon={PathMissingIcon}
-          body="Another page might have what you need."
+          body="Another page might have the information you need."
         />
       </PageSection>
     );
@@ -39,10 +39,10 @@ export const DetailRouteError: React.FC<ErrorComponentProps> = ({ error }) => {
   return (
     <PageSection>
       <FullPageEmptyState
-        titleText="Unable to load this page"
+        titleText="Unable to load resource"
         icon={ExclamationCircleIcon}
         status="danger"
-        body="Check your connection and reload the page."
+        body="Something went wrong while loading this page. Try again later."
       />
     </PageSection>
   );

@@ -130,14 +130,14 @@ test.describe("Users", () => {
   /**
    * USR-DET-07 · Detail-route errors show 404
    *
-   * Summary: A user detail URL with a missing, non-numeric or deleted id shows “404: That page no longer exists”.
+   * Summary: A user detail URL with a missing, non-numeric or deleted id shows “404: That page does not exist”.
    *
    * When I open a user detail URL whose id does not exist, is non-numeric (`abc`), or belongs to a
    * deleted user
-   * Then "404: That page no longer exists" is displayed instead of the detail page
+   * Then "404: That page does not exist" is displayed instead of the detail page
    */
   test(
-    "A user detail URL with a missing, non-numeric or deleted id shows “404: That page no longer exists”.",
+    "A user detail URL with a missing, non-numeric or deleted id shows “404: That page does not exist”.",
     {
       tag: "@USR-DET-07",
       annotation: {
@@ -157,7 +157,7 @@ test.describe("Users", () => {
           await page.goto(`/admin/users/${id}`);
           await expect(
             page.getByRole("heading", {
-              name: "404: That page no longer exists",
+              name: "404: That page does not exist",
             }),
           ).toBeVisible();
         });
@@ -168,16 +168,16 @@ test.describe("Users", () => {
   /**
    * USR-DET-08 · A non-superuser cannot open a user detail page
    *
-   * Summary: A non-superuser opening a user's detail URL sees “Access permissions needed”.
+   * Summary: A non-superuser opening a user's detail URL sees “403: Access denied”.
    *
    * Auth: second-user
    *
    * Given a second user with no permission on users
    * When they open an existing user detail URL
-   * Then "Access permissions needed" is displayed (users are superuser-only)
+   * Then "403: Access denied" is displayed (users are superuser-only)
    */
   test(
-    "A non-superuser opening a user's detail URL sees “Access permissions needed”.",
+    "A non-superuser opening a user's detail URL sees “403: Access denied”.",
     {
       tag: "@USR-DET-08",
       annotation: {
@@ -192,7 +192,7 @@ test.describe("Users", () => {
       const page = await secondUser.login(user);
       await page.goto(`/admin/users/${id}`);
       await expect(
-        page.getByRole("heading", { name: "Access permissions needed" }),
+        page.getByRole("heading", { name: "403: Access denied" }),
       ).toBeVisible();
     },
   );

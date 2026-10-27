@@ -175,16 +175,16 @@ test.describe("Users", () => {
   /**
    * USR-LIST-06 · A non-superuser cannot read the Users list
    *
-   * Summary: A non-superuser opening the Users list sees “Access permissions needed” and no rows, with or without Staff status.
+   * Summary: A non-superuser opening the Users list sees “403: Access denied” and no rows, with or without Staff status.
    *
    * Auth: second-user
    *
    * Given a second user who is not a superuser (with or without Staff status)
    * When they open the Users list
-   * Then the table shows "Access permissions needed" and no rows (Pulp lets only superusers list users)
+   * Then the table shows "403: Access denied" and no rows (Pulp lets only superusers list users)
    */
   test(
-    "A non-superuser opening the Users list sees “Access permissions needed” and no rows, with or without Staff status.",
+    "A non-superuser opening the Users list sees “403: Access denied” and no rows, with or without Staff status.",
     {
       tag: "@USR-LIST-06",
       annotation: {
@@ -201,7 +201,7 @@ test.describe("Users", () => {
           await page.goto("/admin/users");
           const grid = page.getByRole("grid", { name: "Users table" });
           await expect(
-            grid.getByRole("heading", { name: "Access permissions needed" }),
+            grid.getByRole("heading", { name: "403: Access denied" }),
           ).toBeVisible();
           await expect(
             grid.getByRole("button", { name: "Kebab toggle" }),

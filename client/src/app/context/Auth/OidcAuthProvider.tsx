@@ -72,10 +72,10 @@ const OidcAuthBridge: React.FC<IOidcAuthBridgeProps> = ({ children }) => {
     return (
       <Bullseye>
         <FullPageEmptyState
-          titleText="Authentication error"
+          titleText="Auth Error"
           icon={ExclamationCircleIcon}
           status="danger"
-          body={`${auth.error.name}: ${auth.error.message}. Check your OIDC configuration or contact your administrator.`}
+          body={`${auth.error.name}: ${auth.error.message}. Check your OIDC configuration or contact your admin.`}
         />
       </Bullseye>
     );

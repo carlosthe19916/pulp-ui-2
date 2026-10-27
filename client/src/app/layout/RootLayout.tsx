@@ -69,7 +69,7 @@ export const WaitForApiStatus: React.FC<IWaitForApiStatusProps> = ({
       fetchErrorState={(error) => (
         <Bullseye>
           <FullPageEmptyState
-            titleText="Unable to load server status"
+            titleText="Could not load Server Status"
             icon={ExclamationCircleIcon}
             status="danger"
             body={error.message}

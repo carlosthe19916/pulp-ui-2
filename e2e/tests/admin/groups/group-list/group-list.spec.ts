@@ -149,7 +149,7 @@ test.describe("Groups", () => {
    *
    * Given a second user with no admin permissions who may view one group
    * When they open the Groups list
-   * Then the table lists only the groups they may view (not "Access permissions needed" — groups are scoped)
+   * Then the table lists only the groups they may view (not "403: Access denied" — groups are scoped)
    */
   test(
     "A non-superuser sees only the groups they may view in the list (scoped, not a 403).",
@@ -174,7 +174,7 @@ test.describe("Groups", () => {
       await groupsPage.goto();
       // Groups are scoped, so the table lists what they may view, never "403".
       await expect(
-        groupsPage.list.stateHeading("Access permissions needed"),
+        groupsPage.list.stateHeading("403: Access denied"),
       ).toHaveCount(0);
       await groupsPage.filterBy("Name", viewable.name);
       await expect(groupsPage.row(viewable.name)).toBeVisible();
@@ -212,7 +212,7 @@ test.describe("Groups", () => {
    * | yes    | yes    | enabled                                                       | enabled                                                       |
    *
    * The detail page's actions and the Users tab's "Add User" / "Remove" use the same gate. When "Add
-   * User" is enabled for a non-superuser, its modal still shows "Access permissions needed" because Pulp
+   * User" is enabled for a non-superuser, its modal still shows "403: Access denied" because Pulp
    * lets only superusers list users, so in practice only superusers add members from the UI.
    */
   test(
@@ -281,11 +281,11 @@ test.describe("Groups", () => {
    * | yes    | yes    | enabled                                                       | enabled                                                       |
    *
    * The detail page's actions and the Users tab's "Add User" / "Remove" use the same gate. When "Add
-   * User" is enabled for a non-superuser, its modal still shows "Access permissions needed" because Pulp
+   * User" is enabled for a non-superuser, its modal still shows "403: Access denied" because Pulp
    * lets only superusers list users, so in practice only superusers add members from the UI.
    */
   test(
-    '"Add User" for a non-superuser opens a modal showing "Access permissions needed"',
+    '"Add User" for a non-superuser opens a modal showing "403: Access denied"',
     {
       tag: "@GRP-PERM-01",
       annotation: {
@@ -309,7 +309,7 @@ test.describe("Groups", () => {
         grid: "Select users",
       });
       await expect(
-        modal.table.stateHeading("Access permissions needed"),
+        modal.table.stateHeading("403: Access denied"),
       ).toBeVisible();
     },
   );

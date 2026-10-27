@@ -424,16 +424,16 @@ test.describe("Roles", () => {
     /**
      * ROL-LIST-06 · A non-superuser cannot read the Roles list
      *
-     * Summary: A non-superuser opening the Roles list sees “Access permissions needed”.
+     * Summary: A non-superuser opening the Roles list sees “403: Access denied”.
      *
      * Auth: second-user
      *
      * Given a second user who is not a superuser
      * When they open the Roles list
-     * Then the table shows "Access permissions needed" (Pulp lets only superusers list roles)
+     * Then the table shows "403: Access denied" (Pulp lets only superusers list roles)
      */
     test(
-      "A non-superuser opening the Roles list sees “Access permissions needed”.",
+      "A non-superuser opening the Roles list sees “403: Access denied”.",
       {
         tag: "@ROL-LIST-06",
         annotation: {
@@ -446,9 +446,7 @@ test.describe("Roles", () => {
         const page = await secondUser.login(user);
         await page.goto("/admin/roles");
         const table = new DataTable(page.getByRole("main"), "Roles table");
-        await expect(
-          table.stateHeading("Access permissions needed"),
-        ).toBeVisible();
+        await expect(table.stateHeading("403: Access denied")).toBeVisible();
       },
     );
   });

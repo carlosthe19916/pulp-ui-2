@@ -38,7 +38,7 @@ export const RouteErrorFallback: React.FC<IRouteErrorFallbackProps> = ({
                 void navigate({ to: "/" });
               }}
             >
-              Go to dashboard
+              Go to Dashboard
             </Button>
             <Button
               variant="secondary"

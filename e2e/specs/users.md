@@ -44,13 +44,13 @@ Then the right rows and item range are shown
 
 ### USR-LIST-06 A non-superuser cannot read the Users list
 
-Summary: A non-superuser opening the Users list sees “Access permissions needed” and no rows, with or without Staff status.
+Summary: A non-superuser opening the Users list sees “403: Access denied” and no rows, with or without Staff status.
 
 Auth: second-user
 
 Given a second user who is not a superuser (with or without Staff status)
 When they open the Users list
-Then the table shows "Access permissions needed" and no rows (Pulp lets only superusers list users)
+Then the table shows "403: Access denied" and no rows (Pulp lets only superusers list users)
 
 ## Create
 
@@ -196,21 +196,21 @@ Users list
 
 ### USR-DET-07 Detail-route errors show 404
 
-Summary: A user detail URL with a missing, non-numeric or deleted id shows “404: That page no longer exists”.
+Summary: A user detail URL with a missing, non-numeric or deleted id shows “404: That page does not exist”.
 
 When I open a user detail URL whose id does not exist, is non-numeric (`abc`), or belongs to a
 deleted user
-Then "404: That page no longer exists" is displayed instead of the detail page
+Then "404: That page does not exist" is displayed instead of the detail page
 
 ### USR-DET-08 A non-superuser cannot open a user detail page
 
-Summary: A non-superuser opening a user's detail URL sees “Access permissions needed”.
+Summary: A non-superuser opening a user's detail URL sees “403: Access denied”.
 
 Auth: second-user
 
 Given a second user with no permission on users
 When they open an existing user detail URL
-Then "Access permissions needed" is displayed (users are superuser-only)
+Then "403: Access denied" is displayed (users are superuser-only)
 
 ## Groups tab
 
