@@ -5,6 +5,7 @@ import { Cleanup } from "./helpers/cleanup";
 import { PulpApi } from "./helpers/pulp-api";
 import { SecondUsers } from "./helpers/secondUser";
 import { AccessPoliciesPage } from "./pom/AccessPoliciesPage";
+import { ContentGuardsPage } from "./pom/ContentGuardsPage";
 import { ContentListPage } from "./pom/ContentListPage";
 import { ContentPage } from "./pom/ContentPage";
 import { DomainsPage } from "./pom/DomainsPage";
@@ -18,6 +19,7 @@ interface ITestFixtures {
   rolesPage: RolesPage;
   groupsPage: GroupsPage;
   accessPoliciesPage: AccessPoliciesPage;
+  contentGuardsPage: ContentGuardsPage;
   toasts: Toasts;
   domainsPage: DomainsPage;
   remotesPage: ContentPage;
@@ -80,6 +82,9 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   },
   accessPoliciesPage: async ({ page }, provide) => {
     await provide(new AccessPoliciesPage(page));
+  },
+  contentGuardsPage: async ({ page }, provide) => {
+    await provide(new ContentGuardsPage(page));
   },
   toasts: async ({ page }, provide) => {
     await provide(new Toasts(page));
