@@ -1,0 +1,41 @@
+name: Auto-merge dependabot PRs
+
+# Approves and enables auto-merge on every Dependabot PR — patch, minor and major.
+# GitHub's native auto-merge then merges the PR only once the required status checks
+# (branch protection on main) pass, so CI remains the real gate.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge-dependabot:
+    runs-on: ubuntu-latest
+    # pull_request_target runs in the base-repo context with a write token (Dependabot's own
+    # pull_request token is read-only). Restrict to Dependabot PRs from this same repo.
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ github.token }}
+
+      - name: Approve PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr review "$PR_NUMBER" --repo "${{ github.repository }}" --approve \
+            --body "🤖 Auto-approved — Dependabot \`${{ steps.metadata.outputs.update-type }}\`."
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr merge "$PR_NUMBER" --repo "${{ github.repository }}" --auto --squash
