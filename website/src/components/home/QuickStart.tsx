@@ -13,7 +13,7 @@ const POINTS = [
 
 export default function QuickStart(): React.ReactElement {
   return (
-    <section className="py-24">
+    <section data-testid="home-quick-start" className="py-24">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-2">
         <div>
           <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">

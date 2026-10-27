@@ -8,7 +8,10 @@ import ProductPreview from "./ProductPreview";
 
 export default function Hero(): React.ReactElement {
   return (
-    <section className="relative overflow-hidden bg-gray-95 text-white">
+    <section
+      data-testid="home-hero"
+      className="relative overflow-hidden bg-gray-95 text-white"
+    >
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,102,204,0.55),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(94,64,190,0.35),transparent_55%)]"

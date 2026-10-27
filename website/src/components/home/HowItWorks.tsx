@@ -20,7 +20,10 @@ const STEPS = [
 
 export default function HowItWorks(): React.ReactElement {
   return (
-    <section className="bg-gray-10 py-24 dark:bg-gray-90">
+    <section
+      data-testid="home-how-it-works"
+      className="bg-gray-10 py-24 dark:bg-gray-90"
+    >
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">

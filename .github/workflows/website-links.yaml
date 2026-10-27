@@ -1,0 +1,38 @@
+name: Website links
+
+# External link checking is inherently flaky (rate limits, transient 5xx), so it
+# runs on a schedule rather than gating PRs. On failure it opens a tracking issue
+# instead of failing a required check.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: website-links
+  cancel-in-progress: true
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --cache --max-cache-age 1d --accept 200,206,429 --no-progress
+            --exclude 'fonts\.(googleapis|gstatic)\.com'
+            './website/docs/**/*.md' './website/docusaurus.config.ts'
+          fail: false
+      - name: Open issue on broken links
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: Broken links found on the website
+          content-filepath: ./lychee/out.md
+          labels: documentation

@@ -4,7 +4,7 @@ import Link from "@docusaurus/Link";
 
 export default function CallToAction(): React.ReactElement {
   return (
-    <section className="px-6 pb-24">
+    <section data-testid="home-cta" className="px-6 pb-24">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-gradient-to-r from-brand-60 via-brand-50 to-purple-50 px-8 py-16 text-center text-white sm:px-16">
         <h2 className="text-3xl font-bold text-white sm:text-4xl">
           Ready to take control of your content?
