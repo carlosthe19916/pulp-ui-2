@@ -1,0 +1,103 @@
+name: Release
+
+# Cuts a weekly release: tag → GitHub release (auto-generated notes) → container image.
+# Runs every Friday from what is on `main` at run time (commits pushed afterwards roll into
+# next week), and can be triggered manually. If nothing new landed since the last release,
+# it does nothing.
+#
+# Tag-driven: the git tag is the version source of truth — package.json is NOT modified. The
+# version is MAJOR.MINOR, tagged vMAJOR.MINOR.0 (patch always 0) so image-build.yaml's semver
+# tagging yields both `0.2.0` and `0.2` image tags, and the release version is injected into
+# the image (ENV.VERSION) at build time. MAJOR is read from the hand-edited `.release-major`
+# file; MINOR auto-increments per major (starting at 1).
+on:
+  schedule:
+    - cron: "0 6 * * 5" # Fridays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the tag and the GitHub release
+  actions: write # dispatch image-build.yaml
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history + all tags, for the guard and note generation
+          fetch-tags: true
+
+      - name: Determine version
+        id: plan
+        run: |
+          set -euo pipefail
+          MAJOR="$(tr -cd '0-9' < .release-major)"
+          if [ -z "$MAJOR" ]; then
+            echo "::error file=.release-major::.release-major must contain the major version number"
+            exit 1
+          fi
+
+          # Nothing-to-release guard: release tags sit on main, so if main has not advanced
+          # past the newest release tag there is nothing new to release.
+          LAST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+          if [ -n "$LAST_TAG" ] && [ "$(git rev-list "${LAST_TAG}..HEAD" --count)" -eq 0 ]; then
+            echo "No new commits since ${LAST_TAG}; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Next minor = highest existing minor for this major + 1 (starts at 1).
+          highest=0
+          while read -r t; do
+            [ -n "$t" ] || continue
+            m="${t#v${MAJOR}.}"; m="${m%%.*}"
+            case "$m" in ''|*[!0-9]*) continue ;; esac
+            if [ "$m" -gt "$highest" ]; then highest="$m"; fi
+          done <<EOF
+          $(git tag --list "v${MAJOR}.*")
+          EOF
+          MINOR=$((highest + 1))
+          VERSION="${MAJOR}.${MINOR}"
+          echo "Releasing ${VERSION} (tag v${VERSION}.0)"
+          {
+            echo "release=true"
+            echo "version=${VERSION}"
+            echo "tag=v${VERSION}.0"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Tag and push
+        if: steps.plan.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Tag main's current commit directly. Pushing a tag is allowed (only the main branch
+          # is protected), and the git tag is the version source of truth.
+          git tag -a "${{ steps.plan.outputs.tag }}" -m "Release ${{ steps.plan.outputs.version }}"
+          git push origin "refs/tags/${{ steps.plan.outputs.tag }}"
+
+      - name: Create GitHub release
+        if: steps.plan.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.plan.outputs.tag }}" \
+            --title "Release ${{ steps.plan.outputs.version }}" \
+            --generate-notes \
+            --latest \
+            --verify-tag
+
+      - name: Build the container image for the release
+        if: steps.plan.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # image-build.yaml checks out this tag ref, so its semver metadata produces the
+          # `${VERSION}.0` and `${VERSION}` image tags, injects the version into the image, and
+          # signs + attests it.
+          gh workflow run image-build.yaml --ref "${{ steps.plan.outputs.tag }}"

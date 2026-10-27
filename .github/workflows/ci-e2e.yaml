@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - id: areas
-        uses: ./.github/actions/changed-areas
+        uses: $/.github/actions/changed-areas
 
   # Publish the oci-env base image to ghcr once, then reuse it across the e2e matrix.
   #
@@ -113,7 +113,7 @@ jobs:
       # Only oci_env is needed to build the base image (plugins are not baked in).
       - name: Set up oci-env
         if: steps.check.outputs.needs_build == 'true'
-        uses: ./.github/actions/pulp-oci-env
+        uses: $/.github/actions/pulp-oci-env
         with:
           clone-plugins: "false"
 
@@ -227,7 +227,7 @@ jobs:
 
       # Plugins install from /src at container boot, so e2e needs all repos cloned.
       - name: Set up oci-env
-        uses: ./.github/actions/pulp-oci-env
+        uses: $/.github/actions/pulp-oci-env
         with:
           domain-enabled: ${{ matrix.domains == 'enabled' }}
           clone-plugins: "true"
