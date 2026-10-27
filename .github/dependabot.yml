@@ -7,6 +7,23 @@ updates:
     commit-message:
       prefix: "ci(deps): "
 
+  # The website is a standalone package, not a root workspace, so it needs its
+  # own npm entry. These PRs touch only website/** and auto-merge once the
+  # website `build` check (which runs the Playwright smoke suite) passes.
+  - package-ecosystem: "npm"
+    directory: "/website"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps): "
+    allow:
+      - dependency-type: direct
+    groups:
+      docusaurus:
+        patterns:
+          - "@docusaurus/*"
+          - "@mdx-js/*"
+
   - package-ecosystem: "npm"
     directory: "/"
     schedule:

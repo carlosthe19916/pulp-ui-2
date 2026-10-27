@@ -1,18 +1,16 @@
 name: Website
 
+# No `on: paths` filter: the workflow must always run so its required `build`
+# check is always reported. Whether the heavy job actually runs is decided by a
+# job-level `if:` (a skipped required check counts as passing; an `on: paths`
+# skip would leave it pending and block auto-merge).
 on:
   push:
     branches:
       - "main"
-    paths:
-      - "website/**"
-      - ".github/workflows/website.yaml"
   pull_request:
     branches:
       - "main"
-    paths:
-      - "website/**"
-      - ".github/workflows/website.yaml"
   workflow_dispatch:
 
 concurrency:
@@ -20,7 +18,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      website: ${{ steps.areas.outputs.website }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: areas
+        uses: ./.github/actions/changed-areas
+
   build:
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:

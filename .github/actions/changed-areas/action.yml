@@ -1,0 +1,31 @@
+name: Detect changed areas
+description: >-
+  Classify a PR/push's changed files into "website" and "app" areas so workflows
+  can gate expensive jobs with a job-level `if:` (which reports a skipped — and
+  therefore passing — required check, unlike an `on: paths` filter). The calling
+  job must check out the repo first so this local action can be resolved.
+outputs:
+  website:
+    description: true when website/** (or its own workflow) changed
+    value: ${{ steps.filter.outputs.website }}
+  app:
+    description: >-
+      true when any file outside website/** changed (client, common, server,
+      e2e, root/shared config, CI). Broad on purpose: unknown/shared files run
+      the full client + e2e suite.
+    value: ${{ steps.filter.outputs.app }}
+runs:
+  using: composite
+  steps:
+    - id: filter
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          website:
+            - 'website/**'
+            - '.github/workflows/website.yaml'
+          app:
+            # Match everything, then exclude website/** (gitignore-style
+            # ordering): true iff some changed file lives outside website/.
+            - '**'
+            - '!website/**'
