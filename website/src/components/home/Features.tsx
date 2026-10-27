@@ -73,7 +73,11 @@ const FEATURES: IFeature[] = [
 export default function Features(): React.ReactElement {
   useBrokenLinks().collectAnchor("features");
   return (
-    <section id="features" className="scroll-mt-16 py-24">
+    <section
+      id="features"
+      data-testid="home-features"
+      className="scroll-mt-16 py-24"
+    >
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">

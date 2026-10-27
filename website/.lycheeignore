@@ -1,0 +1,4 @@
+# External URLs lychee should not flag. One regex per line.
+# Web fonts are loaded by the browser, not meaningful to link-check.
+fonts\.googleapis\.com
+fonts\.gstatic\.com

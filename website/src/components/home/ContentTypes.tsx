@@ -16,7 +16,10 @@ const CONTENT_TYPES = [
 
 export default function ContentTypes(): React.ReactElement {
   return (
-    <section className="border-b border-gray-20 bg-gray-10 py-12 dark:border-gray-80 dark:bg-gray-90">
+    <section
+      data-testid="home-content-types"
+      className="border-b border-gray-20 bg-gray-10 py-12 dark:border-gray-80 dark:bg-gray-90"
+    >
       <div className="mx-auto max-w-7xl px-6">
         <p className="text-center font-display text-sm font-medium tracking-widest text-gray-50 uppercase dark:text-gray-40">
           One interface for every Pulp content plugin
