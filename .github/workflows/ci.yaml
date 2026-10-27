@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - id: areas
-        uses: ./.github/actions/changed-areas
+        uses: $/.github/actions/changed-areas
 
   ci:
     needs: changes
