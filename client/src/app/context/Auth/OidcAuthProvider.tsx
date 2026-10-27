@@ -2,14 +2,10 @@ import type React from "react";
 import { useCallback, useMemo } from "react";
 import { AuthProvider, useAuth } from "react-oidc-context";
 
-import {
-  Bullseye,
-  EmptyState,
-  EmptyStateBody,
-  EmptyStateVariant,
-} from "@patternfly/react-core";
+import { Bullseye } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
+import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 import { oidcClientSettings, oidcSignoutArgs } from "@app/oidc";
 
 import { AuthContext, type IAuthContext } from "./AuthContext";
@@ -75,18 +71,12 @@ const OidcAuthBridge: React.FC<IOidcAuthBridgeProps> = ({ children }) => {
   if (auth.error) {
     return (
       <Bullseye>
-        <EmptyState
-          status="danger"
+        <FullPageEmptyState
           titleText="Auth Error"
-          headingLevel="h4"
           icon={ExclamationCircleIcon}
-          variant={EmptyStateVariant.sm}
-        >
-          <EmptyStateBody>
-            {`${auth.error.name}: ${auth.error.message}`}. Check your OIDC
-            configuration or contact your admin.
-          </EmptyStateBody>
-        </EmptyState>
+          status="danger"
+          body={`${auth.error.name}: ${auth.error.message}. Check your OIDC configuration or contact your admin.`}
+        />
       </Bullseye>
     );
   }

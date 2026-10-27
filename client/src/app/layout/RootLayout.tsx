@@ -2,14 +2,10 @@ import type React from "react";
 
 import { Outlet, useRouterState } from "@tanstack/react-router";
 
-import {
-  Bullseye,
-  EmptyState,
-  EmptyStateBody,
-  EmptyStateVariant,
-} from "@patternfly/react-core";
+import { Bullseye } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
+import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
 import { NotificationsProvider } from "@app/context/Notifications/NotificationsProvider";
@@ -72,15 +68,12 @@ export const WaitForApiStatus: React.FC<IWaitForApiStatusProps> = ({
       fetchError={apiStatus.error}
       fetchErrorState={(error) => (
         <Bullseye>
-          <EmptyState
-            status="danger"
+          <FullPageEmptyState
             titleText="Could not load Server Status"
-            headingLevel="h4"
             icon={ExclamationCircleIcon}
-            variant={EmptyStateVariant.sm}
-          >
-            <EmptyStateBody>{error.message}</EmptyStateBody>
-          </EmptyState>
+            status="danger"
+            body={error.message}
+          />
         </Bullseye>
       )}
     >
