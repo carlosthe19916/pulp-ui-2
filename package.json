@@ -39,6 +39,11 @@
   "dependencies": {
     "typescript": "~6.0.3"
   },
+  "overrides": {
+    "@hey-api/json-schema-ref-parser": {
+      "js-yaml": "^4.3.2"
+    }
+  },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",

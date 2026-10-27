@@ -18,7 +18,7 @@ paths:
 
 - The loader is the only place an href is built: `ensureDomainFromParam` (or
   `ensureDefaultDomain` for global objects) → `build*Href` from `@app/queries/…` (throw if it
-  returns nothing) → `queryClient.ensureQueryData(…)` → return the href(s).
+  returns nothing) → `queryClient.query({ …, staleTime: "static" })` → return the href(s).
 - `pendingComponent` is `DetailRoutePending` labelled `Loading <object>`, no ellipsis;
   `errorComponent` is `DetailRouteError`. The page uses `useSuspense*DetailQuery` and has no
   loading or not-found guards.
@@ -37,7 +37,10 @@ export const Route = createFileRoute(
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
     const href = buildWidgetHref(widgetId, domain);
     if (!href) throw new Error("Unknown widget");
-    await queryClient.ensureQueryData(widgetDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...widgetDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading widget" />,
@@ -71,7 +74,8 @@ Pass/fail rubric for `/eval`. Check changed files under `client/src/routes/`, `r
 
 - [ ] Route files only wire options to a page; pathless layouts have no `component`.
 - [ ] Detail loaders resolve the domain, build the href with a `@app/queries` builder, throw on
-      no href, `ensureQueryData`, and return the href(s).
+      no href, prime the detail query with `query({ …, staleTime: "static" })`, and return
+      the href(s).
 - [ ] `DetailRoutePending` with `Loading <object>` (no ellipsis) and `DetailRouteError`.
 - [ ] Adapters read through `getRouteApi` with the exact route id and pass props.
 - [ ] Pages read no path params (except `useSelectedDomain`) and read search only for their own

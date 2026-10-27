@@ -19,7 +19,10 @@ export const Route = createFileRoute(
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
     const href = buildRemoteHref(remoteType, remoteId, domain);
     if (!href) throw new Error("Unknown remote plugin type");
-    await queryClient.ensureQueryData(remoteDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...remoteDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading remote" />,

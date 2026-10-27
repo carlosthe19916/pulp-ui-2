@@ -11,7 +11,10 @@ export const Route = createFileRoute("/_authenticated/admin/users/$userId")({
   loader: async ({ context: { queryClient }, params: { userId } }) => {
     const domain = await ensureDefaultDomain(queryClient);
     const href = buildUserHref(userId, domain);
-    await queryClient.ensureQueryData(userDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...userDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading user" />,

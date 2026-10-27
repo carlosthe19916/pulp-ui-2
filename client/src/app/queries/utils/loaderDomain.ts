@@ -13,7 +13,7 @@ export const ensureDefaultDomain = async (
   queryClient: QueryClient,
 ): Promise<IPulpDomain> =>
   defaultDomainFromStatus(
-    await queryClient.ensureQueryData(statusQueryOptions),
+    await queryClient.query({ ...statusQueryOptions, staleTime: "static" }),
   );
 
 /**
@@ -24,7 +24,10 @@ export const ensureDomainFromParam = async (
   queryClient: QueryClient,
   pulpDomain: string,
 ): Promise<IPulpDomain> => {
-  const status = await queryClient.ensureQueryData(statusQueryOptions);
+  const status = await queryClient.query({
+    ...statusQueryOptions,
+    staleTime: "static",
+  });
   const enabled = status?.domain_enabled ?? false;
   return {
     enabled,

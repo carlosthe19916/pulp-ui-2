@@ -200,5 +200,5 @@ export const useMavenPackageHrefLookup = () => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return (gav: IMavenPackageGav) =>
-    queryClient.fetchQuery(mavenPackageHrefQueryOptions({ domain, gav }));
+    queryClient.query(mavenPackageHrefQueryOptions({ domain, gav }));
 };

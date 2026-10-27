@@ -19,7 +19,10 @@ export const Route = createFileRoute(
     const domain = await ensureDomainFromParam(queryClient, pulpDomain);
     const href = buildRepositoryHref(repositoryType, repositoryId, domain);
     if (!href) throw new Error("Unknown repository plugin type");
-    await queryClient.ensureQueryData(repositoryDetailQueryOptions({ href }));
+    await queryClient.query({
+      ...repositoryDetailQueryOptions({ href }),
+      staleTime: "static",
+    });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading repository" />,
