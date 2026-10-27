@@ -18,3 +18,14 @@ Registry.
 Versions follow a `MAJOR.MINOR` scheme (for example `0.1`, `0.2`, `0.3`). The minor number
 increments with each weekly release; the major number is bumped manually for significant
 milestones.
+
+## Verifying a release image
+
+Every published image is keyless-signed and carries a build-provenance attestation and an
+SBOM (via [Sigstore](https://www.sigstore.dev/)). Verify the provenance of a specific digest
+with the GitHub CLI:
+
+```bash
+gh attestation verify oci://ghcr.io/carlosthe19916/pulp-ui-2:0.1 \
+  --repo carlosthe19916/pulp-ui-2
+```

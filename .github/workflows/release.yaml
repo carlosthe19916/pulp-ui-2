@@ -1,13 +1,15 @@
 name: Release
 
-# Cuts a weekly release: bump version → tag → GitHub release (auto-generated notes) →
-# container image. Runs every Friday from what is on `main` at run time (commits pushed
-# afterwards roll into next week), and can be triggered manually. If nothing new landed
-# since the last release, it does nothing.
+# Cuts a weekly release: tag → GitHub release (auto-generated notes) → container image.
+# Runs every Friday from what is on `main` at run time (commits pushed afterwards roll into
+# next week), and can be triggered manually. If nothing new landed since the last release,
+# it does nothing.
 #
-# Version is MAJOR.MINOR, tagged vMAJOR.MINOR.0 (patch always 0) so image-build.yaml's
-# existing semver tagging yields both `0.2.0` and `0.2` image tags. MAJOR is read from the
-# hand-edited `.release-major` file; MINOR auto-increments per major (starting at 1).
+# Tag-driven: the git tag is the version source of truth — package.json is NOT modified. The
+# version is MAJOR.MINOR, tagged vMAJOR.MINOR.0 (patch always 0) so image-build.yaml's semver
+# tagging yields both `0.2.0` and `0.2` image tags, and the release version is injected into
+# the image (ENV.VERSION) at build time. MAJOR is read from the hand-edited `.release-major`
+# file; MINOR auto-increments per major (starting at 1).
 on:
   schedule:
     - cron: "0 6 * * 5" # Fridays 06:00 UTC
@@ -25,7 +27,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0 # full history + all tags, for the guard and note generation
           fetch-tags: true
@@ -40,17 +42,13 @@ jobs:
             exit 1
           fi
 
-          # Nothing-to-release guard: the newest release tag's commit was cut from its parent
-          # on main (we tag a bump commit layered on the main tip). If main has not advanced
-          # past that parent, there is nothing new to release.
+          # Nothing-to-release guard: release tags sit on main, so if main has not advanced
+          # past the newest release tag there is nothing new to release.
           LAST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
-          if [ -n "$LAST_TAG" ]; then
-            BASE="$(git rev-parse --verify --quiet "${LAST_TAG}^" || true)"
-            if [ -n "$BASE" ] && [ "$(git rev-list "${BASE}..HEAD" --count)" -eq 0 ]; then
-              echo "No new commits since ${LAST_TAG}; nothing to release."
-              echo "release=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
+          if [ -n "$LAST_TAG" ] && [ "$(git rev-list "${LAST_TAG}..HEAD" --count)" -eq 0 ]; then
+            echo "No new commits since ${LAST_TAG}; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           # Next minor = highest existing minor for this major + 1 (starts at 1).
@@ -70,43 +68,17 @@ jobs:
             echo "release=true"
             echo "version=${VERSION}"
             echo "tag=v${VERSION}.0"
-            echo "pkg_version=${VERSION}.0"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Bump package.json versions
-        if: steps.plan.outputs.release == 'true'
-        run: |
-          set -euo pipefail
-          # Only version strings change, so patch them directly (in the five package.json files
-          # and the matching package-lock.json fields). This keeps the lockfile in sync for the
-          # image build's `npm ci` without re-running npm's resolver, which needs node_modules
-          # and can hit peer-dependency ERESOLVE on a fresh checkout.
-          node -e '
-            const fs = require("node:fs");
-            const v = process.argv[1];
-            const workspaces = ["common", "client", "server", "e2e"];
-            for (const f of ["package.json", ...workspaces.map((w) => `${w}/package.json`)]) {
-              const p = JSON.parse(fs.readFileSync(f, "utf8"));
-              p.version = v;
-              fs.writeFileSync(f, JSON.stringify(p, null, 2) + "\n");
-            }
-            const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
-            lock.version = v;
-            lock.packages[""].version = v;
-            for (const w of workspaces) lock.packages[w].version = v;
-            fs.writeFileSync("package-lock.json", JSON.stringify(lock, null, 2) + "\n");
-          ' "${{ steps.plan.outputs.pkg_version }}"
-
-      - name: Commit, tag and push the tag
+      - name: Tag and push
         if: steps.plan.outputs.release == 'true'
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -aqm "chore(release): ${{ steps.plan.outputs.tag }}"
+          # Tag main's current commit directly. Pushing a tag is allowed (only the main branch
+          # is protected), and the git tag is the version source of truth.
           git tag -a "${{ steps.plan.outputs.tag }}" -m "Release ${{ steps.plan.outputs.version }}"
-          # Push only the tag — branch protection would reject a direct push to main, and git
-          # tags are the version source of truth. The bump commit is reachable via the tag.
           git push origin "refs/tags/${{ steps.plan.outputs.tag }}"
 
       - name: Create GitHub release
@@ -126,5 +98,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # image-build.yaml checks out this tag ref, so its semver metadata produces the
-          # `${VERSION}.0` and `${VERSION}` image tags and pushes them to GHCR.
+          # `${VERSION}.0` and `${VERSION}` image tags, injects the version into the image, and
+          # signs + attests it.
           gh workflow run image-build.yaml --ref "${{ steps.plan.outputs.tag }}"
