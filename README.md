@@ -33,9 +33,9 @@ Then open <http://localhost:8080> and sign in (default `AUTH=basic`); `docker` w
 - `PULP_API_URL` **(required)** — your Pulp server's base URL; requests under `/api` are proxied here.
 - `PULP_API_ROOT` — Pulp's `API_ROOT` (default `/pulp`).
 
-Images are published per release (`latest`, `0.1`, `0.1.0`) and signed with build provenance and
-an SBOM — see [Releases](website/docs/releases.md). For Compose, Kubernetes/OpenShift, TLS, and
-OIDC, see the [installation guide](website/docs/getting-started/installation.md).
+Images are published for each release (`latest`, `0.1`, `0.1.0`); see all
+[releases](https://github.com/carlosthe19916/pulp-ui-2/releases). For more options (Compose,
+TLS, OIDC), see the [installation guide](website/docs/getting-started/installation.md).
 
 ## Local development
 
