@@ -17,31 +17,25 @@ command line.
 
 ## Get started
 
-Pulp UI ships as a small container image that serves the web app and proxies API calls to
-your Pulp server — it needs no database or storage of its own. Point it at a running
-**Pulp 3** backend and open it in the browser:
+Pulp UI is a small container image that serves the web app and proxies API calls to your Pulp
+server — no database or storage of its own. Point it at a running **Pulp 3** backend:
 
 ```bash
 podman run -d --name pulp-ui \
   -p 8080:8080 \
   -e PULP_API_URL=https://pulp.example.com \
+  -e PULP_API_ROOT=/pulp \
   ghcr.io/carlosthe19916/pulp-ui-2:latest
 ```
 
-Then open <http://localhost:8080> and sign in (default `AUTH=basic`). Works the same with
-`docker` in place of `podman`.
+Then open <http://localhost:8080> and sign in (default `AUTH=basic`); `docker` works too.
 
-- `PULP_API_URL` **(required)** — base URL of your Pulp server; every request under `/api` is
-  proxied here. The container refuses to start without it.
-- `PULP_API_ROOT` (default `/pulp`) — set it if your server uses a non-default `API_ROOT`.
-- `AUTH` (default `basic`) — `none`, `basic`, or `oidc`.
+- `PULP_API_URL` **(required)** — your Pulp server's base URL; requests under `/api` are proxied here.
+- `PULP_API_ROOT` — Pulp's `API_ROOT` (default `/pulp`).
 
-Images are published per release as `latest`, `MAJOR.MINOR`, and `MAJOR.MINOR.PATCH` (e.g.
-`0.1`, `0.1.0`), and are signed with SLSA build provenance and an SBOM — see
-[Releases](website/docs/releases.md) to verify one.
-
-For Compose, Kubernetes/OpenShift, TLS, and OIDC, see the
-[installation guide](website/docs/getting-started/installation.md).
+Images are published per release (`latest`, `0.1`, `0.1.0`) and signed with build provenance and
+an SBOM — see [Releases](website/docs/releases.md). For Compose, Kubernetes/OpenShift, TLS, and
+OIDC, see the [installation guide](website/docs/getting-started/installation.md).
 
 ## Local development
 
