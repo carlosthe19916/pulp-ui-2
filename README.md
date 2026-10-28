@@ -34,8 +34,7 @@ Then open <http://localhost:8080> and sign in (default `AUTH=basic`); `docker` w
 - `PULP_API_ROOT` — Pulp's `API_ROOT` (default `/pulp`).
 
 Images are published for each release (`latest`, `0.1`, `0.1.0`); see all
-[releases](https://github.com/carlosthe19916/pulp-ui-2/releases). For more options (Compose,
-TLS, OIDC), see the [installation guide](website/docs/getting-started/installation.md).
+[releases](https://github.com/carlosthe19916/pulp-ui-2/releases).
 
 ## Local development
 
