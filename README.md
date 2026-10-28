@@ -15,7 +15,28 @@ command line.
 - Create **publications** and expose them through **distributions**.
 - Follow **tasks**, manage **domains**, and administer **users, groups, and roles**.
 
-## Quick Start
+## Get started
+
+Pulp UI is a small container image that serves the web app and proxies API calls to your Pulp
+server — no database or storage of its own. Point it at a running **Pulp 3** backend:
+
+```bash
+podman run -d --name pulp-ui \
+  -p 8080:8080 \
+  -e PULP_API_URL=https://pulp.example.com \
+  -e PULP_API_ROOT=/pulp \
+  ghcr.io/carlosthe19916/pulp-ui-2:latest
+```
+
+Then open <http://localhost:8080> and sign in (default `AUTH=basic`); `docker` works too.
+
+- `PULP_API_URL` **(required)** — your Pulp server's base URL; requests under `/api` are proxied here.
+- `PULP_API_ROOT` — Pulp's `API_ROOT` (default `/pulp`).
+
+Images are published for each release (`latest`, `0.1`, `0.1.0`); see all
+[releases](https://github.com/carlosthe19916/pulp-ui-2/releases).
+
+## Local development
 
 ```bash
 npm ci
