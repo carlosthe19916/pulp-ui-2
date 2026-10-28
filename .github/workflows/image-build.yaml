@@ -43,8 +43,14 @@ jobs:
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          # Apply OCI annotations (incl. the description) to the image index as well as each
+          # platform manifest, so GHCR shows a description for the multi-arch image.
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.description=Pulp - User Interface
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -72,6 +78,7 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           sbom: true # attach an SBOM attestation to the image
           provenance: false # provenance comes from attest-build-provenance (GitHub-native)
 
