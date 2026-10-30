@@ -109,7 +109,13 @@ test.describe("Domains (enabled)", () => {
 
     await domainsPage.filterBy("Name", name);
     await domainsPage.expectRowVisible(name);
-    await expect(domainsPage.table.locator("tbody tr")).toHaveCount(1);
+    // Compound-expand tables render one tbody per row, each with a hidden expansion
+    // row, so count data rows by role (header and collapsed expansion rows excluded).
+    await expect(
+      domainsPage.table
+        .getByRole("row")
+        .filter({ hasNot: domainsPage.page.getByRole("columnheader") }),
+    ).toHaveCount(1);
   });
 
   // Storage backends other than the local filesystem aren't installed on the dev
