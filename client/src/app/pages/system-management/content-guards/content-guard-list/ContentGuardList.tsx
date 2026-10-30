@@ -45,7 +45,11 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { ContentGuardModal } from "./components/ContentGuardModal";
-import { GUARD_TYPES, guardTypeOf } from "./utils/guardTypes";
+import {
+  GUARD_TYPES,
+  guardHasRoleEndpoints,
+  guardTypeOf,
+} from "./utils/guardTypes";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -112,7 +116,9 @@ export const ContentGuardList: React.FC = () => {
   const guards = data?.results ?? [];
 
   const { disabledProps } = useObjectsPermissions({
-    hrefs: guards.map((item) => item.pulp_href ?? ""),
+    hrefs: guards
+      .filter((item) => guardHasRoleEndpoints(item.pulp_href))
+      .map((item) => item.pulp_href ?? ""),
   });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [

@@ -80,6 +80,8 @@ export const huggingFace: IPluginDefinition = {
       compatiblePublicationTypes: ["hugging_face.hugging-face"],
       contentChanges: "modify",
       archiveImport: false,
+      // pulp_hugging_face is read-only for RBAC: no per-object role endpoints.
+      rolesManaged: false,
     },
 
     remote: {
@@ -88,6 +90,7 @@ export const huggingFace: IPluginDefinition = {
         createFields: [...remoteBase.create, ...huggingFaceRemoteExtras],
         editFields: [...remoteBase.edit, ...huggingFaceRemoteExtras],
       },
+      rolesManaged: false,
     },
 
     distribution: {
@@ -102,6 +105,7 @@ export const huggingFace: IPluginDefinition = {
           ...huggingFaceDistributionExtras,
         ],
       },
+      rolesManaged: false,
     },
 
     publication: {
@@ -117,6 +121,7 @@ export const huggingFace: IPluginDefinition = {
         ],
         editFields: [],
       },
+      rolesManaged: false,
     },
   },
 

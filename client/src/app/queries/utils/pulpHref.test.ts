@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildGroupHref,
   extractIdFromHref,
+  hasRoleEndpoints,
   parseRepositoryVersionHref,
   resolvePulpType,
 } from "./pulpHref";
@@ -55,6 +56,31 @@ describe("pulpHref helpers", () => {
     expect(resolvePulpType("/repositories/bogus/bogus/x/")).toBeUndefined();
     // Content family but an unmodelled content type.
     expect(resolvePulpType("/content/bogus/bogus/x/")).toBeUndefined();
+  });
+
+  it("reports role endpoints per entity and type", () => {
+    // RBAC-managed type → has my_permissions/ etc.
+    expect(
+      hasRoleEndpoints("/api/pulp/default/api/v3/distributions/file/file/abc/"),
+    ).toBe(true);
+    // Unmodelled read-only type (core.artifact) → no role endpoints.
+    expect(
+      hasRoleEndpoints(
+        "/api/pulp/default/api/v3/distributions/core/artifacts/abc/",
+      ),
+    ).toBe(false);
+    // Modelled but RBAC-read-only (hugging_face, OpenPGP distribution).
+    expect(
+      hasRoleEndpoints("/distributions/hugging_face/hugging-face/x/"),
+    ).toBe(false);
+    expect(hasRoleEndpoints("/distributions/core/openpgp/x/")).toBe(false);
+    // Same pulp_type, different entity: the keyring repository IS role-managed.
+    expect(hasRoleEndpoints("/repositories/core/openpgp_keyring/x/")).toBe(
+      true,
+    );
+    // Aggregate/unmodelled/falsy hrefs.
+    expect(hasRoleEndpoints("/distributions/bogus/bogus/x/")).toBe(false);
+    expect(hasRoleEndpoints(undefined)).toBe(false);
   });
 
   it("splits a repository-version href into repository href and number", () => {

@@ -93,6 +93,7 @@ export const buildCatalog = (
             createFields: [...contribution.form.createFields],
             editFields: [...contribution.form.editFields],
           },
+          rolesManaged: contribution.rolesManaged,
         };
         if (entity === "repository") {
           const repo = contribution as

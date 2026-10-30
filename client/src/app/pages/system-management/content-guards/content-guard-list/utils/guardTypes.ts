@@ -138,3 +138,11 @@ export const guardTypeOf = (href: string): IGuardType | undefined => {
     ? GUARD_TYPES.find((type) => type.apiPath === `${match[1]}/${match[2]}`)
     : undefined;
 };
+
+/**
+ * Whether a guard exposes per-object role endpoints. Only core guards do; certguard
+ * ones don't, so probing them 404s.
+ */
+export const guardHasRoleEndpoints = (
+  href: string | null | undefined,
+): boolean => !!href && guardTypeOf(href)?.component === "core";
