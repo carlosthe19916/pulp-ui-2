@@ -1,6 +1,6 @@
 import * as yup from "yup";
 
-import type { StorageClassEnum } from "@app/client";
+import type { DomainResponse, StorageClassEnum } from "@app/client";
 
 /**
  * The spec's `StorageClassEnum` plus OCI's `pulp_service` backend, which isn't on every
@@ -106,6 +106,17 @@ export const STORAGE_BACKEND_BY_CLASS: Record<StorageClass, IStorageBackend> =
 
 export const storageClassLabel = (value: StorageClass): string =>
   STORAGE_BACKEND_BY_CLASS[value]?.label ?? value;
+
+/**
+ * A domain's `storage_settings`. The field is write-only in the spec (so the generated
+ * `DomainResponse` omits it), but the API returns it at runtime — read it through a narrow
+ * cast. Secrets come back redacted; `hidden_fields` reports whether they're set.
+ */
+export const getDomainStorageSettings = (
+  domain: DomainResponse,
+): Record<string, unknown> =>
+  (domain as { storage_settings?: Record<string, unknown> }).storage_settings ??
+  {};
 
 /** yup schema for the selected backend's `storage_settings`. */
 export const buildStorageSettingsSchema = (storageClass: StorageClass) => {

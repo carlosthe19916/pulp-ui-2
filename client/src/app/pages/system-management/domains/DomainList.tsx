@@ -15,9 +15,11 @@ import {
   DataView,
   DataViewFilters,
   DataViewTable,
+  type DataViewTd,
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
+  type ExpandableContent,
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
@@ -31,6 +33,7 @@ import { EditLabelsModal } from "@app/components/EditLabelsModal";
 import { ListPagination } from "@app/components/ListPagination";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import { useColumnSort } from "@app/hooks/useColumnSort";
@@ -52,6 +55,7 @@ import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
 import { DomainModal } from "./components/DomainModal";
+import { DomainStorageDetails } from "./components/DomainStorageDetails";
 import { storageClassLabel } from "./utils/storageBackends";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -60,6 +64,11 @@ const SORTABLE_COLUMN_KEYS = [
   "storage_class",
   "pulp_created",
 ] as const satisfies readonly OrderingField<IDomainListParams>[];
+
+// Compound-expandable column positions. Status sits right after Created and only when a task is
+// in flight, so its index is fixed too.
+const STORAGE_COLUMN_INDEX = 2;
+const STATUS_COLUMN_INDEX = 6;
 
 interface IDomainFilters {
   name: IDomainListParams["name"];
@@ -133,13 +142,18 @@ export const DomainList: React.FC = () => {
   const domains = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
-  const STATUS_COLUMN_INDEX = 6;
   const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: domains,
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
     },
   });
+
+  // Status is task-driven: show the column only when a domain actually has an in-flight task,
+  // so it isn't a column of dashes.
+  const hasAnyActiveTask = domains.some(
+    (domain) => getActiveCount(domain.prn) > 0,
+  );
 
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 20 } },
@@ -151,7 +165,9 @@ export const DomainList: React.FC = () => {
     { cell: "Redirect", props: { width: 10 } },
     { cell: "Hide guarded", props: { width: 10 } },
     { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
-    { cell: "Status", props: { width: 10 } },
+    ...(hasAnyActiveTask
+      ? [{ cell: "Status", props: { width: 10 } } as DataViewTh]
+      : []),
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
@@ -188,15 +204,19 @@ export const DomainList: React.FC = () => {
           cell: formatDateTime(domain.pulp_created) ?? "—",
           props: { dataLabel: "Created" },
         },
-        {
-          cell: (
-            <ResourceTaskStatus
-              count={getActiveCount(domain.prn)}
-              kind={getTaskKinds(domain.prn)[0]}
-            />
-          ),
-          props: { dataLabel: "Status" },
-        },
+        ...(hasAnyActiveTask
+          ? [
+              {
+                cell: (
+                  <ResourceTaskStatus
+                    count={getActiveCount(domain.prn)}
+                    kind={getTaskKinds(domain.prn)[0]}
+                  />
+                ),
+                props: { dataLabel: "Status" },
+              } as DataViewTd,
+            ]
+          : []),
         {
           cell: (
             <ActionsColumn
@@ -232,11 +252,28 @@ export const DomainList: React.FC = () => {
     };
   });
 
-  const expandedRows = resourceTaskExpansions({
-    entities: domains,
-    getActiveCount,
-    statusColumnIndex: STATUS_COLUMN_INDEX,
-  });
+  // Storage and Status are both compound-expandable columns; every entry sets `columnId` so the
+  // table stays in compound-expand mode (one panel open at a time).
+  const expandedRows: ExpandableContent[] = [
+    ...domains
+      .filter((domain) => domain.pulp_href)
+      .map((domain) => ({
+        rowId: domain.pulp_href ?? "",
+        columnId: STORAGE_COLUMN_INDEX,
+        content: (
+          <RevealCellOnExpand>
+            {() => <DomainStorageDetails domain={domain} />}
+          </RevealCellOnExpand>
+        ),
+      })),
+    ...(hasAnyActiveTask
+      ? resourceTaskExpansions({
+          entities: domains,
+          getActiveCount,
+          statusColumnIndex: STATUS_COLUMN_INDEX,
+        })
+      : []),
+  ];
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
