@@ -49,7 +49,7 @@ export const ansibleCollectionRemoteForm = defineForm<
         label: "Requirements",
         language: "yaml",
         template: REQUIREMENTS_TEMPLATE,
-        downloadName: "requirements.yml",
+        downloadName: "requirements",
         help: "A requirements.yml listing the collections (and versions) to sync. Without one, the remote syncs everything the server offers.",
         warnings: [
           {

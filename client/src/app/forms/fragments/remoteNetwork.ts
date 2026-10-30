@@ -64,13 +64,13 @@ export const tlsSection = <T extends ITlsKeys>(f: IFieldBuilders<T>) => [
   f.code("ca_cert", {
     label: "CA certificate",
     language: "pem",
-    downloadName: "ca.pem",
+    downloadName: "ca-cert",
     help: "A PEM-encoded CA certificate used to validate the server.",
   }),
   f.code("client_cert", {
     label: "Client certificate",
     language: "pem",
-    downloadName: "client.pem",
+    downloadName: "client-cert",
     help: "A PEM-encoded client certificate used for authentication.",
   }),
   f.secret("client_key", {
