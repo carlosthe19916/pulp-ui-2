@@ -16,12 +16,14 @@ import type {
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
+import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { IBatchResult } from "./utils/settleBatch";
 
 export const DistributionsQueryKey = "distributions";
 
@@ -253,6 +255,21 @@ export const useDistributionUpdateMutation = (
       // Surface the new update task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
       options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Saves a diff of a distribution's labels; refreshes the distribution list. */
+export const useDistributionLabelsMutation = (
+  options?: IMutationCallbacks<IBatchResult, ILabelsChangeVariables>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<IBatchResult, DrfAxiosError, ILabelsChangeVariables>({
+    mutationFn: applyLabelChanges,
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
+      options?.onSuccess?.(data, vars);
     },
     onError: options?.onError,
   });

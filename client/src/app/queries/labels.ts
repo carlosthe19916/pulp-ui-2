@@ -1,72 +1,44 @@
-import {
-  type QueryKey,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-
 import { axiosInstance } from "@app/axios-config/apiInit";
-import type {
-  SetLabel,
-  SetLabelResponse,
-  UnsetLabel,
-  UnsetLabelResponse,
-} from "@app/client";
+import type { SetLabel, UnsetLabel } from "@app/client";
+import type { ILabelChanges } from "@app/utils/pulpLabels";
 
-import type { IMutationCallbacks } from "./utils/mutationCallbacks";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { toProxyHref } from "./utils/pulpApi";
+import { type IBatchResult, settleBatch } from "./utils/settleBatch";
 
-export interface ISetLabelVariables extends SetLabel {
+export interface ILabelsChangeVariables extends ILabelChanges {
+  /** The labelled resource. */
   href: string;
 }
 
-export interface IUnsetLabelVariables extends UnsetLabel {
-  href: string;
-}
+type LabelOp =
+  { kind: "set"; label: SetLabel } | { kind: "unset"; key: string };
 
 /**
- * Sets one label on any labelled resource (`{href}set_label/`, synchronous);
- * `invalidateKey` is its family's detail key.
+ * Applies a diff of label changes to one resource in parallel — one synchronous
+ * `set_label/` / `unset_label/` call per change — reporting partial failures via `IBatchResult`.
+ * Pulp has no replace-all label write, so a "save" is this diff of individual calls. Shared by
+ * the per-entity `use<Entity>LabelsMutation` hooks, which each own their own cache invalidation.
  */
-export const useSetLabelMutation = (
-  invalidateKey: QueryKey,
-  options?: IMutationCallbacks<SetLabelResponse, ISetLabelVariables>,
-) => {
-  const queryClient = useQueryClient();
-  return useMutation<SetLabelResponse, DrfAxiosError, ISetLabelVariables>({
-    mutationFn: async ({ href, key, value }) =>
-      (
-        await axiosInstance.post<SetLabelResponse>(
-          `${toProxyHref(href)}set_label/`,
-          { key, value },
-        )
-      ).data,
-    onSuccess: (data, vars) => {
-      void queryClient.invalidateQueries({ queryKey: invalidateKey });
-      options?.onSuccess?.(data, vars);
-    },
-    onError: options?.onError,
-  });
-};
-
-/** Removes one label (`{href}unset_label/`, synchronous). */
-export const useUnsetLabelMutation = (
-  invalidateKey: QueryKey,
-  options?: IMutationCallbacks<UnsetLabelResponse, IUnsetLabelVariables>,
-) => {
-  const queryClient = useQueryClient();
-  return useMutation<UnsetLabelResponse, DrfAxiosError, IUnsetLabelVariables>({
-    mutationFn: async ({ href, key }) =>
-      (
-        await axiosInstance.post<UnsetLabelResponse>(
-          `${toProxyHref(href)}unset_label/`,
-          { key },
-        )
-      ).data,
-    onSuccess: (data, vars) => {
-      void queryClient.invalidateQueries({ queryKey: invalidateKey });
-      options?.onSuccess?.(data, vars);
-    },
-    onError: options?.onError,
+export const applyLabelChanges = ({
+  href,
+  toSet,
+  toUnset,
+}: ILabelsChangeVariables): Promise<IBatchResult> => {
+  const ops: LabelOp[] = [
+    ...toSet.map((label): LabelOp => ({ kind: "set", label })),
+    ...toUnset.map((key): LabelOp => ({ kind: "unset", key })),
+  ];
+  return settleBatch({
+    items: ops,
+    label: (op) => (op.kind === "set" ? op.label.key : op.key),
+    request: (op) =>
+      op.kind === "set"
+        ? axiosInstance.post(
+            `${toProxyHref(href)}set_label/`,
+            op.label satisfies SetLabel,
+          )
+        : axiosInstance.post(`${toProxyHref(href)}unset_label/`, {
+            key: op.key,
+          } satisfies UnsetLabel),
   });
 };

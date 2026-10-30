@@ -10,11 +10,12 @@ test.describe("Repositories", () => {
   test("create + delete a repository for every installed plugin type", async ({
     repositoriesPage,
     cleanup,
+    api,
   }) => {
     // One full create+delete round-trip per installed plugin type (a dozen-plus on
-    // a fully-loaded backend). Each async delete waits out a ~5s task-status poll,
-    // so the whole loop needs well past the default 30s test budget.
-    test.setTimeout(180_000);
+    // a fully-loaded backend). Each async delete waits out its task plus a ~5s
+    // task-status poll, so the whole loop needs well past the default 30s budget.
+    test.setTimeout(240_000);
     await repositoriesPage.goto();
 
     const types = await repositoriesPage.typeOptions();
@@ -26,6 +27,12 @@ test.describe("Repositories", () => {
       await repositoriesPage.filterBy("Name", name);
       await repositoriesPage.expectRowVisible(name);
       await repositoriesPage.delete(name);
+      // The delete is async (202 + task); under load the task can outlast the row's
+      // 15s UI wait. Confirm the server-side delete first, so expectRowGone only has
+      // to wait for the list's next task-status poll to catch up, not for the task.
+      await expect
+        .poll(() => api.repositoryExists(name), { timeout: 60_000 })
+        .toBe(false);
       await repositoriesPage.expectRowGone(name);
     }
   });

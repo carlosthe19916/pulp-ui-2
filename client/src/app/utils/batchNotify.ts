@@ -45,3 +45,39 @@ export const notifyBatchResult = ({
     });
   }
 };
+
+interface INotifyLabelsResultOptions {
+  addNotification: INotificationsContextValue["addNotification"];
+  result: IBatchResult;
+}
+
+/**
+ * Toasts the outcome of a batch of label `set_label/` / `unset_label/` changes: one success
+ * toast, and one danger toast naming the labels that failed with the server's reason.
+ */
+export const notifyLabelsResult = ({
+  addNotification,
+  result: { succeeded, failed },
+}: INotifyLabelsResultOptions) => {
+  if (succeeded.length > 0) {
+    addNotification({
+      title: `${countOf({ count: succeeded.length, item: "label" })} updated`,
+      variant: "success",
+    });
+  }
+  if (failed.length > 0) {
+    // Show why with the first failure's server message (e.g. a 403).
+    const { description } = getMutationErrorMessage({
+      error: failed[0].error,
+      fallback: "",
+    });
+    addNotification({
+      variant: "danger",
+      title: `Failed to update ${countOf({
+        count: failed.length,
+        item: "label",
+      })}: ${failed.map((failure) => failure.label).join(", ")}`,
+      description,
+    });
+  }
+};

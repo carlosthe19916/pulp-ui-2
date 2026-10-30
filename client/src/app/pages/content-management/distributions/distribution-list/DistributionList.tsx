@@ -9,6 +9,7 @@ import {
   ContentVariants,
   Flex,
   FlexItem,
+  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -34,7 +35,6 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
@@ -169,7 +169,7 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Base Path", modifier: "truncate" },
         },
         {
-          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
+          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
           props: { dataLabel: "Type" },
         },
         {

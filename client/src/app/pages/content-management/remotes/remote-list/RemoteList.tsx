@@ -7,6 +7,7 @@ import {
   Button,
   Content,
   ContentVariants,
+  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -29,7 +30,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoteModal } from "@app/components/RemoteModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
@@ -205,7 +205,7 @@ export const RemoteList: React.FC = () => {
           props: { dataLabel: "Policy" },
         },
         {
-          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
+          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
           props: { dataLabel: "Type" },
         },
         {

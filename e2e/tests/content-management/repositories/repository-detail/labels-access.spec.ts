@@ -26,17 +26,27 @@ test.describe("Repository labels and access", () => {
     await api.createFileRepository(name);
     const page = await openRepository(repositoriesPage, name);
 
-    await page.getByText("Add label", { exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Add label" });
-    await dialog.getByLabel("Key").fill("stage");
-    await dialog.getByLabel("Value").fill("prod");
-    await dialog.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(page.getByText('Label "stage" saved')).toBeVisible();
-    await expect(page.getByText("stage: prod")).toBeVisible();
+    await page.getByText("Edit labels", { exact: true }).click();
+    const addDialog = page.getByRole("dialog", { name: "Edit labels" });
+    await addDialog
+      .getByRole("textbox", { name: "Add label" })
+      .fill("stage=prod");
+    await addDialog.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(addDialog.getByText("stage=prod")).toBeVisible();
+    await addDialog.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("1 label updated")).toBeVisible();
+    await expect(page.getByText("stage=prod")).toBeVisible();
 
-    await page.getByRole("button", { name: "Remove label stage" }).click();
-    await expect(page.getByText('Label "stage" removed')).toBeVisible();
-    await expect(page.getByText("stage: prod")).toHaveCount(0);
+    await page.getByText("Edit labels", { exact: true }).click();
+    const removeDialog = page.getByRole("dialog", { name: "Edit labels" });
+    await removeDialog
+      .getByRole("button", { name: "Remove label stage" })
+      .click();
+    await removeDialog
+      .getByRole("button", { name: "Save", exact: true })
+      .click();
+    await expect(page.getByText("1 label updated")).toBeVisible();
+    await expect(page.getByText("stage=prod")).toHaveCount(0);
   });
 
   test("grants and revokes a role on the repository", async ({

@@ -12,7 +12,9 @@ import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
-import { distributionKeys } from "@app/queries/distributions";
+import { useNotifications } from "@app/hooks/useNotifications";
+import { useDistributionLabelsMutation } from "@app/queries/distributions";
+import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IDistributionDetailPanelProps {
@@ -30,6 +32,11 @@ export const DistributionDetailPanel: React.FC<
   // Plugin-specific (file distributions): only on typed payloads.
   const publication =
     typeof record.publication === "string" ? record.publication : null;
+  const href = distribution.pulp_href ?? "";
+  const { addNotification } = useNotifications();
+  const { mutateAsync, isPending } = useDistributionLabelsMutation({
+    onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
+  });
 
   return (
     <DescriptionList isCompact>
@@ -79,9 +86,9 @@ export const DistributionDetailPanel: React.FC<
         <DescriptionListTerm>Labels</DescriptionListTerm>
         <DescriptionListDescription>
           <EditablePulpLabels
-            href={distribution.pulp_href ?? ""}
             labels={distribution.pulp_labels}
-            invalidateKey={distributionKeys.list()}
+            isSaving={isPending}
+            onSave={(changes) => mutateAsync({ href, ...changes })}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>

@@ -7,6 +7,7 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import {
   Breadcrumb,
   BreadcrumbItem,
+  Label,
   PageSection,
   Tab,
   TabContentBody,
@@ -19,7 +20,6 @@ import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
@@ -60,7 +60,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
       <DocumentTitle title={`Content · ${pulpType}`} />
       <PageHeader
         title={prn}
-        label={<PulpTypeLabel pulpType={pulpType} />}
+        label={<Label color="blue">{pulpType}</Label>}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>

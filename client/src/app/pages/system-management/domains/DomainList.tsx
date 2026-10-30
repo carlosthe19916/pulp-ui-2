@@ -27,6 +27,7 @@ import type { DomainResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { EditLabelsModal } from "@app/components/EditLabelsModal";
 import { ListPagination } from "@app/components/ListPagination";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
@@ -40,14 +41,15 @@ import type { IDomainListParams } from "@app/queries/domains";
 import {
   domainKeys,
   useDomainDeleteMutation,
+  useDomainLabelsMutation,
   useDomainsListQuery,
 } from "@app/queries/domains";
 import type { OrderingField } from "@app/queries/utils/listParams";
+import { notifyLabelsResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { DomainLabelsModal } from "./components/DomainLabelsModal";
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
 import { DomainModal } from "./components/DomainModal";
 import { storageClassLabel } from "./utils/storageBackends";
@@ -251,6 +253,9 @@ export const DomainList: React.FC = () => {
   });
 
   const labelsDomain = domains.find((item) => item.pulp_href === labelsHref);
+  const labelsMutation = useDomainLabelsMutation({
+    onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
+  });
 
   const handleDelete = () => {
     const target = deleteTarget;
@@ -332,8 +337,16 @@ export const DomainList: React.FC = () => {
         )}
 
         {labelsDomain && (
-          <DomainLabelsModal
-            domain={labelsDomain}
+          <EditLabelsModal
+            labels={labelsDomain.pulp_labels}
+            title={`Labels — "${labelsDomain.name}"`}
+            isSaving={labelsMutation.isPending}
+            onSave={(changes) =>
+              labelsMutation.mutateAsync({
+                href: labelsDomain.pulp_href ?? "",
+                ...changes,
+              })
+            }
             onClose={() => setLabelsHref(null)}
           />
         )}

@@ -24,12 +24,14 @@ import type {
   ContentTypePage,
   IContentTypeListParams,
 } from "./contentTypes";
+import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { waitForTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import type { IBatchResult } from "./utils/settleBatch";
 
 export const ContentQueryKey = "content";
 
@@ -293,6 +295,23 @@ export const useContentUploadMutation = (
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: contentKeys.list() });
       options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Saves a diff of a content unit's labels; refreshes that unit's detail. */
+export const useContentLabelsMutation = (
+  options?: IMutationCallbacks<IBatchResult, ILabelsChangeVariables>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<IBatchResult, DrfAxiosError, ILabelsChangeVariables>({
+    mutationFn: applyLabelChanges,
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({
+        queryKey: contentKeys.detail(vars.href),
+      });
+      options?.onSuccess?.(data, vars);
     },
     onError: options?.onError,
   });

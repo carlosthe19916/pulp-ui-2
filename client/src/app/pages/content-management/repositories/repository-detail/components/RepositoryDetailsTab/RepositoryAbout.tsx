@@ -9,6 +9,7 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Label,
   Stack,
   Title,
 } from "@patternfly/react-core";
@@ -20,10 +21,11 @@ import type {
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
-import { repositoryKeys } from "@app/queries/repositories";
+import { useRepositoryLabelsMutation } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
 import { getPlugin } from "@catalog";
@@ -59,8 +61,11 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   pulpType,
   pulpDomain,
 }) => {
-  const { disabledProps } = useObjectPermissions({
-    href: repository.pulp_href ?? "",
+  const href = repository.pulp_href ?? "";
+  const { disabledProps } = useObjectPermissions({ href });
+  const { addNotification } = useNotifications();
+  const { mutateAsync, isPending } = useRepositoryLabelsMutation({
+    onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
   });
   const data = repository as Record<string, unknown>;
   const settings = (
@@ -79,7 +84,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
       )}
       <DescriptionList columnModifier={COLUMNS} isCompact>
         <Fact term="Type">
-          <PulpTypeLabel pulpType={pulpType} />
+          <Label color="blue">{pulpType}</Label>
         </Fact>
         <Fact term="Latest version">
           {latestNumber != null ? (
@@ -122,10 +127,10 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
         </Fact>
         <Fact term="Labels">
           <EditablePulpLabels
-            href={repository.pulp_href ?? ""}
             labels={repository.pulp_labels}
-            invalidateKey={repositoryKeys.detail(repository.pulp_href ?? "")}
             actionProps={disabledProps("change")}
+            isSaving={isPending}
+            onSave={(changes) => mutateAsync({ href, ...changes })}
           />
         </Fact>
         {repository.prn && (

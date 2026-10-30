@@ -7,6 +7,7 @@ import {
   Button,
   Content,
   ContentVariants,
+  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -30,7 +31,6 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { PublishModal } from "@app/components/PublishModal";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RepositoryModal } from "@app/components/RepositoryModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
@@ -242,7 +242,7 @@ export const RepositoryList: React.FC = () => {
           props: { dataLabel: "Description", modifier: "truncate" },
         },
         {
-          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
+          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
           props: { dataLabel: "Type" },
         },
         {
