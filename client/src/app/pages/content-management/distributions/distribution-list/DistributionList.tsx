@@ -157,12 +157,20 @@ export const DistributionList: React.FC = () => {
     },
   });
 
+  // Status is task-driven: show the column only when a distribution actually has an in-flight
+  // task, so it isn't a column of dashes.
+  const hasAnyActiveTask = distributions.some(
+    (distribution) => getActiveCount(distribution.prn) > 0,
+  );
+
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
     { cell: "Base Path", props: { width: 25 } },
     { cell: "Type", props: { width: 15 } },
     { cell: "Repository", props: { width: 25 } },
-    { cell: "Status", props: { width: 10 } },
+    ...(hasAnyActiveTask
+      ? [{ cell: "Status", props: { width: 10 } } satisfies DataViewTh]
+      : []),
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
 
@@ -197,15 +205,19 @@ export const DistributionList: React.FC = () => {
           ),
           props: { dataLabel: "Repository" },
         },
-        {
-          cell: (
-            <ResourceTaskStatus
-              count={getActiveCount(distribution.prn)}
-              kind={getTaskKinds(distribution.prn)[0]}
-            />
-          ),
-          props: { dataLabel: "Status" },
-        },
+        ...(hasAnyActiveTask
+          ? [
+              {
+                cell: (
+                  <ResourceTaskStatus
+                    count={getActiveCount(distribution.prn)}
+                    kind={getTaskKinds(distribution.prn)[0]}
+                  />
+                ),
+                props: { dataLabel: "Status" },
+              },
+            ]
+          : []),
         {
           cell: (
             <ActionsColumn
@@ -267,11 +279,13 @@ export const DistributionList: React.FC = () => {
         </RevealCellOnExpand>
       ),
     })),
-    ...resourceTaskExpansions({
-      entities: distributions,
-      getActiveCount,
-      statusColumnIndex: STATUS_COLUMN_INDEX,
-    }),
+    ...(hasAnyActiveTask
+      ? resourceTaskExpansions({
+          entities: distributions,
+          getActiveCount,
+          statusColumnIndex: STATUS_COLUMN_INDEX,
+        })
+      : []),
   ];
 
   const { activeState, bodyStates } = dataViewBodyStates({

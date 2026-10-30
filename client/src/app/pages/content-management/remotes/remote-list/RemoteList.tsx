@@ -19,6 +19,7 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
+  type ExpandableContent,
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
@@ -136,13 +137,18 @@ export const RemoteList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
 
-  const STATUS_COLUMN_INDEX = 4;
   const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: remotes,
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
     },
   });
+
+  // Status is task-driven: show the column only when a remote actually has an in-flight task,
+  // so it isn't a column of dashes.
+  const hasAnyActiveTask = remotes.some(
+    (remote) => getActiveCount(remote.prn) > 0,
+  );
 
   const columns: DataViewTh[] = [
     {
@@ -172,7 +178,9 @@ export const RemoteList: React.FC = () => {
         width: 10,
       },
     },
-    { cell: "Status", props: { width: 10 } },
+    ...(hasAnyActiveTask
+      ? [{ cell: "Status", props: { width: 10 } } satisfies DataViewTh]
+      : []),
     {
       cell: "",
       props: {
@@ -210,15 +218,19 @@ export const RemoteList: React.FC = () => {
           cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
           props: { dataLabel: "Type" },
         },
-        {
-          cell: (
-            <ResourceTaskStatus
-              count={getActiveCount(remote.prn)}
-              kind={getTaskKinds(remote.prn)[0]}
-            />
-          ),
-          props: { dataLabel: "Status" },
-        },
+        ...(hasAnyActiveTask
+          ? [
+              {
+                cell: (
+                  <ResourceTaskStatus
+                    count={getActiveCount(remote.prn)}
+                    kind={getTaskKinds(remote.prn)[0]}
+                  />
+                ),
+                props: { dataLabel: "Status" },
+              },
+            ]
+          : []),
         {
           cell: (
             <ActionsColumn
@@ -251,11 +263,14 @@ export const RemoteList: React.FC = () => {
     };
   });
 
-  const expandedRows = resourceTaskExpansions({
-    entities: remotes,
-    getActiveCount,
-    statusColumnIndex: STATUS_COLUMN_INDEX,
-  });
+  const STATUS_COLUMN_INDEX = 4;
+  const expandedRows: ExpandableContent[] = hasAnyActiveTask
+    ? resourceTaskExpansions({
+        entities: remotes,
+        getActiveCount,
+        statusColumnIndex: STATUS_COLUMN_INDEX,
+      })
+    : [];
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,

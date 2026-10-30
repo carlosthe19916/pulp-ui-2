@@ -19,6 +19,7 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
+  type ExpandableContent,
   useDataViewFilters,
   useDataViewPagination,
 } from "@patternfly/react-data-view";
@@ -133,7 +134,6 @@ export const RepositoryList: React.FC = () => {
   });
   const totalCount = data?.count ?? 0;
 
-  const STATUS_COLUMN_INDEX = 4;
   const { getActiveCount, getTaskKinds } = useResourceTasks({
     entities: repositories,
     onSettled: ({ entity }) => {
@@ -146,6 +146,12 @@ export const RepositoryList: React.FC = () => {
       }
     },
   });
+
+  // Status is task-driven: show the column only when a repository actually has an in-flight
+  // task, so it isn't a column of dashes.
+  const hasAnyActiveTask = repositories.some(
+    (repository) => getActiveCount(repository.prn) > 0,
+  );
 
   const columns: DataViewTh[] = [
     {
@@ -174,7 +180,9 @@ export const RepositoryList: React.FC = () => {
         width: 20,
       },
     },
-    { cell: "Status", props: { width: 10 } },
+    ...(hasAnyActiveTask
+      ? [{ cell: "Status", props: { width: 10 } } satisfies DataViewTh]
+      : []),
     {
       cell: "",
       props: {
@@ -251,15 +259,19 @@ export const RepositoryList: React.FC = () => {
           cell: repository.remote || "—",
           props: { dataLabel: "Remote", modifier: "truncate" },
         },
-        {
-          cell: (
-            <ResourceTaskStatus
-              count={getActiveCount(repository.prn)}
-              kind={getTaskKinds(repository.prn)[0]}
-            />
-          ),
-          props: { dataLabel: "Status" },
-        },
+        ...(hasAnyActiveTask
+          ? [
+              {
+                cell: (
+                  <ResourceTaskStatus
+                    count={getActiveCount(repository.prn)}
+                    kind={getTaskKinds(repository.prn)[0]}
+                  />
+                ),
+                props: { dataLabel: "Status" },
+              },
+            ]
+          : []),
         {
           cell: <ActionsColumn items={actionItems} />,
           props: { dataLabel: "Actions", isActionCell: true },
@@ -268,11 +280,14 @@ export const RepositoryList: React.FC = () => {
     };
   });
 
-  const expandedRows = resourceTaskExpansions({
-    entities: repositories,
-    getActiveCount,
-    statusColumnIndex: STATUS_COLUMN_INDEX,
-  });
+  const STATUS_COLUMN_INDEX = 4;
+  const expandedRows: ExpandableContent[] = hasAnyActiveTask
+    ? resourceTaskExpansions({
+        entities: repositories,
+        getActiveCount,
+        statusColumnIndex: STATUS_COLUMN_INDEX,
+      })
+    : [];
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
