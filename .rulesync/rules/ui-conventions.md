@@ -3,7 +3,12 @@ name: ui-conventions
 description: "Apply when building or changing UI in pages/ or components/: use the shared table, modal and detail helpers, and follow where this project departs from PatternFly defaults (no red actions, no empty-state actions, disabled not hidden)."
 root: false
 targets: ["claudecode", "cursor"]
-globs: ["client/src/app/pages/**", "client/src/app/components/**"]
+globs:
+  [
+    "client/src/app/pages/**",
+    "client/src/app/components/**",
+    "client/src/app/forms/**",
+  ]
 ---
 
 # UI conventions (`components/`, `pages/`)

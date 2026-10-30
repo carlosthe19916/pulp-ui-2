@@ -2,6 +2,7 @@
 paths:
   - client/src/app/pages/**
   - client/src/app/components/**
+  - client/src/app/forms/**
 ---
 
 # UI conventions (`components/`, `pages/`)
