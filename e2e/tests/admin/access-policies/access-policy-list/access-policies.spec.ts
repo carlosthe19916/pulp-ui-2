@@ -74,18 +74,18 @@ test.describe("Access policies", () => {
     /**
      * ACP-LIST-01 · Page and row content
      *
-     * Summary: The Access policies page shows its heading and description, 20 rows per page with viewset, statements, status and Edit/Reset, and no create or delete.
+     * Summary: The Access policies page shows its heading and description, 10 rows per page with viewset, statements, status and Edit/Reset, and no create or delete.
      *
      * When I open Access policies from the Administration navigation
      * Then the heading is "Access policies", the nav item is highlighted, and the page text reads "Each
      * policy decides who may call one API endpoint. Changing them is advanced; reset a policy to restore
      * its plugin's default."
-     * And the table shows 20 rows per page, with no create button and no delete action
+     * And the table shows 10 rows per page, with no create button and no delete action
      * And each row shows its viewset name (plain text), a Statements count, a Status label — Default, or
      * Customized once edited — and row actions "Edit" and "Reset to default"
      */
     test(
-      "The Access policies page shows its heading and description, 20 rows per page with viewset, statements, status and Edit/Reset, and no create or delete.",
+      "The Access policies page shows its heading and description, 10 rows per page with viewset, statements, status and Edit/Reset, and no create or delete.",
       {
         tag: "@ACP-LIST-01",
         annotation: {
@@ -103,9 +103,9 @@ test.describe("Access policies", () => {
           ),
         ).toBeVisible();
         await acp.list.expectLoaded();
-        await expect(acp.list.rows).toHaveCount(20);
+        await expect(acp.list.rows).toHaveCount(10);
         await expect(acp.list.paginator().toggle).toHaveText(
-          /^1 - 20 of \d+\s*$/,
+          /^1 - 10 of \d+\s*$/,
         );
         await expect(
           page.getByRole("main").getByRole("button", { name: /create/i }),
