@@ -1,15 +1,7 @@
 import type { RemotesAnsibleCollectionCreateData } from "@app/client";
 
 import { nameField, urlField } from "../fragments/base";
-import { labelsField } from "../fragments/labels";
-import {
-  downloadsSection,
-  proxySection,
-  proxySummary,
-  timeoutsSection,
-  tlsSection,
-  tlsSummary,
-} from "../fragments/remoteNetwork";
+import { authSection, connectionSections } from "../fragments/remoteNetwork";
 import { defineForm } from "../kit/defineForm";
 import type { IFormContext } from "../kit/types";
 
@@ -83,10 +75,7 @@ export const ansibleCollectionRemoteForm = defineForm<
           label: "SSO URL",
           help: "Where the token is exchanged for a session token (Automation Hub). Leave empty for Galaxy.",
         }),
-        f.row([
-          f.secret("username", { label: "Username" }),
-          f.secret("password", { label: "Password" }),
-        ]),
+        ...authSection(f),
       ],
       { description: "Galaxy needs none; Automation Hub needs a token." },
     ),
@@ -96,11 +85,7 @@ export const ansibleCollectionRemoteForm = defineForm<
         help: "How many of the newest versions of each collection to sync. Empty syncs all versions.",
       }),
     ]),
-    s.collapsible("tls", "TLS", tlsSection(f), { summary: tlsSummary }),
-    s.collapsible("proxy", "Proxy", proxySection(f), { summary: proxySummary }),
-    s.collapsible("downloads", "Downloads", downloadsSection(f)),
-    s.collapsible("timeouts", "Timeouts", timeoutsSection(f)),
-    s.collapsible("labels", "Labels", [labelsField(f)]),
+    ...connectionSections({ f, s }),
   ],
   // Collection remotes accept only the "immediate" policy, the server default.
   omit: ["policy"],

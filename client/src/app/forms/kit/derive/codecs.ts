@@ -81,6 +81,15 @@ const stringList: ICodec = {
   clearAs: null,
 };
 
+// Enum lists (e.g. Python package types) aren't nullable: an empty list clears them.
+const checkboxes: ICodec = {
+  empty: () => [],
+  fromApi: (value) => (Array.isArray(value) ? value : []),
+  toApi: (value) =>
+    Array.isArray(value) && value.length > 0 ? value : undefined,
+  clearAs: [],
+};
+
 const toRows = (value: unknown, field: IFieldDef): IKeyValueRow[] => {
   if (field.kind !== "keyValue" || value == null) return [];
   if (field.shape === "headers" && Array.isArray(value)) {
@@ -199,6 +208,7 @@ const CODECS: Record<FieldKind, ICodec> = {
   radio: choice,
   tiles: choice,
   stringList,
+  checkboxes,
   keyValue,
   secret,
   code: text,

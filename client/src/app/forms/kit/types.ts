@@ -88,6 +88,12 @@ export interface IStringListField<K extends string> extends IFieldBase<K> {
   kind: "stringList";
 }
 
+/** Several values picked from a fixed list (an array of an enum). */
+export interface ICheckboxesField<K extends string> extends IFieldBase<K> {
+  kind: "checkboxes";
+  options: IChoiceOption<unknown>[];
+}
+
 export interface IKeyValueField<K extends string> extends IFieldBase<K> {
   kind: "keyValue";
   /** `headers`: Pulp's `[{ name: value }]`; `labels`: a `{ key: value }` object. */
@@ -142,6 +148,7 @@ export type IFieldDef<K extends string = string> =
   | ISimpleField<K>
   | IChoiceField<K>
   | IStringListField<K>
+  | ICheckboxesField<K>
   | IKeyValueField<K>
   | ISecretField<K>
   | ICodeField<K>

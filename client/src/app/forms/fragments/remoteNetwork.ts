@@ -1,7 +1,8 @@
 import type { AnySchema, NumberSchema } from "yup";
 
-import type { IFieldBuilders } from "../kit/defineForm";
-import type { IFormContext } from "../kit/types";
+import type { IFieldBuilders, ISectionBuilders } from "../kit/defineForm";
+import type { IChoiceOption, IFormContext } from "../kit/types";
+import { labelsField } from "./labels";
 
 /**
  * Remote settings shared by pulpcore's RemoteSerializer, as collapsible sections a plugin
@@ -153,4 +154,42 @@ export const timeoutsSection = <T extends ITimeoutKeys>(
     f.number("sock_connect_timeout", { label: "Socket connect (seconds)" }),
     f.number("sock_read_timeout", { label: "Socket read (seconds)" }),
   ]),
+];
+
+/** The download policy as radios with descriptions; the first option is the default. */
+export const policyField = <T extends { policy?: unknown }>(
+  f: IFieldBuilders<T>,
+  options: [IChoiceOption<PolicyValue<T>>, ...IChoiceOption<PolicyValue<T>>[]],
+) =>
+  f.select("policy", {
+    kind: "radio",
+    label: "Download policy",
+    defaultValue: options[0].value,
+    // Checked against the body's policy enum at the call site; TS can't relate the two here.
+    options: options as unknown as IChoiceOption<never>[],
+  });
+
+type PolicyValue<T> = T extends { policy?: infer P } ? NonNullable<P> : never;
+
+/**
+ * The sections most remotes end with, after their essentials and authentication: TLS,
+ * proxy, downloads, timeouts and labels.
+ */
+export const connectionSections = <
+  T extends ITlsKeys &
+    IProxyKeys &
+    IDownloadKeys &
+    ITimeoutKeys & { pulp_labels?: unknown },
+>({
+  f,
+  s,
+}: {
+  f: IFieldBuilders<T>;
+  s: ISectionBuilders;
+}) => [
+  s.collapsible("tls", "TLS", tlsSection(f), { summary: tlsSummary }),
+  s.collapsible("proxy", "Proxy", proxySection(f), { summary: proxySummary }),
+  s.collapsible("downloads", "Downloads", downloadsSection(f)),
+  s.collapsible("timeouts", "Timeouts", timeoutsSection(f)),
+  s.collapsible("labels", "Labels", [labelsField(f)]),
 ];

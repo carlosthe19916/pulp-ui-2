@@ -1,16 +1,11 @@
 import type { RemotesFileFileCreateData } from "@app/client";
 
 import { nameField, urlField } from "../fragments/base";
-import { labelsField } from "../fragments/labels";
 import {
   authSection,
-  downloadsSection,
+  connectionSections,
   POLICY_OPTIONS,
-  proxySection,
-  proxySummary,
-  timeoutsSection,
-  tlsSection,
-  tlsSummary,
+  policyField,
 } from "../fragments/remoteNetwork";
 import { defineForm } from "../kit/defineForm";
 
@@ -25,25 +20,14 @@ export const fileRemoteForm = defineForm<RemotesFileFileCreateData["body"]>()(
         urlField(f, {
           help: "The URL of the PULP_MANIFEST that lists the files to sync, e.g. https://example.com/files/PULP_MANIFEST.",
         }),
-        f.select("policy", {
-          kind: "radio",
-          label: "Download policy",
-          defaultValue: "immediate",
-          options: [
-            POLICY_OPTIONS.immediate,
-            POLICY_OPTIONS.on_demand,
-            POLICY_OPTIONS.streamed,
-          ],
-        }),
+        policyField(f, [
+          POLICY_OPTIONS.immediate,
+          POLICY_OPTIONS.on_demand,
+          POLICY_OPTIONS.streamed,
+        ]),
       ]),
       s.collapsible("auth", "Authentication", authSection(f)),
-      s.collapsible("tls", "TLS", tlsSection(f), { summary: tlsSummary }),
-      s.collapsible("proxy", "Proxy", proxySection(f), {
-        summary: proxySummary,
-      }),
-      s.collapsible("downloads", "Downloads", downloadsSection(f)),
-      s.collapsible("timeouts", "Timeouts", timeoutsSection(f)),
-      s.collapsible("labels", "Labels", [labelsField(f)]),
+      ...connectionSections({ f, s }),
     ],
   }),
 );

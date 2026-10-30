@@ -87,6 +87,8 @@ const baseSchema = ({
       return required
         ? yup.array().of(yup.string()).min(1, requiredMessage)
         : yup.array().of(yup.string());
+    case "checkboxes":
+      return required ? yup.array().min(1, requiredMessage) : yup.array();
     case "keyValue":
       return yup
         .array()

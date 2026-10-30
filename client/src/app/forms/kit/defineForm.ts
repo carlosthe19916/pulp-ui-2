@@ -1,6 +1,7 @@
 import type {
   BodyKey,
   FieldKind,
+  ICheckboxesField,
   IChoiceField,
   IChoiceOption,
   ICodeField,
@@ -26,6 +27,12 @@ type Key<T> = (keyof T & string) | VirtualKey;
 
 type ChoiceValue<T, K> = K extends keyof T
   ? Exclude<T[K], null | undefined>
+  : string;
+
+type ElementValue<T, K> = K extends keyof T
+  ? NonNullable<T[K]> extends readonly (infer E)[]
+    ? E
+    : never
   : string;
 
 type ChoiceKind = "select" | "radio" | "tiles";
@@ -63,6 +70,10 @@ export interface IFieldBuilders<T> {
     key: K,
     opts: IFieldOptions,
   ) => IStringListField<K>;
+  checkboxes: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions & { options: IChoiceOption<ElementValue<T, K>>[] },
+  ) => ICheckboxesField<K>;
   keyValue: <K extends Key<T>>(
     key: K,
     opts: IFieldOptions & { shape: IKeyValueField<K>["shape"] },
@@ -117,6 +128,7 @@ const fieldBuilders: IFieldBuilders<Record<string, unknown>> = {
     kind: kind ?? ("select" as NonNullable<typeof kind>),
   }),
   stringList: (key, opts) => ({ ...opts, key, kind: "stringList" }),
+  checkboxes: (key, opts) => ({ ...opts, key, kind: "checkboxes" }),
   keyValue: (key, opts) => ({ ...opts, key, kind: "keyValue" }),
   secret: (key, opts) => ({ ...opts, key, kind: "secret" }),
   code: (key, opts) => ({ ...opts, key, kind: "code" }),
@@ -169,6 +181,7 @@ interface IKindValue {
   number: number;
   switch: boolean;
   stringList: readonly string[];
+  checkboxes: readonly unknown[];
   keyValue: readonly unknown[] | Record<string, unknown>;
   resource: string | readonly string[];
   select: unknown;

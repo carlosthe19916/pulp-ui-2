@@ -10,8 +10,11 @@ import { getEntityForm, registeredEntries } from "./registry";
  * by a type's new form. A deliberate drop is listed here with its reason.
  */
 const DROPPED: Record<string, string[]> = {
-  // Collection remotes accept only "immediate", the server default.
+  // These policy enums allow a single value, the server default.
   "remote:ansible.collection": ["policy"],
+  "remote:ansible.role": ["policy"],
+  "remote:maven.maven": ["policy"],
+  "remote:container.pull-through": ["policy"],
 };
 
 const entries = registeredEntries();

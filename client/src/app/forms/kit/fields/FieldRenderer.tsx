@@ -6,6 +6,7 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  Checkbox,
   FileUpload,
   FormGroup,
   FormGroupLabelHelp,
@@ -196,6 +197,26 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   onChange={onChange}
                 />
               );
+            case "checkboxes": {
+              const checked = (value as unknown[] | undefined) ?? [];
+              return field.options.map((option) => (
+                <Checkbox
+                  key={String(option.value)}
+                  id={`${fieldId}-${String(option.value)}`}
+                  label={option.label}
+                  description={option.description}
+                  isChecked={checked.includes(option.value)}
+                  isDisabled={isDisabled}
+                  onChange={(_event, isChecked) =>
+                    onChange(
+                      isChecked
+                        ? [...checked, option.value]
+                        : checked.filter((item) => item !== option.value),
+                    )
+                  }
+                />
+              ));
+            }
             case "keyValue":
               return (
                 <KeyValueField
@@ -310,8 +331,14 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
             label={isGroupLabelled ? field.label : undefined}
             isRequired={isGroupLabelled && required}
             labelHelp={isGroupLabelled ? labelHelp : undefined}
-            role={field.kind === "radio" ? "radiogroup" : undefined}
-            isStack={field.kind === "radio"}
+            role={
+              field.kind === "radio"
+                ? "radiogroup"
+                : field.kind === "checkboxes"
+                  ? "group"
+                  : undefined
+            }
+            isStack={field.kind === "radio" || field.kind === "checkboxes"}
           >
             {input}
             {(showError ||
