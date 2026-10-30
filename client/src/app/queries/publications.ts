@@ -35,8 +35,11 @@ export const publicationKeys = {
   detail: (pubHref: string) =>
     [...publicationKeys.all(), "detail", pubHref] as const,
 
-  listQuery: (domain: IPulpDomain, params: IPublicationListParams) =>
-    [...publicationKeys.list(), domain, params] as const,
+  listQuery: (
+    domain: IPulpDomain,
+    params: IPublicationListParams,
+    apiPath?: string,
+  ) => [...publicationKeys.list(), domain, apiPath, params] as const,
   detailQuery: (pubHref: string) => publicationKeys.detail(pubHref),
 };
 
@@ -45,22 +48,31 @@ type PublicationListOptions = Omit<
   "queryKey" | "queryFn"
 >;
 
+/**
+ * Lists publications: the cross-type aggregate, or one plugin's typed collection when
+ * `apiPath` is given (only typed ones carry `distributions`).
+ */
 export const publicationsListQueryOptions = ({
   domain,
+  apiPath,
   params,
   options,
 }: {
   domain: IPulpDomain;
+  apiPath?: string;
   params: IPublicationListParams;
   options?: PublicationListOptions;
 }) =>
   queryOptions<PaginatedPublicationResponseList, DrfAxiosError>({
     ...options,
-    queryKey: publicationKeys.listQuery(domain, params),
+    queryKey: publicationKeys.listQuery(domain, params, apiPath),
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
         await axiosInstance.get<PaginatedPublicationResponseList>(
-          pulpApiPath("publications/", domain),
+          pulpApiPath(
+            apiPath ? `publications/${apiPath}/` : "publications/",
+            domain,
+          ),
           {
             params: {
               ...params,
@@ -73,14 +85,18 @@ export const publicationsListQueryOptions = ({
   });
 
 export const usePublicationsListQuery = ({
+  apiPath,
   params,
   options,
 }: {
+  apiPath?: string;
   params: IPublicationListParams;
   options?: PublicationListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(publicationsListQueryOptions({ domain, params, options }));
+  return useQuery(
+    publicationsListQueryOptions({ domain, apiPath, params, options }),
+  );
 };
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */

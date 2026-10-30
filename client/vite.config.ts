@@ -124,7 +124,11 @@ export default defineConfig({
           if (id.includes("/react/") || id.includes("/react-dom/")) {
             return "react";
           }
-          if (id.includes("/@patternfly/")) {
+          // Topology stays in its lazy route chunk with d3 and mobx.
+          if (
+            id.includes("/@patternfly/") &&
+            !id.includes("/@patternfly/react-topology/")
+          ) {
             return "patternfly";
           }
           return undefined;
