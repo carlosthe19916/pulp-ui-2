@@ -13,6 +13,7 @@ import {
   PageSection,
   PaginationVariant,
   Tooltip,
+  type TooltipProps,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -53,7 +54,7 @@ import {
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -65,6 +66,16 @@ import { DistributionModal } from "./components/DistributionModal";
 const SORTABLE_COLUMN_KEYS = [
   "name",
 ] as const satisfies readonly OrderingField<IDistributionListParams>[];
+
+// Read-only/unmodelled types (e.g. core.artifact) can't be edited or deleted here.
+const UNAVAILABLE_TYPE_TOOLTIP: TooltipProps = {
+  content: "This distribution's plugin type isn't available in the UI.",
+};
+
+// Some types (hugging_face, OpenPGP) have no role endpoints to manage access with.
+const NO_ROLES_TOOLTIP: TooltipProps = {
+  content: "This distribution type doesn't support access management.",
+};
 
 interface IDistributionFilters {
   name: IDistributionListParams["name"];
@@ -133,7 +144,9 @@ export const DistributionList: React.FC = () => {
   const distributions = data?.results ?? [];
 
   const { disabledProps } = useObjectsPermissions({
-    hrefs: distributions.map((item) => item.pulp_href ?? ""),
+    hrefs: distributions
+      .filter((item) => hasRoleEndpoints(item.pulp_href))
+      .map((item) => item.pulp_href ?? ""),
   });
   const totalCount = data?.count ?? 0;
 
@@ -155,7 +168,10 @@ export const DistributionList: React.FC = () => {
 
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const pulpType = resolvePulpType(distribution.pulp_href);
+    // Unmodelled types (e.g. core.artifact) are read-only here, so Edit and Delete gate
+    // on canEdit; access management instead needs the type's role endpoints.
     const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
+    const canManageRoles = hasRoleEndpoints(distribution.pulp_href);
 
     return {
       id: distribution.pulp_href,
@@ -197,12 +213,7 @@ export const DistributionList: React.FC = () => {
                 {
                   title: "Edit",
                   isAriaDisabled: !canEdit,
-                  tooltipProps: canEdit
-                    ? undefined
-                    : {
-                        content:
-                          "This distribution's plugin type isn't available in the UI.",
-                      },
+                  tooltipProps: canEdit ? undefined : UNAVAILABLE_TYPE_TOOLTIP,
                   onClick: () => setModalState(distribution),
                   ...(canEdit
                     ? disabledProps({
@@ -213,19 +224,27 @@ export const DistributionList: React.FC = () => {
                 },
                 {
                   title: "Manage access",
+                  isAriaDisabled: !canManageRoles,
+                  tooltipProps: canManageRoles ? undefined : NO_ROLES_TOOLTIP,
                   onClick: () => setAccessTarget(distribution),
-                  ...disabledProps({
-                    href: distribution.pulp_href,
-                    verb: "manage_roles",
-                  }),
+                  ...(canManageRoles
+                    ? disabledProps({
+                        href: distribution.pulp_href,
+                        verb: "manage_roles",
+                      })
+                    : {}),
                 },
                 {
                   title: "Delete",
+                  isAriaDisabled: !canEdit,
+                  tooltipProps: canEdit ? undefined : UNAVAILABLE_TYPE_TOOLTIP,
                   onClick: () => setDeleteTarget(distribution),
-                  ...disabledProps({
-                    href: distribution.pulp_href,
-                    verb: "delete",
-                  }),
+                  ...(canEdit
+                    ? disabledProps({
+                        href: distribution.pulp_href,
+                        verb: "delete",
+                      })
+                    : {}),
                 },
               ]}
             />

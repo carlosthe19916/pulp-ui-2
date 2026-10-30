@@ -88,6 +88,8 @@ export interface IPluginEntity {
   /** The `<app>/<slug>` collection segment, per entity (content pluralizes). */
   apiPath: string;
   form: IPluginForm;
+  /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
+  rolesManaged?: boolean;
 }
 
 /**
@@ -132,6 +134,8 @@ export interface IContributionBase {
     createFields: IEntityField[];
     editFields: IEntityField[];
   };
+  /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
+  rolesManaged?: boolean;
 }
 
 /**

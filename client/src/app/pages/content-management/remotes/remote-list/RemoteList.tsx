@@ -48,7 +48,7 @@ import {
   useRemotesListQuery,
 } from "@app/queries/remotes";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -130,7 +130,9 @@ export const RemoteList: React.FC = () => {
   const remotes = data?.results ?? [];
 
   const { disabledProps } = useObjectsPermissions({
-    hrefs: remotes.map((item) => item.pulp_href ?? ""),
+    hrefs: remotes
+      .filter((item) => hasRoleEndpoints(item.pulp_href))
+      .map((item) => item.pulp_href ?? ""),
   });
   const totalCount = data?.count ?? 0;
 

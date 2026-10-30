@@ -50,7 +50,7 @@ import {
   useRepositoryDeleteMutation,
 } from "@app/queries/repositories";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -127,7 +127,9 @@ export const RepositoryList: React.FC = () => {
 
   const repositories = data?.results ?? [];
   const { disabledProps } = useObjectsPermissions({
-    hrefs: repositories.map((repository) => repository.pulp_href ?? ""),
+    hrefs: repositories
+      .filter((repository) => hasRoleEndpoints(repository.pulp_href))
+      .map((repository) => repository.pulp_href ?? ""),
   });
   const totalCount = data?.count ?? 0;
 

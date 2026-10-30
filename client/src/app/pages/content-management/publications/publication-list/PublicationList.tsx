@@ -11,6 +11,7 @@ import {
   PageSection,
   PaginationVariant,
   Tooltip,
+  type TooltipProps,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -45,6 +46,7 @@ import {
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
+  hasRoleEndpoints,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -56,6 +58,11 @@ import { PublicationModal } from "./components/PublicationModal";
 const SORTABLE_COLUMN_KEYS = [
   "pulp_created",
 ] as const satisfies readonly OrderingField<IPublicationListParams>[];
+
+// Some types (hugging_face) have no role endpoints to manage access with.
+const NO_ROLES_TOOLTIP: TooltipProps = {
+  content: "This publication type doesn't support access management.",
+};
 
 export const PublicationList: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -105,7 +112,9 @@ export const PublicationList: React.FC = () => {
   const publications = data?.results ?? [];
 
   const { disabledProps } = useObjectsPermissions({
-    hrefs: publications.map((item) => item.pulp_href ?? ""),
+    hrefs: publications
+      .filter((item) => hasRoleEndpoints(item.pulp_href))
+      .map((item) => item.pulp_href ?? ""),
   });
   const totalCount = data?.count ?? 0;
 
@@ -121,6 +130,7 @@ export const PublicationList: React.FC = () => {
     const href = pub.pulp_href;
     const pubId = href ? extractIdFromHref(href) : "";
     const pulpType = resolvePulpType(pub.pulp_href);
+    const canManageRoles = hasRoleEndpoints(pub.pulp_href);
     return {
       id: href,
       row: [
@@ -153,11 +163,15 @@ export const PublicationList: React.FC = () => {
               items={[
                 {
                   title: "Manage access",
+                  isAriaDisabled: !canManageRoles,
+                  tooltipProps: canManageRoles ? undefined : NO_ROLES_TOOLTIP,
                   onClick: () => setAccessTarget(pub),
-                  ...disabledProps({
-                    href: pub.pulp_href,
-                    verb: "manage_roles",
-                  }),
+                  ...(canManageRoles
+                    ? disabledProps({
+                        href: pub.pulp_href,
+                        verb: "manage_roles",
+                      })
+                    : {}),
                 },
                 {
                   title: "Delete",

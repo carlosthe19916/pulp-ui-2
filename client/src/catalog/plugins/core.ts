@@ -46,6 +46,8 @@ export const core: IPluginDefinition = {
         ],
         editFields: [...distributionBase.edit, ...keyringDistributionExtras],
       },
+      // The keyring repository has role endpoints; its distribution does not.
+      rolesManaged: false,
     },
   },
   content: [
