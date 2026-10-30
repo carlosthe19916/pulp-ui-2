@@ -65,7 +65,8 @@ Form pages ([forms](forms.md)) sit beside the list and detail routes:
   page reads and updates `?type=` itself (the Type select). The path never names a plugin.
 - `<entities>/$<entity>Type/$<entity>Id/edit.tsx` is a detail route (same loader, pending and
   error components) that also throws when `getEntityForm({ …, mode: "edit" })` has no form for
-  the type; its `*EditRoute.tsx` adapter passes `pulpDomain`, the type and the href.
+  the type, and loads the page's permission check with `prefetchEditPermissions` (failures
+  ignored); its `*EditRoute.tsx` adapter passes `pulpDomain`, the type and the href.
 
 ## Params, search and links
 

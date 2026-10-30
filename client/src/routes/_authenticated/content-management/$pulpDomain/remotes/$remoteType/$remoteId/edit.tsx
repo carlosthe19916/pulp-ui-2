@@ -9,6 +9,7 @@ import {
   remoteDetailQueryOptions,
 } from "@app/queries/remotes";
 import { ensureDomainFromParam } from "@app/queries/utils/loaderDomain";
+import { prefetchEditPermissions } from "@app/queries/utils/loaderPermissions";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/remotes/$remoteType/$remoteId/edit",
@@ -29,6 +30,7 @@ export const Route = createFileRoute(
       ...remoteDetailQueryOptions({ href }),
       staleTime: "static",
     });
+    await prefetchEditPermissions({ queryClient, href });
     return { href };
   },
   pendingComponent: () => <DetailRoutePending label="Loading remote" />,

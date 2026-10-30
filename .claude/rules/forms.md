@@ -57,6 +57,9 @@ forms** run everything else (plugin actions, admin objects, uploads).
   call-level `onSuccess`; the kit lifts the leave prompt and calls `onSaved`, where the page
   navigates (remote, repository → detail page; distribution, publication → list). An edit with
   nothing to send calls `onSaved` without a request. Nothing navigates in `onError`.
+- An edit page renders `UnauthorizedState` instead of the form when
+  `useObjectPermissions({ href }).can("change")` is false; lists and detail pages keep their
+  disabled Edit. A create page isn't pre-checked (Pulp exposes no create permission).
 - No wizard; no create/edit modal for these entities.
 
 ## Modal forms

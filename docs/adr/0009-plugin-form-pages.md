@@ -42,9 +42,13 @@ differ most in what they ask for when an object is made, so that part of
       or publication to its list, with the task feedback of
       [0006](0006-async-task-feedback.md).
 - [ ] Leaving a form with unsaved changes asks for confirmation.
-- [ ] An edit page for an unknown or forbidden object shows the error state; without change
-      permission, Save is disabled with the permission tooltip
-      ([0008](0008-permission-aware-actions.md)).
+- [ ] Edit permission is checked where Edit is offered and on the edit page itself: lists and
+      detail pages disable Edit with the permission tooltip
+      ([0008](0008-permission-aware-actions.md)), and an edit page reached without change
+      permission shows the access-denied state instead of the form. An unknown or unviewable
+      object shows the error state.
+- [ ] Create permission can't be known in advance (Pulp exposes none): Create stays enabled, and
+      a refusal shows at the top of the form.
 - [ ] A detail page labels and groups an object's settings the same way its form does.
 
 ## Consequences

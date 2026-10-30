@@ -18,7 +18,6 @@ import {
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { FormSubmitError } from "@app/components/FormSubmitError";
-import { GatedButton } from "@app/components/GatedButton";
 import { toFieldRecord } from "@app/utils/formSchema";
 import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
@@ -65,11 +64,6 @@ interface IEntityFormPageProps {
   resourceFilter: ResourceFilterMap;
   submitError: IMutationErrorMessage | null;
   isSubmitting: boolean;
-  /** Permission props for the submit button (`disabledProps("change")`). */
-  submitProps?: {
-    isAriaDisabled?: boolean;
-    tooltipProps?: { content: React.ReactNode };
-  };
   /** Runs the request; call `saved()` from its success callback. */
   onSubmit: (body: Record<string, unknown>, helpers: ISubmitHelpers) => void;
   /** Where to go after saving, given the saved object's href when the request returned it. */
@@ -93,7 +87,6 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   resourceFilter,
   submitError,
   isSubmitting,
-  submitProps,
   onSubmit,
   onSaved,
   onCancel,
@@ -266,16 +259,15 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
       <PageSection stickyOnBreakpoint={{ default: "bottom" }}>
         <Flex>
           <FlexItem>
-            <GatedButton
+            <Button
               type="submit"
               form={formId}
               variant="primary"
               isLoading={isSubmitting}
               isDisabled={isSubmitting || (mode === "edit" && !isDirty)}
-              {...submitProps}
             >
               {mode === "create" ? "Create" : "Save"}
-            </GatedButton>
+            </Button>
           </FlexItem>
           <FlexItem>
             <Button variant="link" onClick={onCancel}>

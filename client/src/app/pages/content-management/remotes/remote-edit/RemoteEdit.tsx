@@ -2,8 +2,14 @@ import type React from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { Breadcrumb, BreadcrumbItem, Label } from "@patternfly/react-core";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  Label,
+  PageSection,
+} from "@patternfly/react-core";
 
+import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { EntityFormPage, getEntityForm } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
@@ -33,7 +39,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
-  const { disabledProps } = useObjectPermissions({ href });
+  const { can } = useObjectPermissions({ href });
   const entry = getEntityForm({ entity: "remote", pulpType, mode: "edit" });
   const name = remote.name ?? extractIdFromHref(href);
 
@@ -70,6 +76,17 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 
   // The route loader only resolves for types with an edit form.
   if (!entry) return null;
+
+  // The page is reachable by URL, so it checks for itself what the list's Edit action does.
+  if (!can("change")) {
+    return (
+      <PageSection>
+        <UnauthorizedState
+          description={`You don't have permission to change remote "${name}".`}
+        />
+      </PageSection>
+    );
+  }
 
   return (
     <EntityFormPage
@@ -108,7 +125,6 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
       })}
       submitError={submitError}
       isSubmitting={updateMutation.isPending}
-      submitProps={disabledProps("change")}
       onSubmit={(body, { saved }) => {
         clearSubmitError();
         updateMutation.mutate({ href, body }, { onSuccess: () => saved() });
