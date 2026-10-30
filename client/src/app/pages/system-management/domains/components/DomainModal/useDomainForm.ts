@@ -23,6 +23,7 @@ import {
 
 import {
   buildStorageSettingsSchema,
+  getDomainStorageSettings,
   STORAGE_BACKEND_BY_CLASS,
 } from "../../utils/storageBackends";
 
@@ -73,11 +74,7 @@ const toStorageSettingsDefaults = (
 ): Record<string, string> => {
   if (!domain) return {};
   const backend = STORAGE_BACKEND_BY_CLASS[domain.storage_class];
-  // The generated response type omits storage_settings (write-only in the schema),
-  // but the API returns it, so read it through a narrow cast.
-  const settings =
-    (domain as { storage_settings?: Record<string, unknown> })
-      .storage_settings ?? {};
+  const settings = getDomainStorageSettings(domain);
   return Object.fromEntries(
     (backend?.settingsFields ?? [])
       .map((field) => [field.key, settings[field.key]] as const)

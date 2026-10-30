@@ -27,6 +27,25 @@ test.describe("Domains (enabled)", () => {
     }
   });
 
+  test("expands a domain to show its storage settings", async ({
+    domainsPage,
+    cleanup,
+  }) => {
+    const name = cleanup.domain(uniqueName("domain"));
+    const location = `/var/lib/pulp/media/${name}`;
+    await domainsPage.create({
+      name,
+      storageBackend: "Local filesystem",
+      storageSettings: { Location: location },
+    });
+    await domainsPage.filterBy("Name", name);
+    await domainsPage.expectRowVisible(name);
+
+    // The Storage cell is the row's first (compound-expand) button.
+    await domainsPage.expandRow(name);
+    await expect(domainsPage.page.getByText(location)).toBeVisible();
+  });
+
   test("shows the default domain with its actions disabled", async ({
     domainsPage,
   }) => {
