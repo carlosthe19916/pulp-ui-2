@@ -80,3 +80,35 @@ export const missingConstraint = authFields(
   // @ts-expect-error -- a fragment needing `username` can't take a body without it.
   {} as IFieldBuilders<{ url: string }>,
 );
+
+// @ts-expect-error -- a switch can't edit the string `url`.
+export const wrongKind: IFormDef = defineForm<FileRemoteBody>()(({ f, s }) => ({
+  title: { create: "Create", edit: "Edit" },
+  sections: [
+    s.essentials([
+      f.text("name", { label: "Name" }),
+      f.switch("url", { label: "URL" }),
+    ]),
+  ],
+  omit: [
+    "policy",
+    "username",
+    "password",
+    "pulp_labels",
+    "ca_cert",
+    "client_cert",
+    "client_key",
+    "tls_validation",
+    "proxy_url",
+    "proxy_username",
+    "proxy_password",
+    "max_retries",
+    "total_timeout",
+    "connect_timeout",
+    "sock_connect_timeout",
+    "sock_read_timeout",
+    "headers",
+    "download_concurrency",
+    "rate_limit",
+  ],
+}));

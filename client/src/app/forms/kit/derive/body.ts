@@ -1,5 +1,5 @@
 import type { FormValues, IFieldDef, IFormContext, IFormDef } from "../types";
-import { clearValue, toApiValue } from "./codecs";
+import { clearValue, type ISecretValue, toApiValue } from "./codecs";
 import {
   isFieldVisible,
   isSectionVisible,
@@ -72,7 +72,13 @@ export const buildPatchBody = ({
         const wasVisible =
           isSectionVisible({ section, ctx: initialCtx }) &&
           isFieldVisible({ field, ctx: initialCtx });
-        if (wasVisible && before !== undefined) {
+        // A kept secret has no body value; the server says whether it is set.
+        const wasSet =
+          field.kind === "secret"
+            ? (initialValues[field.key] as ISecretValue | undefined)?.isSet ===
+              true
+            : before !== undefined;
+        if (wasVisible && wasSet) {
           body[field.key] = clearValue(field);
         }
         continue;

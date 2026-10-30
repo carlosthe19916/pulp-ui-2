@@ -109,20 +109,31 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                 />
               );
             case "select":
+              // A native select only holds strings: its value is the option's
+              // index, so a boolean or number option keeps its type.
               return (
                 <FormSelect
                   id={fieldId}
-                  value={(value as string) ?? ""}
+                  value={String(
+                    field.options.findIndex((option) => option.value === value),
+                  )}
                   isDisabled={isDisabled}
                   validated={validated}
-                  onChange={(_event, next) => onChange(next)}
+                  onChange={(_event, index) =>
+                    onChange(field.options[Number(index)]?.value ?? "")
+                  }
                   onBlur={onBlur}
                 >
-                  {!required && <FormSelectOption value="" label="Default" />}
-                  {field.options.map((option) => (
+                  <FormSelectOption
+                    value="-1"
+                    label={required ? "Select an option" : "Default"}
+                    isPlaceholder={required}
+                    isDisabled={required}
+                  />
+                  {field.options.map((option, index) => (
                     <FormSelectOption
                       key={String(option.value)}
-                      value={String(option.value)}
+                      value={String(index)}
                       label={option.label}
                     />
                   ))}
@@ -269,17 +280,13 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                 />
               );
             }
-            default:
+            case "text":
+            case "url":
+            case "number":
               return (
                 <TextInput
                   id={fieldId}
-                  type={
-                    field.kind === "number"
-                      ? "number"
-                      : field.kind === "url"
-                        ? "url"
-                        : "text"
-                  }
+                  type={field.kind}
                   value={(value as string) ?? ""}
                   placeholder={field.placeholder}
                   isDisabled={isDisabled}
@@ -288,6 +295,11 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   onBlur={onBlur}
                 />
               );
+            default: {
+              // A new field kind fails to compile here until it has an input.
+              const unhandled: never = field;
+              return unhandled;
+            }
           }
         })();
 

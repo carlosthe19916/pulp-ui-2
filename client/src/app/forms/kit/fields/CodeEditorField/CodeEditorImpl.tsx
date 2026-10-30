@@ -26,7 +26,6 @@ const HEIGHT: Record<CodeLanguage, string> = {
 
 /** The Monaco-backed editor; loaded lazily by `CodeEditorField`. */
 export const CodeEditorImpl: React.FC<ICodeEditorFieldProps> = ({
-  id,
   label,
   language,
   value,
@@ -70,7 +69,6 @@ export const CodeEditorImpl: React.FC<ICodeEditorFieldProps> = ({
             />
           )
         }
-        editorProps={{ wrapperProps: { id: `${id}-editor` } }}
         options={{
           ariaLabel: label,
           minimap: { enabled: false },

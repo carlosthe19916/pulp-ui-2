@@ -75,7 +75,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
     <EntityFormPage
       form={entry.form}
       mode="edit"
-      entity={remote as Record<string, unknown>}
+      entity={remote}
       label={<Label color="blue">plugin: {pulpType}</Label>}
       breadcrumbs={
         <Breadcrumb>
@@ -109,18 +109,11 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
       submitError={submitError}
       isSubmitting={updateMutation.isPending}
       submitProps={disabledProps("change")}
-      onSubmit={(body, { allowLeave }) => {
+      onSubmit={(body, { saved }) => {
         clearSubmitError();
-        updateMutation.mutate(
-          { href, body },
-          {
-            onSuccess: () => {
-              allowLeave();
-              toDetail();
-            },
-          },
-        );
+        updateMutation.mutate({ href, body }, { onSuccess: () => saved() });
       }}
+      onSaved={toDetail}
       onCancel={toDetail}
     />
   );

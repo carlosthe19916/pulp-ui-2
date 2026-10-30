@@ -1,5 +1,6 @@
 import type {
   BodyKey,
+  FieldKind,
   IChoiceField,
   IChoiceOption,
   ICodeField,
@@ -27,20 +28,37 @@ type ChoiceValue<T, K> = K extends keyof T
   ? Exclude<T[K], null | undefined>
   : string;
 
+type ChoiceKind = "select" | "radio" | "tiles";
+
 /** Field builders bound to a request body `T`: a key outside `T` fails to compile. */
 export interface IFieldBuilders<T> {
-  text: <K extends Key<T>>(key: K, opts: IFieldOptions) => ISimpleField<K>;
-  url: <K extends Key<T>>(key: K, opts: IFieldOptions) => ISimpleField<K>;
-  textarea: <K extends Key<T>>(key: K, opts: IFieldOptions) => ISimpleField<K>;
-  number: <K extends Key<T>>(key: K, opts: IFieldOptions) => ISimpleField<K>;
-  switch: <K extends Key<T>>(key: K, opts: IFieldOptions) => ISimpleField<K>;
-  select: <K extends Key<T>>(
+  text: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions,
+  ) => ISimpleField<K, "text">;
+  url: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions,
+  ) => ISimpleField<K, "url">;
+  textarea: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions,
+  ) => ISimpleField<K, "textarea">;
+  number: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions,
+  ) => ISimpleField<K, "number">;
+  switch: <K extends Key<T>>(
+    key: K,
+    opts: IFieldOptions,
+  ) => ISimpleField<K, "switch">;
+  select: <K extends Key<T>, Kd extends ChoiceKind = "select">(
     key: K,
     opts: IFieldOptions & {
       options: IChoiceOption<ChoiceValue<T, K>>[];
-      kind?: "select" | "radio" | "tiles";
+      kind?: Kd;
     },
-  ) => IChoiceField<K>;
+  ) => IChoiceField<K, Kd>;
   stringList: <K extends Key<T>>(
     key: K,
     opts: IFieldOptions,
@@ -66,21 +84,25 @@ export interface IFieldBuilders<T> {
     key: K,
     opts: IFieldOptions & Omit<ICustomField<K>, "key" | "kind" | "label">,
   ) => ICustomField<K>;
-  row: <K extends string>(fields: IFieldDef<K>[]) => IRowDef<K>;
+  // Arrays are inferred whole: TS doesn't union object types across separate candidates.
+  row: <I extends IFieldDef[]>(fields: I) => IRowDef<I[number]>;
 }
+
+/** The fields of section items, rows flattened. */
+type ItemFields<I> = I extends IRowDef<infer F> ? F : I;
 
 export interface ISectionBuilders {
   /** The always-open first section: the fields that define this plugin's object. */
-  essentials: <K extends string>(
-    items: ISectionItem<K>[],
+  essentials: <I extends ISectionItem[]>(
+    items: I,
     opts?: ISectionOptions,
-  ) => ISectionDef<K>;
-  collapsible: <K extends string>(
+  ) => ISectionDef<ItemFields<I[number]>>;
+  collapsible: <I extends ISectionItem[]>(
     id: string,
     title: string,
-    items: ISectionItem<K>[],
+    items: I,
     opts?: ISectionOptions,
-  ) => ISectionDef<K>;
+  ) => ISectionDef<ItemFields<I[number]>>;
 }
 
 const fieldBuilders: IFieldBuilders<Record<string, unknown>> = {
@@ -89,7 +111,11 @@ const fieldBuilders: IFieldBuilders<Record<string, unknown>> = {
   textarea: (key, opts) => ({ ...opts, key, kind: "textarea" }),
   number: (key, opts) => ({ ...opts, key, kind: "number" }),
   switch: (key, opts) => ({ ...opts, key, kind: "switch" }),
-  select: (key, { kind = "select", ...opts }) => ({ ...opts, key, kind }),
+  select: (key, { kind, ...opts }) => ({
+    ...opts,
+    key,
+    kind: kind ?? ("select" as NonNullable<typeof kind>),
+  }),
   stringList: (key, opts) => ({ ...opts, key, kind: "stringList" }),
   keyValue: (key, opts) => ({ ...opts, key, kind: "keyValue" }),
   secret: (key, opts) => ({ ...opts, key, kind: "secret" }),
@@ -100,59 +126,106 @@ const fieldBuilders: IFieldBuilders<Record<string, unknown>> = {
   row: (fields) => ({ row: fields }),
 };
 
-const sectionBuilders: ISectionBuilders = {
-  essentials: (items, opts) => ({
+// The inferred field types exist only at compile time; at runtime a section is plain data.
+const sectionBuilders = {
+  essentials: (items: ISectionItem[], opts?: ISectionOptions): ISectionDef => ({
     ...opts,
     id: "essentials",
     title: "General",
     variant: "essentials",
     items,
   }),
-  collapsible: (id, title, items, opts) => ({
+  collapsible: (
+    id: string,
+    title: string,
+    items: ISectionItem[],
+    opts?: ISectionOptions,
+  ): ISectionDef => ({
     ...opts,
     id,
     title,
     variant: "collapsible",
     items,
   }),
-};
+} as ISectionBuilders;
 
-/** What a definition writes: an `IFormDef` whose sections carry their field keys. */
-export interface IFormSpec<K extends string, O extends string> extends Omit<
-  IFormDef,
-  "sections"
-> {
-  sections: ISectionDef<K>[];
+/** What a definition writes: an `IFormDef` whose sections carry their fields' types. */
+export interface IFormSpec<
+  S extends ISectionDef[],
+  O extends string,
+> extends Omit<IFormDef, "sections"> {
+  sections: S;
   /** API keys deliberately not offered, each with a reason comment. */
   omit?: O[];
 }
+
+/** The API value type each field kind can edit. */
+interface IKindValue {
+  text: string;
+  url: string;
+  textarea: string;
+  code: string;
+  secret: string;
+  number: number;
+  switch: boolean;
+  stringList: readonly string[];
+  keyValue: readonly unknown[] | Record<string, unknown>;
+  resource: string | readonly string[];
+  select: unknown;
+  radio: unknown;
+  tiles: unknown;
+  file: unknown;
+  custom: unknown;
+}
+
+/** Keys of fields whose kind can't hold the key's API type (e.g. `f.switch("url")`). */
+type WrongKind<T, F> = F extends {
+  key: infer K;
+  kind: infer Kd extends FieldKind;
+}
+  ? K extends keyof T
+    ? [NonNullable<T[K]>] extends [IKindValue[Kd]]
+      ? never
+      : K
+    : never
+  : never;
 
 /** Compile error naming the API keys a definition neither renders nor omits. */
 export interface IUncoveredApiKeys<K> {
   __uncoveredApiKeys: K;
 }
 
-type Covered<T, K extends string, O extends string> = [
-  Exclude<BodyKey<T>, K | O>,
+/** Compile error naming the keys rendered with a kind that can't hold their type. */
+export interface IWrongKindKeys<K> {
+  __wrongKindKeys: K;
+}
+
+type SectionFields<S> = S extends ISectionDef<infer F> ? F : never;
+
+type Checked<T, F extends IFieldDef, O extends string> = [
+  Exclude<BodyKey<T>, F["key"] | O>,
 ] extends [never]
-  ? IFormDef
-  : IUncoveredApiKeys<Exclude<BodyKey<T>, K | O>>;
+  ? [WrongKind<T, F>] extends [never]
+    ? IFormDef
+    : IWrongKindKeys<WrongKind<T, F>>
+  : IUncoveredApiKeys<Exclude<BodyKey<T>, F["key"] | O>>;
 
 /**
  * Declares one plugin's form, typed by its create request body (`<Op>CreateData["body"]`).
- * Every body key must be rendered or listed in `omit`, or the result isn't an `IFormDef`.
+ * Every body key must be rendered (with a kind that fits its type) or listed in `omit`, or
+ * the result isn't an `IFormDef`.
  */
 export const defineForm =
   <T>() =>
-  <K extends string, O extends BodyKey<T> = never>(
+  <S extends ISectionDef[], O extends BodyKey<T> = never>(
     build: (builders: {
       f: IFieldBuilders<T>;
       s: ISectionBuilders;
-    }) => IFormSpec<K, O>,
-  ): Covered<T, K, O> => {
+    }) => IFormSpec<S, O>,
+  ): Checked<T, SectionFields<S[number]>, O> => {
     const { omit: _omit, ...spec } = build({
       f: fieldBuilders as unknown as IFieldBuilders<T>,
       s: sectionBuilders,
     });
-    return spec as unknown as Covered<T, K, O>;
+    return spec as unknown as Checked<T, SectionFields<S[number]>, O>;
   };

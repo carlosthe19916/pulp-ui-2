@@ -124,13 +124,14 @@ export default defineConfig({
           if (id.includes("/react/") || id.includes("/react-dom/")) {
             return "react";
           }
-          // Before the PatternFly rule: the code editor is lazy and must not join the eager chunk.
+          // Before the PatternFly rule: the code editor is only imported lazily, so leave it
+          // to the lazy chunk instead of the eager one (a named chunk would cycle with react).
           if (
             id.includes("/monaco-editor/") ||
             id.includes("/@monaco-editor/") ||
             id.includes("/@patternfly/react-code-editor/")
           ) {
-            return "code-editor";
+            return undefined;
           }
           // Topology stays in its lazy route chunk with d3 and mobx.
           if (

@@ -53,8 +53,9 @@ export class EntityFormPage {
    * auto-indent or auto-close it.
    */
   async fillCode(label: string, text: string): Promise<void> {
+    // Monaco's input sits under its rendered lines, which intercept a click: focus it.
     const editor = this.page.getByRole("textbox", { name: label, exact: true });
-    await editor.click();
+    await editor.focus();
     await this.page.keyboard.press("ControlOrMeta+A");
     await this.page.keyboard.press("Delete");
     await this.page.keyboard.insertText(text);

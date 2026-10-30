@@ -142,9 +142,26 @@ const baseSchema = ({
         .url(`${field.label} must be a valid URL`);
       return required ? schema.required(requiredMessage) : schema;
     }
-    default: {
+    case "select":
+    case "radio":
+    case "tiles":
+      // Options may be booleans or numbers, not only strings.
+      return yup
+        .mixed()
+        .test(
+          "required",
+          requiredMessage,
+          (value) => !required || (value !== "" && value != null),
+        );
+    case "text":
+    case "textarea": {
       const schema = yup.string().nullable();
       return required ? schema.required(requiredMessage) : schema;
+    }
+    default: {
+      // A new field kind fails to compile here until it has a schema.
+      const unhandled: never = field;
+      return unhandled;
     }
   }
 };

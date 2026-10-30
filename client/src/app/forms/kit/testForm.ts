@@ -10,6 +10,7 @@ interface ITestBody {
   tls_validation?: boolean;
   ca_cert?: string | null;
   password?: string | null;
+  token?: string | null;
   download_concurrency?: number | null;
   include_tags?: string[] | null;
   headers?: unknown[];
@@ -46,6 +47,10 @@ export const testForm: IFormDef = defineForm<ITestBody>()(({ f, s }) => ({
     ]),
     s.collapsible("auth", "Authentication", [
       f.secret("password", { label: "Password", required: "create" }),
+      f.secret("token", {
+        label: "Token",
+        visibleWhen: ({ values }) => values.policy === "on_demand",
+      }),
     ]),
     s.collapsible("tls", "TLS", [
       f.switch("tls_validation", { label: "Verify TLS", defaultValue: true }),

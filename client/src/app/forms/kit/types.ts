@@ -65,12 +65,22 @@ interface IFieldBase<K extends string> extends IFieldOptions {
   key: K;
 }
 
-export interface ISimpleField<K extends string> extends IFieldBase<K> {
-  kind: "text" | "url" | "textarea" | "number" | "switch";
+type SimpleKind = "text" | "url" | "textarea" | "number" | "switch";
+
+export interface ISimpleField<
+  K extends string,
+  Kd extends SimpleKind = SimpleKind,
+> extends IFieldBase<K> {
+  kind: Kd;
 }
 
-export interface IChoiceField<K extends string> extends IFieldBase<K> {
-  kind: "select" | "radio" | "tiles";
+type ChoiceKind = "select" | "radio" | "tiles";
+
+export interface IChoiceField<
+  K extends string,
+  Kd extends ChoiceKind = ChoiceKind,
+> extends IFieldBase<K> {
+  kind: Kd;
   options: IChoiceOption<unknown>[];
 }
 
@@ -142,11 +152,11 @@ export type IFieldDef<K extends string = string> =
 export type FieldKind = IFieldDef["kind"];
 
 /** Fields rendered side by side. */
-export interface IRowDef<K extends string = string> {
-  row: IFieldDef<K>[];
+export interface IRowDef<F extends IFieldDef = IFieldDef> {
+  row: F[];
 }
 
-export type ISectionItem<K extends string = string> = IFieldDef<K> | IRowDef<K>;
+export type ISectionItem<F extends IFieldDef = IFieldDef> = F | IRowDef<F>;
 
 export interface ISectionOptions {
   description?: string;
@@ -157,18 +167,12 @@ export interface ISectionOptions {
 }
 
 export interface ISectionDef<
-  K extends string = string,
+  F extends IFieldDef = IFieldDef,
 > extends ISectionOptions {
   id: string;
   title: string;
   variant: "essentials" | "collapsible";
-  items: ISectionItem<K>[];
-}
-
-/** Props of a whole-form override: the same page, laid out by hand with kit pieces. */
-export interface IFormOverrideProps {
-  form: IFormDef;
-  mode: FormMode;
+  items: ISectionItem<F>[];
 }
 
 /** A resolved form definition, as the renderer and the derivations consume it. */
@@ -183,5 +187,4 @@ export interface IFormDef {
     body: Record<string, unknown>,
     ctx: IFormContext,
   ) => Record<string, unknown>;
-  override?: React.ComponentType<IFormOverrideProps>;
 }

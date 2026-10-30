@@ -115,6 +115,28 @@ describe("buildPatchBody", () => {
     ).toEqual({ policy: "on_demand", requirements_file: null });
   });
 
+  it("clears a set secret that a condition now hides", () => {
+    const tokenEntity = {
+      ...entity,
+      policy: "on_demand",
+      hidden_fields: [{ name: "token", is_set: true }],
+    };
+    const initialValues = buildDefaultValues({
+      form: testForm,
+      mode: "edit",
+      entity: tokenEntity,
+    });
+    const values = { ...initialValues, policy: "immediate" };
+    expect(
+      buildPatchBody({
+        form: testForm,
+        values,
+        initialValues,
+        entity: tokenEntity,
+      }),
+    ).toEqual({ policy: "immediate", token: null });
+  });
+
   it("never sends read-only or create-only fields", () => {
     const initialValues = editDefaults();
     const values = {

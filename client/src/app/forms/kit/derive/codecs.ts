@@ -27,7 +27,12 @@ export const newKeyValueRow = ({
 /** Converts one field kind between its API value and its form value. */
 interface ICodec {
   empty: (field: IFieldDef) => unknown;
-  fromApi: (value: unknown, field: IFieldDef) => unknown;
+  /** `entity` is the whole edited object (a secret reads its `hidden_fields`). */
+  fromApi: (
+    value: unknown,
+    field: IFieldDef,
+    entity: Record<string, unknown>,
+  ) => unknown;
   /** `undefined` means "empty": dropped on create, cleared on edit. */
   toApi: (value: unknown, field: IFieldDef) => unknown;
   /** Edit value for an emptied field. */
@@ -135,8 +140,16 @@ const secret: ICodec = {
   empty: () =>
     ({ mode: "replace", value: "", isSet: false }) satisfies ISecretValue,
   // Write-only: the API never returns the value, only whether it is set.
-  fromApi: () =>
-    ({ mode: "keep", value: "", isSet: false }) satisfies ISecretValue,
+  fromApi: (_value, field, entity) => {
+    const hidden = entity.hidden_fields;
+    const isSet =
+      Array.isArray(hidden) &&
+      hidden.some(
+        (item: { name?: string; is_set?: boolean }) =>
+          item.name === field.key && item.is_set === true,
+      );
+    return { mode: "keep", value: "", isSet } satisfies ISecretValue;
+  },
   toApi: (value) => {
     const secretValue = value as ISecretValue | undefined;
     if (!secretValue || secretValue.mode === "keep") return undefined;
@@ -212,17 +225,7 @@ export const fromApiValue = ({
   entity: Record<string, unknown>;
 }): unknown => {
   if (field.fromEntity) return field.fromEntity(entity);
-  if (field.kind === "secret") {
-    const hidden = entity.hidden_fields;
-    const isSet = Array.isArray(hidden)
-      ? hidden.some(
-          (item: { name?: string; is_set?: boolean }) =>
-            item.name === field.key && item.is_set === true,
-        )
-      : false;
-    return { mode: "keep", value: "", isSet } satisfies ISecretValue;
-  }
-  return codecOf(field).fromApi(entity[field.key], field);
+  return codecOf(field).fromApi(entity[field.key], field, entity);
 };
 
 /** The body value of a form value; `undefined` when the field is empty. */

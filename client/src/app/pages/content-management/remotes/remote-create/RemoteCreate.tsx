@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
@@ -10,21 +9,13 @@ import {
 } from "@patternfly/react-core";
 
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import {
-  carryOverValues,
-  EntityFormPage,
-  type FormValues,
-  getEntityForm,
-  useCreatableTypes,
-} from "@app/forms";
+import { EntityFormPage, useCreateTypeSelect } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRemoteCreateMutation } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
 
 const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/remotes/create",
@@ -37,20 +28,22 @@ export const RemoteCreate: React.FC = () => {
   const { name: pulpDomain } = useSelectedDomain();
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  // Values carried over from the type the user switched away from.
-  const [carried, setCarried] = useState<{
-    pulpType: string;
-    values: FormValues;
-  } | null>(null);
 
-  const types = useCreatableTypes("remote");
-  const pulpType =
-    types.find((option) => option.pulpType === type)?.pulpType ??
-    types[0]?.pulpType;
-  const entry = pulpType
-    ? getEntityForm({ entity: "remote", pulpType, mode: "create" })
-    : undefined;
-  const plugin = pulpType ? getPlugin(pulpType) : undefined;
+  const {
+    pulpType,
+    entry,
+    apiPath,
+    resourceFilter,
+    typeSelect,
+    initialValues,
+  } = useCreateTypeSelect({
+    entity: "remote",
+    type,
+    onTypeChange: (next) => {
+      clearSubmitError();
+      void navigateSearch({ search: { type: next }, replace: true });
+    },
+  });
 
   const createMutation = useRemoteCreateMutation({
     onSuccess: (data) =>
@@ -64,31 +57,10 @@ export const RemoteCreate: React.FC = () => {
       ),
   });
 
-  const toList = () =>
-    void navigate({
-      to: "/content-management/$pulpDomain/remotes",
-      params: { pulpDomain },
-    });
-
-  const breadcrumbs = (
-    <Breadcrumb>
-      <BreadcrumbItem>
-        <Link
-          to="/content-management/$pulpDomain/remotes"
-          params={{ pulpDomain }}
-        >
-          Remotes
-        </Link>
-      </BreadcrumbItem>
-      <BreadcrumbItem isActive>Create</BreadcrumbItem>
-    </Breadcrumb>
-  );
-
-  const apiPath = plugin?.entities.remote?.apiPath;
   if (!pulpType || !entry || !apiPath) {
     return (
       <PageSection>
-        <TableEmptyState title="No remote plugin is installed" />
+        <TableEmptyState title="No remote type can be created" />
       </PageSection>
     );
   }
@@ -98,56 +70,47 @@ export const RemoteCreate: React.FC = () => {
       key={pulpType}
       form={entry.form}
       mode="create"
-      initialValues={
-        carried?.pulpType === pulpType ? carried.values : undefined
+      initialValues={initialValues}
+      breadcrumbs={
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <Link
+              to="/content-management/$pulpDomain/remotes"
+              params={{ pulpDomain }}
+            >
+              Remotes
+            </Link>
+          </BreadcrumbItem>
+          <BreadcrumbItem isActive>Create</BreadcrumbItem>
+        </Breadcrumb>
       }
-      breadcrumbs={breadcrumbs}
-      typeSelect={{
-        options: types,
-        value: pulpType,
-        onChange: (next, values) => {
-          const nextEntry = getEntityForm({
-            entity: "remote",
-            pulpType: next,
-            mode: "create",
-          });
-          if (nextEntry) {
-            setCarried({
-              pulpType: next,
-              values: carryOverValues({
-                from: entry.form,
-                to: nextEntry.form,
-                values,
-              }),
-            });
-          }
-          clearSubmitError();
-          void navigateSearch({ search: { type: next }, replace: true });
-        },
-      }}
-      resourceFilter={buildResourceFilter({ kind: "remote", plugin })}
+      typeSelect={typeSelect}
+      resourceFilter={resourceFilter}
       submitError={submitError}
       isSubmitting={createMutation.isPending}
-      onSubmit={(body, { allowLeave }) => {
+      onSubmit={(body, { saved }) => {
         clearSubmitError();
         createMutation.mutate(
           { apiPath, body },
-          {
-            onSuccess: (data) => {
-              allowLeave();
-              void navigate({
-                to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId",
-                params: {
-                  pulpDomain,
-                  remoteType: pulpType,
-                  remoteId: extractIdFromHref(data.pulp_href ?? ""),
-                },
-              });
-            },
-          },
+          { onSuccess: (data) => saved(data.pulp_href) },
         );
       }}
-      onCancel={toList}
+      onSaved={(href) =>
+        void navigate({
+          to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId",
+          params: {
+            pulpDomain,
+            remoteType: pulpType,
+            remoteId: extractIdFromHref(href ?? ""),
+          },
+        })
+      }
+      onCancel={() =>
+        void navigate({
+          to: "/content-management/$pulpDomain/remotes",
+          params: { pulpDomain },
+        })
+      }
     />
   );
 };

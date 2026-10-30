@@ -19,6 +19,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import { GatedButton } from "@app/components/GatedButton";
+import { toFieldRecord } from "@app/utils/formSchema";
 import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
@@ -39,8 +40,8 @@ import { useUnsavedChangesGuard } from "./useUnsavedChangesGuard";
 const JUMP_LINKS_MIN_SECTIONS = 4;
 
 export interface ISubmitHelpers {
-  /** Lets the next navigation through without the unsaved-changes prompt. */
-  allowLeave: () => void;
+  /** Call when the request succeeds: lifts the leave prompt, then runs `onSaved`. */
+  saved: (href?: string) => void;
 }
 
 export interface ITypeSelectProps {
@@ -53,8 +54,9 @@ export interface ITypeSelectProps {
 interface IEntityFormPageProps {
   form: IFormDef;
   mode: FormMode;
-  entity?: Record<string, unknown>;
-  /** Values that override the defaults (carried over from another type). */
+  /** The edited object, as the detail query returned it. */
+  entity?: object;
+  /** Values carried over from another type; they count as unsaved changes. */
   initialValues?: FormValues;
   breadcrumbs: React.ReactNode;
   /** Shown beside the title (e.g. the plugin type). */
@@ -68,7 +70,10 @@ interface IEntityFormPageProps {
     isAriaDisabled?: boolean;
     tooltipProps?: { content: React.ReactNode };
   };
+  /** Runs the request; call `saved()` from its success callback. */
   onSubmit: (body: Record<string, unknown>, helpers: ISubmitHelpers) => void;
+  /** Where to go after saving, given the saved object's href when the request returned it. */
+  onSaved: (href?: string) => void;
   onCancel: () => void;
 }
 
@@ -80,7 +85,7 @@ interface IEntityFormPageProps {
 export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   form,
   mode,
-  entity,
+  entity: editedObject,
   initialValues,
   breadcrumbs,
   label,
@@ -90,29 +95,35 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   isSubmitting,
   submitProps,
   onSubmit,
+  onSaved,
   onCancel,
 }) => {
   const formId = useId();
-  const [defaultValues] = useState<FormValues>(() => ({
-    ...buildDefaultValues({ form, mode, entity }),
-    ...initialValues,
-  }));
+  const entity = editedObject ? toFieldRecord(editedObject) : undefined;
+  // Carried-over values go in as `values`, not defaults, so the form starts dirty and
+  // leaving still asks.
+  const [defaultValues] = useState<FormValues>(() =>
+    buildDefaultValues({ form, mode, entity }),
+  );
+  const [startValues] = useState<FormValues | undefined>(() =>
+    initialValues ? { ...defaultValues, ...initialValues } : undefined,
+  );
+  // Built once: a resolver recreated on every render re-registers with the form.
+  const [resolver] = useState(() => formResolver({ form, mode, entity }));
   const methods = useForm<FormValues>({
     defaultValues,
+    values: startValues,
+    resetOptions: { keepDefaultValues: true },
     mode: "onChange",
-    resolver: formResolver({ form, mode, entity }),
+    resolver,
   });
   const values = useWatch({ control: methods.control }) as FormValues;
-  const ctx: IFormContext = {
-    mode,
-    values: { ...defaultValues, ...values },
-    entity,
-  };
+  const ctx: IFormContext = { mode, values, entity };
 
   const [expanded, setExpanded] = useState<Set<string>>(() =>
     initialExpandedSections({
       form,
-      ctx: { mode, values: defaultValues, entity },
+      ctx: { mode, values: startValues ?? defaultValues, entity },
     }),
   );
   const setSectionExpanded = ({
@@ -139,18 +150,26 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   const hasJumpLinks = visibleSections.length >= JUMP_LINKS_MIN_SECTIONS;
   const title = form.title[mode];
 
+  const saved = (href?: string) => {
+    guard.allowLeave();
+    onSaved(href);
+  };
+
   const submit = methods.handleSubmit(
     (submitted) => {
-      const body =
-        mode === "create"
-          ? buildCreateBody({ form, values: submitted })
-          : buildPatchBody({
-              form,
-              values: submitted,
-              initialValues: defaultValues,
-              entity,
-            });
-      onSubmit(body, { allowLeave: guard.allowLeave });
+      if (mode === "create") {
+        onSubmit(buildCreateBody({ form, values: submitted }), { saved });
+        return;
+      }
+      const body = buildPatchBody({
+        form,
+        values: submitted,
+        initialValues: defaultValues,
+        entity,
+      });
+      // E.g. "Change" opened on a secret but left empty: no request, no pointless task.
+      if (Object.keys(body).length === 0) saved();
+      else onSubmit(body, { saved });
     },
     (errors) => {
       const toOpen = sectionsWithErrors({
