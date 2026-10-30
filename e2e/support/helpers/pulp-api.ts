@@ -137,6 +137,19 @@ export class PulpApi {
     }
   }
 
+  private async existsByExactName(
+    collection: string,
+    param: string,
+    value: string,
+  ): Promise<boolean> {
+    const res = await this.ctx.get(this.collectionUrl(collection), {
+      params: { [param]: value, limit: 1 },
+    });
+    if (!res.ok()) return false;
+    const { results = [] } = (await res.json()) as IListResponse;
+    return results.length > 0;
+  }
+
   deleteUser(username: string): Promise<void> {
     return this.deleteByExactName("users", "username", username);
   }
@@ -159,6 +172,11 @@ export class PulpApi {
 
   deleteRepository(name: string): Promise<void> {
     return this.deleteByExactName("repositories", "name", name);
+  }
+
+  /** Whether a repository with this exact name still exists (for delete round-trips). */
+  repositoryExists(name: string): Promise<boolean> {
+    return this.existsByExactName("repositories", "name", name);
   }
 
   deleteDistribution(name: string): Promise<void> {
