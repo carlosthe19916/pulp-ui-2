@@ -15,7 +15,6 @@ import {
   DataView,
   DataViewFilters,
   DataViewTable,
-  type DataViewTd,
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
@@ -166,7 +165,7 @@ export const DomainList: React.FC = () => {
     { cell: "Hide guarded", props: { width: 10 } },
     { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
     ...(hasAnyActiveTask
-      ? [{ cell: "Status", props: { width: 10 } } as DataViewTh]
+      ? [{ cell: "Status", props: { width: 10 } } satisfies DataViewTh]
       : []),
     { cell: "", props: { screenReaderText: "Actions" } },
   ];
@@ -214,7 +213,7 @@ export const DomainList: React.FC = () => {
                   />
                 ),
                 props: { dataLabel: "Status" },
-              } as DataViewTd,
+              },
             ]
           : []),
         {
