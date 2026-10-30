@@ -2,6 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   Button,
@@ -31,17 +32,17 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
-import { RemoteModal } from "@app/components/RemoteModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
+import { getEntityForm, useCreatableTypes } from "@app/forms";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRemoteListParams } from "@app/queries/remotes";
 import {
   remoteKeys,
@@ -49,11 +50,14 @@ import {
   useRemotesListQuery,
 } from "@app/queries/remotes";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  hasRoleEndpoints,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
 
 import { BandersnatchRemoteModal } from "./components/BandersnatchRemoteModal";
 
@@ -72,19 +76,16 @@ export const RemoteList: React.FC = () => {
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
-  const [modalState, setModalState] = useState<
-    "create" | GenericRemoteResponse | null
-  >(null);
-  const remoteToEdit =
-    modalState === "create" ? undefined : (modalState ?? undefined);
+  const navigate = useNavigate();
+  const { name: pulpDomain } = useSelectedDomain();
 
   const [deleteTarget, setDeleteTarget] =
     useState<GenericRemoteResponse | null>(null);
 
-  const creatablePlugins = useCreatablePlugins("remote");
-  const canCreate = creatablePlugins.length > 0;
-  const canCreatePython = creatablePlugins.some(
-    (plugin) => plugin.pulpType === "python.python",
+  const creatableTypes = useCreatableTypes("remote");
+  const canCreate = creatableTypes.length > 0;
+  const canCreatePython = creatableTypes.some(
+    (option) => option.pulpType === "python.python",
   );
   const [isBandersnatchOpen, setIsBandersnatchOpen] = useState(false);
   const deleteMutation = useRemoteDeleteMutation({
@@ -191,7 +192,9 @@ export const RemoteList: React.FC = () => {
 
   const rows: DataViewTr[] = remotes.map((remote) => {
     const pulpType = resolvePulpType(remote.pulp_href);
-    const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.remote);
+    const canEdit = !!(
+      pulpType && getEntityForm({ entity: "remote", pulpType, mode: "edit" })
+    );
 
     return {
       id: remote.pulp_href,
@@ -244,7 +247,16 @@ export const RemoteList: React.FC = () => {
                         content:
                           "This remote's plugin type isn't available in the UI.",
                       },
-                  onClick: () => setModalState(remote),
+                  onClick: () =>
+                    pulpType &&
+                    void navigate({
+                      to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId/edit",
+                      params: {
+                        pulpDomain,
+                        remoteType: pulpType,
+                        remoteId: extractIdFromHref(remote.pulp_href ?? ""),
+                      },
+                    }),
                   ...(canEdit
                     ? disabledProps({ href: remote.pulp_href, verb: "change" })
                     : {}),
@@ -326,7 +338,12 @@ export const RemoteList: React.FC = () => {
                 <>
                   <Button
                     variant="primary"
-                    onClick={() => setModalState("create")}
+                    onClick={() =>
+                      void navigate({
+                        to: "/content-management/$pulpDomain/remotes/create",
+                        params: { pulpDomain },
+                      })
+                    }
                   >
                     Create remote
                   </Button>
@@ -382,12 +399,6 @@ export const RemoteList: React.FC = () => {
             onClose={() => setIsBandersnatchOpen(false)}
           />
         )}
-
-        <RemoteModal
-          isOpen={modalState !== null}
-          entity={remoteToEdit}
-          onClose={() => setModalState(null)}
-        />
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

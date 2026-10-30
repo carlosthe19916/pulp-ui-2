@@ -106,6 +106,7 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         tableName: "Remotes table",
         singular: "Remote",
         createButton: "Create remote",
+        form: "page",
       }),
     );
   },

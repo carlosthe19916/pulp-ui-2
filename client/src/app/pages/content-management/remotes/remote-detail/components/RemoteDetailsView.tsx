@@ -22,43 +22,32 @@ import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
 import InfoCircleIcon from "@patternfly/react-icons/dist/esm/icons/info-circle-icon";
 import KeyIcon from "@patternfly/react-icons/dist/esm/icons/key-icon";
 import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
+import NetworkIcon from "@patternfly/react-icons/dist/esm/icons/network-icon";
 import OutlinedClockIcon from "@patternfly/react-icons/dist/esm/icons/outlined-clock-icon";
 import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 
 import type { GenericRemoteResponse } from "@app/client";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
+import { getEntityForm, toDetailSections } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRemoteLabelsMutation } from "@app/queries/remotes";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
+import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime } from "@app/utils/utils";
-import { getRemoteEditFields } from "@catalog";
-
-const DEFAULT_GROUP = "General";
 
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 
-// Shared transport groups, in trailing order. Any other group is plugin-specific and
-// is surfaced right after General, so each plugin's distinctive fields lead the page.
-const CONNECTION_GROUPS = ["Authentication", "TLS", "Timeouts", "Limits"];
-
+// Icons for the shared remote sections, by form section id; plugin sections get a default.
 const SECTION_ICONS: Record<string, React.ComponentType> = {
-  General: CogIcon,
-  Authentication: KeyIcon,
-  TLS: LockIcon,
-  Timeouts: OutlinedClockIcon,
-  Limits: TachometerAltIcon,
-  Metadata: InfoCircleIcon,
-};
-
-const orderGroups = (groups: string[]): string[] => {
-  const general = groups.filter((g) => g === DEFAULT_GROUP);
-  const pluginGroups = groups.filter(
-    (g) => g !== DEFAULT_GROUP && !CONNECTION_GROUPS.includes(g),
-  );
-  const connection = CONNECTION_GROUPS.filter((g) => groups.includes(g));
-  return [...general, ...pluginGroups, ...connection];
+  essentials: CogIcon,
+  auth: KeyIcon,
+  tls: LockIcon,
+  proxy: NetworkIcon,
+  downloads: TachometerAltIcon,
+  timeouts: OutlinedClockIcon,
+  metadata: InfoCircleIcon,
 };
 
 interface IRemoteDetailsViewProps {
@@ -137,12 +126,13 @@ const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
 };
 
 interface ISection {
+  id: string;
   title: string;
   content: React.ReactNode;
 }
 
-const SectionCard: React.FC<ISection> = ({ title, content }) => {
-  const IconComponent = SECTION_ICONS[title] ?? CubesIcon;
+const SectionCard: React.FC<ISection> = ({ id, title, content }) => {
+  const IconComponent = SECTION_ICONS[id] ?? CubesIcon;
   return (
     <Card isFullHeight>
       <CardHeader>
@@ -169,37 +159,39 @@ export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
 }) => {
-  const fields = getRemoteEditFields(pulpType);
-  const data = remote as Record<string, unknown>;
+  const form = getEntityForm({
+    entity: "remote",
+    pulpType,
+    mode: "edit",
+  })?.form;
+  const data = toFieldRecord(remote);
 
-  const groupNames = orderGroups([
-    ...new Set(fields.map((field) => field.group ?? DEFAULT_GROUP)),
-  ]);
-
-  const sections: ISection[] = groupNames.map((groupName) => ({
-    title: groupName,
-    content: (
-      <EntityDetailFields
-        fields={fields.filter(
-          (field) => (field.group ?? DEFAULT_GROUP) === groupName,
-        )}
-        data={data}
-        copyableKeys={["url"]}
-        columnModifier={COLUMNS}
-      />
-    ),
-  }));
-
-  sections.push({
-    title: "Metadata",
-    content: <RemoteMetadata remote={remote} pulpType={pulpType} />,
-  });
+  // Grouped and labelled the way the remote's form is (ADR 0009).
+  const sections: ISection[] = [
+    ...(form ? toDetailSections(form) : []).map((section) => ({
+      id: section.id,
+      title: section.title,
+      content: (
+        <EntityDetailFields
+          fields={section.fields}
+          data={data}
+          copyableKeys={["url"]}
+          columnModifier={COLUMNS}
+        />
+      ),
+    })),
+    {
+      id: "metadata",
+      title: "Metadata",
+      content: <RemoteMetadata remote={remote} pulpType={pulpType} />,
+    },
+  ];
 
   return (
     <Stack hasGutter>
       {sections.map((section) => (
-        <StackItem key={section.title}>
-          <SectionCard title={section.title} content={section.content} />
+        <StackItem key={section.id}>
+          <SectionCard {...section} />
         </StackItem>
       ))}
     </Stack>

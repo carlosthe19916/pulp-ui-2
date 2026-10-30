@@ -19,7 +19,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
-import { RemoteModal } from "@app/components/RemoteModal";
+import { getEntityForm } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
@@ -79,8 +79,12 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       }),
   });
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const hasEditForm = !!getEntityForm({
+    entity: "remote",
+    pulpType,
+    mode: "edit",
+  });
   const [activeTab, setActiveTab] = useState<string | number>("details");
 
   return (
@@ -109,8 +113,24 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
                 key: "edit",
                 dropdownItemProps: {
                   children: "Edit",
-                  onClick: () => setIsEditOpen(true),
-                  ...disabledProps("change"),
+                  onClick: () =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId/edit",
+                      params: {
+                        pulpDomain,
+                        remoteType: pulpType,
+                        remoteId: extractIdFromHref(href),
+                      },
+                    }),
+                  ...(hasEditForm
+                    ? disabledProps("change")
+                    : {
+                        isAriaDisabled: true,
+                        tooltipProps: {
+                          content:
+                            "This remote's plugin type isn't available in the UI.",
+                        },
+                      }),
                 },
               },
               {
@@ -154,12 +174,6 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
           </Tab>
         </Tabs>
       </PageSection>
-
-      <RemoteModal
-        isOpen={isEditOpen}
-        entity={remote}
-        onClose={() => setIsEditOpen(false)}
-      />
 
       <ConfirmActionModal
         isOpen={isDeleteOpen}

@@ -53,6 +53,16 @@ const getHiddenField = ({
   return (hidden as IHiddenField[]).find((field) => field.name === key);
 };
 
+/** A map (labels, `{ header: value }`, gem requirements) as `key: value` pairs. */
+const formatItem = (item: unknown): string =>
+  item !== null && typeof item === "object"
+    ? Object.entries(item)
+        .map(([key, value]) =>
+          value == null ? key : `${key}: ${String(value)}`,
+        )
+        .join(", ")
+    : String(item);
+
 const renderValue = ({
   field,
   data,
@@ -89,7 +99,14 @@ const renderValue = ({
   }
 
   if (Array.isArray(value)) {
-    return value.filter((item) => item != null && item !== "").join(", ");
+    return value
+      .filter((item) => item != null && item !== "")
+      .map(formatItem)
+      .join(", ");
+  }
+
+  if (typeof value === "object") {
+    return formatItem(value);
   }
 
   // Certificates are long and multi-line — collapse into an expandable copyable block.
