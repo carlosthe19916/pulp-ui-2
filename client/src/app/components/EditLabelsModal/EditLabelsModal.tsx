@@ -9,6 +9,8 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Stack,
+  StackItem,
 } from "@patternfly/react-core";
 
 import { PulpLabelChips } from "@app/components/PulpLabelChips";
@@ -57,14 +59,26 @@ export const EditLabelsModal: React.FC<IEditLabelsModalProps> = ({
     <Modal isOpen onClose={onClose} variant="small">
       <ModalHeader title={title} />
       <ModalBody>
-        <FormGroup label="Labels" fieldId="edit-labels-group">
-          {hasLabels ? (
-            <PulpLabelChips labels={draft} numLabels={10} onRemove={remove} />
-          ) : (
-            <Content component={ContentVariants.small}>No labels yet.</Content>
-          )}
-        </FormGroup>
-        <AddLabelField onAdd={add} />
+        <Stack hasGutter>
+          <StackItem>
+            <FormGroup label="Labels" fieldId="edit-labels-group">
+              {hasLabels ? (
+                <PulpLabelChips
+                  labels={draft}
+                  numLabels={10}
+                  onRemove={remove}
+                />
+              ) : (
+                <Content component={ContentVariants.small}>
+                  No labels yet.
+                </Content>
+              )}
+            </FormGroup>
+          </StackItem>
+          <StackItem>
+            <AddLabelField onAdd={add} />
+          </StackItem>
+        </Stack>
       </ModalBody>
       <ModalFooter>
         <Button
