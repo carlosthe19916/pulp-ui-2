@@ -1,10 +1,11 @@
-// Keeps each admin e2e test linked to its spec scenario.
+// Keeps each spec-linked e2e test linked to its spec scenario.
 //
 //   node scripts/spec-links.mjs           # check (CI): fail on drift or broken coverage
 //   node scripts/spec-links.mjs --write   # fix: title, tag, annotation and the scenario doc
 //
 // Each scenario in e2e/specs/*.md has `### <ID> <label>`, a `Summary:` line and a body.
-// Every admin browser test (tests/admin/**/*.spec.ts, not *.api.spec.ts) carries:
+// Every spec-linked browser test (a tests/**/*.spec.ts, not *.api.spec.ts, carrying an @<ID>
+// tag or an ID-prefixed title) carries:
 //   - a Playwright tag  @<ID>                         (filterable; the machine id)
 //   - an annotation     { type: "spec", description } (the spec ref, shown in the report)
 //   - a generated JSDoc block above it                (the scenario text, inline)
@@ -19,8 +20,16 @@ import prettier from "prettier";
 
 const E2E_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..");
 const SPEC_DIR = path.join(E2E_ROOT, "specs");
-const SPEC_FILES = ["users.md", "groups.md", "roles.md", "access-policies.md"];
-const ADMIN_DIR = path.join(E2E_ROOT, "tests", "admin");
+const SPEC_FILES = [
+  "users.md",
+  "groups.md",
+  "roles.md",
+  "access-policies.md",
+  "domains.md",
+];
+// Scan the whole test tree: transform() only acts on tests carrying an @<ID> tag or an
+// ID-prefixed title, so untagged specs elsewhere are left untouched.
+const TESTS_DIR = path.join(E2E_ROOT, "tests");
 
 /** id → { specRel, label, summary, body[] } from the spec headings and bodies. */
 function parseSpecs() {
@@ -202,9 +211,12 @@ async function main() {
   const problems = [...specErrors];
   let changed = 0;
 
-  for (const file of walk(ADMIN_DIR)) {
+  for (const file of walk(TESTS_DIR)) {
     const { code, ids, errors } = transform(file, specs);
     problems.push(...errors);
+    // Only touch files with spec-linked tests; a spec elsewhere (its own prettier
+    // config, no @<ID> tags) is left entirely alone — never reformatted or flagged.
+    if (ids.length === 0) continue;
     ids.forEach((id) => used.add(id));
     const options = await prettier.resolveConfig(file);
     const formatted = await prettier.format(code, {
@@ -236,7 +248,7 @@ async function main() {
   console.log(
     write
       ? `spec-links: ${changed} file(s) updated, ${used.size} scenarios linked`
-      : `spec-links: OK (${used.size} scenarios linked across admin specs)`,
+      : `spec-links: OK (${used.size} scenarios linked across specs)`,
   );
 }
 

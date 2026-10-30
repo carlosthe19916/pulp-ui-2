@@ -87,6 +87,10 @@ export class DomainsPage extends DataViewList {
     await new ConfirmModal(this.page, "Delete Domain").confirm("Delete");
   }
 
+  /**
+   * The default domain can't be edited or deleted (Pulp forbids it), so Edit and Delete
+   * are disabled — but Edit labels stays enabled, since labels are editable on every domain.
+   */
   async expectRowActionsDisabled(name: string): Promise<void> {
     const row = this.row(name);
     await expect(row).toBeVisible();
@@ -96,10 +100,15 @@ export class DomainsPage extends DataViewList {
       name: "Delete",
       exact: true,
     });
+    const editLabels = this.page.getByRole("menuitem", {
+      name: "Edit labels",
+      exact: true,
+    });
     // Wait for the menu to actually open before asserting on its items.
     await expect(edit).toBeVisible();
     await expect(edit).toHaveAttribute("aria-disabled", "true");
     await expect(del).toHaveAttribute("aria-disabled", "true");
+    await expect(editLabels).not.toHaveAttribute("aria-disabled", "true");
     await this.page.keyboard.press("Escape");
   }
 }
