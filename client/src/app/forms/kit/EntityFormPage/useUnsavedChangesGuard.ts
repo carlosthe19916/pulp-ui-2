@@ -12,7 +12,9 @@ export const useUnsavedChangesGuard = ({ when }: { when: boolean }) => {
   const shouldBlock = () => when && !leavingRef.current;
 
   const blocker = useBlocker({
-    shouldBlockFn: shouldBlock,
+    // Same-page navigations (the create page's `?type=`) aren't leaving.
+    shouldBlockFn: ({ current, next }) =>
+      shouldBlock() && current.pathname !== next.pathname,
     enableBeforeUnload: shouldBlock,
     withResolver: true,
   });

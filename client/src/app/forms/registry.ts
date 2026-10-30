@@ -52,6 +52,14 @@ export const useCreatableTypes = (entity: EntityType): ITypeOption[] => {
   });
 };
 
-/** Every registered pulp_type of `entity` (tests check them against the catalog). */
-export const registeredTypes = (entity: EntityType): PulpType[] =>
-  Object.keys(FORMS_BY_ENTITY[entity]);
+/** Every registered entity and pulp_type (tests check them against the catalog). */
+export const registeredEntries = (): {
+  entity: EntityType;
+  pulpType: PulpType;
+}[] =>
+  (Object.keys(FORMS_BY_ENTITY) as EntityType[]).flatMap((entity) =>
+    Object.keys(FORMS_BY_ENTITY[entity]).map((pulpType) => ({
+      entity,
+      pulpType,
+    })),
+  );

@@ -8,6 +8,7 @@ globs:
     "client/src/routes/**",
     "client/src/router.ts",
     "client/src/app/pages/**/*DetailRoute.tsx",
+    "client/src/app/pages/**/*EditRoute.tsx",
   ]
 ---
 
@@ -65,6 +66,16 @@ export const WidgetDetailRoute: React.FC = () => {
 };
 ```
 
+## Create and edit routes
+
+Form pages ([forms](forms.md)) sit beside the list and detail routes:
+
+- `<entities>/create.ts` has no loader; `validateSearch` returns `{ type?: string }`, and the
+  page reads and updates `?type=` itself (the Type select). The path never names a plugin.
+- `<entities>/$<entity>Type/$<entity>Id/edit.tsx` is a detail route (same loader, pending and
+  error components) that also throws when `getEntityForm({ …, mode: "edit" })` has no form for
+  the type; its `*EditRoute.tsx` adapter passes `pulpDomain`, the type and the href.
+
 ## Params, search and links
 
 - Pages and components never read path params; the one exception is `useSelectedDomain()`.
@@ -83,6 +94,8 @@ Pass/fail rubric for `/eval`. Check changed files under `client/src/routes/`, `r
       no href, prime the detail query with `query({ …, staleTime: "static" })`, and return
       the href(s).
 - [ ] `DetailRoutePending` with `Loading <object>` (no ellipsis) and `DetailRouteError`.
+- [ ] A create route has no loader and a `type` search param; an edit route is a detail route
+      that also throws for a type without an edit form.
 - [ ] Adapters read through `getRouteApi` with the exact route id and pass props.
 - [ ] Pages read no path params (except `useSelectedDomain`) and read search only for their own
       route via `getRouteApi`.

@@ -58,6 +58,10 @@ Admin suites derive from the use cases in `e2e/specs/**/*.md`.
   reached through the **`@support/*`** alias (`@support/pom/…`, `@support/helpers/…`),
   not `../../..`. Page objects are classes in `support/pom/`; list screens extend
   `DataViewList` and add only their own modal-form helpers.
+- Create/edit form pages (repositories, remotes, distributions, publications) go through the
+  `formPage` fixture (`support/pom/EntityFormPage.ts`: Type select, sections, secrets, code
+  editors, leave prompt); their specs sit in `<entity>-create/` and `<entity>-edit/`. A code
+  editor is filled with `formPage.fillCode`, never by typing key by key.
 
 ```ts
 // support/pom/WidgetsPage.ts

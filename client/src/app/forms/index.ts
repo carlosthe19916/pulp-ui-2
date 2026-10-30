@@ -9,6 +9,6 @@ export type { FormMode, FormValues, IFormDef } from "./kit/types";
 export {
   getEntityForm,
   type IFormEntry,
-  registeredTypes,
+  registeredEntries,
   useCreatableTypes,
 } from "./registry";
