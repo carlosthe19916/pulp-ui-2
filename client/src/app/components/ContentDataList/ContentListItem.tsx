@@ -18,28 +18,21 @@ import {
   DescriptionListTerm,
   Flex,
   FlexItem,
-  Label,
-  LabelGroup,
 } from "@patternfly/react-core";
 
 import {
   type IPageHeaderAction,
   PageHeaderActionsMenu,
 } from "@app/components/PageHeaderActionsMenu";
+import { PulpLabelChips } from "@app/components/PulpLabelChips";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { IContentUnit } from "@app/utils/contentUnit";
+import { joinKeyValueAsString } from "@app/utils/pulpLabels";
 import { formatDateTime } from "@app/utils/utils";
-
-/** Max rendered width of a label chip before it truncates (with a tooltip). */
-const LABEL_MAX_WIDTH = "20ch";
 
 /** DOM-id-safe token derived from a unit's href (for toggle/content aria wiring). */
 const rowKey = (href: string): string => href.replace(/[^a-zA-Z0-9]+/g, "-");
-
-/** The `pulp_label_select` selector for a label entry: `key=value`, or `key` when valueless. */
-const labelSelector = ([key, value]: [string, string | null]): string =>
-  value == null ? key : `${key}=${value}`;
 
 /** A dot separator between the small metadata items. */
 const MetaDot: React.FC = () => (
@@ -187,28 +180,15 @@ export const ContentListItem: React.FC<IContentListItemProps> = ({
             </DataListCell>,
             <DataListCell key="labels" isFilled={false} alignRight>
               {labelEntries.length ? (
-                <LabelGroup numLabels={3} isCompact>
-                  {labelEntries.map(([labelKey, value]) => (
-                    <Label
-                      key={labelKey}
-                      color="grey"
-                      isCompact
-                      textMaxWidth={LABEL_MAX_WIDTH}
-                      tooltipPosition="top"
-                      onClick={
-                        onLabelClick
-                          ? (event) => {
-                              // Don't also select the row.
-                              event.stopPropagation();
-                              onLabelClick(labelSelector([labelKey, value]));
-                            }
-                          : undefined
-                      }
-                    >
-                      {value == null ? labelKey : `${labelKey}=${value}`}
-                    </Label>
-                  ))}
-                </LabelGroup>
+                <PulpLabelChips
+                  labels={unit.pulp_labels}
+                  numLabels={3}
+                  onLabelClick={
+                    onLabelClick
+                      ? (kv) => onLabelClick(joinKeyValueAsString(kv))
+                      : undefined
+                  }
+                />
               ) : null}
             </DataListCell>,
           ]}

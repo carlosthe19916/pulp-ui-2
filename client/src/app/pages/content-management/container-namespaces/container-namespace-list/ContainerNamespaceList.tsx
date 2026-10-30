@@ -29,6 +29,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
+import { PulpLabelChips } from "@app/components/PulpLabelChips";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useColumnSort } from "@app/hooks/useColumnSort";
@@ -46,8 +47,6 @@ import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-
-import { PulpLabels } from "./components/PulpLabels";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -138,7 +137,11 @@ export const ContainerNamespaceList: React.FC = () => {
     row: [
       { cell: namespace.name, props: { dataLabel: "Name" } },
       {
-        cell: <PulpLabels labels={namespace.pulp_labels} />,
+        cell: Object.keys(namespace.pulp_labels ?? {}).length ? (
+          <PulpLabelChips labels={namespace.pulp_labels} />
+        ) : (
+          "—"
+        ),
         props: { dataLabel: "Labels" },
       },
       {

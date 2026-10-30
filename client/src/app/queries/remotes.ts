@@ -17,12 +17,14 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getPlugin } from "@catalog";
 
+import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import type { IBatchResult } from "./utils/settleBatch";
 
 export const RemotesQueryKey = "remotes";
 
@@ -231,6 +233,23 @@ export const useRemoteUpdateMutation = (
       // Surface the new update task on the row without waiting for the next poll.
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
       options?.onSuccess?.(data, variables);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Saves a diff of a remote's labels; refreshes that remote's detail. */
+export const useRemoteLabelsMutation = (
+  options?: IMutationCallbacks<IBatchResult, ILabelsChangeVariables>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<IBatchResult, DrfAxiosError, ILabelsChangeVariables>({
+    mutationFn: applyLabelChanges,
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({
+        queryKey: remoteKeys.detail(vars.href),
+      });
+      options?.onSuccess?.(data, vars);
     },
     onError: options?.onError,
   });

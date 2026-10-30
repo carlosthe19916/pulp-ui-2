@@ -27,9 +27,11 @@ import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { Snippet } from "@app/components/Snippet";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useArtifactDetailQuery } from "@app/queries/artifacts";
-import { contentKeys } from "@app/queries/content";
+import { useContentLabelsMutation } from "@app/queries/content";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { formatDateTime } from "@app/utils/utils";
 
 import type { IFact, ILink } from "./contentFields";
@@ -269,6 +271,10 @@ export const StorageFacts: React.FC<IStorageFactsProps> = ({
   });
   const bytes = size ?? artifact?.size;
   const checksum = sha256 || artifact?.sha256;
+  const { addNotification } = useNotifications();
+  const { mutateAsync, isPending } = useContentLabelsMutation({
+    onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
+  });
 
   return (
     <FactList
@@ -279,9 +285,9 @@ export const StorageFacts: React.FC<IStorageFactsProps> = ({
         Added: formatDateTime(created),
         Labels: (
           <EditablePulpLabels
-            href={href}
             labels={labels}
-            invalidateKey={contentKeys.detail(href)}
+            isSaving={isPending}
+            onSave={(changes) => mutateAsync({ href, ...changes })}
           />
         ),
       })}

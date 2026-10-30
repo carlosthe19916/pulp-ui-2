@@ -7,6 +7,7 @@ import {
   ContentVariants,
   Flex,
   FlexItem,
+  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -29,7 +30,6 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -129,7 +129,7 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Publication" },
         },
         {
-          cell: pulpType ? <PulpTypeLabel pulpType={pulpType} /> : "—",
+          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
           props: { dataLabel: "Type" },
         },
         {

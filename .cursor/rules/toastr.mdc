@@ -10,12 +10,18 @@ Mutation hooks own **cache invalidation only**; the page or feature hook that tr
 mutation owns the message and passes it as **hook-level** `onSuccess`/`onError`
 ([TkDodo, _Mastering Mutations_](https://tkdodo.eu/blog/mastering-mutations-in-react-query)).
 A modal form's submission error is the one exception: it shows in the form
-(`FormSubmitError`), not as a toast.
+(`FormSubmitError`), not as a toast. A reusable component never owns the toast or the
+invalidation — it reports outcomes to its caller ([component-boundaries](component-boundaries.md)).
 
 ## Hooks
 
 - Mutation hooks accept `IMutationCallbacks<TData, TVars>` (`queries/utils/mutationCallbacks.ts`)
   and call them from their own `useMutation` `onSuccess`/`onError`, **after** invalidation.
+- A mutation hook owns its invalidation **internally** — it computes the key from its family key
+  factory and the mutation variables, and **never takes a `QueryKey`/`invalidateKey` parameter**.
+  A write that applies to several resource types is **one hook per type**
+  (`useDomainLabelsMutation`, `useRepositoryLabelsMutation`, …), each with its own key — not one
+  generic hook parameterized by key. A shared request helper can hold the common HTTP work.
 - No `useMutationAction` / `runAction` wrapper and no per-feature `useXActions` toast hub.
   Batch/selection modals (add several members or roles at once) follow the same rules and
   report their `IBatchResult` with `notifyBatchResult`.
@@ -53,6 +59,9 @@ Pass/fail rubric for `/eval`.
 
 - [ ] Mutation hooks own **cache invalidation only** — no toast/notification text inside the
       hook.
+- [ ] Mutation hooks compute their own invalidation key (family factory + variables) and take
+      **no `QueryKey`/`invalidateKey` parameter**; a write across resource types is one hook per
+      type, not a generic key-parameterized hook.
 - [ ] Mutation hooks accept caller callbacks (`IMutationCallbacks<TData, TVars>`) and wire them
       into their own `useMutation` `onSuccess`/`onError`, **after** the invalidation.
 - [ ] Toasts are raised at the page/feature layer via **hook-level** `onSuccess`/`onError`,

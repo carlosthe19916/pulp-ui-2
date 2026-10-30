@@ -18,12 +18,14 @@ import type {
 } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
+import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import type { IBatchResult } from "./utils/settleBatch";
 
 export const DomainsQueryKey = "domains";
 
@@ -198,6 +200,21 @@ export const useDomainMigrateMutation = (
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, vars);
+    },
+    onError: options?.onError,
+  });
+};
+
+/** Saves a diff of a domain's labels; refreshes the domain list (domains have no detail page). */
+export const useDomainLabelsMutation = (
+  options?: IMutationCallbacks<IBatchResult, ILabelsChangeVariables>,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation<IBatchResult, DrfAxiosError, ILabelsChangeVariables>({
+    mutationFn: applyLabelChanges,
+    onSuccess: (data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       options?.onSuccess?.(data, vars);
     },
     onError: options?.onError,

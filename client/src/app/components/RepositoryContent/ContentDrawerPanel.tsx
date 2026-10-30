@@ -10,12 +10,12 @@ import {
   DrawerPanelContent,
   Flex,
   FlexItem,
+  Label,
   Title,
 } from "@patternfly/react-core";
 import textStyles from "@patternfly/react-styles/css/utilities/Text/text";
 
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useContentDetailQuery } from "@app/queries/content";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
@@ -56,7 +56,7 @@ export const ContentDrawerPanel: React.FC<IContentDrawerPanelProps> = ({
               >
                 {pulpType && (
                   <FlexItem>
-                    <PulpTypeLabel pulpType={pulpType} />
+                    <Label color="blue">{pulpType}</Label>
                   </FlexItem>
                 )}
                 <FlexItem>

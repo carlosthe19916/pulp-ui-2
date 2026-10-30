@@ -13,6 +13,7 @@ import {
   Flex,
   FlexItem,
   Icon,
+  Label,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
@@ -27,9 +28,10 @@ import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer
 import type { GenericRemoteResponse } from "@app/client";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
-import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
-import { remoteKeys } from "@app/queries/remotes";
+import { useRemoteLabelsMutation } from "@app/queries/remotes";
+import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { formatDateTime } from "@app/utils/utils";
 import { getRemoteEditFields } from "@catalog";
 
@@ -81,15 +83,18 @@ const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
 }) => {
-  const { disabledProps } = useObjectPermissions({
-    href: remote.pulp_href ?? "",
+  const href = remote.pulp_href ?? "";
+  const { disabledProps } = useObjectPermissions({ href });
+  const { addNotification } = useNotifications();
+  const { mutateAsync, isPending } = useRemoteLabelsMutation({
+    onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
   });
   return (
     <DescriptionList columnModifier={COLUMNS}>
       <DescriptionListGroup>
         <DescriptionListTerm>Type</DescriptionListTerm>
         <DescriptionListDescription>
-          <PulpTypeLabel pulpType={pulpType} />
+          <Label color="blue">{pulpType}</Label>
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
@@ -108,10 +113,10 @@ const RemoteMetadata: React.FC<IRemoteDetailsViewProps> = ({
         <DescriptionListTerm>Labels</DescriptionListTerm>
         <DescriptionListDescription>
           <EditablePulpLabels
-            href={remote.pulp_href ?? ""}
             labels={remote.pulp_labels}
-            invalidateKey={remoteKeys.detail(remote.pulp_href ?? "")}
             actionProps={disabledProps("change")}
+            isSaving={isPending}
+            onSave={(changes) => mutateAsync({ href, ...changes })}
           />
         </DescriptionListDescription>
       </DescriptionListGroup>
