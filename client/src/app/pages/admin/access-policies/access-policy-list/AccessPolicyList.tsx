@@ -85,7 +85,7 @@ export const AccessPolicyList: React.FC = () => {
   const [resetTarget, setResetTarget] = useState<AccessPolicyResponse | null>(
     null,
   );
-  const pagination = useDataViewPagination({ perPage: 20 });
+  const pagination = useDataViewPagination({ perPage: 10 });
   const { ordering, sortProps } = useColumnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
     initialSort: { sortBy: "viewset_name", direction: "asc" },
