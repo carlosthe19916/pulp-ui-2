@@ -24,6 +24,25 @@ export async function expectGate(item: Locator, gate: Gate): Promise<void> {
   await expect(item.page().getByRole("tooltip")).toHaveText(gate.tooltip);
 }
 
+/**
+ * Remove a user's role assignments on one group. Asks the server for just those (filtered by
+ * `content_object`): the user's full list spans every object other tests create in parallel,
+ * and serializing one of them mid-change can fail the whole listing.
+ */
+export async function dropRolesOnGroup(
+  api: PulpApi,
+  { username, group }: { username: string; group: IGroupRecord },
+): Promise<void> {
+  const user = await api.user(username);
+  if (!user) throw new Error(`no user "${username}"`);
+  const { results = [] } = await api.getJson<{
+    results?: { pulp_href: string }[];
+  }>(`${user.pulp_href}roles/`, { content_object: group.pulp_href });
+  for (const assignment of results) {
+    await api.removeRoleAssignment(assignment.pulp_href);
+  }
+}
+
 /** Create a group through the API and register it for cleanup. */
 export async function seedGroup(
   api: PulpApi,

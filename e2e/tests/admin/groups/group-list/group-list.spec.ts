@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@support/fixtures";
 import { delayApi } from "@support/helpers/delayApi";
 import {
+  dropRolesOnGroup,
   type Gate,
   NO_CHANGE,
   NO_DELETE,
@@ -410,10 +411,7 @@ test.describe("Groups", () => {
     async ({ api, cleanup, page }) => {
       const group = await seedGroup(api, cleanup);
       // Drop the admin's roles on the group so only superuser status grants the actions.
-      for (const assignment of await api.roleAssignments({ user: "admin" })) {
-        if (assignment.content_object === group.pulp_href)
-          await api.removeRoleAssignment(assignment.pulp_href);
-      }
+      await dropRolesOnGroup(api, { username: "admin", group });
       const member = cleanup.user(uniqueName("user"));
       await api.createUser({ username: member });
       await api.addGroupMember(group.name, member);

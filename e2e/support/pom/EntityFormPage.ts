@@ -69,6 +69,13 @@ export class EntityFormPage {
    * auto-indent or auto-close it.
    */
   async fillCode(label: string, text: string): Promise<void> {
+    // The editor loads lazily behind a same-named fallback textarea; Monaco replaces it, so
+    // wait for the editor's own upload control before typing.
+    await expect(
+      this.page.getByRole("button", {
+        name: `Upload ${label.toLowerCase()} from a file`,
+      }),
+    ).toBeVisible();
     // Monaco's input sits under its rendered lines, which intercept a click: focus it.
     const editor = this.page.getByRole("textbox", { name: label, exact: true });
     await editor.focus();
