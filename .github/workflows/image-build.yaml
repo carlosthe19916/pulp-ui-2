@@ -16,7 +16,27 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  changes:
+    # Only PRs are gated; pushes to main, tags and releases always build.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      image: ${{ steps.areas.outputs.image }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: areas
+        uses: $/.github/actions/changed-areas
+
   build:
+    needs: changes
+    # On PRs, build only when the image's dependencies changed (a skipped
+    # required check counts as passing). `!cancelled()` lets non-PR events run
+    # even though `changes` is skipped for them.
+    if: >-
+      !cancelled() && (github.event_name != 'pull_request' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.image == 'true'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
