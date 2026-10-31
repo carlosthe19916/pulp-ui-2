@@ -4,6 +4,7 @@ import { type EntityType, getAvailablePlugins, type PulpType } from "@catalog";
 import type { ITypeOption } from "./kit/EntityFormPage";
 import type { FormMode, IFormDef } from "./kit/types";
 import { REMOTE_FORMS } from "./remotes";
+import { REPOSITORY_FORMS } from "./repositories";
 
 /** A plugin's form for one entity and the modes it supports (push repositories: edit only). */
 export interface IFormEntry {
@@ -21,7 +22,7 @@ export type FormRegistry = Record<PulpType, IFormEntry>;
  */
 const FORMS_BY_ENTITY: Record<EntityType, FormRegistry> = {
   remote: REMOTE_FORMS,
-  repository: {},
+  repository: REPOSITORY_FORMS,
   distribution: {},
   publication: {},
 };

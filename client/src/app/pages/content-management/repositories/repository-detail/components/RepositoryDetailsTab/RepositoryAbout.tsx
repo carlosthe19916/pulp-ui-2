@@ -21,14 +21,15 @@ import type {
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
+import { getEntityForm, toDetailSections } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryLabelsMutation } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { summaryTotal } from "@app/utils/contentSummary";
+import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
 
 interface IRepositoryAboutProps {
   repository: RepositoryResponse;
@@ -67,12 +68,18 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   const { mutateAsync, isPending } = useRepositoryLabelsMutation({
     onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
   });
-  const data = repository as Record<string, unknown>;
-  const settings = (
-    getPlugin(pulpType)?.entities.repository?.form.editFields ?? []
-  ).filter(
-    (f) => !NON_SETTING_KEYS.includes(f.key) && !isEmptyValue(data[f.key]),
-  );
+  const data = toFieldRecord(repository);
+  // Labelled the way the repository's form labels them (ADR 0009).
+  const form = getEntityForm({
+    entity: "repository",
+    pulpType,
+    mode: "edit",
+  })?.form;
+  const settings = (form ? toDetailSections(form) : [])
+    .flatMap((section) => section.fields)
+    .filter(
+      (f) => !NON_SETTING_KEYS.includes(f.key) && !isEmptyValue(data[f.key]),
+    );
   const latestNumber = repository.latest_version_href
     ? extractIdFromHref(repository.latest_version_href)
     : undefined;

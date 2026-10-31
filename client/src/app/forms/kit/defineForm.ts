@@ -176,7 +176,8 @@ interface IKindValue {
   text: string;
   url: string;
   textarea: string;
-  code: string;
+  // YAML and PEM text, or a JSON value (an object or a list).
+  code: unknown;
   secret: string;
   number: number;
   switch: boolean;

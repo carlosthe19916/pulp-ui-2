@@ -24,7 +24,6 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
-import { RepositoryModal } from "@app/components/RepositoryModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
 import { UploadContentModal } from "@app/components/UploadContentModal";
@@ -139,7 +138,6 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -181,7 +179,15 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 key: "edit",
                 dropdownItemProps: {
                   children: "Edit",
-                  onClick: () => setIsEditOpen(true),
+                  onClick: () =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/edit",
+                      params: {
+                        pulpDomain,
+                        repositoryType: pulpType,
+                        repositoryId: extractIdFromHref(href),
+                      },
+                    }),
                   ...lockedProps,
                   ...disabledProps("change"),
                 },
@@ -389,12 +395,6 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           </StackItem>
         </Stack>
       </PageSection>
-
-      <RepositoryModal
-        isOpen={isEditOpen}
-        entity={repository}
-        onClose={() => setIsEditOpen(false)}
-      />
 
       {isSyncOpen && (
         <SyncModal

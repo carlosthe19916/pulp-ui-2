@@ -15,6 +15,8 @@ const DROPPED: Record<string, string[]> = {
   "remote:ansible.role": ["policy"],
   "remote:maven.maven": ["policy"],
   "remote:container.pull-through": ["policy"],
+  // Deprecated by pulp_python: distributions serve the repository directly.
+  "repository:python.python": ["autopublish"],
 };
 
 const entries = registeredEntries();
