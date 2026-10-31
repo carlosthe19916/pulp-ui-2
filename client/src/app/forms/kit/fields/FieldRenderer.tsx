@@ -284,6 +284,7 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   resourceKind={field.resourceKind}
                   value={(value as string) ?? ""}
                   pulpTypes={pulpTypes}
+                  isClearable={!required}
                   onChange={onChange}
                 />
               );
