@@ -12,7 +12,7 @@ status: Accepted
 reference to what they serve and a few settings. Since
 [0010](0010-plugin-form-pages.md) gave them a per-plugin edit page, a distribution has settings
 worth reading on their own (serving URL, client setup, source, content guard, plugin options),
-its own task history, and roles; and an edit page that can't point back to the object it edits.
+its own task history and roles, and an edit page with nothing to return to.
 
 ## Rules
 
@@ -25,7 +25,6 @@ its own task history, and roles; and an edit page that can't point back to the o
       an edit returns to it.
 - [ ] The page offers Edit and Delete; deleting returns to the Distributions list.
 - [ ] Distribution rows still expand inline for a quick look.
-- [ ] Publications keep no detail page: they expand inline in their list.
 
 ## Consequences
 

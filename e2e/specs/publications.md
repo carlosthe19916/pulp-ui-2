@@ -46,21 +46,21 @@ task completes, producing a publication no client can use.
 
 ### PUB-CRE-04 APT publications by structure
 
-Summary: An APT repository can be published as a structured APT publication or as a verbatim copy, each with its own options.
+Summary: An APT repository can be published as a structured APT publication or as a verbatim copy.
 
 Seed: an APT repository synced from a small Debian fixture
 
 When I create a publication of Type <type> with <options>
-Then the publication is created and its expanded row shows <shown>
+Then once its task finishes, the list shows it with the type <listed>
+And the server has <stored>
 
-| type     | options       | shown                     |
-| -------- | ------------- | ------------------------- |
-| APT      | Structured on | its type and "Structured" |
-| Verbatim | (none)        | its type                  |
+| type           | options       | listed                   | stored           |
+| -------------- | ------------- | ------------------------ | ---------------- |
+| APT            | Structured on | deb.apt-publication      | structured: true |
+| APT (verbatim) | (none)        | deb.verbatim-publication | —                |
 
-The e2e backend has no APT release signing service (its "pulp-ui-dev-signing" signs RPM metadata
-only), and adding one needs a signing script on the server, so signing an APT publication is a
-manual check.
+Signing an APT publication is a manual check: the e2e backend has no APT release signing
+service.
 
 ## Edit
 
@@ -73,8 +73,7 @@ Seed: a file publication
 When I open its row actions
 Then there is no "Edit" action
 
-This follows the backend: a publication accepts only read and delete (an update is "Method not
-allowed").
+Pulp itself allows only reading and deleting a publication.
 
 ## Other layers
 

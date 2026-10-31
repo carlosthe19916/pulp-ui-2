@@ -17,6 +17,11 @@ A repository form leads with its remote (filtered to the types it can sync from)
 retained versions and, for plugins that publish, Auto-publish; plugin settings (a signing
 service, metadata options) follow in their own sections.
 
+Each signing-service field accepts only its own kind of service (RPM metadata, RPM package, APT
+release, container manifest). Pulp's signing-service list can't filter by kind, so every picker
+lists every service and the server rejects a wrong one ("Invalid hyperlink - Object does not
+exist."). The e2e backend's "pulp-ui-dev-signing" signs RPM metadata only.
+
 ## List and detail
 
 ### REP-LIST-01 Create and Edit open the form pages
@@ -38,8 +43,7 @@ Then the same edit page opens
 
 Summary: Each repository form saves the fields that define its type, and the new repository's page shows them.
 
-Seed: a file remote, an RPM remote; the backend's "pulp-ui-dev-signing" signing service (the
-`pulp-ui-2/signing` compose profile)
+Seed: a file remote, an RPM remote
 
 When I create a repository of type <type> with <values>
 Then the toast "Repository "<name>" created" appears, its detail page opens, and its About tab
@@ -50,20 +54,6 @@ shows <shown>
 | File      | a description, the seeded file remote, Auto-publish on, 3 retained versions | the description, the remote, Auto-publish, 3 |
 | RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and the metadata signing service  |
 | Container | a description                                                               | the description                              |
-
-### REP-CRE-04 A signing service of the wrong kind is rejected
-
-Summary: Choosing a signing service the field can't use is refused by the server, and the reason shows in the form.
-
-Seed: the backend's "pulp-ui-dev-signing" signing service (it signs RPM metadata only)
-
-When I create an APT repository with "pulp-ui-dev-signing" as its signing service
-Then the in-form error "Failed to create repository" shows the server's reason "Invalid
-hyperlink - Object does not exist.", and the page stays open
-
-Each signing-service field accepts only its own kind of service (RPM metadata, RPM package, APT
-release, container manifest), but Pulp's signing-service list neither reports nor filters by
-kind, so every picker lists every service and only the server can refuse a wrong one.
 
 ### REP-CRE-02 The remote picker offers only compatible remotes
 
@@ -109,7 +99,8 @@ Summary: While a task runs on a repository, Edit stays enabled and the edit page
 Seed: a file repository with a remote and a sync running
 
 When I open its detail page's actions menu
-Then "Sync" and "Delete" are disabled with the running-task tooltip, but "Edit" is enabled
+Then "Sync" and "Delete" are disabled with the tooltip "Wait for the running task to finish", but
+"Edit" is enabled
 When I choose "Edit"
 Then the alert "Sync in progress" says "You can still save: your changes are applied when the
 task finishes." and links to the task
@@ -117,9 +108,7 @@ When I change the description and save
 Then the toast "Repository "<name>" update started" appears and the detail page opens
 And once the sync finishes, the server has the new description
 
-The backend doesn't refuse an edit during a task: it accepts it (a task is started) and the
-update waits for the repository's lock, then runs as soon as the sync finishes. The remote and
-distribution edit pages show the same alert while a task runs on their object.
+Pulp queues the update behind the repository's lock and runs it when the sync finishes.
 
 ## Detail
 
@@ -131,8 +120,8 @@ Seed: an RPM repository with a remote, "pulp-ui-dev-signing" as metadata signing
 retained versions
 
 When I open its About tab
-Then its settings use the form's labels ("Remote", "Retained versions", "Metadata signing service", …)
-and the remote links to the remote's page
+Then its settings use the form's labels ("Remote", "Retained versions", "Metadata signing
+service", …) and the remote links to the remote's page
 
 ## Other layers
 
@@ -143,4 +132,3 @@ and the remote links to the remote's page
 | Auto-publish shows only for plugins that publish                                | component  |
 | Retained versions accepts only a positive whole number or nothing               | component  |
 | Repository write rules (unique name, blank description, signing-service kind)   | API        |
-| An edit sent during a sync is queued and applied after it                       | API        |

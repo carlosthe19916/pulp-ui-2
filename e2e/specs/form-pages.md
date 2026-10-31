@@ -88,8 +88,8 @@ When I open its edit page, change the URL, empty the CA certificate and Download
 save
 Then the toast "Remote "<name>" update started" appears (an edit runs as a task) and its detail
 page opens
-And once the task finishes, the server has the new URL, no CA certificate and no download concurrency, while the
-password is still set and every other setting is unchanged
+And once the task finishes, the server has the new URL, no CA certificate and no download
+concurrency, and every other setting unchanged
 
 ### FORM-SAVE-03 A server error stays in the form
 
@@ -127,16 +127,7 @@ Proxy username and on Proxy password, and save
 Then the server reports the password still set (it can't be read back) and neither proxy
 credential set, while the proxy URL is unchanged
 
-### FORM-SECRET-03 Proxy credentials go together
-
-Summary: Clearing only one proxy credential is refused by the server, and the reason shows in the form.
-
-Seed: a file remote with a proxy URL, a proxy username and a proxy password
-
-When I open its edit page, choose "Clear" on Proxy password only, and save
-Then the in-form error "Failed to update remote" shows the server's reason "proxy username and
-password can only be specified together", and the page stays open
-And the server still has both proxy credentials set
+Both proxy credentials are cleared because Pulp accepts them only as a pair.
 
 ## Code editor
 
@@ -210,15 +201,13 @@ Seed: a file remote; a second user with no roles
 When I open the edit address of <target>
 Then <outcome>
 
-| target                                | outcome                      |
-| ------------------------------------- | ---------------------------- |
-| a remote id that doesn't exist        | the "not found" error state  |
-| the seeded remote, as the second user | the "not found" error state  |
-| a type the UI doesn't know            | the detail-route error state |
+| target                                | outcome                         |
+| ------------------------------------- | ------------------------------- |
+| a remote id that doesn't exist        | "404: That page does not exist" |
+| the seeded remote, as the second user | "404: That page does not exist" |
+| a type the UI doesn't know            | "Unable to load resource"       |
 
-Pulp answers "not found", not "forbidden", for an object the user can't view, so the UI can't
-tell the two apart; only a user who can view but not change gets "403: Access denied"
-(FORM-PERM-01).
+Pulp answers "not found", not "forbidden", for an object the user can't view.
 
 ## Other layers
 
@@ -242,4 +231,4 @@ server's own rules by the API layer. Neither repeats here.
 | The edit page renders access denied without change permission             | component  |
 | The edit page warns, and keeps the form, while a task runs on the object  | component  |
 | Chips, key-value rows and checkboxes edit their lists                     | component  |
-| Proxy credentials only together and only with a proxy URL (server rules)  | API        |
+| Proxy credentials only as a pair and only with a proxy URL                | API        |

@@ -68,6 +68,7 @@ client/src/app/
 ```
 forms/
   index.ts  registry.ts      # public surface; per-entity registries by pulp_type
+  useCreateTypeSelect.ts     # a create page's Type select and carried-over values
   kit/                       # the definition language, derivations and renderer
     types.ts  defineForm.ts  derive/
     EntityFormPage/  fields/ # component folders and flat field components

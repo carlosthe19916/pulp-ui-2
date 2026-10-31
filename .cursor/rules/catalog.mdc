@@ -28,10 +28,10 @@ publication create/edit forms are UI, not data: each plugin's form lives in `@ap
 
 - Lives in UI registries keyed by `pulp_type`: `PANEL_BY_TYPE` (content detail panels),
   `BROWSE_BY_REPOSITORY_TYPE` (repository Browse sections), `TAB_BY_REPOSITORY_TYPE` (extra
-  repository tabs), and the create/edit form registries in `@app/forms` (`REMOTE_FORMS`, …),
-  which alone have no generic fallback: a type without a form can't be created or edited.
-- Each registry has a generic fallback (`BaseContent` — the All-content view, no extra tabs),
-  so a lookup never branches on the plugin:
+  repository tabs), and the create/edit form registries in `@app/forms` (`REMOTE_FORMS`, …).
+- Each presentation registry has a generic fallback (`BaseContent` — the All-content view, no
+  extra tabs), so a lookup never branches on the plugin. The form registries have none: a type
+  without a form can't be created or edited.
 
 ```tsx
 const PANEL_BY_TYPE: Record<string, React.FC<IPluginContentProps>> = {

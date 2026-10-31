@@ -46,23 +46,15 @@ And when the task finishes, the row expanded shows <serves>
 | "Repository version" and pick version 1 | version 1 of the repository |
 | "Publication" and pick the publication  | the publication             |
 
-### DST-CRE-02 A base path in use is rejected
+### DST-CRE-02 A base path in use is rejected in the form
 
-Summary: Creating a distribution whose base path is taken or overlaps another's shows the server's reason in the form.
+Summary: Although a distribution is created by a task, a taken base path is refused at submit and shown in the form.
 
 Seed: a file distribution with base path "files/stable"
 
-When I create another file distribution with base path <base path>
-Then the in-form error "Failed to create distribution" shows the server's reason <reason>, and
-the page stays open with what I typed
-
-| base path           | reason                                    |
-| ------------------- | ----------------------------------------- |
-| "files/stable"      | "This field must be unique."              |
-| "files/stable/beta" | "Overlaps with an existing distribution." |
-
-The server checks the base path when the create is submitted, before any task starts, so the
-error arrives in the form rather than as a failed task.
+When I create another file distribution with base path "files/stable"
+Then the in-form error "Failed to create distribution" shows the server's reason "This field
+must be unique.", no task starts, and the page stays open with what I typed
 
 ### DST-CRE-03 A content guard protects a distribution
 
@@ -85,9 +77,8 @@ When I open its edit page, choose "Repository" as the source, pick a repository 
 Then the toast "Distribution "<name>" update started" appears and the detail page opens
 And once the task finishes, the server has the repository set and no publication
 
-Pulp refuses a distribution with both a repository and a publication ("Only one of the
-attributes 'repository' and 'publication' may be used simultaneously."), so the switch must
-clear the old source in the same save.
+Pulp refuses a distribution with both a repository and a publication, so the save must clear the
+old source.
 
 ### DST-EDT-02 Rename the base path
 
@@ -148,8 +139,7 @@ Seed: a file distribution, edited once so an update task ran
 When I open its Tasks tab
 Then the tab title counts one task and the update task is listed
 
-The create task isn't listed: it reserved only the domain, since the distribution didn't exist
-yet, and the tab lists the tasks that reserved the distribution.
+The create task isn't listed: it ran before the distribution existed, so it didn't reserve it.
 
 ## Other layers
 

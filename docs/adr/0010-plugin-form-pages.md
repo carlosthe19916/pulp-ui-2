@@ -12,11 +12,12 @@ Repositories, remotes, distributions and publications were created and edited in
 fields came from one generic list per plugin. Every plugin got the same shape, so what defines an
 object for that plugin (an Ansible requirements file, a container upstream name and tags, Debian
 suites) carried the same weight as proxy settings; remotes needed a step wizard even for a
-one-field edit; and clearing an optional value on edit didn't clear it on the server. Edit was
-also disabled while a task ran on a repository, although Pulp accepts the update and runs it
-once the task finishes. Plugins
+one-field edit; and clearing an optional value on edit didn't clear it on the server. Plugins
 differ most in what they ask for when an object is made, so that part of
 [0001](0001-plugin-specifics-are-data.md) no longer holds.
+
+Edit was also disabled while a task ran on a repository, although Pulp accepts the update and
+runs it once the task finishes.
 
 ## Rules
 
@@ -24,7 +25,8 @@ differ most in what they ask for when an object is made, so that part of
       remote or distribution, opens its own page, not a modal. A create URL doesn't name a
       plugin; an edit URL identifies the object.
 - [ ] A create page's first field is Type: the installed types that have a form. It is hidden
-      when there is only one. Changing it keeps the name, description, URL and credentials.
+      when there is only one. Changing it keeps the values both types' forms share (name, URL,
+      credentials…).
 - [ ] Each type has its own layout. The fields that define an object of that type are always
       visible; other settings sit in consistently named collapsible sections (Authentication,
       TLS, Proxy, Downloads, Timeouts, Labels…). A section opens by itself when it holds an

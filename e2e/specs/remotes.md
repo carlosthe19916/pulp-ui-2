@@ -41,7 +41,7 @@ Then its detail page opens and shows <shown>
 | Ansible collection | the Galaxy URL and requirements listing ansible.posix                             | the requirements                             |
 | Container          | a registry URL, upstream name "library/busybox", include tags "latest" and "1.36" | the upstream name and both include tags      |
 | APT                | a Debian URL, distributions "bookworm", components "main", architectures "amd64"  | the distributions, components, architectures |
-| Python             | the PyPI URL, include project "django" and the package type "Wheel"               | the include and the package type             |
+| Python             | the PyPI URL, include project "django" and package type "Wheel (bdist_wheel)"     | the include and the package type             |
 | RPM (ULN)          | a ULN channel URL and the ULN username and password                               | the URL, with username and password "Set"    |
 
 ## Edit
@@ -98,7 +98,7 @@ Then the toast "Remote "<name>" deletion started" appears and the row disappears
 | Behaviour                                                                            | Layer      |
 | ------------------------------------------------------------------------------------ | ---------- |
 | Every remote type's form covers its API fields; single-value policies are omitted    | type check |
-| Every catalog remote type has a form (none left on the old modal)                    | component  |
+| Every catalog remote type has a form                                                 | component  |
 | The Galaxy warning shows while syncing galaxy.ansible.com without requirements       | component  |
 | Required plugin fields (container upstream name, APT distributions, ULN credentials) | component  |
 | "Use template" fills an empty requirements editor                                    | component  |

@@ -65,8 +65,9 @@ forms** run everything else (plugin actions, admin objects, uploads).
   distribution or publication create, which runs as a task → the list). An edit with
   nothing to send calls `onSaved` without a request. Nothing navigates in `onError`.
 - An edit page renders `UnauthorizedState` instead of the form when
-  `useObjectPermissions({ href }).can("change")` is false; lists and detail pages keep their
-  disabled Edit. A create page isn't pre-checked (Pulp exposes no create permission).
+  `useObjectPermissions({ href }).can("change")` is false; lists and detail pages disable Edit
+  with `disabledProps("change")`. A create page isn't pre-checked (Pulp exposes no create
+  permission).
 - No wizard; no create/edit modal for these entities.
 
 ## Modal forms
