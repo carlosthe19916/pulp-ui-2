@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { ConfirmModal } from "./ConfirmModal";
 import { DataViewList } from "./DataViewList";
+import { EntityFormPage } from "./EntityFormPage";
 
 export interface IContentPageOptions {
   path: string;
@@ -11,6 +12,8 @@ export interface IContentPageOptions {
   singular: string;
   /** Exact label of the create button, e.g. "Create remote". */
   createButton: string;
+  /** How create/edit open: a form page (ADR 0010) or, until migrated, a modal. */
+  form?: "page" | "dialog";
 }
 
 /**
@@ -42,8 +45,44 @@ export class ContentPage extends DataViewList {
     });
   }
 
-  /** Visible labels of the plugin-type selector options in the create modal. */
+  private get usesPages(): boolean {
+    return this.opts.form === "page";
+  }
+
+  /** Fill a form page by field label, submit, and return to the list once it has saved. */
+  private async fillAndSubmitPage(input: {
+    type?: string;
+    fields: Record<string, string>;
+    submitLabel: "Create" | "Save";
+  }): Promise<void> {
+    const form = new EntityFormPage(this.page);
+    if (input.type) {
+      const typeSelect = this.page.getByRole("combobox", { name: "Type" });
+      if ((await typeSelect.count()) > 0) await form.selectType(input.type);
+    }
+    await form.fill(input.fields);
+    await form.submit(input.submitLabel);
+    // A saved form leaves for the object's detail page.
+    await expect(
+      this.page.getByRole("button", { name: input.submitLabel, exact: true }),
+    ).toBeHidden();
+    await this.goto();
+  }
+
+  /** Visible labels of the plugin-type selector options in the create form. */
   async typeOptions(): Promise<string[]> {
+    if (this.usesPages) {
+      await this.dismissToasts();
+      await this.page
+        .getByRole("button", { name: this.opts.createButton, exact: true })
+        .click();
+      const options = await this.page
+        .getByRole("combobox", { name: "Type" })
+        .locator("option")
+        .allInnerTexts();
+      await this.goto();
+      return options;
+    }
     const dialog = await this.openCreate();
     const options = await dialog
       .getByRole("combobox", { name: "Type" })
@@ -118,12 +157,24 @@ export class ContentPage extends DataViewList {
     type?: string;
     fields: Record<string, string>;
   }): Promise<void> {
+    if (this.usesPages) {
+      await this.dismissToasts();
+      await this.page
+        .getByRole("button", { name: this.opts.createButton, exact: true })
+        .click();
+      await this.fillAndSubmitPage({ ...input, submitLabel: "Create" });
+      return;
+    }
     const dialog = await this.openCreate();
     await this.fillAndSubmit(dialog, input.type, input.fields, "Create");
   }
 
   async editField(name: string, fields: Record<string, string>): Promise<void> {
     await this.rowAction(name, "Edit");
+    if (this.usesPages) {
+      await this.fillAndSubmitPage({ fields, submitLabel: "Save" });
+      return;
+    }
     const dialog = this.page.getByRole("dialog", { name: `Edit ${name}` });
     await expect(dialog).toBeVisible();
     await this.fillAndSubmit(dialog, undefined, fields, "Save");

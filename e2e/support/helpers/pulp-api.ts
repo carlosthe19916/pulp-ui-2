@@ -220,6 +220,15 @@ export class PulpApi {
     return this.postCreate(`remotes/${typeSlug}`, body);
   }
 
+  /** A remote of a given plugin type by exact name, e.g. `remote("file/file", name)`. */
+  async remote<T>(typeSlug: string, name: string): Promise<T | undefined> {
+    const { results } = await this.getJson<{ results: T[] }>(
+      this.collectionUrl(`remotes/${typeSlug}`),
+      { name },
+    );
+    return results[0];
+  }
+
   /** Seed a repository of a given plugin type, e.g. `createRepository("rpm/rpm", {...})`. */
   createRepository(
     typeSlug: string,

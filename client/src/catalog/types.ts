@@ -1,12 +1,10 @@
 import type { VersionResponse } from "@app/client";
 
-import type { IEntityField } from "./fieldTypes";
-
 /**
- * Data model for Pulp's content entity types and the plugins implementing them.
- * Two ingredients compose: `base-fields.ts` (shared field groups) and `plugins/*.ts`
- * (one per plugin); `index.ts` assembles them into the catalog, keyed by pulp_type.
- * Data only.
+ * Data model for Pulp's content entity types and the plugins implementing them:
+ * `plugins/*.ts` (one per plugin), assembled by `index.ts` into the catalog, keyed by
+ * pulp_type. Data only: what a form asks for (entity forms, action and upload fields) lives
+ * in `@app/forms`.
  */
 
 /**
@@ -41,26 +39,22 @@ export type PulpType = string;
  */
 export type ContentUploadMechanism = "upload" | "create";
 
-/** Upload capability of an uploadable content type. Absent ⇒ read-only (sync/push only). */
+/**
+ * Upload capability of an uploadable content type. Absent ⇒ read-only (sync/push only).
+ * What it asks for per file is UI (`@app/forms` upload fields).
+ */
 export interface IContentUpload {
   mechanism: ContentUploadMechanism;
-  fields: IEntityField[];
-}
-
-/** Optional detail-page field layout for a content type (drawer). */
-export interface IContentDetail {
-  fields: IEntityField[];
 }
 
 /**
- * One content type owned by a plugin (immutable: no form fields). `apiPath` is its
- * `<app>/<slug>` segment, omitted for endpoint-less types.
+ * One content type owned by a plugin. `apiPath` is its `<app>/<slug>` segment, omitted for
+ * endpoint-less types.
  */
 export interface IContentType {
   pulpType: PulpType;
   apiPath?: string;
   uploadable?: IContentUpload;
-  detail?: IContentDetail;
 }
 
 /** App-environment concern: whether the plugin's package is installed. */
@@ -74,20 +68,15 @@ export interface IPluginRest {
   apiPath: string;
 }
 
-/** Create/edit field lists (base + plugin extras) plus the wizard flag. */
-export interface IPluginForm {
-  isWizard: boolean;
-  createFields: IEntityField[];
-  editFields: IEntityField[];
-}
-
 // --- Resolved shapes (what `index.ts` exposes; keyed by pulp_type) ---
 
-/** One entity's resolved contribution for a pulp_type: its endpoint and form. */
+/**
+ * One entity's resolved contribution for a pulp_type: its endpoint. Its create/edit form is
+ * UI, not data: see `@app/forms` (ADR 0010).
+ */
 export interface IPluginEntity {
   /** The `<app>/<slug>` collection segment, per entity (content pluralizes). */
   apiPath: string;
-  form: IPluginForm;
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
 }
@@ -129,11 +118,6 @@ export interface IPlugin {
  * overridden only by variants.
  */
 export interface IContributionBase {
-  form: {
-    isWizard: boolean;
-    createFields: IEntityField[];
-    editFields: IEntityField[];
-  };
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
 }
@@ -157,7 +141,8 @@ export interface IRepositoryContribution extends IContributionBase {
 }
 
 /**
- * A plugin action: a POST that starts a task, with a form built from `fields`.
+ * A plugin action: a POST that starts a task. Its form fields are UI, keyed by `key`
+ * (`@app/forms` action fields).
  */
 export interface IRepositoryAction {
   key: string;
@@ -168,7 +153,6 @@ export interface IRepositoryAction {
    */
   path: string;
   target: "repository" | "version";
-  fields: IEntityField[];
   description?: string;
   /**
    * For collection endpoints: the body field the repository href fills (`list`

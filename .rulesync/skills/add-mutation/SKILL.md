@@ -18,6 +18,7 @@ use a made-up `widget` resource.
 | Delete from a list                     | the list page                              | `handleDelete`: `mutate(row, { onSuccess: closeDialog })` | danger toast                         |
 | Delete from a detail page              | the detail page                            | `mutate(entity)`; toast + `navigate()` in hook-level      | danger toast                         |
 | Create / update in a modal             | the feature form hook (`useWidgetForm`)    | `onSubmit`: `mutate(vars, { onSuccess: onClose })`        | in-form (`FormSubmitError`)          |
+| Create / update on a form page         | the create/edit page (`RemoteCreate`, …)   | `onSubmit`: `mutate(vars, { onSuccess: () => saved() })`  | in-form via `EntityFormPage`         |
 | Action modal with fields (sync, …)     | the wrapper that renders `TaskActionModal` | `mutate(vars, { onSuccess: onClose })`                    | in-form via `TaskActionModal`        |
 | One-off action (cancel, purge)         | the page/component with the handler        | `mutate(vars, { onSettled: closeDialog })`                | danger toast                         |
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |

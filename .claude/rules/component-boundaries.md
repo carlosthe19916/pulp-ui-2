@@ -2,6 +2,7 @@
 paths:
   - client/src/app/components/**
   - client/src/app/pages/**
+  - client/src/app/forms/**
 ---
 
 # Component boundaries: the caller owns side effects

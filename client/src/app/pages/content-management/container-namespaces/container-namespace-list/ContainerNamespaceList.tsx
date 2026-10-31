@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import type { IEntityField } from "@catalog";
-
 import {
   Button,
   Content,
@@ -45,6 +43,7 @@ import {
 } from "@app/queries/container-namespaces";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import type { IEntityField } from "@app/utils/entityField";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 

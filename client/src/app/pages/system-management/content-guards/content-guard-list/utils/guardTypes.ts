@@ -1,4 +1,4 @@
-import type { IEntityField } from "@catalog";
+import type { IEntityField } from "@app/utils/entityField";
 
 /** One content guard type: its collection and form fields. */
 export interface IGuardType {

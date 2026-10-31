@@ -1,1 +1,0 @@
-export { EntityModalBody } from "./EntityModalBody";

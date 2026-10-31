@@ -4,9 +4,11 @@ import type { IRepositoryAction } from "@catalog";
 
 import type { RepositoryResponse } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
+import { getActionFields } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositoryActionMutation } from "@app/queries/repositories";
+import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -64,7 +66,10 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
       title={`${action.label} — "${repository.name}"`}
       description={action.description}
       submitLabel={action.label}
-      fields={action.fields}
+      fields={getActionFields({
+        repositoryType: resolvePulpType(repository.pulp_href) ?? "",
+        actionKey: action.key,
+      })}
       initialValues={initialValues}
       repository={repository}
       isSubmitting={mutation.isPending}

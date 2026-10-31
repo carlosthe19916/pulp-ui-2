@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import type { IEntityField } from "@catalog";
-
 import {
   Button,
   Card,
@@ -24,6 +22,7 @@ import {
   type MaintenanceOperation,
   useMaintenanceMutation,
 } from "@app/queries/maintenance";
+import type { IEntityField } from "@app/utils/entityField";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 

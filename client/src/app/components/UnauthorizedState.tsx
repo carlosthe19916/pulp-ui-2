@@ -3,7 +3,14 @@ import type React from "react";
 import { EmptyState, EmptyStateBody } from "@patternfly/react-core";
 import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
 
-export const UnauthorizedState: React.FC = () => {
+interface IUnauthorizedStateProps {
+  /** What the user can't do here; defaults to viewing the page. */
+  description?: string;
+}
+
+export const UnauthorizedState: React.FC<IUnauthorizedStateProps> = ({
+  description = "You do not have permission to view this page.",
+}) => {
   return (
     <EmptyState
       titleText="403: Access denied"
@@ -11,8 +18,8 @@ export const UnauthorizedState: React.FC = () => {
       icon={LockIcon}
     >
       <EmptyStateBody>
-        You do not have permission to view this page. Contact your administrator
-        if you believe this is an error.
+        {description} Contact your administrator if you believe this is an
+        error.
       </EmptyStateBody>
     </EmptyState>
   );

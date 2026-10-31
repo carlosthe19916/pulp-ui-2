@@ -7,9 +7,7 @@
 
 import type { VersionResponse } from "@app/client";
 
-import { remoteBase } from "./baseFields";
 import { buildCatalog } from "./compose";
-import type { IEntityField } from "./fieldTypes";
 import { ansible } from "./plugins/ansible";
 import { container } from "./plugins/container";
 import { core } from "./plugins/core";
@@ -146,13 +144,6 @@ export const resolveContentTypeByApiPath = ({
   apiPath: string;
 }): PulpType | undefined => contentTypeByApiPath[apiPath];
 
-/**
- * Remote edit fields for a pulp_type, falling back to the pulpcore base when the plugin
- * (or its remote slot) isn't modelled.
- */
-export const getRemoteEditFields = (pulpType: PulpType): IEntityField[] =>
-  getPlugin(pulpType)?.entities.remote?.form.editFields ?? remoteBase.edit;
-
 /** Plugins implementing `entity` whose package is installed in this environment. */
 export const getAvailablePlugins = ({
   entity,
@@ -184,14 +175,11 @@ export const getEntityLabel = (entity: EntityType): string =>
 export type {
   ContentUploadMechanism,
   EntityType,
-  IContentDetail,
   IContentType,
   IContentUpload,
   IPlugin,
   IPluginEntity,
-  IPluginForm,
   IPluginRepositoryEntity,
   IRepositoryAction,
   PulpType,
 } from "./types";
-export type { IEntityField, ResourceKind } from "./fieldTypes";

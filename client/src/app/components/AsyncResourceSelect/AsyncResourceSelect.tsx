@@ -1,12 +1,11 @@
 import type React from "react";
 import { useState } from "react";
 
-import type { ResourceKind } from "@catalog";
-
 import { Label, LabelGroup, Stack, StackItem } from "@patternfly/react-core";
 
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { ResourceKind } from "@app/utils/entityField";
 
 import { useResourceSearch } from "./useResourceSearch";
 

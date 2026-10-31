@@ -2,6 +2,7 @@
 paths:
   - client/src/app/pages/**
   - client/src/app/components/**
+  - client/src/app/forms/**
 ---
 
 # UI conventions (`components/`, `pages/`)
@@ -125,7 +126,9 @@ return (
 - Task status on rows and pages comes from `useResourceTasks` + `ResourceTaskStatus` /
   `EntityTaskStatus`, never from local "pending" flags alone.
 - Repository content writes and header actions spread `lockedProps` from
-  `useRepositoryActivity` so they are disabled while a task runs on the repository.
+  `useRepositoryActivity` so they are disabled while a task runs on the repository. Edit is
+  the exception: Pulp queues an update behind the task, so Edit stays enabled and the edit
+  page shows `EditDuringTaskAlert` instead.
 
 ## Checklist
 

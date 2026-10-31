@@ -4,6 +4,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -15,6 +16,7 @@ import type {
 } from "@app/client";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPlugin } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
@@ -22,7 +24,7 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const DistributionsQueryKey = "distributions";
@@ -183,6 +185,21 @@ export const useDistributionDetailQuery = ({ href }: { href: string | null }) =>
     ...distributionDetailQueryOptions({ href }),
     enabled: !!href,
   });
+
+export const useSuspenseDistributionDetailQuery = ({
+  href,
+}: {
+  href: string;
+}) => useSuspenseQuery(distributionDetailQueryOptions({ href }));
+
+export const buildDistributionHref = (
+  pulpType: string,
+  id: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = getPlugin(pulpType)?.entities.distribution?.apiPath;
+  return apiPath ? pulpHref(`distributions/${apiPath}/${id}/`, domain) : null;
+};
 
 /**
  * Creates a distribution of the given plugin type (`distributions/<apiPath>/`); creation

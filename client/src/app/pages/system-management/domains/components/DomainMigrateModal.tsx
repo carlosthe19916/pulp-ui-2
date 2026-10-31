@@ -1,12 +1,11 @@
 import type React from "react";
 
-import type { IEntityField } from "@catalog";
-
 import type { DomainResponse, StorageClassEnum } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useDomainMigrateMutation } from "@app/queries/domains";
+import type { IEntityField } from "@app/utils/entityField";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 

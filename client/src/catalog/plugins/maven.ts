@@ -1,32 +1,5 @@
-import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
-
-const mavenRepositoryExtras: IEntityField[] = [
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-  { key: "retain_checkpoints", label: "Retained Checkpoints", type: "number" },
-];
-
-const mavenDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Repository",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-];
 
 const mavenActions: IRepositoryAction[] = [
   {
@@ -35,7 +8,6 @@ const mavenActions: IRepositoryAction[] = [
     path: "repair_metadata/",
     target: "repository",
     description: "Regenerates every maven-metadata.xml file and its checksums.",
-    fields: [],
   },
   {
     key: "repair-packages",
@@ -44,7 +16,6 @@ const mavenActions: IRepositoryAction[] = [
     target: "repository",
     description:
       "Reconciles the latest version's packages with the POMs it holds.",
-    fields: [],
   },
   {
     key: "repair-index-pages",
@@ -52,7 +23,6 @@ const mavenActions: IRepositoryAction[] = [
     path: "repair_index_pages/",
     target: "repository",
     description: "Regenerates the HTML index page of every directory.",
-    fields: [],
   },
   {
     key: "build-path-index",
@@ -60,7 +30,6 @@ const mavenActions: IRepositoryAction[] = [
     path: "build_path_index/",
     target: "repository",
     description: "Builds the initial path index.",
-    fields: [],
   },
   {
     key: "compact-path-index",
@@ -68,7 +37,6 @@ const mavenActions: IRepositoryAction[] = [
     path: "compact_path_index/",
     target: "repository",
     description: "Rebases the latest completed path index.",
-    fields: [],
   },
 ];
 
@@ -78,11 +46,6 @@ export const maven: IPluginDefinition = {
   entities: {
     // Maven repository: a pull-through cache — no sync or publish (both stay off).
     repository: {
-      form: {
-        isWizard: false,
-        createFields: [...repositoryBase.create, ...mavenRepositoryExtras],
-        editFields: [...repositoryBase.edit, ...mavenRepositoryExtras],
-      },
       compatibleRemoteTypes: [],
       compatiblePublicationTypes: [],
       contentChanges: "modify",
@@ -90,21 +53,9 @@ export const maven: IPluginDefinition = {
       actions: mavenActions,
     },
 
-    remote: {
-      form: {
-        isWizard: true,
-        createFields: remoteBase.create,
-        editFields: remoteBase.edit,
-      },
-    },
+    remote: {},
 
-    distribution: {
-      form: {
-        isWizard: false,
-        createFields: [...distributionBase.create, ...mavenDistributionExtras],
-        editFields: [...distributionBase.edit, ...mavenDistributionExtras],
-      },
-    },
+    distribution: {},
   },
 
   content: [
@@ -113,14 +64,6 @@ export const maven: IPluginDefinition = {
       apiPath: "maven/artifact",
       uploadable: {
         mechanism: "upload",
-        fields: [
-          {
-            key: "relative_path",
-            label: "Relative path",
-            type: "text",
-            required: true,
-          },
-        ],
       },
     },
     {
@@ -128,14 +71,6 @@ export const maven: IPluginDefinition = {
       apiPath: "maven/metadata",
       uploadable: {
         mechanism: "upload",
-        fields: [
-          {
-            key: "relative_path",
-            label: "Relative path",
-            type: "text",
-            required: true,
-          },
-        ],
       },
     },
     {

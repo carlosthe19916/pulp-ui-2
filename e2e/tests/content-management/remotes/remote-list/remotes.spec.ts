@@ -13,7 +13,7 @@ test.describe("Remotes", () => {
 
     const name = cleanup.remote(uniqueName("remote"));
     await remotesPage.create({
-      type: "file.file",
+      type: "File",
       fields: { Name: name, URL: FILE_URL },
     });
     await remotesPage.filterBy("Name", name);
@@ -27,47 +27,14 @@ test.describe("Remotes", () => {
     await remotesPage.expectRowGone(name);
   });
 
-  test("create modal offers every installed remote plugin type", async ({
+  test("create page offers every installed remote plugin type", async ({
     remotesPage,
   }) => {
     await remotesPage.goto();
     const types = await remotesPage.typeOptions();
-    expect(types).toContain("file.file");
+    expect(types).toContain("File");
     // Multiple plugins are installed in the dev/e2e backend.
     expect(types.length).toBeGreaterThan(1);
-  });
-
-  test("create remote is a multi-step wizard with grouped fields", async ({
-    remotesPage,
-    page,
-  }) => {
-    await remotesPage.goto();
-    const dialog = await remotesPage.openCreate();
-
-    // The large remote form is a wizard: grouped steps + Back/Next footer.
-    await expect(
-      dialog.getByRole("button", { name: "Next", exact: true }),
-    ).toBeVisible();
-    await expect(
-      dialog.getByRole("button", { name: "Back", exact: true }),
-    ).toBeDisabled();
-    // Step 1 (General) holds the required fields.
-    await expect(dialog.getByRole("combobox", { name: "Type" })).toBeVisible();
-    await expect(
-      dialog.getByRole("textbox", { name: "Name", exact: true }),
-    ).toBeVisible();
-
-    // Advancing enables Back; a later step exposes an authentication field.
-    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill("x");
-    await dialog.getByRole("textbox", { name: "URL", exact: true }).fill("x");
-    await dialog.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(
-      dialog.getByRole("button", { name: "Back", exact: true }),
-    ).toBeEnabled();
-
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-    await expect(dialog).toBeHidden();
-    void page;
   });
 
   test("create a container remote with its required upstream_name", async ({
@@ -77,11 +44,11 @@ test.describe("Remotes", () => {
     await remotesPage.goto();
     const name = cleanup.remote(uniqueName("remote"));
     await remotesPage.create({
-      type: "container.container",
+      type: "Container",
       fields: {
         Name: name,
         URL: "https://registry-1.docker.io",
-        "Upstream Name": "library/busybox",
+        "Upstream name": "library/busybox",
       },
     });
     await remotesPage.filterBy("Name", name);

@@ -1,1 +1,0 @@
-export { DistributionModal } from "./DistributionModal";
