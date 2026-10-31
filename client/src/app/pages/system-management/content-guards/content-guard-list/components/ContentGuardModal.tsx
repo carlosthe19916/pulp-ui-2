@@ -18,8 +18,10 @@ import {
 } from "@app/queries/content-guards";
 import { buildDefaultValues } from "@app/utils/formSchema";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { isPluginInstalled } from "@catalog";
+import { getContentGuardTypes } from "@plugins";
 
-import { GUARD_TYPES, guardTypeOf } from "../utils/guardTypes";
+import { guardTypeOf } from "../utils/guardTypes";
 
 interface IContentGuardModalProps {
   /** The full (typed) guard being edited; absent to create. */
@@ -35,12 +37,16 @@ export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
   const { status } = useApiStatus();
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const installed = new Set(status?.versions.map((v) => v.component));
-  const types = GUARD_TYPES.filter((type) => installed.has(type.component));
+  const installed = status?.versions ?? [];
+  const types = getContentGuardTypes().filter(({ pluginId }) =>
+    isPluginInstalled({ pluginId, installed }),
+  );
   const [pulpType, setPulpType] = useState(() =>
     guard ? guardTypeOf(guard.pulp_href ?? "")?.pulpType : types[0]?.pulpType,
   );
-  const guardType = GUARD_TYPES.find((type) => type.pulpType === pulpType);
+  const guardType = getContentGuardTypes().find(
+    (type) => type.pulpType === pulpType,
+  );
 
   const onError = (error: unknown) =>
     setSubmitError(

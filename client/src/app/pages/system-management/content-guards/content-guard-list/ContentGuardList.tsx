@@ -43,13 +43,10 @@ import {
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+import { getContentGuardTypes } from "@plugins";
 
 import { ContentGuardModal } from "./components/ContentGuardModal";
-import {
-  GUARD_TYPES,
-  guardHasRoleEndpoints,
-  guardTypeOf,
-} from "./utils/guardTypes";
+import { guardHasRoleEndpoints, guardTypeOf } from "./utils/guardTypes";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -158,7 +155,7 @@ export const ContentGuardList: React.FC = () => {
                     ? disabledProps({ href: guard.pulp_href, verb: "change" })
                     : {}),
                 },
-                ...(type?.hasAccess
+                ...(type?.downloaderRole
                   ? [
                       {
                         title: "Manage access",
@@ -226,7 +223,7 @@ export const ContentGuardList: React.FC = () => {
                 <MultiSelectFilter
                   filterId="pulp_type"
                   title="Type"
-                  options={GUARD_TYPES.map((type) => ({
+                  options={getContentGuardTypes().map((type) => ({
                     value: type.pulpType,
                     label: type.label,
                   }))}

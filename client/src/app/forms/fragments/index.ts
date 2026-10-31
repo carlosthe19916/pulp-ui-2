@@ -1,4 +1,5 @@
 export { advancedCopyAction, scanAction } from "./actions";
+export { contentGuardBaseFields } from "./contentGuards";
 export { descriptionField, nameField, urlField } from "./base";
 export {
   accessSection,

@@ -6,16 +6,18 @@ import type { IEntityField } from "@app/utils/entityField";
 import {
   ENTITY_TYPES,
   type EntityType,
+  getContentGuardTypes as getContentGuardFacts,
   getPulpType,
   PLUGIN_DEFINITIONS,
   type PluginId,
   type PulpType,
 } from "@catalog";
-import type { IAcsDef } from "@plugin-sdk/definition";
+import type { IAcsDef, IContentGuardType } from "@plugin-sdk/definition";
 import {
   type ClientSetup,
   GENERIC,
   type IArchiveImportUi,
+  type IContentGuardTypeUi,
   type IContentPanelProps,
   type IContentSearch,
   type ICreateFromUi,
@@ -27,6 +29,7 @@ import {
 } from "@plugin-sdk/ui";
 
 import { ansibleUi } from "./ansible/ui";
+import { certguardUi } from "./certguard/ui";
 import { containerUi } from "./container/ui";
 import { coreUi } from "./core/ui";
 import { debUi } from "./deb/ui";
@@ -56,6 +59,7 @@ export const PLUGIN_UI: Record<PluginId, IPluginModule> = {
   deb: debUi,
   ansible: ansibleUi,
   core: coreUi,
+  certguard: certguardUi,
 };
 
 /** A type's form, its name in the Type select, and whether it can be created and edited. */
@@ -98,6 +102,7 @@ const createAlternatives = new Map<
 >();
 const archiveImports = new Map<PulpType, IArchiveImportUi>();
 const acsTypes: IAcsType[] = [];
+const guardUis = new Map<PulpType, IContentGuardTypeUi>();
 
 // Walk the plugins in declaration order, so lists (nav pages, ACS types) follow it.
 for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
@@ -155,6 +160,9 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
     if (contentUi.panel !== GENERIC) panels.set(pulpType, contentUi.panel);
     if (contentUi.search) searches.set(pulpType, contentUi.search);
     if (contentUi.upload) uploads.set(pulpType, contentUi.upload);
+  }
+  for (const [pulpType, guardUi] of Object.entries(ui.contentGuard ?? {})) {
+    guardUis.set(pulpType, guardUi);
   }
   for (const page of ui.pages ?? []) {
     pages.push({ pluginId, page });
@@ -225,6 +233,16 @@ export const getPluginPages = (): readonly {
 }[] => pages;
 
 /** Every plugin's alternate content source. */
+/** A content guard type: its facts with its name, description and form fields. */
+export interface IGuardType extends IContentGuardType, IContentGuardTypeUi {}
+
+/** Every content guard type, in declaration order (each one's UI is required). */
+export const getContentGuardTypes = (): IGuardType[] =>
+  getContentGuardFacts().flatMap((guard) => {
+    const guardUi = guardUis.get(guard.pulpType);
+    return guardUi ? [{ ...guard, ...guardUi }] : [];
+  });
+
 export const getAcsTypes = (): readonly IAcsType[] => acsTypes;
 
 /** The component of a plugin's own page, by its route. */

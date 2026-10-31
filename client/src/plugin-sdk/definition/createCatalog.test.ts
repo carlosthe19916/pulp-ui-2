@@ -148,6 +148,38 @@ describe("createCatalog", () => {
     ]);
   });
 
+  it("resolves content guard types from their hrefs", () => {
+    const guards = createCatalog([
+      {
+        id: "guards",
+        packages: [],
+        contentGuard: {
+          "guards.open": { apiPath: "core/rbac", downloaderRole: true },
+          "guards.cert": { apiPath: "certguard/x509", rolesManaged: false },
+        },
+      } as unknown as IPluginDefinition,
+    ]);
+    expect(
+      guards.resolveContentGuardType("/pulp/api/v3/contentguards/core/rbac/1/"),
+    ).toMatchObject({
+      pulpType: "guards.open",
+      rolesManaged: true,
+      downloaderRole: true,
+    });
+    expect(
+      guards.resolveContentGuardType(
+        "/pulp/api/v3/contentguards/certguard/x509/1/",
+      ),
+    ).toMatchObject({
+      pulpType: "guards.cert",
+      rolesManaged: false,
+      downloaderRole: false,
+    });
+    expect(
+      guards.resolveContentGuardType("/pulp/api/v3/contentguards/x/y/1/"),
+    ).toBeUndefined();
+  });
+
   it("refuses a type declared twice", () => {
     const twin = { ...gadget, id: "twin" } as IPluginDefinition;
     expect(() => createCatalog([gadget, twin])).toThrow(

@@ -38,13 +38,14 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   types per entity keyed by `pulp_type` with their `apiPath`, what a repository syncs from and
   publishes to, `contentChanges`, `archiveImport`, `scan`, `rolesManaged`, action endpoints
   (`path`, `target`, `repositoryParam`), a remote's `createFrom` endpoints, content types
-  (`apiPath`, `upload`), the ACS endpoint.
+  (`apiPath`, `upload`), the ACS endpoint, content guard types (`apiPath`, `rolesManaged`,
+  `downloaderRole`).
   It imports only `@plugin-sdk/definition` (and generated types).
 - **UI** (`ui/`, `definePluginUi`): labels, forms, content panels, Browse sections, the
   repository tab, client setup snippets, action labels and fields, upload fields, content
   search, the plugin's own pages (`pages`: label, route, `Page`), a remote's create alternatives
-  (`createFrom`: label, `Modal`), the archive import (`archiveImport`: label, `Modal`), the ACS
-  label. A panel, view or modal file exports one component, named like the file; the plugin's
+  (`createFrom`: label, `Modal`), the archive import (`archiveImport`: label, `Modal`), the ACS label, content
+  guard labels, descriptions and fields. A panel, view or modal file exports one component, named like the file; the plugin's
   queries sit in `ui/queries/`, reusing the base `*Keys` from `@app/queries`.
 
 ## Type-checked completeness
@@ -69,7 +70,8 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 - Pages and components read facts from `@catalog` (`getPulpType`, `getAvailableTypes`,
   `getContentType`, …) and UI from `@plugins` (`getEntityForm`, `getContentPanel`,
   `getRepositoryBrowse`, `getRepositoryTab`, `getRepositoryActions`, `getClientSetup`,
-  `getContentSearch`, `getUploadFields`, `getPluginPages`, `useCreateTypeSelect`), never
+  `getContentSearch`, `getUploadFields`, `getPluginPages`, `getContentGuardTypes`,
+  `useCreateTypeSelect`), never
   `pulp_type` string comparisons, plugin `switch` chains or a plugin's files.
 - Panels, Browse views and tabs are lazy (`lazyViews(() => import("./browse/X"))("XView")`);
   hosts render them inside `Suspense`.

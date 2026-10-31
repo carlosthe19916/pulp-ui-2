@@ -6,6 +6,7 @@ export {
   getAcsTypes,
   getArchiveImport,
   getClientSetup,
+  getContentGuardTypes,
   getContentPanel,
   getContentSearch,
   getCreateAlternatives,
@@ -18,6 +19,7 @@ export {
   getUploadFields,
   type IAcsType,
   type IFormEntry,
+  type IGuardType,
 } from "./registry";
 export { useCreatableTypes } from "./useCreatableTypes";
 export { useCreateTypeSelect } from "./useCreateTypeSelect";

@@ -11,11 +11,12 @@ Each plugin is a folder, `client/src/plugins/<id>/`:
 - `definition.ts` declares **facts** with `definePlugin`: which packages mean it is installed,
   its types per entity (keyed by `pulp_type`, each with its collection `apiPath`), repository
   capabilities (what it syncs from and publishes to, how content changes, scans, actions), its
-  content types and its ACS endpoint. It imports no UI, so anything can read it.
+  content types, its ACS endpoint and its content guard types. It imports no UI, so anything
+  can read it.
 - `ui/index.ts` declares the **presentation** with `definePluginUi({ definition, ui })`: labels,
   forms, content panels, Browse sections, the repository tab, client setup, action labels and
   fields, upload fields, content search, the plugin's own pages, a remote's create
-  alternatives and the archive import. The plugin's pages, modals and queries live under
+  alternatives, the archive import and content guards' names, descriptions and fields. The plugin's pages, modals and queries live under
   `ui/` too.
 
 The split is "would this change if the UI were redesigned?": facts don't, presentation does.

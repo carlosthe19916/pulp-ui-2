@@ -9,7 +9,8 @@ describe("guardTypeOf", () => {
         ?.pulpType,
     ).toBe("certguard.x509");
     expect(
-      guardTypeOf("/pulp/api/v3/contentguards/core/rbac/0190-ab/")?.hasAccess,
+      guardTypeOf("/pulp/api/v3/contentguards/core/rbac/0190-ab/")
+        ?.downloaderRole,
     ).toBe(true);
   });
 

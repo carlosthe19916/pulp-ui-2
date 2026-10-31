@@ -2,6 +2,7 @@ import type { VersionResponse } from "@app/client";
 import type {
   AcsEndpoints,
   ContentEndpoints,
+  ContentGuardEndpoints,
   DistributionEndpoints,
   PublicationEndpoints,
   RemoteEndpoints,
@@ -94,6 +95,15 @@ export interface IContentDef {
   upload?: ContentUploadMechanism;
 }
 
+/** A content guard type: who may download content a distribution serves. */
+export interface IContentGuardDef {
+  apiPath: keyof ContentGuardEndpoints & string;
+  /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
+  rolesManaged?: boolean;
+  /** Downloads are granted through the guard's own downloader role (RBAC). */
+  downloaderRole?: boolean;
+}
+
 /** The plugin's alternate content source collection. */
 export interface IAcsDef {
   apiPath: keyof AcsEndpoints & string;
@@ -115,6 +125,7 @@ export interface IPluginDefinition {
   publication?: Readonly<Record<string, IEntityTypeDef<"publication">>>;
   content?: Readonly<Record<string, IContentDef>>;
   acs?: IAcsDef;
+  contentGuard?: Readonly<Record<string, IContentGuardDef>>;
 }
 
 /** A definition's pulp_types for one of its sections (`never` when it has none). */

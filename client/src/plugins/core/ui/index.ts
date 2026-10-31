@@ -1,6 +1,7 @@
 import { definePluginUi, GENERIC } from "@plugin-sdk/ui";
 
 import { core } from "../definition";
+import { coreContentGuards } from "./contentGuards";
 import { openpgpDistributionForm } from "./forms/distribution";
 import { openpgpKeyringRepositoryForm } from "./forms/repository";
 
@@ -26,5 +27,6 @@ export const coreUi = definePluginUi({
       "core.openpgp_userid": { panel: GENERIC, search: null },
       "core.publishedmetadata": { panel: GENERIC, search: null },
     },
+    contentGuard: coreContentGuards,
   },
 });

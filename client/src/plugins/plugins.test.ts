@@ -8,6 +8,7 @@ import {
 } from "@catalog";
 import type { IPluginDefinition } from "@plugin-sdk/definition";
 import {
+  getContentGuardTypes,
   getEntityForm,
   getRepositoryActions,
   getRepositoryBrowse,
@@ -89,6 +90,21 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
 );
 
 describe("plugin registry", () => {
+  it("offers every declared content guard type with its UI", () => {
+    const declared = definitions.flatMap((definition) =>
+      Object.keys(definition.contentGuard ?? {}),
+    );
+    expect(getContentGuardTypes().map((type) => type.pulpType)).toEqual(
+      declared,
+    );
+    expect(
+      getContentGuardTypes().find((type) => type.pulpType === "certguard.x509"),
+    ).toMatchObject({ pluginId: "certguard", rolesManaged: false });
+    expect(
+      getContentGuardTypes().find((type) => type.pulpType === "core.rbac"),
+    ).toMatchObject({ rolesManaged: true, downloaderRole: true });
+  });
+
   it("registers each plugin's UI under its own id", () => {
     for (const definition of definitions) {
       expect(

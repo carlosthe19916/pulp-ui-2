@@ -1,5 +1,6 @@
 export {
   createCatalog,
+  type IContentGuardType,
   type IContentType,
   type IPulpType,
   type IPulpTypeEntity,
@@ -14,6 +15,7 @@ export {
   type EntityType,
   type IActionDef,
   type IContentDef,
+  type IContentGuardDef,
   type ICreateFromDef,
   type IEndpointsByEntity,
   type IPluginDefinition,

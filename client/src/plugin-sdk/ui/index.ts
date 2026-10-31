@@ -22,6 +22,7 @@ export {
   GENERIC,
   type Generic,
   type IAnyPluginUi,
+  type IContentGuardTypeUi,
   type IContentTypeUi,
   type IDistributionTypeUi,
   type IRemoteTypeUi,

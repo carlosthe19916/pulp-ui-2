@@ -237,3 +237,18 @@ definePluginUi({
     },
   },
 });
+
+// A declared content guard type without its UI.
+const guarded = definePlugin({
+  id: "guarded",
+  packages: [],
+  contentGuard: { "guarded.header": { apiPath: "core/header" } },
+});
+definePluginUi({
+  definition: guarded,
+  ui: {
+    label: "Guarded",
+    // @ts-expect-error "guarded.header" has no label, description or fields.
+    contentGuard: {},
+  },
+});

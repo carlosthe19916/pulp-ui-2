@@ -33,6 +33,15 @@ export interface IPulpTypeRepository extends IPulpTypeEntity {
 }
 
 /** A content type: its list endpoint (absent for endpoint-less types) and upload mechanism. */
+/** A content guard type: its collection, role endpoints and download roles. */
+export interface IContentGuardType {
+  pulpType: PulpType;
+  pluginId: string;
+  apiPath: string;
+  rolesManaged: boolean;
+  downloaderRole: boolean;
+}
+
 export interface IContentType {
   pulpType: PulpType;
   apiPath?: string;
@@ -82,6 +91,7 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
   const contentByType = new Map<PulpType, IContentType>();
   const contentByApiPath = new Map<string, PulpType>();
   const contentByPlugin = new Map<string, IContentType[]>();
+  const guardsByType = new Map<PulpType, IContentGuardType>();
   const isInstalledById = new Map<string, IsInstalled>();
 
   for (const definition of definitions) {
@@ -147,6 +157,23 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
         }
         contentByApiPath.set(content.apiPath, content.pulpType);
       }
+    }
+  }
+
+  for (const definition of definitions) {
+    for (const [pulpType, guard] of Object.entries(
+      definition.contentGuard ?? {},
+    )) {
+      if (guardsByType.has(pulpType)) {
+        throw new Error(`Duplicate content guard type "${pulpType}".`);
+      }
+      guardsByType.set(pulpType, {
+        pulpType,
+        pluginId: definition.id,
+        apiPath: guard.apiPath,
+        rolesManaged: guard.rolesManaged ?? true,
+        downloaderRole: guard.downloaderRole ?? false,
+      });
     }
   }
 
@@ -227,6 +254,18 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
         .map((plugin) => plugin.pulpType),
 
     /** Each plugin's alternate content source, with the plugin it belongs to. */
+    /** Every content guard type, in declaration order. */
+    getContentGuardTypes: (): IContentGuardType[] => [...guardsByType.values()],
+
+    /** The content guard type of a guard's href (`…/contentguards/<app>/<slug>/<id>/`). */
+    resolveContentGuardType: (href: string): IContentGuardType | undefined => {
+      const match = /\/contentguards\/([^/]+)\/([^/]+)\//.exec(href);
+      const apiPath = match ? `${match[1]}/${match[2]}` : undefined;
+      return [...guardsByType.values()].find(
+        (guard) => guard.apiPath === apiPath,
+      );
+    },
+
     getAcsSources: () =>
       definitions.flatMap((definition) =>
         definition.acs ? [{ pluginId: definition.id, ...definition.acs }] : [],

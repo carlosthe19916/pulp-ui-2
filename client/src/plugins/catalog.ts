@@ -10,6 +10,7 @@ import {
 } from "@plugin-sdk/definition";
 
 import { ansible } from "./ansible/definition";
+import { certguard } from "./certguard/definition";
 import { container } from "./container/definition";
 import { core } from "./core/definition";
 import { deb } from "./deb/definition";
@@ -36,6 +37,7 @@ export const PLUGIN_DEFINITIONS = [
   deb,
   ansible,
   core,
+  certguard,
 ] as const;
 
 type Definition = (typeof PLUGIN_DEFINITIONS)[number];
@@ -76,6 +78,7 @@ export type ContentTypeApiPaths = {
 export const {
   getAcsSources,
   getAvailableTypes,
+  getContentGuardTypes,
   getContentType,
   getContentTypes,
   getPulpType,
@@ -84,6 +87,7 @@ export const {
   getRepositoryTypesForPublication,
   getScannableRepositoryTypes,
   isPluginInstalled,
+  resolveContentGuardType,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } = createCatalog(PLUGIN_DEFINITIONS);
@@ -92,6 +96,7 @@ export {
   type ContentUploadMechanism,
   ENTITY_TYPES,
   type EntityType,
+  type IContentGuardType,
   type IContentType,
   type IPulpType,
   type IPulpTypeEntity,

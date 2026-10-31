@@ -71,6 +71,13 @@ export type IRepositoryTypeUi<
 } & ActionsUi<RepositoryDefOf<D, T>["actions"]> &
   ArchiveImportUi<RepositoryDefOf<D, T>["archiveImport"]>;
 
+/** A content guard type's UI: its name, what it allows, and its modal form's fields. */
+export interface IContentGuardTypeUi {
+  label: string;
+  description: string;
+  fields: IEntityField[];
+}
+
 export interface IDistributionTypeUi extends ITypeUi {
   clientSetup: ClientSetup | Generic;
 }
@@ -102,6 +109,7 @@ interface IUiSections<D extends IPluginDefinition> {
   content: { [T in TypesOf<D, "content">]: IContentTypeUi<D, T> };
   /** Its alternate content source; `label` defaults to the plugin's. */
   acs: { label?: string };
+  contentGuard: { [T in TypesOf<D, "contentGuard">]: IContentGuardTypeUi };
 }
 
 /**
@@ -130,6 +138,7 @@ export interface IAnyPluginUi {
   publication?: Readonly<Record<string, ITypeUi>>;
   content?: Readonly<Record<string, IContentTypeUi<IPluginDefinition, string>>>;
   acs?: { label?: string };
+  contentGuard?: Readonly<Record<string, IContentGuardTypeUi>>;
 }
 
 /** A plugin's definition and its checked UI, the unit the UI registry holds. */

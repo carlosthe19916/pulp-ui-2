@@ -28,4 +28,11 @@ export const core = definePlugin({
     // Internal: no browsable collection endpoint.
     "core.publishedmetadata": {},
   },
+  contentGuard: {
+    "core.rbac": { apiPath: "core/rbac", downloaderRole: true },
+    "core.content_redirect": { apiPath: "core/content_redirect" },
+    "core.header": { apiPath: "core/header" },
+    "core.envvar_header": { apiPath: "core/envvar_header" },
+    "core.composite": { apiPath: "core/composite" },
+  },
 });
