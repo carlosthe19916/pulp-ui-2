@@ -328,10 +328,24 @@ jobs:
         if: always()
         run: oci-env -e compose.ci.env compose down -v
 
-  # Single required check for the whole e2e pipeline. A matrix job skipped by a
-  # job-level `if:` reports one unexpanded check instead of each leg, so the
-  # per-leg names can't be required; this job passes when e2e succeeded or was
-  # skipped (website-only change) and fails otherwise.
+  # Website-only changes: report the required per-leg `e2e (<name>)` checks as
+  # passing without starting Pulp. A matrix job skipped by a job-level `if:`
+  # reports one unexpanded `e2e (${{ matrix.name }})` check, so the skip must
+  # happen here instead. Keep `name` in sync with the e2e matrix above.
+  e2e-skip:
+    needs: changes
+    if: needs.changes.outputs.app != 'true'
+    runs-on: ubuntu-latest
+    name: e2e (${{ matrix.name }})
+    permissions: {}
+    strategy:
+      matrix:
+        name: [main-1, main-2, main-3, access-policies, smoke-no-domains]
+    steps:
+      - run: echo "Website-only change; e2e not needed."
+
+  # Single check for the whole e2e pipeline (passes when e2e succeeded or was
+  # skipped), usable as a required check that doesn't depend on shard names.
   e2e-gate:
     needs: [changes, build-backend, e2e]
     if: always()
