@@ -4,6 +4,7 @@ import { type EntityType, getAvailablePlugins, type PulpType } from "@catalog";
 import { DISTRIBUTION_FORMS } from "./distributions";
 import type { ITypeOption } from "./kit/EntityFormPage";
 import type { FormMode, IFormDef } from "./kit/types";
+import { PUBLICATION_FORMS } from "./publications";
 import { REMOTE_FORMS } from "./remotes";
 import { REPOSITORY_FORMS } from "./repositories";
 
@@ -25,7 +26,7 @@ const FORMS_BY_ENTITY: Record<EntityType, FormRegistry> = {
   remote: REMOTE_FORMS,
   repository: REPOSITORY_FORMS,
   distribution: DISTRIBUTION_FORMS,
-  publication: {},
+  publication: PUBLICATION_FORMS,
 };
 
 export const getEntityForm = ({

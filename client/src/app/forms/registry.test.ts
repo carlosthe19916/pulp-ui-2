@@ -4,6 +4,7 @@ import type { VersionResponse } from "@app/client";
 import { type EntityType, getAvailablePlugins, getPlugin } from "@catalog";
 
 import { formFields } from "./kit/derive/visibility";
+import type { FormMode } from "./kit/types";
 import { getEntityForm, registeredEntries } from "./registry";
 
 const entries = registeredEntries();
@@ -24,22 +25,25 @@ const ALL_INSTALLED = [
   "hugging_face",
 ].map((component) => ({ component, version: "1.0.0" }) as VersionResponse);
 
-/** Entities whose every catalog type has a form; grows as each entity moves to pages. */
-const COMPLETE_ENTITIES: EntityType[] = [
-  "remote",
-  "repository",
-  "distribution",
-];
+/** The form every catalog type must have: publications are immutable, so create. */
+const REQUIRED_MODE: Record<EntityType, FormMode> = {
+  remote: "edit",
+  repository: "edit",
+  distribution: "edit",
+  publication: "create",
+};
 
 describe("form registry", () => {
   it.each(
-    COMPLETE_ENTITIES.flatMap((entity) =>
+    (Object.keys(REQUIRED_MODE) as EntityType[]).flatMap((entity) =>
       getAvailablePlugins({ entity, installed: ALL_INSTALLED }).map(
         (plugin) => ({ entity, pulpType: plugin.pulpType }),
       ),
     ),
-  )("$entity $pulpType has an edit form", ({ entity, pulpType }) => {
-    expect(getEntityForm({ entity, pulpType, mode: "edit" })).toBeDefined();
+  )("$entity $pulpType has a form", ({ entity, pulpType }) => {
+    expect(
+      getEntityForm({ entity, pulpType, mode: REQUIRED_MODE[entity] }),
+    ).toBeDefined();
   });
 
   it.each(entries)(

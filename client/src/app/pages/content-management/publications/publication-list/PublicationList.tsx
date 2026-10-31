@@ -1,6 +1,8 @@
 import type React from "react";
 import { useState } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import {
   Button,
   Content,
@@ -34,10 +36,11 @@ import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
+import { useCreatableTypes } from "@app/forms";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IPublicationListParams } from "@app/queries/publications";
 import {
   usePublicationDeleteMutation,
@@ -53,7 +56,6 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
-import { PublicationModal } from "./components/PublicationModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "pulp_created",
@@ -65,7 +67,8 @@ const NO_ROLES_TOOLTIP: TooltipProps = {
 };
 
 export const PublicationList: React.FC = () => {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const navigate = useNavigate();
+  const { name: pulpDomain } = useSelectedDomain();
 
   const [accessTarget, setAccessTarget] = useState<PublicationResponse | null>(
     null,
@@ -75,7 +78,7 @@ export const PublicationList: React.FC = () => {
   );
 
   const { addNotification } = useNotifications();
-  const canCreate = useCreatablePlugins("publication").length > 0;
+  const canCreate = useCreatableTypes("publication").length > 0;
   const deleteMutation = usePublicationDeleteMutation({
     onSuccess: (_data, { pulp_href }) =>
       addNotification({
@@ -232,7 +235,12 @@ export const PublicationList: React.FC = () => {
                   {canCreate ? (
                     <Button
                       variant="primary"
-                      onClick={() => setIsCreateOpen(true)}
+                      onClick={() =>
+                        void navigate({
+                          to: "/content-management/$pulpDomain/publications/create",
+                          params: { pulpDomain },
+                        })
+                      }
                     >
                       Create publication
                     </Button>
@@ -276,11 +284,6 @@ export const PublicationList: React.FC = () => {
             }
           />
         </DataView>
-
-        <PublicationModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-        />
 
         {accessTarget && (
           <ObjectAccessModal
