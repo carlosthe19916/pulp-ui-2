@@ -11,7 +11,7 @@ import {
 
 import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { EntityFormPage, getEntityForm } from "@app/forms";
+import { EntityFormPage } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
@@ -23,6 +23,7 @@ import {
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getEntityForm } from "@plugins";
 
 interface IDistributionEditProps {
   pulpDomain: string;

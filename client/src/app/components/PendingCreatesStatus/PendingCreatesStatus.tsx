@@ -8,8 +8,8 @@ import {
 } from "@patternfly/react-core";
 
 import type { PendingCreateEntityType } from "@app/hooks/usePendingCreatesStore";
-import { getEntityLabel } from "@catalog";
 
+import { getEntityLabel } from "./entityLabel";
 import { usePendingCreates } from "./usePendingCreates";
 
 interface IPendingCreatesStatusProps {

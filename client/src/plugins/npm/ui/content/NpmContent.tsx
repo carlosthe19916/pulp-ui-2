@@ -1,0 +1,36 @@
+import type React from "react";
+
+import type { NpmPackageResponse } from "@app/client";
+import { useContentDetailQuery } from "@app/queries/content";
+import {
+  ContentHeader,
+  ContentPanelLayout,
+  InstallSnippet,
+  type IPluginContentProps,
+  StorageFacts,
+} from "@plugin-sdk/ui/blocks/content";
+
+/** npmjs.com style: package name, version and the install command. */
+export const NpmContent: React.FC<IPluginContentProps> = ({ href }) => {
+  const { data, isLoading, error } = useContentDetailQuery<NpmPackageResponse>({
+    href,
+  });
+
+  return (
+    <ContentPanelLayout
+      isLoading={isLoading}
+      error={error}
+      header={<ContentHeader title={data?.name} version={data?.version} />}
+      aside={
+        <StorageFacts
+          href={href}
+          artifactHref={data?.artifact}
+          created={data?.pulp_created}
+          labels={data?.pulp_labels}
+        />
+      }
+    >
+      <InstallSnippet command={`npm install ${data?.name}@${data?.version}`} />
+    </ContentPanelLayout>
+  );
+};

@@ -12,7 +12,8 @@ import { distributionKeys } from "@app/queries/distributions";
 import { publicationKeys } from "@app/queries/publications";
 import { isTerminalTaskState, useTaskDetailQueries } from "@app/queries/tasks";
 import { notifyTaskFailed } from "@app/utils/taskNotify";
-import { getEntityLabel } from "@catalog";
+
+import { getEntityLabel } from "./entityLabel";
 
 /** List query-key folders to invalidate when a create of each type settles. */
 const listKeyByEntityType: Record<

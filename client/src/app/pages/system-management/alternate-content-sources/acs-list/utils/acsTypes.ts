@@ -1,35 +1,23 @@
 import type { IEntityField } from "@app/utils/entityField";
+import { getAcsSources, type PluginId } from "@catalog";
+import { getAcsLabel } from "@plugins";
 
-/** One plugin's alternate content source: its collection and remote type. */
+/** One plugin's alternate content source: its collection, remote type and name. */
 export interface IAcsType {
   apiPath: string;
   label: string;
-  /** The repository pulp_type whose plugin must be installed. */
-  pluginType: string;
-  /** The remote pulp_type an ACS of this plugin points at. */
+  /** The plugin that must be installed. */
+  pluginId: PluginId;
+  /** The remote type an ACS of this plugin points at. */
   remoteType: string;
 }
 
-export const ACS_TYPES: IAcsType[] = [
-  {
-    apiPath: "file/file",
-    label: "File",
-    pluginType: "file.file",
-    remoteType: "file.file",
-  },
-  {
-    apiPath: "rpm/rpm",
-    label: "RPM",
-    pluginType: "rpm.rpm",
-    remoteType: "rpm.rpm",
-  },
-  {
-    apiPath: "deb/deb",
-    label: "Debian",
-    pluginType: "deb.deb",
-    remoteType: "deb.apt-remote",
-  },
-];
+/** Every plugin's ACS type, from its definition (endpoint) and UI (name). */
+export const getAcsTypes = (): IAcsType[] =>
+  getAcsSources().map((source) => {
+    const pluginId = source.pluginId as PluginId;
+    return { ...source, pluginId, label: getAcsLabel(pluginId) ?? pluginId };
+  });
 
 export const ACS_FIELDS: IEntityField[] = [
   { key: "name", label: "Name", type: "text", required: true },

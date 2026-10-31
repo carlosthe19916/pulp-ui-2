@@ -75,3 +75,13 @@ interface IContentField extends IFieldBase {
 /** A single form/page field. */
 export type IEntityField =
   IBasicField | ISelectField | IAsyncResourceField | IContentField;
+
+/** The `relative_path` an uploaded file is stored under, for upload forms. */
+export const relativePathField = ({
+  required = false,
+}: { required?: boolean } = {}): IEntityField => ({
+  key: "relative_path",
+  label: "Relative path",
+  type: "text",
+  required,
+});

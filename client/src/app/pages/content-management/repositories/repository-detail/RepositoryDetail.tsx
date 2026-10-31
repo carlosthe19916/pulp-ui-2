@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -8,6 +8,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   PageSection,
+  Spinner,
   Stack,
   StackItem,
   Tab,
@@ -50,15 +51,12 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import {
-  getPlugin,
-  getRepositoryContentTypes,
-  type IRepositoryAction,
-} from "@catalog";
+import { getPlugin, getRepositoryContentTypes } from "@catalog";
+import type { IPluginAction } from "@plugin-sdk/ui";
+import { getRepositoryActions, getRepositoryTab } from "@plugins";
 
 import { AddContentModal } from "./components/AddContentModal";
 import { OstreeImportModal } from "./components/OstreeImportModal";
-import { TAB_BY_REPOSITORY_TYPE } from "./components/pluginTabs";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
@@ -92,8 +90,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const { disabledProps } = useObjectPermissions({ href });
   const repoEntity = getPlugin(pulpType)?.entities.repository;
-  const pluginTab = TAB_BY_REPOSITORY_TYPE[pulpType];
-  const repositoryActions = (repoEntity?.actions ?? []).filter(
+  const pluginTab = getRepositoryTab(pulpType);
+  const repositoryActions = getRepositoryActions(pulpType).filter(
     (action) => action.target === "repository",
   );
   const canSync = (repoEntity?.compatibleRemoteTypes.length ?? 0) > 0;
@@ -144,7 +142,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [repoAction, setRepoAction] = useState<IRepositoryAction | null>(null);
+  const [repoAction, setRepoAction] = useState<IPluginAction | null>(null);
   // Units to remove; "all" removes every unit.
   const [removeUnits, setRemoveUnits] = useState<
     IContentUnitRef[] | "all" | null
@@ -379,7 +377,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   title={<TabTitleText>{pluginTab.title}</TabTitleText>}
                 >
                   <TabContentBody hasPadding>
-                    <pluginTab.Tab repository={repository} />
+                    <Suspense fallback={<Spinner aria-label="Loading" />}>
+                      <pluginTab.Tab repository={repository} />
+                    </Suspense>
                   </TabContentBody>
                 </Tab>
               )}

@@ -15,13 +15,14 @@ import type { GenericRemoteResponse } from "@app/client";
 import { DetailSectionCard } from "@app/components/DetailSectionCard";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
-import { getEntityForm, toDetailSections } from "@app/forms";
+import { toDetailSections } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRemoteLabelsMutation } from "@app/queries/remotes";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime } from "@app/utils/utils";
+import { getEntityForm } from "@plugins";
 
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 

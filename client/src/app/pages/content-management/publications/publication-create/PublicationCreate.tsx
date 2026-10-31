@@ -9,7 +9,7 @@ import {
 } from "@patternfly/react-core";
 
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityFormPage, useCreateTypeSelect } from "@app/forms";
+import { EntityFormPage } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -17,6 +17,7 @@ import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { useCreateTypeSelect } from "@plugins";
 
 const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/publications/create",

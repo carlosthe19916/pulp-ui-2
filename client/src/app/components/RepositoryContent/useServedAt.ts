@@ -3,8 +3,7 @@ import {
   useDistributionDetailQuery,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
-
-import type { IServedAt } from "./browseTypes";
+import type { IServedAt } from "@plugin-sdk/ui/blocks/browse";
 
 const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";

@@ -11,8 +11,8 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
 import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
+import { getRepositoryActions, getRepositoryBrowse } from "@plugins";
 
-import { getPluginBrowse } from "./browseRegistry";
 import { ContentDrawer } from "./ContentDrawer";
 import { PluginBrowse } from "./PluginBrowse";
 import { useServedAt } from "./useServedAt";
@@ -38,7 +38,7 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
   summary,
   writes,
 }) => {
-  const browse = getPluginBrowse(repositoryType);
+  const browse = getRepositoryBrowse(repositoryType);
   const [activeTab, setActiveTab] = useState<string | number>("browse");
   const [selectedHref, setSelectedHref] = useState<string | null>(null);
   const served = useServedAt({ repositoryHref });
@@ -78,6 +78,7 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
               selectedHref: selectedHref ?? undefined,
               onSelect: setSelectedHref,
               writes,
+              actions: getRepositoryActions(repositoryType),
             }}
           />
         </ContentDrawer>

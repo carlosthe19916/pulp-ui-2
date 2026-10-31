@@ -21,7 +21,7 @@ import type {
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
-import { getEntityForm, toDetailSections } from "@app/forms";
+import { toDetailSections } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryLabelsMutation } from "@app/queries/repositories";
@@ -30,6 +30,7 @@ import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
+import { getEntityForm } from "@plugins";
 
 interface IRepositoryAboutProps {
   repository: RepositoryResponse;

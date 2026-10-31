@@ -1,15 +1,18 @@
 import { useState } from "react";
 
 import {
+  carryOverValues,
+  type FormValues,
+  type ITypeSelectProps,
+} from "@app/forms";
+import {
   buildResourceFilter,
   type ResourceFilterMap,
 } from "@app/utils/resourceFilter";
 import { type EntityType, getPlugin } from "@catalog";
 
-import { carryOverValues } from "./kit/derive/carryOver";
-import type { ITypeSelectProps } from "./kit/EntityFormPage";
-import type { FormValues } from "./kit/types";
-import { getEntityForm, type IFormEntry, useCreatableTypes } from "./registry";
+import { getEntityForm, type IFormEntry } from "./registry";
+import { useCreatableTypes } from "./useCreatableTypes";
 
 interface ICreateTypeSelect {
   /** The selected type: `?type=` when creatable, else the first creatable one. */

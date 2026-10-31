@@ -5,12 +5,13 @@ import { Button, Flex, FlexItem } from "@patternfly/react-core";
 import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 
 import { useContentTypeListQuery } from "@app/queries/content";
-
-import { pathSegments } from "./browseHelpers";
-import { BrowseTable } from "./BrowseTable";
-import type { IBrowseContext } from "./browseTypes";
-import { PathBreadcrumb } from "./PathBreadcrumb";
-import { useBrowseListState } from "./useBrowseListState";
+import {
+  BrowseTable,
+  type IBrowseContext,
+  PathBreadcrumb,
+  pathSegments,
+  useBrowseListState,
+} from "@plugin-sdk/ui/blocks/browse";
 
 interface IPathCellProps {
   path: string;

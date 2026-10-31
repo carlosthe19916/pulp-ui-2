@@ -24,13 +24,10 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin } from "@catalog";
+import { getPlugin, getScannableRepositoryTypes } from "@catalog";
 
 import { VulnerabilitiesCard } from "./components/VulnerabilitiesCard";
 import { WorkersCard } from "./components/WorkersCard";
-
-/** Repository types whose versions can be scanned for vulnerabilities. */
-const SCANNABLE_REPOSITORY_TYPES = ["rpm.rpm", "python.python"];
 
 export const Dashboard: React.FC = () => {
   const { status, isLoading, error } = useApiStatus();
@@ -78,7 +75,7 @@ export const Dashboard: React.FC = () => {
               <WorkersCard />
             </GalleryItem>
 
-            {SCANNABLE_REPOSITORY_TYPES.some((type) =>
+            {getScannableRepositoryTypes().some((type) =>
               getPlugin(type)?.isAvailable(status.versions),
             ) && (
               <GalleryItem>

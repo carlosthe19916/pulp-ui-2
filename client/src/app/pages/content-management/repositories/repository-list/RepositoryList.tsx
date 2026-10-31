@@ -38,7 +38,6 @@ import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { getEntityForm, useCreatableTypes } from "@app/forms";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -61,6 +60,7 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPlugin } from "@catalog";
+import { getEntityForm, useCreatableTypes } from "@plugins";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

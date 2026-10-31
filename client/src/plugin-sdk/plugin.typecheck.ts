@@ -1,0 +1,130 @@
+/**
+ * Compile-time checks of `definePlugin` and `definePluginUi` (run by `tsc`, never executed):
+ * each `@ts-expect-error` marks a plugin that must not compile.
+ */
+import { definePlugin } from "./definition";
+import { definePluginUi, GENERIC, type ITypeUi, type PluginUi } from "./ui";
+
+const form = {} as ITypeUi["form"];
+
+const widget = definePlugin({
+  id: "widget",
+  packages: ["widget"],
+  remote: { "widget.widget": { apiPath: "file/file" } },
+  repository: {
+    "widget.widget": {
+      apiPath: "file/file",
+      compatibleRemoteTypes: ["widget.widget"],
+      compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      actions: { prune: { path: "prune/", target: "repository" } },
+    },
+  },
+  content: {
+    "widget.unit": { apiPath: "file/files", upload: "upload" },
+    "widget.part": { apiPath: "rpm/packages" },
+  },
+});
+
+const ui = {
+  label: "Widget",
+  remote: { "widget.widget": { form } },
+  repository: {
+    "widget.widget": {
+      form,
+      browse: GENERIC,
+      tab: null,
+      actions: { prune: { label: "Prune", fields: [] } },
+    },
+  },
+  content: {
+    "widget.unit": {
+      panel: GENERIC,
+      search: { param: "relative_path__contains", label: "path" },
+      upload: [],
+    },
+    "widget.part": { panel: GENERIC, search: null },
+  },
+} satisfies PluginUi<typeof widget>;
+
+// Complete: every declared type has its pieces.
+export const complete = definePluginUi(widget, ui);
+
+// An apiPath the API doesn't have.
+definePlugin({
+  id: "typo",
+  packages: [],
+  // @ts-expect-error "file/fiel" isn't a remote collection.
+  remote: { "typo.typo": { apiPath: "file/fiel" } },
+});
+
+// A repository syncing from another plugin's remote type.
+definePlugin({
+  id: "foreign",
+  packages: [],
+  remote: { "foreign.foreign": { apiPath: "file/file" } },
+  repository: {
+    "foreign.foreign": {
+      apiPath: "file/file",
+      // @ts-expect-error "rpm.rpm" isn't one of this plugin's remote types.
+      compatibleRemoteTypes: ["rpm.rpm"],
+      compatiblePublicationTypes: [],
+      contentChanges: "modify",
+    },
+  },
+});
+
+// A declared type without its UI.
+definePluginUi(widget, {
+  ...ui,
+  // @ts-expect-error "widget.widget" has no remote UI.
+  remote: {},
+});
+
+// A declared action without its label and fields.
+definePluginUi(widget, {
+  ...ui,
+  repository: {
+    "widget.widget": {
+      ...ui.repository["widget.widget"],
+      // @ts-expect-error the "prune" action has no UI.
+      actions: {},
+    },
+  },
+});
+
+// An uploadable type without its upload fields; a read-only one with them.
+definePluginUi(widget, {
+  ...ui,
+  content: {
+    // @ts-expect-error "widget.unit" is uploadable, so it needs `upload`.
+    "widget.unit": { panel: GENERIC, search: null },
+    // @ts-expect-error "widget.part" is read-only, so it can't have `upload`.
+    "widget.part": { panel: GENERIC, search: null, upload: [] },
+  },
+});
+
+// A search on a param the list endpoint doesn't have.
+definePluginUi(widget, {
+  ...ui,
+  content: {
+    ...ui.content,
+    "widget.part": {
+      panel: GENERIC,
+      // @ts-expect-error rpm/packages has no `relative_path__contains` filter.
+      search: { param: "relative_path__contains", label: "path" },
+    },
+  },
+});
+
+// GENERIC only where a generic view exists: a tab has none.
+definePluginUi(widget, {
+  ...ui,
+  repository: {
+    "widget.widget": {
+      ...ui.repository["widget.widget"],
+      // @ts-expect-error a repository tab is a component or null.
+      tab: GENERIC,
+    },
+  },
+});

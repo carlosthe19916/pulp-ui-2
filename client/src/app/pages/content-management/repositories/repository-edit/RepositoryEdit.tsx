@@ -11,7 +11,7 @@ import {
 
 import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { EntityFormPage, getEntityForm } from "@app/forms";
+import { EntityFormPage } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
@@ -25,6 +25,7 @@ import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPlugin } from "@catalog";
+import { getEntityForm } from "@plugins";
 
 interface IRepositoryEditProps {
   pulpDomain: string;

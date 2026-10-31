@@ -1,16 +1,17 @@
-import type { RemotesFileFileCreateData } from "@app/client";
-
-import { nameField, urlField } from "../fragments/base";
 import {
   authSection,
   connectionSections,
+  nameField,
   POLICY_OPTIONS,
   policyField,
-} from "../fragments/remoteNetwork";
-import { defineForm } from "../kit/defineForm";
+  urlField,
+} from "@app/forms/fragments";
+import { remoteForm } from "@plugin-sdk/ui";
+
+import { file } from "../../definition";
 
 /** A file remote syncs the files listed in a `PULP_MANIFEST`. */
-export const fileRemoteForm = defineForm<RemotesFileFileCreateData["body"]>()(
+export const fileRemoteForm = remoteForm(file.remote["file.file"])(
   ({ f, s }) => ({
     title: { create: "Create file remote", edit: "Edit file remote" },
     docsUrl: "https://pulpproject.org/pulp_file/",

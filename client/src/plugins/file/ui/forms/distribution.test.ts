@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCreateBody, buildPatchBody } from "../kit/derive/body";
-import { buildDefaultValues } from "../kit/derive/defaults";
-import { fileDistributionForm } from "./published";
+import { buildCreateBody, buildPatchBody } from "@app/forms/kit/derive/body";
+import { buildDefaultValues } from "@app/forms/kit/derive/defaults";
+
+import { fileDistributionForm } from "./distribution";
 
 const PUBLICATION = "/pulp/api/v3/publications/file/file/1/";
 const REPOSITORY = "/pulp/api/v3/repositories/file/file/2/";

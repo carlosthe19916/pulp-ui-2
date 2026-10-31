@@ -1,6 +1,6 @@
 import type { IContentType } from "@catalog";
 
-import { getUploadFields } from "@app/forms";
+import { getUploadFields } from "@plugins";
 
 import type { IUploadItem } from "./useUploadQueue";
 

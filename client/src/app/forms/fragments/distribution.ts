@@ -13,6 +13,10 @@ import { labelsField } from "./labels";
 export type DistributionSource =
   "repository" | "repository_version" | "publication";
 
+/** Help for the `checkpoint` switch of distributions that serve published content. */
+export const CHECKPOINT_HELP =
+  "Serve the checkpoint publications of the source, browsable by date.";
+
 const SOURCE_OPTIONS: Record<DistributionSource, IChoiceOption> = {
   repository: {
     value: "repository",

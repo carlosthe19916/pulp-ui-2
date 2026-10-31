@@ -1,34 +1,34 @@
-import type { RepositoriesFileFileCreateData } from "@app/client";
-
 import {
   autopublishField,
   labelsSection,
   remoteField,
   repositoryIdentity,
   retentionSection,
-} from "../fragments/repository";
-import { defineForm } from "../kit/defineForm";
+} from "@app/forms/fragments";
+import { repositoryForm } from "@plugin-sdk/ui";
+
+import { file } from "../../definition";
 
 /** A file repository holds arbitrary files, published with a PULP_MANIFEST. */
-export const fileRepositoryForm = defineForm<
-  RepositoriesFileFileCreateData["body"]
->()(({ f, s }) => ({
-  title: { create: "Create file repository", edit: "Edit file repository" },
-  docsUrl: "https://pulpproject.org/pulp_file/",
-  sections: [
-    s.essentials([
-      ...repositoryIdentity(f),
-      remoteField(f),
-      autopublishField(f),
-    ]),
-    s.collapsible("publishing", "Publishing", [
-      f.text("manifest", {
-        label: "Manifest file name",
-        defaultValue: "PULP_MANIFEST",
-        help: "The name of the file listing every file in a publication.",
-      }),
-    ]),
-    retentionSection({ f, s }),
-    labelsSection({ f, s }),
-  ],
-}));
+export const fileRepositoryForm = repositoryForm(file.repository["file.file"])(
+  ({ f, s }) => ({
+    title: { create: "Create file repository", edit: "Edit file repository" },
+    docsUrl: "https://pulpproject.org/pulp_file/",
+    sections: [
+      s.essentials([
+        ...repositoryIdentity(f),
+        remoteField(f),
+        autopublishField(f),
+      ]),
+      s.collapsible("publishing", "Publishing", [
+        f.text("manifest", {
+          label: "Manifest file name",
+          defaultValue: "PULP_MANIFEST",
+          help: "The name of the file listing every file in a publication.",
+        }),
+      ]),
+      retentionSection({ f, s }),
+      labelsSection({ f, s }),
+    ],
+  }),
+);

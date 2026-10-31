@@ -37,21 +37,9 @@ import type {
   IContentTypeListParams,
 } from "@app/queries/contentTypes";
 import { toUnitRefs } from "@app/utils/contentUnitLabel";
+import { getContentSearch } from "@plugins";
 
 import { notInVersionQuery } from "./notInVersionQuery";
-
-/** The text search each content type's list supports, when it has one. */
-const SEARCH_BY_TYPE: Record<string, { param: string; label: string }> = {
-  "file.file": { param: "relative_path__contains", label: "path" },
-  "rpm.package": { param: "name__contains", label: "name" },
-  "rpm.advisory": { param: "id", label: "advisory ID" },
-  "python.python": { param: "name__contains", label: "name" },
-  "container.tag": { param: "name", label: "tag" },
-  "container.manifest": { param: "digest", label: "digest" },
-  "ansible.collection_version": { param: "name", label: "name" },
-  "npm.package": { param: "name", label: "name" },
-  "gem.gem": { param: "name", label: "name" },
-};
 
 interface IContentPickerProps {
   /** Content types the user can pick from (each has a list endpoint). */
@@ -81,7 +69,7 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
   // From another repository, the point is what the target is missing: hide the rest.
   const [hidePresent, setHidePresent] = useState(!!sourceVersionHref);
   const pagination = useDataViewPagination({ perPage: 10 });
-  const searchDef = SEARCH_BY_TYPE[pulpType];
+  const searchDef = getContentSearch(pulpType);
   const typeKey = pulpType as ContentTypeKey;
 
   const { data, isLoading, error } = useContentTypeListQuery({
