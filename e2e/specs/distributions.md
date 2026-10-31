@@ -63,7 +63,7 @@ Summary: A distribution can be created with a content guard, and its row shows t
 Seed: a file repository, an RBAC content guard
 
 When I create a file distribution serving the repository with that content guard
-Then the row expanded shows the content guard
+Then the row expanded shows the content guard's name
 
 ## Edit
 
@@ -112,7 +112,7 @@ with that content guard and the label "env=prod"
 
 When I open the distribution's Details tab
 Then the "Serving" card shows its base URL, client setup and the repository as a link
-And the "General" and "Access" cards show the base path and the content guard, with the form's
+And the "General" and "Access" cards show the base path and the content guard's name, with the form's
 labels
 And the "Metadata" card shows the label "env=prod", its creation time and its PRN
 

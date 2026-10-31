@@ -198,7 +198,7 @@ test.describe("Distribution create page", () => {
    * Seed: a file repository, an RBAC content guard
    *
    * When I create a file distribution serving the repository with that content guard
-   * Then the row expanded shows the content guard
+   * Then the row expanded shows the content guard's name
    */
   test(
     "A distribution can be created with a content guard, and its row shows the guard.",
@@ -240,7 +240,9 @@ test.describe("Distribution create page", () => {
 
       await distributionsPage.filterBy("Name", name);
       await distributionsPage.expandRow(name);
-      await expect(expandedRow(page).getByText(guardHref)).toBeVisible();
+      await expect(
+        expandedRow(page).getByText(guardName, { exact: true }),
+      ).toBeVisible();
     },
   );
 });

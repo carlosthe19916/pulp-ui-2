@@ -52,7 +52,7 @@ on its Details tab shows <shown>
 | type      | values                                                                      | shown                                        |
 | --------- | --------------------------------------------------------------------------- | -------------------------------------------- |
 | File      | a description, the seeded file remote, Auto-publish on, 3 retained versions | the description, the remote, Auto-publish, 3 |
-| RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and a "Metadata signing service"  |
+| RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and "pulp-ui-dev-signing"         |
 | Container | a description                                                               | the description                              |
 
 ### REP-CRE-02 The remote picker offers only compatible remotes
@@ -121,7 +121,8 @@ retained versions
 
 When I open its Details tab
 Then its settings use the form's labels ("Remote", "Retained versions", "Metadata signing
-service", …) and the remote links to the remote's page
+service", …), the remote links to the remote's page and the signing service shows its name
+"pulp-ui-dev-signing"
 
 ## Other layers
 

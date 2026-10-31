@@ -18,7 +18,8 @@ test.describe("Repository About", () => {
    *
    * When I open its Details tab
    * Then its settings use the form's labels ("Remote", "Retained versions", "Metadata signing
-   * service", …) and the remote links to the remote's page
+   * service", …), the remote links to the remote's page and the signing service shows its name
+   * "pulp-ui-dev-signing"
    */
   test(
     "A repository's About card labels its settings the way its form does.",
@@ -65,6 +66,11 @@ test.describe("Repository About", () => {
           main.getByRole("term").filter({ hasText: term }),
         ).toBeVisible();
       }
+
+      // A signing service has no page of its own: it is named, not linked.
+      await expect(
+        main.getByText(SIGNING_SERVICE, { exact: true }),
+      ).toBeVisible();
 
       await main.getByRole("link", { name: remoteName }).click();
       await expect(

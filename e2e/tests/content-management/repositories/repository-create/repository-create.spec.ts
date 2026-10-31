@@ -51,7 +51,7 @@ test.describe("Repository create page", () => {
    * | type      | values                                                                      | shown                                        |
    * | --------- | --------------------------------------------------------------------------- | -------------------------------------------- |
    * | File      | a description, the seeded file remote, Auto-publish on, 3 retained versions | the description, the remote, Auto-publish, 3 |
-   * | RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and a "Metadata signing service"  |
+   * | RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and "pulp-ui-dev-signing"         |
    * | Container | a description                                                               | the description                              |
    */
   test(
@@ -120,7 +120,7 @@ test.describe("Repository create page", () => {
               SIGNING_SERVICE,
             );
           },
-          shown: [rpmRemote],
+          shown: [rpmRemote, SIGNING_SERVICE],
           terms: ["Metadata signing service"],
           skip: hasSigning
             ? undefined

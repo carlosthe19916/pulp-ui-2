@@ -25,6 +25,9 @@ vi.mock(import("@app/components/ContentUrlLink"), () => ({
 vi.mock(import("@app/components/PluginRepositoryClientSetup"), () => ({
   PluginRepositoryClientSetup: () => <span>client setup</span>,
 }));
+vi.mock(import("@app/components/ResourceName"), () => ({
+  ResourceName: () => <span>guard-name</span>,
+}));
 vi.mock(import("@app/components/NamedResourceHrefLink"), () => ({
   NamedResourceHrefLink: ({ href }: { href?: string | null }) => (
     <span>{href ? "linked" : "—"}</span>

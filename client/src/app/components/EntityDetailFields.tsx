@@ -13,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
+import { ResourceName } from "@app/components/ResourceName";
 import type { IEntityField } from "@app/utils/entityField";
 import { isEmptyValue } from "@app/utils/utils";
 
@@ -77,9 +78,14 @@ const renderValue = ({
 
   if (field.type === "asyncResource") {
     const kind = field.resourceKind;
-    // Supporting resources have no detail page to link.
+    // Supporting resources have no detail page to link: name them.
     if (kind === "signingService" || kind === "contentGuard") {
-      return typeof value === "string" && value ? value : "—";
+      return (
+        <ResourceName
+          kind={kind}
+          href={typeof value === "string" ? value : null}
+        />
+      );
     }
     return (
       <NamedResourceHrefLink

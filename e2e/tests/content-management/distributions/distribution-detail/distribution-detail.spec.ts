@@ -20,7 +20,7 @@ test.describe("Distribution detail page", () => {
    *
    * When I open the distribution's Details tab
    * Then the "Serving" card shows its base URL, client setup and the repository as a link
-   * And the "General" and "Access" cards show the base path and the content guard, with the form's
+   * And the "General" and "Access" cards show the base path and the content guard's name, with the form's
    * labels
    * And the "Metadata" card shows the label "env=prod", its creation time and its PRN
    */
@@ -67,8 +67,8 @@ test.describe("Distribution detail page", () => {
       await expect(
         main.getByText("Content guard", { exact: true }),
       ).toBeVisible();
-      // A content guard has no page of its own: the detail shows its href.
-      await expect(main.getByText(guardHref)).toBeVisible();
+      // A content guard has no page of its own: it is named, not linked.
+      await expect(main.getByText(guardName, { exact: true })).toBeVisible();
       await expect(main.getByText("Hidden", { exact: true })).toBeVisible();
       // Metadata.
       await expect(main.getByText("env=prod")).toBeVisible();

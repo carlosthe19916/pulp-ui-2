@@ -12,6 +12,7 @@ import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
+import { ResourceName } from "@app/components/ResourceName";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
   useDistributionDetailQuery,
@@ -62,7 +63,7 @@ export const DistributionDetailPanel: React.FC<
       <DescriptionListGroup>
         <DescriptionListTerm>Content guard</DescriptionListTerm>
         <DescriptionListDescription>
-          {distribution.content_guard || "—"}
+          <ResourceName kind="contentGuard" href={distribution.content_guard} />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
