@@ -40,7 +40,6 @@ import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
-import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
@@ -65,8 +64,6 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
-
-import { DistributionDetailPanel } from "./components/DistributionDetailPanel";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -289,26 +286,14 @@ export const DistributionList: React.FC = () => {
     };
   });
 
-  const NAME_COLUMN_INDEX = 0;
   const STATUS_COLUMN_INDEX = 4;
-  const expandedRows: ExpandableContent[] = [
-    ...distributions.map((distribution) => ({
-      rowId: distribution.pulp_href ?? "",
-      columnId: NAME_COLUMN_INDEX,
-      content: (
-        <RevealCellOnExpand>
-          {() => <DistributionDetailPanel distribution={distribution} />}
-        </RevealCellOnExpand>
-      ),
-    })),
-    ...(hasAnyActiveTask
-      ? resourceTaskExpansions({
-          entities: distributions,
-          getActiveCount,
-          statusColumnIndex: STATUS_COLUMN_INDEX,
-        })
-      : []),
-  ];
+  const expandedRows: ExpandableContent[] = hasAnyActiveTask
+    ? resourceTaskExpansions({
+        entities: distributions,
+        getActiveCount,
+        statusColumnIndex: STATUS_COLUMN_INDEX,
+      })
+    : [];
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
@@ -401,7 +386,7 @@ export const DistributionList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
-            isExpandable
+            isExpandable={expandedRows.length > 0}
             expandedRows={expandedRows}
             indexBy="id"
           />
