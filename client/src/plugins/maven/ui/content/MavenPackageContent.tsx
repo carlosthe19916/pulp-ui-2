@@ -4,11 +4,6 @@ import { PaginationVariant } from "@patternfly/react-core";
 import { useDataViewPagination } from "@patternfly/react-data-view";
 
 import type { MavenMavenPackageResponse } from "@app/client";
-import { ListPagination } from "@app/components/ListPagination";
-import {
-  useContentDetailQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
 import {
   asArray,
   ContentHeader,
@@ -16,12 +11,17 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { ListPagination } from "@app/components/ListPagination";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
 
 import { MavenInstall } from "./MavenContent";
 
@@ -38,9 +38,7 @@ interface IMavenDependency {
 }
 
 /** Maven Central artifact page: coordinates, dependency snippet, files, dependencies. */
-export const MavenPackageContent: React.FC<IPluginContentProps> = ({
-  href,
-}) => {
+export const MavenPackageContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<MavenMavenPackageResponse>({ href });
   const filesPagination = useDataViewPagination({ perPage: 10 });

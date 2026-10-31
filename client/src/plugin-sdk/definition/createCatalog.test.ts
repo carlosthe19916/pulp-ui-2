@@ -151,7 +151,7 @@ describe("createCatalog", () => {
   it("refuses a type declared twice", () => {
     const twin = { ...gadget, id: "twin" } as IPluginDefinition;
     expect(() => createCatalog([gadget, twin])).toThrow(
-      'Duplicate remote type "gadget.gadget".',
+      '"gadget.gadget" is declared by both "gadget" and "twin".',
     );
     const content = {
       id: "content",

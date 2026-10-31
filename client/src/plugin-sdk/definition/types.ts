@@ -1,5 +1,6 @@
 import type { VersionResponse } from "@app/client";
 import type {
+  AcsEndpoints,
   ContentEndpoints,
   DistributionEndpoints,
   PublicationEndpoints,
@@ -84,14 +85,14 @@ export interface IContentDef {
 
 /** The plugin's alternate content source collection. */
 export interface IAcsDef {
-  apiPath: string;
+  apiPath: keyof AcsEndpoints & string;
   /** The remote type an ACS of this plugin points at. */
   remoteType: string;
 }
 
 /**
  * A plugin: the packages that mean it is installed, then its types per entity, keyed by
- * pulp_type. A pulp_type is unique within an entity, not across entities.
+ * pulp_type. One pulp_type can name several of a plugin's entities; two plugins never share one.
  */
 export interface IPluginDefinition {
   id: string;

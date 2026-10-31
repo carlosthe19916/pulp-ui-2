@@ -3,7 +3,7 @@
  * lookups; they never import a plugin's files. Pure facts live in `@catalog`.
  */
 export {
-  getAcsLabel,
+  getAcsTypes,
   getClientSetup,
   getContentPanel,
   getContentSearch,
@@ -13,6 +13,7 @@ export {
   getRepositoryBrowse,
   getRepositoryTab,
   getUploadFields,
+  type IAcsType,
   type IFormEntry,
 } from "./registry";
 export { useCreatableTypes } from "./useCreatableTypes";

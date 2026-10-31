@@ -1,17 +1,17 @@
 import type React from "react";
 
 import type { NpmPackageResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 /** npmjs.com style: package name, version and the install command. */
-export const NpmContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const NpmContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } = useContentDetailQuery<NpmPackageResponse>({
     href,
   });

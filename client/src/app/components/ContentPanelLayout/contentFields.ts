@@ -1,6 +1,6 @@
 import type React from "react";
 
-export interface IPluginContentProps {
+export interface IContentPanelProps {
   href: string;
   /** The repository version the unit is browsed in, when there is one. */
   versionHref?: string;

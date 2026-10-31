@@ -1,7 +1,6 @@
 import { definePlugin } from "@plugin-sdk/definition";
 
 const tag = { path: "tag/", target: "repository" } as const;
-// Also a row action on the Browse Tags view, prefilled with the tag.
 const untag = { path: "untag/", target: "repository" } as const;
 const sign = { path: "sign/", target: "repository" } as const;
 

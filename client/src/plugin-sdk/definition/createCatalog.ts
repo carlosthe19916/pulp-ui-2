@@ -6,7 +6,6 @@ import {
   type EntityType,
   type IActionDef,
   type IPluginDefinition,
-  type IRepositoryDef,
   type IsInstalled,
   type PulpType,
 } from "./types";
@@ -64,12 +63,6 @@ const installedCheck =
         packages.includes(version.package ?? ""),
     );
 
-/** What every entity type declares; repository types add their capabilities. */
-type IEntityDefShape = IPluginEntity | IRepositoryDef;
-
-const isRepositoryDef = (def: IEntityDefShape): def is IRepositoryDef =>
-  "contentChanges" in def;
-
 const contentTypesOf = (definition: IPluginDefinition): IContentType[] =>
   Object.entries(definition.content ?? {}).map(([pulpType, content]) => ({
     pulpType,
@@ -97,39 +90,49 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
     const contentTypes = contentTypesOf(definition);
     contentByPlugin.set(definition.id, contentTypes);
 
-    for (const entity of ENTITY_TYPES) {
-      const types: Readonly<Record<string, IEntityDefShape>> =
-        definition[entity] ?? {};
-      for (const [pulpType, def] of Object.entries(types)) {
-        const plugin = byType.get(pulpType) ?? {
-          pulpType,
-          pluginId: definition.id,
-          isAvailable,
-          entities: {},
+    const entry = (entity: EntityType, pulpType: PulpType, apiPath: string) => {
+      const plugin = byType.get(pulpType) ?? {
+        pulpType,
+        pluginId: definition.id,
+        isAvailable,
+        entities: {},
+      };
+      // Install checks and UI lookups are per pulp_type, so one plugin owns each.
+      if (plugin.pluginId !== definition.id) {
+        throw new Error(
+          `"${pulpType}" is declared by both "${plugin.pluginId}" and "${definition.id}".`,
+        );
+      }
+      if (plugin.entities[entity]) {
+        throw new Error(`Duplicate ${entity} type "${pulpType}".`);
+      }
+      byType.set(pulpType, plugin);
+      apiPathIndex[entity].set(apiPath, pulpType);
+      return plugin;
+    };
+
+    for (const [pulpType, def] of Object.entries(definition.repository ?? {})) {
+      entry("repository", pulpType, def.apiPath).entities.repository = {
+        apiPath: def.apiPath,
+        rolesManaged: def.rolesManaged,
+        compatibleRemoteTypes: [...def.compatibleRemoteTypes],
+        compatiblePublicationTypes: [...def.compatiblePublicationTypes],
+        contentChanges: def.contentChanges,
+        archiveImport: def.archiveImport ?? false,
+        scan: def.scan ?? false,
+        actions: Object.entries(def.actions ?? {}).map(([key, action]) => ({
+          key,
+          ...action,
+        })),
+        contentTypes: contentTypes.map((content) => content.pulpType),
+      };
+    }
+    for (const entity of ["remote", "distribution", "publication"] as const) {
+      for (const [pulpType, def] of Object.entries(definition[entity] ?? {})) {
+        entry(entity, pulpType, def.apiPath).entities[entity] = {
+          apiPath: def.apiPath,
+          rolesManaged: def.rolesManaged,
         };
-        byType.set(pulpType, plugin);
-        if (plugin.entities[entity]) {
-          throw new Error(`Duplicate ${entity} type "${pulpType}".`);
-        }
-        const base = { apiPath: def.apiPath, rolesManaged: def.rolesManaged };
-        if (isRepositoryDef(def)) {
-          plugin.entities.repository = {
-            ...base,
-            compatibleRemoteTypes: [...def.compatibleRemoteTypes],
-            compatiblePublicationTypes: [...def.compatiblePublicationTypes],
-            contentChanges: def.contentChanges,
-            archiveImport: def.archiveImport ?? false,
-            scan: def.scan ?? false,
-            actions: Object.entries(def.actions ?? {}).map(([key, action]) => ({
-              key,
-              ...action,
-            })),
-            contentTypes: contentTypes.map((content) => content.pulpType),
-          };
-        } else if (entity !== "repository") {
-          plugin.entities[entity] = base;
-        }
-        apiPathIndex[entity].set(def.apiPath, pulpType);
       }
     }
 

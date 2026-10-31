@@ -4,15 +4,15 @@ import prettyBytes from "pretty-bytes";
 
 import { Label } from "@patternfly/react-core";
 
-import { Snippet } from "@app/components/Snippet";
-import { useContentTypeListQuery } from "@app/queries/content";
-import { nevra } from "@app/utils/pluginContentFormat";
-import { formatDateTime } from "@app/utils/utils";
 import {
   BrowseTable,
   type IBrowseContext,
   useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
+} from "@app/components/BrowseShell";
+import { Snippet } from "@app/components/Snippet";
+import { useContentTypeListQuery } from "@app/queries/content";
+import { nevra } from "@app/utils/pluginContentFormat";
+import { formatDateTime } from "@app/utils/utils";
 
 import { severityColor } from "./helpers";
 

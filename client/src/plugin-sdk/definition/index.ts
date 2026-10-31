@@ -9,6 +9,7 @@ export {
 export { definePlugin } from "./definePlugin";
 export {
   type ContentUploadMechanism,
+  type IAcsDef,
   ENTITY_TYPES,
   type EntityType,
   type IActionDef,

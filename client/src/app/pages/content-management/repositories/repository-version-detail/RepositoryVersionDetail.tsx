@@ -174,7 +174,7 @@ export const RepositoryVersionDetail: React.FC<
               />
             </StackItem>
           )}
-          {versionActions.some((item) => item.key === "scan") && (
+          {repoEntity?.scan && (
             <StackItem>
               <VersionVulnerabilityAlert
                 pulpDomain={pulpDomain}

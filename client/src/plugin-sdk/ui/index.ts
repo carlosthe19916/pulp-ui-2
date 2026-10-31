@@ -17,6 +17,7 @@ export {
   definePluginUi,
   GENERIC,
   type Generic,
+  type IAnyPluginUi,
   type IContentTypeUi,
   type IDistributionTypeUi,
   type IPluginModule,
@@ -30,4 +31,4 @@ export {
   remoteForm,
   repositoryForm,
 } from "./forms";
-export { lazyView } from "./lazyView";
+export { lazyView, lazyViews } from "./lazyView";

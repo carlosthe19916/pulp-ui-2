@@ -15,7 +15,7 @@ const spec = JSON.parse(
 const target = join(root, "src/app/client/pulpTypes.gen.ts");
 
 const COLLECTION =
-  /^\/api\/pulp\/\{pulp_domain\}\/api\/v3\/(remotes|repositories|distributions|publications|content)\/([^/{}]+)\/([^/{}]+)\/$/;
+  /^\/api\/pulp\/\{pulp_domain\}\/api\/v3\/(remotes|repositories|distributions|publications|content|acs)\/([^/{}]+)\/([^/{}]+)\/$/;
 
 // How @hey-api/openapi-ts names an operation's types: PascalCase of the operationId.
 const typeName = (operationId) =>
@@ -43,6 +43,7 @@ const maps = {
   distributions: [],
   publications: [],
   content: [],
+  acs: [],
 };
 const imports = new Set();
 
@@ -88,7 +89,8 @@ ${block("RemoteEndpoints", "Remote collections by apiPath: create and update bod
 ${block("RepositoryEndpoints", "Repository collections by apiPath: create and update bodies.", maps.repositories)}
 ${block("DistributionEndpoints", "Distribution collections by apiPath: create and update bodies.", maps.distributions)}
 ${block("PublicationEndpoints", "Publication collections by apiPath: the create body.", maps.publications)}
-${block("ContentEndpoints", "Content collections by apiPath: list params and page.", maps.content)}`;
+${block("ContentEndpoints", "Content collections by apiPath: list params and page.", maps.content)}
+${block("AcsEndpoints", "Alternate content source collections by apiPath: create and update bodies.", maps.acs)}`;
 
 writeFileSync(target, source);
 console.log(`generate-pulp-types: wrote ${target}`);

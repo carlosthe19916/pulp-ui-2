@@ -2,13 +2,13 @@ import type React from "react";
 
 import { Label, LabelGroup } from "@patternfly/react-core";
 
-import { Snippet } from "@app/components/Snippet";
-import { useContentTypeListQuery } from "@app/queries/content";
 import {
   BrowseTable,
   type IBrowseContext,
   useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
+} from "@app/components/BrowseShell";
+import { Snippet } from "@app/components/Snippet";
+import { useContentTypeListQuery } from "@app/queries/content";
 
 import { sourcesLine } from "./helpers";
 

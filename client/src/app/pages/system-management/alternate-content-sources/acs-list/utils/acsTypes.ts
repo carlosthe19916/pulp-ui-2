@@ -1,23 +1,4 @@
 import type { IEntityField } from "@app/utils/entityField";
-import { getAcsSources, type PluginId } from "@catalog";
-import { getAcsLabel } from "@plugins";
-
-/** One plugin's alternate content source: its collection, remote type and name. */
-export interface IAcsType {
-  apiPath: string;
-  label: string;
-  /** The plugin that must be installed. */
-  pluginId: PluginId;
-  /** The remote type an ACS of this plugin points at. */
-  remoteType: string;
-}
-
-/** Every plugin's ACS type, from its definition (endpoint) and UI (name). */
-export const getAcsTypes = (): IAcsType[] =>
-  getAcsSources().map((source) => {
-    const pluginId = source.pluginId as PluginId;
-    return { ...source, pluginId, label: getAcsLabel(pluginId) ?? pluginId };
-  });
 
 export const ACS_FIELDS: IEntityField[] = [
   { key: "name", label: "Name", type: "text", required: true },

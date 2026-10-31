@@ -11,16 +11,16 @@ import {
 } from "@patternfly/react-core";
 
 import {
-  useContentTypeListQueries,
-  useContentTypeListQuery,
-} from "@app/queries/content";
-import {
   BrowseDataList,
   BrowseTable,
   type IBrowseContext,
   StatusBadges,
   useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
+} from "@app/components/BrowseShell";
+import {
+  useContentTypeListQueries,
+  useContentTypeListQuery,
+} from "@app/queries/content";
 
 import { fqcn } from "./helpers";
 

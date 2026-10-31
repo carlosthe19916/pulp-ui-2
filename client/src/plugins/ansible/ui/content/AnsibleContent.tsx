@@ -1,20 +1,20 @@
 import type React from "react";
 
 import type { AnsibleCollectionVersionResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 interface ICollectionContent {
   name: string;
@@ -55,7 +55,7 @@ const CollectionContents: React.FC<ICollectionContentsProps> = ({ href }) => {
 };
 
 /** Ansible Galaxy style: FQCN, install command, tags, contents; project links in the sidebar. */
-export const AnsibleContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const AnsibleContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<AnsibleCollectionVersionResponse>({ href });
 

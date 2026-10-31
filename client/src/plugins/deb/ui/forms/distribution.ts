@@ -1,6 +1,6 @@
 import {
   accessSection,
-  CHECKPOINT_HELP,
+  checkpointSection,
   distributionIdentity,
   distributionLabelsSection,
   servedPublicationField,
@@ -28,12 +28,7 @@ export const debDistributionForm = distributionForm(
       servedRepositoryField(f, { pulpTypes: ["deb.deb"] }),
       servedVersionField(f, { pulpTypes: ["deb.deb"] }),
     ]),
-    s.collapsible("checkpoints", "Checkpoints", [
-      f.switch("checkpoint", {
-        label: "Checkpoint distribution",
-        help: CHECKPOINT_HELP,
-      }),
-    ]),
+    checkpointSection({ f, s }),
     accessSection({ f, s }),
     distributionLabelsSection({ f, s }),
   ],

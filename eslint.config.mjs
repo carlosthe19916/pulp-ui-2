@@ -51,7 +51,7 @@ const iconBarrelImport = {
 };
 
 const pluginInternals = {
-  group: ["@plugins/*", "@catalog/*"],
+  group: ["@plugins/*"],
   message:
     "Reach plugins through the registries: @catalog (facts) and @plugins (UI), never a plugin's files.",
 };
@@ -244,6 +244,10 @@ export default defineConfig([
         {
           patterns: [
             {
+              regex: "^\\.\\./",
+              message: "A definition never imports another plugin.",
+            },
+            {
               group: [
                 "@app/*",
                 "!@app/client",
@@ -285,6 +289,11 @@ export default defineConfig([
               ],
               message:
                 "A plugin's UI never imports the UI registry, the hosts or another plugin.",
+            },
+            {
+              // From ui/ or ui/<folder>/, only the plugin's own definition sits two levels up.
+              regex: "^\\.\\./\\.\\./(\\.\\./|(?!definition$))",
+              message: "A plugin's UI never imports another plugin.",
             },
           ],
         },

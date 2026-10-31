@@ -4,22 +4,22 @@ import type {
   AnsibleAnsibleNamespaceMetadataResponse,
   AnsibleRoleResponse,
 } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 /** Galaxy namespace page: the publisher, contact and links. */
-export const AnsibleNamespaceContent: React.FC<IPluginContentProps> = ({
+export const AnsibleNamespaceContent: React.FC<IContentPanelProps> = ({
   href,
 }) => {
   const { data, isLoading, error } =
@@ -57,7 +57,7 @@ export const AnsibleNamespaceContent: React.FC<IPluginContentProps> = ({
 };
 
 /** Galaxy legacy role page: role name, version and install command. */
-export const AnsibleRoleContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const AnsibleRoleContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } = useContentDetailQuery<AnsibleRoleResponse>(
     { href },
   );

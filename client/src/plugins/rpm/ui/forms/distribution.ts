@@ -1,6 +1,6 @@
 import {
   accessSection,
-  CHECKPOINT_HELP,
+  checkpointSection,
   distributionIdentity,
   distributionLabelsSection,
   servedPublicationField,
@@ -30,12 +30,7 @@ export const rpmDistributionForm = distributionForm(
         help: "Serve a config.repo clients can drop into /etc/yum.repos.d.",
       }),
     ]),
-    s.collapsible("checkpoints", "Checkpoints", [
-      f.switch("checkpoint", {
-        label: "Checkpoint distribution",
-        help: CHECKPOINT_HELP,
-      }),
-    ]),
+    checkpointSection({ f, s }),
     accessSection({ f, s }),
     distributionLabelsSection({ f, s }),
   ],

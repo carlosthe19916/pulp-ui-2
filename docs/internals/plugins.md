@@ -12,7 +12,7 @@ Each plugin is a folder, `client/src/plugins/<id>/`:
   its types per entity (keyed by `pulp_type`, each with its collection `apiPath`), repository
   capabilities (what it syncs from and publishes to, how content changes, scans, actions), its
   content types and its ACS endpoint. It imports no UI, so anything can read it.
-- `ui/index.ts` declares the **presentation** with `definePluginUi(definition, ui)`: labels,
+- `ui/index.ts` declares the **presentation** with `definePluginUi({ definition, ui })`: labels,
   forms, content panels, Browse sections, the repository tab, client setup, action labels and
   fields, upload fields, content search, nav pages.
 
@@ -61,12 +61,19 @@ ESLint (`eslint.config.mjs`) enforces the dependency direction:
 
 ```
 plugin-sdk  ◀──  plugins/<id>/definition.ts  ◀──  plugins/<id>/ui  ◀──  registries  ◀──  hosts
+                                                       │
+                                     app building blocks (forms kit, ContentPanelLayout,
+                                     BrowseShell, queries, components)
 ```
 
-- A definition imports only `@plugin-sdk/definition` and generated types.
-- A plugin's UI never imports `@plugins`, a host or another plugin.
-- `plugin-sdk/**` never imports a plugin or a registry.
+- A definition imports only `@plugin-sdk/definition` and generated types, never another plugin.
+- A plugin's UI builds on the SDK and the app's shared building blocks; it never imports
+  `@plugins`, a host or another plugin (relative escapes included).
+- `plugin-sdk/**` never imports a plugin or a registry directly. Its UI contracts reuse the
+  building blocks' types, so the SDK sits on top of the app's shared components.
 - Hosts (`app/**`, `routes/**`) never import a plugin's files, only the registries.
+- Plugin-only pages and their queries (Ansible collections, container namespaces, the
+  Maven/Python/OSTree query modules, the Python Bandersnatch import) still live in `app/`.
 
 Panels, Browse views and tabs are loaded with `lazyView`, so registering every plugin doesn't put
 their views in the main bundle; forms are small data and load with the registry.

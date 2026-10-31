@@ -14,7 +14,7 @@ import {
   getUploadFields,
 } from "@plugins";
 
-import { registeredForms } from "./registry";
+import { PLUGIN_UI } from "./registry";
 
 const definitions: readonly IPluginDefinition[] = PLUGIN_DEFINITIONS;
 
@@ -58,7 +58,7 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
       }
     });
 
-    it("names every repository action and gives it fields", () => {
+    it("runs every declared action, and scans only through a scan action", () => {
       for (const [pulpType, repository] of Object.entries(
         definition.repository ?? {},
       )) {
@@ -66,12 +66,10 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
         expect(actions.map((action) => action.key)).toEqual(
           Object.keys(repository.actions ?? {}),
         );
-        for (const action of actions) {
-          expect(action.label, `${pulpType} ${action.key}`).not.toBe(
-            action.key,
-          );
-          expect(Array.isArray(action.fields)).toBe(true);
-        }
+        const scans = actions.some(
+          (action) => action.target === "version" && action.path === "scan/",
+        );
+        expect(scans, `${pulpType} scan`).toBe(!!repository.scan);
       }
     });
 
@@ -91,12 +89,11 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
 );
 
 describe("plugin registry", () => {
-  it("registers forms only for declared types", () => {
-    for (const { entity, pulpType } of registeredForms()) {
+  it("registers each plugin's UI under its own id", () => {
+    for (const definition of definitions) {
       expect(
-        getPlugin(pulpType)?.entities[entity],
-        `${entity} ${pulpType}`,
-      ).toBeDefined();
+        PLUGIN_UI[definition.id as keyof typeof PLUGIN_UI].definition,
+      ).toBe(definition);
     }
   });
 

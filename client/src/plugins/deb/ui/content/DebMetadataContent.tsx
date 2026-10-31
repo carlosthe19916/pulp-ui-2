@@ -4,23 +4,23 @@ import { PaginationVariant } from "@patternfly/react-core";
 import { useDataViewPagination } from "@patternfly/react-data-view";
 
 import type { DebReleaseResponse, DebSourcePackageResponse } from "@app/client";
-import { ListPagination } from "@app/components/ListPagination";
-import {
-  useContentDetailQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { ListPagination } from "@app/components/ListPagination";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
 
 interface IReleaseValuesProps {
   /** The release's `distribution` name, which its component/architecture units carry. */
@@ -99,7 +99,7 @@ const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
 /**
  * A dist (`dists/<codename>/Release`): suite, origin, components and architectures.
  */
-export const DebReleaseContent: React.FC<IPluginContentProps> = ({
+export const DebReleaseContent: React.FC<IContentPanelProps> = ({
   href,
   versionHref,
 }) => {
@@ -173,7 +173,7 @@ const commaList = (value?: string) =>
     .filter(Boolean);
 
 /** Launchpad source package page: versions, binaries built, build dependencies, VCS. */
-export const DebSourcePackageContent: React.FC<IPluginContentProps> = ({
+export const DebSourcePackageContent: React.FC<IContentPanelProps> = ({
   href,
 }) => {
   const { data, isLoading, error } =

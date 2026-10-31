@@ -47,9 +47,9 @@ import {
 } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { isPluginInstalled } from "@catalog";
+import { getAcsTypes } from "@plugins";
 
 import { AcsModal } from "./components/AcsModal";
-import { getAcsTypes } from "./utils/acsTypes";
 
 interface IAcsFilters {
   name: string;

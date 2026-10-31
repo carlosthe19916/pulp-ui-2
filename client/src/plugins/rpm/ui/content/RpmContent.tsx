@@ -6,20 +6,20 @@ import prettyBytes from "pretty-bytes";
 import { Label } from "@patternfly/react-core";
 
 import type { RpmPackageResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 const FLAGS: Record<string, string> = {
   EQ: "=",
@@ -60,7 +60,7 @@ const bytes = (value?: number) =>
   typeof value === "number" ? prettyBytes(value) : undefined;
 
 /** Fedora Packages style: NEVRA identity, dnf install and requires. */
-export const RpmContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const RpmContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } = useContentDetailQuery<RpmPackageResponse>({
     href,
   });

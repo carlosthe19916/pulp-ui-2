@@ -49,22 +49,25 @@ Add `widget: widgetUi` to `PLUGIN_UI` in `client/src/plugins/registry.ts`, then 
 until it is quiet. Each error names a missing piece.
 
 ```ts
-export const widgetUi = definePluginUi(widget, {
-  label: "Widget",
-  remote: { "widget.widget": { form: widgetRemoteForm } },
-  repository: {
-    "widget.widget": {
-      form: widgetRepositoryForm,
-      browse: GENERIC, // or sections with lazyView({ load, name }) views
-      tab: null,
-      actions: { prune: { label: "Prune", fields: [] } },
+export const widgetUi = definePluginUi({
+  definition: widget,
+  ui: {
+    label: "Widget",
+    remote: { "widget.widget": { form: widgetRemoteForm } },
+    repository: {
+      "widget.widget": {
+        form: widgetRepositoryForm,
+        browse: GENERIC, // or sections whose views are lazyViews(() => import(...))
+        tab: null,
+        actions: { prune: { label: "Prune", fields: [] } },
+      },
     },
-  },
-  distribution: {
-    "widget.widget": { form: widgetDistributionForm, clientSetup: GENERIC },
-  },
-  content: {
-    "widget.unit": { panel: GENERIC, search: null, upload: [] },
+    distribution: {
+      "widget.widget": { form: widgetDistributionForm, clientSetup: GENERIC },
+    },
+    content: {
+      "widget.unit": { panel: GENERIC, search: null, upload: [] },
+    },
   },
 });
 ```
@@ -93,5 +96,6 @@ export const widgetRemoteForm = remoteForm(widget.remote["widget.widget"])(
 - `npm test` runs the conformance suite (`client/src/plugins/plugins.test.ts`) over the new
   plugin: forms per type, actions with labels, Browse types with list endpoints.
 - Custom panels, Browse views and tabs go in `ui/content/`, `ui/browse/`, `ui/tabs/`, built from
-  `@plugin-sdk/ui/blocks/*`, registered with `lazyView`.
+  `@app/components/ContentPanelLayout` and `@app/components/BrowseShell`, registered with
+  `lazyViews`.
 - No page or component changes: hosts pick the plugin up from the registries.

@@ -1,7 +1,9 @@
+export { advancedCopyAction, scanAction } from "./actions";
 export { descriptionField, nameField, urlField } from "./base";
 export {
   accessSection,
   CHECKPOINT_HELP,
+  checkpointSection,
   distributionIdentity,
   distributionLabelsSection,
   type DistributionSource,

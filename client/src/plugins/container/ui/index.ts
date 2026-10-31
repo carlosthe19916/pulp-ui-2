@@ -1,5 +1,11 @@
-import type { IPluginBrowse } from "@plugin-sdk/ui";
-import { definePluginUi, GENERIC, lazyView } from "@plugin-sdk/ui";
+import type { TypesOf } from "@plugin-sdk/definition";
+import {
+  type ClientSetup,
+  definePluginUi,
+  GENERIC,
+  type IPluginBrowse,
+  lazyViews,
+} from "@plugin-sdk/ui";
 
 import { container } from "../definition";
 import { containerActions, containerPushActions } from "./actions";
@@ -14,30 +20,27 @@ import {
   containerRepositoryForm,
 } from "./forms/repository";
 
-const browse: IPluginBrowse<"container.tag" | "container.manifest"> = {
+const containerBrowse = lazyViews(() => import("./browse/ContainerBrowse"));
+const containerContent = lazyViews(() => import("./content/ContainerContent"));
+
+const browse: IPluginBrowse<TypesOf<typeof container, "content">> = {
   sections: [
     {
       key: "tags",
       title: "Tags",
       pulpTypes: ["container.tag"],
-      View: lazyView({
-        load: () => import("./browse/ContainerBrowse"),
-        name: "ContainerTags",
-      }),
+      View: containerBrowse("ContainerTags"),
     },
     {
       key: "manifests",
       title: "Manifests",
       pulpTypes: ["container.manifest"],
-      View: lazyView({
-        load: () => import("./browse/ContainerBrowse"),
-        name: "ContainerManifests",
-      }),
+      View: containerBrowse("ContainerManifests"),
     },
   ],
 };
 
-const clientSetup = ({ registryPath }: { registryPath: string }) =>
+const clientSetup: ClientSetup = ({ registryPath }) =>
   registryPath
     ? {
         hint: "Pull an image by tag.",
@@ -45,62 +48,59 @@ const clientSetup = ({ registryPath }: { registryPath: string }) =>
       }
     : null;
 
-export const containerUi = definePluginUi(container, {
-  label: "Container",
-  pages: [
-    {
-      label: "Container Namespaces",
-      to: "/content-management/$pulpDomain/container-namespaces",
+export const containerUi = definePluginUi({
+  definition: container,
+  ui: {
+    label: "Container",
+    pages: [
+      {
+        label: "Container Namespaces",
+        to: "/content-management/$pulpDomain/container-namespaces",
+      },
+    ],
+    remote: {
+      "container.container": { form: containerRemoteForm },
+      "container.pull-through": {
+        label: "Container (pull-through)",
+        form: containerPullThroughRemoteForm,
+      },
     },
-  ],
-  remote: {
-    "container.container": { form: containerRemoteForm },
-    "container.pull-through": {
-      label: "Container (pull-through)",
-      form: containerPullThroughRemoteForm,
+    repository: {
+      "container.container": {
+        form: containerRepositoryForm,
+        browse,
+        tab: null,
+        actions: containerActions,
+      },
+      "container.container-push": {
+        label: "Container (push)",
+        form: containerPushRepositoryForm,
+        // Created only by pushing an image to the registry.
+        modes: ["edit"],
+        browse,
+        tab: null,
+        actions: containerPushActions,
+      },
     },
-  },
-  repository: {
-    "container.container": {
-      form: containerRepositoryForm,
-      browse,
-      tab: null,
-      actions: containerActions,
+    distribution: {
+      "container.container": { form: containerDistributionForm, clientSetup },
+      "container.pull-through": {
+        label: "Container (pull-through)",
+        form: containerPullThroughDistributionForm,
+        clientSetup,
+      },
     },
-    "container.container-push": {
-      label: "Container (push)",
-      form: containerPushRepositoryForm,
-      // Created only by pushing an image to the registry.
-      modes: ["edit"],
-      browse,
-      tab: null,
-      actions: containerPushActions,
-    },
-  },
-  distribution: {
-    "container.container": { form: containerDistributionForm, clientSetup },
-    "container.pull-through": {
-      label: "Container (pull-through)",
-      form: containerPullThroughDistributionForm,
-      clientSetup,
-    },
-  },
-  content: {
-    "container.blob": { panel: GENERIC, search: null },
-    "container.manifest": {
-      panel: lazyView({
-        load: () => import("./content/ContainerContent"),
-        name: "ContainerManifestContent",
-      }),
-      search: { param: "digest", label: "digest" },
-    },
-    "container.signature": { panel: GENERIC, search: null },
-    "container.tag": {
-      panel: lazyView({
-        load: () => import("./content/ContainerContent"),
-        name: "ContainerTagContent",
-      }),
-      search: { param: "name", label: "tag" },
+    content: {
+      "container.blob": { panel: GENERIC, search: null },
+      "container.manifest": {
+        panel: containerContent("ContainerManifestContent"),
+        search: { param: "digest", label: "digest" },
+      },
+      "container.signature": { panel: GENERIC, search: null },
+      "container.tag": {
+        panel: containerContent("ContainerTagContent"),
+        search: { param: "name", label: "tag" },
+      },
     },
   },
 });

@@ -17,3 +17,12 @@ export const lazyView = <M, K extends keyof M>({
   })) as unknown as M[K] extends React.ComponentType<infer P>
     ? React.LazyExoticComponent<React.ComponentType<P>>
     : never;
+
+/**
+ * Lazy views of one module: `const view = lazyViews(() => import("./browse/RpmBrowse"))`, then
+ * `view("RpmPackages")`; the names are the module's exports.
+ */
+export const lazyViews =
+  <M>(load: () => Promise<M>) =>
+  <K extends keyof M>(name: K) =>
+    lazyView({ load, name });

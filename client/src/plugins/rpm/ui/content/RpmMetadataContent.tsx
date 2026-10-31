@@ -7,9 +7,6 @@ import type {
   RpmPackageGroupResponse,
   RpmUpdateRecordResponse,
 } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
-import { type INevraParams, nevra } from "@app/utils/pluginContentFormat";
-import { formatDateTime } from "@app/utils/utils";
 import {
   asArray,
   ContentHeader,
@@ -17,12 +14,15 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
+import { type INevraParams, nevra } from "@app/utils/pluginContentFormat";
+import { formatDateTime } from "@app/utils/utils";
 
 interface IAdvisoryReference {
   id?: string;
@@ -31,7 +31,7 @@ interface IAdvisoryReference {
 }
 
 /** Satellite erratum page: type, severity, description, references, affected packages. */
-export const RpmAdvisoryContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const RpmAdvisoryContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<RpmUpdateRecordResponse>({ href });
   const packages = (data?.pkglist ?? []).flatMap((collection) =>
@@ -94,7 +94,7 @@ export const RpmAdvisoryContent: React.FC<IPluginContentProps> = ({ href }) => {
 };
 
 /** `dnf module info`: stream, profiles (default marked by the repository), packages. */
-export const RpmModulemdContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const RpmModulemdContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } = useContentDetailQuery<RpmModulemdResponse>(
     { href },
   );
@@ -145,7 +145,7 @@ export const RpmModulemdContent: React.FC<IPluginContentProps> = ({ href }) => {
 };
 
 /** `dnf group info`: the group and the packages it pulls in. */
-export const RpmPackageGroupContent: React.FC<IPluginContentProps> = ({
+export const RpmPackageGroupContent: React.FC<IContentPanelProps> = ({
   href,
 }) => {
   const { data, isLoading, error } =

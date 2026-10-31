@@ -20,8 +20,7 @@
       "@app/*": ["./src/app/*"],
       "@catalog": ["./src/plugins/catalog"],
       "@plugin-sdk/*": ["./src/plugin-sdk/*"],
-      "@plugins": ["./src/plugins"],
-      "@plugins/*": ["./src/plugins/*"]
+      "@plugins": ["./src/plugins"]
     },
     "esModuleInterop": true
   },

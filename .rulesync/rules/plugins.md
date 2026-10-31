@@ -14,23 +14,25 @@ globs:
 
 # Plugins
 
-Everything the UI knows about one Pulp plugin lives in its folder, `client/src/plugins/<id>/`,
-in two layers: a **definition** (facts about Pulp) and a **UI** (how the app presents them).
-Generic pages (hosts) render per-plugin pieces through two registries and never branch on a
-plugin.
+A plugin's facts and every piece of UI the generic pages render for it live in its folder,
+`client/src/plugins/<id>/`, in two layers: a **definition** (facts about Pulp) and a **UI** (how
+the app presents them). Generic pages (hosts) render per-plugin pieces through two registries and
+never branch on a plugin. (Plugin-only pages and their queries, such as Ansible collections or
+container namespaces, still live in `app/`.)
 
 ```
 client/src/
-  plugin-sdk/                  # what plugins build on (never imports plugins or registries)
+  plugin-sdk/                  # the plugin contract (never imports plugins or registries)
     definition/                # definePlugin, createCatalog, the definition types
-    ui/                        # definePluginUi, PluginUi<D>, GENERIC, lazyView, contracts
-      blocks/content/  blocks/browse/   # shared building blocks of panels and Browse views
+    ui/                        # definePluginUi, PluginUi<D>, GENERIC, lazyViews, contracts
+  app/components/ContentPanelLayout/  app/components/BrowseShell/
+                               # app building blocks plugin panels and Browse views reuse
   plugins/
     catalog.ts                 # @catalog: PLUGIN_DEFINITIONS and the pure lookups
     registry.ts  index.ts      # @plugins: PLUGIN_UI and the UI lookups hosts call
     rpm/
       definition.ts            # definePlugin({...}): facts only
-      ui/index.ts              # definePluginUi(rpm, {...})
+      ui/index.ts              # definePluginUi({ definition: rpm, ui: {...} })
       ui/forms/  ui/content/  ui/browse/  ui/tabs/  ui/actions.ts
 ```
 
@@ -70,7 +72,8 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   `getRepositoryBrowse`, `getRepositoryTab`, `getRepositoryActions`, `getClientSetup`,
   `getContentSearch`, `getUploadFields`, `getPluginPages`, `useCreateTypeSelect`), never
   `pulp_type` string comparisons, plugin `switch` chains or a plugin's files.
-- Panels, Browse views and tabs are `lazyView(...)`; hosts render them inside `Suspense`.
+- Panels, Browse views and tabs are lazy (`lazyViews(() => import("./browse/X"))("XView")`);
+  hosts render them inside `Suspense`.
 - Plugin actions run through `RepositoryActionModal` with the `IPluginAction` the registry
   returns (endpoint, label and fields together); no per-action modal.
 
@@ -95,4 +98,4 @@ Pass/fail rubric for `/eval`.
       plugin's files.
 - [ ] Forms are typed with `remoteForm` / `repositoryForm` / `distributionForm` /
       `publicationForm` from the plugin's definition, not a hand-picked body type.
-- [ ] Panels, Browse views and tabs are `lazyView`s rendered inside `Suspense`.
+- [ ] Panels, Browse views and tabs are lazy views rendered inside `Suspense`.

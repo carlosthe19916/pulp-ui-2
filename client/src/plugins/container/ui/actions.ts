@@ -15,6 +15,7 @@ const tag: IActionUi = {
   ],
 };
 
+// Also a row action on the Browse Tags view, prefilled with the tag.
 const untag: IActionUi = {
   label: "Untag image",
   fields: [{ key: "tag", label: "Tag", type: "text", required: true }],

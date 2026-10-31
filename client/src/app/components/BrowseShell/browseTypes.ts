@@ -1,8 +1,7 @@
 import type React from "react";
 
 import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
-
-import type { IPluginAction } from "../../action";
+import type { IPluginAction } from "@plugin-sdk/ui";
 
 /** Where a repository is served, resolved by the shell; empty strings when it isn't. */
 export interface IServedAt {

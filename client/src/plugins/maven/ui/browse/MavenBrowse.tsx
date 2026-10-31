@@ -10,16 +10,16 @@ import {
 
 import type { MavenRepositoryPackageResponse } from "@app/client";
 import {
+  BrowseTable,
+  type IBrowseContext,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
+import {
   useMavenMetricsQuery,
   useMavenPackageHrefLookup,
   useMavenPackagesListQuery,
 } from "@app/queries/maven-repositories";
 import { formatDateTime } from "@app/utils/utils";
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
 
 import { snapshotBuild } from "./helpers";
 

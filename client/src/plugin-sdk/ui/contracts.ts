@@ -1,6 +1,7 @@
 import type React from "react";
 
 import type { RepositoryResponse } from "@app/client";
+import type { IServedAt } from "@app/components/BrowseShell";
 
 import type { FileRoutesByTo } from "../../routeTree.gen";
 
@@ -10,12 +11,13 @@ import type { FileRoutesByTo } from "../../routeTree.gen";
  */
 
 export type { IActionUi, IPluginAction } from "./action";
-export type { IPluginContentProps as IContentPanelProps } from "./blocks/content";
+export type { IContentPanelProps } from "@app/components/ContentPanelLayout";
 export type {
   IBrowseContext,
   IBrowseSection,
   IPluginBrowse,
-} from "./blocks/browse";
+  IServedAt,
+} from "@app/components/BrowseShell";
 
 export interface IRepositoryTabProps {
   repository: RepositoryResponse;
@@ -28,11 +30,10 @@ export interface IRepositoryTab {
   Tab: React.ComponentType<IRepositoryTabProps>;
 }
 
-/** Where a distribution serves its content; empty strings when it doesn't. */
-export interface IClientServedAt {
+/** Where a distribution serves its content, as a client needs it; empty strings when it doesn't. */
+export interface IClientServedAt extends IServedAt {
   name: string;
-  baseUrl: string;
-  registryPath: string;
+  /** The Galaxy client URL (Ansible). */
   clientUrl: string;
 }
 

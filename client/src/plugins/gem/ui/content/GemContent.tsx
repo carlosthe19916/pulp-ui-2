@@ -3,21 +3,21 @@ import type React from "react";
 import { Label, LabelGroup } from "@patternfly/react-core";
 
 import type { GemGemContentResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LabelList,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 /** rubygems.org style: gem install + Gemfile line, runtime dependencies. */
-export const GemContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const GemContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<GemGemContentResponse>({ href });
 

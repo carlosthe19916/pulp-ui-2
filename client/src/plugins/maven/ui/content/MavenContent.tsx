@@ -4,17 +4,17 @@ import { useState } from "react";
 import { Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 
 import type { MavenMavenArtifactResponse } from "@app/client";
-import { Snippet } from "@app/components/Snippet";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { Snippet } from "@app/components/Snippet";
+import { useContentDetailQuery } from "@app/queries/content";
 
 interface IMavenInstallProps {
   groupId: string;
@@ -59,7 +59,7 @@ export const MavenInstall: React.FC<IMavenInstallProps> = ({
 };
 
 /** Maven Central style: coordinates up front, build-tool snippets to copy. */
-export const MavenContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const MavenContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<MavenMavenArtifactResponse>({ href });
   const groupId = data?.group_id ?? "";

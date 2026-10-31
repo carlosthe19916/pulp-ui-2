@@ -1,6 +1,6 @@
 import {
   accessSection,
-  CHECKPOINT_HELP,
+  checkpointSection,
   distributionIdentity,
   distributionLabelsSection,
   servedPublicationField,
@@ -26,12 +26,7 @@ export const fileDistributionForm = distributionForm(
       servedPublicationField(f, { pulpTypes: ["file.file"] }),
       servedVersionField(f, { pulpTypes: ["file.file"] }),
     ]),
-    s.collapsible("checkpoints", "Checkpoints", [
-      f.switch("checkpoint", {
-        label: "Checkpoint distribution",
-        help: CHECKPOINT_HELP,
-      }),
-    ]),
+    checkpointSection({ f, s }),
     accessSection({ f, s }),
     distributionLabelsSection({ f, s }),
   ],

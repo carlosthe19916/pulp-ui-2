@@ -1,9 +1,10 @@
+import type { StringSchema } from "yup";
+
 import {
   connectionSections,
   nameField,
   POLICY_OPTIONS,
   policyField,
-  urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
 
@@ -17,8 +18,17 @@ export const rpmUlnRemoteForm = remoteForm(rpm.remote["rpm.uln"])(
     sections: [
       s.essentials([
         nameField(f),
-        urlField(f, {
+        // A ULN channel is a uln:// address, which an http(s) URL check rejects.
+        f.text("url", {
+          label: "URL",
+          required: true,
+          placeholder: "uln://ol8_x86_64_baseos_latest",
           help: "The ULN channel, e.g. uln://ol8_x86_64_baseos_latest.",
+          validate: (schema) =>
+            (schema as StringSchema).matches(/^uln:\/\/\S+$/, {
+              message: "URL must be a uln:// channel address",
+              excludeEmptyString: true,
+            }),
         }),
         f.row([
           f.secret("username", { label: "ULN username", required: "create" }),

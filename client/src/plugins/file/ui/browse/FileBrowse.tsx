@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Button, Flex, FlexItem } from "@patternfly/react-core";
 import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 
-import { useContentTypeListQuery } from "@app/queries/content";
 import {
   BrowseTable,
   type IBrowseContext,
   PathBreadcrumb,
   pathSegments,
   useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
+} from "@app/components/BrowseShell";
+import { useContentTypeListQuery } from "@app/queries/content";
 
 interface IPathCellProps {
   path: string;

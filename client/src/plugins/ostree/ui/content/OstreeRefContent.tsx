@@ -7,15 +7,15 @@ import type {
   OstreeOstreeCommitResponse,
   OstreeOstreeRefResponse,
 } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   Checksum,
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
-  type IPluginContentProps,
+  type IContentPanelProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 const PAGE = 10;
 
@@ -59,7 +59,7 @@ const CommitChain: React.FC<ICommitChainProps> = ({
 };
 
 /** `ostree refs` / `ostree log`: the branch, its head commit and the history behind it. */
-export const OstreeRefContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const OstreeRefContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<OstreeOstreeRefResponse>({ href });
   const [depth, setDepth] = useState(PAGE);

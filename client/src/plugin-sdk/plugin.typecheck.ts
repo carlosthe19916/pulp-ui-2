@@ -48,7 +48,7 @@ const ui = {
 } satisfies PluginUi<typeof widget>;
 
 // Complete: every declared type has its pieces.
-export const complete = definePluginUi(widget, ui);
+export const complete = definePluginUi({ definition: widget, ui });
 
 // An apiPath the API doesn't have.
 definePlugin({
@@ -75,56 +75,71 @@ definePlugin({
 });
 
 // A declared type without its UI.
-definePluginUi(widget, {
-  ...ui,
-  // @ts-expect-error "widget.widget" has no remote UI.
-  remote: {},
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    // @ts-expect-error "widget.widget" has no remote UI.
+    remote: {},
+  },
 });
 
 // A declared action without its label and fields.
-definePluginUi(widget, {
-  ...ui,
-  repository: {
-    "widget.widget": {
-      ...ui.repository["widget.widget"],
-      // @ts-expect-error the "prune" action has no UI.
-      actions: {},
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    repository: {
+      "widget.widget": {
+        ...ui.repository["widget.widget"],
+        // @ts-expect-error the "prune" action has no UI.
+        actions: {},
+      },
     },
   },
 });
 
 // An uploadable type without its upload fields; a read-only one with them.
-definePluginUi(widget, {
-  ...ui,
-  content: {
-    // @ts-expect-error "widget.unit" is uploadable, so it needs `upload`.
-    "widget.unit": { panel: GENERIC, search: null },
-    // @ts-expect-error "widget.part" is read-only, so it can't have `upload`.
-    "widget.part": { panel: GENERIC, search: null, upload: [] },
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    content: {
+      // @ts-expect-error "widget.unit" is uploadable, so it needs `upload`.
+      "widget.unit": { panel: GENERIC, search: null },
+      // @ts-expect-error "widget.part" is read-only, so it can't have `upload`.
+      "widget.part": { panel: GENERIC, search: null, upload: [] },
+    },
   },
 });
 
 // A search on a param the list endpoint doesn't have.
-definePluginUi(widget, {
-  ...ui,
-  content: {
-    ...ui.content,
-    "widget.part": {
-      panel: GENERIC,
-      // @ts-expect-error rpm/packages has no `relative_path__contains` filter.
-      search: { param: "relative_path__contains", label: "path" },
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    content: {
+      ...ui.content,
+      "widget.part": {
+        panel: GENERIC,
+        // @ts-expect-error rpm/packages has no `relative_path__contains` filter.
+        search: { param: "relative_path__contains", label: "path" },
+      },
     },
   },
 });
 
 // GENERIC only where a generic view exists: a tab has none.
-definePluginUi(widget, {
-  ...ui,
-  repository: {
-    "widget.widget": {
-      ...ui.repository["widget.widget"],
-      // @ts-expect-error a repository tab is a component or null.
-      tab: GENERIC,
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    repository: {
+      "widget.widget": {
+        ...ui.repository["widget.widget"],
+        // @ts-expect-error a repository tab is a component or null.
+        tab: GENERIC,
+      },
     },
   },
 });

@@ -3,7 +3,6 @@ import type React from "react";
 import { Label } from "@patternfly/react-core";
 
 import type { PythonPythonPackageContentResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   asStringRecord,
   asStrings,
@@ -12,13 +11,14 @@ import {
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 const PACKAGE_TYPES: Record<string, string> = {
   sdist: "Source",
@@ -33,7 +33,7 @@ const shortLicense = (license?: string) =>
     : undefined;
 
 /** PyPI style: pip install and requirements; project links in the sidebar. */
-export const PythonContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const PythonContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<PythonPythonPackageContentResponse>({ href });
 

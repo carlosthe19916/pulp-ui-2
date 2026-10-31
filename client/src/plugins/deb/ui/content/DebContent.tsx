@@ -5,20 +5,20 @@ import prettyBytes from "pretty-bytes";
 import { Label } from "@patternfly/react-core";
 
 import type { DebPackageResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 const splitList = (value?: string) =>
   value
@@ -33,7 +33,7 @@ const installedSize = (value?: string) => {
 };
 
 /** packages.debian.org style: apt install, depends; package facts in the sidebar. */
-export const DebContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const DebContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } = useContentDetailQuery<DebPackageResponse>({
     href,
   });

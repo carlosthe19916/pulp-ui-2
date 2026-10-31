@@ -3,21 +3,21 @@ import type React from "react";
 import prettyBytes from "pretty-bytes";
 
 import type { HuggingFaceHuggingFaceContentResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
-import { formatDateTime } from "@app/utils/utils";
 import {
   basename,
   ContentHeader,
   ContentPanelLayout,
   FactList,
   facts,
+  type IContentPanelProps,
   InstallSnippet,
-  type IPluginContentProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
+import { formatDateTime } from "@app/utils/utils";
 
 /** Hub "Files and versions": one file of a repo at a revision. */
-export const HuggingFaceContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const HuggingFaceContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<HuggingFaceHuggingFaceContentResponse>({ href });
 

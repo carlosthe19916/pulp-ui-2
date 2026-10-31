@@ -23,10 +23,7 @@ import {
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
-import type {
-  PythonPythonBlocklistEntryResponse,
-  RepositoryResponse,
-} from "@app/client";
+import type { PythonPythonBlocklistEntryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { FormSubmitError } from "@app/components/FormSubmitError";
@@ -43,18 +40,15 @@ import {
   usePythonBlocklistQuery,
 } from "@app/queries/python-repositories";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+import type { IRepositoryTabProps } from "@plugin-sdk/ui";
 
 const entryLabel = (entry: PythonPythonBlocklistEntryResponse) =>
   entry.filename ||
   [entry.name, entry.version].filter(Boolean).join(" ") ||
   "entry";
 
-interface IPythonBlocklistTabProps {
-  repository: RepositoryResponse;
-}
-
 /** Packages this Python repository refuses, by name, version or filename. */
-export const PythonBlocklistTab: React.FC<IPythonBlocklistTabProps> = ({
+export const PythonBlocklistTab: React.FC<IRepositoryTabProps> = ({
   repository,
 }) => {
   const repositoryHref = repository.pulp_href ?? "";

@@ -7,11 +7,6 @@ import type {
   ContainerTagResponse,
 } from "@app/client";
 import {
-  useContentDetailQuery,
-  useContentTypeListQuery,
-} from "@app/queries/content";
-import { platformOf } from "@app/utils/pluginContentFormat";
-import {
   asStringRecord,
   Checksum,
   ContentHeader,
@@ -19,10 +14,15 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   LabelList,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
+import { platformOf } from "@app/utils/pluginContentFormat";
 
 interface IManifestDetailsProps {
   manifest?: ContainerManifestResponse;
@@ -82,9 +82,7 @@ const ManifestDetails: React.FC<IManifestDetailsProps> = ({ manifest }) => {
 };
 
 /** Quay-style tag page: the tag and the image it points at. */
-export const ContainerTagContent: React.FC<IPluginContentProps> = ({
-  href,
-}) => {
+export const ContainerTagContent: React.FC<IContentPanelProps> = ({ href }) => {
   const tag = useContentDetailQuery<ContainerTagResponse>({ href });
   const manifest = useContentDetailQuery<ContainerManifestResponse>({
     href: tag.data?.tagged_manifest ?? null,
@@ -109,7 +107,7 @@ export const ContainerTagContent: React.FC<IPluginContentProps> = ({
 };
 
 /** Harbor-style artifact page for one manifest. */
-export const ContainerManifestContent: React.FC<IPluginContentProps> = ({
+export const ContainerManifestContent: React.FC<IContentPanelProps> = ({
   href,
 }) => {
   const { data, isLoading, error } =

@@ -1,7 +1,6 @@
 import type React from "react";
 
 import type { OstreeOstreeContentResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   basename,
   Checksum,
@@ -10,12 +9,13 @@ import {
   dirname,
   FactList,
   facts,
-  type IPluginContentProps,
+  type IContentPanelProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 /** An OSTree repository file, identified by its path and object digest. */
-export const OstreeContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const OstreeContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<OstreeOstreeContentResponse>({ href });
 

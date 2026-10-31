@@ -154,6 +154,21 @@ export const accessSection = <T extends IAccessKeys>({
     }),
   ]);
 
+/** The checkpoint switch of distributions that serve published content. */
+export const checkpointSection = <T extends { checkpoint?: unknown }>({
+  f,
+  s,
+}: {
+  f: IFieldBuilders<T>;
+  s: ISectionBuilders;
+}) =>
+  s.collapsible("checkpoints", "Checkpoints", [
+    f.switch("checkpoint", {
+      label: "Checkpoint distribution",
+      help: CHECKPOINT_HELP,
+    }),
+  ]);
+
 export const distributionLabelsSection = <T extends { pulp_labels?: unknown }>({
   f,
   s,

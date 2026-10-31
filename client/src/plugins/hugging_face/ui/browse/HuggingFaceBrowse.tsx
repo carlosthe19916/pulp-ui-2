@@ -3,16 +3,20 @@ import type React from "react";
 import prettyBytes from "pretty-bytes";
 
 import type { RepoTypeEnum } from "@app/client";
-import { useContentTypeListQuery } from "@app/queries/content";
-import { formatDateTime } from "@app/utils/utils";
 import {
   BrowseTable,
   type IBrowseContext,
   useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
+} from "@app/components/BrowseShell";
+import { useContentTypeListQuery } from "@app/queries/content";
+import { formatDateTime } from "@app/utils/utils";
 
 /** Hub "Files and versions" for one repo type: each repo's files under it. */
-const RepoTypeFiles: React.FC<IBrowseContext & { repoType: RepoTypeEnum }> = ({
+interface IRepoTypeFilesProps extends IBrowseContext {
+  repoType: RepoTypeEnum;
+}
+
+const RepoTypeFiles: React.FC<IRepoTypeFilesProps> = ({
   repoType,
   versionHref,
   selectedHref,

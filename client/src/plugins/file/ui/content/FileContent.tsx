@@ -1,18 +1,18 @@
 import type React from "react";
 
 import type { FileFileContentResponse } from "@app/client";
-import { useContentDetailQuery } from "@app/queries/content";
 import {
   basename,
   ContentHeader,
   ContentPanelLayout,
   dirname,
-  type IPluginContentProps,
+  type IContentPanelProps,
   StorageFacts,
-} from "@plugin-sdk/ui/blocks/content";
+} from "@app/components/ContentPanelLayout";
+import { useContentDetailQuery } from "@app/queries/content";
 
 /** A plain file: its name, where it lives, and how big it is. */
-export const FileContent: React.FC<IPluginContentProps> = ({ href }) => {
+export const FileContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<FileFileContentResponse>({ href });
 

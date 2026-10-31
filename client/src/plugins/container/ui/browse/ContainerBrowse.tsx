@@ -6,6 +6,12 @@ import prettyBytes from "pretty-bytes";
 import { Content, ContentVariants } from "@patternfly/react-core";
 
 import type { ContainerManifestResponse } from "@app/client";
+import {
+  BrowseTable,
+  type IBrowseContext,
+  StatusBadges,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { GatedButton } from "@app/components/GatedButton";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { Snippet } from "@app/components/Snippet";
@@ -15,12 +21,6 @@ import {
 } from "@app/queries/content";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { platformOf } from "@app/utils/pluginContentFormat";
-import {
-  BrowseTable,
-  type IBrowseContext,
-  StatusBadges,
-  useBrowseListState,
-} from "@plugin-sdk/ui/blocks/browse";
 
 import { isMultiArch, pullCommand } from "./helpers";
 

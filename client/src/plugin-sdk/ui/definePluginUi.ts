@@ -77,7 +77,8 @@ interface IUiSections<D extends IPluginDefinition> {
   distribution: { [T in TypesOf<D, "distribution">]: IDistributionTypeUi };
   publication: { [T in TypesOf<D, "publication">]: ITypeUi };
   content: { [T in TypesOf<D, "content">]: IContentTypeUi<D, T> };
-  acs: { label: string };
+  /** Its alternate content source; `label` defaults to the plugin's. */
+  acs: { label?: string };
 }
 
 /**
@@ -94,16 +95,31 @@ export type PluginUi<D extends IPluginDefinition> = {
   ]: IUiSections<D>[S];
 };
 
-/** A plugin's definition and its UI, the unit the UI registry holds. */
-export interface IPluginModule<
-  D extends IPluginDefinition = IPluginDefinition,
-> {
-  definition: D;
-  ui: PluginUi<D>;
+/** Any plugin's UI read through one shape: what the registry walks once checked per plugin. */
+export interface IAnyPluginUi {
+  label: string;
+  pages?: readonly INavPage[];
+  remote?: Readonly<Record<string, ITypeUi>>;
+  repository?: Readonly<
+    Record<string, IRepositoryTypeUi<IPluginDefinition, string>>
+  >;
+  distribution?: Readonly<Record<string, IDistributionTypeUi>>;
+  publication?: Readonly<Record<string, ITypeUi>>;
+  content?: Readonly<Record<string, IContentTypeUi<IPluginDefinition, string>>>;
+  acs?: { label?: string };
 }
 
-/** Declares a plugin's UI against its definition. */
-export const definePluginUi = <D extends IPluginDefinition>(
-  definition: D,
-  ui: PluginUi<D>,
-): IPluginModule<D> => ({ definition, ui });
+/** A plugin's definition and its checked UI, the unit the UI registry holds. */
+export interface IPluginModule {
+  definition: IPluginDefinition;
+  ui: IAnyPluginUi;
+}
+
+/** Declares a plugin's UI against its definition; the UI's shape is checked here. */
+export const definePluginUi = <D extends IPluginDefinition>({
+  definition,
+  ui,
+}: {
+  definition: D;
+  ui: PluginUi<D>;
+}): IPluginModule => ({ definition, ui });
