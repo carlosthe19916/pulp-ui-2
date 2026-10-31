@@ -12,7 +12,9 @@ Repositories, remotes, distributions and publications were created and edited in
 fields came from one generic list per plugin. Every plugin got the same shape, so what defines an
 object for that plugin (an Ansible requirements file, a container upstream name and tags, Debian
 suites) carried the same weight as proxy settings; remotes needed a step wizard even for a
-one-field edit; and clearing an optional value on edit didn't clear it on the server. Plugins
+one-field edit; and clearing an optional value on edit didn't clear it on the server. Edit was
+also disabled while a task ran on a repository, although Pulp accepts the update and runs it
+once the task finishes. Plugins
 differ most in what they ask for when an object is made, so that part of
 [0001](0001-plugin-specifics-are-data.md) no longer holds.
 
@@ -43,6 +45,9 @@ differ most in what they ask for when an object is made, so that part of
       new remote's or repository's detail page, or, for a distribution or publication (whose
       create runs as a task), to its list.
 - [ ] Leaving a form with unsaved changes asks for confirmation.
+- [ ] A task running on the object doesn't stop an edit: Edit stays enabled in lists and
+      detail pages, and the edit page says a task is running and still lets the user save.
+      Pulp queues the update and applies it once the task finishes.
 - [ ] Edit permission is checked where Edit is offered and on the edit page itself: lists and
       detail pages disable Edit with the permission tooltip
       ([0008](0008-permission-aware-actions.md)), and an edit page reached without change

@@ -9,10 +9,12 @@ import {
   PageSection,
 } from "@patternfly/react-core";
 
+import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { EntityFormPage, getEntityForm } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useDistributionUpdateMutation,
@@ -38,6 +40,12 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
+  // The form keeps its own values, so a settled task needs no refetch here.
+  const { getActiveCount, getTasks } = useResourceTasks({
+    entities: [distribution],
+    onSettled: () => undefined,
+  });
+  const isRunning = getActiveCount(distribution.prn) > 0;
   const entry = getEntityForm({
     entity: "distribution",
     pulpType,
@@ -100,6 +108,15 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
       mode="edit"
       entity={distribution}
       label={<Label color="blue">plugin: {pulpType}</Label>}
+      // Pulp queues an update behind the running task rather than refusing it.
+      notice={
+        isRunning && (
+          <EditDuringTaskAlert
+            entityLabel="distribution"
+            running={getTasks(distribution.prn)[0] ?? {}}
+          />
+        )
+      }
       breadcrumbs={
         <Breadcrumb>
           <BreadcrumbItem>

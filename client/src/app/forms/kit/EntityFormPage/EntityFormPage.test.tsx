@@ -231,6 +231,20 @@ describe("EntityFormPage", () => {
     expect(onSubmit.mock.calls[0]?.[0]).toEqual({ name: "a", enabled: false });
   });
 
+  it("shows a notice above the fields and still saves", async () => {
+    const { screen, onSubmit } = await renderPage({
+      mode: "edit",
+      entity,
+      notice: <p>Sync in progress</p>,
+    });
+    await expect.element(screen.getByText("Sync in progress")).toBeVisible();
+    await screen
+      .getByRole("textbox", { name: "URL" })
+      .fill("https://mirror.example.com/");
+    await screen.getByRole("button", { name: "Save" }).click();
+    await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+  });
+
   it("shows the submission error at the top of the form", async () => {
     const { screen } = await renderPage({
       submitError: { title: "Failed to create widget" },

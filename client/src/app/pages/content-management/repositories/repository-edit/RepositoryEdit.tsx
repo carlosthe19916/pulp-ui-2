@@ -9,10 +9,12 @@ import {
   PageSection,
 } from "@patternfly/react-core";
 
+import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { EntityFormPage, getEntityForm } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRepositoryUpdateMutation,
@@ -40,6 +42,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
+  const { running } = useRepositoryActivity({ repository });
   const entry = getEntityForm({ entity: "repository", pulpType, mode: "edit" });
   const name = repository.name ?? extractIdFromHref(href);
 
@@ -98,6 +101,12 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
       mode="edit"
       entity={repository}
       label={<Label color="blue">plugin: {pulpType}</Label>}
+      // Pulp queues an update behind the running task rather than refusing it.
+      notice={
+        running && (
+          <EditDuringTaskAlert entityLabel="repository" running={running} />
+        )
+      }
       breadcrumbs={
         <Breadcrumb>
           <BreadcrumbItem>

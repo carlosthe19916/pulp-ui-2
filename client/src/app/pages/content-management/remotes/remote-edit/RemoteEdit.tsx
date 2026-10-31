@@ -9,10 +9,12 @@ import {
   PageSection,
 } from "@patternfly/react-core";
 
+import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import { EntityFormPage, getEntityForm } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRemoteUpdateMutation,
@@ -40,6 +42,12 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
+  // The form keeps its own values, so a settled task needs no refetch here.
+  const { getActiveCount, getTasks } = useResourceTasks({
+    entities: [remote],
+    onSettled: () => undefined,
+  });
+  const isRunning = getActiveCount(remote.prn) > 0;
   const entry = getEntityForm({ entity: "remote", pulpType, mode: "edit" });
   const name = remote.name ?? extractIdFromHref(href);
 
@@ -94,6 +102,15 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
       mode="edit"
       entity={remote}
       label={<Label color="blue">plugin: {pulpType}</Label>}
+      // Pulp queues an update behind the running task rather than refusing it.
+      notice={
+        isRunning && (
+          <EditDuringTaskAlert
+            entityLabel="remote"
+            running={getTasks(remote.prn)[0] ?? {}}
+          />
+        )
+      }
       breadcrumbs={
         <Breadcrumb>
           <BreadcrumbItem>

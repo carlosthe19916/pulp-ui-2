@@ -61,6 +61,8 @@ interface IEntityFormPageProps {
   /** Shown beside the title (e.g. the plugin type). */
   label?: React.ReactNode;
   typeSelect?: ITypeSelectProps;
+  /** An inline alert about the object's state, shown above the fields. */
+  notice?: React.ReactNode;
   resourceFilter: ResourceFilterMap;
   submitError: IMutationErrorMessage | null;
   isSubmitting: boolean;
@@ -84,6 +86,7 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   breadcrumbs,
   label,
   typeSelect,
+  notice,
   resourceFilter,
   submitError,
   isSubmitting,
@@ -183,6 +186,7 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   const formBody = (
     <Form id={formId} onSubmit={(event) => void submit(event)} isWidthLimited>
       <FormSubmitError error={submitError} />
+      {notice}
       {typeSelect && (
         <PluginTypeSelect
           id={`${formId}-type`}

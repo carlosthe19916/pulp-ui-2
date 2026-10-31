@@ -188,7 +188,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                         repositoryId: extractIdFromHref(href),
                       },
                     }),
-                  ...lockedProps,
+                  // Not locked by a running task: the edit page warns and Pulp queues the save.
                   ...disabledProps("change"),
                 },
               },
