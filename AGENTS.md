@@ -26,13 +26,15 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 │       ├── router.ts         # TanStack Router instance
 │       ├── routes/           # file-based routes (TanStack Router)
 │       ├── routeTree.gen.ts  # auto-generated route tree (DO NOT EDIT)
-│       ├── catalog/          # `@catalog`: per-plugin data (pulp_type → endpoints, capabilities)
+│       ├── plugin-sdk/       # `@plugin-sdk`: what plugins build on (definition + UI types, blocks)
+│       ├── plugins/          # one folder per plugin: definition.ts (facts) + ui/ (forms, views)
+│       │                     #   `@catalog` (pure registry) and `@plugins` (UI registry)
 │       └── app/
 │           ├── App.tsx       # root app component
 │           ├── pages/        # page components, grouped by area
 │           ├── queries/      # TanStack Query hooks, one file per domain
 │           ├── components/   # shared UI components
-│           ├── forms/        # per-plugin create/edit form definitions + form-page kit
+│           ├── forms/        # form-page kit and shared fragments
 │           ├── hooks/        # custom hooks (useStorage, useSelectedDomain)
 │           ├── context/      # React context providers
 │           ├── layout/       # app shell / layout components

@@ -3,6 +3,8 @@ paths:
   - client/src/app/components/**
   - client/src/app/pages/**
   - client/src/app/forms/**
+  - client/src/plugins/*/ui/**
+  - client/src/plugin-sdk/ui/**
 ---
 
 # Component boundaries: the caller owns side effects

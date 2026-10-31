@@ -3,6 +3,8 @@ paths:
   - client/src/app/pages/**
   - client/src/app/components/**
   - client/src/app/forms/**
+  - client/src/plugins/*/ui/**
+  - client/src/plugin-sdk/ui/**
 ---
 
 # UI conventions (`components/`, `pages/`)

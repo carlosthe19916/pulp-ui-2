@@ -2,7 +2,7 @@
 paths:
   - client/src/app/queries/**
   - client/src/app/hooks/**
-  - client/src/catalog/**
+  - client/src/plugins/*/definition.ts
 ---
 
 # Pulp API usage
@@ -60,7 +60,8 @@ Don't build new UI on deprecated fields or endpoints (`deprecated: true` in the 
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and `catalog/`.
+Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and plugin
+definitions.
 
 - [ ] Write responses are typed from the operation's declared statuses; task handling doesn't
       assume every write returns `202`.
