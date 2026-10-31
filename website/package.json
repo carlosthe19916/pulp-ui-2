@@ -26,13 +26,14 @@
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "search-insights": "^2.17.3",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.10.2",
-    "@playwright/test": "^1.64.0",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
+    "@playwright/test": "^1.64.0",
     "@types/react": "^19.0.0",
     "typescript": "~6.0.2"
   },
