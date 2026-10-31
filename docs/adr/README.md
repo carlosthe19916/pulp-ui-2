@@ -22,6 +22,7 @@ To change a decision, add a new record with the next number, set the old one's `
 | [0006](0006-async-task-feedback.md)              | Long-running work is shown as tasks                      |
 | [0007](0007-rest-api-only.md)                    | The UI uses only the Pulp REST API                       |
 | [0008](0008-permission-aware-actions.md)         | Actions the user can't run are disabled, not hidden      |
+| [0009](0009-relationship-views.md)               | Relationship graphs are an extra view (Proposed)         |
 
 ## Template
 

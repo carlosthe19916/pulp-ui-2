@@ -63,6 +63,7 @@ import { TAB_BY_REPOSITORY_TYPE } from "./components/pluginTabs";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
+import { RepositoryTopologyTab } from "./components/RepositoryTopologyTab";
 import { RepositoryVersionsTab } from "./components/RepositoryVersionsTab";
 
 interface IRepositoryDetailProps {
@@ -351,6 +352,19 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               >
                 <TabContentBody hasPadding>
                   <RepositoryDistributionsTab repositoryHref={href} />
+                </TabContentBody>
+              </Tab>
+              <Tab
+                eventKey="topology"
+                title={<TabTitleText>Topology</TabTitleText>}
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryTopologyTab
+                    repository={repository}
+                    pulpType={pulpType}
+                    isRunning={isRunning}
+                    onOpenTab={setActiveTab}
+                  />
                 </TabContentBody>
               </Tab>
               {pluginTab && (
