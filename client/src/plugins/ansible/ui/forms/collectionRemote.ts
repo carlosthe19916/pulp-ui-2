@@ -9,6 +9,7 @@ import {
 import { remoteForm } from "@plugin-sdk/ui";
 
 import { ansible } from "../../definition";
+import { isPublicGalaxyUrl } from "./galaxy";
 
 const REQUIREMENTS_TEMPLATE = `---
 collections:
@@ -18,7 +19,7 @@ collections:
 `;
 
 const isPublicGalaxy = ({ values }: IFormContext): boolean =>
-  typeof values.url === "string" && /galaxy\.ansible\.com/i.test(values.url);
+  typeof values.url === "string" && isPublicGalaxyUrl(values.url);
 
 const hasRequirements = ({ values }: IFormContext): boolean =>
   typeof values.requirements_file === "string" &&
