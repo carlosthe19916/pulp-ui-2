@@ -1,7 +1,6 @@
 import { expect, test } from "@support/fixtures";
 import {
   DISTRIBUTIONS,
-  expandedRow,
   expectCreated,
   fileDistribution,
   seedDistribution,
@@ -34,7 +33,7 @@ test.describe("Distribution create page", () => {
    *
    * When I create a file distribution with a base path and choose <source>
    * Then the Distributions list opens with the toast "Distribution "<name>" creation started"
-   * And when the task finishes, the row expanded shows <serves>
+   * And when the task finishes, its detail page opened from the list shows <serves>
    *
    * | source                                  | serves                      |
    * | --------------------------------------- | --------------------------- |
@@ -132,10 +131,12 @@ test.describe("Distribution create page", () => {
             .toEqual(row.expected);
 
           await distributionsPage.filterBy("Name", name);
-          await distributionsPage.expectRowVisible(name);
-          await distributionsPage.expandRow(name);
+          await distributionsPage
+            .row(name)
+            .getByRole("link", { name, exact: true })
+            .click();
           await expect(
-            expandedRow(page).getByText(row.serves).first(),
+            page.getByRole("main").getByText(row.serves).first(),
           ).toBeVisible();
         });
       }
@@ -184,15 +185,15 @@ test.describe("Distribution create page", () => {
   /**
    * DST-CRE-03 · A content guard protects a distribution
    *
-   * Summary: A distribution can be created with a content guard, and its row shows the guard.
+   * Summary: A distribution can be created with a content guard, and its detail page shows the guard.
    *
    * Seed: a file repository, an RBAC content guard
    *
    * When I create a file distribution serving the repository with that content guard
-   * Then the row expanded shows the content guard's name
+   * Then its detail page opened from the list shows the content guard's name
    */
   test(
-    "A distribution can be created with a content guard, and its row shows the guard.",
+    "A distribution can be created with a content guard, and its detail page shows the guard.",
     {
       tag: "@DST-CRE-03",
       annotation: {
@@ -230,9 +231,12 @@ test.describe("Distribution create page", () => {
         .toBe(guardHref);
 
       await distributionsPage.filterBy("Name", name);
-      await distributionsPage.expandRow(name);
+      await distributionsPage
+        .row(name)
+        .getByRole("link", { name, exact: true })
+        .click();
       await expect(
-        expandedRow(page).getByText(guardName, { exact: true }),
+        page.getByRole("main").getByText(guardName, { exact: true }),
       ).toBeVisible();
     },
   );

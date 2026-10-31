@@ -11,7 +11,7 @@ routes:
 
 A distribution serves content at a base path. It serves exactly one source: a repository's latest
 version, one repository version, or a publication. Each distribution has a detail page (Details,
-Tasks, Access); rows also expand in the list for a quick look. Create and edit are form pages:
+Tasks, Access); list rows don't expand. Create and edit are form pages:
 creating returns to the list (the create runs as a task), editing returns to the detail page.
 The shared form-page behaviour is in [form-pages.md](form-pages.md).
 
@@ -38,7 +38,7 @@ Seed: a file repository with two versions and a publication of version 1
 
 When I create a file distribution with a base path and choose <source>
 Then the Distributions list opens with the toast "Distribution "<name>" creation started"
-And when the task finishes, the row expanded shows <serves>
+And when the task finishes, its detail page opened from the list shows <serves>
 
 | source                                  | serves                      |
 | --------------------------------------- | --------------------------- |
@@ -58,12 +58,12 @@ must be unique.", no task starts, and the page stays open with what I typed
 
 ### DST-CRE-03 A content guard protects a distribution
 
-Summary: A distribution can be created with a content guard, and its row shows the guard.
+Summary: A distribution can be created with a content guard, and its detail page shows the guard.
 
 Seed: a file repository, an RBAC content guard
 
 When I create a file distribution serving the repository with that content guard
-Then the row expanded shows the content guard's name
+Then its detail page opened from the list shows the content guard's name
 
 ## Edit
 
