@@ -3,9 +3,7 @@ import { describe, expect, it } from "vitest";
 import { accessKeys } from "./access";
 import { accessPolicyKeys } from "./access-policies";
 import { acsKeys } from "./acs";
-import { ansibleCollectionKeys } from "./ansible-collections";
 import { artifactKeys } from "./artifacts";
-import { containerNamespaceKeys } from "./container-namespaces";
 import { contentKeys } from "./content";
 import { contentGuardKeys } from "./content-guards";
 import { distributionKeys } from "./distributions";
@@ -13,9 +11,7 @@ import { domainKeys } from "./domains";
 import { exporterKeys } from "./exporters";
 import { groupKeys } from "./groups";
 import { importerKeys } from "./importers";
-import { mavenRepositoryKeys } from "./maven-repositories";
 import { publicationKeys } from "./publications";
-import { pythonRepositoryKeys } from "./python-repositories";
 import { remoteKeys } from "./remotes";
 import { repositoryKeys } from "./repositories";
 import { roleKeys } from "./roles";
@@ -209,21 +205,6 @@ describe("query-key factories", () => {
         }),
       ).toBe(true);
     });
-
-    it("nests plugin sub-resources under the repository detail folder", () => {
-      expect(
-        startsWith({
-          key: mavenRepositoryKeys.packagesQuery(repoHref, { limit: 1 }),
-          prefix: repositoryKeys.detail(repoHref),
-        }),
-      ).toBe(true);
-      expect(
-        startsWith({
-          key: pythonRepositoryKeys.blocklistQuery(repoHref, { limit: 1 }),
-          prefix: repositoryKeys.detail(repoHref),
-        }),
-      ).toBe(true);
-    });
   });
 
   describe("remoteKeys", () => {
@@ -380,14 +361,6 @@ describe("query-key factories", () => {
         [
           taskScheduleKeys.listQuery(domain, { limit: 10 }),
           taskScheduleKeys.list(),
-        ],
-        [
-          containerNamespaceKeys.listQuery(domain, { limit: 10 }),
-          containerNamespaceKeys.list(),
-        ],
-        [
-          ansibleCollectionKeys.listQuery(domain, { limit: 10 }),
-          ansibleCollectionKeys.list(),
         ],
         [artifactKeys.listQuery(domain, { limit: 10 }), artifactKeys.list()],
         [uploadKeys.listQuery(domain, { limit: 10 }), uploadKeys.list()],

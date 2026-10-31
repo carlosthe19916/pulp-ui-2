@@ -12,8 +12,12 @@ import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
+import { ResourceName } from "@app/components/ResourceName";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { useDistributionLabelsMutation } from "@app/queries/distributions";
+import {
+  useDistributionDetailQuery,
+  useDistributionLabelsMutation,
+} from "@app/queries/distributions";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -28,8 +32,12 @@ interface IDistributionDetailPanelProps {
 export const DistributionDetailPanel: React.FC<
   IDistributionDetailPanelProps
 > = ({ distribution }) => {
-  const record = distribution as Record<string, unknown>;
-  // Plugin-specific (file distributions): only on typed payloads.
+  // The list's cross-type endpoint omits plugin fields such as `publication`, so the opened
+  // row reads the distribution's typed detail.
+  const { data: detail } = useDistributionDetailQuery({
+    href: distribution.pulp_href ?? null,
+  });
+  const record = (detail ?? distribution) as Record<string, unknown>;
   const publication =
     typeof record.publication === "string" ? record.publication : null;
   const href = distribution.pulp_href ?? "";
@@ -55,7 +63,7 @@ export const DistributionDetailPanel: React.FC<
       <DescriptionListGroup>
         <DescriptionListTerm>Content guard</DescriptionListTerm>
         <DescriptionListDescription>
-          {distribution.content_guard || "—"}
+          <ResourceName kind="contentGuard" href={distribution.content_guard} />
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>

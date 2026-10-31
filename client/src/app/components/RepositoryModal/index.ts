@@ -1,1 +1,0 @@
-export { RepositoryModal } from "./RepositoryModal";

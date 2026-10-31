@@ -25,6 +25,7 @@ import type {
   IContentUnitRef,
   IContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
+import type { IEntityField } from "@app/utils/entityField";
 import {
   buildDefaultValues,
   buildFieldSchema,
@@ -32,7 +33,7 @@ import {
 } from "@app/utils/formSchema";
 import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
-import { getContentType, type IContentType, type IEntityField } from "@catalog";
+import { getContentType, type IContentType } from "@catalog";
 
 interface ITaskActionModalProps {
   title: string;

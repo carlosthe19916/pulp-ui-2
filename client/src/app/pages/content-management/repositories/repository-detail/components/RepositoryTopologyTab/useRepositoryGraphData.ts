@@ -2,7 +2,7 @@ import type { RepositoryResponse } from "@app/client";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import { useRemoteDetailQuery } from "@app/queries/remotes";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 import type { ITopologyPublication } from "./buildRepositoryGraph";
 
@@ -23,9 +23,9 @@ export const useRepositoryGraphData = ({
 }) => {
   const href = repository.pulp_href ?? "";
   const publicationType =
-    getPlugin(pulpType)?.entities.repository?.compatiblePublicationTypes[0];
+    getPulpType(pulpType)?.entities.repository?.compatiblePublicationTypes[0];
   const publicationApiPath = publicationType
-    ? getPlugin(publicationType)?.entities.publication?.apiPath
+    ? getPulpType(publicationType)?.entities.publication?.apiPath
     : undefined;
 
   const remote = useRemoteDetailQuery({ href: repository.remote ?? null });

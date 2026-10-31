@@ -28,7 +28,8 @@
     "start": "dotenv -- npm run build -w common -w client && dotenv -- npm run start -w server",
     "test": "npm run test -w common -w client -w server --if-present --",
     "test:e2e": "npm run test -w e2e",
-    "test:e2e:local": "npm run test:local -w e2e --"
+    "test:e2e:local": "npm run test:local -w e2e --",
+    "plugin:new": "npm run plugin:new -w client --"
   },
   "workspaces": [
     "common",

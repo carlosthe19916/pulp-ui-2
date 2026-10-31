@@ -1,5 +1,3 @@
-import type { ResourceKind } from "@catalog";
-
 import type { ITypeaheadOption } from "@app/components/TypeaheadSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import {
@@ -25,6 +23,7 @@ import {
   useSigningServicesListQuery,
 } from "@app/queries/signing-services";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import type { ResourceKind } from "@app/utils/entityField";
 
 // A publication's label is its id; only a whole id can be searched (`pulp_id__in`).
 const UUID_PATTERN =
@@ -49,7 +48,7 @@ interface IUseResourceSearchOptions {
    * Compatible pulp_types (e.g. a repository's remote types), sent as `pulp_type__in`
    * to the kinds that take it (repository, remote, publication); unset offers every type.
    */
-  pulpTypes?: string[];
+  pulpTypes?: readonly string[];
 }
 
 /**

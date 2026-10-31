@@ -18,10 +18,17 @@ public REST API — no private endpoints, no server-side rendering of app state
 
 Pulp has many plugins (file, rpm, container, …) that share the same concepts: remotes,
 repositories, publications, distributions, content and tasks. The UI has **one generic screen
-per concept** rather than a screen per plugin. What differs between plugins — form fields, which
-capabilities exist, how content is presented — is **declared as data** and plugged into the
-generic screens. Supporting a new plugin is a data change, not a new section of the app
-([ADR 0001](../adr/0001-plugin-specifics-are-data.md)).
+per concept** rather than a screen per plugin. What differs between plugins — which capabilities
+exist, how content is presented — is **declared as data** in the catalog and plugged into the
+generic screens ([ADR 0001](../adr/0001-plugin-specifics-are-data.md)), with per-plugin create
+and edit forms ([ADR 0010](../adr/0010-plugin-form-pages.md)).
+
+Everything about one plugin lives in its folder, `client/src/plugins/<id>/`: a **definition**
+(facts about Pulp: its types, endpoints and capabilities) and a **UI** (labels, forms, content
+panels, Browse views, snippets), whose required shape the compiler derives from the definition.
+Generic screens read facts from `@catalog` and UI from `@plugins`, never a plugin's files.
+Supporting a new plugin is one folder plus two registry entries, and `tsc` lists whatever is
+missing (see [plugins](plugins.md)).
 
 ## Domain-scoped
 

@@ -3,7 +3,14 @@ name: ui-conventions
 description: "Apply when building or changing UI in pages/ or components/: use the shared table, modal and detail helpers, and follow where this project departs from PatternFly defaults (no red actions, no empty-state actions, disabled not hidden)."
 root: false
 targets: ["claudecode", "cursor"]
-globs: ["client/src/app/pages/**", "client/src/app/components/**"]
+globs:
+  [
+    "client/src/app/pages/**",
+    "client/src/app/components/**",
+    "client/src/app/plugin-forms/**",
+    "client/src/plugins/*/ui/**",
+    "client/src/plugin-sdk/ui/**",
+  ]
 ---
 
 # UI conventions (`components/`, `pages/`)
@@ -127,7 +134,9 @@ return (
 - Task status on rows and pages comes from `useResourceTasks` + `ResourceTaskStatus` /
   `EntityTaskStatus`, never from local "pending" flags alone.
 - Repository content writes and header actions spread `lockedProps` from
-  `useRepositoryActivity` so they are disabled while a task runs on the repository.
+  `useRepositoryActivity` so they are disabled while a task runs on the repository. Edit is
+  the exception: Pulp queues an update behind the task, so Edit stays enabled and the edit
+  page shows `EditDuringTaskAlert` instead.
 
 ## Checklist
 

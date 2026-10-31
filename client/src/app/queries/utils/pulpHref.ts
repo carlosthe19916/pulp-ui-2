@@ -1,7 +1,8 @@
-import type { EntityType } from "@catalog";
+import type { EntityType, IContentGuardType } from "@catalog";
 
 import {
-  getPlugin,
+  getPulpType,
+  resolveContentGuardTypeByApiPath,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "@catalog";
@@ -51,17 +52,29 @@ export const resolvePulpType = (
   return resolveCrudHref(href)?.pulpType;
 };
 
+/** A content guard's type, from its href (`…/contentguards/<app>/<slug>/<pk>/`). */
+export const resolveContentGuardType = (
+  href: string | null | undefined,
+): IContentGuardType | undefined => {
+  const match = href?.match(/\/contentguards\/([^/]+)\/([^/]+)\//);
+  return match
+    ? resolveContentGuardTypeByApiPath({ apiPath: `${match[1]}/${match[2]}` })
+    : undefined;
+};
+
 /**
  * Whether a resource exposes per-object role endpoints (`my_permissions/` etc.). Role
  * support is per entity+type: some modelled types are read-only for RBAC (hugging_face,
- * OpenPGP distributions), and unmodelled ones (`core.artifact`) have none — all 404.
+ * OpenPGP distributions, certguard guards), and unmodelled ones (`core.artifact`) have
+ * none — all 404.
  */
 export const hasRoleEndpoints = (href: string | null | undefined): boolean => {
+  const guard = resolveContentGuardType(href);
+  if (guard) return guard.rolesManaged;
   const resolved = resolveCrudHref(href);
-  if (!resolved) return false;
   return (
-    getPlugin(resolved.pulpType)?.entities[resolved.entity]?.rolesManaged !==
-    false
+    !!resolved &&
+    !!getPulpType(resolved.pulpType)?.entities[resolved.entity]?.rolesManaged
   );
 };
 

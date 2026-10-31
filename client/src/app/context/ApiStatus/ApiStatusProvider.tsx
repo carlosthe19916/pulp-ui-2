@@ -15,19 +15,10 @@ export const ApiStatusProvider: React.FC<IApiStatusProviderProps> = ({
 }) => {
   const { data: status, isLoading, error } = useStatusQuery();
 
-  const value = useMemo<IApiStatusContext>(() => {
-    const plugins = status?.versions ?? [];
-    return {
-      status,
-      isLoading,
-      error,
-      plugins,
-      isPluginInstalled: (componentName: string) =>
-        plugins.some((p) => p.component === componentName),
-      getPluginVersion: (componentName: string) =>
-        plugins.find((p) => p.component === componentName)?.version,
-    };
-  }, [status, isLoading, error]);
+  const value = useMemo<IApiStatusContext>(
+    () => ({ status, isLoading, error, plugins: status?.versions ?? [] }),
+    [status, isLoading, error],
+  );
 
   return <ApiStatusContext value={value}>{children}</ApiStatusContext>;
 };

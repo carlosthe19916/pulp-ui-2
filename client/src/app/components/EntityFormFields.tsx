@@ -1,8 +1,6 @@
 import type { Control, FieldValues, Path } from "react-hook-form";
 import { Controller } from "react-hook-form";
 
-import type { IEntityField } from "@catalog";
-
 import {
   Checkbox,
   type DropEvent,
@@ -23,6 +21,7 @@ import {
   AsyncResourceMultiSelect,
   AsyncResourceSelect,
 } from "@app/components/AsyncResourceSelect";
+import type { IEntityField } from "@app/utils/entityField";
 import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 
 const isFile = (value: unknown): value is File => {

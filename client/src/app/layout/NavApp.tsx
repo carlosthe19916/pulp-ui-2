@@ -19,7 +19,8 @@ import RhUiUsersIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-users-ic
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin } from "@catalog";
+import { getScannableRepositoryTypes } from "@catalog";
+import { getAcsTypes, getPluginPages } from "@plugins";
 
 interface INavGroupProps {
   title: string;
@@ -88,10 +89,10 @@ export const NavApp: React.FC<INavAppProps> = ({
   // (or default) domain into the nav links.
   const { name: pulpDomain } = useSelectedDomain();
   // Plugin-specific pages show only when the plugin is installed.
-  const { status } = useApiStatus();
-  const isInstalled = (pulpType: string) =>
-    !!getPlugin(pulpType)?.isAvailable(status?.versions ?? []);
-  const hasAcs = ["file.file", "rpm.rpm", "deb.deb"].some(isInstalled);
+  const { plugins: installed } = useApiStatus();
+  const pluginPages = getPluginPages({ installed });
+  const hasAcs = getAcsTypes({ installed }).length > 0;
+  const canScan = getScannableRepositoryTypes({ installed }).length > 0;
 
   // Each group owns one top-level URL segment ("" for the dashboard).
   const section = useLocation({
@@ -342,42 +343,22 @@ export const NavApp: React.FC<INavAppProps> = ({
               Content
             </Link>
           </NavItem>
-          {isInstalled("ansible.ansible") && (
+          {pluginPages.map(({ page }) => (
             <NavItem
+              key={page.to}
               isActive={
                 !!matchRoute({
-                  to: "/content-management/$pulpDomain/ansible-collections",
+                  to: page.to,
                   params: { pulpDomain },
                   fuzzy: true,
                 })
               }
             >
-              <Link
-                to="/content-management/$pulpDomain/ansible-collections"
-                params={{ pulpDomain }}
-              >
-                Ansible Collections
+              <Link to={page.to} params={{ pulpDomain }}>
+                {page.label}
               </Link>
             </NavItem>
-          )}
-          {isInstalled("container.container") && (
-            <NavItem
-              isActive={
-                !!matchRoute({
-                  to: "/content-management/$pulpDomain/container-namespaces",
-                  params: { pulpDomain },
-                  fuzzy: true,
-                })
-              }
-            >
-              <Link
-                to="/content-management/$pulpDomain/container-namespaces"
-                params={{ pulpDomain }}
-              >
-                Container Namespaces
-              </Link>
-            </NavItem>
-          )}
+          ))}
         </NavGroup>
 
         <NavGroup
@@ -414,7 +395,7 @@ export const NavApp: React.FC<INavAppProps> = ({
               Task Schedules
             </Link>
           </NavItem>
-          {(isInstalled("rpm.rpm") || isInstalled("python.python")) && (
+          {canScan && (
             <NavItem
               isActive={
                 !!matchRoute({

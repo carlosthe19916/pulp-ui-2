@@ -85,7 +85,7 @@ export const ContentList: React.FC = () => {
 
   // Type options are the catalog's content types for installed plugins, grouped by owning app.
   const installedTypes = getContentTypes({ installed: useApiStatus().plugins });
-  const uploadableTypes = installedTypes.filter((ct) => ct.uploadable);
+  const uploadableTypes = installedTypes.filter((ct) => ct.upload);
   const typeOptions: IMultiSelectOption[] = installedTypes.map((ct) => ({
     label: ct.pulpType,
     value: ct.pulpType,

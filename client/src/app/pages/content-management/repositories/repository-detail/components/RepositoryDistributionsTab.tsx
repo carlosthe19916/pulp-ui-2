@@ -12,6 +12,7 @@ import {
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
@@ -49,7 +50,13 @@ export const RepositoryDistributionsTab: React.FC<
       id: distribution.pulp_href,
       row: [
         {
-          cell: distribution.name || "—",
+          cell: (
+            <ResourceHrefLink
+              kind="distribution"
+              href={distribution.pulp_href}
+              label={distribution.name}
+            />
+          ),
           props: { dataLabel: "Name" },
         },
         {

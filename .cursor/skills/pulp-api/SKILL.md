@@ -48,6 +48,6 @@ one that has it, then `npm run generate`.
 ## 3. Wire it
 
 Reads: the `add-query` skill. Writes and their toasts: the `add-mutation` skill. Plugin
-endpoints and fields: the catalog (`client/src/catalog/plugins/<plugin>.ts`).
+endpoints and fields: the plugin's definition (`client/src/plugins/<id>/definition.ts`).
 
 When you verify a new quirk against a backend, add it to `docs/internals/pulp-api-notes.md`.

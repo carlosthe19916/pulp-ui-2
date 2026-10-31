@@ -1,4 +1,4 @@
-import type { IEntityField } from "@catalog";
+import type { IEntityField } from "@app/utils/entityField";
 
 const qSelect: IEntityField = {
   key: "q_select",

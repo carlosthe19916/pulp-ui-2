@@ -1,10 +1,12 @@
 import type { IContentType } from "@catalog";
 
+import { getUploadFields } from "@plugins";
+
 import type { IUploadItem } from "./useUploadQueue";
 
-/** The catalog upload fields entered per file, as text inputs. */
+/** A content type's upload fields entered per file, as text inputs. */
 export const perFileFields = (contentType?: IContentType) =>
-  (contentType?.uploadable?.fields ?? []).filter(
+  (contentType?.upload ? getUploadFields(contentType.pulpType) : []).filter(
     (field) => field.type === "text",
   );
 

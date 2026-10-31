@@ -1,8 +1,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import type { IEntityField } from "@catalog";
-
 import {
   Content,
   ContentVariants,
@@ -41,6 +39,7 @@ import {
 } from "@app/queries/access-policies";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import type { IEntityField } from "@app/utils/entityField";
 import { buildDefaultValues } from "@app/utils/formSchema";
 import { getMutationErrorMessage } from "@app/utils/utils";
 

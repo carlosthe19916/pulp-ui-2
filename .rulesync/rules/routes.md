@@ -8,6 +8,7 @@ globs:
     "client/src/routes/**",
     "client/src/router.ts",
     "client/src/app/pages/**/*DetailRoute.tsx",
+    "client/src/app/pages/**/*EditRoute.tsx",
   ]
 ---
 
@@ -19,6 +20,9 @@ globs:
   `pendingComponent`, `errorComponent`, `component`) to a page from `@app/pages/...`. No page
   JSX, hooks or queries; no `lazy()` (routes are auto code-split).
 - A pathless layout (`_authenticated.tsx`) has no `component`; the router renders `<Outlet />`.
+- A plugin's own page keeps its route file (file-based routing) with
+  `component: pluginPage("<to>")` from `@app/components/PluginPage`, which renders the page the
+  plugin registered for that route; the route never imports the plugin.
 
 ## Detail routes
 
@@ -65,6 +69,19 @@ export const WidgetDetailRoute: React.FC = () => {
 };
 ```
 
+## Create and edit routes
+
+Form pages ([forms](forms.md)) sit beside the list and detail routes:
+
+- `<entities>/create.ts` has no loader; `validateSearch` returns `{ type?: string }`, and the
+  page reads and updates `?type=` itself (the Type select). The path never names a plugin.
+- `<entities>/$<entity>Type/$<entity>Id/edit.tsx` is a detail route (pending and error
+  components) that also throws when `getEntityForm({ …, mode: "edit" })` has no form for the
+  type, and loads the page's permission check with `prefetchEditPermissions` (failures
+  ignored); its `*EditRoute.tsx` adapter passes `pulpDomain`, the type and the href. Unlike a
+  detail route it primes the object with `staleTime: 0`: the form freezes what it loads as its
+  defaults and diffs the PATCH against them, so it never starts from a stale cache.
+
 ## Params, search and links
 
 - Pages and components never read path params; the one exception is `useSelectedDomain()`.
@@ -83,6 +100,9 @@ Pass/fail rubric for `/eval`. Check changed files under `client/src/routes/`, `r
       no href, prime the detail query with `query({ …, staleTime: "static" })`, and return
       the href(s).
 - [ ] `DetailRoutePending` with `Loading <object>` (no ellipsis) and `DetailRouteError`.
+- [ ] A create route has no loader and a `type` search param; an edit route is a detail route
+      that also throws for a type without an edit form and primes the object fresh
+      (`staleTime: 0`).
 - [ ] Adapters read through `getRouteApi` with the exact route id and pass props.
 - [ ] Pages read no path params (except `useSelectedDomain`) and read search only for their own
       route via `getRouteApi`.

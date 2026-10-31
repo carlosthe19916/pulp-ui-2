@@ -1,5 +1,7 @@
 import type React from "react";
 
+import type { IAcsType } from "@plugins";
+
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
@@ -12,7 +14,7 @@ import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { ACS_FIELDS, type IAcsType } from "../utils/acsTypes";
+import { ACS_FIELDS } from "../utils/acsTypes";
 
 interface IAcsModalProps {
   acsType: IAcsType;

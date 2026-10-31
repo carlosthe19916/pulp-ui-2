@@ -3,7 +3,14 @@ name: component-boundaries
 description: "Apply when building or changing a reusable component in components/ or a page's components/: keep it controlled and side-effect-free — no query-key props, no cache invalidation, no toasts — and let the caller own success and error."
 root: false
 targets: ["claudecode", "cursor"]
-globs: ["client/src/app/components/**", "client/src/app/pages/**"]
+globs:
+  [
+    "client/src/app/components/**",
+    "client/src/app/pages/**",
+    "client/src/app/plugin-forms/**",
+    "client/src/plugins/*/ui/**",
+    "client/src/plugin-sdk/ui/**",
+  ]
 ---
 
 # Component boundaries: the caller owns side effects

@@ -8,9 +8,8 @@ export interface IApiStatusContext {
   status: StatusResponse | undefined;
   isLoading: boolean;
   error: AxiosError<unknown> | null;
+  /** The installed components (`/status/` versions). */
   plugins: VersionResponse[];
-  isPluginInstalled: (componentName: string) => boolean;
-  getPluginVersion: (componentName: string) => string | undefined;
 }
 
 export const ApiStatusContext = createContext<IApiStatusContext | null>(null);

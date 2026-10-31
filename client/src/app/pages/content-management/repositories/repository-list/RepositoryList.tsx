@@ -2,6 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   Button,
@@ -32,18 +33,18 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { PublishModal } from "@app/components/PublishModal";
-import { RepositoryModal } from "@app/components/RepositoryModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IRepositoryListParams } from "@app/queries/repositories";
 import {
   repositoryKeys,
@@ -51,11 +52,16 @@ import {
   useRepositoryDeleteMutation,
 } from "@app/queries/repositories";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  hasRoleEndpoints,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
+import { getEntityForm } from "@plugins";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -71,11 +77,8 @@ export const RepositoryList: React.FC = () => {
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
-  const [modalState, setModalState] = useState<
-    "create" | RepositoryResponse | null
-  >(null);
-  const repositoryToEdit =
-    modalState === "create" ? undefined : (modalState ?? undefined);
+  const navigate = useNavigate();
+  const { name: pulpDomain } = useSelectedDomain();
 
   const [deleteTarget, setDeleteTarget] = useState<RepositoryResponse | null>(
     null,
@@ -85,7 +88,7 @@ export const RepositoryList: React.FC = () => {
     null,
   );
 
-  const canCreate = useCreatablePlugins("repository").length > 0;
+  const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
       notifyTaskStarted({
@@ -194,16 +197,28 @@ export const RepositoryList: React.FC = () => {
   const rows: DataViewTr[] = repositories.map((repository) => {
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
-      ? getPlugin(pulpType)?.entities.repository
+      ? getPulpType(pulpType)?.entities.repository
       : undefined;
-    const canEdit = !!repo;
+    const canEdit = !!(
+      pulpType &&
+      getEntityForm({ entity: "repository", pulpType, mode: "edit" })
+    );
     const canSync = (repo?.compatibleRemoteTypes.length ?? 0) > 0;
     const canPublish = (repo?.compatiblePublicationTypes.length ?? 0) > 0;
 
     const actionItems: IAction[] = [
       {
         title: "Edit",
-        onClick: () => setModalState(repository),
+        onClick: () =>
+          pulpType &&
+          void navigate({
+            to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/edit",
+            params: {
+              pulpDomain,
+              repositoryType: pulpType,
+              repositoryId: extractIdFromHref(repository.pulp_href ?? ""),
+            },
+          }),
         ...(canEdit
           ? disabledProps({ href: repository.pulp_href, verb: "change" })
           : {
@@ -340,7 +355,12 @@ export const RepositoryList: React.FC = () => {
               canCreate ? (
                 <Button
                   variant="primary"
-                  onClick={() => setModalState("create")}
+                  onClick={() =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/repositories/create",
+                      params: { pulpDomain },
+                    })
+                  }
                 >
                   Create repository
                 </Button>
@@ -381,12 +401,6 @@ export const RepositoryList: React.FC = () => {
             }
           />
         </DataView>
-
-        <RepositoryModal
-          isOpen={modalState !== null}
-          entity={repositoryToEdit}
-          onClose={() => setModalState(null)}
-        />
 
         {syncTarget && (
           <SyncModal

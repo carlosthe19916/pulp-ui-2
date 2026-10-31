@@ -26,6 +26,11 @@ const SPEC_FILES = [
   "roles.md",
   "access-policies.md",
   "domains.md",
+  "form-pages.md",
+  "remotes.md",
+  "repositories.md",
+  "distributions.md",
+  "publications.md",
 ];
 // Scan the whole test tree: transform() only acts on tests carrying an @<ID> tag or an
 // ID-prefixed title, so untagged specs elsewhere are left untouched.

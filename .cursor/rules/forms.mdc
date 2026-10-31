@@ -1,38 +1,82 @@
 ---
-description: 'Apply when building a create, edit or action modal form: submission errors appear inside the form (FormSubmitError) so the user can fix and retry, and the modal closes only on success.'
-globs: client/src/app/**/*Form.tsx,client/src/app/**/use*Form.tsx,client/src/app/**/use*Form.ts,client/src/app/**/*Modal.tsx,client/src/app/components/EntityModalBody/**,client/src/app/components/EntityModalShell.tsx,client/src/app/components/PluginTypeSelector.tsx,client/src/app/utils/formSchema.ts,client/src/app/utils/resourceFilter.ts,client/src/app/components/FormSubmitError.tsx,client/src/app/hooks/useSubmitError.ts
+description: 'Apply when building a create or edit form page (repositories, remotes, distributions, publications) or a modal form: per-plugin definitions rendered by EntityFormPage, edit sends only changes, submission errors show in the form, and the form leaves (page) or closes (modal) only on success.'
+globs: client/src/app/plugin-forms/**,client/src/plugins/*/ui/forms/**,client/src/app/pages/**/*-create/**,client/src/app/pages/**/*-edit/**,client/src/app/**/*Form.tsx,client/src/app/**/use*Form.tsx,client/src/app/**/use*Form.ts,client/src/app/**/*Modal.tsx,client/src/app/utils/formSchema.ts,client/src/app/utils/resourceFilter.ts,client/src/app/components/FormSubmitError.tsx,client/src/app/hooks/useSubmitError.ts
 ---
 
-# Modal form submission-error conventions
+# Forms
 
-**A modal form's submission failure is shown _in the form_, not as a toast.** On
-create/update/action failure the error renders as an inline PatternFly `Alert` at the **top of
-`<Form>`** and the modal **stays open** for retry. Success toasts and all list/detail error
-toasts (delete, one-off actions, navigate-away) stay toasts.
+Two kinds of form share one core: **form pages** create and edit repositories, remotes,
+distributions and publications ([ADR 0010](../../docs/adr/0010-plugin-form-pages.md)); **modal
+forms** run everything else (plugin actions, admin objects, uploads).
 
-## Building blocks
+## Shared core
 
-- **`useSubmitError`** (`hooks/useSubmitError.ts`) — returns `submitError`, `setSubmitError`
-  and `clearSubmitError`.
-- **`FormSubmitError`** (`components/FormSubmitError.tsx`) — renders the error; **first child
-  of `<Form>`**.
-- **`getMutationErrorMessage({ error, fallback })`** (`utils/utils.ts`) — builds the message.
+**A submission failure is shown _in the form_, not as a toast**: an inline `Alert` at the top of
+`<Form>`, and the form stays for retry. Success toasts and list/detail error toasts stay toasts.
 
-## Rules
+- **`useSubmitError`** (`hooks/useSubmitError.ts`) returns `submitError`, `setSubmitError` and
+  `clearSubmitError`; **`FormSubmitError`** renders it as the **first child of `<Form>`**;
+  **`getMutationErrorMessage({ error, fallback })`** builds the message.
+- `clearSubmitError()` runs at the start of each submit.
+- The primary button is `type="submit" form={formId}` with `<Form id={formId}>`, so Enter and
+  click share one `onSubmit`.
+
+## Form pages
+
+- `client/src/app/plugin-forms/` is the kit (`defineForm`, derivations, `EntityFormPage`) and the
+  shared `fragments/`. Each plugin × type form lives in its plugin, `plugins/<id>/ui/forms/`,
+  typed from the definition (`remoteForm(rpm.remote["rpm.uln"])(…)`, see [plugins](plugins.md))
+  and registered in the plugin's UI. **No generic fallback**: every declared type needs a form.
+  A type Pulp creates itself (push repositories) sets `modes: ["edit"]`; publications are
+  create-only.
+- A definition renders or `omit`s every body key — `tsc` names the uncovered ones. Each `omit`
+  entry gets a reason comment. Deprecated fields are omitted.
+- Layout is the plugin's: `s.essentials([...])` first (the 3–6 fields that define the object),
+  then `s.collapsible(...)` sections, reusing `plugin-forms/fragments/` (`authSection`,
+  `tlsSection`, `proxySection`, `downloadsSection`, `timeoutsSection`, `labelsField`, …, all
+  from `@app/plugin-forms/fragments`) where they fit.
+- Field kinds carry behaviour, so a definition never hand-writes it: write-only values are
+  `secret` (never re-sent unless changed), PEM / YAML / JSON are `code`, lists are `stringList`,
+  headers and labels are `keyValue`, pickers are `resource`. Something the kinds can't express
+  is a `custom` field. `defineForm` also rejects a kind that can't hold the key's API type.
+- Labels are `createOnly`; an existing object's labels change through its labels editor.
+- A `resource` picker offers only the types its field's `pulpTypes` lists (`remoteField(f, {
+pulpTypes: def.compatibleRemoteTypes })`); the page passes no filter.
+- One file per plugin × type in `ui/forms/`: `<entity>.ts` for the plugin's main type,
+  `<variant><Entity>.ts` for the others, exporting `<plugin><Variant><Entity>Form`
+  (`pushRepository.ts` → `containerPushRepositoryForm`). Shared sections use `SECTION_IDS`.
+- The page (`pages/<area>/<entity>/<entity>-create/`, `<entity>-edit/`) owns `useSubmitError`,
+  the mutation, the toasts and the navigation, and renders `EntityCreatePage` /
+  `EntityEditPage` (`@app/components`), the controlled frames that look up the form and add the
+  breadcrumb, Type select, permission gate and running-task notice. `EntityFormPage` builds the
+  body (create: non-empty visible values; edit: only the changed fields, an emptied field as its
+  clear value, never the whole object).
+- A create page takes its Type select, carried-over values and `apiPath` from
+  `useCreateTypeSelect` (`@app/hooks`); edit routes take the form from `getEntityForm`
+  (`@plugins`) and prime the object fresh.
+- An edit page passes `can("change")` and the running task (`useRunningTask`, or
+  `useRepositoryActivity` for a repository) to `EntityEditPage`, and toasts the update with
+  `notifyUpdateResult` (a task or the updated object).
+- The page's `onSubmit` runs the mutation and calls the `saved(href?)` helper from its
+  call-level `onSuccess`; the kit lifts the leave prompt and calls `onSaved`, where the page
+  navigates (an edit → the detail page; a remote or repository create → its new detail page,
+  or the list when the response has no href; a distribution or publication create, which runs as a task → the list). An edit with
+  nothing to send calls `onSaved` without a request. Nothing navigates in `onError`.
+- `EntityEditPage` renders `UnauthorizedState` instead of the form when
+  `useObjectPermissions({ href }).can("change")` is false; lists and detail pages disable Edit
+  with `disabledProps("change")`. A create page isn't pre-checked (Pulp exposes no create
+  permission).
+- No wizard; no create/edit modal for these entities.
+
+## Modal forms
 
 - The **form hook** owns the error (sets it in the mutation `onError`), the **form component**
   renders it, the **modal** threads it. `TaskActionModal` takes `submitError` as a prop; its
   caller owns `useSubmitError` and the mutation.
-- `clearSubmitError()` at the start of each submit; a persistently-mounted modal also clears it
-  in its close handler.
+- A persistently-mounted modal also clears the error in its close handler.
 - The modal closes **on success only**: call-level `onSuccess: onClose`. `mutateAsync` modals
   (chained requests, or a success message built from the result plus form state)
   `setSubmitError(…)` in `catch` and `return` instead of closing.
-- In the entity wizard, the error shows only on the final (submitting) step.
-- One `<Entity>Modal` per entity handles create and edit (`entity` prop present = edit); the
-  list page keeps one `"create" | Entity | null` state. No separate `Create*` / `Edit*` modals.
-- The primary button is `type="submit" form={formId}` with `<Form id={formId}>`, so Enter and
-  click share one `onSubmit`.
 - An edit form's values→payload mapping sends a cleared optional field as its empty value so
   the server clears it (`""` for text, `null` for a nullable field); omitting it keeps the old
   value (see [pulp-api](pulp-api.md)). Create may still drop empties.
@@ -43,20 +87,22 @@ toasts.
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check modal create/update/action forms in changed `*Form.tsx`,
-`use*Form.ts(x)`, `*Modal.tsx` and `EntityModalBody/**` (skip the out-of-scope batch and
-confirmation modals).
+Pass/fail rubric for `/eval`. Check changed `plugin-forms/**`, `plugins/*/ui/forms/**`,
+`*-create/**`, `*-edit/**`, `*Form.tsx`, `use*Form.ts(x)` and `*Modal.tsx` (skip the
+out-of-scope batch and confirmation modals).
 
-- [ ] Modal form submission failures are shown in-form via `FormSubmitError` as the **first
-      child of `<Form>`**, fed by `useSubmitError` — **not** a danger toast.
-- [ ] The form hook sets `submitError` in the mutation `onError` (or the `catch` for
-      `mutateAsync` modals) using `getMutationErrorMessage({ error, fallback })`.
-- [ ] `clearSubmitError()` runs at the start of each submit; the close handler of a
-      persistently-mounted modal also clears it.
-- [ ] The modal **closes on success only** and stays open on error (success via the call-level
-      `onSuccess: onClose`; `mutateAsync` modals `return` after `setSubmitError` instead of
-      closing).
-- [ ] One modal per entity for create and edit; its primary button is
-      `type="submit" form={formId}` tied to `<Form id={formId}>`.
-- [ ] Success toasts and all list/detail error toasts remain toasts — only the
-      modal-form submission error moves in-form.
+- [ ] Submission failures are shown in-form via `FormSubmitError` as the **first child of
+      `<Form>`**, fed by `useSubmitError` and `getMutationErrorMessage` — **not** a danger
+      toast; `clearSubmitError()` runs at the start of each submit.
+- [ ] The primary button is `type="submit" form={formId}` tied to `<Form id={formId}>`.
+- [ ] Repository, remote, distribution and publication create/edit is a form page: one form
+      per plugin × type in `plugins/<id>/ui/forms/`, registered in the plugin's UI, no generic
+      fallback, no wizard and no modal.
+- [ ] Forms are typed from the plugin's definition (`remoteForm(…)` and siblings), compile
+      with no uncovered keys, and give each `omit` entry a reason.
+- [ ] Write-only fields are `secret`; PEM, YAML and JSON are `code`; labels are `createOnly`.
+- [ ] A form page navigates away only through `onSaved`, reached by calling `saved()` from the
+      mutation's call-level `onSuccess`; edit sends the derived diff, never the whole object.
+- [ ] A modal **closes on success only** (call-level `onSuccess: onClose`; `mutateAsync` modals
+      `return` after `setSubmitError`), and a modal edit sends a cleared field as its empty value.
+- [ ] Success toasts and all list/detail error toasts remain toasts.

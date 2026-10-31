@@ -8,7 +8,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 import { RemoveContentBody } from "./RemoveContentBody";
 
@@ -68,8 +68,8 @@ export const RemoveContentModal: React.FC<IRemoveContentModalProps> = ({
   }
 
   const isContainer =
-    getPlugin(resolvePulpType(repository.pulp_href) ?? "")?.entities.repository
-      ?.contentChanges === "addRemove";
+    getPulpType(resolvePulpType(repository.pulp_href) ?? "")?.entities
+      .repository?.contentChanges === "addRemove";
   return (
     <ConfirmActionModal
       isOpen

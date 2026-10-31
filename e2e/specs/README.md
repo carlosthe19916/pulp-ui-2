@@ -40,6 +40,11 @@ navigation end to end:
 | [roles.md](roles.md)                     | `ROL`  | Roles list, locked roles, create/edit/delete, permission input            |
 | [access-policies.md](access-policies.md) | `ACP`  | Access policy list, edit, reset, permissions, effect                      |
 | [domains.md](domains.md)                 | `DOM`  | Domains list, storage expand, create/edit/delete, feature-disabled states |
+| [form-pages.md](form-pages.md)           | `FORM` | What every create/edit form page shares, on the remote pages              |
+| [remotes.md](remotes.md)                 | `RMT`  | Remotes list actions, per-plugin create, edit, detail settings, delete    |
+| [repositories.md](repositories.md)       | `REP`  | Repository create/edit pages, remote picker, push types, About settings   |
+| [distributions.md](distributions.md)     | `DST`  | Distribution create/edit pages, detail page, source choice, base path     |
+| [publications.md](publications.md)       | `PUB`  | Publication create page, version choice, publishable types, APT kinds     |
 
 ## Writing a scenario
 
@@ -100,4 +105,4 @@ Expected outcomes follow the Pulp backend; where the UI disagrees, the backend w
 - **Second user**: a non-admin user created by the test, holding only the permissions the
   scenario states.
 - **Toast**: the alert that appears top-right; _success_ (green) or _danger_ (red).
-- **In-form error**: the red alert at the top of a modal form.
+- **In-form error**: the red alert at the top of a modal form or a form page.

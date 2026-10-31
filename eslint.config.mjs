@@ -50,6 +50,12 @@ const iconBarrelImport = {
     "Import the icon from its deep path: @patternfly/react-icons/dist/esm/icons/<name>-icon.",
 };
 
+const pluginInternals = {
+  regex: "^(\\.\\./)+plugins(/|$)",
+  message:
+    "Reach plugins through the registries: @catalog (facts) and @plugins (UI), never a plugin's files.",
+};
+
 export default defineConfig([
   globalIgnores(["**/dist", "**/coverage"]),
   {
@@ -144,7 +150,7 @@ export default defineConfig([
       "simple-import-sort": simpleImportSort,
     },
     rules: {
-      // Five blocks: react → packages → @patternfly → @app/@catalog → relative.
+      // Five blocks: react → packages → @patternfly → @app/@catalog/@plugin-sdk/@plugins → relative.
       "simple-import-sort/imports": [
         "error",
         {
@@ -152,7 +158,7 @@ export default defineConfig([
             ["^\\u0000?react\\u0000?$", "^\\u0000?react-"],
             ["^\\u0000?@?\\w"],
             ["^\\u0000?@patternfly/"],
-            ["^\\u0000?@(app|catalog)(/|$)"],
+            ["^\\u0000?@(app|catalog|plugin-sdk|plugins)(/|$)"],
             ["^\\u0000?\\."],
           ],
         },
@@ -175,6 +181,16 @@ export default defineConfig([
     },
   },
   {
+    // Hosts reach plugins only through the registries (ADR 0012).
+    files: ["client/src/app/**", "client/src/routes/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { paths: [iconBarrelImport], patterns: [pluginInternals] },
+      ],
+    },
+  },
+  {
     // App-root modules are shared; pages depend on them, never the reverse.
     files: [
       "client/src/app/components/**",
@@ -191,6 +207,111 @@ export default defineConfig([
             {
               group: ["@app/pages", "@app/pages/*", "**/pages/*"],
               message: "App-root modules never import from pages/.",
+            },
+            pluginInternals,
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // The SDK is what plugins build on; it never depends on the plugins or their registries.
+    files: ["client/src/plugin-sdk/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [iconBarrelImport],
+          patterns: [
+            {
+              group: ["@plugins", "@catalog"],
+              message: "The plugin SDK never imports the plugins or their registries.",
+            },
+            pluginInternals,
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // A definition is facts about Pulp: generated types and @plugin-sdk/definition only.
+    files: [
+      "client/src/plugin-sdk/definition/**",
+      "client/src/plugins/*/definition.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^\\.\\./",
+              message: "A definition never imports another plugin.",
+            },
+            {
+              group: [
+                "@app/*",
+                "!@app/client",
+                "!@app/client/*",
+                "react",
+                "react-*",
+                "@patternfly/*",
+                "@plugin-sdk/ui",
+                "@plugin-sdk/ui/*",
+                "@plugins",
+                "@catalog",
+              ],
+              message:
+                "A plugin definition holds facts only: no UI, app modules or registries.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // A plugin's UI uses the SDK and shared building blocks, never the hosts or registries.
+    files: ["client/src/plugins/*/ui/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [iconBarrelImport],
+          patterns: [
+            {
+              group: [
+                "@plugins",
+                "@catalog",
+                "@app/pages/*",
+                "@app/layout/*",
+                "@app/components/PluginContentPanel",
+                "@app/components/PluginPage",
+                "@app/components/RepositoryContent",
+              ],
+              message:
+                "A plugin's UI never imports the registries, the hosts or another plugin; its facts come from its own definition.",
+            },
+            {
+              // From ui/ or ui/<folder>/, only the plugin's own definition sits two levels up.
+              regex: "^\\.\\./\\.\\./(\\.\\./|(?!definition$))",
+              message: "A plugin's UI never imports another plugin.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // @catalog is pure facts: it joins the definitions, never a plugin's UI.
+    files: ["client/src/plugins/catalog.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*/ui", "./*/ui/*", "@plugin-sdk/ui", "@plugin-sdk/ui/*", "react", "react-*"],
+              message: "The catalog imports plugin definitions only, never UI.",
             },
           ],
         },

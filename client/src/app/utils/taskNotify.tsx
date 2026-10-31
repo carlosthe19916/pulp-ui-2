@@ -44,6 +44,31 @@ export const notifyTaskStarted = ({
   });
 };
 
+export interface INotifyUpdateResultOptions {
+  addNotification: INotifyFn;
+  /** The update response: a task (202) or the updated object (200). */
+  data: object;
+  /** What was updated, e.g. `Remote "foo"`. */
+  subject: string;
+}
+
+/** Toast for an update that Pulp may run as a task or apply at once. */
+export const notifyUpdateResult = ({
+  addNotification,
+  data,
+  subject,
+}: INotifyUpdateResultOptions) => {
+  if ("task" in data && typeof data.task === "string") {
+    notifyTaskStarted({
+      addNotification,
+      taskHref: data.task,
+      title: `${subject} update started`,
+    });
+  } else {
+    addNotification({ title: `${subject} updated`, variant: "success" });
+  }
+};
+
 export interface INotifyTaskGroupStartedOptions {
   addNotification: INotifyFn;
   taskGroupHref: string;

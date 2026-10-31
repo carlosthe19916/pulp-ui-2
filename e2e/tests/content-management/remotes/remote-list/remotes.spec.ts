@@ -1,94 +1,84 @@
 import { expect, test } from "@support/fixtures";
+import { FILE_MANIFEST_URL } from "@support/helpers/fixtureUrls";
 import { uniqueName } from "@support/helpers/unique";
+import { ConfirmModal } from "@support/pom/ConfirmModal";
 
-const FILE_URL = "https://fixtures.pulpproject.org/file/PULP_MANIFEST";
-const FILE_URL_2 = "https://fixtures.pulpproject.org/file2/PULP_MANIFEST";
+// Scenarios: e2e/specs/remotes.md (list, delete).
 
 test.describe("Remotes", () => {
-  test("create, edit, and delete a file remote", async ({
-    remotesPage,
-    cleanup,
-  }) => {
-    await remotesPage.goto();
-
-    const name = cleanup.remote(uniqueName("remote"));
-    await remotesPage.create({
-      type: "file.file",
-      fields: { Name: name, URL: FILE_URL },
-    });
-    await remotesPage.filterBy("Name", name);
-    await remotesPage.expectRowVisible(name);
-    await expect(remotesPage.row(name)).toContainText(FILE_URL);
-
-    await remotesPage.editField(name, { URL: FILE_URL_2 });
-    await expect(remotesPage.row(name)).toContainText(FILE_URL_2);
-
-    await remotesPage.delete(name);
-    await remotesPage.expectRowGone(name);
-  });
-
-  test("create modal offers every installed remote plugin type", async ({
-    remotesPage,
-  }) => {
-    await remotesPage.goto();
-    const types = await remotesPage.typeOptions();
-    expect(types).toContain("file.file");
-    // Multiple plugins are installed in the dev/e2e backend.
-    expect(types.length).toBeGreaterThan(1);
-  });
-
-  test("create remote is a multi-step wizard with grouped fields", async ({
-    remotesPage,
-    page,
-  }) => {
-    await remotesPage.goto();
-    const dialog = await remotesPage.openCreate();
-
-    // The large remote form is a wizard: grouped steps + Back/Next footer.
-    await expect(
-      dialog.getByRole("button", { name: "Next", exact: true }),
-    ).toBeVisible();
-    await expect(
-      dialog.getByRole("button", { name: "Back", exact: true }),
-    ).toBeDisabled();
-    // Step 1 (General) holds the required fields.
-    await expect(dialog.getByRole("combobox", { name: "Type" })).toBeVisible();
-    await expect(
-      dialog.getByRole("textbox", { name: "Name", exact: true }),
-    ).toBeVisible();
-
-    // Advancing enables Back; a later step exposes an authentication field.
-    await dialog.getByRole("textbox", { name: "Name", exact: true }).fill("x");
-    await dialog.getByRole("textbox", { name: "URL", exact: true }).fill("x");
-    await dialog.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(
-      dialog.getByRole("button", { name: "Back", exact: true }),
-    ).toBeEnabled();
-
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-    await expect(dialog).toBeHidden();
-    void page;
-  });
-
-  test("create a container remote with its required upstream_name", async ({
-    remotesPage,
-    cleanup,
-  }) => {
-    await remotesPage.goto();
-    const name = cleanup.remote(uniqueName("remote"));
-    await remotesPage.create({
-      type: "container.container",
-      fields: {
-        Name: name,
-        URL: "https://registry-1.docker.io",
-        "Upstream Name": "library/busybox",
+  /**
+   * RMT-LIST-01 · Create and Edit open the form pages
+   *
+   * Summary: The Remotes list's "Create remote" opens the create page, and a row's Edit opens that remote's edit page.
+   *
+   * Seed: a file remote
+   *
+   * When I click "Create remote" on the Remotes list
+   * Then the create page opens with the title of the first installed type's form
+   * When I go back and choose "Edit" in the file remote's row actions
+   * Then "Edit file remote" opens with that remote's values filled in
+   */
+  test(
+    "The Remotes list's \"Create remote\" opens the create page, and a row's Edit opens that remote's edit page.",
+    {
+      tag: "@RMT-LIST-01",
+      annotation: {
+        type: "spec",
+        description: "e2e/specs/remotes.md#RMT-LIST-01",
       },
-    });
-    await remotesPage.filterBy("Name", name);
-    await remotesPage.expectRowVisible(name);
-    await expect(remotesPage.row(name)).toContainText("container.container");
+    },
+    async ({ remotesPage, formPage, api, cleanup, page }) => {
+      const name = cleanup.remote(uniqueName("remote"));
+      await api.createRemote("file/file", { name, url: FILE_MANIFEST_URL });
 
-    await remotesPage.delete(name);
-    await remotesPage.expectRowGone(name);
-  });
+      await remotesPage.goto();
+      await page
+        .getByRole("button", { name: "Create remote", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/remotes\/create/);
+      await expect(formPage.heading(/^Create .+ remote$/)).toBeVisible();
+
+      await page.goBack();
+      await remotesPage.filterBy("Name", name);
+      await remotesPage.rowAction(name, "Edit");
+      await expect(formPage.heading("Edit file remote")).toBeVisible();
+      await expect(formPage.textbox("Name")).toHaveValue(name);
+      await expect(formPage.textbox("URL")).toHaveValue(FILE_MANIFEST_URL);
+    },
+  );
+
+  /**
+   * RMT-DEL-01 · Delete a remote
+   *
+   * Summary: Deleting a remote from the list removes it after confirmation.
+   *
+   * Seed: a file remote
+   *
+   * When I choose "Delete" in its row actions and confirm "Delete Remote"
+   * Then the toast "Remote "<name>" deletion started" appears and the row disappears
+   */
+  test(
+    "Deleting a remote from the list removes it after confirmation.",
+    {
+      tag: "@RMT-DEL-01",
+      annotation: {
+        type: "spec",
+        description: "e2e/specs/remotes.md#RMT-DEL-01",
+      },
+    },
+    async ({ remotesPage, toasts, api, cleanup, page }) => {
+      const name = cleanup.remote(uniqueName("remote"));
+      await api.createRemote("file/file", { name, url: FILE_MANIFEST_URL });
+
+      await remotesPage.goto();
+      await remotesPage.filterBy("Name", name);
+      await remotesPage.rowAction(name, "Delete");
+      await new ConfirmModal(page, "Delete Remote").confirm("Delete");
+
+      await expect(
+        toasts.info(`Remote "${name}" deletion started`),
+      ).toBeVisible();
+      await remotesPage.expectRowGone(name);
+    },
+  );
 });

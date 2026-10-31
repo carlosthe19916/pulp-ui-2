@@ -61,6 +61,27 @@ client/src/app/
           WidgetDetailRoute.tsx           # route → component adapter
 ```
 
+## Form pages (`plugin-forms/`)
+
+`client/src/app/plugin-forms/` is an app-root module with a fixed layout (see [forms](forms.md)):
+
+```
+plugin-forms/
+  index.ts                   # public surface: the kit
+  kit/                       # the definition language, derivations and renderer
+    types.ts  defineForm.ts  derive/
+    EntityFormPage/  fields/ # component folders and flat field components
+  fragments/                 # shared fields and sections plugin forms opt into (index.ts)
+```
+
+Pages import it only through `@app/plugin-forms`; plugin forms also use `@app/plugin-forms/fragments`. A
+module only one form page uses still lives in that page's directory.
+
+## Plugins (`plugins/`, `plugin-sdk/`)
+
+Plugin code sits outside `app/`, one folder per plugin, laid out as [plugins](plugins.md)
+describes. Within a plugin's `ui/`, the narrowest-scope rule above applies as usual.
+
 ## React Context
 
 A context follows the same scopes as any module. It is a pair: `<Name>Context.ts` holds the
@@ -79,5 +100,7 @@ Pass/fail rubric for `/eval`.
 - [ ] Component folders are flat and hold an `index.ts`.
 - [ ] A page directory's root holds its main component and its route adapter, if any.
 - [ ] No `components/`, `hooks/`, `utils/` or `context/` under an area or entity directory.
+- [ ] Kit modules and fragments follow the `forms/` layout; pages import it through
+      `@app/plugin-forms`. Plugin forms, panels, Browse views and tabs sit in their plugin's `ui/`.
 - [ ] New contexts sit at the narrowest scope, split into `<Name>Context.ts` +
       `<Name>Provider.tsx` (in `context/<Name>/` outside a component folder).

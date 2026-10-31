@@ -2,6 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   Button,
@@ -41,12 +42,13 @@ import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useCreatablePlugins } from "@app/hooks/pluginForm/useCreatablePlugins";
 import { useColumnSort } from "@app/hooks/useColumnSort";
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { IDistributionListParams } from "@app/queries/distributions";
 import {
   distributionKeys,
@@ -54,14 +56,17 @@ import {
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 import type { OrderingField } from "@app/queries/utils/listParams";
-import { hasRoleEndpoints, resolvePulpType } from "@app/queries/utils/pulpHref";
+import {
+  extractIdFromHref,
+  hasRoleEndpoints,
+  resolvePulpType,
+} from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getEntityForm } from "@plugins";
 
 import { DistributionDetailPanel } from "./components/DistributionDetailPanel";
-import { DistributionModal } from "./components/DistributionModal";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -86,11 +91,8 @@ export const DistributionList: React.FC = () => {
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
-  const [modalState, setModalState] = useState<
-    "create" | DistributionResponse | null
-  >(null);
-  const distributionToEdit =
-    modalState === "create" ? undefined : (modalState ?? undefined);
+  const navigate = useNavigate();
+  const { name: pulpDomain } = useSelectedDomain();
 
   const [accessTarget, setAccessTarget] = useState<DistributionResponse | null>(
     null,
@@ -99,7 +101,7 @@ export const DistributionList: React.FC = () => {
     null,
   );
 
-  const canCreate = useCreatablePlugins("distribution").length > 0;
+  const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
       notifyTaskStarted({
@@ -178,14 +180,23 @@ export const DistributionList: React.FC = () => {
     const pulpType = resolvePulpType(distribution.pulp_href);
     // Unmodelled types (e.g. core.artifact) are read-only here, so Edit and Delete gate
     // on canEdit; access management instead needs the type's role endpoints.
-    const canEdit = !!(pulpType && getPlugin(pulpType)?.entities.distribution);
+    const canEdit = !!(
+      pulpType &&
+      getEntityForm({ entity: "distribution", pulpType, mode: "edit" })
+    );
     const canManageRoles = hasRoleEndpoints(distribution.pulp_href);
 
     return {
       id: distribution.pulp_href,
       row: [
         {
-          cell: distribution.name,
+          cell: (
+            <ResourceHrefLink
+              kind="distribution"
+              href={distribution.pulp_href}
+              label={distribution.name}
+            />
+          ),
           props: { dataLabel: "Name", modifier: "truncate" },
         },
         {
@@ -226,7 +237,18 @@ export const DistributionList: React.FC = () => {
                   title: "Edit",
                   isAriaDisabled: !canEdit,
                   tooltipProps: canEdit ? undefined : UNAVAILABLE_TYPE_TOOLTIP,
-                  onClick: () => setModalState(distribution),
+                  onClick: () =>
+                    pulpType &&
+                    void navigate({
+                      to: "/content-management/$pulpDomain/distributions/$distributionType/$distributionId/edit",
+                      params: {
+                        pulpDomain,
+                        distributionType: pulpType,
+                        distributionId: extractIdFromHref(
+                          distribution.pulp_href ?? "",
+                        ),
+                      },
+                    }),
                   ...(canEdit
                     ? disabledProps({
                         href: distribution.pulp_href,
@@ -345,7 +367,12 @@ export const DistributionList: React.FC = () => {
                   {canCreate ? (
                     <Button
                       variant="primary"
-                      onClick={() => setModalState("create")}
+                      onClick={() =>
+                        void navigate({
+                          to: "/content-management/$pulpDomain/distributions/create",
+                          params: { pulpDomain },
+                        })
+                      }
                     >
                       Create distribution
                     </Button>
@@ -389,12 +416,6 @@ export const DistributionList: React.FC = () => {
             }
           />
         </DataView>
-
-        <DistributionModal
-          isOpen={modalState !== null}
-          entity={distributionToEdit}
-          onClose={() => setModalState(null)}
-        />
 
         {accessTarget && (
           <ObjectAccessModal

@@ -9,6 +9,7 @@ import { ContentGuardsPage } from "./pom/ContentGuardsPage";
 import { ContentListPage } from "./pom/ContentListPage";
 import { ContentPage } from "./pom/ContentPage";
 import { DomainsPage } from "./pom/DomainsPage";
+import { EntityFormPage } from "./pom/EntityFormPage";
 import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
 import { Toasts } from "./pom/Toasts";
@@ -27,6 +28,8 @@ interface ITestFixtures {
   distributionsPage: ContentPage;
   publicationsPage: ContentPage;
   contentPage: ContentListPage;
+  /** A create/edit form page (repositories, remotes, distributions, publications). */
+  formPage: EntityFormPage;
   /** Register test-created names here; leftovers are removed in teardown. */
   cleanup: Cleanup;
   /** Non-admin users logged in through the basic-auth form (skips other auth modes). */
@@ -92,6 +95,9 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   domainsPage: async ({ page }, provide) => {
     await provide(new DomainsPage(page));
   },
+  formPage: async ({ page }, provide) => {
+    await provide(new EntityFormPage(page));
+  },
   remotesPage: async ({ page }, provide) => {
     await provide(
       new ContentPage(page, {
@@ -99,7 +105,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Remotes",
         tableName: "Remotes table",
         singular: "Remote",
-        createButton: "Create remote",
       }),
     );
   },
@@ -110,7 +115,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Repositories",
         tableName: "Repositories table",
         singular: "Repository",
-        createButton: "Create repository",
       }),
     );
   },
@@ -121,7 +125,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Distributions",
         tableName: "Distributions table",
         singular: "Distribution",
-        createButton: "Create distribution",
       }),
     );
   },
@@ -132,7 +135,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Publications",
         tableName: "Publications table",
         singular: "Publication",
-        createButton: "Create publication",
       }),
     );
   },

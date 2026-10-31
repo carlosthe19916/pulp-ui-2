@@ -1,7 +1,7 @@
 ---
 name: plugin-specifics-are-data
 description: One generic page per pulpcore concept; every per-plugin difference (fields, capabilities, content, actions) is data, not a screen; plugin pages, tabs and actions appear only when the plugin is installed.
-status: Accepted
+status: Accepted (create and edit forms superseded by 0010)
 ---
 
 # 0001. Plugin specifics are data, not screens
@@ -19,9 +19,10 @@ actions (sign, tag, copy, prune, repair metadata, scan, rebuild…), and nearly 
 - [ ] Each pulpcore concept has one list page that shows every plugin's objects together.
       Nothing in the navigation or the URL structure is specific to one plugin, except the
       plugin pages below.
-- [ ] What differs per plugin — form fields, whether it can sync or publish, which content it
-      holds, how content is changed or uploaded, extra actions — is declared as data per plugin,
-      not built as separate screens.
+- [ ] What differs per plugin — whether it can sync or publish, which content it holds, how
+      content is changed or uploaded, extra actions — is declared as data per plugin, not built
+      as separate screens. Create and edit forms are per-plugin pages
+      ([0010](0010-plugin-form-pages.md)).
 - [ ] Per-plugin presentation (how a content unit or a repository's content looks) plugs into
       the generic pages; a plugin without one falls back to the generic view.
 - [ ] Create and edit are offered only for plugins installed on the server. Objects of types the

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -8,6 +8,7 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   PageSection,
+  Spinner,
   Stack,
   StackItem,
   Tab,
@@ -24,7 +25,6 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
-import { RepositoryModal } from "@app/components/RepositoryModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
 import { UploadContentModal } from "@app/components/UploadContentModal";
@@ -51,15 +51,15 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import { getPulpType, getRepositoryContentTypes } from "@catalog";
+import type { IPluginAction } from "@plugin-sdk/ui";
 import {
-  getPlugin,
-  getRepositoryContentTypes,
-  type IRepositoryAction,
-} from "@catalog";
+  getArchiveImport,
+  getRepositoryActions,
+  getRepositoryTab,
+} from "@plugins";
 
 import { AddContentModal } from "./components/AddContentModal";
-import { OstreeImportModal } from "./components/OstreeImportModal";
-import { TAB_BY_REPOSITORY_TYPE } from "./components/pluginTabs";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
@@ -92,16 +92,16 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     summaryTotal(latestVersion?.content_summary?.present) === 0;
 
   const { disabledProps } = useObjectPermissions({ href });
-  const repoEntity = getPlugin(pulpType)?.entities.repository;
-  const pluginTab = TAB_BY_REPOSITORY_TYPE[pulpType];
-  const repositoryActions = (repoEntity?.actions ?? []).filter(
+  const repoEntity = getPulpType(pulpType)?.entities.repository;
+  const pluginTab = getRepositoryTab(pulpType);
+  const repositoryActions = getRepositoryActions(pulpType).filter(
     (action) => action.target === "repository",
   );
   const canSync = (repoEntity?.compatibleRemoteTypes.length ?? 0) > 0;
   const canPublish = (repoEntity?.compatiblePublicationTypes.length ?? 0) > 0;
   const canChangeContent = !!repoEntity?.contentChanges;
   const uploadableTypes = canChangeContent
-    ? getRepositoryContentTypes(pulpType).filter((type) => type.uploadable)
+    ? getRepositoryContentTypes(pulpType).filter((type) => type.upload)
     : [];
 
   // Tab-title counts: one row each, read the paginated `count`.
@@ -139,14 +139,14 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   });
 
   const [activeTab, setActiveTab] = useState<string | number>("details");
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [repoAction, setRepoAction] = useState<IRepositoryAction | null>(null);
+  const archiveImport = getArchiveImport(pulpType);
+  const [repoAction, setRepoAction] = useState<IPluginAction | null>(null);
   // Units to remove; "all" removes every unit.
   const [removeUnits, setRemoveUnits] = useState<
     IContentUnitRef[] | "all" | null
@@ -181,8 +181,16 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 key: "edit",
                 dropdownItemProps: {
                   children: "Edit",
-                  onClick: () => setIsEditOpen(true),
-                  ...lockedProps,
+                  onClick: () =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/edit",
+                      params: {
+                        pulpDomain,
+                        repositoryType: pulpType,
+                        repositoryId: extractIdFromHref(href),
+                      },
+                    }),
+                  // Not locked by a running task: the edit page warns and Pulp queues the save.
                   ...disabledProps("change"),
                 },
               },
@@ -204,10 +212,10 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   ...disabledProps("modify"),
                 },
               },
-              repoEntity?.archiveImport && {
+              archiveImport && {
                 key: "import-archive",
                 dropdownItemProps: {
-                  children: "Import archive…",
+                  children: `${archiveImport.label}…`,
                   onClick: () => setIsImportOpen(true),
                   ...lockedProps,
                   ...disabledProps("modify"),
@@ -373,7 +381,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   title={<TabTitleText>{pluginTab.title}</TabTitleText>}
                 >
                   <TabContentBody hasPadding>
-                    <pluginTab.Tab repository={repository} />
+                    <Suspense fallback={<Spinner aria-label="Loading" />}>
+                      <pluginTab.Tab repository={repository} />
+                    </Suspense>
                   </TabContentBody>
                 </Tab>
               )}
@@ -389,12 +399,6 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           </StackItem>
         </Stack>
       </PageSection>
-
-      <RepositoryModal
-        isOpen={isEditOpen}
-        entity={repository}
-        onClose={() => setIsEditOpen(false)}
-      />
 
       {isSyncOpen && (
         <SyncModal
@@ -439,12 +443,14 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         />
       )}
 
-      {isImportOpen && (
-        <OstreeImportModal
-          repository={repository}
-          onClose={() => setIsImportOpen(false)}
-          onStarted={contentChange.watch}
-        />
+      {isImportOpen && archiveImport && (
+        <Suspense fallback={null}>
+          <archiveImport.Modal
+            repository={repository}
+            onClose={() => setIsImportOpen(false)}
+            onStarted={contentChange.watch}
+          />
+        </Suspense>
       )}
 
       {isAddContentOpen && (

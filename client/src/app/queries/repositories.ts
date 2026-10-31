@@ -25,7 +25,7 @@ import type {
   TaskGroupOperationResponse,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
@@ -266,7 +266,7 @@ export const useRepositoryActionMutation = (
 
 /** The catalog's repository entity for a repository href. */
 const repositoryEntity = (href: string) =>
-  getPlugin(resolvePulpType(href) ?? "")?.entities.repository;
+  getPulpType(resolvePulpType(href) ?? "")?.entities.repository;
 
 /**
  * Change a repository's content; every change creates a new version. Container
@@ -466,7 +466,7 @@ export const useRepositoryDetailQuery = ({ href }: { href: string | null }) =>
   });
 
 const repositoryApiPath = (pulpType: string): string | undefined =>
-  getPlugin(pulpType)?.entities.repository?.apiPath;
+  getPulpType(pulpType)?.entities.repository?.apiPath;
 
 export const buildRepositoryHref = (
   pulpType: string,

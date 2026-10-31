@@ -16,6 +16,11 @@ export class Toasts {
     return this.toast("Danger", title);
   }
 
+  /** A "… started" toast of an operation that runs as a task. */
+  info(title: string | RegExp): Locator {
+    return this.toast("Info", title);
+  }
+
   /** Every toast heading currently shown (toasts are list items; in-form alerts aren't). */
   all(): Locator {
     return this.page

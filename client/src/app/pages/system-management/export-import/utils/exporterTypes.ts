@@ -1,4 +1,4 @@
-import type { IEntityField } from "@catalog";
+import type { IEntityField } from "@app/utils/entityField";
 
 /** One exporter type: how it is configured and what one export takes. */
 export interface IExporterType {
