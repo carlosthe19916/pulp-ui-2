@@ -41,7 +41,7 @@ forms** run everything else (plugin actions, admin objects, uploads).
   is a `custom` field. `defineForm` also rejects a kind that can't hold the key's API type.
 - Labels are `createOnly`; an existing object's labels change through its labels editor.
 - A `resource` picker offers only the types its field's `pulpTypes` lists (`remoteField(f, {
-  pulpTypes: def.compatibleRemoteTypes })`); the page passes no filter.
+pulpTypes: def.compatibleRemoteTypes })`); the page passes no filter.
 - One file per plugin × type in `ui/forms/`: `<entity>.ts` for the plugin's main type,
   `<variant><Entity>.ts` for the others, exporting `<plugin><Variant><Entity>Form`
   (`pushRepository.ts` → `containerPushRepositoryForm`). Shared sections use `SECTION_IDS`.
