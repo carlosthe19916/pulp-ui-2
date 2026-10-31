@@ -1,6 +1,7 @@
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { type EntityType, getAvailablePlugins, type PulpType } from "@catalog";
 
+import { DISTRIBUTION_FORMS } from "./distributions";
 import type { ITypeOption } from "./kit/EntityFormPage";
 import type { FormMode, IFormDef } from "./kit/types";
 import { REMOTE_FORMS } from "./remotes";
@@ -23,7 +24,7 @@ export type FormRegistry = Record<PulpType, IFormEntry>;
 const FORMS_BY_ENTITY: Record<EntityType, FormRegistry> = {
   remote: REMOTE_FORMS,
   repository: REPOSITORY_FORMS,
-  distribution: {},
+  distribution: DISTRIBUTION_FORMS,
   publication: {},
 };
 

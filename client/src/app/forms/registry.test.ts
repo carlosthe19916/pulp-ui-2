@@ -25,7 +25,11 @@ const ALL_INSTALLED = [
 ].map((component) => ({ component, version: "1.0.0" }) as VersionResponse);
 
 /** Entities whose every catalog type has a form; grows as each entity moves to pages. */
-const COMPLETE_ENTITIES: EntityType[] = ["remote", "repository"];
+const COMPLETE_ENTITIES: EntityType[] = [
+  "remote",
+  "repository",
+  "distribution",
+];
 
 describe("form registry", () => {
   it.each(
