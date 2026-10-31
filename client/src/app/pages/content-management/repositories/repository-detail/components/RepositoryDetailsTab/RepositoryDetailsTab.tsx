@@ -9,26 +9,23 @@ import {
   CardTitle,
   Stack,
   StackItem,
-  Title,
 } from "@patternfly/react-core";
 
-import type { RepositoryResponse } from "@app/client";
-import { RepositoryContent } from "@app/components/RepositoryContent";
-import { TableEmptyState } from "@app/components/TableEmptyState";
-import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
-import { useRepositoryVersionDetailQuery } from "@app/queries/repositories";
-import { summaryTotal } from "@app/utils/contentSummary";
+import type {
+  RepositoryResponse,
+  RepositoryVersionResponse,
+} from "@app/client";
 
 import { RepositoryAbout } from "./RepositoryAbout";
 import { RepositoryUsage } from "./RepositoryUsage";
 
 interface IRepositoryDetailsTabProps {
   repository: RepositoryResponse;
+  latestVersion?: RepositoryVersionResponse;
   pulpType: string;
   pulpDomain: string;
+  onViewContent: () => void;
   onViewDistributions: () => void;
-  /** Content changes on the latest version; absent when the plugin can't change content. */
-  writes?: IContentWrites;
 }
 
 interface ITitledCardProps {
@@ -59,64 +56,35 @@ const TitledCard: React.FC<ITitledCardProps> = ({ title, children }) => {
   );
 };
 
-/** Overview, client setup, and the latest version's content. */
+/** Overview and client setup; the content itself has its own tab. */
 export const RepositoryDetailsTab: React.FC<IRepositoryDetailsTabProps> = ({
   repository,
+  latestVersion,
   pulpType,
   pulpDomain,
+  onViewContent,
   onViewDistributions,
-  writes,
-}) => {
-  const { data: latestVersion } = useRepositoryVersionDetailQuery({
-    href: repository.latest_version_href ?? null,
-  });
+}) => (
+  <Stack hasGutter>
+    <StackItem>
+      <TitledCard title="About">
+        <RepositoryAbout
+          repository={repository}
+          latestVersion={latestVersion}
+          pulpType={pulpType}
+          pulpDomain={pulpDomain}
+          onViewContent={onViewContent}
+        />
+      </TitledCard>
+    </StackItem>
 
-  return (
-    <Stack hasGutter>
-      <StackItem>
-        <TitledCard title="About">
-          <RepositoryAbout
-            repository={repository}
-            latestVersion={latestVersion}
-            pulpType={pulpType}
-            pulpDomain={pulpDomain}
-          />
-        </TitledCard>
-      </StackItem>
-
-      <StackItem>
-        <TitledCard title="Use this repository">
-          <RepositoryUsage
-            repositoryHref={repository.pulp_href ?? ""}
-            onViewDistributions={onViewDistributions}
-          />
-        </TitledCard>
-      </StackItem>
-
-      {latestVersion?.pulp_href && (
-        <StackItem>
-          <Stack hasGutter>
-            <Title headingLevel="h2" size="lg">
-              Latest version content
-            </Title>
-            {summaryTotal(latestVersion.content_summary?.present) === 0 ? (
-              <TableEmptyState
-                title={`No content in "${repository.name}" yet`}
-              />
-            ) : (
-              <RepositoryContent
-                // A new latest version remounts the lists, clearing their selection.
-                key={latestVersion.pulp_href}
-                repositoryHref={repository.pulp_href ?? ""}
-                repositoryType={pulpType}
-                versionHref={latestVersion.pulp_href}
-                summary={latestVersion.content_summary}
-                writes={writes}
-              />
-            )}
-          </Stack>
-        </StackItem>
-      )}
-    </Stack>
-  );
-};
+    <StackItem>
+      <TitledCard title="Use this repository">
+        <RepositoryUsage
+          repositoryHref={repository.pulp_href ?? ""}
+          onViewDistributions={onViewDistributions}
+        />
+      </TitledCard>
+    </StackItem>
+  </Stack>
+);

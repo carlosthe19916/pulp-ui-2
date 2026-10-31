@@ -60,6 +60,7 @@ import {
 } from "@plugins";
 
 import { AddContentModal } from "./components/AddContentModal";
+import { RepositoryContentTab } from "./components/RepositoryContentTab";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
@@ -88,8 +89,8 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const { data: latestVersion } = useRepositoryVersionDetailQuery({
     href: repository.latest_version_href ?? null,
   });
-  const isLatestEmpty =
-    summaryTotal(latestVersion?.content_summary?.present) === 0;
+  const latestTotal = summaryTotal(latestVersion?.content_summary?.present);
+  const isLatestEmpty = latestTotal === 0;
 
   const { disabledProps } = useObjectPermissions({ href });
   const repoEntity = getPulpType(pulpType)?.entities.repository;
@@ -296,9 +297,27 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 <TabContentBody hasPadding>
                   <RepositoryDetailsTab
                     repository={repository}
+                    latestVersion={latestVersion}
                     pulpType={pulpType}
                     pulpDomain={pulpDomain}
+                    onViewContent={() => setActiveTab("content")}
                     onViewDistributions={() => setActiveTab("distributions")}
+                  />
+                </TabContentBody>
+              </Tab>
+              <Tab
+                eventKey="content"
+                title={
+                  <TabTitleText>
+                    Content ({latestTotal.toLocaleString()})
+                  </TabTitleText>
+                }
+              >
+                <TabContentBody hasPadding>
+                  <RepositoryContentTab
+                    repository={repository}
+                    pulpType={pulpType}
+                    latestVersion={latestVersion}
                     writes={
                       canChangeContent
                         ? {
