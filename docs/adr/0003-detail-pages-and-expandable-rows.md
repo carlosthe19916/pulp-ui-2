@@ -17,8 +17,7 @@ distributions are small records: a reference to what they serve and a few settin
       Distributions, Access, plus plugin tabs), Repository version, Remote (Details, Tasks,
       Access), Distribution (Details, Tasks, Access; [0011](0011-distribution-detail-page.md)),
       Content (Details, Artifacts, Repositories), Task, Task group, User and Group.
-- [ ] Publications have no detail page: their details expand inline in the list (distribution
-      rows expand too).
+- [ ] Publications have no detail page: their details expand inline in the list.
 - [ ] The Repository page is where its content is viewed and changed, and shows how to consume
       it (client setup for the serving distribution).
 - [ ] Sync appears only for repositories whose plugin can sync; Publish only for those that

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { Cleanup } from "./cleanup";
 import { idOf } from "./hrefs";
@@ -71,10 +71,6 @@ export const seedDistribution = async (
   });
   return { name, href, basePath };
 };
-
-/** The expanded detail row of a listed distribution (it shows a "Client setup" fact). */
-export const expandedRow = (page: Page) =>
-  page.getByRole("row").filter({ hasText: "Client setup" });
 
 /** Wait until the create task has made the distribution (polls the API). */
 export const expectCreated = async (
