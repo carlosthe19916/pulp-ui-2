@@ -86,19 +86,20 @@ Seed: a file remote with a URL, a CA certificate, a download concurrency of 5 an
 
 When I open its edit page, change the URL, empty the CA certificate and Download concurrency, and
 save
-Then its detail page opens
-And the server has the new URL, no CA certificate and no download concurrency, while the
+Then the toast "Remote "<name>" update started" appears (an edit runs as a task) and its detail
+page opens
+And once the task finishes, the server has the new URL, no CA certificate and no download concurrency, while the
 password is still set and every other setting is unchanged
 
 ### FORM-SAVE-03 A server error stays in the form
 
 Summary: When the server rejects a submit, the error shows at the top of the form and what was typed is kept.
 
-Seed: a remote named "taken"
+Seed: an RPM remote named "taken"
 
 When I create a file remote named "taken"
-Then the in-form error "Failed to create remote" appears with the server's reason (the name must
-be unique)
+Then the in-form error "Failed to create remote" appears with the server's reason "This field
+must be unique." (remote names are unique across every remote type)
 And the page stays open with everything I typed
 
 ## Secrets
@@ -117,14 +118,25 @@ Then the password is still set on the server
 
 ### FORM-SECRET-02 Changing and clearing a secret
 
-Summary: A changed secret is replaced and a cleared secret is removed on the server.
+Summary: A changed secret is replaced and cleared secrets are removed on the server.
 
-Seed: a file remote with a password and a proxy password
+Seed: a file remote with a password, a proxy URL, a proxy username and a proxy password
 
 When I open its edit page, choose "Change" on Password and enter a new value, choose "Clear" on
-Proxy password, and save
-Then the server reports the password still set (it can't be read back) and the proxy password
-no longer set
+Proxy username and on Proxy password, and save
+Then the server reports the password still set (it can't be read back) and neither proxy
+credential set, while the proxy URL is unchanged
+
+### FORM-SECRET-03 Proxy credentials go together
+
+Summary: Clearing only one proxy credential is refused by the server, and the reason shows in the form.
+
+Seed: a file remote with a proxy URL, a proxy username and a proxy password
+
+When I open its edit page, choose "Clear" on Proxy password only, and save
+Then the in-form error "Failed to update remote" shows the server's reason "proxy username and
+password can only be specified together", and the page stays open
+And the server still has both proxy credentials set
 
 ## Code editor
 
@@ -183,22 +195,30 @@ Auth: second-user
 Given I am a second user with no roles
 Then "Create remote" on the Remotes list is enabled (Pulp can't tell the UI who may create)
 When I fill in a file remote and submit
-Then the in-form error "Failed to create remote" explains that I don't have permission, and the
-page stays open
+Then the in-form error "Failed to create remote" shows the server's reason "You do not have
+permission to perform this action.", and the page stays open
 
 ## Addresses
 
 ### FORM-ROUTE-01 Edit addresses that don't resolve
 
-Summary: An edit address for an unknown remote or an unknown type shows an error state instead of the form.
+Summary: An edit address for an unknown remote, a remote I can't view, or an unknown type shows an error state instead of the form.
+
+Auth: second-user (the "can't view" row)
+Seed: a file remote; a second user with no roles
 
 When I open the edit address of <target>
 Then <outcome>
 
-| target                         | outcome                      |
-| ------------------------------ | ---------------------------- |
-| a remote id that doesn't exist | the "not found" error state  |
-| a type the UI doesn't know     | the detail-route error state |
+| target                                | outcome                      |
+| ------------------------------------- | ---------------------------- |
+| a remote id that doesn't exist        | the "not found" error state  |
+| the seeded remote, as the second user | the "not found" error state  |
+| a type the UI doesn't know            | the detail-route error state |
+
+Pulp answers "not found", not "forbidden", for an object the user can't view, so the UI can't
+tell the two apart; only a user who can view but not change gets "403: Access denied"
+(FORM-PERM-01).
 
 ## Other layers
 
@@ -220,4 +240,6 @@ server's own rules by the API layer. Neither repeats here.
 | Collapsed-section summaries ("2 set", "Verify off", the proxy URL)        | component  |
 | No leave prompt after a save reports success                              | component  |
 | The edit page renders access denied without change permission             | component  |
+| The edit page warns, and keeps the form, while a task runs on the object  | component  |
 | Chips, key-value rows and checkboxes edit their lists                     | component  |
+| Proxy credentials only together and only with a proxy URL (server rules)  | API        |

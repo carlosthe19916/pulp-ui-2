@@ -55,8 +55,8 @@ Seed: a container remote with include tag "latest"
 When I open its detail page and choose "Edit" in the actions menu
 Then "Edit container remote" opens
 When I add the include tag "stable", remove "latest" and save
-Then the toast "Remote "<name>" updated" (or "update started") appears, the detail page opens,
-and its include tags are only "stable"
+Then the toast "Remote "<name>" update started" appears and the detail page opens
+And once the update task finishes, its include tags are only "stable"
 
 ### RMT-EDT-02 Cancel leaves without saving
 
@@ -103,4 +103,4 @@ Then the toast "Remote "<name>" deletion started" appears and the row disappears
 | Required plugin fields (container upstream name, APT distributions, ULN credentials) | component  |
 | "Use template" fills an empty requirements editor                                    | component  |
 | Edit is disabled, with a tooltip, for a remote type without a form                   | component  |
-| Remote write rules (unique name, ULN credentials required, URL formats)              | API        |
+| Remote write rules (name unique across types, plugin required fields, URL formats)   | API        |

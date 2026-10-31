@@ -41,6 +41,9 @@ Seed: a file repository, a container repository
 When I choose Type "File" and open the Repository picker
 Then the file repository is offered and the container repository is not
 
+The picker is the only guard: Pulp accepts a file publication of a container repository and the
+task completes, producing a publication no client can use.
+
 ### PUB-CRE-04 APT publications by structure
 
 Summary: An APT repository can be published as a structured APT publication or as a verbatim copy, each with its own options.
@@ -50,10 +53,14 @@ Seed: an APT repository synced from a small Debian fixture
 When I create a publication of Type <type> with <options>
 Then the publication is created and its expanded row shows <shown>
 
-| type     | options                          | shown                                 |
-| -------- | -------------------------------- | ------------------------------------- |
-| APT      | Structured on, a signing service | its type, "Structured" and the signer |
-| Verbatim | (none)                           | its type                              |
+| type     | options       | shown                     |
+| -------- | ------------- | ------------------------- |
+| APT      | Structured on | its type and "Structured" |
+| Verbatim | (none)        | its type                  |
+
+The e2e backend has no APT release signing service (its "pulp-ui-dev-signing" signs RPM metadata
+only), and adding one needs a signing script on the server, so signing an APT publication is a
+manual check.
 
 ## Edit
 
@@ -66,6 +73,9 @@ Seed: a file publication
 When I open its row actions
 Then there is no "Edit" action
 
+This follows the backend: a publication accepts only read and delete (an update is "Method not
+allowed").
+
 ## Other layers
 
 | Behaviour                                                                | Layer      |
@@ -73,4 +83,4 @@ Then there is no "Edit" action
 | Every publication type's form covers its API fields                      | type check |
 | Choosing a repository version instead of the repository swaps the picker | component  |
 | APT publication options show only for the APT type                       | component  |
-| Publication write rules (one of repository or version, signing service)  | API        |
+| Publication write rules (exactly one of repository or version)           | API        |

@@ -46,15 +46,23 @@ And when the task finishes, the row expanded shows <serves>
 | "Repository version" and pick version 1 | version 1 of the repository |
 | "Publication" and pick the publication  | the publication             |
 
-### DST-CRE-02 A taken base path is rejected
+### DST-CRE-02 A base path in use is rejected
 
-Summary: Creating a distribution with a base path already in use shows the server's reason in the form.
+Summary: Creating a distribution whose base path is taken or overlaps another's shows the server's reason in the form.
 
 Seed: a file distribution with base path "files/stable"
 
-When I create another file distribution with base path "files/stable"
-Then the in-form error "Failed to create distribution" names the base path conflict, and the
-page stays open with what I typed
+When I create another file distribution with base path <base path>
+Then the in-form error "Failed to create distribution" shows the server's reason <reason>, and
+the page stays open with what I typed
+
+| base path           | reason                                    |
+| ------------------- | ----------------------------------------- |
+| "files/stable"      | "This field must be unique."              |
+| "files/stable/beta" | "Overlaps with an existing distribution." |
+
+The server checks the base path when the create is submitted, before any task starts, so the
+error arrives in the form rather than as a failed task.
 
 ### DST-CRE-03 A content guard protects a distribution
 
@@ -74,8 +82,12 @@ Summary: Changing a distribution's source to another kind stops serving the old 
 Seed: a file distribution serving a publication
 
 When I open its edit page, choose "Repository" as the source, pick a repository and save
-Then the distribution's detail page opens with the update toast
-And the server has the repository set and no publication
+Then the toast "Distribution "<name>" update started" appears and the detail page opens
+And once the task finishes, the server has the repository set and no publication
+
+Pulp refuses a distribution with both a repository and a publication ("Only one of the
+attributes 'repository' and 'publication' may be used simultaneously."), so the switch must
+clear the old source in the same save.
 
 ### DST-EDT-02 Rename the base path
 
@@ -129,12 +141,15 @@ Then the toast "Distribution "<name>" deletion started" appears and the Distribu
 
 ### DST-DET-04 A distribution's task history
 
-Summary: The Tasks tab lists the tasks run on the distribution, its count in the tab title.
+Summary: The Tasks tab lists the update tasks run on the distribution, their count in the tab title.
 
 Seed: a file distribution, edited once so an update task ran
 
 When I open its Tasks tab
-Then the tab title counts at least one task and the update task is listed
+Then the tab title counts one task and the update task is listed
+
+The create task isn't listed: it reserved only the domain, since the distribution didn't exist
+yet, and the tab lists the tasks that reserved the distribution.
 
 ## Other layers
 
@@ -144,4 +159,4 @@ Then the tab title counts at least one task and the update task is listed
 | The source choice shows only the picker it needs; switching source sends the others empty | component  |
 | The publication picker lists only publications of the distribution's type                 | component  |
 | Base path accepts no leading or trailing slash                                            | component  |
-| Distribution write rules (unique name and base path, one source at a time)                | API        |
+| Distribution write rules (unique name and base path, overlap, canonical path, one source) | API        |
