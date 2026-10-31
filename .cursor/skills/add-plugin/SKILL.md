@@ -16,7 +16,11 @@ Read the plugin's collections in `client/openapi/pulp.json` (`/api/pulp/{pulp_do
 `client/src/app/client/pulpTypes.gen.ts` after `npm run generate`. Note each type's
 `pulp_type`, its repository's `REMOTE_TYPES`, how content is changed, and its actions.
 
-## 2. Write the definition
+## 2. Scaffold and write the definition
+
+`npm run plugin:new -- widget` creates `client/src/plugins/widget/definition.ts` and
+`ui/index.ts` and registers both (`PLUGIN_DEFINITIONS` in `catalog.ts`, `PLUGIN_UI` in
+`registry.ts`). It compiles as is. Then declare the plugin's types:
 
 ```ts
 // client/src/plugins/widget/definition.ts
@@ -40,13 +44,10 @@ export const widget = definePlugin({
 });
 ```
 
-Add it to `PLUGIN_DEFINITIONS` in `client/src/plugins/catalog.ts`.
-
 ## 3. Let the compiler list the UI
 
-Add `widget: widgetUi` to `PLUGIN_UI` in `client/src/plugins/registry.ts`, then write
-`client/src/plugins/widget/ui/index.ts` and run `npx tsc --noEmit -p client/tsconfig.app.json`
-until it is quiet. Each error names a missing piece.
+Run `npx tsc --noEmit -p client/tsconfig.app.json` and fill in `ui/index.ts` until it is
+quiet. Each error names a missing piece.
 
 ```ts
 export const widgetUi = definePluginUi({

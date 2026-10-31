@@ -21,7 +21,8 @@
     "test": "vitest",
     "generate": "openapi-ts -f ./config/openapi-ts.config.ts && node ./scripts/patch-openapi-client.mjs && node ./scripts/generate-pulp-types.mjs",
     "coverage": "vitest run --coverage",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "plugin:new": "node ./scripts/new-plugin.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.6.0",
