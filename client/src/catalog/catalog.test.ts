@@ -329,9 +329,6 @@ describe("uploads", () => {
     expect(getContentType("file.file")?.uploadable?.mechanism).toBe("upload");
     expect(getContentType("rpm.package")?.uploadable?.mechanism).toBe("upload");
     expect(getContentType("gem.gem")?.uploadable?.mechanism).toBe("create");
-    expect(
-      getContentType("maven.artifact")?.uploadable?.fields.map((f) => f.key),
-    ).toEqual(["relative_path"]);
     // Pushed or synced only: no upload.
     expect(getContentType("container.tag")?.uploadable).toBeUndefined();
   });

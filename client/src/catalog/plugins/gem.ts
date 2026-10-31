@@ -23,7 +23,7 @@ export const gem: IPluginDefinition = {
     {
       pulpType: "gem.gem",
       apiPath: "gem/gem",
-      uploadable: { mechanism: "create", fields: [] },
+      uploadable: { mechanism: "create" },
     },
   ],
 };

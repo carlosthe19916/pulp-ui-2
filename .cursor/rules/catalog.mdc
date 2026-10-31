@@ -16,10 +16,11 @@ publication create/edit forms are UI, not data: each plugin's form lives in `@ap
 - Only `.ts` files; no React, JSX, icons, columns, CSS or layout.
 - The only `@app` import is `import type { … } from "@app/client"` (generated types).
 - Allowed: endpoint paths, `pulp_type`s, capability flags (`contentChanges`, `archiveImport`,
-  `compatibleRemoteTypes`, …), action definitions (`actions`, with their fields), upload
-  mechanism and fields.
-- Not allowed: create/edit form definitions for repositories, remotes, distributions and
-  publications (fields, labels, layout, defaults).
+  `compatibleRemoteTypes`, …), action definitions (`actions`: key, label, path, target,
+  description) and the upload mechanism.
+- Not allowed: form definitions of any kind — entity create/edit forms, action fields, upload
+  fields. They are UI and live in `@app/forms` (`forms/<entities>/`, `forms/actions/` keyed
+  by repository type and action key, `forms/uploads/` keyed by content type).
 - A new plugin is a `plugins/<plugin>.ts` file plus an entry in `pluginDefinitions`, and a form
   per entity in `@app/forms`; no new routes or nav items.
 
@@ -47,7 +48,7 @@ return <Panel href={href} />;
   `getAvailablePlugins`, `getContentType`) or a registry lookup — not from `pulp_type`
   string comparisons or plugin `if`/`switch` chains.
 - Plugin actions render through the shared `RepositoryActionModal` (`TaskActionModal`) from
-  `entities.repository.actions`; no per-action modal.
+  `entities.repository.actions`, with the fields `getActionFields` returns; no per-action modal.
 - Create/edit offer only installed plugins that have a form (`useCreatableTypes`,
   `getEntityForm` from `@app/forms`).
 
@@ -62,6 +63,7 @@ Pass/fail rubric for `/eval`.
       fallback intact — not to the catalog.
 - [ ] Changed pages/components read plugin capabilities from the catalog or a registry; no new
       `pulpType === "<plugin>.<type>"` comparisons or plugin `switch` chains.
-- [ ] New plugin actions are catalog `actions` rendered by the shared action modal; no new
-      per-action modal.
+- [ ] New plugin actions are catalog `actions` (no fields) rendered by the shared action modal,
+      with their fields in `forms/actions/`; new uploadable types get their fields in
+      `forms/uploads/`; no new per-action modal.
 - [ ] Create/edit flows list only installed plugins with a registered form.

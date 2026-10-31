@@ -1,6 +1,6 @@
-import type { IEntityField } from "@catalog";
 import { describe, expect, it } from "vitest";
 
+import type { IEntityField } from "@app/utils/entityField";
 import {
   buildDefaultValues,
   buildFieldSchema,

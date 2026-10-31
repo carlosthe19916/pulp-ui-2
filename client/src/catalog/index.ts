@@ -175,7 +175,6 @@ export const getEntityLabel = (entity: EntityType): string =>
 export type {
   ContentUploadMechanism,
   EntityType,
-  IContentDetail,
   IContentType,
   IContentUpload,
   IPlugin,
@@ -184,4 +183,3 @@ export type {
   IRepositoryAction,
   PulpType,
 } from "./types";
-export type { IEntityField, ResourceKind } from "./fieldTypes";

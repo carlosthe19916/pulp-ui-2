@@ -1,4 +1,4 @@
-import type { EntityType } from "./types";
+import type { EntityType } from "@catalog";
 
 /**
  * The field model, shared by form and page. Discriminated on `type`: a `select`

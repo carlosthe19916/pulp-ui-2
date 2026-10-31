@@ -70,6 +70,7 @@ forms/
     EntityFormPage/  fields/ # component folders and flat field components
   fragments/                 # shared fields and sections plugins opt into
   remotes/  repositories/  distributions/  publications/   # <plugin>.ts + index.ts
+  actions/  uploads/         # plugin action fields and upload fields (modal forms)
 ```
 
 Pages import it only through `@app/forms` (its `index.ts`). A module only one form page uses

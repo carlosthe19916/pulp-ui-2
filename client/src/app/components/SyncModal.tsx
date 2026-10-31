@@ -6,10 +6,11 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositorySyncMutation } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { IEntityField } from "@app/utils/entityField";
 import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin, type IEntityField } from "@catalog";
+import { getPlugin } from "@catalog";
 
 const SYNC_FIELDS: IEntityField[] = [
   {

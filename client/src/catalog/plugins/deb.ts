@@ -9,16 +9,6 @@ const debActions: IRepositoryAction[] = [
     target: "repository",
     description:
       "Copies content between repositories as described by a config.",
-    fields: [
-      {
-        key: "config",
-        label: "Config",
-        type: "json",
-        required: true,
-        helpText:
-          'A list of {"source_repo_version", "dest_repo", "content"} entries.',
-      },
-    ],
   },
 ];
 
@@ -64,11 +54,6 @@ export const deb: IPluginDefinition = {
       apiPath: "deb/packages",
       uploadable: {
         mechanism: "create",
-        fields: [
-          { key: "relative_path", label: "Relative path", type: "text" },
-          { key: "distribution", label: "Distribution", type: "text" },
-          { key: "component", label: "Component", type: "text" },
-        ],
       },
     },
     {
@@ -76,14 +61,6 @@ export const deb: IPluginDefinition = {
       apiPath: "deb/generic_contents",
       uploadable: {
         mechanism: "create",
-        fields: [
-          {
-            key: "relative_path",
-            label: "Relative path",
-            type: "text",
-            required: true,
-          },
-        ],
       },
     },
     {
@@ -95,9 +72,6 @@ export const deb: IPluginDefinition = {
       apiPath: "deb/installer_packages",
       uploadable: {
         mechanism: "create",
-        fields: [
-          { key: "relative_path", label: "Relative path", type: "text" },
-        ],
       },
     },
     {

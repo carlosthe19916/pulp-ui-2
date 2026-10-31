@@ -1,12 +1,11 @@
 import type React from "react";
 
-import type { IEntityField } from "@catalog";
-
 import type { Policy692Enum } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useBandersnatchRemoteCreateMutation } from "@app/queries/python-remotes";
+import type { IEntityField } from "@app/utils/entityField";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const FIELDS: IEntityField[] = [

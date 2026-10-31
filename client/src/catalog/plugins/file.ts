@@ -37,14 +37,6 @@ export const file: IPluginDefinition = {
       apiPath: "file/files",
       uploadable: {
         mechanism: "upload",
-        fields: [
-          {
-            key: "relative_path",
-            label: "Relative Path",
-            type: "text",
-            required: true,
-          },
-        ],
       },
     },
   ],

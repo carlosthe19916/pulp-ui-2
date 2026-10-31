@@ -29,7 +29,7 @@ export const core: IPluginDefinition = {
     {
       pulpType: "core.openpgp_publickey",
       apiPath: "core/openpgp_publickey",
-      uploadable: { mechanism: "create", fields: [] },
+      uploadable: { mechanism: "create" },
     },
     {
       pulpType: "core.openpgp_publicsubkey",

@@ -1,9 +1,6 @@
 import { whenInstalled } from "../compose";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
 
-const copyConfigHelp =
-  'A list of {"source_repo_version", "dest_repo", "content"} entries.';
-
 const rpmActions: IRepositoryAction[] = [
   {
     key: "copy",
@@ -12,15 +9,6 @@ const rpmActions: IRepositoryAction[] = [
     target: "repository",
     description:
       "Copies content and its dependencies between repositories as described by a config.",
-    fields: [
-      {
-        key: "config",
-        label: "Config",
-        type: "json",
-        required: true,
-        helpText: copyConfigHelp,
-      },
-    ],
   },
   {
     key: "comps",
@@ -28,14 +16,6 @@ const rpmActions: IRepositoryAction[] = [
     path: "/rpm/comps/",
     target: "repository",
     repositoryParam: { key: "repository" },
-    fields: [
-      { key: "file", label: "comps.xml", type: "file", required: true },
-      {
-        key: "replace",
-        label: "Replace existing comps content",
-        type: "boolean",
-      },
-    ],
   },
   {
     key: "prune",
@@ -44,16 +24,6 @@ const rpmActions: IRepositoryAction[] = [
     target: "repository",
     repositoryParam: { key: "repo_hrefs", list: true },
     description: "Removes all but the newest version of each package.",
-    fields: [
-      {
-        key: "keep_days",
-        label: "Keep days",
-        type: "number",
-        defaultValue: 14,
-        helpText: "Prune packages introduced before this many days ago.",
-      },
-      { key: "dry_run", label: "Dry run", type: "boolean" },
-    ],
   },
   {
     key: "scan",
@@ -62,7 +32,6 @@ const rpmActions: IRepositoryAction[] = [
     target: "version",
     description:
       "Checks this version's packages against known vulnerabilities and stores a report.",
-    fields: [],
   },
 ];
 
@@ -96,12 +65,12 @@ export const rpm: IPluginDefinition = {
     {
       pulpType: "rpm.package",
       apiPath: "rpm/packages",
-      uploadable: { mechanism: "upload", fields: [] },
+      uploadable: { mechanism: "upload" },
     },
     {
       pulpType: "rpm.advisory",
       apiPath: "rpm/advisories",
-      uploadable: { mechanism: "create", fields: [] },
+      uploadable: { mechanism: "create" },
     },
     { pulpType: "rpm.modulemd", apiPath: "rpm/modulemds" },
     {

@@ -1,7 +1,5 @@
 import type React from "react";
 
-import type { IEntityField } from "@catalog";
-
 import type { DescriptionListProps } from "@patternfly/react-core";
 import {
   ClipboardCopy,
@@ -15,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
+import type { IEntityField } from "@app/utils/entityField";
 import { isEmptyValue } from "@app/utils/utils";
 
 /** The server's write-only-secret descriptor (`hidden_fields` on every response). */

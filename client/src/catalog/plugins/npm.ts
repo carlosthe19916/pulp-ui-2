@@ -24,11 +24,6 @@ export const npm: IPluginDefinition = {
       apiPath: "npm/packages",
       uploadable: {
         mechanism: "upload",
-        fields: [
-          { key: "relative_path", label: "Relative path", type: "text" },
-          { key: "name", label: "Name", type: "text" },
-          { key: "version", label: "Version", type: "text" },
-        ],
       },
     },
   ],

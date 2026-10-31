@@ -1,4 +1,4 @@
-import type { IEntityField } from "@catalog";
+import type { IEntityField } from "@app/utils/entityField";
 
 /** One plugin's alternate content source: its collection and remote type. */
 export interface IAcsType {

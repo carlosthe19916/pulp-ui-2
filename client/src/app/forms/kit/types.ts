@@ -1,7 +1,8 @@
 import type React from "react";
 
-import type { ResourceKind } from "@catalog";
 import type { AnySchema } from "yup";
+
+import type { ResourceKind } from "@app/utils/entityField";
 
 /** Whether a form page creates a new object or edits an existing one. */
 export type FormMode = "create" | "edit";

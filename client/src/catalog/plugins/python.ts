@@ -14,7 +14,6 @@ const pythonActions: IRepositoryAction[] = [
     target: "repository",
     description:
       "Repairs the metadata of every package without creating a new version.",
-    fields: [],
   },
   {
     key: "scan",
@@ -23,7 +22,6 @@ const pythonActions: IRepositoryAction[] = [
     target: "version",
     description:
       "Checks this version's packages against known vulnerabilities and stores a report.",
-    fields: [],
   },
 ];
 
@@ -54,23 +52,13 @@ export const python: IPluginDefinition = {
     {
       pulpType: "python.python",
       apiPath: "python/packages",
-      uploadable: { mechanism: "upload", fields: [] },
+      uploadable: { mechanism: "upload" },
     },
     {
       pulpType: "python.provenance",
       apiPath: "python/provenance",
       uploadable: {
         mechanism: "create",
-        fields: [
-          {
-            key: "package",
-            label: "Package href",
-            type: "text",
-            required: true,
-            helpText:
-              "The pulp_href of the Python package this provenance is for.",
-          },
-        ],
       },
     },
     {

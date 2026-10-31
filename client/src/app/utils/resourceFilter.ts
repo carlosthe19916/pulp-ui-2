@@ -1,8 +1,8 @@
+import type { ResourceKind } from "@app/utils/entityField";
 import {
   type EntityType,
   getRepositoryTypesForPublication,
   type IPlugin,
-  type ResourceKind,
 } from "@catalog";
 
 /** Per-resource-kind compatible pulp_types an `asyncResource` field offers. */

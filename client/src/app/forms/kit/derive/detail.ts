@@ -1,4 +1,4 @@
-import type { IEntityField } from "@catalog";
+import type { IEntityField } from "@app/utils/entityField";
 
 import type { IFieldDef, IFormDef } from "../types";
 import { sectionFields } from "./visibility";
