@@ -38,9 +38,10 @@ differ most in what they ask for when an object is made, so that part of
 - [ ] Certificates, keys, YAML and JSON are edited in a code editor with upload, download and
       copy, and are checked for well-formedness before submitting.
 - [ ] A failed submit shows the error at the top of the form and keeps what was typed. A
-      successful one leaves the page: a remote or repository to its detail page, a distribution
-      or publication to its list, with the task feedback of
-      [0006](0006-async-task-feedback.md).
+      successful one leaves the page, with the task feedback of
+      [0006](0006-async-task-feedback.md): an edit to the object's detail page, a create to the
+      new remote's or repository's detail page, or, for a distribution or publication (whose
+      create runs as a task), to its list.
 - [ ] Leaving a form with unsaved changes asks for confirmation.
 - [ ] Edit permission is checked where Edit is offered and on the edit page itself: lists and
       detail pages disable Edit with the permission tooltip
@@ -57,5 +58,6 @@ differ most in what they ask for when an object is made, so that part of
   and edit.
 - Supporting a new plugin now includes writing its forms: code, not only catalog data. The
   catalog keeps what the API needs (types, endpoints, capabilities).
-- Distribution and publication forms become linkable pages, though those objects still have no
-  detail page ([0003](0003-detail-pages-and-expandable-rows.md)).
+- Distribution and publication forms become linkable pages. Distributions later got a detail
+  page of their own ([0010](0010-distribution-detail-page.md)); publications still have none
+  ([0003](0003-detail-pages-and-expandable-rows.md)).

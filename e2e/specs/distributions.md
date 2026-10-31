@@ -3,15 +3,17 @@ area: distributions
 routes:
   - /content-management/:domain/distributions
   - /content-management/:domain/distributions/create
+  - /content-management/:domain/distributions/:type/:id
   - /content-management/:domain/distributions/:type/:id/edit
 ---
 
-# Distributions (create and edit)
+# Distributions (create, edit and detail)
 
 A distribution serves content at a base path. It serves exactly one source: a repository's latest
-version, one repository version, or a publication. Distributions have no detail page: their
-details expand in the list, and create and edit are form pages that return to the list. The
-shared form-page behaviour is in [form-pages.md](form-pages.md).
+version, one repository version, or a publication. Each distribution has a detail page (Details,
+Tasks, Access); rows also expand in the list for a quick look. Create and edit are form pages:
+creating returns to the list (the create runs as a task), editing returns to the detail page.
+The shared form-page behaviour is in [form-pages.md](form-pages.md).
 
 ## List
 
@@ -72,7 +74,7 @@ Summary: Changing a distribution's source to another kind stops serving the old 
 Seed: a file distribution serving a publication
 
 When I open its edit page, choose "Repository" as the source, pick a repository and save
-Then the Distributions list opens with the update toast
+Then the distribution's detail page opens with the update toast
 And the server has the repository set and no publication
 
 ### DST-EDT-02 Rename the base path
@@ -82,7 +84,57 @@ Summary: Editing a distribution's base path moves where its content is served.
 Seed: a file distribution with base path "files/old"
 
 When I change its base path to "files/new" and save
-Then the row shows "files/new" once the update task finishes
+Then its detail page shows the base path "files/new" once the update task finishes
+
+## Detail
+
+### DST-DET-01 Open a distribution's page from its name
+
+Summary: A distribution's name links to its detail page from the Distributions list and from its repository's Distributions tab.
+
+Seed: a file repository and a file distribution serving it
+
+When I click the distribution's name in the Distributions list
+Then its detail page opens with the title of its name, the label "plugin: file.file" and the
+tabs Details, Tasks and Access
+When I go to the repository's Distributions tab and click the distribution's name
+Then the same detail page opens
+
+### DST-DET-02 Details show how it is served and its settings
+
+Summary: The Details tab shows the serving URL, client setup and source, then the settings grouped like the form, then metadata.
+
+Seed: a file repository, an RBAC content guard, and a file distribution serving the repository
+with that content guard and the label "env: prod"
+
+When I open the distribution's Details tab
+Then the "Serving" card shows its base URL, client setup and the repository as a link
+And the "General" and "Access" cards show the base path and the content guard, with the form's
+labels
+And the "Metadata" card shows the label "env: prod", its creation time and its PRN
+
+### DST-DET-03 Edit and delete from the detail page
+
+Summary: The detail page's Edit opens the edit page, whose breadcrumb leads back; Delete removes the distribution and returns to the list.
+
+Seed: a file distribution
+
+When I choose "Edit" in its detail page's actions menu
+Then "Edit file distribution" opens, and its breadcrumb's distribution name links back to the
+detail page
+When I choose "Cancel"
+Then the detail page opens
+When I choose "Delete" in the actions menu and confirm "Delete Distribution"
+Then the toast "Distribution "<name>" deletion started" appears and the Distributions list opens
+
+### DST-DET-04 A distribution's task history
+
+Summary: The Tasks tab lists the tasks run on the distribution, its count in the tab title.
+
+Seed: a file distribution, edited once so an update task ran
+
+When I open its Tasks tab
+Then the tab title counts at least one task and the update task is listed
 
 ## Other layers
 

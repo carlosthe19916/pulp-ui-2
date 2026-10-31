@@ -43,7 +43,7 @@ navigation end to end:
 | [form-pages.md](form-pages.md)           | `FORM` | What every create/edit form page shares, on the remote pages              |
 | [remotes.md](remotes.md)                 | `RMT`  | Remotes list actions, per-plugin create, edit, detail settings, delete    |
 | [repositories.md](repositories.md)       | `REP`  | Repository create/edit pages, remote picker, push types, About settings   |
-| [distributions.md](distributions.md)     | `DST`  | Distribution create/edit pages, source choice, base path, content guard   |
+| [distributions.md](distributions.md)     | `DST`  | Distribution create/edit pages, detail page, source choice, base path     |
 | [publications.md](publications.md)       | `PUB`  | Publication create page, version choice, publishable types, APT kinds     |
 
 ## Writing a scenario

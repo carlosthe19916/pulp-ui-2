@@ -24,6 +24,7 @@ To change a decision, add a new record with the next number, set the old one's `
 | [0008](0008-permission-aware-actions.md)         | Actions the user can't run are disabled, not hidden      |
 | [0009](0009-relationship-views.md)               | Relationship graphs are an extra view (Proposed)         |
 | [0009](0009-plugin-form-pages.md)                | Create and edit are per-plugin form pages                |
+| [0010](0010-distribution-detail-page.md)         | Distributions have a detail page                         |
 
 ## Template
 

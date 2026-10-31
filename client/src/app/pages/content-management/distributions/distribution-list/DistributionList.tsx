@@ -189,7 +189,13 @@ export const DistributionList: React.FC = () => {
       id: distribution.pulp_href,
       row: [
         {
-          cell: distribution.name,
+          cell: (
+            <ResourceHrefLink
+              kind="distribution"
+              href={distribution.pulp_href}
+              label={distribution.name}
+            />
+          ),
           props: { dataLabel: "Name", modifier: "truncate" },
         },
         {

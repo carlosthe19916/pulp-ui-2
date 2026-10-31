@@ -28,7 +28,6 @@ interface IDistributionEditProps {
   href: string;
 }
 
-/** Distributions have no detail page: the edit page returns to the list. */
 export const DistributionEdit: React.FC<IDistributionEditProps> = ({
   pulpDomain,
   pulpType,
@@ -70,10 +69,15 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
       ),
   });
 
-  const toList = () =>
+  const detailParams = {
+    pulpDomain,
+    distributionType: pulpType,
+    distributionId: extractIdFromHref(href),
+  };
+  const toDetail = () =>
     void navigate({
-      to: "/content-management/$pulpDomain/distributions",
-      params: { pulpDomain },
+      to: "/content-management/$pulpDomain/distributions/$distributionType/$distributionId",
+      params: detailParams,
     });
 
   // The route loader only resolves for types with an edit form.
@@ -106,7 +110,14 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
               Distributions
             </Link>
           </BreadcrumbItem>
-          <BreadcrumbItem>{name}</BreadcrumbItem>
+          <BreadcrumbItem>
+            <Link
+              to="/content-management/$pulpDomain/distributions/$distributionType/$distributionId"
+              params={detailParams}
+            >
+              {name}
+            </Link>
+          </BreadcrumbItem>
           <BreadcrumbItem isActive>Edit</BreadcrumbItem>
         </Breadcrumb>
       }
@@ -117,8 +128,8 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
         clearSubmitError();
         updateMutation.mutate({ href, body }, { onSuccess: () => saved() });
       }}
-      onSaved={toList}
-      onCancel={toList}
+      onSaved={toDetail}
+      onCancel={toDetail}
     />
   );
 };

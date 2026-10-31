@@ -89,6 +89,17 @@ export const ResourceHrefLink: React.FC<IResourceHrefLinkProps> = ({
     );
   }
 
+  if (pulpType && kind === "distribution") {
+    return (
+      <Link
+        to="/content-management/$pulpDomain/distributions/$distributionType/$distributionId"
+        params={{ pulpDomain, distributionType: pulpType, distributionId: id }}
+      >
+        {text}
+      </Link>
+    );
+  }
+
   if (pulpType && kind === "content") {
     return (
       <Link

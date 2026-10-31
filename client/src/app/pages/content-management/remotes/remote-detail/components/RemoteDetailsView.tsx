@@ -1,32 +1,18 @@
 import type React from "react";
 
 import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
   ClipboardCopy,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Flex,
-  FlexItem,
-  Icon,
   Label,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
-import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
-import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
-import InfoCircleIcon from "@patternfly/react-icons/dist/esm/icons/info-circle-icon";
-import KeyIcon from "@patternfly/react-icons/dist/esm/icons/key-icon";
-import LockIcon from "@patternfly/react-icons/dist/esm/icons/lock-icon";
-import NetworkIcon from "@patternfly/react-icons/dist/esm/icons/network-icon";
-import OutlinedClockIcon from "@patternfly/react-icons/dist/esm/icons/outlined-clock-icon";
-import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 
 import type { GenericRemoteResponse } from "@app/client";
+import { DetailSectionCard } from "@app/components/DetailSectionCard";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { getEntityForm, toDetailSections } from "@app/forms";
@@ -38,17 +24,6 @@ import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime } from "@app/utils/utils";
 
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
-
-// Icons for the shared remote sections, by form section id; plugin sections get a default.
-const SECTION_ICONS: Record<string, React.ComponentType> = {
-  essentials: CogIcon,
-  auth: KeyIcon,
-  tls: LockIcon,
-  proxy: NetworkIcon,
-  downloads: TachometerAltIcon,
-  timeouts: OutlinedClockIcon,
-  metadata: InfoCircleIcon,
-};
 
 interface IRemoteDetailsViewProps {
   remote: GenericRemoteResponse;
@@ -131,30 +106,6 @@ interface ISection {
   content: React.ReactNode;
 }
 
-const SectionCard: React.FC<ISection> = ({ id, title, content }) => {
-  const IconComponent = SECTION_ICONS[id] ?? CubesIcon;
-  return (
-    <Card isFullHeight>
-      <CardHeader>
-        <CardTitle>
-          <Flex
-            spaceItems={{ default: "spaceItemsSm" }}
-            alignItems={{ default: "alignItemsCenter" }}
-          >
-            <FlexItem>
-              <Icon size="md" isInline>
-                <IconComponent />
-              </Icon>
-            </FlexItem>
-            <FlexItem>{title}</FlexItem>
-          </Flex>
-        </CardTitle>
-      </CardHeader>
-      <CardBody>{content}</CardBody>
-    </Card>
-  );
-};
-
 export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
   remote,
   pulpType,
@@ -191,7 +142,9 @@ export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
     <Stack hasGutter>
       {sections.map((section) => (
         <StackItem key={section.id}>
-          <SectionCard {...section} />
+          <DetailSectionCard id={section.id} title={section.title}>
+            {section.content}
+          </DetailSectionCard>
         </StackItem>
       ))}
     </Stack>
