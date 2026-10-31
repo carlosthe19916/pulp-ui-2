@@ -1,6 +1,6 @@
 ---
 paths:
-  - client/src/app/forms/**
+  - client/src/app/plugin-forms/**
   - client/src/plugins/*/ui/forms/**
   - client/src/app/pages/**/*-create/**
   - client/src/app/pages/**/*-edit/**
@@ -34,7 +34,7 @@ forms** run everything else (plugin actions, admin objects, uploads).
 
 ## Form pages
 
-- `client/src/app/forms/` is the kit (`defineForm`, derivations, `EntityFormPage`) and the
+- `client/src/app/plugin-forms/` is the kit (`defineForm`, derivations, `EntityFormPage`) and the
   shared `fragments/`. Each plugin × type form lives in its plugin, `plugins/<id>/ui/forms/`,
   typed from the definition (`remoteForm(rpm.remote["rpm.uln"])(…)`, see [plugins](plugins.md))
   and registered in the plugin's UI. **No generic fallback**: every declared type needs a form.
@@ -43,9 +43,9 @@ forms** run everything else (plugin actions, admin objects, uploads).
 - A definition renders or `omit`s every body key — `tsc` names the uncovered ones. Each `omit`
   entry gets a reason comment. Deprecated fields are omitted.
 - Layout is the plugin's: `s.essentials([...])` first (the 3–6 fields that define the object),
-  then `s.collapsible(...)` sections, reusing `forms/fragments/` (`authSection`, `tlsSection`,
-  `proxySection`, `downloadsSection`, `timeoutsSection`, `labelsField`, …, all from
-  `@app/forms/fragments`) where they fit.
+  then `s.collapsible(...)` sections, reusing `plugin-forms/fragments/` (`authSection`,
+  `tlsSection`, `proxySection`, `downloadsSection`, `timeoutsSection`, `labelsField`, …, all
+  from `@app/plugin-forms/fragments`) where they fit.
 - Field kinds carry behaviour, so a definition never hand-writes it: write-only values are
   `secret` (never re-sent unless changed), PEM / YAML / JSON are `code`, lists are `stringList`,
   headers and labels are `keyValue`, pickers are `resource`. Something the kinds can't express
@@ -98,9 +98,9 @@ toasts.
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check changed `forms/**`, `plugins/*/ui/forms/**`, `*-create/**`,
-`*-edit/**`, `*Form.tsx`, `use*Form.ts(x)` and `*Modal.tsx` (skip the out-of-scope batch and
-confirmation modals).
+Pass/fail rubric for `/eval`. Check changed `plugin-forms/**`, `plugins/*/ui/forms/**`,
+`*-create/**`, `*-edit/**`, `*Form.tsx`, `use*Form.ts(x)` and `*Modal.tsx` (skip the
+out-of-scope batch and confirmation modals).
 
 - [ ] Submission failures are shown in-form via `FormSubmitError` as the **first child of
       `<Form>`**, fed by `useSubmitError` and `getMutationErrorMessage` — **not** a danger

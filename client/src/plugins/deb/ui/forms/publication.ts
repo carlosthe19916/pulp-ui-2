@@ -1,7 +1,7 @@
 import {
   publicationSourceFields,
   signingServiceField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { publicationForm } from "@plugin-sdk/ui";
 
 import { deb } from "../../definition";

@@ -1,4 +1,4 @@
-import type { IChoiceOption, IFieldBuilders } from "@app/forms";
+import type { IChoiceOption, IFieldBuilders } from "@app/plugin-forms";
 
 interface IPublishingKeys {
   checksum_type?: unknown;

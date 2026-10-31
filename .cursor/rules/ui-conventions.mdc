@@ -1,6 +1,6 @@
 ---
 description: 'Apply when building or changing UI in pages/ or components/: use the shared table, modal and detail helpers, and follow where this project departs from PatternFly defaults (no red actions, no empty-state actions, disabled not hidden).'
-globs: client/src/app/pages/**,client/src/app/components/**,client/src/app/forms/**,client/src/plugins/*/ui/**,client/src/plugin-sdk/ui/**
+globs: client/src/app/pages/**,client/src/app/components/**,client/src/app/plugin-forms/**,client/src/plugins/*/ui/**,client/src/plugin-sdk/ui/**
 ---
 
 # UI conventions (`components/`, `pages/`)

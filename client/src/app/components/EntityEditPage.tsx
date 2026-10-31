@@ -11,8 +11,8 @@ import {
 
 import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { EntityFormPage, type ISubmitHelpers } from "@app/forms";
 import type { IRunningTask } from "@app/hooks/useRunningTask";
+import { EntityFormPage, type ISubmitHelpers } from "@app/plugin-forms";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 

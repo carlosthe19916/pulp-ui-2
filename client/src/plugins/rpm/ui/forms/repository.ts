@@ -4,7 +4,7 @@ import {
   remoteField,
   repositoryIdentity,
   signingServiceField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { repositoryForm } from "@plugin-sdk/ui";
 
 import { rpm } from "../../definition";

@@ -3,7 +3,7 @@ import {
   remoteField,
   repositoryIdentity,
   retentionSection,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { repositoryForm } from "@plugin-sdk/ui";
 
 import { python } from "../../definition";

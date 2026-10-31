@@ -1,4 +1,4 @@
-import { defineForm } from "@app/forms";
+import { defineForm } from "@app/plugin-forms";
 
 import type { EntityType, IEndpointsByEntity } from "../definition";
 

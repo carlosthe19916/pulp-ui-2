@@ -6,7 +6,7 @@ import {
   policyField,
   SECTION_IDS,
   urlField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
 
 import { rpm } from "../../definition";

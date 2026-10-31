@@ -1,11 +1,11 @@
-import type { IFormContext } from "@app/forms";
+import type { IFormContext } from "@app/plugin-forms";
 import {
   authSection,
   connectionSections,
   nameField,
   SECTION_IDS,
   urlField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
 
 import { ansible } from "../../definition";

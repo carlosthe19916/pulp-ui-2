@@ -2,7 +2,7 @@
 paths:
   - client/src/app/components/**
   - client/src/app/pages/**
-  - client/src/app/forms/**
+  - client/src/app/plugin-forms/**
   - client/src/plugins/*/ui/**
   - client/src/plugin-sdk/ui/**
 ---

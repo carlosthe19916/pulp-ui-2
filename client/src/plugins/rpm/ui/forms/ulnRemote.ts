@@ -5,7 +5,7 @@ import {
   nameField,
   POLICY_OPTIONS,
   policyField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
 
 import { rpm } from "../../definition";

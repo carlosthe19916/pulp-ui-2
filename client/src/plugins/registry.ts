@@ -1,7 +1,7 @@
 import type React from "react";
 
 import type { VersionResponse } from "@app/client";
-import type { FormMode, IFormDef } from "@app/forms";
+import type { FormMode, IFormDef } from "@app/plugin-forms";
 import type { IEntityField } from "@app/utils/entityField";
 import {
   ENTITY_TYPES,

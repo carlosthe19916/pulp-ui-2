@@ -4,7 +4,7 @@ import {
   distributionIdentity,
   distributionLabelsSection,
   pullThroughRemoteField,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { distributionForm } from "@plugin-sdk/ui";
 
 import { container } from "../../definition";

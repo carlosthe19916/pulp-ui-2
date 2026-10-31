@@ -1,4 +1,7 @@
-import { CHECKPOINT, publicationSourceFields } from "@app/forms/fragments";
+import {
+  CHECKPOINT,
+  publicationSourceFields,
+} from "@app/plugin-forms/fragments";
 import { publicationForm } from "@plugin-sdk/ui";
 
 import { file } from "../../definition";

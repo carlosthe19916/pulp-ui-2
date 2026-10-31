@@ -9,8 +9,8 @@ import {
 } from "@patternfly/react-core";
 
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityFormPage, type ISubmitHelpers } from "@app/forms";
 import type { ICreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
+import { EntityFormPage, type ISubmitHelpers } from "@app/plugin-forms";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 interface IEntityCreatePageProps {

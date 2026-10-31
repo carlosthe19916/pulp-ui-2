@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCreateBody, buildPatchBody } from "@app/forms/kit/derive/body";
-import { buildDefaultValues } from "@app/forms/kit/derive/defaults";
+import {
+  buildCreateBody,
+  buildPatchBody,
+} from "@app/plugin-forms/kit/derive/body";
+import { buildDefaultValues } from "@app/plugin-forms/kit/derive/defaults";
 
 import { fileDistributionForm } from "./distribution";
 

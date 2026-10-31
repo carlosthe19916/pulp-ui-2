@@ -77,7 +77,7 @@ export const widgetUi = definePluginUi({
 ## 4. Write the forms
 
 One file per type in `ui/forms/`, typed from the definition and built from
-`@app/forms/fragments`:
+`@app/plugin-forms/fragments`:
 
 ```ts
 export const widgetRemoteForm = remoteForm(widget.remote["widget.widget"])(

@@ -20,7 +20,7 @@ import ServerIcon from "@patternfly/react-icons/dist/esm/icons/server-icon";
 import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 import UserShieldIcon from "@patternfly/react-icons/dist/esm/icons/user-shield-icon";
 
-import { SECTION_IDS } from "@app/forms/fragments";
+import { SECTION_IDS } from "@app/plugin-forms/fragments";
 
 // Icons for the shared form sections, by section id; plugin sections get the default.
 const SECTION_ICONS: Record<string, React.ComponentType> = {

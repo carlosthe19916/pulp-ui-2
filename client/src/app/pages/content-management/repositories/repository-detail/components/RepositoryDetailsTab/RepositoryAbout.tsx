@@ -21,9 +21,9 @@ import type {
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
-import { toDetailSections } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { toDetailSections } from "@app/plugin-forms";
 import { useRepositoryLabelsMutation } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyLabelsResult } from "@app/utils/batchNotify";

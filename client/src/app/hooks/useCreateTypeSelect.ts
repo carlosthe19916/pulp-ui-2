@@ -1,11 +1,11 @@
 import { useState } from "react";
 
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import {
   carryOverValues,
   type FormValues,
   type ITypeSelectProps,
-} from "@app/forms";
-import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
+} from "@app/plugin-forms";
 import { type EntityType, getPulpType } from "@catalog";
 import { getEntityForm, type IFormEntry } from "@plugins";
 

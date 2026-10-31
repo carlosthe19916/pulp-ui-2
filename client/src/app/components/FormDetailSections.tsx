@@ -4,7 +4,7 @@ import { StackItem } from "@patternfly/react-core";
 
 import { DetailSectionCard } from "@app/components/DetailSectionCard";
 import { EntityDetailFields } from "@app/components/EntityDetailFields";
-import type { IDetailSection } from "@app/forms";
+import type { IDetailSection } from "@app/plugin-forms";
 
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
 

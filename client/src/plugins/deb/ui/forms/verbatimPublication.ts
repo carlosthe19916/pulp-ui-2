@@ -1,4 +1,4 @@
-import { publicationSourceFields } from "@app/forms/fragments";
+import { publicationSourceFields } from "@app/plugin-forms/fragments";
 import { publicationForm } from "@plugin-sdk/ui";
 
 import { deb } from "../../definition";

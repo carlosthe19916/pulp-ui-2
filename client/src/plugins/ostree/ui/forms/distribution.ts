@@ -5,7 +5,7 @@ import {
   servedRepositoryField,
   servedVersionField,
   sourceChoice,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { distributionForm } from "@plugin-sdk/ui";
 
 import { ostree } from "../../definition";

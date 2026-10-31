@@ -58,12 +58,12 @@ client/src/app/
           WidgetDetailRoute.tsx           # route → component adapter
 ```
 
-## Form pages (`forms/`)
+## Form pages (`plugin-forms/`)
 
-`client/src/app/forms/` is an app-root module with a fixed layout (see [forms](forms.md)):
+`client/src/app/plugin-forms/` is an app-root module with a fixed layout (see [forms](forms.md)):
 
 ```
-forms/
+plugin-forms/
   index.ts                   # public surface: the kit
   kit/                       # the definition language, derivations and renderer
     types.ts  defineForm.ts  derive/
@@ -71,7 +71,7 @@ forms/
   fragments/                 # shared fields and sections plugin forms opt into (index.ts)
 ```
 
-Pages import it only through `@app/forms`; plugin forms also use `@app/forms/fragments`. A
+Pages import it only through `@app/plugin-forms`; plugin forms also use `@app/plugin-forms/fragments`. A
 module only one form page uses still lives in that page's directory.
 
 ## Plugins (`plugins/`, `plugin-sdk/`)
@@ -98,6 +98,6 @@ Pass/fail rubric for `/eval`.
 - [ ] A page directory's root holds its main component and its route adapter, if any.
 - [ ] No `components/`, `hooks/`, `utils/` or `context/` under an area or entity directory.
 - [ ] Kit modules and fragments follow the `forms/` layout; pages import it through
-      `@app/forms`. Plugin forms, panels, Browse views and tabs sit in their plugin's `ui/`.
+      `@app/plugin-forms`. Plugin forms, panels, Browse views and tabs sit in their plugin's `ui/`.
 - [ ] New contexts sit at the narrowest scope, split into `<Name>Context.ts` +
       `<Name>Provider.tsx` (in `context/<Name>/` outside a component folder).

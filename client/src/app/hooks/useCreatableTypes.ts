@@ -1,5 +1,5 @@
-import type { ITypeOption } from "@app/forms";
 import { useApiStatus } from "@app/hooks/useApiStatus";
+import type { ITypeOption } from "@app/plugin-forms";
 import { type EntityType, getAvailableTypes } from "@catalog";
 import { getEntityForm } from "@plugins";
 

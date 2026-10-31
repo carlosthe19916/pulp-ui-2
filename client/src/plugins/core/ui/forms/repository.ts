@@ -2,7 +2,7 @@ import {
   labelsSection,
   repositoryIdentity,
   retentionSection,
-} from "@app/forms/fragments";
+} from "@app/plugin-forms/fragments";
 import { repositoryForm } from "@plugin-sdk/ui";
 
 import { core } from "../../definition";

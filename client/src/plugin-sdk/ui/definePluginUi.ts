@@ -1,7 +1,7 @@
 import type React from "react";
 
 import type { ContentEndpoints } from "@app/client/pulpTypes.gen";
-import type { FormMode, IFormDef, IFormFor } from "@app/forms";
+import type { FormMode, IFormDef, IFormFor } from "@app/plugin-forms";
 import type { IEntityField } from "@app/utils/entityField";
 
 import type {

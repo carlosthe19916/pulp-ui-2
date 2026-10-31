@@ -2,7 +2,7 @@
  * Compile-time checks of `definePlugin` and `definePluginUi` (run by `tsc`, never executed):
  * each `@ts-expect-error` marks a plugin that must not compile.
  */
-import type { IFormFor } from "@app/forms";
+import type { IFormFor } from "@app/plugin-forms";
 
 import { definePlugin } from "./definition";
 import {
