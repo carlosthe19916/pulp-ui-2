@@ -1,10 +1,9 @@
 import { expect, test } from "@support/fixtures";
+import { FILE_MANIFEST_URL } from "@support/helpers/fixtureUrls";
 import { uniqueName } from "@support/helpers/unique";
 import { ConfirmModal } from "@support/pom/ConfirmModal";
 
 // Scenarios: e2e/specs/remotes.md (list, delete).
-
-const FILE_URL = "https://fixtures.pulpproject.org/file/PULP_MANIFEST";
 
 test.describe("Remotes", () => {
   /**
@@ -30,7 +29,7 @@ test.describe("Remotes", () => {
     },
     async ({ remotesPage, formPage, api, cleanup, page }) => {
       const name = cleanup.remote(uniqueName("remote"));
-      await api.createRemote("file/file", { name, url: FILE_URL });
+      await api.createRemote("file/file", { name, url: FILE_MANIFEST_URL });
 
       await remotesPage.goto();
       await page
@@ -44,7 +43,7 @@ test.describe("Remotes", () => {
       await remotesPage.rowAction(name, "Edit");
       await expect(formPage.heading("Edit file remote")).toBeVisible();
       await expect(formPage.textbox("Name")).toHaveValue(name);
-      await expect(formPage.textbox("URL")).toHaveValue(FILE_URL);
+      await expect(formPage.textbox("URL")).toHaveValue(FILE_MANIFEST_URL);
     },
   );
 
@@ -69,7 +68,7 @@ test.describe("Remotes", () => {
     },
     async ({ remotesPage, toasts, api, cleanup, page }) => {
       const name = cleanup.remote(uniqueName("remote"));
-      await api.createRemote("file/file", { name, url: FILE_URL });
+      await api.createRemote("file/file", { name, url: FILE_MANIFEST_URL });
 
       await remotesPage.goto();
       await remotesPage.filterBy("Name", name);

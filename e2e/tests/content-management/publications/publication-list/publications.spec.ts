@@ -1,5 +1,5 @@
 import { expect, test } from "@support/fixtures";
-import { publicationId } from "@support/helpers/publications";
+import { idOf } from "@support/helpers/hrefs";
 import { uniqueName } from "@support/helpers/unique";
 
 // Scenarios: e2e/specs/publications.md (edit).
@@ -38,7 +38,7 @@ test.describe("Publications", () => {
       );
 
       await publicationsPage.goto();
-      const row = publicationsPage.row(`Publication ${publicationId(href)}`);
+      const row = publicationsPage.row(`Publication ${idOf(href)}`);
       await row.getByRole("button", { name: "Kebab toggle" }).click();
       await expect(
         page.getByRole("menuitem", { name: "Delete" }),

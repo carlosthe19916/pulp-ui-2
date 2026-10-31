@@ -2,7 +2,6 @@ import { expect, test } from "@support/fixtures";
 import {
   editPath,
   fileDistribution,
-  pickResource,
   seedDistribution,
   seedPublication,
   seedRepository,
@@ -53,7 +52,7 @@ test.describe("Distribution edit page", () => {
       await page
         .getByRole("radio", { name: "Repository", exact: true })
         .check();
-      await pickResource(page, {
+      await formPage.pickResource({
         label: "Repository",
         filter: repository.name,
         option: repository.name,

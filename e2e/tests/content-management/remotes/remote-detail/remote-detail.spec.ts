@@ -1,4 +1,5 @@
 import { expect, test } from "@support/fixtures";
+import { DOCKER_HUB_URL } from "@support/helpers/fixtureUrls";
 import { uniqueName } from "@support/helpers/unique";
 
 // Scenarios: e2e/specs/remotes.md (detail).
@@ -42,7 +43,7 @@ test.describe("Remote detail page", () => {
       const name = cleanup.remote(uniqueName("remote"));
       const href = await api.createRemote("container/container", {
         name,
-        url: "https://registry-1.docker.io",
+        url: DOCKER_HUB_URL,
         upstream_name: "library/busybox",
         password: "s3cret",
         sigstore: "https://sigstore.example.com/",

@@ -1,39 +1,21 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "@support/fixtures";
-import type { PulpApi } from "@support/helpers/pulp-api";
+import {
+  FILE_MANIFEST_URL,
+  RPM_FIXTURE_URL,
+} from "@support/helpers/fixtureUrls";
+import {
+  SIGNING_SERVICE,
+  signingServiceHref,
+} from "@support/helpers/signingService";
 import { uniqueName } from "@support/helpers/unique";
 import type { EntityFormPage } from "@support/pom/EntityFormPage";
 
 // Scenarios: e2e/specs/repositories.md (create).
 
 const CREATE = "/content-management/default/repositories/create";
-const SIGNING_SERVICE = "pulp-ui-dev-signing";
 
 const openCreate = async (formPage: EntityFormPage, type: string) => {
   await formPage.goto(`${CREATE}?type=${type}`);
-};
-
-/** Open a resource picker, search it by name and return its menu. */
-const searchPicker = async (page: Page, label: string, term: string) => {
-  const toggle = page.getByRole("button", { name: label, exact: true });
-  if ((await toggle.getAttribute("aria-expanded")) !== "true") {
-    await toggle.click();
-  }
-  await page.getByRole("textbox", { name: `${label} filter` }).fill(term);
-};
-
-const pickResource = async (page: Page, label: string, name: string) => {
-  await searchPicker(page, label, name);
-  await page.getByRole("option", { name, exact: true }).click();
-};
-
-const signingServiceExists = async (api: PulpApi) => {
-  const { count } = await api.getJson<{ count: number }>(
-    api.hrefOf("signing-services"),
-    { name: SIGNING_SERVICE },
-  );
-  return count > 0;
 };
 
 test.describe("Repository create page", () => {
@@ -70,14 +52,14 @@ test.describe("Repository create page", () => {
       await Promise.all([
         api.createRemote("file/file", {
           name: fileRemote,
-          url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+          url: FILE_MANIFEST_URL,
         }),
         api.createRemote("rpm/rpm", {
           name: rpmRemote,
-          url: "https://fixtures.pulpproject.org/rpm-signed/",
+          url: RPM_FIXTURE_URL,
         }),
       ]);
-      const hasSigning = await signingServiceExists(api);
+      const hasSigning = !!(await signingServiceHref(api));
 
       const rows: {
         label: string;
@@ -93,7 +75,10 @@ test.describe("Repository create page", () => {
           type: "file.file",
           fill: async () => {
             await formPage.fill({ Description: "Release files" });
-            await pickResource(page, "Remote", fileRemote);
+            await formPage.pickResource({
+              label: "Remote",
+              option: fileRemote,
+            });
             // PatternFly hides the switch input under its track: toggle it by keyboard.
             const autopublish = page.getByRole("switch", {
               name: "Auto-publish",
@@ -112,13 +97,12 @@ test.describe("Repository create page", () => {
           label: "RPM",
           type: "rpm.rpm",
           fill: async () => {
-            await pickResource(page, "Remote", rpmRemote);
+            await formPage.pickResource({ label: "Remote", option: rpmRemote });
             await formPage.expandSection("Signing");
-            await pickResource(
-              page,
-              "Metadata signing service",
-              SIGNING_SERVICE,
-            );
+            await formPage.pickResource({
+              label: "Metadata signing service",
+              option: SIGNING_SERVICE,
+            });
           },
           shown: [rpmRemote, SIGNING_SERVICE],
           terms: ["Metadata signing service"],
@@ -197,11 +181,11 @@ test.describe("Repository create page", () => {
       await Promise.all([
         api.createRemote("file/file", {
           name: fileRemote,
-          url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+          url: FILE_MANIFEST_URL,
         }),
         api.createRemote("rpm/rpm", {
           name: rpmRemote,
-          url: "https://fixtures.pulpproject.org/rpm-signed/",
+          url: RPM_FIXTURE_URL,
         }),
       ]);
       const option = (name: string) =>
@@ -209,17 +193,17 @@ test.describe("Repository create page", () => {
       const noMatches = page.getByRole("option", { name: "No matches" });
 
       await openCreate(formPage, "file.file");
-      await searchPicker(page, "Remote", fileRemote);
+      await formPage.searchResource({ label: "Remote", term: fileRemote });
       await expect(option(fileRemote)).toBeVisible();
-      await searchPicker(page, "Remote", rpmRemote);
+      await formPage.searchResource({ label: "Remote", term: rpmRemote });
       await expect(noMatches).toBeVisible();
       await page.keyboard.press("Escape");
 
       await formPage.selectType("RPM");
       await expect(formPage.heading("Create RPM repository")).toBeVisible();
-      await searchPicker(page, "Remote", rpmRemote);
+      await formPage.searchResource({ label: "Remote", term: rpmRemote });
       await expect(option(rpmRemote)).toBeVisible();
-      await searchPicker(page, "Remote", fileRemote);
+      await formPage.searchResource({ label: "Remote", term: fileRemote });
       await expect(noMatches).toBeVisible();
     },
   );

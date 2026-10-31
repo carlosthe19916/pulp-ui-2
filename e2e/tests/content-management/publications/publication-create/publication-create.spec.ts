@@ -1,9 +1,6 @@
 import { expect, test } from "@support/fixtures";
-import {
-  pickOption,
-  publicationId,
-  publicationOf,
-} from "@support/helpers/publications";
+import { idOf } from "@support/helpers/hrefs";
+import { publicationOf } from "@support/helpers/publications";
 import { uniqueName } from "@support/helpers/unique";
 
 // Scenarios: e2e/specs/publications.md (create).
@@ -44,7 +41,7 @@ test.describe("Publication create page", () => {
         .click();
       await formPage.selectType("File");
       await expect(formPage.heading("Create file publication")).toBeVisible();
-      await pickOption(page, { label: "Repository", option: repoName });
+      await formPage.pickResource({ label: "Repository", option: repoName });
       await formPage.submit("Create");
 
       await expect(toasts.info("Publication creation started")).toBeVisible();
@@ -54,9 +51,7 @@ test.describe("Publication create page", () => {
         href,
       );
       expect(publication.repository_version).toBe(`${repoHref}versions/1/`);
-      await publicationsPage.expectRowVisible(
-        `Publication ${publicationId(href)}`,
-      );
+      await publicationsPage.expectRowVisible(`Publication ${idOf(href)}`);
     },
   );
 
@@ -89,8 +84,12 @@ test.describe("Publication create page", () => {
 
       await formPage.goto(`${CREATE}?type=file.file`);
       await page.getByRole("radio", { name: "A specific version" }).check();
-      await pickOption(page, { label: "Repository", option: repoName });
-      await pickOption(page, { label: "Version", option: "Version 1" });
+      await formPage.pickResource({ label: "Repository", option: repoName });
+      await formPage.pickResource({
+        label: "Version",
+        option: "Version 1",
+        filter: "1",
+      });
       await formPage.submit("Create");
 
       const href = cleanup.href(await publicationOf(api, repoHref));
@@ -198,7 +197,10 @@ test.describe("Publication create page", () => {
 
           await formPage.goto(CREATE);
           await formPage.selectType(row.type);
-          await pickOption(page, { label: "Repository", option: repoName });
+          await formPage.pickResource({
+            label: "Repository",
+            option: repoName,
+          });
           if (row.structured) {
             await expect(
               page.getByRole("switch", { name: "Structured" }),
@@ -209,7 +211,7 @@ test.describe("Publication create page", () => {
           await expect(publicationsPage.heading).toBeVisible();
           const href = cleanup.href(await publicationOf(api, repoHref));
           await expect(
-            publicationsPage.row(`Publication ${publicationId(href)}`),
+            publicationsPage.row(`Publication ${idOf(href)}`),
           ).toContainText(row.listed);
           const publication = await api.getJson<{ structured?: boolean }>(href);
           expect(publication.structured).toBe(row.structured);

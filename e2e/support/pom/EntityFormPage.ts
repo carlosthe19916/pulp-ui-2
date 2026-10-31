@@ -84,13 +84,62 @@ export class EntityFormPage {
     await this.page.keyboard.insertText(text);
   }
 
-  /** Type a write-only value; on an edit page it first opens the input (Set / Change). */
-  async setSecret(label: string, value: string): Promise<void> {
+  /**
+   * Type a write-only value. An edit page shows a "Set"/"Change" button first, a create page
+   * the input; wait until one renders before choosing.
+   */
+  async setSecret({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string;
+  }): Promise<void> {
     const open = this.page.getByRole("button", {
       name: new RegExp(`^(Set|Change) ${label}$`),
     });
-    if ((await open.count()) > 0) await open.click();
-    await this.page.getByLabel(new RegExp(`^${label}`)).fill(value);
+    const input = this.page.getByLabel(new RegExp(`^${label}`));
+    await expect(open.or(input).first()).toBeVisible();
+    if (await open.isVisible()) await open.click();
+    await input.fill(value);
+  }
+
+  /** Open a resource picker (if closed) and type `term` into its filter. */
+  async searchResource({
+    label,
+    term,
+  }: {
+    label: string;
+    term: string;
+  }): Promise<void> {
+    const toggle = this.page.getByRole("button", { name: label, exact: true });
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") {
+      await toggle.click();
+    }
+    await this.page
+      .getByRole("textbox", { name: `${label} filter` })
+      .fill(term);
+  }
+
+  /** Choose `option` in a resource picker, narrowing it by `filter` (default: the option). */
+  async pickResource({
+    label,
+    option,
+    filter = option,
+  }: {
+    label: string;
+    option: string;
+    filter?: string;
+  }): Promise<void> {
+    await this.searchResource({ label, term: filter });
+    await this.page.getByRole("option", { name: option, exact: true }).click();
+  }
+
+  /** The in-form error alert raised by a failed submit. */
+  submitError(title: string): Locator {
+    return this.page.getByRole("heading", {
+      name: new RegExp(`^Danger alert:\\s*${title}$`),
+    });
   }
 
   async clearSecret(label: string): Promise<void> {

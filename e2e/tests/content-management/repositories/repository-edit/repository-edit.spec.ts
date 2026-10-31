@@ -1,4 +1,6 @@
 import { expect, test } from "@support/fixtures";
+import { FILE_MANIFEST_URL } from "@support/helpers/fixtureUrls";
+import { idOf } from "@support/helpers/hrefs";
 import { mockInFlightTask } from "@support/helpers/taskMock";
 import { uniqueName } from "@support/helpers/unique";
 
@@ -10,8 +12,6 @@ interface IRepositoryRecord {
   remote: string | null;
   retain_repo_versions: number | null;
 }
-
-const idOf = (href: string) => href.split("/").filter(Boolean).pop() ?? "";
 
 const detailPath = (href: string) =>
   `/content-management/default/repositories/file.file/${idOf(href)}`;
@@ -43,7 +43,7 @@ test.describe("Repository edit page", () => {
       const remoteName = cleanup.remote(uniqueName("remote"));
       const remote = await api.createRemote("file/file", {
         name: remoteName,
-        url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+        url: FILE_MANIFEST_URL,
       });
       const name = cleanup.repository(uniqueName("repo"));
       const href = await api.createRepository("file/file", {
@@ -111,7 +111,7 @@ test.describe("Repository edit page", () => {
     async ({ formPage, toasts, api, cleanup, page }) => {
       const remote = await api.createRemote("file/file", {
         name: cleanup.remote(uniqueName("remote")),
-        url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+        url: FILE_MANIFEST_URL,
       });
       const name = cleanup.repository(uniqueName("repo"));
       const href = await api.createRepository("file/file", { name, remote });

@@ -1,11 +1,13 @@
 import { expect, test } from "@support/fixtures";
+import { RPM_FIXTURE_URL } from "@support/helpers/fixtureUrls";
+import { idOf } from "@support/helpers/hrefs";
+import {
+  SIGNING_SERVICE,
+  signingServiceHref,
+} from "@support/helpers/signingService";
 import { uniqueName } from "@support/helpers/unique";
 
 // Scenarios: e2e/specs/repositories.md (detail).
-
-const SIGNING_SERVICE = "pulp-ui-dev-signing";
-
-const idOf = (href: string) => href.split("/").filter(Boolean).pop() ?? "";
 
 test.describe("Repository About", () => {
   /**
@@ -31,24 +33,22 @@ test.describe("Repository About", () => {
       },
     },
     async ({ api, cleanup, page }) => {
-      const { results } = await api.getJson<{
-        results: { pulp_href: string }[];
-      }>(api.hrefOf("signing-services"), { name: SIGNING_SERVICE });
+      const signingService = await signingServiceHref(api);
       test.skip(
-        results.length === 0,
+        !signingService,
         `the backend has no "${SIGNING_SERVICE}" signing service`,
       );
 
       const remoteName = cleanup.remote(uniqueName("remote"));
       const remote = await api.createRemote("rpm/rpm", {
         name: remoteName,
-        url: "https://fixtures.pulpproject.org/rpm-signed/",
+        url: RPM_FIXTURE_URL,
       });
       const name = cleanup.repository(uniqueName("repo"));
       const href = await api.createRepository("rpm/rpm", {
         name,
         remote,
-        metadata_signing_service: results[0].pulp_href,
+        metadata_signing_service: signingService,
         retain_repo_versions: 3,
       });
 

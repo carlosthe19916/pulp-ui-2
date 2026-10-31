@@ -1,5 +1,6 @@
 import { request, type APIRequestContext } from "@playwright/test";
 
+import { FILE_MANIFEST_URL } from "./fixtureUrls";
 import { E2E_PASSWORD, E2E_USERNAME } from "./auth";
 import { STRONG_PASSWORD } from "./unique";
 
@@ -220,13 +221,21 @@ export class PulpApi {
     return this.postCreate(`remotes/${typeSlug}`, body);
   }
 
-  /** A remote of a given plugin type by exact name, e.g. `remote("file/file", name)`. */
-  async remote<T>(typeSlug: string, name: string): Promise<T | undefined> {
+  /** The object of a collection with this exact name, e.g. `findByName("distributions/file/file", n)`. */
+  async findByName<T>(
+    collection: string,
+    name: string,
+  ): Promise<T | undefined> {
     const { results } = await this.getJson<{ results: T[] }>(
-      this.collectionUrl(`remotes/${typeSlug}`),
+      this.collectionUrl(collection),
       { name },
     );
     return results[0];
+  }
+
+  /** A remote of a given plugin type by exact name, e.g. `remote("file/file", name)`. */
+  remote<T>(typeSlug: string, name: string): Promise<T | undefined> {
+    return this.findByName<T>(`remotes/${typeSlug}`, name);
   }
 
   /** Seed a repository of a given plugin type, e.g. `createRepository("rpm/rpm", {...})`. */
@@ -350,7 +359,7 @@ export class PulpApi {
   async createFileRemote(name: string): Promise<ICreatedResource> {
     return this.createSync("remotes/file/file", {
       name,
-      url: "https://fixtures.pulpproject.org/file/PULP_MANIFEST",
+      url: FILE_MANIFEST_URL,
     });
   }
 

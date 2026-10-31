@@ -1,17 +1,21 @@
 import { readFileSync } from "node:fs";
 
-import type { Page } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 
 import { dataFile } from "@support/dataFile";
 import { expect, test } from "@support/fixtures";
+import {
+  DOCKER_HUB_URL,
+  FILE_MANIFEST_URL,
+  FILE_MANIFEST_URL_2,
+} from "@support/helpers/fixtureUrls";
+import { idOf } from "@support/helpers/hrefs";
 import type { PulpApi } from "@support/helpers/pulp-api";
 import { uniqueName } from "@support/helpers/unique";
 
 // Scenarios: e2e/specs/form-pages.md (edit-page behaviour, on the remote pages) and
 // e2e/specs/remotes.md (edit).
 
-const FILE_URL = "https://fixtures.pulpproject.org/file/PULP_MANIFEST";
-const FILE_URL_2 = "https://fixtures.pulpproject.org/file2/PULP_MANIFEST";
 const PROXY_URL = "http://proxy.example.com:3128";
 // A self-signed certificate: Pulp parses the CA certificate it is given.
 const CA_CERT = readFileSync(dataFile("test-ca.pem"), "utf8");
@@ -30,8 +34,6 @@ interface IRemoteRecord {
 const isSet = (remote: IRemoteRecord | undefined, field: string) =>
   remote?.hidden_fields.find((item) => item.name === field)?.is_set;
 
-const idOf = (href: string) => href.split("/").filter(Boolean).pop() ?? "";
-
 const editPath = (type: string, href: string) =>
   `/content-management/default/remotes/${type}/${idOf(href)}/edit`;
 
@@ -40,10 +42,14 @@ const seedFileRemote = async (
   api: PulpApi,
   name: string,
   extra: Record<string, unknown> = {},
-) => api.createRemote("file/file", { name, url: FILE_URL, ...extra });
+) => api.createRemote("file/file", { name, url: FILE_MANIFEST_URL, ...extra });
 
 const fileRemote = (api: PulpApi, name: string) =>
   api.remote<IRemoteRecord>("file/file", name);
+
+/** The edit page's PATCH to a file remote. */
+const isRemotePatch = (request: Request) =>
+  request.method() === "PATCH" && request.url().includes("/remotes/file/file/");
 
 const heading403 = (page: Page) =>
   page.getByRole("heading", { name: "403: Access denied" });
@@ -133,14 +139,20 @@ test.describe("Remote edit page", () => {
 
       await formPage.goto(editPath("file.file", href));
       await expect(page.getByRole("button", { name: "Save" })).toBeDisabled();
-      await formPage.fill({ URL: FILE_URL_2 });
+      await formPage.fill({ URL: FILE_MANIFEST_URL_2 });
       await formPage.fillCode("CA certificate", "");
       await formPage.expandSection("Downloads");
       await page
         .getByRole("spinbutton", { name: "Download concurrency" })
         .fill("");
+      const patch = page.waitForRequest(isRemotePatch);
       await formPage.submit("Save");
 
+      expect((await patch).postDataJSON()).toEqual({
+        url: FILE_MANIFEST_URL_2,
+        ca_cert: null,
+        download_concurrency: null,
+      });
       await expect(
         toasts.info(`Remote "${name}" update started`),
       ).toBeVisible();
@@ -150,7 +162,7 @@ test.describe("Remote edit page", () => {
           const remote = await fileRemote(api, name);
           return [remote?.url, remote?.ca_cert, remote?.download_concurrency];
         })
-        .toEqual([FILE_URL_2, null, null]);
+        .toEqual([FILE_MANIFEST_URL_2, null, null]);
     },
   );
 
@@ -193,17 +205,25 @@ test.describe("Remote edit page", () => {
       await expect(
         page.getByRole("button", { name: "Set Username" }),
       ).toBeVisible();
+      // In order: Username's status and its "Set" button, then Password's status.
+      await expect(
+        page.getByText(/^(Set|Not set)$/).filter({ visible: true }),
+      ).toHaveText(["Not set", "Set", "Set"]);
       await expect(page.getByText("s3cret")).toHaveCount(0);
 
-      await formPage.fill({ URL: FILE_URL_2 });
+      await formPage.fill({ URL: FILE_MANIFEST_URL_2 });
+      const patch = page.waitForRequest(isRemotePatch);
       await formPage.submit("Save");
+      expect((await patch).postDataJSON()).toEqual({
+        url: FILE_MANIFEST_URL_2,
+      });
       await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
       await expect
         .poll(async () => {
           const remote = await fileRemote(api, name);
           return [remote?.url, isSet(remote, "password")];
         })
-        .toEqual([FILE_URL_2, true]);
+        .toEqual([FILE_MANIFEST_URL_2, true]);
     },
   );
 
@@ -241,7 +261,7 @@ test.describe("Remote edit page", () => {
 
       await formPage.goto(editPath("file.file", href));
       await formPage.expandSection("Authentication");
-      await formPage.setSecret("Password", "n3w-s3cret");
+      await formPage.setSecret({ label: "Password", value: "n3w-s3cret" });
       await formPage.expandSection("Proxy");
       await page.getByRole("button", { name: "Clear Proxy username" }).click();
       await page.getByRole("button", { name: "Clear Proxy password" }).click();
@@ -420,7 +440,7 @@ test.describe("Remote edit page", () => {
       const name = cleanup.remote(uniqueName("remote"));
       const href = await api.createRemote("container/container", {
         name,
-        url: "https://registry-1.docker.io",
+        url: DOCKER_HUB_URL,
         upstream_name: "library/busybox",
         includes: ["latest"],
       });

@@ -1,9 +1,9 @@
 import { expect, test } from "@support/fixtures";
 import {
-  idOf,
   seedDistribution,
   seedRepository,
 } from "@support/helpers/distributions";
+import { idOf } from "@support/helpers/hrefs";
 
 // Scenarios: e2e/specs/distributions.md (list, opening a detail page).
 

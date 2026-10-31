@@ -55,7 +55,12 @@ test.describe("Repository labels and access", () => {
     api,
   }) => {
     const name = cleanup.repository(uniqueName("repo"));
-    await api.createFileRepository(name);
+    // A user of its own: searching "admin" can match other tests' users and page it out.
+    const username = cleanup.user(uniqueName("grantee"));
+    await Promise.all([
+      api.createFileRepository(name),
+      api.createUser({ username }),
+    ]);
     const page = await openRepository(repositoriesPage, name);
 
     await page.getByRole("tab", { name: "Access" }).click();
@@ -75,8 +80,8 @@ test.describe("Repository labels and access", () => {
     await role.click();
     await dialog.getByRole("button", { name: "Users", exact: true }).click();
     await page.getByRole("listbox").waitFor({ state: "visible" });
-    await page.getByRole("textbox", { name: "Users filter" }).fill("admin");
-    const user = page.getByRole("option").filter({ hasText: /^admin$/ });
+    await page.getByRole("textbox", { name: "Users filter" }).fill(username);
+    const user = page.getByRole("option", { name: username, exact: true });
     await expect(user).toHaveCount(1, { timeout: 15_000 });
     await user.click();
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
@@ -88,9 +93,9 @@ test.describe("Repository labels and access", () => {
     await expect(roles.getByText("file.filerepository_viewer")).toBeVisible();
     await roles
       .getByRole("button", {
-        name: "Remove admin from file.filerepository_viewer",
+        name: `Remove ${username} from file.filerepository_viewer`,
       })
       .click();
-    await expect(page.getByText('Removed "admin"')).toBeVisible();
+    await expect(page.getByText(`Removed "${username}"`)).toBeVisible();
   });
 });

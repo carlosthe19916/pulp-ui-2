@@ -1,21 +1,17 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "@support/fixtures";
+import {
+  DOCKER_HUB_URL,
+  FILE_MANIFEST_URL,
+  GALAXY_URL,
+} from "@support/helpers/fixtureUrls";
 import { uniqueName } from "@support/helpers/unique";
-import type { EntityFormPage } from "@support/pom/EntityFormPage";
+import { EntityFormPage } from "@support/pom/EntityFormPage";
 
 // Scenarios: e2e/specs/form-pages.md (create-page behaviour, on the remote pages) and
 // e2e/specs/remotes.md (create).
 
 const CREATE = "/content-management/default/remotes/create";
-const FILE_URL = "https://fixtures.pulpproject.org/file/PULP_MANIFEST";
-const GALAXY_URL = "https://galaxy.ansible.com/api/";
 const REQUIREMENTS = "collections:\n  - name: ansible.posix\n";
-
-const inFormError = (page: Page, title: string) =>
-  page.getByRole("heading", {
-    name: new RegExp(`^Danger alert:\\s*${title}$`),
-  });
 
 /** Open the create page with a type preselected, as the Type select would. */
 const openCreate = async (formPage: EntityFormPage, type?: string) => {
@@ -110,18 +106,16 @@ test.describe("Remote create page", () => {
       await openCreate(formPage, "container.container");
       await formPage.fill({
         Name: "carried",
-        URL: "https://registry-1.docker.io",
+        URL: DOCKER_HUB_URL,
         "Upstream name": "library/busybox",
       });
       await formPage.expandSection("Authentication");
-      await formPage.setSecret("Password", "s3cret");
+      await formPage.setSecret({ label: "Password", value: "s3cret" });
 
       await formPage.selectType("File");
       await expect(formPage.heading("Create file remote")).toBeVisible();
       await expect(formPage.textbox("Name")).toHaveValue("carried");
-      await expect(formPage.textbox("URL")).toHaveValue(
-        "https://registry-1.docker.io",
-      );
+      await expect(formPage.textbox("URL")).toHaveValue(DOCKER_HUB_URL);
       await formPage.expandSection("Authentication");
       await expect(page.getByLabel(/^Password/)).toHaveValue("s3cret");
 
@@ -187,7 +181,7 @@ test.describe("Remote create page", () => {
     async ({ formPage, toasts, cleanup, page }) => {
       const name = cleanup.remote(uniqueName("remote"));
       await openCreate(formPage, "file.file");
-      await formPage.fill({ Name: name, URL: FILE_URL });
+      await formPage.fill({ Name: name, URL: FILE_MANIFEST_URL });
       await formPage.submit("Create");
 
       await expect(toasts.success(`Remote "${name}" created`)).toBeVisible();
@@ -222,14 +216,16 @@ test.describe("Remote create page", () => {
       await api.createRemote("rpm/rpm", { name, url: "https://example.com/" });
 
       await openCreate(formPage, "file.file");
-      await formPage.fill({ Name: name, URL: FILE_URL });
+      await formPage.fill({ Name: name, URL: FILE_MANIFEST_URL });
       await formPage.submit("Create");
 
-      await expect(inFormError(page, "Failed to create remote")).toBeVisible();
+      await expect(
+        formPage.submitError("Failed to create remote"),
+      ).toBeVisible();
       await expect(page.getByText("This field must be unique.")).toBeVisible();
       await expect(formPage.heading("Create file remote")).toBeVisible();
       await expect(formPage.textbox("Name")).toHaveValue(name);
-      await expect(formPage.textbox("URL")).toHaveValue(FILE_URL);
+      await expect(formPage.textbox("URL")).toHaveValue(FILE_MANIFEST_URL);
     },
   );
 
@@ -406,10 +402,12 @@ test.describe("Remote create page", () => {
         .fill(uniqueName("denied"));
       await page
         .getByRole("textbox", { name: "URL", exact: true })
-        .fill(FILE_URL);
+        .fill(FILE_MANIFEST_URL);
       await page.getByRole("button", { name: "Create", exact: true }).click();
 
-      await expect(inFormError(page, "Failed to create remote")).toBeVisible();
+      await expect(
+        new EntityFormPage(page).submitError("Failed to create remote"),
+      ).toBeVisible();
       await expect(
         page.getByText("You do not have permission to perform this action."),
       ).toBeVisible();
@@ -459,10 +457,10 @@ test.describe("Remote create page", () => {
           label: "File",
           type: "file.file",
           fill: async (name) => {
-            await formPage.fill({ Name: name, URL: FILE_URL });
+            await formPage.fill({ Name: name, URL: FILE_MANIFEST_URL });
             await page.getByRole("radio", { name: "On demand" }).check();
           },
-          shown: [FILE_URL, "on_demand"],
+          shown: [FILE_MANIFEST_URL, "on_demand"],
         },
         {
           label: "Ansible collection",
@@ -479,7 +477,7 @@ test.describe("Remote create page", () => {
           fill: async (name) => {
             await formPage.fill({
               Name: name,
-              URL: "https://registry-1.docker.io",
+              URL: DOCKER_HUB_URL,
               "Upstream name": "library/busybox",
             });
             await formPage.addListItems("Include tags", ["latest", "1.36"]);
@@ -522,8 +520,14 @@ test.describe("Remote create page", () => {
               Name: name,
               URL: "uln://ol8_x86_64_baseos_latest",
             });
-            await formPage.setSecret("ULN username", "uln-user");
-            await formPage.setSecret("ULN password", "uln-pass");
+            await formPage.setSecret({
+              label: "ULN username",
+              value: "uln-user",
+            });
+            await formPage.setSecret({
+              label: "ULN password",
+              value: "uln-pass",
+            });
           },
           shown: ["uln://ol8_x86_64_baseos_latest"],
         },

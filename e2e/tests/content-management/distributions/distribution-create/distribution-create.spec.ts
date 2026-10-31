@@ -1,29 +1,21 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "@support/fixtures";
 import {
   DISTRIBUTIONS,
   expandedRow,
   expectCreated,
   fileDistribution,
-  idOf,
-  pickResource,
   seedDistribution,
   seedPublication,
   seedRepository,
   uniqueBasePath,
 } from "@support/helpers/distributions";
+import { idOf } from "@support/helpers/hrefs";
 import { uniqueName } from "@support/helpers/unique";
 import type { EntityFormPage } from "@support/pom/EntityFormPage";
 
 // Scenarios: e2e/specs/distributions.md (create).
 
 const CREATE = `${DISTRIBUTIONS}/create?type=file.file`;
-
-const inFormError = (page: Page, title: string) =>
-  page.getByRole("heading", {
-    name: new RegExp(`^Danger alert:\\s*${title}$`),
-  });
 
 /** Open the create page and fill the identity every distribution needs. */
 const startCreate = async (formPage: EntityFormPage, name: string) => {
@@ -79,7 +71,7 @@ test.describe("Distribution create page", () => {
         {
           source: "Repository",
           choose: () =>
-            pickResource(page, {
+            formPage.pickResource({
               label: "Repository",
               filter: repository.name,
               option: repository.name,
@@ -91,17 +83,16 @@ test.describe("Distribution create page", () => {
         {
           source: "Repository version",
           choose: async () => {
-            await pickResource(page, {
+            await formPage.pickResource({
               label: "Repository",
               filter: repository.name,
               option: repository.name,
             });
-            await page
-              .getByRole("button", { name: "Version", exact: true })
-              .click();
-            await page
-              .getByRole("option", { name: "Version 1", exact: true })
-              .click();
+            await formPage.pickResource({
+              label: "Version",
+              option: "Version 1",
+              filter: "1",
+            });
           },
           serves: `${repository.name} · Version 1`,
           stored: (record) => record?.repository_version,
@@ -110,7 +101,7 @@ test.describe("Distribution create page", () => {
         {
           source: "Publication",
           choose: () =>
-            pickResource(page, {
+            formPage.pickResource({
               label: "Publication",
               filter: idOf(publication),
               option: `Publication ${idOf(publication)}`,
@@ -180,7 +171,7 @@ test.describe("Distribution create page", () => {
       await formPage.submit("Create");
 
       await expect(
-        inFormError(page, "Failed to create distribution"),
+        formPage.submitError("Failed to create distribution"),
       ).toBeVisible();
       await expect(page.getByText("This field must be unique.")).toBeVisible();
       await expect(toasts.info(/creation started/)).toHaveCount(0);
@@ -219,13 +210,13 @@ test.describe("Distribution create page", () => {
 
       const name = cleanup.distribution(uniqueName("dist"));
       await startCreate(formPage, name);
-      await pickResource(page, {
+      await formPage.pickResource({
         label: "Repository",
         filter: repository.name,
         option: repository.name,
       });
       await formPage.expandSection("Access");
-      await pickResource(page, {
+      await formPage.pickResource({
         label: "Content guard",
         filter: guardName,
         option: guardName,
