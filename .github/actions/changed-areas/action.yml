@@ -7,25 +7,31 @@ description: >-
 outputs:
   website:
     description: true when website/** (or its own workflow) changed
-    value: ${{ steps.filter.outputs.website }}
+    value: ${{ steps.website.outputs.website }}
   app:
     description: >-
       true when any file outside website/** changed (client, common, server,
       e2e, root/shared config, CI). Broad on purpose: unknown/shared files run
       the full client + e2e suite.
-    value: ${{ steps.filter.outputs.app }}
+    value: ${{ steps.app.outputs.app }}
 runs:
   using: composite
   steps:
-    - id: filter
+    - id: website
       uses: dorny/paths-filter@v3
       with:
         filters: |
           website:
             - 'website/**'
             - '.github/workflows/website.yaml'
+    # Separate step: `every` makes a file match only if it matches all patterns,
+    # so the negation excludes website/** (with the default `some`, '**' alone
+    # matches every file and app is always true).
+    - id: app
+      uses: dorny/paths-filter@v3
+      with:
+        predicate-quantifier: every
+        filters: |
           app:
-            # Match everything, then exclude website/** (gitignore-style
-            # ordering): true iff some changed file lives outside website/.
             - '**'
             - '!website/**'
