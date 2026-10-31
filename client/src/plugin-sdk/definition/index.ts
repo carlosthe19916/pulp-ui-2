@@ -1,9 +1,9 @@
 export {
   createCatalog,
   type IContentType,
-  type IPlugin,
-  type IPluginEntity,
-  type IPluginRepositoryEntity,
+  type IPulpType,
+  type IPulpTypeEntity,
+  type IPulpTypeRepository,
   type IRepositoryAction,
 } from "./createCatalog";
 export { definePlugin } from "./definePlugin";

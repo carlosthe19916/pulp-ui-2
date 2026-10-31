@@ -31,7 +31,7 @@ import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 const publishSchema = yup.object({
   repository: yup.string(),
@@ -102,11 +102,11 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   // whose catalog `apiPath` is the collection to POST to. Follows the selection so
   // changing the repo targets the right endpoint.
   const repoPlugin = repository
-    ? getPlugin(resolvePulpType(repository) ?? "")?.entities.repository
+    ? getPulpType(resolvePulpType(repository) ?? "")?.entities.repository
     : undefined;
   const publicationType = repoPlugin?.compatiblePublicationTypes[0];
   const publicationApiPath = publicationType
-    ? getPlugin(publicationType)?.entities.publication?.apiPath
+    ? getPulpType(publicationType)?.entities.publication?.apiPath
     : undefined;
 
   const onSubmit = handleSubmit(async (values) => {

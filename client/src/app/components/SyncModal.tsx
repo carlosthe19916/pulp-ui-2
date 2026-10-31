@@ -10,7 +10,7 @@ import type { IEntityField } from "@app/utils/entityField";
 import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 const SYNC_FIELDS: IEntityField[] = [
   {
@@ -44,7 +44,7 @@ const SyncForm: React.FC<Omit<ISyncModalProps, "isOpen">> = ({
 }) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const plugin = getPlugin(resolvePulpType(repository.pulp_href) ?? "");
+  const plugin = getPulpType(resolvePulpType(repository.pulp_href) ?? "");
 
   const syncMutation = useRepositorySyncMutation({
     onSuccess: (data) =>

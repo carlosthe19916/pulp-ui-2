@@ -56,7 +56,7 @@ describe("createCatalog", () => {
   const catalog = createCatalog([widget, gadget]);
 
   it("groups what every entity offers under its pulp_type", () => {
-    const plugin = catalog.getPlugin("widget.widget");
+    const plugin = catalog.getPulpType("widget.widget");
     expect(plugin?.pluginId).toBe("widget");
     expect(Object.keys(plugin?.entities ?? {}).sort()).toEqual([
       "publication",
@@ -70,12 +70,12 @@ describe("createCatalog", () => {
       scan: true,
       contentTypes: ["widget.unit", "widget.part"],
     });
-    expect(catalog.getPlugin("bogus.bogus")).toBeUndefined();
+    expect(catalog.getPulpType("bogus.bogus")).toBeUndefined();
   });
 
   it("lists a repository type's actions by key", () => {
     expect(
-      catalog.getPlugin("widget.widget")?.entities.repository?.actions,
+      catalog.getPulpType("widget.widget")?.entities.repository?.actions,
     ).toEqual([
       {
         key: "prune",
@@ -107,7 +107,7 @@ describe("createCatalog", () => {
   it("offers only types whose plugin is installed", () => {
     expect(
       catalog
-        .getAvailablePlugins({
+        .getAvailableTypes({
           entity: "remote",
           installed: installed("gadget"),
         })

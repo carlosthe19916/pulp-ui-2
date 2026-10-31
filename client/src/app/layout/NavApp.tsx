@@ -21,7 +21,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   getAcsSources,
-  getPlugin,
+  getPulpType,
   getScannableRepositoryTypes,
   isPluginInstalled,
 } from "@catalog";
@@ -103,7 +103,7 @@ export const NavApp: React.FC<INavAppProps> = ({
     isPluginInstalled({ pluginId, installed }),
   );
   const canScan = getScannableRepositoryTypes().some(
-    (type) => !!getPlugin(type)?.isAvailable(installed),
+    (type) => !!getPulpType(type)?.isAvailable(installed),
   );
 
   // Each group owns one top-level URL segment ("" for the dashboard).

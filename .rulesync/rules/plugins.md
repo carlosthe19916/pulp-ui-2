@@ -67,7 +67,7 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 
 ## Hosts
 
-- Pages and components read facts from `@catalog` (`getPlugin`, `getAvailablePlugins`,
+- Pages and components read facts from `@catalog` (`getPulpType`, `getAvailableTypes`,
   `getContentType`, …) and UI from `@plugins` (`getEntityForm`, `getContentPanel`,
   `getRepositoryBrowse`, `getRepositoryTab`, `getRepositoryActions`, `getClientSetup`,
   `getContentSearch`, `getUploadFields`, `getPluginPages`, `useCreateTypeSelect`), never

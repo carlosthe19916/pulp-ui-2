@@ -59,7 +59,7 @@ import {
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 import { getEntityForm, useCreatableTypes } from "@plugins";
 
 const SORTABLE_COLUMN_KEYS = [
@@ -196,7 +196,7 @@ export const RepositoryList: React.FC = () => {
   const rows: DataViewTr[] = repositories.map((repository) => {
     const pulpType = resolvePulpType(repository.pulp_href);
     const repo = pulpType
-      ? getPlugin(pulpType)?.entities.repository
+      ? getPulpType(pulpType)?.entities.repository
       : undefined;
     const canEdit = !!(
       pulpType &&

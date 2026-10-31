@@ -24,7 +24,7 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 import { getEntityForm } from "@plugins";
 
 interface IRepositoryEditProps {
@@ -131,7 +131,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
       }
       resourceFilter={buildResourceFilter({
         kind: "repository",
-        plugin: getPlugin(pulpType),
+        plugin: getPulpType(pulpType),
       })}
       submitError={submitError}
       isSubmitting={updateMutation.isPending}

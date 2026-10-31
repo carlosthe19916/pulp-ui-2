@@ -16,7 +16,7 @@ import type {
 } from "@app/client";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
@@ -197,7 +197,7 @@ export const buildDistributionHref = (
   id: string,
   domain: IPulpDomain,
 ): string | null => {
-  const apiPath = getPlugin(pulpType)?.entities.distribution?.apiPath;
+  const apiPath = getPulpType(pulpType)?.entities.distribution?.apiPath;
   return apiPath ? pulpHref(`distributions/${apiPath}/${id}/`, domain) : null;
 };
 

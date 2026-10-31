@@ -24,7 +24,7 @@ import {
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin, getScannableRepositoryTypes } from "@catalog";
+import { getPulpType, getScannableRepositoryTypes } from "@catalog";
 
 import { VulnerabilitiesCard } from "./components/VulnerabilitiesCard";
 import { WorkersCard } from "./components/WorkersCard";
@@ -76,7 +76,7 @@ export const Dashboard: React.FC = () => {
             </GalleryItem>
 
             {getScannableRepositoryTypes().some((type) =>
-              getPlugin(type)?.isAvailable(status.versions),
+              getPulpType(type)?.isAvailable(status.versions),
             ) && (
               <GalleryItem>
                 <VulnerabilitiesCard pulpDomain={pulpDomain} />

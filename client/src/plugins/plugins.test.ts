@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ENTITY_TYPES,
   getContentType,
-  getPlugin,
+  getPulpType,
   PLUGIN_DEFINITIONS,
 } from "@catalog";
 import type { IPluginDefinition } from "@plugin-sdk/definition";
@@ -28,13 +28,13 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
       )) {
         for (const remote of repository.compatibleRemoteTypes) {
           expect(
-            getPlugin(remote)?.entities.remote,
+            getPulpType(remote)?.entities.remote,
             `${pulpType} → ${remote}`,
           ).toBeDefined();
         }
         for (const publication of repository.compatiblePublicationTypes) {
           expect(
-            getPlugin(publication)?.entities.publication,
+            getPulpType(publication)?.entities.publication,
             `${pulpType} → ${publication}`,
           ).toBeDefined();
         }
@@ -138,19 +138,19 @@ describe("plugin registry", () => {
   });
 
   it("models deb's per-entity pulp_types", () => {
-    expect(getPlugin("deb.deb")?.entities.repository).toBeDefined();
-    expect(getPlugin("deb.apt-remote")?.entities.remote).toBeDefined();
+    expect(getPulpType("deb.deb")?.entities.repository).toBeDefined();
+    expect(getPulpType("deb.apt-remote")?.entities.remote).toBeDefined();
     expect(
-      getPlugin("deb.apt-distribution")?.entities.distribution,
+      getPulpType("deb.apt-distribution")?.entities.distribution,
     ).toBeDefined();
     expect(
-      getPlugin("deb.verbatim-publication")?.entities.publication,
+      getPulpType("deb.verbatim-publication")?.entities.publication,
     ).toBeDefined();
   });
 
   it("imports archives into OSTree repositories", () => {
-    expect(getPlugin("ostree.ostree")?.entities.repository?.archiveImport).toBe(
-      true,
-    );
+    expect(
+      getPulpType("ostree.ostree")?.entities.repository?.archiveImport,
+    ).toBe(true);
   });
 });

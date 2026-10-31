@@ -35,7 +35,7 @@ import {
 } from "@app/queries/repositories";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
 import { getRepositoryActions } from "@plugins";
 
@@ -83,7 +83,7 @@ export const RepositoryVersionDetail: React.FC<
   const isOlder =
     !!repository?.latest_version_href &&
     repository.latest_version_href !== version.pulp_href;
-  const repoEntity = getPlugin(pulpType)?.entities.repository;
+  const repoEntity = getPulpType(pulpType)?.entities.repository;
   const canRestore = repoEntity?.contentChanges === "modify";
   const versionActions = getRepositoryActions(pulpType).filter(
     (item) => item.target === "version",

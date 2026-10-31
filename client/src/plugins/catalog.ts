@@ -75,10 +75,10 @@ export type ContentTypeApiPaths = {
 
 export const {
   getAcsSources,
-  getAvailablePlugins,
+  getAvailableTypes,
   getContentType,
   getContentTypes,
-  getPlugin,
+  getPulpType,
   getRepositoryContentTypes,
   getRepositoryTypesForContent,
   getRepositoryTypesForPublication,
@@ -93,9 +93,9 @@ export {
   ENTITY_TYPES,
   type EntityType,
   type IContentType,
-  type IPlugin,
-  type IPluginEntity,
-  type IPluginRepositoryEntity,
+  type IPulpType,
+  type IPulpTypeEntity,
+  type IPulpTypeRepository,
   type IRepositoryAction,
   type PulpType,
 } from "@plugin-sdk/definition";

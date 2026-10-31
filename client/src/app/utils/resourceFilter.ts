@@ -2,7 +2,7 @@ import type { ResourceKind } from "@app/utils/entityField";
 import {
   type EntityType,
   getRepositoryTypesForPublication,
-  type IPlugin,
+  type IPulpType,
 } from "@catalog";
 
 /** Per-resource-kind compatible pulp_types an `asyncResource` field offers. */
@@ -17,7 +17,7 @@ export const buildResourceFilter = ({
   plugin,
 }: {
   kind: EntityType;
-  plugin: IPlugin | undefined;
+  plugin: IPulpType | undefined;
 }): ResourceFilterMap => {
   const filters: ResourceFilterMap = {};
 

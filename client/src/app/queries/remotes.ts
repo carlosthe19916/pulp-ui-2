@@ -15,7 +15,7 @@ import type {
   RemotesListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
@@ -148,7 +148,7 @@ export const useRemoteDetailQuery = ({ href }: { href: string | null }) =>
   });
 
 const remoteApiPath = (pulpType: string): string | undefined =>
-  getPlugin(pulpType)?.entities.remote?.apiPath;
+  getPulpType(pulpType)?.entities.remote?.apiPath;
 
 export const buildRemoteHref = (
   pulpType: string,

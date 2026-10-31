@@ -1,7 +1,7 @@
 import type { EntityType } from "@catalog";
 
 import {
-  getPlugin,
+  getPulpType,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } from "@catalog";
@@ -60,7 +60,7 @@ export const hasRoleEndpoints = (href: string | null | undefined): boolean => {
   const resolved = resolveCrudHref(href);
   if (!resolved) return false;
   return (
-    getPlugin(resolved.pulpType)?.entities[resolved.entity]?.rolesManaged !==
+    getPulpType(resolved.pulpType)?.entities[resolved.entity]?.rolesManaged !==
     false
   );
 };

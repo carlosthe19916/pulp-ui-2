@@ -51,7 +51,7 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin, getRepositoryContentTypes } from "@catalog";
+import { getPulpType, getRepositoryContentTypes } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
 import { getRepositoryActions, getRepositoryTab } from "@plugins";
 
@@ -89,7 +89,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     summaryTotal(latestVersion?.content_summary?.present) === 0;
 
   const { disabledProps } = useObjectPermissions({ href });
-  const repoEntity = getPlugin(pulpType)?.entities.repository;
+  const repoEntity = getPulpType(pulpType)?.entities.repository;
   const pluginTab = getRepositoryTab(pulpType);
   const repositoryActions = getRepositoryActions(pulpType).filter(
     (action) => action.target === "repository",

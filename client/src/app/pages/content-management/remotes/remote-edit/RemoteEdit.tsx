@@ -24,7 +24,7 @@ import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { buildResourceFilter } from "@app/utils/resourceFilter";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 import { getEntityForm } from "@plugins";
 
 interface IRemoteEditProps {
@@ -139,7 +139,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
       }
       resourceFilter={buildResourceFilter({
         kind: "remote",
-        plugin: getPlugin(pulpType),
+        plugin: getPulpType(pulpType),
       })}
       submitError={submitError}
       isSubmitting={updateMutation.isPending}

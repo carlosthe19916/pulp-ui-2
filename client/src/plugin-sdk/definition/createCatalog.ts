@@ -11,7 +11,7 @@ import {
 } from "./types";
 
 /** One entity's endpoint for a pulp_type. */
-export interface IPluginEntity {
+export interface IPulpTypeEntity {
   apiPath: string;
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
@@ -21,7 +21,7 @@ export interface IRepositoryAction extends IActionDef {
   key: string;
 }
 
-export interface IPluginRepositoryEntity extends IPluginEntity {
+export interface IPulpTypeRepository extends IPulpTypeEntity {
   compatibleRemoteTypes: PulpType[];
   compatiblePublicationTypes: PulpType[];
   contentChanges: "modify" | "addRemove" | null;
@@ -40,16 +40,16 @@ export interface IContentType {
 }
 
 /** What each entity offers for one pulp_type (a pulp_type can name several entities). */
-export interface IPlugin {
+export interface IPulpType {
   pulpType: PulpType;
   /** The id of the plugin that declares it. */
   pluginId: string;
   isAvailable: IsInstalled;
   entities: {
-    repository?: IPluginRepositoryEntity;
-    remote?: IPluginEntity;
-    distribution?: IPluginEntity;
-    publication?: IPluginEntity;
+    repository?: IPulpTypeRepository;
+    remote?: IPulpTypeEntity;
+    distribution?: IPulpTypeEntity;
+    publication?: IPulpTypeEntity;
   };
 }
 
@@ -75,7 +75,7 @@ const contentTypesOf = (definition: IPluginDefinition): IContentType[] =>
  * pulp_type declared twice for one entity, or a content type or content apiPath declared twice.
  */
 export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
-  const byType = new Map<PulpType, IPlugin>();
+  const byType = new Map<PulpType, IPulpType>();
   const apiPathIndex = Object.fromEntries(
     ENTITY_TYPES.map((entity) => [entity, new Map<string, PulpType>()]),
   ) as Record<EntityType, Map<string, PulpType>>;
@@ -161,17 +161,17 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
 
   return {
     /** What each entity offers for a pulp_type, or `undefined` if no plugin declares it. */
-    getPlugin: (pulpType: PulpType): IPlugin | undefined =>
+    getPulpType: (pulpType: PulpType): IPulpType | undefined =>
       byType.get(pulpType),
 
     /** Pulp types of `entity` whose plugin is installed, in declaration order. */
-    getAvailablePlugins: ({
+    getAvailableTypes: ({
       entity,
       installed,
     }: {
       entity: EntityType;
       installed: VersionResponse[];
-    }): IPlugin[] =>
+    }): IPulpType[] =>
       plugins.filter(
         (plugin) => plugin.entities[entity] && plugin.isAvailable(installed),
       ),

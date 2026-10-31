@@ -9,7 +9,7 @@ import {
   buildResourceFilter,
   type ResourceFilterMap,
 } from "@app/utils/resourceFilter";
-import { type EntityType, getPlugin } from "@catalog";
+import { type EntityType, getPulpType } from "@catalog";
 
 import { getEntityForm, type IFormEntry } from "./registry";
 import { useCreatableTypes } from "./useCreatableTypes";
@@ -51,7 +51,7 @@ export const useCreateTypeSelect = ({
   const entry = pulpType
     ? getEntityForm({ entity, pulpType, mode: "create" })
     : undefined;
-  const plugin = pulpType ? getPlugin(pulpType) : undefined;
+  const plugin = pulpType ? getPulpType(pulpType) : undefined;
 
   return {
     pulpType,

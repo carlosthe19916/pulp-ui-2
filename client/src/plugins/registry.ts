@@ -6,7 +6,7 @@ import type { IEntityField } from "@app/utils/entityField";
 import {
   ENTITY_TYPES,
   type EntityType,
-  getPlugin,
+  getPulpType,
   PLUGIN_DEFINITIONS,
   type PluginId,
   type PulpType,
@@ -114,7 +114,7 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
     // The catalog holds each action's endpoint; `definePluginUi` made each one's UI required.
     actions.set(
       pulpType,
-      (getPlugin(pulpType)?.entities.repository?.actions ?? []).flatMap(
+      (getPulpType(pulpType)?.entities.repository?.actions ?? []).flatMap(
         (action) => {
           const actionUi = repositoryUi.actions?.[action.key];
           return actionUi ? [{ ...action, ...actionUi }] : [];

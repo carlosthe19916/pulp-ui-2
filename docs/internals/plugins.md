@@ -46,7 +46,7 @@ ui/index.ts ──── PluginUi<D> ──────────────�
 ## Registries
 
 - `@catalog` (`plugins/catalog.ts`) lists `PLUGIN_DEFINITIONS` and exposes the pure lookups
-  built by `createCatalog`: `getPlugin`, `getAvailablePlugins`, `getContentType`,
+  built by `createCatalog`: `getPulpType`, `getAvailableTypes`, `getContentType`,
   `resolvePulpTypeByApiPath`, … It also derives types: per-entity unions (`RemoteType`,
   `ContentType`, …) and `ContentTypeApiPaths`, from which `queries/contentTypes.ts` derives the
   typed content-list map.

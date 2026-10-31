@@ -34,7 +34,7 @@ import {
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import { formatDateTime } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { getPulpType } from "@catalog";
 
 interface IContentRepositoriesTabProps {
   href: string;
@@ -164,7 +164,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                     {formatDateTime(repository.pulp_last_updated) ?? "—"}
                   </Td>
                   <Td isActionCell>
-                    {getPlugin(pulpType ?? "")?.entities.repository
+                    {getPulpType(pulpType ?? "")?.entities.repository
                       ?.contentChanges && (
                       <ActionsColumn
                         items={[
