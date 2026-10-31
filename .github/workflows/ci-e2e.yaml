@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Stacked branches (whose PRs target another branch) run it by hand.
+  workflow_dispatch:
 
 env:
   # Fork-fallback tarball path (when we cannot push to / pull from ghcr).
