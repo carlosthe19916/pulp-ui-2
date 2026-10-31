@@ -15,7 +15,7 @@ export class EntityFormPage {
     await expect(this.page.getByRole("heading", { level: 1 })).toBeVisible();
   }
 
-  heading(name: string): Locator {
+  heading(name: string | RegExp): Locator {
     return this.page.getByRole("heading", { level: 1, name });
   }
 
@@ -27,6 +27,22 @@ export class EntityFormPage {
     for (const [label, value] of Object.entries(fields)) {
       await this.textbox(label).fill(value);
     }
+  }
+
+  /** Add chips to a string-list field (each value typed and entered). */
+  async addListItems(label: string, values: string[]): Promise<void> {
+    const input = this.textbox(label);
+    for (const value of values) {
+      await input.fill(value);
+      await input.press("Enter");
+    }
+  }
+
+  /** Remove one chip from a string-list field. */
+  async removeListItem(value: string): Promise<void> {
+    await this.page
+      .getByRole("button", { name: new RegExp(`^close ${value}$`, "i") })
+      .click();
   }
 
   async selectType(label: string): Promise<void> {

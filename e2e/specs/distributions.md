@@ -108,13 +108,13 @@ Then the same detail page opens
 Summary: The Details tab shows the serving URL, client setup and source, then the settings grouped like the form, then metadata.
 
 Seed: a file repository, an RBAC content guard, and a file distribution serving the repository
-with that content guard and the label "env: prod"
+with that content guard and the label "env=prod"
 
 When I open the distribution's Details tab
 Then the "Serving" card shows its base URL, client setup and the repository as a link
 And the "General" and "Access" cards show the base path and the content guard, with the form's
 labels
-And the "Metadata" card shows the label "env: prod", its creation time and its PRN
+And the "Metadata" card shows the label "env=prod", its creation time and its PRN
 
 ### DST-DET-03 Edit and delete from the detail page
 

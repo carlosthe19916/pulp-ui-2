@@ -46,13 +46,13 @@ Summary: Each repository form saves the fields that define its type, and the new
 Seed: a file remote, an RPM remote
 
 When I create a repository of type <type> with <values>
-Then the toast "Repository "<name>" created" appears, its detail page opens, and its About tab
-shows <shown>
+Then the toast "Repository "<name>" created" appears, its detail page opens, and the About card
+on its Details tab shows <shown>
 
 | type      | values                                                                      | shown                                        |
 | --------- | --------------------------------------------------------------------------- | -------------------------------------------- |
 | File      | a description, the seeded file remote, Auto-publish on, 3 retained versions | the description, the remote, Auto-publish, 3 |
-| RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and the metadata signing service  |
+| RPM       | the seeded RPM remote and "pulp-ui-dev-signing" as Metadata signing service | the remote and a "Metadata signing service"  |
 | Container | a description                                                               | the description                              |
 
 ### REP-CRE-02 The remote picker offers only compatible remotes
@@ -114,12 +114,12 @@ Pulp queues the update behind the repository's lock and runs it when the sync fi
 
 ### REP-DET-01 About settings follow the form
 
-Summary: A repository's About tab labels its settings the way its form does.
+Summary: A repository's About card labels its settings the way its form does.
 
 Seed: an RPM repository with a remote, "pulp-ui-dev-signing" as metadata signing service and 3
 retained versions
 
-When I open its About tab
+When I open its Details tab
 Then its settings use the form's labels ("Remote", "Retained versions", "Metadata signing
 service", …) and the remote links to the remote's page
 

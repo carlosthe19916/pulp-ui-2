@@ -48,7 +48,7 @@ task completes, producing a publication no client can use.
 
 Summary: An APT repository can be published as a structured APT publication or as a verbatim copy.
 
-Seed: an APT repository synced from a small Debian fixture
+Seed: an APT repository
 
 When I create a publication of Type <type> with <options>
 Then once its task finishes, the list shows it with the type <listed>

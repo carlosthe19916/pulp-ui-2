@@ -1,53 +1,49 @@
 import { expect, test } from "@support/fixtures";
+import { publicationId } from "@support/helpers/publications";
 import { uniqueName } from "@support/helpers/unique";
 
-/**
- * Publications are immutable (create-only, no edit) and are created against an
- * existing repository via a typeahead picker.
- */
+// Scenarios: e2e/specs/publications.md (edit).
+
 test.describe("Publications", () => {
-  test("list renders and the create modal offers a repository", async ({
-    publicationsPage,
-  }) => {
-    await publicationsPage.goto();
+  /**
+   * PUB-EDT-01 · Publications can't be edited
+   *
+   * Summary: Publications offer no Edit action, since a publication is immutable.
+   *
+   * Seed: a file publication
+   *
+   * When I open its row actions
+   * Then there is no "Edit" action
+   *
+   * Pulp itself allows only reading and deleting a publication.
+   */
+  test(
+    "Publications offer no Edit action, since a publication is immutable.",
+    {
+      tag: "@PUB-EDT-01",
+      annotation: {
+        type: "spec",
+        description: "e2e/specs/publications.md#PUB-EDT-01",
+      },
+    },
+    async ({ publicationsPage, api, cleanup, page }) => {
+      const repoName = cleanup.repository(uniqueName("repo"));
+      const repoHref = await api.createRepository("file/file", {
+        name: repoName,
+      });
+      const href = cleanup.href(
+        await api.createViaTask("publications/file/file", {
+          repository: repoHref,
+        }),
+      );
 
-    const dialog = await publicationsPage.openCreate();
-    await expect(dialog.getByText("Repository", { exact: true })).toBeVisible();
-    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-    await expect(dialog).toBeHidden();
-  });
-
-  test("create a publication for a file repository", async ({
-    publicationsPage,
-    cleanup,
-    api,
-  }) => {
-    // Seed a file repository to publish from.
-    const repoName = cleanup.repository(uniqueName("repo-file"));
-    const repoHref = await api.createRepository("file/file", {
-      name: repoName,
-    });
-
-    await publicationsPage.goto();
-    const dialog = await publicationsPage.openCreate();
-    // Pick File so the create routes to publications/file/file, then the repo.
-    await publicationsPage.selectType(dialog, "file.file");
-    await publicationsPage.selectResource(dialog, "Repository", repoName);
-    await dialog.getByRole("button", { name: "Create", exact: true }).click();
-    await expect(dialog).toBeHidden();
-
-    // Publication create is async; poll the backend for the new record, register
-    // it for cleanup (publications have no name), and assert its row renders.
-    await expect
-      .poll(() =>
-        api.publicationHrefsForRepository(repoHref).then((h) => h.length),
-      )
-      .toBeGreaterThan(0);
-    const [pubHref] = await api.publicationHrefsForRepository(repoHref);
-    cleanup.href(pubHref);
-
-    const pubId = pubHref.split("/").filter(Boolean).pop() ?? pubHref;
-    await publicationsPage.goto();
-    await publicationsPage.expectRowVisible(pubId);
-  });
+      await publicationsPage.goto();
+      const row = publicationsPage.row(`Publication ${publicationId(href)}`);
+      await row.getByRole("button", { name: "Kebab toggle" }).click();
+      await expect(
+        page.getByRole("menuitem", { name: "Delete" }),
+      ).toBeVisible();
+      await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
+    },
+  );
 });
