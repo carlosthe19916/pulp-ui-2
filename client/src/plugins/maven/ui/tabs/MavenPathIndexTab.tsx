@@ -9,8 +9,9 @@ import {
 } from "@patternfly/react-core";
 
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
-import { useMavenPathIndexStatusQuery } from "@app/queries/maven-repositories";
 import type { IRepositoryTabProps } from "@plugin-sdk/ui";
+
+import { useMavenPathIndexStatusQuery } from "../queries/maven-repositories";
 
 /** The state of a Maven repository's path index (build it from the actions menu). */
 export const MavenPathIndexTab: React.FC<IRepositoryTabProps> = ({

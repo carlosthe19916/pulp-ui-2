@@ -52,6 +52,17 @@ export interface IActionDef {
   repositoryParam?: { key: string; list?: boolean };
 }
 
+/** Another way to create an object of a type: a POST relative to its collection. */
+export interface ICreateFromDef {
+  /** Relative to the type's collection, e.g. `from_bandersnatch/`. */
+  path: string;
+}
+
+export interface IRemoteDef extends IEntityTypeDef<"remote"> {
+  /** Endpoints that create a remote from something else (a Bandersnatch config), by key. */
+  createFrom?: Readonly<Record<string, ICreateFromDef>>;
+}
+
 export interface IRepositoryDef extends IEntityTypeDef<"repository"> {
   /** Remote types it syncs from (backend `REMOTE_TYPES`); `[]` when it can't sync. */
   compatibleRemoteTypes: readonly string[];
@@ -98,7 +109,7 @@ export interface IPluginDefinition {
   id: string;
   /** Component or package names (`/status/` versions) that mean it is installed. */
   packages: readonly string[];
-  remote?: Readonly<Record<string, IEntityTypeDef<"remote">>>;
+  remote?: Readonly<Record<string, IRemoteDef>>;
   repository?: Readonly<Record<string, IRepositoryDef>>;
   distribution?: Readonly<Record<string, IEntityTypeDef<"distribution">>>;
   publication?: Readonly<Record<string, IEntityTypeDef<"publication">>>;

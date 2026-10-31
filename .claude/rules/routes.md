@@ -14,6 +14,9 @@ paths:
   `pendingComponent`, `errorComponent`, `component`) to a page from `@app/pages/...`. No page
   JSX, hooks or queries; no `lazy()` (routes are auto code-split).
 - A pathless layout (`_authenticated.tsx`) has no `component`; the router renders `<Outlet />`.
+- A plugin's own page keeps its route file (file-based routing) with
+  `component: pluginPage("<to>")` from `@app/components/PluginPage`, which renders the page the
+  plugin registered for that route; the route never imports the plugin.
 
 ## Detail routes
 

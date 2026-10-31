@@ -17,6 +17,12 @@ export const ostreeUi = definePluginUi({
     repository: {
       "ostree.ostree": {
         form: ostreeRepositoryForm,
+        archiveImport: {
+          label: "Import archive",
+          Modal: lazyViews(() => import("./modals/OstreeImportModal"))(
+            "OstreeImportModal",
+          ),
+        },
         browse: {
           sections: [
             {

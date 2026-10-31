@@ -6,11 +6,10 @@ import type {
   PythonBanderRemoteWritable,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-
-import { remoteKeys } from "./remotes";
-import type { IMutationCallbacks } from "./utils/mutationCallbacks";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { pulpApiPath } from "./utils/pulpApi";
+import { remoteKeys } from "@app/queries/remotes";
+import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
+import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import { pulpApiPath } from "@app/queries/utils/pulpApi";
 
 /** Creates a Python remote from a Bandersnatch config file (synchronous). */
 export const useBandersnatchRemoteCreateMutation = (

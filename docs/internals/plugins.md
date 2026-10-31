@@ -14,7 +14,9 @@ Each plugin is a folder, `client/src/plugins/<id>/`:
   content types and its ACS endpoint. It imports no UI, so anything can read it.
 - `ui/index.ts` declares the **presentation** with `definePluginUi({ definition, ui })`: labels,
   forms, content panels, Browse sections, the repository tab, client setup, action labels and
-  fields, upload fields, content search, nav pages.
+  fields, upload fields, content search, the plugin's own pages, a remote's create
+  alternatives and the archive import. The plugin's pages, modals and queries live under
+  `ui/` too.
 
 The split is "would this change if the UI were redesigned?": facts don't, presentation does.
 
@@ -72,8 +74,8 @@ plugin-sdk  ◀──  plugins/<id>/definition.ts  ◀──  plugins/<id>/ui  �
 - `plugin-sdk/**` never imports a plugin or a registry directly. Its UI contracts reuse the
   building blocks' types, so the SDK sits on top of the app's shared components.
 - Hosts (`app/**`, `routes/**`) never import a plugin's files, only the registries.
-- Plugin-only pages and their queries (Ansible collections, container namespaces, the
-  Maven/Python/OSTree query modules, the Python Bandersnatch import) still live in `app/`.
+- A plugin's own page keeps its route file (file-based routing), which renders
+  `pluginPage("<to>")`: the page the plugin registered, found through `@plugins`.
 
-Panels, Browse views and tabs are loaded with `lazyView`, so registering every plugin doesn't put
+Panels, Browse views, tabs, pages and modals are loaded with `lazyViews`, so registering every plugin doesn't put
 their views in the main bundle; forms are small data and load with the registry.

@@ -8,8 +8,10 @@ import type { IPluginDefinition, TypesOf } from "../definition";
 import type {
   ClientSetup,
   IActionUi,
+  IArchiveImportUi,
   IContentPanelProps,
   IContentSearch,
+  ICreateFromUi,
   INavPage,
   IPluginBrowse,
   IRepositoryTab,
@@ -26,10 +28,30 @@ export interface ITypeUi {
   form: IFormDef;
 }
 
+type RemoteDefOf<D extends IPluginDefinition, T extends string> = NonNullable<
+  D["remote"]
+>[T];
+
+/** Each declared create-from endpoint needs its UI; a type without one declares none. */
+type CreateFromUi<A> =
+  A extends Readonly<Record<string, unknown>>
+    ? { createFrom: { [K in keyof A]: ICreateFromUi } }
+    : { createFrom?: never };
+
+export type IRemoteTypeUi<
+  D extends IPluginDefinition,
+  T extends string,
+> = ITypeUi & CreateFromUi<RemoteDefOf<D, T>["createFrom"]>;
+
 type RepositoryDefOf<
   D extends IPluginDefinition,
   T extends string,
 > = NonNullable<D["repository"]>[T];
+
+/** An archive-importing repository needs its import UI; any other can't have one. */
+type ArchiveImportUi<A> = A extends true
+  ? { archiveImport: IArchiveImportUi }
+  : { archiveImport?: never };
 
 /** Each declared action needs its label and fields; a type without actions declares none. */
 type ActionsUi<A> =
@@ -46,7 +68,8 @@ export type IRepositoryTypeUi<
   browse: IPluginBrowse<TypesOf<D, "content">> | Generic;
   /** The plugin's own repository tab, or `null` for none. */
   tab: IRepositoryTab | null;
-} & ActionsUi<RepositoryDefOf<D, T>["actions"]>;
+} & ActionsUi<RepositoryDefOf<D, T>["actions"]> &
+  ArchiveImportUi<RepositoryDefOf<D, T>["archiveImport"]>;
 
 export interface IDistributionTypeUi extends ITypeUi {
   clientSetup: ClientSetup | Generic;
@@ -72,7 +95,7 @@ export type IContentTypeUi<D extends IPluginDefinition, T extends string> = {
   : { upload?: never });
 
 interface IUiSections<D extends IPluginDefinition> {
-  remote: { [T in TypesOf<D, "remote">]: ITypeUi };
+  remote: { [T in TypesOf<D, "remote">]: IRemoteTypeUi<D, T> };
   repository: { [T in TypesOf<D, "repository">]: IRepositoryTypeUi<D, T> };
   distribution: { [T in TypesOf<D, "distribution">]: IDistributionTypeUi };
   publication: { [T in TypesOf<D, "publication">]: ITypeUi };
@@ -99,7 +122,7 @@ export type PluginUi<D extends IPluginDefinition> = {
 export interface IAnyPluginUi {
   label: string;
   pages?: readonly INavPage[];
-  remote?: Readonly<Record<string, ITypeUi>>;
+  remote?: Readonly<Record<string, IRemoteTypeUi<IPluginDefinition, string>>>;
   repository?: Readonly<
     Record<string, IRepositoryTypeUi<IPluginDefinition, string>>
   >;

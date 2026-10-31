@@ -14,13 +14,13 @@ import {
   type IBrowseContext,
   useBrowseListState,
 } from "@app/components/BrowseShell";
+import { formatDateTime } from "@app/utils/utils";
+
 import {
   useMavenMetricsQuery,
   useMavenPackageHrefLookup,
   useMavenPackagesListQuery,
-} from "@app/queries/maven-repositories";
-import { formatDateTime } from "@app/utils/utils";
-
+} from "../queries/maven-repositories";
 import { snapshotBuild } from "./helpers";
 
 const MAX_VERSION_LABELS = 5;

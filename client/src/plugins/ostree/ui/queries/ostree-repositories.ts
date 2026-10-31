@@ -6,12 +6,11 @@ import type {
   OstreeImportAll,
   RepositoryResponse,
 } from "@app/client";
-
-import { repositoryKeys } from "./repositories";
-import { taskKeys } from "./tasks";
-import type { IMutationCallbacks } from "./utils/mutationCallbacks";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import { repositoryKeys } from "@app/queries/repositories";
+import { taskKeys } from "@app/queries/tasks";
+import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
+import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import { toProxyHref } from "@app/queries/utils/pulpApi";
 
 /**
  * Imports an uploaded OSTree archive (an artifact) into a new repository version:

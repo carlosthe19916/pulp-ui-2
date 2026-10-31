@@ -25,14 +25,14 @@ import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import {
-  type IAnsibleCollectionListParams,
-  useAnsibleCollectionsListQuery,
-} from "@app/queries/ansible-collections";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 
-import { CollectionVersions } from "./components/CollectionVersions";
+import {
+  type IAnsibleCollectionListParams,
+  useAnsibleCollectionsListQuery,
+} from "../queries/ansible-collections";
+import { CollectionVersions } from "./CollectionVersions";
 
 const SORTABLE_COLUMN_KEYS = [
   "namespace",

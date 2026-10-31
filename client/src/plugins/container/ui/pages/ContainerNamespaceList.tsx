@@ -35,17 +35,18 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import {
-  type IContainerNamespaceListParams,
-  useContainerNamespaceCreateMutation,
-  useContainerNamespaceDeleteMutation,
-  useContainerNamespacesListQuery,
-} from "@app/queries/container-namespaces";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@app/utils/entityField";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+
+import {
+  type IContainerNamespaceListParams,
+  useContainerNamespaceCreateMutation,
+  useContainerNamespaceDeleteMutation,
+  useContainerNamespacesListQuery,
+} from "../queries/container-namespaces";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",

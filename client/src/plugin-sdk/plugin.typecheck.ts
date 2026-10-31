@@ -143,3 +143,97 @@ definePluginUi({
     },
   },
 });
+
+const Modal = () => null;
+
+// A remote type with another way to be created, and a repository that imports archives.
+const importer = definePlugin({
+  id: "importer",
+  packages: [],
+  remote: {
+    "importer.importer": {
+      apiPath: "file/file",
+      createFrom: { config: { path: "from_config/" } },
+    },
+  },
+  repository: {
+    "importer.importer": {
+      apiPath: "file/file",
+      compatibleRemoteTypes: ["importer.importer"],
+      compatiblePublicationTypes: [],
+      contentChanges: "modify",
+      archiveImport: true,
+    },
+  },
+});
+
+const importerUi = {
+  label: "Importer",
+  remote: {
+    "importer.importer": {
+      form,
+      createFrom: { config: { label: "From config", Modal } },
+    },
+  },
+  repository: {
+    "importer.importer": {
+      form,
+      browse: GENERIC,
+      tab: null,
+      archiveImport: { label: "Import archive", Modal },
+    },
+  },
+} satisfies PluginUi<typeof importer>;
+
+export const completeImporter = definePluginUi({
+  definition: importer,
+  ui: importerUi,
+});
+
+// A declared create-from endpoint or archive import without its UI.
+definePluginUi({
+  definition: importer,
+  ui: {
+    ...importerUi,
+    // @ts-expect-error "config" has no create-from UI.
+    remote: { "importer.importer": { form } },
+  },
+});
+definePluginUi({
+  definition: importer,
+  ui: {
+    ...importerUi,
+    repository: {
+      // @ts-expect-error an archive-importing repository needs its import UI.
+      "importer.importer": { form, browse: GENERIC, tab: null },
+    },
+  },
+});
+
+// Create-from or archive-import UI the definition doesn't declare.
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    remote: {
+      "widget.widget": {
+        form,
+        // @ts-expect-error "widget.widget" declares no create-from endpoint.
+        createFrom: { config: { label: "From config", Modal } },
+      },
+    },
+  },
+});
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    repository: {
+      "widget.widget": {
+        ...ui.repository["widget.widget"],
+        // @ts-expect-error "widget.widget" doesn't import archives.
+        archiveImport: { label: "Import archive", Modal },
+      },
+    },
+  },
+});

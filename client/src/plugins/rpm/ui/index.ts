@@ -9,9 +9,6 @@ import { rpmRepositoryForm } from "./forms/repository";
 import { rpmUlnRemoteForm } from "./forms/ulnRemote";
 
 const rpmBrowse = lazyViews(() => import("./browse/RpmBrowse"));
-const rpmMetadataContent = lazyViews(
-  () => import("./content/RpmMetadataContent"),
-);
 const rpmContent = lazyViews(() => import("./content/RpmContent"));
 
 export const rpmUi = definePluginUi({
@@ -74,12 +71,16 @@ export const rpmUi = definePluginUi({
         upload: [],
       },
       "rpm.advisory": {
-        panel: rpmMetadataContent("RpmAdvisoryContent"),
+        panel: lazyViews(() => import("./content/RpmAdvisoryContent"))(
+          "RpmAdvisoryContent",
+        ),
         search: { param: "id", label: "advisory ID" },
         upload: [],
       },
       "rpm.modulemd": {
-        panel: rpmMetadataContent("RpmModulemdContent"),
+        panel: lazyViews(() => import("./content/RpmModulemdContent"))(
+          "RpmModulemdContent",
+        ),
         search: null,
       },
       "rpm.modulemd_defaults": { panel: GENERIC, search: null },
@@ -87,7 +88,9 @@ export const rpmUi = definePluginUi({
       "rpm.packagecategory": { panel: GENERIC, search: null },
       "rpm.packageenvironment": { panel: GENERIC, search: null },
       "rpm.packagegroup": {
-        panel: rpmMetadataContent("RpmPackageGroupContent"),
+        panel: lazyViews(() => import("./content/RpmPackageGroupContent"))(
+          "RpmPackageGroupContent",
+        ),
         search: null,
       },
       "rpm.packagelangpacks": { panel: GENERIC, search: null },

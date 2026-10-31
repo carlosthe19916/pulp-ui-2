@@ -13,12 +13,11 @@ import type {
   PythonPythonBlocklistEntryResponse,
   RepositoriesPythonPythonBlocklistEntriesListData,
 } from "@app/client";
-
-import { repositoryKeys } from "./repositories";
-import type { ListParams } from "./utils/listParams";
-import type { IMutationCallbacks } from "./utils/mutationCallbacks";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import { repositoryKeys } from "@app/queries/repositories";
+import type { ListParams } from "@app/queries/utils/listParams";
+import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
+import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import { toProxyHref } from "@app/queries/utils/pulpApi";
 
 const BLOCKLIST_PATH = "blocklist_entries/";
 

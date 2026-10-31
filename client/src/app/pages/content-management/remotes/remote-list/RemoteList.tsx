@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { createElement, Suspense, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -57,9 +57,11 @@ import {
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getEntityForm, useCreatableTypes } from "@plugins";
-
-import { BandersnatchRemoteModal } from "./components/BandersnatchRemoteModal";
+import {
+  getCreateAlternatives,
+  getEntityForm,
+  useCreatableTypes,
+} from "@plugins";
 
 const SORTABLE_COLUMN_KEYS = [
   "name",
@@ -84,10 +86,15 @@ export const RemoteList: React.FC = () => {
 
   const creatableTypes = useCreatableTypes("remote");
   const canCreate = creatableTypes.length > 0;
-  const canCreatePython = creatableTypes.some(
-    (option) => option.pulpType === "python.python",
+  // Other ways to create a remote that installed plugins offer (e.g. a Bandersnatch config).
+  const alternatives = creatableTypes.flatMap((option) =>
+    getCreateAlternatives(option.pulpType).map((alternative) => ({
+      ...alternative,
+      key: `${option.pulpType}/${alternative.key}`,
+    })),
   );
-  const [isBandersnatchOpen, setIsBandersnatchOpen] = useState(false);
+  const [openAlternative, setOpenAlternative] = useState<string | null>(null);
+  const openModal = alternatives.find(({ key }) => key === openAlternative);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
       notifyTaskStarted({
@@ -347,14 +354,15 @@ export const RemoteList: React.FC = () => {
                   >
                     Create remote
                   </Button>
-                  {canCreatePython && (
+                  {alternatives.map(({ key, label }) => (
                     <Button
+                      key={key}
                       variant="secondary"
-                      onClick={() => setIsBandersnatchOpen(true)}
+                      onClick={() => setOpenAlternative(key)}
                     >
-                      From Bandersnatch config
+                      {label}
                     </Button>
-                  )}
+                  ))}
                 </>
               ) : (
                 <Tooltip content="No remote plugin is available. Install a content plugin (e.g. pulp_file) to create remotes.">
@@ -394,10 +402,12 @@ export const RemoteList: React.FC = () => {
           />
         </DataView>
 
-        {isBandersnatchOpen && (
-          <BandersnatchRemoteModal
-            onClose={() => setIsBandersnatchOpen(false)}
-          />
+        {openModal && (
+          <Suspense fallback={null}>
+            {createElement(openModal.Modal, {
+              onClose: () => setOpenAlternative(null),
+            })}
+          </Suspense>
         )}
 
         <ConfirmActionModal

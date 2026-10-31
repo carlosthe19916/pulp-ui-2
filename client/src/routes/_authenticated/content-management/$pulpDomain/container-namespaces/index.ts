@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ContainerNamespaceList } from "@app/pages/content-management/container-namespaces/container-namespace-list/ContainerNamespaceList";
+import { pluginPage } from "@app/components/PluginPage";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/container-namespaces/",
 )({
-  component: ContainerNamespaceList,
+  component: pluginPage("/content-management/$pulpDomain/container-namespaces"),
 });

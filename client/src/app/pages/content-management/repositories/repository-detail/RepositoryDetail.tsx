@@ -53,10 +53,13 @@ import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPulpType, getRepositoryContentTypes } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
-import { getRepositoryActions, getRepositoryTab } from "@plugins";
+import {
+  getArchiveImport,
+  getRepositoryActions,
+  getRepositoryTab,
+} from "@plugins";
 
 import { AddContentModal } from "./components/AddContentModal";
-import { OstreeImportModal } from "./components/OstreeImportModal";
 import { RepositoryDetailsTab } from "./components/RepositoryDetailsTab";
 import { RepositoryDistributionsTab } from "./components/RepositoryDistributionsTab";
 import { RepositoryPublicationsTab } from "./components/RepositoryPublicationsTab";
@@ -142,6 +145,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const archiveImport = getArchiveImport(pulpType);
   const [repoAction, setRepoAction] = useState<IPluginAction | null>(null);
   // Units to remove; "all" removes every unit.
   const [removeUnits, setRemoveUnits] = useState<
@@ -208,10 +212,10 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   ...disabledProps("modify"),
                 },
               },
-              repoEntity?.archiveImport && {
+              archiveImport && {
                 key: "import-archive",
                 dropdownItemProps: {
-                  children: "Import archive…",
+                  children: `${archiveImport.label}…`,
                   onClick: () => setIsImportOpen(true),
                   ...lockedProps,
                   ...disabledProps("modify"),
@@ -439,12 +443,14 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         />
       )}
 
-      {isImportOpen && (
-        <OstreeImportModal
-          repository={repository}
-          onClose={() => setIsImportOpen(false)}
-          onStarted={contentChange.watch}
-        />
+      {isImportOpen && archiveImport && (
+        <Suspense fallback={null}>
+          <archiveImport.Modal
+            repository={repository}
+            onClose={() => setIsImportOpen(false)}
+            onStarted={contentChange.watch}
+          />
+        </Suspense>
       )}
 
       {isAddContentOpen && (

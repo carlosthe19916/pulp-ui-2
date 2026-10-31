@@ -34,13 +34,14 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+import type { IRepositoryTabProps } from "@plugin-sdk/ui";
+
 import {
   usePythonBlocklistCreateMutation,
   usePythonBlocklistDeleteMutation,
   usePythonBlocklistQuery,
-} from "@app/queries/python-repositories";
-import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-import type { IRepositoryTabProps } from "@plugin-sdk/ui";
+} from "../queries/python-repositories";
 
 const entryLabel = (entry: PythonPythonBlocklistEntryResponse) =>
   entry.filename ||

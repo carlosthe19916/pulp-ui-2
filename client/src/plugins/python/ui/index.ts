@@ -15,7 +15,19 @@ export const pythonUi = definePluginUi({
   definition: python,
   ui: {
     label: "Python",
-    remote: { "python.python": { form: pythonRemoteForm } },
+    remote: {
+      "python.python": {
+        form: pythonRemoteForm,
+        createFrom: {
+          bandersnatch: {
+            label: "From Bandersnatch config",
+            Modal: lazyViews(() => import("./modals/BandersnatchRemoteModal"))(
+              "BandersnatchRemoteModal",
+            ),
+          },
+        },
+      },
+    },
     repository: {
       "python.python": {
         form: pythonRepositoryForm,

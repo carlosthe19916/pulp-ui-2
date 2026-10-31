@@ -6,11 +6,10 @@ import type {
   PaginatedansibleCollectionResponseList,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-
-import type { ListParams } from "./utils/listParams";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath } from "./utils/pulpApi";
+import type { ListParams } from "@app/queries/utils/listParams";
+import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import type { IPulpDomain } from "@app/queries/utils/pulpApi";
+import { pulpApiPath } from "@app/queries/utils/pulpApi";
 
 export const AnsibleCollectionsQueryKey = "ansible-collections";
 

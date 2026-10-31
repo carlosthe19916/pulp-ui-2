@@ -4,10 +4,13 @@
  */
 export {
   getAcsTypes,
+  getArchiveImport,
   getClientSetup,
   getContentPanel,
   getContentSearch,
+  getCreateAlternatives,
   getEntityForm,
+  getPluginPage,
   getPluginPages,
   getRepositoryActions,
   getRepositoryBrowse,

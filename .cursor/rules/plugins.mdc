@@ -5,11 +5,10 @@ globs: client/src/plugins/**,client/src/plugin-sdk/**,client/src/app/pages/**,cl
 
 # Plugins
 
-A plugin's facts and every piece of UI the generic pages render for it live in its folder,
-`client/src/plugins/<id>/`, in two layers: a **definition** (facts about Pulp) and a **UI** (how
-the app presents them). Generic pages (hosts) render per-plugin pieces through two registries and
-never branch on a plugin. (Plugin-only pages and their queries, such as Ansible collections or
-container namespaces, still live in `app/`.)
+Everything the UI knows about one Pulp plugin lives in its folder, `client/src/plugins/<id>/`,
+in two layers: a **definition** (facts about Pulp) and a **UI** (how the app presents them,
+including the plugin's own pages, modals and queries). Generic pages (hosts) render per-plugin
+pieces through two registries and never branch on a plugin.
 
 ```
 client/src/
@@ -24,7 +23,8 @@ client/src/
     rpm/
       definition.ts            # definePlugin({...}): facts only
       ui/index.ts              # definePluginUi({ definition: rpm, ui: {...} })
-      ui/forms/  ui/content/  ui/browse/  ui/tabs/  ui/actions.ts
+      ui/forms/  ui/content/  ui/browse/  ui/tabs/  ui/pages/  ui/modals/  ui/queries/
+      ui/actions.ts
 ```
 
 ## Definition or UI
@@ -34,11 +34,15 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 - **Definition** (`definition.ts`, `definePlugin`): the packages that mean it's installed, its
   types per entity keyed by `pulp_type` with their `apiPath`, what a repository syncs from and
   publishes to, `contentChanges`, `archiveImport`, `scan`, `rolesManaged`, action endpoints
-  (`path`, `target`, `repositoryParam`), content types (`apiPath`, `upload`), the ACS endpoint.
+  (`path`, `target`, `repositoryParam`), a remote's `createFrom` endpoints, content types
+  (`apiPath`, `upload`), the ACS endpoint.
   It imports only `@plugin-sdk/definition` (and generated types).
 - **UI** (`ui/`, `definePluginUi`): labels, forms, content panels, Browse sections, the
   repository tab, client setup snippets, action labels and fields, upload fields, content
-  search, nav pages, the ACS label.
+  search, the plugin's own pages (`pages`: label, route, `Page`), a remote's create alternatives
+  (`createFrom`: label, `Modal`), the archive import (`archiveImport`: label, `Modal`), the ACS
+  label. A panel, view or modal file exports one component, named like the file; the plugin's
+  queries sit in `ui/queries/`, reusing the base `*Keys` from `@app/queries`.
 
 ## Type-checked completeness
 
@@ -47,7 +51,8 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   `compatiblePublicationTypes` must be the plugin's own types.
 - `PluginUi<D>` is derived from the definition: one entry per declared type, every piece a
   required key. An uploadable content type must have `upload` and a read-only one can't; a
-  `search.param` must be a filter of its list endpoint; each declared action needs its UI.
+  `search.param` must be a filter of its list endpoint; each declared action, `createFrom`
+  endpoint and `archiveImport` needs its UI, and none can be given without the fact.
 - Opting out is explicit: `GENERIC` where the host has a generic view (`panel`, `browse`,
   `clientSetup`), `null` where the piece can be absent (`tab`, `search`). A type's `label`
   is optional and defaults to the plugin's.
@@ -58,7 +63,7 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 
 ## Hosts
 
-- Pages and components read facts from `@catalog` (`getPlugin`, `getAvailablePlugins`,
+- Pages and components read facts from `@catalog` (`getPulpType`, `getAvailableTypes`,
   `getContentType`, …) and UI from `@plugins` (`getEntityForm`, `getContentPanel`,
   `getRepositoryBrowse`, `getRepositoryTab`, `getRepositoryActions`, `getClientSetup`,
   `getContentSearch`, `getUploadFields`, `getPluginPages`, `useCreateTypeSelect`), never
@@ -70,8 +75,9 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 
 ## Adding a plugin
 
-Write `plugins/<id>/definition.ts`, add it to `PLUGIN_DEFINITIONS`, add `<id>: <id>Ui` to
-`PLUGIN_UI`; the compiler then lists every missing UI piece. The `add-plugin` skill walks
+`npm run plugin:new -- <id>` scaffolds `plugins/<id>/` and registers it in `PLUGIN_DEFINITIONS`
+and `PLUGIN_UI`; declare the types in `definition.ts` and the compiler lists every missing UI
+piece. The `add-plugin` skill walks
 through it.
 
 ## Checklist

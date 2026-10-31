@@ -22,13 +22,13 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 
-import type { RepositoryResponse } from "@app/client";
 import { FormSubmitError } from "@app/components/FormSubmitError";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useOstreeImportMutation } from "@app/queries/ostree-repositories";
 import { useArtifactUploadMutation } from "@app/queries/uploads";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import type { IArchiveImportModalProps } from "@plugin-sdk/ui";
+
+import { useOstreeImportMutation } from "../queries/ostree-repositories";
 
 const importSchema = yup.object({
   file: yup.mixed<File>().required("Select an archive"),
@@ -38,17 +38,11 @@ const importSchema = yup.object({
 
 type ImportFormValues = yup.InferType<typeof importSchema>;
 
-interface IOstreeImportModalProps {
-  repository: RepositoryResponse;
-  onClose: () => void;
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
-}
-
 /**
  * Imports an OSTree repository archive (a tarball): uploads it as an artifact, then
  * imports every ref, or only one ref's commits, into a new repository version.
  */
-export const OstreeImportModal: React.FC<IOstreeImportModalProps> = ({
+export const OstreeImportModal: React.FC<IArchiveImportModalProps> = ({
   repository,
   onClose,
   onStarted,

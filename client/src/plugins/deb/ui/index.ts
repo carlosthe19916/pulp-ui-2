@@ -12,9 +12,6 @@ import { debRemoteForm } from "./forms/remote";
 import { debRepositoryForm } from "./forms/repository";
 
 const debBrowse = lazyViews(() => import("./browse/DebBrowse"));
-const debMetadataContent = lazyViews(
-  () => import("./content/DebMetadataContent"),
-);
 const debContent = lazyViews(() => import("./content/DebContent"));
 
 export const debUi = definePluginUi({
@@ -91,7 +88,9 @@ export const debUi = definePluginUi({
       "deb.package_index": { panel: GENERIC, search: null },
       "deb.package_release_component": { panel: GENERIC, search: null },
       "deb.release": {
-        panel: debMetadataContent("DebReleaseContent"),
+        panel: lazyViews(() => import("./content/DebReleaseContent"))(
+          "DebReleaseContent",
+        ),
         search: null,
       },
       "deb.release_architecture": { panel: GENERIC, search: null },
@@ -99,7 +98,9 @@ export const debUi = definePluginUi({
       "deb.release_file": { panel: GENERIC, search: null },
       "deb.source_index": { panel: GENERIC, search: null },
       "deb.source_package": {
-        panel: debMetadataContent("DebSourcePackageContent"),
+        panel: lazyViews(() => import("./content/DebSourcePackageContent"))(
+          "DebSourcePackageContent",
+        ),
         search: null,
       },
       "deb.source_package_release_component": { panel: GENERIC, search: null },

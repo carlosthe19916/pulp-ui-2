@@ -12,14 +12,13 @@ import type {
   RepositoriesMavenMavenPackagesData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { contentKeys } from "@app/queries/content";
+import { repositoryKeys } from "@app/queries/repositories";
+import type { MultiOrderListParams } from "@app/queries/utils/listParams";
+import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
+import type { IPulpDomain } from "@app/queries/utils/pulpApi";
+import { pulpApiPath, toProxyHref } from "@app/queries/utils/pulpApi";
 import { getContentType } from "@catalog";
-
-import { contentKeys } from "./content";
-import { repositoryKeys } from "./repositories";
-import type { MultiOrderListParams } from "./utils/listParams";
-import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
 
 /**
  * Params for a Maven repository's `packages/` catalog. Its `ordering` takes several

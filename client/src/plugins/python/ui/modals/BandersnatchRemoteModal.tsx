@@ -4,9 +4,11 @@ import type { Policy692Enum } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useBandersnatchRemoteCreateMutation } from "@app/queries/python-remotes";
 import type { IEntityField } from "@app/utils/entityField";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import type { ICreateFromModalProps } from "@plugin-sdk/ui";
+
+import { useBandersnatchRemoteCreateMutation } from "../queries/python-remotes";
 
 const FIELDS: IEntityField[] = [
   { key: "name", label: "Name", type: "text", required: true },
@@ -31,14 +33,10 @@ const FIELDS: IEntityField[] = [
   },
 ];
 
-interface IBandersnatchRemoteModalProps {
-  onClose: () => void;
-}
-
 /** Creates a Python remote from a Bandersnatch config. */
-export const BandersnatchRemoteModal: React.FC<
-  IBandersnatchRemoteModalProps
-> = ({ onClose }) => {
+export const BandersnatchRemoteModal: React.FC<ICreateFromModalProps> = ({
+  onClose,
+}) => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useBandersnatchRemoteCreateMutation({

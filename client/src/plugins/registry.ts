@@ -15,8 +15,10 @@ import type { IAcsDef } from "@plugin-sdk/definition";
 import {
   type ClientSetup,
   GENERIC,
+  type IArchiveImportUi,
   type IContentPanelProps,
   type IContentSearch,
+  type ICreateFromUi,
   type INavPage,
   type IPluginAction,
   type IPluginBrowse,
@@ -89,6 +91,12 @@ const panels = new Map<PulpType, React.ComponentType<IContentPanelProps>>();
 const searches = new Map<PulpType, IContentSearch>();
 const uploads = new Map<PulpType, IEntityField[]>();
 const pages: { pluginId: PluginId; page: INavPage }[] = [];
+const pageComponents = new Map<INavPage["to"], React.ComponentType>();
+const createAlternatives = new Map<
+  PulpType,
+  (ICreateFromUi & { key: string })[]
+>();
+const archiveImports = new Map<PulpType, IArchiveImportUi>();
 const acsTypes: IAcsType[] = [];
 
 // Walk the plugins in declaration order, so lists (nav pages, ACS types) follow it.
@@ -106,7 +114,21 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
       });
     }
   }
+  for (const [pulpType, remoteUi] of Object.entries(ui.remote ?? {})) {
+    if (remoteUi.createFrom) {
+      createAlternatives.set(
+        pulpType,
+        Object.entries(remoteUi.createFrom).map(([key, alternative]) => ({
+          key,
+          ...alternative,
+        })),
+      );
+    }
+  }
   for (const [pulpType, repositoryUi] of Object.entries(ui.repository ?? {})) {
+    if (repositoryUi.archiveImport) {
+      archiveImports.set(pulpType, repositoryUi.archiveImport);
+    }
     if (repositoryUi.browse !== GENERIC) {
       browses.set(pulpType, repositoryUi.browse);
     }
@@ -134,7 +156,10 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
     if (contentUi.search) searches.set(pulpType, contentUi.search);
     if (contentUi.upload) uploads.set(pulpType, contentUi.upload);
   }
-  for (const page of ui.pages ?? []) pages.push({ pluginId, page });
+  for (const page of ui.pages ?? []) {
+    pages.push({ pluginId, page });
+    pageComponents.set(page.to, page.Page);
+  }
   if (definition.acs) {
     acsTypes.push({
       ...definition.acs,
@@ -201,3 +226,19 @@ export const getPluginPages = (): readonly {
 
 /** Every plugin's alternate content source. */
 export const getAcsTypes = (): readonly IAcsType[] => acsTypes;
+
+/** The component of a plugin's own page, by its route. */
+export const getPluginPage = (
+  to: INavPage["to"],
+): React.ComponentType | undefined => pageComponents.get(to);
+
+/** A remote type's other ways to be created (e.g. from a Bandersnatch config). */
+export const getCreateAlternatives = (
+  remoteType: PulpType,
+): readonly (ICreateFromUi & { key: string })[] =>
+  createAlternatives.get(remoteType) ?? [];
+
+/** A repository type's archive import, if its plugin imports archives. */
+export const getArchiveImport = (
+  repositoryType: PulpType,
+): IArchiveImportUi | undefined => archiveImports.get(repositoryType);

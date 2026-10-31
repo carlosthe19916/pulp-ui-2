@@ -23,7 +23,7 @@ import {
   useContentTypeListQuery,
 } from "@app/queries/content";
 
-import { MavenInstall } from "./MavenContent";
+import { MavenInstall } from "./MavenInstall";
 
 interface IMavenLicense {
   name?: string;

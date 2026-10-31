@@ -2,6 +2,7 @@ import type React from "react";
 
 import type { RepositoryResponse } from "@app/client";
 import type { IServedAt } from "@app/components/BrowseShell";
+import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 
 import type { FileRoutesByTo } from "../../routeTree.gen";
 
@@ -57,9 +58,35 @@ export interface IContentSearch<P extends string = string> {
 /** A page of the plugin's own, linked from the Content management navigation. */
 export interface INavPage {
   label: string;
+  /** The page; its route renders it through the registry. */
+  Page: React.ComponentType;
   /** A domain-scoped content-management route. */
   to: Extract<
     keyof FileRoutesByTo,
     `/content-management/$pulpDomain/${string}`
   >;
+}
+
+export interface ICreateFromModalProps {
+  onClose: () => void;
+}
+
+/** A remote type's other way to be created, offered next to "Create remote". */
+export interface ICreateFromUi {
+  label: string;
+  /** Owns its form, request and toasts; closes on success. */
+  Modal: React.ComponentType<ICreateFromModalProps>;
+}
+
+export interface IArchiveImportModalProps {
+  repository: RepositoryResponse;
+  onClose: () => void;
+  /** Hands the started import task to the repository page, which follows it. */
+  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+}
+
+/** A repository type's archive import, offered in its page's actions. */
+export interface IArchiveImportUi {
+  label: string;
+  Modal: React.ComponentType<IArchiveImportModalProps>;
 }

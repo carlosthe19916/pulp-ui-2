@@ -4,7 +4,12 @@ import { definePlugin } from "@plugin-sdk/definition";
 export const python = definePlugin({
   id: "python",
   packages: ["python", "pulp-python"],
-  remote: { "python.python": { apiPath: "python/python" } },
+  remote: {
+    "python.python": {
+      apiPath: "python/python",
+      createFrom: { bandersnatch: { path: "from_bandersnatch/" } },
+    },
+  },
   repository: {
     "python.python": {
       apiPath: "python/python",

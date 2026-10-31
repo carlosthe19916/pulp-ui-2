@@ -21,7 +21,6 @@ import {
 } from "./forms/repository";
 
 const containerBrowse = lazyViews(() => import("./browse/ContainerBrowse"));
-const containerContent = lazyViews(() => import("./content/ContainerContent"));
 
 const browse: IPluginBrowse<TypesOf<typeof container, "content">> = {
   sections: [
@@ -56,6 +55,9 @@ export const containerUi = definePluginUi({
       {
         label: "Container Namespaces",
         to: "/content-management/$pulpDomain/container-namespaces",
+        Page: lazyViews(() => import("./pages/ContainerNamespaceList"))(
+          "ContainerNamespaceList",
+        ),
       },
     ],
     remote: {
@@ -93,12 +95,16 @@ export const containerUi = definePluginUi({
     content: {
       "container.blob": { panel: GENERIC, search: null },
       "container.manifest": {
-        panel: containerContent("ContainerManifestContent"),
+        panel: lazyViews(() => import("./content/ContainerManifestContent"))(
+          "ContainerManifestContent",
+        ),
         search: { param: "digest", label: "digest" },
       },
       "container.signature": { panel: GENERIC, search: null },
       "container.tag": {
-        panel: containerContent("ContainerTagContent"),
+        panel: lazyViews(() => import("./content/ContainerTagContent"))(
+          "ContainerTagContent",
+        ),
         search: { param: "name", label: "tag" },
       },
     },
