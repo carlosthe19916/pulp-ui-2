@@ -18,7 +18,8 @@ outputs:
     description: >-
       true when the container image's inputs changed: the npm dependencies of
       client, common and server (their package.json and the shared root
-      package-lock.json), the Dockerfile, .dockerignore or image-build.yaml
+      package-lock.json), entrypoint.sh, the Dockerfile, .dockerignore or
+      image-build.yaml
     value: ${{ steps.image.outputs.image }}
 runs:
   using: composite
@@ -51,6 +52,7 @@ runs:
             - 'client/package.json'
             - 'common/package.json'
             - 'server/package.json'
+            - 'entrypoint.sh'
             - 'Dockerfile'
             - '.dockerignore'
             - '.github/workflows/image-build.yaml'
