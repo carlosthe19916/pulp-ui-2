@@ -1,20 +1,8 @@
-import { distributionBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
 
 /** OpenPGP keyrings (repository) and their distributions share one pulp_type. */
 const openpgp = { pulpType: "core.openpgp" };
-
-const keyringDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Keyring",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  { key: "repository_version", label: "Keyring version", type: "text" },
-];
 
 /**
  * pulpcore: the OpenPGP content types and keyring (pulp_type `core.openpgp`).
@@ -26,11 +14,6 @@ export const core: IPluginDefinition = {
   entities: {
     repository: {
       rest: { ...openpgp, apiPath: "core/openpgp_keyring" },
-      form: {
-        isWizard: false,
-        createFields: repositoryBase.create,
-        editFields: repositoryBase.edit,
-      },
       compatibleRemoteTypes: [],
       compatiblePublicationTypes: [],
       contentChanges: "modify",
@@ -38,14 +21,6 @@ export const core: IPluginDefinition = {
     },
     distribution: {
       rest: { ...openpgp, apiPath: "core/openpgp" },
-      form: {
-        isWizard: false,
-        createFields: [
-          ...distributionBase.create,
-          ...keyringDistributionExtras,
-        ],
-        editFields: [...distributionBase.edit, ...keyringDistributionExtras],
-      },
       // The keyring repository has role endpoints; its distribution does not.
       rolesManaged: false,
     },

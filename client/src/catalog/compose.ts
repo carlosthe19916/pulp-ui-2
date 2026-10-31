@@ -88,11 +88,6 @@ export const buildCatalog = (
 
         const resolved: IPluginEntity = {
           apiPath,
-          form: {
-            isWizard: contribution.form.isWizard,
-            createFields: [...contribution.form.createFields],
-            editFields: [...contribution.form.editFields],
-          },
           rolesManaged: contribution.rolesManaged,
         };
         if (entity === "repository") {

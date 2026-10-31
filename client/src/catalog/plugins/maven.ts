@@ -1,32 +1,5 @@
-import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
-
-const mavenRepositoryExtras: IEntityField[] = [
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-  { key: "retain_checkpoints", label: "Retained Checkpoints", type: "number" },
-];
-
-const mavenDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Repository",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-];
 
 const mavenActions: IRepositoryAction[] = [
   {
@@ -78,11 +51,6 @@ export const maven: IPluginDefinition = {
   entities: {
     // Maven repository: a pull-through cache — no sync or publish (both stay off).
     repository: {
-      form: {
-        isWizard: false,
-        createFields: [...repositoryBase.create, ...mavenRepositoryExtras],
-        editFields: [...repositoryBase.edit, ...mavenRepositoryExtras],
-      },
       compatibleRemoteTypes: [],
       compatiblePublicationTypes: [],
       contentChanges: "modify",
@@ -90,21 +58,9 @@ export const maven: IPluginDefinition = {
       actions: mavenActions,
     },
 
-    remote: {
-      form: {
-        isWizard: true,
-        createFields: remoteBase.create,
-        editFields: remoteBase.edit,
-      },
-    },
+    remote: {},
 
-    distribution: {
-      form: {
-        isWizard: false,
-        createFields: [...distributionBase.create, ...mavenDistributionExtras],
-        editFields: [...distributionBase.edit, ...mavenDistributionExtras],
-      },
-    },
+    distribution: {},
   },
 
   content: [

@@ -8,7 +8,6 @@ import {
   getContentType,
   getContentTypes,
   getPlugin,
-  getRemoteEditFields,
   getRepositoryContentTypes,
   getRepositoryTypesForContent,
   getRepositoryTypesForPublication,
@@ -19,40 +18,6 @@ import type { IPluginDefinition } from "./types";
 
 /** Locks the resolved catalog so it can't silently drift. */
 describe("catalog composition", () => {
-  it("restores the entity base into every plugin (create: required; edit: optional)", () => {
-    const remote = getPlugin("file.file")?.entities.remote;
-    const keys = remote?.form.createFields.map((f) => f.key);
-    expect(keys).toContain("name");
-    expect(keys).toContain("url");
-    expect(keys).toContain("policy");
-    // 19 base remote fields + 0 file extras.
-    expect(remote?.form.createFields).toHaveLength(19);
-    expect(
-      remote?.form.createFields.find((f) => f.key === "name")?.required,
-    ).toBe(true);
-    expect(
-      remote?.form.editFields.find((f) => f.key === "name")?.required,
-    ).toBeUndefined();
-  });
-
-  it("appends plugin extras after the base", () => {
-    const remote = getPlugin("rpm.rpm")?.entities.remote;
-    const keys = remote?.form.createFields.map((f) => f.key);
-    expect(keys?.[0]).toBe("name");
-    expect(keys).toContain("sles_auth_token");
-    expect(remote?.form.isWizard).toBe(true);
-  });
-
-  it("getRemoteEditFields returns plugin fields, or the base for unmodelled types", () => {
-    expect(getRemoteEditFields("rpm.rpm").map((f) => f.key)).toContain(
-      "sles_auth_token",
-    );
-    // An unknown pulp_type still yields the shared base fields, never empty.
-    const fallback = getRemoteEditFields("not.a.plugin").map((f) => f.key);
-    expect(fallback).toContain("url");
-    expect(fallback).toContain("policy");
-  });
-
   it("carries each repository's valid sync remote types (backend REMOTE_TYPES)", () => {
     // rpm and file both accept a second remote variant (ULN, Git).
     expect(
@@ -146,12 +111,6 @@ describe("catalog composition", () => {
     expect(getPlugin("ansible.collection")?.entities.remote).toBeDefined();
     expect(getPlugin("ansible.role")?.entities.remote).toBeDefined();
     expect(getPlugin("ansible.git")?.entities.remote).toBeDefined();
-    // The git remote drops the inherited `policy` field.
-    expect(
-      getPlugin("ansible.git")?.entities.remote?.form.createFields.map(
-        (f) => f.key,
-      ),
-    ).not.toContain("policy");
   });
 
   it("models ostree (syncable, no publication)", () => {
@@ -246,11 +205,7 @@ describe("buildCatalog", () => {
   const makeRemote = (): IPluginDefinition => ({
     app: { isAvailable: () => true },
     rest: { pulpType: "dup.dup", apiPath: "dup/dup" },
-    entities: {
-      remote: {
-        form: { isWizard: false, createFields: [], editFields: [] },
-      },
-    },
+    entities: { remote: {} },
   });
 
   it("throws on a duplicate (entity, pulp_type)", () => {
@@ -276,7 +231,6 @@ describe("buildCatalog", () => {
         rest: { pulpType: "test.test", apiPath: "test/test" },
         entities: {
           repository: {
-            form: { isWizard: false, createFields: [], editFields: [] },
             compatibleRemoteTypes: [],
             compatiblePublicationTypes: [],
             contentChanges: null,
@@ -287,7 +241,6 @@ describe("buildCatalog", () => {
     ]);
     const plugin = catalog["test.test"];
     expect(plugin.entities.repository?.apiPath).toBe("test/test");
-    expect(plugin.entities.repository?.form.isWizard).toBe(false);
     expect(plugin.entities.repository?.compatibleRemoteTypes).toEqual([]);
   });
 

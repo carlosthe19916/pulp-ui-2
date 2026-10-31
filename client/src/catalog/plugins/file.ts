@@ -1,41 +1,5 @@
-import {
-  distributionBase,
-  publicationBase,
-  remoteBase,
-  repositoryBase,
-} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition } from "../types";
-
-const fileDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Repository",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  {
-    key: "publication",
-    label: "Publication",
-    type: "asyncResource",
-    resourceKind: "publication",
-  },
-];
-
-/** FileGitRemote forces policy=immediate server-side (HiddenField), so drop it. */
-const withoutPolicy = (fields: IEntityField[]): IEntityField[] =>
-  fields.filter((field) => field.key !== "policy");
-
-const fileGitRemoteExtras: IEntityField[] = [
-  {
-    key: "git_ref",
-    label: "Git Ref",
-    type: "text",
-    defaultValue: "HEAD",
-    group: "General",
-  },
-];
 
 /** File: the pulpcore reference plugin — implements all five entity types. */
 export const file: IPluginDefinition = {
@@ -43,34 +7,6 @@ export const file: IPluginDefinition = {
   rest: { pulpType: "file.file", apiPath: "file/file" },
   entities: {
     repository: {
-      form: {
-        isWizard: false,
-        createFields: [
-          ...repositoryBase.create,
-          {
-            key: "remote",
-            label: "Remote",
-            type: "asyncResource",
-            resourceKind: "remote",
-          },
-          {
-            key: "autopublish",
-            label: "Auto-publish",
-            type: "boolean",
-            defaultValue: false,
-          },
-        ],
-        editFields: [
-          ...repositoryBase.edit,
-          {
-            key: "remote",
-            label: "Remote",
-            type: "asyncResource",
-            resourceKind: "remote",
-          },
-          { key: "autopublish", label: "Auto-publish", type: "boolean" },
-        ],
-      },
       compatibleRemoteTypes: ["file.file", "file.git"],
       compatiblePublicationTypes: ["file.file"],
       contentChanges: "modify",
@@ -82,51 +18,15 @@ export const file: IPluginDefinition = {
     // both can be synced from; declaring the git variant here lets the sync UI
     // offer it and lets users create one.
     remote: [
-      {
-        form: {
-          isWizard: true,
-          createFields: remoteBase.create,
-          editFields: remoteBase.edit,
-        },
-      },
+      {},
       {
         rest: { pulpType: "file.git", apiPath: "file/git" },
-        form: {
-          isWizard: true,
-          createFields: [
-            ...withoutPolicy(remoteBase.create),
-            ...fileGitRemoteExtras,
-          ],
-          editFields: [
-            ...withoutPolicy(remoteBase.edit),
-            ...fileGitRemoteExtras,
-          ],
-        },
       },
     ],
 
-    distribution: {
-      form: {
-        isWizard: false,
-        createFields: [...distributionBase.create, ...fileDistributionExtras],
-        editFields: [...distributionBase.edit, ...fileDistributionExtras],
-      },
-    },
+    distribution: {},
 
-    publication: {
-      form: {
-        isWizard: false,
-        createFields: [
-          ...publicationBase.create,
-          {
-            key: "repository_version",
-            label: "Repository Version",
-            type: "text",
-          },
-        ],
-        editFields: [],
-      },
-    },
+    publication: {},
   },
 
   // File content: one uploadable type. The collection path (file/files) differs

@@ -30,8 +30,6 @@ interface IFieldBase {
   label: string;
   required?: boolean;
   defaultValue?: unknown;
-  /** Wizard step this field belongs to (when the form renders as a wizard). */
-  group?: string;
   /** Contextual help, shown as a popover on forms and detail pages. */
   helpText?: string;
 }

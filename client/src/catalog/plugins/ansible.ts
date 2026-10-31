@@ -1,49 +1,6 @@
-import { distributionBase, remoteBase, repositoryBase } from "../baseFields";
 import { whenInstalled } from "../compose";
 import type { IEntityField } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
-
-/** GitRemote has no `policy` field (always on-demand server-side), so drop it. */
-const withoutPolicy = (fields: IEntityField[]): IEntityField[] =>
-  fields.filter((field) => field.key !== "policy");
-
-const ansibleRepositoryExtras: IEntityField[] = [
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-  { key: "gpgkey", label: "GPG Key", type: "textarea" },
-];
-
-const collectionRemoteExtras: IEntityField[] = [
-  { key: "requirements_file", label: "Requirements File", type: "textarea" },
-  { key: "auth_url", label: "Auth URL", type: "text", group: "Authentication" },
-  { key: "token", label: "Token", type: "text", group: "Authentication" },
-  { key: "sync_dependencies", label: "Sync Dependencies", type: "boolean" },
-  { key: "signed_only", label: "Signed Only", type: "boolean" },
-  {
-    key: "sync_highest_versions",
-    label: "Sync Highest Versions",
-    type: "number",
-  },
-];
-
-const gitRemoteExtras: IEntityField[] = [
-  { key: "metadata_only", label: "Metadata Only", type: "boolean" },
-  { key: "git_ref", label: "Git Ref", type: "text", group: "General" },
-];
-
-const ansibleDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Repository",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  { key: "repository_version", label: "Repository Version", type: "text" },
-];
 
 const collectionVersions = ({
   key,
@@ -166,11 +123,6 @@ export const ansible: IPluginDefinition = {
   rest: { pulpType: "ansible.ansible", apiPath: "ansible/ansible" },
   entities: {
     repository: {
-      form: {
-        isWizard: false,
-        createFields: [...repositoryBase.create, ...ansibleRepositoryExtras],
-        editFields: [...repositoryBase.edit, ...ansibleRepositoryExtras],
-      },
       compatibleRemoteTypes: [
         "ansible.collection",
         "ansible.role",
@@ -186,43 +138,16 @@ export const ansible: IPluginDefinition = {
     remote: [
       {
         rest: { pulpType: "ansible.collection", apiPath: "ansible/collection" },
-        form: {
-          isWizard: true,
-          createFields: [...remoteBase.create, ...collectionRemoteExtras],
-          editFields: [...remoteBase.edit, ...collectionRemoteExtras],
-        },
       },
       {
         rest: { pulpType: "ansible.role", apiPath: "ansible/role" },
-        form: {
-          isWizard: true,
-          createFields: remoteBase.create,
-          editFields: remoteBase.edit,
-        },
       },
       {
         rest: { pulpType: "ansible.git", apiPath: "ansible/git" },
-        form: {
-          isWizard: true,
-          createFields: [
-            ...withoutPolicy(remoteBase.create),
-            ...gitRemoteExtras,
-          ],
-          editFields: [...withoutPolicy(remoteBase.edit), ...gitRemoteExtras],
-        },
       },
     ],
 
-    distribution: {
-      form: {
-        isWizard: false,
-        createFields: [
-          ...distributionBase.create,
-          ...ansibleDistributionExtras,
-        ],
-        editFields: [...distributionBase.edit, ...ansibleDistributionExtras],
-      },
-    },
+    distribution: {},
   },
 
   content: [

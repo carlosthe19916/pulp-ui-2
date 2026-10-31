@@ -1,85 +1,5 @@
-import {
-  distributionBase,
-  publicationBase,
-  remoteBase,
-  repositoryBase,
-} from "../baseFields";
 import { whenInstalled } from "../compose";
-import type { IEntityField, IFieldOption } from "../fieldTypes";
 import type { IPluginDefinition, IRepositoryAction } from "../types";
-
-const LAYOUT_OPTIONS: IFieldOption[] = [
-  { value: "by_hash", label: "By hash" },
-  { value: "flat", label: "Flat" },
-];
-
-const debRepositoryExtras: IEntityField[] = [
-  {
-    key: "remote",
-    label: "Remote",
-    type: "asyncResource",
-    resourceKind: "remote",
-  },
-  { key: "autopublish", label: "Auto-publish", type: "boolean" },
-  {
-    key: "publish_upstream_release_fields",
-    label: "Publish Upstream Release Fields",
-    type: "boolean",
-  },
-  { key: "signing_service", label: "Signing Service", type: "text" },
-  {
-    key: "excluded_package_metadata_fields",
-    label: "Excluded Package Metadata Fields",
-    type: "textarea",
-  },
-];
-
-const debRemoteExtras: IEntityField[] = [
-  {
-    key: "distributions",
-    label: "Distributions",
-    type: "text",
-    required: true,
-    group: "General",
-  },
-  { key: "components", label: "Components", type: "text", group: "General" },
-  {
-    key: "architectures",
-    label: "Architectures",
-    type: "text",
-    group: "General",
-  },
-  { key: "sync_sources", label: "Sync Sources", type: "boolean" },
-  { key: "sync_udebs", label: "Sync Installer Packages", type: "boolean" },
-  { key: "sync_installer", label: "Sync Installer Files", type: "boolean" },
-  { key: "gpgkey", label: "GPG Key", type: "textarea" },
-  {
-    key: "ignore_missing_package_indices",
-    label: "Ignore Missing Package Indices",
-    type: "boolean",
-  },
-  {
-    key: "excluded_package_metadata_fields",
-    label: "Excluded Package Metadata Fields",
-    type: "textarea",
-  },
-];
-
-const debDistributionExtras: IEntityField[] = [
-  {
-    key: "repository",
-    label: "Repository",
-    type: "asyncResource",
-    resourceKind: "repository",
-  },
-  {
-    key: "publication",
-    label: "Publication",
-    type: "asyncResource",
-    resourceKind: "publication",
-  },
-  { key: "checkpoint", label: "Checkpoint", type: "boolean" },
-];
 
 const debActions: IRepositoryAction[] = [
   {
@@ -109,11 +29,6 @@ export const deb: IPluginDefinition = {
   rest: { pulpType: "deb.deb", apiPath: "deb/apt" },
   entities: {
     repository: {
-      form: {
-        isWizard: false,
-        createFields: [...repositoryBase.create, ...debRepositoryExtras],
-        editFields: [...repositoryBase.edit, ...debRepositoryExtras],
-      },
       compatibleRemoteTypes: ["deb.apt-remote"],
       compatiblePublicationTypes: [
         "deb.apt-publication",
@@ -126,51 +41,19 @@ export const deb: IPluginDefinition = {
 
     remote: {
       rest: { pulpType: "deb.apt-remote" },
-      form: {
-        isWizard: true,
-        createFields: [...remoteBase.create, ...debRemoteExtras],
-        editFields: [...remoteBase.edit, ...debRemoteExtras],
-      },
     },
 
     distribution: {
       rest: { pulpType: "deb.apt-distribution" },
-      form: {
-        isWizard: false,
-        createFields: [...distributionBase.create, ...debDistributionExtras],
-        editFields: [...distributionBase.edit, ...debDistributionExtras],
-      },
     },
 
     // Two publication types: a structured APT publication and a verbatim mirror.
     publication: [
       {
         rest: { pulpType: "deb.apt-publication" },
-        form: {
-          isWizard: false,
-          createFields: [
-            ...publicationBase.create,
-            { key: "structured", label: "Structured", type: "boolean" },
-            { key: "simple", label: "Simple", type: "boolean" },
-            { key: "signing_service", label: "Signing Service", type: "text" },
-            { key: "checkpoint", label: "Checkpoint", type: "boolean" },
-            {
-              key: "layout",
-              label: "Layout",
-              type: "select",
-              options: LAYOUT_OPTIONS,
-            },
-          ],
-          editFields: [],
-        },
       },
       {
         rest: { pulpType: "deb.verbatim-publication", apiPath: "deb/verbatim" },
-        form: {
-          isWizard: false,
-          createFields: publicationBase.create,
-          editFields: [],
-        },
       },
     ],
   },

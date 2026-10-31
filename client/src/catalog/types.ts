@@ -74,20 +74,15 @@ export interface IPluginRest {
   apiPath: string;
 }
 
-/** Create/edit field lists (base + plugin extras) plus the wizard flag. */
-export interface IPluginForm {
-  isWizard: boolean;
-  createFields: IEntityField[];
-  editFields: IEntityField[];
-}
-
 // --- Resolved shapes (what `index.ts` exposes; keyed by pulp_type) ---
 
-/** One entity's resolved contribution for a pulp_type: its endpoint and form. */
+/**
+ * One entity's resolved contribution for a pulp_type: its endpoint. Its create/edit form is
+ * UI, not data: see `@app/forms` (ADR 0009).
+ */
 export interface IPluginEntity {
   /** The `<app>/<slug>` collection segment, per entity (content pluralizes). */
   apiPath: string;
-  form: IPluginForm;
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
 }
@@ -129,11 +124,6 @@ export interface IPlugin {
  * overridden only by variants.
  */
 export interface IContributionBase {
-  form: {
-    isWizard: boolean;
-    createFields: IEntityField[];
-    editFields: IEntityField[];
-  };
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
 }
