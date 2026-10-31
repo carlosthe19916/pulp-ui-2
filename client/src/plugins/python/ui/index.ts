@@ -2,14 +2,18 @@ import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { python } from "../definition";
 import { pythonActions } from "./actions";
-import { pypiDistributionForm } from "./forms/distribution";
-import { pypiPublicationForm } from "./forms/publication";
+import { pythonDistributionForm } from "./forms/distribution";
+import { pythonPublicationForm } from "./forms/publication";
 import { pythonRemoteForm } from "./forms/remote";
 import { pythonRepositoryForm } from "./forms/repository";
+import { pipInstall } from "./helpers";
 
 const pythonBrowse = lazyViews(() => import("./browse/PythonBrowse"));
 const pythonBlocklistTab = lazyViews(() => import("./tabs/PythonBlocklistTab"));
 const pythonContent = lazyViews(() => import("./content/PythonContent"));
+const bandersnatchRemoteModal = lazyViews(
+  () => import("./modals/BandersnatchRemoteModal"),
+);
 
 export const pythonUi = definePluginUi({
   definition: python,
@@ -21,9 +25,7 @@ export const pythonUi = definePluginUi({
         createFrom: {
           bandersnatch: {
             label: "From Bandersnatch config",
-            Modal: lazyViews(() => import("./modals/BandersnatchRemoteModal"))(
-              "BandersnatchRemoteModal",
-            ),
+            Modal: bandersnatchRemoteModal("BandersnatchRemoteModal"),
           },
         },
       },
@@ -58,15 +60,15 @@ export const pythonUi = definePluginUi({
     distribution: {
       "python.pypi": {
         label: "PyPI",
-        form: pypiDistributionForm,
+        form: pythonDistributionForm,
         clientSetup: ({ baseUrl }) => ({
           hint: "Install a package from this index.",
-          code: `pip install --index-url ${baseUrl}simple/ <package>`,
+          code: pipInstall(baseUrl),
         }),
       },
     },
     publication: {
-      "python.pypi": { label: "PyPI", form: pypiPublicationForm },
+      "python.pypi": { label: "PyPI", form: pythonPublicationForm },
     },
     content: {
       "python.python": {

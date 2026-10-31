@@ -1,5 +1,3 @@
-export { advancedCopyAction, scanAction } from "./actions";
-export { contentGuardBaseFields } from "./contentGuards";
 export { descriptionField, nameField, urlField } from "./base";
 export {
   accessSection,
@@ -15,6 +13,7 @@ export {
   sourceChoice,
 } from "./distribution";
 export { labelsField } from "./labels";
+export { SECTION_IDS } from "./sectionIds";
 export { CHECKPOINT, publicationSourceFields } from "./publication";
 export {
   authSection,

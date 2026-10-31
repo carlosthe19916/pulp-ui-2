@@ -9,10 +9,10 @@ import {
   dirname,
   FactList,
   facts,
-  type IContentPanelProps,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** An OSTree repository file, identified by its path and object digest. */
 export const OstreeContent: React.FC<IContentPanelProps> = ({ href }) => {

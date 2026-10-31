@@ -1,9 +1,6 @@
+import type { EntityType, IPulpType } from "@catalog";
+
 import type { ResourceKind } from "@app/utils/entityField";
-import {
-  type EntityType,
-  getRepositoryTypesForPublication,
-  type IPulpType,
-} from "@catalog";
 
 /** Per-resource-kind compatible pulp_types an `asyncResource` field offers. */
 export type ResourceFilterMap = Partial<Record<ResourceKind, string[]>>;
@@ -27,10 +24,6 @@ export const buildResourceFilter = ({
     if (compatibleRemoteTypes) {
       filters.remote = compatibleRemoteTypes;
     }
-  }
-
-  if (kind === "publication" && plugin) {
-    filters.repository = getRepositoryTypesForPublication(plugin.pulpType);
   }
 
   return filters;

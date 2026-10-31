@@ -10,14 +10,15 @@ Each plugin is a folder, `client/src/plugins/<id>/`:
 
 - `definition.ts` declares **facts** with `definePlugin`: which packages mean it is installed,
   its types per entity (keyed by `pulp_type`, each with its collection `apiPath`), repository
-  capabilities (what it syncs from and publishes to, how content changes, scans, actions), its
+  capabilities (what it syncs from and publishes to, how content changes, actions; a version
+  `scan/` action makes it scannable), its
   content types, its ACS endpoint and its content guard types. It imports no UI, so anything
   can read it.
 - `ui/index.ts` declares the **presentation** with `definePluginUi({ definition, ui })`: labels,
   forms, content panels, Browse sections, the repository tab, client setup, action labels and
   fields, upload fields, content search, the plugin's own pages, a remote's create
-  alternatives, the archive import and content guards' names, descriptions and fields. The plugin's pages, modals and queries live under
-  `ui/` too.
+  alternatives, the archive import, the ACS label and content guards' names, descriptions and
+  fields. The plugin's pages, modals and queries live under `ui/` too.
 
 The split is "would this change if the UI were redesigned?": facts don't, presentation does.
 
@@ -50,13 +51,18 @@ ui/index.ts ──── PluginUi<D> ──────────────�
 
 - `@catalog` (`plugins/catalog.ts`) lists `PLUGIN_DEFINITIONS` and exposes the pure lookups
   built by `createCatalog`: `getPulpType`, `getAvailableTypes`, `getContentType`,
-  `resolvePulpTypeByApiPath`, … It also derives types: per-entity unions (`RemoteType`,
-  `ContentType`, …) and `ContentTypeApiPaths`, from which `queries/contentTypes.ts` derives the
-  typed content-list map.
-- `@plugins` (`plugins/registry.ts`) walks every plugin's UI once and answers what hosts ask:
-  `getEntityForm`, `getContentPanel` (falling back to the generic panel), `getRepositoryBrowse`,
+  `getContentTypes`, `getScannableRepositoryTypes`, `resolvePulpTypeByApiPath`, … It also
+  derives types: per-entity unions (`RemoteType`, `ContentType`, …) and `ContentTypeApiPaths`,
+  from which `queries/contentTypes.ts` derives the typed content-list map.
+- `@plugins` (`plugins/registry.ts`) walks every plugin's UI once, joined with its facts, and
+  answers what hosts ask: `getEntityForm`, `getContentPanel`, `getRepositoryBrowse`,
   `getRepositoryTab`, `getRepositoryActions` (definition endpoint and UI merged),
-  `getClientSetup`, `getContentSearch`, `getUploadFields`, `getPluginPages`.
+  `getClientSetup`, `getContentSearch`, `getUploadFields`, `getCreateAlternatives`,
+  `getArchiveImport`, `getAcsTypes`, `getContentGuardTypes`, `getPluginPage` and
+  `getPluginPages`. The create pages' type picker comes from `useCreatableTypes` /
+  `useCreateTypeSelect` (`@app/hooks`), built on these.
+- List lookups take `{ installed }` (the `/status/` versions) and keep only the plugins that are
+  installed; without it they return every plugin's entries.
 
 ## Boundaries
 
@@ -64,19 +70,24 @@ ESLint (`eslint.config.mjs`) enforces the dependency direction:
 
 ```
 plugin-sdk  ◀──  plugins/<id>/definition.ts  ◀──  plugins/<id>/ui  ◀──  registries  ◀──  hosts
-                                                       │
-                                     app building blocks (forms kit, ContentPanelLayout,
-                                     BrowseShell, queries, components)
+    ▲                                                  │                                   │
+    └──────────────  app building blocks (forms kit, ContentPanelLayout, BrowseShell,  ◀───┘
+                     queries, components)
 ```
 
 - A definition imports only `@plugin-sdk/definition` and generated types, never another plugin.
 - A plugin's UI builds on the SDK and the app's shared building blocks; it never imports
-  `@plugins`, a host or another plugin (relative escapes included).
-- `plugin-sdk/**` never imports a plugin or a registry directly. Its UI contracts reuse the
-  building blocks' types, so the SDK sits on top of the app's shared components.
+  `@plugins`, `@catalog`, a host or another plugin (relative escapes included). Its facts come
+  from its own `definition.ts`.
+- `plugins/catalog.ts` imports definitions only, never a plugin's UI, so `@catalog` stays pure.
+- `plugin-sdk/**` never imports a plugin or a registry. Its UI contracts
+  (`plugin-sdk/ui/contracts.ts`) own the types hosts and plugins share (`IContentPanelProps`,
+  `IBrowseContext`, `IPluginBrowse`, `IServedAt`, …); the building blocks import them from
+  `@plugin-sdk/ui`.
 - Hosts (`app/**`, `routes/**`) never import a plugin's files, only the registries.
 - A plugin's own page keeps its route file (file-based routing), which renders
   `pluginPage("<to>")`: the page the plugin registered, found through `@plugins`.
 
-Panels, Browse views, tabs, pages and modals are loaded with `lazyViews`, so registering every plugin doesn't put
-their views in the main bundle; forms are small data and load with the registry.
+Panels, Browse views, tabs, pages and modals are loaded with `lazyViews` (one per module, its
+names limited to the module's component exports), so registering every plugin doesn't put their
+views in the main bundle; forms are small data and load with the registry.

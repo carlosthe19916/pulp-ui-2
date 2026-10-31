@@ -9,12 +9,9 @@ import {
 } from "@patternfly/react-core";
 
 import type { MavenRepositoryPackageResponse } from "@app/client";
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@app/components/BrowseShell";
+import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
 import { formatDateTime } from "@app/utils/utils";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import {
   useMavenMetricsQuery,

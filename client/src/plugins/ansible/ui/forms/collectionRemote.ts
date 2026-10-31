@@ -3,6 +3,7 @@ import {
   authSection,
   connectionSections,
   nameField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -68,7 +69,7 @@ export const ansibleCollectionRemoteForm = remoteForm(
       ]),
     ]),
     s.collapsible(
-      "auth",
+      SECTION_IDS.auth,
       "Authentication",
       [
         f.secret("token", {

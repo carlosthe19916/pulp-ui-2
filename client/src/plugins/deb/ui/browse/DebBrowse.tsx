@@ -2,15 +2,12 @@ import type React from "react";
 
 import { Label, LabelGroup } from "@patternfly/react-core";
 
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@app/components/BrowseShell";
+import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
-import { sourcesLine } from "./helpers";
+import { sourcesLine } from "../helpers";
 
 interface ILabelsProps {
   items?: string[];

@@ -101,7 +101,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const canPublish = (repoEntity?.compatiblePublicationTypes.length ?? 0) > 0;
   const canChangeContent = !!repoEntity?.contentChanges;
   const uploadableTypes = canChangeContent
-    ? getRepositoryContentTypes(pulpType).filter((type) => type.uploadable)
+    ? getRepositoryContentTypes(pulpType).filter((type) => type.upload)
     : [];
 
   // Tab-title counts: one row each, read the paginated `count`.

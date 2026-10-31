@@ -37,6 +37,7 @@ import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -53,7 +54,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-import { useCreatableTypes } from "@plugins";
 
 import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
 

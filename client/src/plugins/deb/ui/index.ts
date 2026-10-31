@@ -1,18 +1,23 @@
-import { relativePathField } from "@app/utils/entityField";
+import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { deb } from "../definition";
 import { debActions } from "./actions";
 import { debDistributionForm } from "./forms/distribution";
-import {
-  debAptPublicationForm,
-  debVerbatimPublicationForm,
-} from "./forms/publication";
+import { debPublicationForm } from "./forms/publication";
 import { debRemoteForm } from "./forms/remote";
 import { debRepositoryForm } from "./forms/repository";
+import { debVerbatimPublicationForm } from "./forms/verbatimPublication";
+import { sourcesLine } from "./helpers";
 
 const debBrowse = lazyViews(() => import("./browse/DebBrowse"));
 const debContent = lazyViews(() => import("./content/DebContent"));
+const debReleaseContent = lazyViews(
+  () => import("./content/DebReleaseContent"),
+);
+const debSourcePackageContent = lazyViews(
+  () => import("./content/DebSourcePackageContent"),
+);
 
 export const debUi = definePluginUi({
   definition: deb,
@@ -53,12 +58,16 @@ export const debUi = definePluginUi({
         form: debDistributionForm,
         clientSetup: ({ baseUrl }) => ({
           hint: "Add to /etc/apt/sources.list.d/.",
-          code: `deb ${baseUrl} <distribution> <component>`,
+          code: sourcesLine({
+            baseUrl,
+            codename: "<distribution>",
+            components: ["<component>"],
+          }),
         }),
       },
     },
     publication: {
-      "deb.apt-publication": { form: debAptPublicationForm },
+      "deb.apt-publication": { form: debPublicationForm },
       "deb.verbatim-publication": {
         label: "APT (verbatim)",
         form: debVerbatimPublicationForm,
@@ -88,9 +97,7 @@ export const debUi = definePluginUi({
       "deb.package_index": { panel: GENERIC, search: null },
       "deb.package_release_component": { panel: GENERIC, search: null },
       "deb.release": {
-        panel: lazyViews(() => import("./content/DebReleaseContent"))(
-          "DebReleaseContent",
-        ),
+        panel: debReleaseContent("DebReleaseContent"),
         search: null,
       },
       "deb.release_architecture": { panel: GENERIC, search: null },
@@ -98,9 +105,7 @@ export const debUi = definePluginUi({
       "deb.release_file": { panel: GENERIC, search: null },
       "deb.source_index": { panel: GENERIC, search: null },
       "deb.source_package": {
-        panel: lazyViews(() => import("./content/DebSourcePackageContent"))(
-          "DebSourcePackageContent",
-        ),
+        panel: debSourcePackageContent("DebSourcePackageContent"),
         search: null,
       },
       "deb.source_package_release_component": { panel: GENERIC, search: null },

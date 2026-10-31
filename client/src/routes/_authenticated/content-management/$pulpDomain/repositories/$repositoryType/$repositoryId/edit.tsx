@@ -32,7 +32,8 @@ export const Route = createFileRoute(
     }
     await queryClient.query({
       ...repositoryDetailQueryOptions({ href }),
-      staleTime: "static",
+      // The form diffs against what it loads: never start it from a stale cache.
+      staleTime: 0,
     });
     await prefetchEditPermissions({ queryClient, href });
     return { href };

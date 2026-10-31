@@ -12,7 +12,6 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   InstallSnippet,
   LabelList,
   LinkList,
@@ -20,6 +19,7 @@ import {
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 const FLAGS: Record<string, string> = {
   EQ: "=",

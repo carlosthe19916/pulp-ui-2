@@ -8,7 +8,6 @@ export {
   facts,
   type IFact,
   type ILink,
-  type IContentPanelProps,
   links,
 } from "./contentFields";
 export {

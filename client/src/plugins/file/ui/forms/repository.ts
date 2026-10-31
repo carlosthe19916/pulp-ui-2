@@ -17,7 +17,9 @@ export const fileRepositoryForm = repositoryForm(file.repository["file.file"])(
     sections: [
       s.essentials([
         ...repositoryIdentity(f),
-        remoteField(f),
+        remoteField(f, {
+          pulpTypes: file.repository["file.file"].compatibleRemoteTypes,
+        }),
         autopublishField(f),
       ]),
       s.collapsible("publishing", "Publishing", [

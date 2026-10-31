@@ -18,7 +18,14 @@ export const huggingFaceRepositoryForm = repositoryForm(
   },
   docsUrl: "https://pulpproject.org/pulp_hugging_face/",
   sections: [
-    s.essentials([...repositoryIdentity(f), remoteField(f)]),
+    s.essentials([
+      ...repositoryIdentity(f),
+      remoteField(f, {
+        pulpTypes:
+          huggingFace.repository["hugging_face.hugging-face"]
+            .compatibleRemoteTypes,
+      }),
+    ]),
     retentionSection({ f, s }),
     labelsSection({ f, s }),
   ],

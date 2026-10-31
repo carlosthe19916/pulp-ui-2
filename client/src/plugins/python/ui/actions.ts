@@ -1,4 +1,4 @@
-import { scanAction } from "@app/forms/fragments";
+import { scanAction } from "@app/utils/entityFieldPresets";
 import type { IActionUi } from "@plugin-sdk/ui";
 
 /** The Python repository's actions. */

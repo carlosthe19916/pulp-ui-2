@@ -3,8 +3,8 @@ import type React from "react";
 import type { MultipleArtifactContentResponse } from "@app/client";
 import { useContentDetailQuery } from "@app/queries/content";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
-import type { IContentPanelProps } from "./contentFields";
 import {
   ContentHeader,
   ContentPanelLayout,

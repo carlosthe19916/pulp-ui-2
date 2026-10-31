@@ -2,21 +2,14 @@ import type React from "react";
 
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  PageSection,
-} from "@patternfly/react-core";
-
-import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityFormPage } from "@app/forms";
+import { EntityCreatePage } from "@app/components/EntityCreatePage";
+import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositoryCreateMutation } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { useCreateTypeSelect } from "@plugins";
 
 const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/repositories/create",
@@ -30,14 +23,7 @@ export const RepositoryCreate: React.FC = () => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
-  const {
-    pulpType,
-    entry,
-    apiPath,
-    resourceFilter,
-    typeSelect,
-    initialValues,
-  } = useCreateTypeSelect({
+  const selection = useCreateTypeSelect({
     entity: "repository",
     type,
     onTypeChange: (next) => {
@@ -61,60 +47,46 @@ export const RepositoryCreate: React.FC = () => {
       ),
   });
 
-  if (!pulpType || !entry || !apiPath) {
-    return (
-      <PageSection>
-        <TableEmptyState title="No repository type can be created" />
-      </PageSection>
-    );
-  }
+  const toList = () =>
+    void navigate({
+      to: "/content-management/$pulpDomain/repositories",
+      params: { pulpDomain },
+    });
 
   return (
-    <EntityFormPage
-      key={pulpType}
-      form={entry.form}
-      mode="create"
-      initialValues={initialValues}
-      breadcrumbs={
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/repositories"
-              params={{ pulpDomain }}
-            >
-              Repositories
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Create</BreadcrumbItem>
-        </Breadcrumb>
+    <EntityCreatePage
+      entityType="repository"
+      selection={selection}
+      listLink={
+        <Link
+          to="/content-management/$pulpDomain/repositories"
+          params={{ pulpDomain }}
+        >
+          Repositories
+        </Link>
       }
-      typeSelect={typeSelect}
-      resourceFilter={resourceFilter}
       submitError={submitError}
       isSubmitting={createMutation.isPending}
-      onSubmit={(body, { saved }) => {
+      onSubmit={(body, { apiPath, saved }) => {
         clearSubmitError();
         createMutation.mutate(
           { apiPath, body },
           { onSuccess: (data) => saved(data.pulp_href) },
         );
       }}
-      onSaved={(href) =>
-        void navigate({
-          to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId",
-          params: {
-            pulpDomain,
-            repositoryType: pulpType,
-            repositoryId: extractIdFromHref(href ?? ""),
-          },
-        })
+      onSaved={({ pulpType, href }) =>
+        href
+          ? void navigate({
+              to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId",
+              params: {
+                pulpDomain,
+                repositoryType: pulpType,
+                repositoryId: extractIdFromHref(href),
+              },
+            })
+          : toList()
       }
-      onCancel={() =>
-        void navigate({
-          to: "/content-management/$pulpDomain/repositories",
-          params: { pulpDomain },
-        })
-      }
+      onCancel={toList}
     />
   );
 };

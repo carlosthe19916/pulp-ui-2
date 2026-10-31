@@ -11,7 +11,6 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
@@ -22,6 +21,7 @@ import {
   useContentDetailQuery,
   useContentTypeListQuery,
 } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 import { MavenInstall } from "./MavenInstall";
 

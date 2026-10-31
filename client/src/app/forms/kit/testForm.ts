@@ -16,7 +16,6 @@ interface ITestBody {
   headers?: unknown[];
   pulp_labels?: Record<string, string>;
   requirements_file?: string | null;
-  base_path?: string;
 }
 
 /** A form exercising the kit: essentials plus collapsible sections and conditions. */
@@ -38,11 +37,6 @@ export const testForm: IFormDef = defineForm<ITestBody>()(({ f, s }) => ({
         label: "Requirements",
         language: "yaml",
         visibleWhen: ({ values }) => values.policy === "immediate",
-      }),
-      f.text("base_path", {
-        label: "Base path",
-        availability: "readOnlyOnEdit",
-        clearAs: "",
       }),
     ]),
     s.collapsible("auth", "Authentication", [

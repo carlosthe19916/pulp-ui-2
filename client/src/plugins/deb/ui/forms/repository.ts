@@ -18,7 +18,9 @@ export const debRepositoryForm = repositoryForm(deb.repository["deb.deb"])(
     sections: [
       s.essentials([
         ...repositoryIdentity(f),
-        remoteField(f),
+        remoteField(f, {
+          pulpTypes: deb.repository["deb.deb"].compatibleRemoteTypes,
+        }),
         autopublishField(f),
       ]),
       s.collapsible("signing", "Signing", [

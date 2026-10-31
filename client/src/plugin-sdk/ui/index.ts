@@ -16,6 +16,7 @@ export type {
   IPluginBrowse,
   IRepositoryTab,
   IRepositoryTabProps,
+  IServedAt,
 } from "./contracts";
 export {
   definePluginUi,
@@ -37,4 +38,4 @@ export {
   remoteForm,
   repositoryForm,
 } from "./forms";
-export { lazyView, lazyViews } from "./lazyView";
+export { lazyViews } from "./lazyView";

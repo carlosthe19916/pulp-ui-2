@@ -183,17 +183,9 @@ const resource: ICodec = {
   clearAs: null,
 };
 
-const file: ICodec = {
-  empty: () => null,
-  fromApi: () => null,
-  toApi: (value) => value ?? undefined,
-  clearAs: null,
-};
-
 const custom: ICodec = {
-  empty: (field) => (field.kind === "custom" ? (field.emptyValue ?? "") : ""),
-  fromApi: (value, field) =>
-    value ?? (field.kind === "custom" ? (field.emptyValue ?? "") : ""),
+  empty: () => "",
+  fromApi: (value) => value ?? "",
   toApi: (value) => (value === "" || value == null ? undefined : value),
   clearAs: null,
 };
@@ -206,13 +198,11 @@ const CODECS: Record<FieldKind, ICodec> = {
   switch: boolean,
   select: choice,
   radio: choice,
-  tiles: choice,
   stringList,
   checkboxes,
   keyValue,
   secret,
   code: text,
-  file,
   resource,
   custom,
 };
@@ -242,19 +232,13 @@ export const fromApiValue = ({
 export const toApiValue = ({
   field,
   value,
-  values,
 }: {
   field: IFieldDef;
   value: unknown;
-  values: Record<string, unknown>;
-}): unknown =>
-  field.toBody
-    ? field.toBody(value, values)
-    : codecOf(field).toApi(value, field);
+}): unknown => codecOf(field).toApi(value, field);
 
 /** What an edit sends to clear a field the user emptied. */
-export const clearValue = (field: IFieldDef): unknown =>
-  field.clearAs !== undefined ? field.clearAs : codecOf(field).clearAs;
+export const clearValue = (field: IFieldDef): unknown => codecOf(field).clearAs;
 
 /** Whether a form value counts as set: opens its section on edit, feeds the summary. */
 export const isValueSet = ({
@@ -283,8 +267,5 @@ export const isAvailableIn = ({
   field: IFieldDef;
   mode: FormMode;
 }): boolean => {
-  const availability = field.availability ?? "both";
-  if (availability === "createOnly") return mode === "create";
-  if (availability === "editOnly") return mode === "edit";
-  return true;
+  return field.availability !== "createOnly" || mode === "create";
 };

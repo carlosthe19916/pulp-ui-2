@@ -2,8 +2,8 @@ import { definePluginUi, GENERIC } from "@plugin-sdk/ui";
 
 import { core } from "../definition";
 import { coreContentGuards } from "./contentGuards";
-import { openpgpDistributionForm } from "./forms/distribution";
-import { openpgpKeyringRepositoryForm } from "./forms/repository";
+import { coreDistributionForm } from "./forms/distribution";
+import { coreRepositoryForm } from "./forms/repository";
 
 export const coreUi = definePluginUi({
   definition: core,
@@ -11,13 +11,13 @@ export const coreUi = definePluginUi({
     label: "OpenPGP keyring",
     repository: {
       "core.openpgp": {
-        form: openpgpKeyringRepositoryForm,
+        form: coreRepositoryForm,
         browse: GENERIC,
         tab: null,
       },
     },
     distribution: {
-      "core.openpgp": { form: openpgpDistributionForm, clientSetup: GENERIC },
+      "core.openpgp": { form: coreDistributionForm, clientSetup: GENERIC },
     },
     content: {
       "core.openpgp_publickey": { panel: GENERIC, search: null, upload: [] },

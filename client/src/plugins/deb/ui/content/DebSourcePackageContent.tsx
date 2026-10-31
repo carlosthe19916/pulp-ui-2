@@ -7,13 +7,13 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 const commaList = (value?: string) =>
   (value ?? "")

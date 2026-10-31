@@ -20,15 +20,17 @@ import ServerIcon from "@patternfly/react-icons/dist/esm/icons/server-icon";
 import TachometerAltIcon from "@patternfly/react-icons/dist/esm/icons/tachometer-alt-icon";
 import UserShieldIcon from "@patternfly/react-icons/dist/esm/icons/user-shield-icon";
 
+import { SECTION_IDS } from "@app/forms/fragments";
+
 // Icons for the shared form sections, by section id; plugin sections get the default.
 const SECTION_ICONS: Record<string, React.ComponentType> = {
-  essentials: CogIcon,
-  auth: KeyIcon,
-  tls: LockIcon,
-  proxy: NetworkIcon,
-  downloads: TachometerAltIcon,
-  timeouts: OutlinedClockIcon,
-  access: UserShieldIcon,
+  [SECTION_IDS.essentials]: CogIcon,
+  [SECTION_IDS.auth]: KeyIcon,
+  [SECTION_IDS.tls]: LockIcon,
+  [SECTION_IDS.proxy]: NetworkIcon,
+  [SECTION_IDS.downloads]: TachometerAltIcon,
+  [SECTION_IDS.timeouts]: OutlinedClockIcon,
+  [SECTION_IDS.access]: UserShieldIcon,
   serving: ServerIcon,
   metadata: InfoCircleIcon,
 };

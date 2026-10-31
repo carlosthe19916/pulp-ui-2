@@ -41,7 +41,9 @@ takes one destructured object, so each argument names itself at the call site:
 - Stay positional for a single obvious arg (`extractTaskId(href)`), comparators
   (`(a, b)`), signatures a library dictates (React handlers, TanStack Query callbacks,
   array callbacks), query key factories (`widgetKeys.detail(href)`), `use*Mutation` call
-  signatures and `build*Href` href builders.
+  signatures, `build*Href` href builders and the form-definition DSL (`f.text("name", {…})`,
+  `s.collapsible(id, title, fields)`, fragment helpers such as `signingServiceField(f, key, {…})`),
+  which reads like the form it declares.
 
 ## Types
 

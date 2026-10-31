@@ -1,12 +1,9 @@
 import type React from "react";
 
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@app/components/BrowseShell";
+import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
 /** `ostree refs` style: branches and the commit each points at; history opens in the drawer. */
 export const OstreeBranches: React.FC<IBrowseContext> = ({

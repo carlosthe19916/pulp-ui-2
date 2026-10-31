@@ -4,6 +4,7 @@ import {
   type ContentUploadMechanism,
   ENTITY_TYPES,
   type EntityType,
+  type IAcsDef,
   type IActionDef,
   type IPluginDefinition,
   type IsInstalled,
@@ -13,8 +14,8 @@ import {
 /** One entity's endpoint for a pulp_type. */
 export interface IPulpTypeEntity {
   apiPath: string;
-  /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
-  rolesManaged?: boolean;
+  /** Exposes per-object role endpoints (`my_permissions/` etc.). */
+  rolesManaged: boolean;
 }
 
 export interface IRepositoryAction extends IActionDef {
@@ -26,6 +27,7 @@ export interface IPulpTypeRepository extends IPulpTypeEntity {
   compatiblePublicationTypes: PulpType[];
   contentChanges: "modify" | "addRemove" | null;
   archiveImport: boolean;
+  /** Its versions can be scanned: it declares a version `scan/` action. */
   scan: boolean;
   actions: IRepositoryAction[];
   /** Its plugin's content types. */
@@ -33,6 +35,12 @@ export interface IPulpTypeRepository extends IPulpTypeEntity {
 }
 
 /** A content type: its list endpoint (absent for endpoint-less types) and upload mechanism. */
+export interface IContentType {
+  pulpType: PulpType;
+  apiPath?: string;
+  upload?: ContentUploadMechanism;
+}
+
 /** A content guard type: its collection, role endpoints and download roles. */
 export interface IContentGuardType {
   pulpType: PulpType;
@@ -42,10 +50,9 @@ export interface IContentGuardType {
   downloaderRole: boolean;
 }
 
-export interface IContentType {
-  pulpType: PulpType;
-  apiPath?: string;
-  uploadable?: { mechanism: ContentUploadMechanism };
+/** A plugin's alternate content source endpoint, with the plugin it belongs to. */
+export interface IAcsFact extends IAcsDef {
+  pluginId: string;
 }
 
 /** What each entity offers for one pulp_type (a pulp_type can name several entities). */
@@ -76,12 +83,16 @@ const contentTypesOf = (definition: IPluginDefinition): IContentType[] =>
   Object.entries(definition.content ?? {}).map(([pulpType, content]) => ({
     pulpType,
     apiPath: content.apiPath,
-    uploadable: content.upload ? { mechanism: content.upload } : undefined,
+    upload: content.upload,
   }));
+
+const isScan = (action: IActionDef) =>
+  action.target === "version" && action.path === "scan/";
 
 /**
  * The read API over a set of plugin definitions: lookups by pulp_type and apiPath. Throws on a
- * pulp_type declared twice for one entity, or a content type or content apiPath declared twice.
+ * pulp_type or `(entity, apiPath)` declared twice, a pulp_type two plugins claim, or a content or
+ * content guard type (or content apiPath) declared twice.
  */
 export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
   const byType = new Map<PulpType, IPulpType>();
@@ -92,6 +103,7 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
   const contentByApiPath = new Map<string, PulpType>();
   const contentByPlugin = new Map<string, IContentType[]>();
   const guardsByType = new Map<PulpType, IContentGuardType>();
+  const acsFacts: IAcsFact[] = [];
   const isInstalledById = new Map<string, IsInstalled>();
 
   for (const definition of definitions) {
@@ -101,39 +113,42 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
     contentByPlugin.set(definition.id, contentTypes);
 
     const entry = (entity: EntityType, pulpType: PulpType, apiPath: string) => {
-      const plugin = byType.get(pulpType) ?? {
+      const typeInfo = byType.get(pulpType) ?? {
         pulpType,
         pluginId: definition.id,
         isAvailable,
         entities: {},
       };
       // Install checks and UI lookups are per pulp_type, so one plugin owns each.
-      if (plugin.pluginId !== definition.id) {
+      if (typeInfo.pluginId !== definition.id) {
         throw new Error(
-          `"${pulpType}" is declared by both "${plugin.pluginId}" and "${definition.id}".`,
+          `"${pulpType}" is declared by both "${typeInfo.pluginId}" and "${definition.id}".`,
         );
       }
-      if (plugin.entities[entity]) {
+      if (typeInfo.entities[entity]) {
         throw new Error(`Duplicate ${entity} type "${pulpType}".`);
       }
-      byType.set(pulpType, plugin);
+      if (apiPathIndex[entity].has(apiPath)) {
+        throw new Error(`Duplicate ${entity} apiPath "${apiPath}".`);
+      }
+      byType.set(pulpType, typeInfo);
       apiPathIndex[entity].set(apiPath, pulpType);
-      return plugin;
+      return typeInfo;
     };
 
     for (const [pulpType, def] of Object.entries(definition.repository ?? {})) {
+      const actions = Object.entries(def.actions ?? {}).map(
+        ([key, action]) => ({ key, ...action }),
+      );
       entry("repository", pulpType, def.apiPath).entities.repository = {
         apiPath: def.apiPath,
-        rolesManaged: def.rolesManaged,
+        rolesManaged: def.rolesManaged ?? true,
         compatibleRemoteTypes: [...def.compatibleRemoteTypes],
         compatiblePublicationTypes: [...def.compatiblePublicationTypes],
         contentChanges: def.contentChanges,
         archiveImport: def.archiveImport ?? false,
-        scan: def.scan ?? false,
-        actions: Object.entries(def.actions ?? {}).map(([key, action]) => ({
-          key,
-          ...action,
-        })),
+        scan: actions.some(isScan),
+        actions,
         contentTypes: contentTypes.map((content) => content.pulpType),
       };
     }
@@ -141,7 +156,7 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
       for (const [pulpType, def] of Object.entries(definition[entity] ?? {})) {
         entry(entity, pulpType, def.apiPath).entities[entity] = {
           apiPath: def.apiPath,
-          rolesManaged: def.rolesManaged,
+          rolesManaged: def.rolesManaged ?? true,
         };
       }
     }
@@ -158,9 +173,7 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
         contentByApiPath.set(content.apiPath, content.pulpType);
       }
     }
-  }
 
-  for (const definition of definitions) {
     for (const [pulpType, guard] of Object.entries(
       definition.contentGuard ?? {},
     )) {
@@ -175,9 +188,13 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
         downloaderRole: guard.downloaderRole ?? false,
       });
     }
+
+    if (definition.acs) {
+      acsFacts.push({ pluginId: definition.id, ...definition.acs });
+    }
   }
 
-  const plugins = [...byType.values()];
+  const pulpTypes = [...byType.values()];
   const isPluginInstalled = ({
     pluginId,
     installed,
@@ -199,10 +216,12 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
       entity: EntityType;
       installed: VersionResponse[];
     }): IPulpType[] =>
-      plugins.filter(
-        (plugin) => plugin.entities[entity] && plugin.isAvailable(installed),
+      pulpTypes.filter(
+        (typeInfo) =>
+          typeInfo.entities[entity] && typeInfo.isAvailable(installed),
       ),
 
+    /** Whether any of a plugin's packages is installed. */
     isPluginInstalled,
 
     /** The content type for a content pulp_type, or `undefined` if not modelled. */
@@ -227,49 +246,43 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
 
     /** Repository types that hold a content type and can change their content. */
     getRepositoryTypesForContent: (contentType: PulpType): PulpType[] =>
-      plugins
-        .filter((plugin) => {
-          const repository = plugin.entities.repository;
+      pulpTypes
+        .filter((typeInfo) => {
+          const repository = typeInfo.entities.repository;
           return (
             !!repository?.contentChanges &&
             repository.contentTypes.includes(contentType)
           );
         })
-        .map((plugin) => plugin.pulpType),
+        .map((typeInfo) => typeInfo.pulpType),
 
     /** Repository types that publish to a publication type. */
     getRepositoryTypesForPublication: (publicationType: PulpType): PulpType[] =>
-      plugins
-        .filter((plugin) =>
-          plugin.entities.repository?.compatiblePublicationTypes.includes(
+      pulpTypes
+        .filter((typeInfo) =>
+          typeInfo.entities.repository?.compatiblePublicationTypes.includes(
             publicationType,
           ),
         )
-        .map((plugin) => plugin.pulpType),
+        .map((typeInfo) => typeInfo.pulpType),
 
-    /** Repository types whose versions can be scanned for vulnerabilities. */
-    getScannableRepositoryTypes: (): PulpType[] =>
-      plugins
-        .filter((plugin) => plugin.entities.repository?.scan)
-        .map((plugin) => plugin.pulpType),
+    /** Repository types whose versions can be scanned (optionally only installed plugins'). */
+    getScannableRepositoryTypes: ({
+      installed,
+    }: { installed?: VersionResponse[] } = {}): PulpType[] =>
+      pulpTypes
+        .filter(
+          (typeInfo) =>
+            !!typeInfo.entities.repository?.scan &&
+            (!installed || typeInfo.isAvailable(installed)),
+        )
+        .map((typeInfo) => typeInfo.pulpType),
 
-    /** Each plugin's alternate content source, with the plugin it belongs to. */
-    /** Every content guard type, in declaration order. */
-    getContentGuardTypes: (): IContentGuardType[] => [...guardsByType.values()],
+    /** Every content guard type's facts; `@plugins.getContentGuardTypes` adds their UI. */
+    getContentGuardFacts: (): IContentGuardType[] => [...guardsByType.values()],
 
-    /** The content guard type of a guard's href (`…/contentguards/<app>/<slug>/<id>/`). */
-    resolveContentGuardType: (href: string): IContentGuardType | undefined => {
-      const match = /\/contentguards\/([^/]+)\/([^/]+)\//.exec(href);
-      const apiPath = match ? `${match[1]}/${match[2]}` : undefined;
-      return [...guardsByType.values()].find(
-        (guard) => guard.apiPath === apiPath,
-      );
-    },
-
-    getAcsSources: () =>
-      definitions.flatMap((definition) =>
-        definition.acs ? [{ pluginId: definition.id, ...definition.acs }] : [],
-      ),
+    /** Every plugin's ACS endpoint; `@plugins.getAcsTypes` adds its name. */
+    getAcsFacts: (): IAcsFact[] => acsFacts,
 
     /** Resolve a pulp_type from an entity and its href's `<app>/<slug>` segment. */
     resolvePulpTypeByApiPath: ({
@@ -286,5 +299,13 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
     }: {
       apiPath: string;
     }): PulpType | undefined => contentByApiPath.get(apiPath),
+
+    /** Resolve a content guard type from its collection apiPath. */
+    resolveContentGuardTypeByApiPath: ({
+      apiPath,
+    }: {
+      apiPath: string;
+    }): IContentGuardType | undefined =>
+      [...guardsByType.values()].find((guard) => guard.apiPath === apiPath),
   };
 };

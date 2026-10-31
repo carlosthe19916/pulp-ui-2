@@ -4,15 +4,12 @@ import prettyBytes from "pretty-bytes";
 
 import { Label } from "@patternfly/react-core";
 
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@app/components/BrowseShell";
+import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { nevra } from "@app/utils/pluginContentFormat";
 import { formatDateTime } from "@app/utils/utils";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { severityColor } from "./helpers";
 

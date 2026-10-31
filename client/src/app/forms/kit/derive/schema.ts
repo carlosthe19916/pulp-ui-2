@@ -2,7 +2,7 @@ import * as yup from "yup";
 
 import type { IFieldDef, IFormContext, IFormDef } from "../types";
 import type { IKeyValueRow, ISecretValue } from "./codecs";
-import { isReadOnly, visibleFields } from "./visibility";
+import { visibleFields } from "./visibility";
 
 const PEM_BLOCK =
   /^-----BEGIN [A-Z0-9 ]+-----[\s\S]+-----END [A-Z0-9 ]+-----\s*$/;
@@ -127,10 +127,6 @@ const baseSchema = ({
       return required
         ? yup.string().nullable().required(requiredMessage)
         : yup.string().nullable();
-    case "file":
-      return required
-        ? yup.mixed().nullable().required(requiredMessage)
-        : yup.mixed().nullable();
     case "custom":
       return required ? yup.mixed().required(requiredMessage) : yup.mixed();
     case "code": {
@@ -146,7 +142,6 @@ const baseSchema = ({
     }
     case "select":
     case "radio":
-    case "tiles":
       // Options may be booleans or numbers, not only strings.
       return yup
         .mixed()
@@ -168,7 +163,7 @@ const baseSchema = ({
   }
 };
 
-/** The schema of a form's visible, editable fields; hidden fields aren't validated. */
+/** The schema of a form's visible fields; hidden fields aren't validated. */
 export const buildFormSchema = ({
   form,
   ctx,
@@ -178,7 +173,6 @@ export const buildFormSchema = ({
 }): yup.AnyObjectSchema => {
   const shape: Record<string, yup.AnySchema> = {};
   for (const field of visibleFields({ form, ctx })) {
-    if (isReadOnly({ field, ctx })) continue;
     const schema = baseSchema({ field, required: isRequired({ field, ctx }) });
     shape[field.key] = field.validate ? field.validate(schema) : schema;
   }

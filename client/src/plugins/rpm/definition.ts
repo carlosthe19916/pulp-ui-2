@@ -14,7 +14,6 @@ export const rpm = definePlugin({
       compatibleRemoteTypes: ["rpm.rpm", "rpm.uln"],
       compatiblePublicationTypes: ["rpm.rpm"],
       contentChanges: "modify",
-      scan: true,
       actions: {
         copy: { path: "/rpm/copy/", target: "repository" },
         comps: {

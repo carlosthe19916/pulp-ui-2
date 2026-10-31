@@ -17,7 +17,6 @@ interface IKeyValueFieldProps {
   id: string;
   label: string;
   value: IKeyValueRow[];
-  isDisabled: boolean;
   onChange: (value: IKeyValueRow[]) => void;
 }
 
@@ -26,7 +25,6 @@ export const KeyValueField: React.FC<IKeyValueFieldProps> = ({
   id,
   label,
   value,
-  isDisabled,
   onChange,
 }) => {
   const update = ({ index, row }: { index: number; row: IKeyValueRow }) =>
@@ -43,7 +41,6 @@ export const KeyValueField: React.FC<IKeyValueFieldProps> = ({
                 aria-label={`${label} name ${index + 1}`}
                 placeholder="Name"
                 value={row.key}
-                isDisabled={isDisabled}
                 onChange={(_event, key) =>
                   update({ index, row: { ...row, key } })
                 }
@@ -54,7 +51,6 @@ export const KeyValueField: React.FC<IKeyValueFieldProps> = ({
                 aria-label={`${label} value ${index + 1}`}
                 placeholder="Value"
                 value={row.value}
-                isDisabled={isDisabled}
                 onChange={(_event, next) =>
                   update({ index, row: { ...row, value: next } })
                 }
@@ -65,7 +61,6 @@ export const KeyValueField: React.FC<IKeyValueFieldProps> = ({
                 variant="plain"
                 aria-label={`Remove ${label.toLowerCase()} ${index + 1}`}
                 icon={<MinusCircleIcon />}
-                isDisabled={isDisabled}
                 onClick={() => onChange(value.filter((_row, i) => i !== index))}
               />
             </SplitItem>
@@ -77,7 +72,6 @@ export const KeyValueField: React.FC<IKeyValueFieldProps> = ({
           variant="link"
           isInline
           icon={<PlusCircleIcon />}
-          isDisabled={isDisabled}
           onClick={() => onChange([...value, newKeyValueRow()])}
         >
           Add {label.toLowerCase()}

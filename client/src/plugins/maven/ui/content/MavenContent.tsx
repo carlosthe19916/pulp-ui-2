@@ -6,10 +6,10 @@ import {
   ContentPanelLayout,
   FactList,
   facts,
-  type IContentPanelProps,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 import { MavenInstall } from "./MavenInstall";
 

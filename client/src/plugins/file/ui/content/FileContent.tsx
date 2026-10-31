@@ -6,10 +6,10 @@ import {
   ContentHeader,
   ContentPanelLayout,
   dirname,
-  type IContentPanelProps,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** A plain file: its name, where it lives, and how big it is. */
 export const FileContent: React.FC<IContentPanelProps> = ({ href }) => {

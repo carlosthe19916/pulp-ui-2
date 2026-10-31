@@ -2,21 +2,14 @@ import type React from "react";
 
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  PageSection,
-} from "@patternfly/react-core";
-
-import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityFormPage } from "@app/forms";
+import { EntityCreatePage } from "@app/components/EntityCreatePage";
+import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRemoteCreateMutation } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { useCreateTypeSelect } from "@plugins";
 
 const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/remotes/create",
@@ -30,14 +23,7 @@ export const RemoteCreate: React.FC = () => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
-  const {
-    pulpType,
-    entry,
-    apiPath,
-    resourceFilter,
-    typeSelect,
-    initialValues,
-  } = useCreateTypeSelect({
+  const selection = useCreateTypeSelect({
     entity: "remote",
     type,
     onTypeChange: (next) => {
@@ -58,60 +44,46 @@ export const RemoteCreate: React.FC = () => {
       ),
   });
 
-  if (!pulpType || !entry || !apiPath) {
-    return (
-      <PageSection>
-        <TableEmptyState title="No remote type can be created" />
-      </PageSection>
-    );
-  }
+  const toList = () =>
+    void navigate({
+      to: "/content-management/$pulpDomain/remotes",
+      params: { pulpDomain },
+    });
 
   return (
-    <EntityFormPage
-      key={pulpType}
-      form={entry.form}
-      mode="create"
-      initialValues={initialValues}
-      breadcrumbs={
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/remotes"
-              params={{ pulpDomain }}
-            >
-              Remotes
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Create</BreadcrumbItem>
-        </Breadcrumb>
+    <EntityCreatePage
+      entityType="remote"
+      selection={selection}
+      listLink={
+        <Link
+          to="/content-management/$pulpDomain/remotes"
+          params={{ pulpDomain }}
+        >
+          Remotes
+        </Link>
       }
-      typeSelect={typeSelect}
-      resourceFilter={resourceFilter}
       submitError={submitError}
       isSubmitting={createMutation.isPending}
-      onSubmit={(body, { saved }) => {
+      onSubmit={(body, { apiPath, saved }) => {
         clearSubmitError();
         createMutation.mutate(
           { apiPath, body },
           { onSuccess: (data) => saved(data.pulp_href) },
         );
       }}
-      onSaved={(href) =>
-        void navigate({
-          to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId",
-          params: {
-            pulpDomain,
-            remoteType: pulpType,
-            remoteId: extractIdFromHref(href ?? ""),
-          },
-        })
+      onSaved={({ pulpType, href }) =>
+        href
+          ? void navigate({
+              to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId",
+              params: {
+                pulpDomain,
+                remoteType: pulpType,
+                remoteId: extractIdFromHref(href),
+              },
+            })
+          : toList()
       }
-      onCancel={() =>
-        void navigate({
-          to: "/content-management/$pulpDomain/remotes",
-          params: { pulpDomain },
-        })
-      }
+      onCancel={toList}
     />
   );
 };

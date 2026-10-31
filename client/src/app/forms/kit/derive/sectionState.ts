@@ -32,7 +32,6 @@ export const initialExpandedSections = ({
       .filter(
         (section) =>
           section.variant === "essentials" ||
-          (section.defaultExpanded?.(ctx) ?? false) ||
           (ctx.mode === "edit" && setFields({ section, ctx }).length > 0),
       )
       .map((section) => section.id),

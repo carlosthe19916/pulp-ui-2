@@ -1,4 +1,4 @@
-import { advancedCopyAction } from "@app/forms/fragments";
+import { advancedCopyAction } from "@app/utils/entityFieldPresets";
 import type { IActionUi } from "@plugin-sdk/ui";
 
 /** The APT repository's actions. */

@@ -14,7 +14,12 @@ export const gemRepositoryForm = repositoryForm(gem.repository["gem.gem"])(
     title: { create: "Create gem repository", edit: "Edit gem repository" },
     docsUrl: "https://pulpproject.org/pulp_gem/",
     sections: [
-      s.essentials([...repositoryIdentity(f), remoteField(f)]),
+      s.essentials([
+        ...repositoryIdentity(f),
+        remoteField(f, {
+          pulpTypes: gem.repository["gem.gem"].compatibleRemoteTypes,
+        }),
+      ]),
       retentionSection({ f, s }),
       labelsSection({ f, s }),
     ],

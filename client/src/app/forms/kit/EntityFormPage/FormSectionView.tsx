@@ -11,8 +11,6 @@ import {
   Stack,
 } from "@patternfly/react-core";
 
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
-
 import { sectionSummary } from "../derive/sectionState";
 import { isFieldVisible } from "../derive/visibility";
 import { FieldRenderer } from "../fields/FieldRenderer";
@@ -23,7 +21,6 @@ interface IFormSectionViewProps {
   ctx: IFormContext;
   anchorId: string;
   idPrefix: string;
-  resourceFilter: ResourceFilterMap;
   isExpanded: boolean;
   onToggle: (isExpanded: boolean) => void;
 }
@@ -34,7 +31,6 @@ export const FormSectionView: React.FC<IFormSectionViewProps> = ({
   ctx,
   anchorId,
   idPrefix,
-  resourceFilter,
   isExpanded,
   onToggle,
 }) => {
@@ -45,7 +41,6 @@ export const FormSectionView: React.FC<IFormSectionViewProps> = ({
         field={field}
         ctx={ctx}
         idPrefix={idPrefix}
-        resourceFilter={resourceFilter}
       />
     ) : null;
 

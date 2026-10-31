@@ -2,6 +2,7 @@ import {
   authSection,
   connectionSections,
   nameField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -34,7 +35,7 @@ export const containerPullThroughRemoteForm = remoteForm(
         }),
       ]),
     ]),
-    s.collapsible("auth", "Authentication", authSection(f)),
+    s.collapsible(SECTION_IDS.auth, "Authentication", authSection(f)),
     ...connectionSections({ f, s }),
   ],
   // Pull-through caching is always "on_demand", the server default.

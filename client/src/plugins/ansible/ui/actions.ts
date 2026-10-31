@@ -1,4 +1,5 @@
 import type { IEntityField } from "@app/utils/entityField";
+import { advancedCopyAction } from "@app/utils/entityFieldPresets";
 import type { IActionUi } from "@plugin-sdk/ui";
 
 const collectionVersions = ({
@@ -74,19 +75,8 @@ export const ansibleActions = {
       { key: "version", label: "Version", type: "text" },
     ],
   },
-  copy: {
-    label: "Advanced copy",
+  copy: advancedCopyAction({
     description:
       "Copies content between repositories as described by a config.",
-    fields: [
-      {
-        key: "config",
-        label: "Config",
-        type: "json",
-        required: true,
-        helpText:
-          'A list of {"source_repo_version", "dest_repo", "content"} entries.',
-      },
-    ],
-  },
+  }),
 } satisfies Record<string, IActionUi>;

@@ -15,7 +15,12 @@ export const mavenRepositoryForm = repositoryForm(
   title: { create: "Create Maven repository", edit: "Edit Maven repository" },
   docsUrl: "https://pulpproject.org/pulp_maven/",
   sections: [
-    s.essentials([...repositoryIdentity(f), remoteField(f)]),
+    s.essentials([
+      ...repositoryIdentity(f),
+      remoteField(f, {
+        pulpTypes: maven.repository["maven.maven"].compatibleRemoteTypes,
+      }),
+    ]),
     retentionSection({ f, s }),
     labelsSection({ f, s }),
   ],

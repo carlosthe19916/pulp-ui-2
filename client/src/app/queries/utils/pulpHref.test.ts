@@ -78,8 +78,16 @@ describe("pulpHref helpers", () => {
     expect(hasRoleEndpoints("/repositories/core/openpgp_keyring/x/")).toBe(
       true,
     );
+    // Content guards: pulpcore's are role-managed, certguard's aren't.
+    expect(hasRoleEndpoints("/pulp/api/v3/contentguards/core/rbac/1/")).toBe(
+      true,
+    );
+    expect(
+      hasRoleEndpoints("/pulp/api/v3/contentguards/certguard/x509/1/"),
+    ).toBe(false);
     // Aggregate/unmodelled/falsy hrefs.
     expect(hasRoleEndpoints("/distributions/bogus/bogus/x/")).toBe(false);
+    expect(hasRoleEndpoints("/pulp/api/v3/contentguards/x/y/1/")).toBe(false);
     expect(hasRoleEndpoints(undefined)).toBe(false);
   });
 

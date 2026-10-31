@@ -2,14 +2,14 @@ import type React from "react";
 
 import {
   BrowseTable,
-  type IBrowseContext,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
-import { gemInstall } from "./helpers";
+import { gemInstall } from "../helpers";
 
 /** rubygems.org style: each gem with its versions and platforms, newest first. */
 export const GemGems: React.FC<IBrowseContext> = ({

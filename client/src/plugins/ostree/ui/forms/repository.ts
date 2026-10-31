@@ -17,7 +17,9 @@ export const ostreeRepositoryForm = repositoryForm(
   sections: [
     s.essentials([
       ...repositoryIdentity(f),
-      remoteField(f),
+      remoteField(f, {
+        pulpTypes: ostree.repository["ostree.ostree"].compatibleRemoteTypes,
+      }),
       f.switch("compute_delta", {
         label: "Compute static deltas",
         defaultValue: true,

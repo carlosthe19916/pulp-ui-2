@@ -6,6 +6,7 @@
 import {
   createCatalog,
   type IPluginDefinition,
+  type TypeSection,
   type TypesOf,
 } from "@plugin-sdk/definition";
 
@@ -44,13 +45,7 @@ type Definition = (typeof PLUGIN_DEFINITIONS)[number];
 
 /** A plugin's id, e.g. "rpm". */
 export type PluginId = Definition["id"];
-/** The definition of the plugin with id `I`. */
-export type DefinitionOf<I extends PluginId> = Extract<Definition, { id: I }>;
-
-type AllTypesOf<
-  S extends
-    "remote" | "repository" | "distribution" | "publication" | "content",
-> = Definition extends infer D
+type AllTypesOf<S extends TypeSection> = Definition extends infer D
   ? D extends IPluginDefinition
     ? TypesOf<D, S>
     : never
@@ -76,9 +71,9 @@ export type ContentTypeApiPaths = {
 };
 
 export const {
-  getAcsSources,
+  getAcsFacts,
   getAvailableTypes,
-  getContentGuardTypes,
+  getContentGuardFacts,
   getContentType,
   getContentTypes,
   getPulpType,
@@ -87,7 +82,7 @@ export const {
   getRepositoryTypesForPublication,
   getScannableRepositoryTypes,
   isPluginInstalled,
-  resolveContentGuardType,
+  resolveContentGuardTypeByApiPath,
   resolveContentTypeByApiPath,
   resolvePulpTypeByApiPath,
 } = createCatalog(PLUGIN_DEFINITIONS);
@@ -96,6 +91,7 @@ export {
   type ContentUploadMechanism,
   ENTITY_TYPES,
   type EntityType,
+  type IAcsFact,
   type IContentGuardType,
   type IContentType,
   type IPulpType,

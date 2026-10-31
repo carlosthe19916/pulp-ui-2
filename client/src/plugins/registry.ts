@@ -1,18 +1,21 @@
 import type React from "react";
 
-import { BaseContent } from "@app/components/ContentPanelLayout";
+import type { VersionResponse } from "@app/client";
 import type { FormMode, IFormDef } from "@app/forms";
 import type { IEntityField } from "@app/utils/entityField";
 import {
   ENTITY_TYPES,
   type EntityType,
-  getContentGuardTypes as getContentGuardFacts,
+  getAcsFacts,
+  getContentGuardFacts,
   getPulpType,
+  type IAcsFact,
+  type IContentGuardType,
+  isPluginInstalled,
   PLUGIN_DEFINITIONS,
   type PluginId,
   type PulpType,
 } from "@catalog";
-import type { IAcsDef, IContentGuardType } from "@plugin-sdk/definition";
 import {
   type ClientSetup,
   GENERIC,
@@ -43,10 +46,10 @@ import { pythonUi } from "./python/ui";
 import { rpmUi } from "./rpm/ui";
 
 /**
- * Every plugin's UI, by plugin id: a plugin defined in `@catalog` without one fails to compile.
- * Each UI was checked against its definition by `definePluginUi`.
+ * Every plugin's UI, keyed by its own id: a plugin defined in `@catalog` without one, or a UI
+ * registered under another plugin's id, fails to compile. `definePluginUi` checked each one.
  */
-export const PLUGIN_UI: Record<PluginId, IPluginModule> = {
+const PLUGIN_UI: { [I in PluginId]: IPluginModule<I> } = {
   file: fileUi,
   rpm: rpmUi,
   python: pythonUi,
@@ -70,13 +73,22 @@ export interface IFormEntry {
 }
 
 /** A plugin's alternate content source: its endpoint and remote type, with its name. */
-export interface IAcsType extends IAcsDef {
+export interface IAcsType extends IAcsFact {
   pluginId: PluginId;
   label: string;
 }
 
+/** A content guard type: its facts with its name, description and form fields. */
+export interface IGuardType extends IContentGuardType, IContentGuardTypeUi {}
+
+/** A plugin's own page, with the plugin that must be installed. */
+export interface IPluginPage {
+  pluginId: PluginId;
+  page: INavPage;
+}
+
 const BOTH: readonly FormMode[] = ["create", "edit"];
-// Publications are immutable: create only.
+// A publication can't be changed once made: create only.
 const DEFAULT_MODES: Record<EntityType, readonly FormMode[]> = {
   remote: BOTH,
   repository: BOTH,
@@ -94,19 +106,18 @@ const clientSetups = new Map<PulpType, ClientSetup>();
 const panels = new Map<PulpType, React.ComponentType<IContentPanelProps>>();
 const searches = new Map<PulpType, IContentSearch>();
 const uploads = new Map<PulpType, IEntityField[]>();
-const pages: { pluginId: PluginId; page: INavPage }[] = [];
+const pages: IPluginPage[] = [];
 const pageComponents = new Map<INavPage["to"], React.ComponentType>();
 const createAlternatives = new Map<
   PulpType,
   (ICreateFromUi & { key: string })[]
 >();
 const archiveImports = new Map<PulpType, IArchiveImportUi>();
-const acsTypes: IAcsType[] = [];
 const guardUis = new Map<PulpType, IContentGuardTypeUi>();
 
 // Walk the plugins in declaration order, so lists (nav pages, ACS types) follow it.
 for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
-  const { definition, ui } = PLUGIN_UI[pluginId];
+  const { ui } = PLUGIN_UI[pluginId];
 
   for (const entity of ENTITY_TYPES) {
     for (const [pulpType, typeUi] of Object.entries(ui[entity] ?? {})) {
@@ -168,14 +179,27 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
     pages.push({ pluginId, page });
     pageComponents.set(page.to, page.Page);
   }
-  if (definition.acs) {
-    acsTypes.push({
-      ...definition.acs,
-      pluginId,
-      label: ui.acs?.label ?? ui.label,
-    });
-  }
 }
+
+// Join the catalog's facts with each one's UI (required by `definePluginUi`), once.
+const acsTypes: IAcsType[] = getAcsFacts().map((fact) => {
+  const pluginId = fact.pluginId as PluginId;
+  const { ui } = PLUGIN_UI[pluginId];
+  return { ...fact, pluginId, label: ui.acs?.label ?? ui.label };
+});
+const guardTypes: IGuardType[] = getContentGuardFacts().flatMap((guard) => {
+  const guardUi = guardUis.get(guard.pulpType);
+  return guardUi ? [{ ...guard, ...guardUi }] : [];
+});
+
+/** Keep only entries whose plugin is installed, when `installed` is given. */
+const onlyInstalled = <T extends { pluginId: string }>(
+  entries: readonly T[],
+  installed: VersionResponse[] | undefined,
+): T[] =>
+  entries.filter(
+    ({ pluginId }) => !installed || isPluginInstalled({ pluginId, installed }),
+  );
 
 /** A type's form for `mode`, or `undefined` when it can't be created/edited in that mode. */
 export const getEntityForm = ({
@@ -191,11 +215,11 @@ export const getEntityForm = ({
   return entry?.modes.includes(mode) ? entry : undefined;
 };
 
-/** The content detail panel of a content type (the generic panel when it has none). */
+/** A content type's own detail panel, or `undefined` for the generic one. */
 export const getContentPanel = (
   contentType: PulpType,
-): React.ComponentType<IContentPanelProps> =>
-  panels.get(contentType) ?? BaseContent;
+): React.ComponentType<IContentPanelProps> | undefined =>
+  panels.get(contentType);
 
 /** A repository type's Browse sections, or `undefined` for the generic content list. */
 export const getRepositoryBrowse = (
@@ -226,29 +250,28 @@ export const getContentSearch = (
 export const getUploadFields = (contentType: PulpType): IEntityField[] =>
   uploads.get(contentType) ?? [];
 
-/** The plugins' own pages, each with the plugin that must be installed. */
-export const getPluginPages = (): readonly {
-  pluginId: PluginId;
-  page: INavPage;
-}[] => pages;
-
-/** Every plugin's alternate content source. */
-/** A content guard type: its facts with its name, description and form fields. */
-export interface IGuardType extends IContentGuardType, IContentGuardTypeUi {}
-
-/** Every content guard type, in declaration order (each one's UI is required). */
-export const getContentGuardTypes = (): IGuardType[] =>
-  getContentGuardFacts().flatMap((guard) => {
-    const guardUi = guardUis.get(guard.pulpType);
-    return guardUi ? [{ ...guard, ...guardUi }] : [];
-  });
-
-export const getAcsTypes = (): readonly IAcsType[] => acsTypes;
+/** The plugins' own pages (only installed plugins', when `installed` is given). */
+export const getPluginPages = ({
+  installed,
+}: { installed?: VersionResponse[] } = {}): IPluginPage[] =>
+  onlyInstalled(pages, installed);
 
 /** The component of a plugin's own page, by its route. */
 export const getPluginPage = (
   to: INavPage["to"],
 ): React.ComponentType | undefined => pageComponents.get(to);
+
+/** Every plugin's alternate content source (only installed plugins', when given). */
+export const getAcsTypes = ({
+  installed,
+}: { installed?: VersionResponse[] } = {}): IAcsType[] =>
+  onlyInstalled(acsTypes, installed);
+
+/** Every content guard type, in declaration order (only installed plugins', when given). */
+export const getContentGuardTypes = ({
+  installed,
+}: { installed?: VersionResponse[] } = {}): IGuardType[] =>
+  onlyInstalled(guardTypes, installed);
 
 /** A remote type's other ways to be created (e.g. from a Bandersnatch config). */
 export const getCreateAlternatives = (

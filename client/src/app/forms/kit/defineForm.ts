@@ -1,5 +1,6 @@
 import type {
   BodyKey,
+  ChoiceKind,
   FieldKind,
   ICheckboxesField,
   IChoiceField,
@@ -8,8 +9,8 @@ import type {
   ICustomField,
   IFieldDef,
   IFieldOptions,
-  IFileField,
   IFormDef,
+  IFormFor,
   IKeyValueField,
   IResourceField,
   IRowDef,
@@ -34,8 +35,6 @@ type ElementValue<T, K> = K extends keyof T
     ? E
     : never
   : string;
-
-type ChoiceKind = "select" | "radio" | "tiles";
 
 /** Field builders bound to a request body `T`: a key outside `T` fails to compile. */
 export interface IFieldBuilders<T> {
@@ -86,7 +85,6 @@ export interface IFieldBuilders<T> {
     key: K,
     opts: IFieldOptions & Omit<ICodeField<K>, "key" | "kind" | "label">,
   ) => ICodeField<K>;
-  file: <K extends Key<T>>(key: K, opts: IFieldOptions) => IFileField<K>;
   resource: <K extends Key<T>>(
     key: K,
     opts: IFieldOptions & Omit<IResourceField<K>, "key" | "kind" | "label">,
@@ -132,7 +130,6 @@ const fieldBuilders: IFieldBuilders<Record<string, unknown>> = {
   keyValue: (key, opts) => ({ ...opts, key, kind: "keyValue" }),
   secret: (key, opts) => ({ ...opts, key, kind: "secret" }),
   code: (key, opts) => ({ ...opts, key, kind: "code" }),
-  file: (key, opts) => ({ ...opts, key, kind: "file" }),
   resource: (key, opts) => ({ ...opts, key, kind: "resource" }),
   custom: (key, opts) => ({ ...opts, key, kind: "custom" }),
   row: (fields) => ({ row: fields }),
@@ -187,8 +184,6 @@ interface IKindValue {
   resource: string | readonly string[];
   select: unknown;
   radio: unknown;
-  tiles: unknown;
-  file: unknown;
   custom: unknown;
 }
 
@@ -216,11 +211,11 @@ export interface IWrongKindKeys<K> {
 
 type SectionFields<S> = S extends ISectionDef<infer F> ? F : never;
 
-type Checked<T, F extends IFieldDef, O extends string> = [
+type Checked<T, F extends IFieldDef, O extends string, Slot extends string> = [
   Exclude<BodyKey<T>, F["key"] | O>,
 ] extends [never]
   ? [WrongKind<T, F>] extends [never]
-    ? IFormDef
+    ? IFormFor<T, Slot>
     : IWrongKindKeys<WrongKind<T, F>>
   : IUncoveredApiKeys<Exclude<BodyKey<T>, F["key"] | O>>;
 
@@ -230,16 +225,16 @@ type Checked<T, F extends IFieldDef, O extends string> = [
  * the result isn't an `IFormDef`.
  */
 export const defineForm =
-  <T>() =>
+  <T, Slot extends string = string>() =>
   <S extends ISectionDef[], O extends BodyKey<T> = never>(
     build: (builders: {
       f: IFieldBuilders<T>;
       s: ISectionBuilders;
     }) => IFormSpec<S, O>,
-  ): Checked<T, SectionFields<S[number]>, O> => {
+  ): Checked<T, SectionFields<S[number]>, O, Slot> => {
     const { omit: _omit, ...spec } = build({
       f: fieldBuilders as unknown as IFieldBuilders<T>,
       s: sectionBuilders,
     });
-    return spec as unknown as Checked<T, SectionFields<S[number]>, O>;
+    return spec as unknown as Checked<T, SectionFields<S[number]>, O, Slot>;
   };

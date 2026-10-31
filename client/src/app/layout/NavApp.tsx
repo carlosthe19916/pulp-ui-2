@@ -19,13 +19,8 @@ import RhUiUsersIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-users-ic
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import {
-  getAcsSources,
-  getPulpType,
-  getScannableRepositoryTypes,
-  isPluginInstalled,
-} from "@catalog";
-import { getPluginPages } from "@plugins";
+import { getScannableRepositoryTypes } from "@catalog";
+import { getAcsTypes, getPluginPages } from "@plugins";
 
 interface INavGroupProps {
   title: string;
@@ -94,17 +89,10 @@ export const NavApp: React.FC<INavAppProps> = ({
   // (or default) domain into the nav links.
   const { name: pulpDomain } = useSelectedDomain();
   // Plugin-specific pages show only when the plugin is installed.
-  const { status } = useApiStatus();
-  const installed = status?.versions ?? [];
-  const pluginPages = getPluginPages().filter(({ pluginId }) =>
-    isPluginInstalled({ pluginId, installed }),
-  );
-  const hasAcs = getAcsSources().some(({ pluginId }) =>
-    isPluginInstalled({ pluginId, installed }),
-  );
-  const canScan = getScannableRepositoryTypes().some(
-    (type) => !!getPulpType(type)?.isAvailable(installed),
-  );
+  const { plugins: installed } = useApiStatus();
+  const pluginPages = getPluginPages({ installed });
+  const hasAcs = getAcsTypes({ installed }).length > 0;
+  const canScan = getScannableRepositoryTypes({ installed }).length > 0;
 
   // Each group owns one top-level URL segment ("" for the dashboard).
   const section = useLocation({

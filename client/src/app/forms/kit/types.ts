@@ -25,9 +25,8 @@ export type BodyKey<T> = Extract<keyof T, string>;
 /** A UI-only key, never sent (e.g. `$source`, a radio choosing which field applies). */
 export type VirtualKey = `$${string}`;
 
-/** When a field is offered: on both forms, only one, or shown read-only on edit. */
-export type FieldAvailability =
-  "both" | "createOnly" | "editOnly" | "readOnlyOnEdit";
+/** When a field is offered: on both forms, or only when creating (labels). */
+export type FieldAvailability = "both" | "createOnly";
 
 export interface IFieldWarning {
   when: FormPredicate;
@@ -44,16 +43,11 @@ export interface IFieldOptions {
   availability?: FieldAvailability;
   defaultValue?: unknown;
   visibleWhen?: FormPredicate;
-  disabledWhen?: FormPredicate;
   warnings?: IFieldWarning[];
   /** Extends the derived yup schema (extra format checks). */
   validate?: (schema: AnySchema) => AnySchema;
   /** The form value read from the edited object; overrides the kind's codec. */
   fromEntity?: (entity: Record<string, unknown>) => unknown;
-  /** The body value sent for a form value; overrides the kind's codec. */
-  toBody?: (value: unknown, values: FormValues) => unknown;
-  /** What an edit sends when the user empties the field; default from the kind. */
-  clearAs?: unknown;
 }
 
 export interface IChoiceOption<V = string> {
@@ -75,7 +69,8 @@ export interface ISimpleField<
   kind: Kd;
 }
 
-type ChoiceKind = "select" | "radio" | "tiles";
+/** How a single choice renders: a dropdown or radio buttons. */
+export type ChoiceKind = "select" | "radio";
 
 export interface IChoiceField<
   K extends string,
@@ -117,16 +112,12 @@ export interface ICodeField<K extends string> extends IFieldBase<K> {
   downloadName?: string;
 }
 
-export interface IFileField<K extends string> extends IFieldBase<K> {
-  kind: "file";
-}
-
 export interface IResourceField<K extends string> extends IFieldBase<K> {
   kind: "resource";
   resourceKind: ResourceKind;
   multiple?: boolean;
-  /** Compatible pulp_types offered; default from the plugin (`buildResourceFilter`). */
-  pulpTypes?: string[];
+  /** Compatible pulp_types offered; every type when unset. */
+  pulpTypes?: readonly string[];
 }
 
 export interface ICustomFieldProps {
@@ -134,15 +125,12 @@ export interface ICustomFieldProps {
   field: ICustomField<string>;
   value: unknown;
   onChange: (value: unknown) => void;
-  isDisabled: boolean;
   ctx: IFormContext;
 }
 
 export interface ICustomField<K extends string> extends IFieldBase<K> {
   kind: "custom";
   component: React.ComponentType<ICustomFieldProps>;
-  /** The empty form value (default `""`). */
-  emptyValue?: unknown;
 }
 
 export type IFieldDef<K extends string = string> =
@@ -153,7 +141,6 @@ export type IFieldDef<K extends string = string> =
   | IKeyValueField<K>
   | ISecretField<K>
   | ICodeField<K>
-  | IFileField<K>
   | IResourceField<K>
   | ICustomField<K>;
 
@@ -170,7 +157,6 @@ export interface ISectionOptions {
   description?: string;
   /** Shown beside a collapsed section's title (e.g. "TLS: verify off"). */
   summary?: (ctx: IFormContext) => string | undefined;
-  defaultExpanded?: FormPredicate;
   visibleWhen?: FormPredicate;
 }
 
@@ -184,15 +170,20 @@ export interface ISectionDef<
 }
 
 /** A resolved form definition, as the renderer and the derivations consume it. */
+/**
+ * A form built for request body `T` of collection `S` (e.g. `"remote:file/git"`). The phantom
+ * members are never set; they make the form fit only the slot it was built for (two
+ * collections can share a body shape, so the body alone isn't enough).
+ */
+export interface IFormFor<T, S extends string = string> extends IFormDef {
+  readonly __body?: (body: T) => T;
+  readonly __slot?: S;
+}
+
 export interface IFormDef {
   title: { create: string; edit: string };
   docsUrl?: string;
   sections: ISectionDef[];
   /** Cross-field checks; returns field key → message. */
   validate?: (ctx: IFormContext) => Record<string, string> | undefined;
-  /** Last step of building a body (e.g. clearing the sources a choice turned off). */
-  transformBody?: (
-    body: Record<string, unknown>,
-    ctx: IFormContext,
-  ) => Record<string, unknown>;
 }

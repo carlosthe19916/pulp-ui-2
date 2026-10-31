@@ -1,6 +1,7 @@
 import type { IFieldBuilders, ISectionBuilders } from "../kit/defineForm";
 import { descriptionField, nameField } from "./base";
 import { labelsField } from "./labels";
+import { SECTION_IDS } from "./sectionIds";
 
 /**
  * Repository settings shared by pulpcore's RepositorySerializer; each plugin places them around
@@ -15,12 +16,15 @@ export const repositoryIdentity = <
 ) => [nameField(f), descriptionField(f)];
 
 /** The remote syncs come from; the picker offers only the types this repository syncs. */
+/** The remote Sync fetches from, offering only the types the repository syncs from. */
 export const remoteField = <T extends { remote?: unknown }>(
   f: IFieldBuilders<T>,
+  { pulpTypes }: { pulpTypes: readonly string[] },
 ) =>
   f.resource("remote", {
     label: "Remote",
     resourceKind: "remote",
+    pulpTypes,
     help: "Where Sync fetches content from. You can set or change it later.",
   });
 
@@ -52,7 +56,7 @@ export const retentionSection = <T extends IRetentionKeys>({
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
 }) =>
-  s.collapsible("retention", "Retention", [
+  s.collapsible(SECTION_IDS.retention, "Retention", [
     f.row([
       f.number("retain_repo_versions", {
         label: "Retained versions",
@@ -71,4 +75,4 @@ export const labelsSection = <T extends { pulp_labels?: unknown }>({
 }: {
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
-}) => s.collapsible("labels", "Labels", [labelsField(f)]);
+}) => s.collapsible(SECTION_IDS.labels, "Labels", [labelsField(f)]);

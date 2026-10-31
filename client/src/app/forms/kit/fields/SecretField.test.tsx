@@ -19,7 +19,6 @@ const renderField = async ({
       label="Password"
       mode={mode}
       value={{ mode: secretMode, value: "", isSet }}
-      isDisabled={false}
       onChange={onChange}
     />,
   );

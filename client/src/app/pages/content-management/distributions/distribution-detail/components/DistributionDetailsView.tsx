@@ -1,7 +1,6 @@
 import type React from "react";
 
 import {
-  ClipboardCopy,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -14,7 +13,8 @@ import type { DistributionResponse } from "@app/client";
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { DetailSectionCard } from "@app/components/DetailSectionCard";
 import { EditablePulpLabels } from "@app/components/EditablePulpLabels";
-import { EntityDetailFields } from "@app/components/EntityDetailFields";
+import { EntityMetadataList } from "@app/components/EntityMetadataList";
+import { FormDetailSections } from "@app/components/FormDetailSections";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 import { toDetailSections } from "@app/forms";
@@ -23,7 +23,6 @@ import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useDistributionLabelsMutation } from "@app/queries/distributions";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import { toFieldRecord } from "@app/utils/formSchema";
-import { formatDateTime } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
 const COLUMNS = { default: "1Col", md: "2Col" } as const;
@@ -57,8 +56,6 @@ export const DistributionDetailsView: React.FC<
 > = ({ distribution, pulpType }) => {
   const href = distribution.pulp_href ?? "";
   const data = toFieldRecord(distribution);
-  const publication =
-    typeof data.publication === "string" ? data.publication : null;
   const { disabledProps } = useObjectPermissions({ href });
   const { addNotification } = useNotifications();
   const { mutateAsync, isPending } = useDistributionLabelsMutation({
@@ -70,7 +67,15 @@ export const DistributionDetailsView: React.FC<
     pulpType,
     mode: "edit",
   })?.form;
-  const settings = (form ? toDetailSections(form) : [])
+  const sections = form ? toDetailSections(form) : [];
+  // The Serving card offers only the sources this type's form has.
+  const sources = new Set(
+    sections
+      .flatMap((section) => section.fields)
+      .map((field) => field.key)
+      .filter((key) => SOURCE_KEYS.includes(key)),
+  );
+  const settings = sections
     .map((section) => ({
       ...section,
       fields: section.fields.filter(
@@ -78,6 +83,8 @@ export const DistributionDetailsView: React.FC<
       ),
     }))
     .filter((section) => section.fields.length > 0);
+  const publication =
+    typeof data.publication === "string" ? data.publication : null;
 
   return (
     <Stack hasGutter>
@@ -90,58 +97,47 @@ export const DistributionDetailsView: React.FC<
             <Fact term="Client setup">
               <PluginRepositoryClientSetup distribution={distribution} />
             </Fact>
-            <Fact term="Repository">
-              <NamedResourceHrefLink
-                kind="repository"
-                href={distribution.repository}
-              />
-            </Fact>
-            <Fact term="Repository version">
-              <NamedResourceHrefLink
-                kind="repositoryVersion"
-                href={distribution.repository_version}
-              />
-            </Fact>
-            <Fact term="Publication">{publication ?? "—"}</Fact>
+            {sources.has("repository") && (
+              <Fact term="Repository">
+                <NamedResourceHrefLink
+                  kind="repository"
+                  href={distribution.repository}
+                />
+              </Fact>
+            )}
+            {sources.has("repository_version") && (
+              <Fact term="Repository version">
+                <NamedResourceHrefLink
+                  kind="repositoryVersion"
+                  href={distribution.repository_version}
+                />
+              </Fact>
+            )}
+            {sources.has("publication") && (
+              <Fact term="Publication">{publication ?? "—"}</Fact>
+            )}
           </DescriptionList>
         </DetailSectionCard>
       </StackItem>
-      {settings.map((section) => (
-        <StackItem key={section.id}>
-          <DetailSectionCard id={section.id} title={section.title}>
-            <EntityDetailFields
-              fields={section.fields}
-              data={data}
-              copyableKeys={["base_path"]}
-              columnModifier={COLUMNS}
-            />
-          </DetailSectionCard>
-        </StackItem>
-      ))}
+      <FormDetailSections
+        sections={settings}
+        data={data}
+        copyableKeys={["base_path"]}
+      />
       <StackItem>
         <DetailSectionCard id="metadata" title="Metadata">
-          <DescriptionList columnModifier={COLUMNS}>
-            <Fact term="Labels">
+          <EntityMetadataList
+            entity={distribution}
+            pulpType={pulpType}
+            labels={
               <EditablePulpLabels
                 labels={distribution.pulp_labels}
                 actionProps={disabledProps("change")}
                 isSaving={isPending}
                 onSave={(changes) => mutateAsync({ href, ...changes })}
               />
-            </Fact>
-            <Fact term="Created">
-              {formatDateTime(distribution.pulp_created) ?? "—"}
-            </Fact>
-            <Fact term="PRN">
-              {distribution.prn ? (
-                <ClipboardCopy variant="inline-compact" isReadOnly>
-                  {distribution.prn}
-                </ClipboardCopy>
-              ) : (
-                "—"
-              )}
-            </Fact>
-          </DescriptionList>
+            }
+          />
         </DetailSectionCard>
       </StackItem>
     </Stack>

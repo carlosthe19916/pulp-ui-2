@@ -8,7 +8,7 @@ import { repositoryForm } from "@plugin-sdk/ui";
 import { core } from "../../definition";
 
 /** An OpenPGP keyring holds public keys; keys are uploaded to it, never synced. */
-export const openpgpKeyringRepositoryForm = repositoryForm(
+export const coreRepositoryForm = repositoryForm(
   core.repository["core.openpgp"],
 )(({ f, s }) => ({
   title: {

@@ -1,4 +1,4 @@
-import { advancedCopyAction, scanAction } from "@app/forms/fragments";
+import { advancedCopyAction, scanAction } from "@app/utils/entityFieldPresets";
 import type { IActionUi } from "@plugin-sdk/ui";
 
 /** The RPM repository's actions. */

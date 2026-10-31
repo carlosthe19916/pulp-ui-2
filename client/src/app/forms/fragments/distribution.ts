@@ -3,6 +3,7 @@ import { makeRepositoryVersionField } from "../kit/fields/RepositoryVersionField
 import type { IChoiceOption, IFormContext } from "../kit/types";
 import { nameField } from "./base";
 import { labelsField } from "./labels";
+import { SECTION_IDS } from "./sectionIds";
 
 /**
  * Distribution settings shared by pulpcore's DistributionSerializer. A distribution serves one
@@ -142,7 +143,7 @@ export const accessSection = <T extends IAccessKeys>({
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
 }) =>
-  s.collapsible("access", "Access", [
+  s.collapsible(SECTION_IDS.access, "Access", [
     f.resource("content_guard", {
       label: "Content guard",
       resourceKind: "contentGuard",
@@ -162,7 +163,7 @@ export const checkpointSection = <T extends { checkpoint?: unknown }>({
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
 }) =>
-  s.collapsible("checkpoints", "Checkpoints", [
+  s.collapsible(SECTION_IDS.checkpoints, "Checkpoints", [
     f.switch("checkpoint", {
       label: "Checkpoint distribution",
       help: CHECKPOINT_HELP,
@@ -175,4 +176,4 @@ export const distributionLabelsSection = <T extends { pulp_labels?: unknown }>({
 }: {
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
-}) => s.collapsible("labels", "Labels", [labelsField(f)]);
+}) => s.collapsible(SECTION_IDS.labels, "Labels", [labelsField(f)]);

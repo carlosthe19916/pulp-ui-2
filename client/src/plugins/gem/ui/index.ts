@@ -5,6 +5,7 @@ import { gemDistributionForm } from "./forms/distribution";
 import { gemPublicationForm } from "./forms/publication";
 import { gemRemoteForm } from "./forms/remote";
 import { gemRepositoryForm } from "./forms/repository";
+import { gemInstall } from "./helpers";
 
 const gemBrowse = lazyViews(() => import("./browse/GemBrowse"));
 const gemContent = lazyViews(() => import("./content/GemContent"));
@@ -35,7 +36,7 @@ export const gemUi = definePluginUi({
         form: gemDistributionForm,
         clientSetup: ({ baseUrl }) => ({
           hint: "Install a gem from this source.",
-          code: `gem install --source ${baseUrl} <gem>`,
+          code: gemInstall(baseUrl),
         }),
       },
     },

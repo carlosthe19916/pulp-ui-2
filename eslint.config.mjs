@@ -51,7 +51,7 @@ const iconBarrelImport = {
 };
 
 const pluginInternals = {
-  group: ["@plugins/*"],
+  regex: "^(\\.\\./)+plugins(/|$)",
   message:
     "Reach plugins through the registries: @catalog (facts) and @plugins (UI), never a plugin's files.",
 };
@@ -224,9 +224,10 @@ export default defineConfig([
           paths: [iconBarrelImport],
           patterns: [
             {
-              group: ["@plugins", "@plugins/*", "@catalog"],
+              group: ["@plugins", "@catalog"],
               message: "The plugin SDK never imports the plugins or their registries.",
             },
+            pluginInternals,
           ],
         },
       ],
@@ -258,7 +259,6 @@ export default defineConfig([
                 "@plugin-sdk/ui",
                 "@plugin-sdk/ui/*",
                 "@plugins",
-                "@plugins/*",
                 "@catalog",
               ],
               message:
@@ -281,19 +281,37 @@ export default defineConfig([
             {
               group: [
                 "@plugins",
-                "@plugins/*",
+                "@catalog",
                 "@app/pages/*",
                 "@app/layout/*",
                 "@app/components/PluginContentPanel",
+                "@app/components/PluginPage",
                 "@app/components/RepositoryContent",
               ],
               message:
-                "A plugin's UI never imports the UI registry, the hosts or another plugin.",
+                "A plugin's UI never imports the registries, the hosts or another plugin; its facts come from its own definition.",
             },
             {
               // From ui/ or ui/<folder>/, only the plugin's own definition sits two levels up.
               regex: "^\\.\\./\\.\\./(\\.\\./|(?!definition$))",
               message: "A plugin's UI never imports another plugin.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // @catalog is pure facts: it joins the definitions, never a plugin's UI.
+    files: ["client/src/plugins/catalog.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*/ui", "./*/ui/*", "@plugin-sdk/ui", "@plugin-sdk/ui/*", "react", "react-*"],
+              message: "The catalog imports plugin definitions only, never UI.",
             },
           ],
         },

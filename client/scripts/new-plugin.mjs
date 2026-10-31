@@ -59,7 +59,7 @@ export const ${variable}Ui = definePluginUi({
 `,
 );
 
-/** Insert `line` after the last line matching `after`, and `entry` before `beforeClose`. */
+/** Insert `importLine` after the last import matching `importAfter`, and `entry` as the last line of `block`. */
 const register = ({ file, importLine, importAfter, entry, block }) => {
   const path = join(plugins, file);
   let source = readFileSync(path, "utf8");
@@ -90,11 +90,11 @@ register({
   importAfter: /^import \{ \w+ \} from "\.\/[\w-]+\/ui";$/gm,
   entry: `${id}: ${variable}Ui`,
   block: {
-    open: "export const PLUGIN_UI: Record<PluginId, IPluginModule> = {",
+    open: "const PLUGIN_UI: { [I in PluginId]: IPluginModule<I> } = {",
     close: "\n};",
   },
 });
 
 console.log(`Created plugins/${id} and registered it. Next: add its types to definition.ts,
-then run \`npx tsc --noEmit -p tsconfig.app.json\` and fill in what it asks for (see the
-add-plugin skill).`);
+then run \`npx tsc --noEmit -p client/tsconfig.app.json\` from the repository root and fill in
+what it asks for (see the add-plugin skill). Run \`npm run lint:fix\` to sort the new imports.`);

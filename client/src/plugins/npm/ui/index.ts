@@ -1,10 +1,11 @@
-import { relativePathField } from "@app/utils/entityField";
+import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
 import { npm } from "../definition";
 import { npmDistributionForm } from "./forms/distribution";
 import { npmRemoteForm } from "./forms/remote";
 import { npmRepositoryForm } from "./forms/repository";
+import { npmInstall } from "./helpers";
 
 const npmBrowse = lazyViews(() => import("./browse/NpmBrowse"));
 const npmContent = lazyViews(() => import("./content/NpmContent"));
@@ -34,8 +35,8 @@ export const npmUi = definePluginUi({
       "npm.npm": {
         form: npmDistributionForm,
         clientSetup: ({ baseUrl }) => ({
-          hint: "Use this registry for npm installs.",
-          code: `npm config set registry ${baseUrl}`,
+          hint: "Install a package from this registry.",
+          code: npmInstall(baseUrl),
         }),
       },
     },

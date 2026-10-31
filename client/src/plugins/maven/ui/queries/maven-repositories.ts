@@ -18,7 +18,8 @@ import type { MultiOrderListParams } from "@app/queries/utils/listParams";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "@app/queries/utils/pulpApi";
-import { getContentType } from "@catalog";
+
+import { maven } from "../../definition";
 
 /**
  * Params for a Maven repository's `packages/` catalog. Its `ordering` takes several
@@ -185,7 +186,7 @@ export const mavenPackageHrefQueryOptions = ({
       const { data } =
         await axiosInstance.get<PaginatedmavenMavenPackageResponseList>(
           pulpApiPath(
-            `content/${getContentType("maven.package")?.apiPath}/`,
+            `content/${maven.content["maven.package"].apiPath}/`,
             domain,
           ),
           { params: { ...gav, fields: ["pulp_href"] } },

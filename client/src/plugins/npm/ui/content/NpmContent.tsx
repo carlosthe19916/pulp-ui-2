@@ -4,11 +4,11 @@ import type { NpmPackageResponse } from "@app/client";
 import {
   ContentHeader,
   ContentPanelLayout,
-  type IContentPanelProps,
   InstallSnippet,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** npmjs.com style: package name, version and the install command. */
 export const NpmContent: React.FC<IContentPanelProps> = ({ href }) => {

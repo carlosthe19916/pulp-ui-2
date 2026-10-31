@@ -4,14 +4,14 @@ import prettyBytes from "pretty-bytes";
 
 import {
   BrowseTable,
-  type IBrowseContext,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
-import { pipInstall } from "./helpers";
+import { pipInstall } from "../helpers";
 
 /** PyPI style: each project's files grouped under it, newest release first. */
 export const PythonPackages: React.FC<IBrowseContext> = ({

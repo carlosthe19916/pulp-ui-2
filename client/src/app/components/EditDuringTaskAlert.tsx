@@ -9,7 +9,7 @@ import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
 const TITLE_BY_KIND: Partial<Record<EntityTaskKind, string>> = {
   sync: "Sync in progress",
-  modify: "Creating a new version…",
+  modify: "Creating a new version",
   update: "An update is in progress",
   delete: "Deletion in progress",
 };

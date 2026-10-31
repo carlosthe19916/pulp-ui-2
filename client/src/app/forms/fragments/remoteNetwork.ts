@@ -3,6 +3,7 @@ import type { AnySchema, NumberSchema } from "yup";
 import type { IFieldBuilders, ISectionBuilders } from "../kit/defineForm";
 import type { IChoiceOption, IFormContext } from "../kit/types";
 import { labelsField } from "./labels";
+import { SECTION_IDS } from "./sectionIds";
 
 /**
  * Remote settings shared by pulpcore's RemoteSerializer, as collapsible sections a plugin
@@ -187,9 +188,11 @@ export const connectionSections = <
   f: IFieldBuilders<T>;
   s: ISectionBuilders;
 }) => [
-  s.collapsible("tls", "TLS", tlsSection(f), { summary: tlsSummary }),
-  s.collapsible("proxy", "Proxy", proxySection(f), { summary: proxySummary }),
-  s.collapsible("downloads", "Downloads", downloadsSection(f)),
-  s.collapsible("timeouts", "Timeouts", timeoutsSection(f)),
-  s.collapsible("labels", "Labels", [labelsField(f)]),
+  s.collapsible(SECTION_IDS.tls, "TLS", tlsSection(f), { summary: tlsSummary }),
+  s.collapsible(SECTION_IDS.proxy, "Proxy", proxySection(f), {
+    summary: proxySummary,
+  }),
+  s.collapsible(SECTION_IDS.downloads, "Downloads", downloadsSection(f)),
+  s.collapsible(SECTION_IDS.timeouts, "Timeouts", timeoutsSection(f)),
+  s.collapsible(SECTION_IDS.labels, "Labels", [labelsField(f)]),
 ];

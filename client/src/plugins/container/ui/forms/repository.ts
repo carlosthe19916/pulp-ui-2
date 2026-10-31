@@ -19,7 +19,13 @@ export const containerRepositoryForm = repositoryForm(
   },
   docsUrl: "https://pulpproject.org/pulp_container/",
   sections: [
-    s.essentials([...repositoryIdentity(f), remoteField(f)]),
+    s.essentials([
+      ...repositoryIdentity(f),
+      remoteField(f, {
+        pulpTypes:
+          container.repository["container.container"].compatibleRemoteTypes,
+      }),
+    ]),
     s.collapsible("signing", "Signing", [
       signingServiceField(f, "manifest_signing_service", {
         label: "Manifest signing service",
@@ -29,30 +35,4 @@ export const containerRepositoryForm = repositoryForm(
     retentionSection({ f, s }),
     labelsSection({ f, s }),
   ],
-}));
-
-/**
- * A push repository is created by pushing an image to the registry, so it has only an edit
- * form, typed from its update body.
- */
-export const containerPushRepositoryForm = repositoryForm(
-  container.repository["container.container-push"],
-)(({ f, s }) => ({
-  title: {
-    create: "Create container push repository",
-    edit: "Edit container push repository",
-  },
-  docsUrl: "https://pulpproject.org/pulp_container/",
-  sections: [
-    s.essentials(repositoryIdentity(f)),
-    s.collapsible("signing", "Signing", [
-      signingServiceField(f, "manifest_signing_service", {
-        label: "Manifest signing service",
-        help: "Signs image manifests pushed to the repository.",
-      }),
-    ]),
-    retentionSection({ f, s }),
-  ],
-  // Labels change from the repository's page.
-  omit: ["pulp_labels"],
 }));

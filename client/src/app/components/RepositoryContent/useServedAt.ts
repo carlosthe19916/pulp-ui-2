@@ -1,9 +1,9 @@
-import type { IServedAt } from "@app/components/BrowseShell";
 import {
   repositoryDistributionsPickerParams,
   useDistributionDetailQuery,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
+import type { IServedAt } from "@plugin-sdk/ui";
 
 const asString = (value: unknown): string =>
   typeof value === "string" ? value : "";

@@ -2,8 +2,17 @@
  * Compile-time checks of `definePlugin` and `definePluginUi` (run by `tsc`, never executed):
  * each `@ts-expect-error` marks a plugin that must not compile.
  */
+import type { IFormFor } from "@app/forms";
+
 import { definePlugin } from "./definition";
-import { definePluginUi, GENERIC, type ITypeUi, type PluginUi } from "./ui";
+import {
+  definePluginUi,
+  GENERIC,
+  type ITypeUi,
+  lazyViews,
+  type PluginUi,
+} from "./ui";
+import type { FormBody } from "./ui/forms";
 
 const form = {} as ITypeUi["form"];
 
@@ -250,5 +259,35 @@ definePluginUi({
     label: "Guarded",
     // @ts-expect-error "guarded.header" has no label, description or fields.
     contentGuard: {},
+  },
+});
+
+// An ACS label for a plugin without an ACS endpoint.
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    // @ts-expect-error "widget" declares no ACS.
+    acs: { label: "Widget ACS" },
+  },
+});
+
+// A lazy view names a component export.
+const view = lazyViews(async () => ({ Panel: Modal, title: "Panel" }));
+view("Panel");
+// @ts-expect-error "title" isn't a component.
+view("title");
+
+// Another collection's form in a type's slot: the file/git remote form under a file/file remote.
+const otherRemoteForm = {} as IFormFor<
+  FormBody<"remote", "file/git">,
+  "remote:file/git"
+>;
+definePluginUi({
+  definition: widget,
+  ui: {
+    ...ui,
+    // @ts-expect-error "widget.widget" is a file/file remote; this form edits file/git.
+    remote: { "widget.widget": { form: otherRemoteForm } },
   },
 });

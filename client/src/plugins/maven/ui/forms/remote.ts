@@ -2,6 +2,7 @@ import {
   authSection,
   connectionSections,
   nameField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -20,7 +21,7 @@ export const mavenRemoteForm = remoteForm(maven.remote["maven.maven"])(
           help: "The Maven repository, e.g. https://repo1.maven.org/maven2/.",
         }),
       ]),
-      s.collapsible("auth", "Authentication", authSection(f)),
+      s.collapsible(SECTION_IDS.auth, "Authentication", authSection(f)),
       ...connectionSections({ f, s }),
     ],
     // Maven remotes accept only the "immediate" policy, the server default.

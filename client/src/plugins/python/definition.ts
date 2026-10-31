@@ -16,7 +16,6 @@ export const python = definePlugin({
       compatibleRemoteTypes: ["python.python"],
       compatiblePublicationTypes: ["python.pypi"],
       contentChanges: "modify",
-      scan: true,
       actions: {
         "repair-metadata": { path: "repair_metadata/", target: "repository" },
         scan: { path: "scan/", target: "version" },

@@ -100,3 +100,6 @@ export const widgetRemoteForm = remoteForm(widget.remote["widget.widget"])(
   `@app/components/ContentPanelLayout` and `@app/components/BrowseShell`, registered with
   `lazyViews`.
 - No page or component changes: hosts pick the plugin up from the registries.
+- A page of the plugin's own (`pages: [{ label, to, Page }]`, its `Page` from `lazyViews`)
+  also needs a route file at that path whose `component` is `pluginPage("<to>")` from
+  `@app/components/PluginPage`; the route never imports the plugin.

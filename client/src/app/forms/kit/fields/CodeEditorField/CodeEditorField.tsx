@@ -12,7 +12,6 @@ export interface ICodeEditorFieldProps {
   value: string;
   template?: string;
   downloadName?: string;
-  isDisabled: boolean;
   onChange: (value: string) => void;
 }
 
@@ -25,7 +24,7 @@ const CodeEditorImpl = lazy(() =>
 
 /** YAML, JSON or PEM text in a code editor, with upload, download and copy. */
 export const CodeEditorField: React.FC<ICodeEditorFieldProps> = (props) => {
-  const { id, label, value, template, isDisabled, onChange } = props;
+  const { id, label, value, template, onChange } = props;
   return (
     <>
       <Suspense
@@ -34,7 +33,6 @@ export const CodeEditorField: React.FC<ICodeEditorFieldProps> = (props) => {
             id={id}
             aria-label={label}
             value={value}
-            isDisabled={isDisabled}
             resizeOrientation="vertical"
             onChange={(_event, next) => onChange(next)}
           />
@@ -42,7 +40,7 @@ export const CodeEditorField: React.FC<ICodeEditorFieldProps> = (props) => {
       >
         <CodeEditorImpl {...props} />
       </Suspense>
-      {template && !value && !isDisabled && (
+      {template && !value && (
         <Button variant="link" isInline onClick={() => onChange(template)}>
           Use template
         </Button>

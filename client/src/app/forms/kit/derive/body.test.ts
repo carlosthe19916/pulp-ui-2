@@ -137,11 +137,10 @@ describe("buildPatchBody", () => {
     ).toEqual({ policy: "immediate", token: null });
   });
 
-  it("never sends read-only or create-only fields", () => {
+  it("never sends create-only fields", () => {
     const initialValues = editDefaults();
     const values = {
       ...initialValues,
-      base_path: "changed",
       pulp_labels: [newKeyValueRow({ key: "env", value: "dev" })],
     };
     expect(
@@ -170,24 +169,5 @@ describe("buildPatchBody", () => {
     expect(patch({ mode: "clear", value: "", isSet: true })).toEqual({
       password: null,
     });
-  });
-
-  it("applies the form's body transform", () => {
-    const initialValues = editDefaults();
-    const form = {
-      ...testForm,
-      transformBody: (body: Record<string, unknown>) => ({
-        ...body,
-        extra: true,
-      }),
-    };
-    expect(
-      buildPatchBody({
-        form,
-        values: { ...initialValues, url: "https://b/" },
-        initialValues,
-        entity,
-      }),
-    ).toEqual({ url: "https://b/", extra: true });
   });
 });

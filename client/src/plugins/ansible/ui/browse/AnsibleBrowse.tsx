@@ -13,7 +13,6 @@ import {
 import {
   BrowseDataList,
   BrowseTable,
-  type IBrowseContext,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
@@ -21,6 +20,7 @@ import {
   useContentTypeListQueries,
   useContentTypeListQuery,
 } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { fqcn } from "./helpers";
 

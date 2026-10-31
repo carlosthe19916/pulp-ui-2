@@ -2,18 +2,12 @@ import type React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 
 import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
   Checkbox,
-  FileUpload,
   FormGroup,
   FormGroupLabelHelp,
   FormHelperText,
   FormSelect,
   FormSelectOption,
-  Gallery,
   HelperText,
   HelperTextItem,
   Popover,
@@ -27,11 +21,9 @@ import {
   AsyncResourceMultiSelect,
   AsyncResourceSelect,
 } from "@app/components/AsyncResourceSelect";
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 
 import type { IKeyValueRow, ISecretValue } from "../derive/codecs";
 import { isRequired } from "../derive/schema";
-import { isReadOnly } from "../derive/visibility";
 import type { FormValues, IFieldDef, IFormContext } from "../types";
 import { CodeEditorField } from "./CodeEditorField";
 import { KeyValueField } from "./KeyValueField";
@@ -42,23 +34,16 @@ interface IFieldRendererProps {
   field: IFieldDef;
   ctx: IFormContext;
   idPrefix: string;
-  /** Compatible pulp_types per resource kind, for pickers that don't set their own. */
-  resourceFilter: ResourceFilterMap;
 }
-
-const isFile = (value: unknown): value is File =>
-  typeof File !== "undefined" && value instanceof File;
 
 /** One field bound to the surrounding react-hook-form: label, help, input, errors, warnings. */
 export const FieldRenderer: React.FC<IFieldRendererProps> = ({
   field,
   ctx,
   idPrefix,
-  resourceFilter,
 }) => {
   const { control } = useFormContext<FormValues>();
   const fieldId = `${idPrefix}-${field.key}`;
-  const isDisabled = isReadOnly({ field, ctx });
   const required = isRequired({ field, ctx });
   const warnings = (field.warnings ?? []).filter((warning) =>
     warning.when(ctx),
@@ -92,7 +77,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   id={fieldId}
                   label={field.label}
                   isChecked={value === true}
-                  isDisabled={isDisabled}
                   onChange={(_event, checked) => onChange(checked)}
                 />
               );
@@ -102,7 +86,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   id={fieldId}
                   value={(value as string) ?? ""}
                   placeholder={field.placeholder}
-                  isDisabled={isDisabled}
                   validated={validated}
                   resizeOrientation="vertical"
                   onChange={(_event, next) => onChange(next)}
@@ -118,7 +101,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   value={String(
                     field.options.findIndex((option) => option.value === value),
                   )}
-                  isDisabled={isDisabled}
                   validated={validated}
                   onChange={(_event, index) =>
                     onChange(field.options[Number(index)]?.value ?? "")
@@ -149,51 +131,15 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   label={option.label}
                   description={option.description}
                   isChecked={value === option.value}
-                  isDisabled={isDisabled}
                   onChange={() => onChange(option.value)}
                 />
               ));
-            case "tiles":
-              return (
-                <Gallery hasGutter minWidths={{ default: "14rem" }}>
-                  {field.options.map((option) => {
-                    const optionId = `${fieldId}-${String(option.value)}`;
-                    return (
-                      <Card
-                        key={optionId}
-                        id={`${optionId}-card`}
-                        isSelectable
-                        isSelected={value === option.value}
-                        isDisabled={isDisabled}
-                      >
-                        <CardHeader
-                          selectableActions={{
-                            selectableActionId: optionId,
-                            selectableActionAriaLabelledby: `${optionId}-title`,
-                            name: fieldId,
-                            variant: "single",
-                            onChange: () => onChange(option.value),
-                          }}
-                        >
-                          <CardTitle id={`${optionId}-title`}>
-                            {option.label}
-                          </CardTitle>
-                        </CardHeader>
-                        {option.description && (
-                          <CardBody>{option.description}</CardBody>
-                        )}
-                      </Card>
-                    );
-                  })}
-                </Gallery>
-              );
             case "stringList":
               return (
                 <StringListField
                   id={fieldId}
                   label={field.label}
                   value={(value as string[]) ?? []}
-                  isDisabled={isDisabled}
                   onChange={onChange}
                 />
               );
@@ -206,7 +152,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   label={option.label}
                   description={option.description}
                   isChecked={checked.includes(option.value)}
-                  isDisabled={isDisabled}
                   onChange={(_event, isChecked) =>
                     onChange(
                       isChecked
@@ -223,7 +168,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   id={fieldId}
                   label={field.label}
                   value={(value as IKeyValueRow[]) ?? []}
-                  isDisabled={isDisabled}
                   onChange={onChange}
                 />
               );
@@ -235,7 +179,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   mode={ctx.mode}
                   editor={field.editor}
                   value={value as ISecretValue}
-                  isDisabled={isDisabled}
                   onChange={onChange}
                 />
               );
@@ -248,26 +191,11 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   value={(value as string) ?? ""}
                   template={field.template}
                   downloadName={field.downloadName}
-                  isDisabled={isDisabled}
                   onChange={onChange}
                 />
               );
-            case "file":
-              return (
-                <FileUpload
-                  id={fieldId}
-                  filename={isFile(value) ? value.name : ""}
-                  isDisabled={isDisabled}
-                  validated={validated}
-                  browseButtonText="Upload"
-                  hideDefaultPreview
-                  onFileInputChange={(_event, file) => onChange(file)}
-                  onClearClick={() => onChange(null)}
-                />
-              );
             case "resource": {
-              const pulpTypes =
-                field.pulpTypes ?? resourceFilter[field.resourceKind];
+              const { pulpTypes } = field;
               return field.multiple ? (
                 <AsyncResourceMultiSelect
                   id={fieldId}
@@ -296,7 +224,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   id={fieldId}
                   field={field}
                   value={value}
-                  isDisabled={isDisabled}
                   ctx={ctx}
                   onChange={onChange}
                 />
@@ -311,7 +238,6 @@ export const FieldRenderer: React.FC<IFieldRendererProps> = ({
                   type={field.kind}
                   value={(value as string) ?? ""}
                   placeholder={field.placeholder}
-                  isDisabled={isDisabled}
                   validated={validated}
                   onChange={(_event, next) => onChange(next)}
                   onBlur={onBlur}

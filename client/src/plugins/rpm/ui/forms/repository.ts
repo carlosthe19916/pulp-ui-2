@@ -18,7 +18,9 @@ export const rpmRepositoryForm = repositoryForm(rpm.repository["rpm.rpm"])(
     sections: [
       s.essentials([
         ...repositoryIdentity(f),
-        remoteField(f),
+        remoteField(f, {
+          pulpTypes: rpm.repository["rpm.rpm"].compatibleRemoteTypes,
+        }),
         autopublishField(f),
       ]),
       s.collapsible("signing", "Signing", [

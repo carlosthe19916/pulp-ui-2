@@ -1,4 +1,4 @@
-import { relativePathField } from "@app/utils/entityField";
+import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { maven } from "../definition";

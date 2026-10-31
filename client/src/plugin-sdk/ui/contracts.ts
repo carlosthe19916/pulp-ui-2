@@ -1,24 +1,61 @@
 import type React from "react";
 
 import type { RepositoryResponse } from "@app/client";
-import type { IServedAt } from "@app/components/BrowseShell";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
 
 import type { FileRoutesByTo } from "../../routeTree.gen";
+import type { IPluginAction } from "./action";
 
 /**
- * The interfaces between the hosts (generic pages) and a plugin's UI. Hosts depend on these,
- * never on a plugin's files; a plugin implements them.
+ * The interfaces between the hosts (generic pages) and a plugin's UI: hosts render them,
+ * plugins implement them, and neither imports the other.
  */
 
 export type { IActionUi, IPluginAction } from "./action";
-export type { IContentPanelProps } from "@app/components/ContentPanelLayout";
-export type {
-  IBrowseContext,
-  IBrowseSection,
-  IPluginBrowse,
-  IServedAt,
-} from "@app/components/BrowseShell";
+
+/** A content unit's panel, shown in the content drawer and on its detail page. */
+export interface IContentPanelProps {
+  href: string;
+  /** The repository version the unit is browsed in, when there is one. */
+  versionHref?: string;
+}
+
+/** Where a repository is served, resolved by the shell; empty strings when it isn't. */
+export interface IServedAt {
+  /** Content URL, as the "Use this repository" card shows it. */
+  baseUrl: string;
+  /** Container registry path (`host/namespace/name`). */
+  registryPath: string;
+}
+
+/** What a Browse section gets from the shell; every list is scoped to `versionHref`. */
+export interface IBrowseContext {
+  versionHref: string;
+  repositoryHref: string;
+  /** Where the repository is served, for install commands and download links. */
+  served: IServedAt;
+  selectedHref?: string;
+  /** Opens a content unit in the side drawer. */
+  onSelect: (contentHref: string) => void;
+  writes?: IContentWrites;
+  /** The repository's plugin actions, for views that offer one per row (container untag). */
+  actions: readonly IPluginAction[];
+}
+
+/** One Browse sub-tab of a plugin, shown only when the version has its content types. */
+export interface IBrowseSection<C extends string = string> {
+  key: string;
+  title: string;
+  /** The plugin's content types the section lists. */
+  pulpTypes: readonly C[];
+  /** Show the `content_summary` count in the tab; off when sections share one type. */
+  showCount?: boolean;
+  View: React.FC<IBrowseContext>;
+}
+
+export interface IPluginBrowse<C extends string = string> {
+  sections: readonly IBrowseSection<C>[];
+}
 
 export interface IRepositoryTabProps {
   repository: RepositoryResponse;
@@ -82,7 +119,11 @@ export interface IArchiveImportModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   /** Hands the started import task to the repository page, which follows it. */
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onStarted: (started: {
+    taskHref: string;
+    repository: RepositoryResponse;
+    title: string;
+  }) => void;
 }
 
 /** A repository type's archive import, offered in its page's actions. */

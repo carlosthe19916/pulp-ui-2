@@ -23,7 +23,6 @@ interface ISecretFieldProps {
   mode: FormMode;
   editor?: "pem";
   value: ISecretValue;
-  isDisabled: boolean;
   onChange: (value: ISecretValue) => void;
 }
 
@@ -32,7 +31,6 @@ interface ISecretInputProps {
   label: string;
   editor?: "pem";
   value: string;
-  isDisabled: boolean;
   onChange: (value: string) => void;
 }
 
@@ -41,7 +39,6 @@ const SecretInput: React.FC<ISecretInputProps> = ({
   label,
   editor,
   value,
-  isDisabled,
   onChange,
 }) => {
   const [isShown, setIsShown] = useState(false);
@@ -52,7 +49,6 @@ const SecretInput: React.FC<ISecretInputProps> = ({
         label={label}
         language="pem"
         value={value}
-        isDisabled={isDisabled}
         onChange={onChange}
       />
     );
@@ -65,7 +61,6 @@ const SecretInput: React.FC<ISecretInputProps> = ({
           type={isShown ? "text" : "password"}
           autoComplete="new-password"
           value={value}
-          isDisabled={isDisabled}
           onChange={(_event, next) => onChange(next)}
         />
       </InputGroupItem>
@@ -91,7 +86,6 @@ export const SecretField: React.FC<ISecretFieldProps> = ({
   mode,
   editor,
   value,
-  isDisabled,
   onChange,
 }) => {
   const input = (
@@ -100,7 +94,6 @@ export const SecretField: React.FC<ISecretFieldProps> = ({
       label={label}
       editor={editor}
       value={value.value}
-      isDisabled={isDisabled}
       onChange={(next) => onChange({ ...value, mode: "replace", value: next })}
     />
   );
@@ -148,7 +141,6 @@ export const SecretField: React.FC<ISecretFieldProps> = ({
               id={id}
               variant="link"
               isInline
-              isDisabled={isDisabled}
               aria-label={`${value.isSet ? "Change" : "Set"} ${label}`}
               onClick={() => onChange({ ...value, mode: "replace", value: "" })}
             >
@@ -160,7 +152,6 @@ export const SecretField: React.FC<ISecretFieldProps> = ({
               <Button
                 variant="link"
                 isInline
-                isDisabled={isDisabled}
                 aria-label={`Clear ${label}`}
                 onClick={() => onChange({ ...value, mode: "clear", value: "" })}
               >

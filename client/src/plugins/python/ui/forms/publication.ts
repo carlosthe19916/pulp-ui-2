@@ -4,7 +4,7 @@ import { publicationForm } from "@plugin-sdk/ui";
 import { python } from "../../definition";
 
 /** Publishes a Python repository as a PyPI simple index. */
-export const pypiPublicationForm = publicationForm(
+export const pythonPublicationForm = publicationForm(
   python.publication["python.pypi"],
 )(({ f, s }) => ({
   title: { create: "Create PyPI publication", edit: "PyPI publication" },

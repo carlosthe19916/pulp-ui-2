@@ -11,7 +11,7 @@ import { distributionForm } from "@plugin-sdk/ui";
 import { core } from "../../definition";
 
 /** Serves an OpenPGP keyring or one of its versions. */
-export const openpgpDistributionForm = distributionForm(
+export const coreDistributionForm = distributionForm(
   core.distribution["core.openpgp"],
 )(({ f, s }) => ({
   title: {

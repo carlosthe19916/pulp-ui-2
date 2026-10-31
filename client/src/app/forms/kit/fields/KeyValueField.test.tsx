@@ -11,7 +11,6 @@ describe("KeyValueField", () => {
         id="headers"
         label="Header"
         value={[]}
-        isDisabled={false}
         onChange={onChange}
       />,
     );
@@ -29,7 +28,6 @@ describe("KeyValueField", () => {
         id="headers"
         label="Header"
         value={[row]}
-        isDisabled={false}
         onChange={onChange}
       />,
     );

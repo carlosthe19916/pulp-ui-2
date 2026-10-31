@@ -14,7 +14,7 @@ import type {
  * is presentation (labels, forms, views); that is the plugin's UI (`plugin-sdk/ui`).
  */
 
-/** The mutable CRUD entity types; content is immutable and modelled apart. */
+/** The entity types a plugin declares per pulp_type (content and content guards are apart). */
 export const ENTITY_TYPES = [
   "repository",
   "remote",
@@ -76,9 +76,7 @@ export interface IRepositoryDef extends IEntityTypeDef<"repository"> {
   contentChanges: "modify" | "addRemove" | null;
   /** Imports an uploaded archive into a new version (OSTree `import_all/`). */
   archiveImport?: boolean;
-  /** Its versions can be scanned for vulnerabilities (`scan/`). */
-  scan?: boolean;
-  /** Plugin actions (sign, tag, copy…), by key. */
+  /** Plugin actions (sign, tag, copy…), by key; a version `scan/` action makes it scannable. */
   actions?: Readonly<Record<string, IActionDef>>;
 }
 
@@ -128,10 +126,13 @@ export interface IPluginDefinition {
   contentGuard?: Readonly<Record<string, IContentGuardDef>>;
 }
 
+/** The sections of a definition that declare types keyed by pulp_type. */
+export type TypeSection = EntityType | "content" | "contentGuard";
+
 /** A definition's pulp_types for one of its sections (`never` when it has none). */
 export type TypesOf<
   D extends IPluginDefinition,
-  S extends keyof IPluginDefinition,
+  S extends TypeSection,
 > = S extends keyof D ? keyof NonNullable<D[S]> & string : never;
 
 export type IsInstalled = (installed: VersionResponse[]) => boolean;

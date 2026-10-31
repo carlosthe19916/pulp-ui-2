@@ -10,7 +10,6 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LabelList,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
@@ -19,6 +18,7 @@ import {
   useContentDetailQuery,
   useContentTypeListQuery,
 } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 interface IReleaseValuesProps {
   /** The release's `distribution` name, which its component/architecture units carry. */

@@ -30,7 +30,6 @@ export const CodeEditorImpl: React.FC<ICodeEditorFieldProps> = ({
   language,
   value,
   downloadName,
-  isDisabled,
   onChange,
 }) => {
   // The editor's own upload swaps it for a large drop zone while empty, too heavy in a
@@ -53,21 +52,18 @@ export const CodeEditorImpl: React.FC<ICodeEditorFieldProps> = ({
         code={value}
         onCodeChange={onChange}
         language={LANGUAGE[language]}
-        isReadOnly={isDisabled}
         isDownloadEnabled
         isCopyEnabled
         isLanguageLabelVisible
         downloadFileName={downloadName}
         height={HEIGHT[language]}
         customControls={
-          isDisabled ? undefined : (
-            <CodeEditorControl
-              icon={<UploadIcon />}
-              aria-label={`Upload ${label.toLowerCase()} from a file`}
-              tooltipProps={{ content: "Upload from a file" }}
-              onClick={() => fileInputRef.current?.click()}
-            />
-          )
+          <CodeEditorControl
+            icon={<UploadIcon />}
+            aria-label={`Upload ${label.toLowerCase()} from a file`}
+            tooltipProps={{ content: "Upload from a file" }}
+            onClick={() => fileInputRef.current?.click()}
+          />
         }
         options={{
           ariaLabel: label,

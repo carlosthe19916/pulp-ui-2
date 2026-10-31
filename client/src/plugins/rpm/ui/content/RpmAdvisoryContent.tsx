@@ -10,7 +10,6 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LabelList,
   LinkList,
   links,
@@ -19,6 +18,7 @@ import {
 import { useContentDetailQuery } from "@app/queries/content";
 import { type INevraParams, nevra } from "@app/utils/pluginContentFormat";
 import { formatDateTime } from "@app/utils/utils";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 interface IAdvisoryReference {
   id?: string;

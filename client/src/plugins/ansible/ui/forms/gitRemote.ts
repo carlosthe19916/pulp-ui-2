@@ -2,6 +2,7 @@ import {
   authSection,
   connectionSections,
   nameField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -31,7 +32,7 @@ export const ansibleGitRemoteForm = remoteForm(ansible.remote["ansible.git"])(
           help: "Store only the collection's metadata; clients download it from the Git repository.",
         }),
       ]),
-      s.collapsible("auth", "Authentication", authSection(f)),
+      s.collapsible(SECTION_IDS.auth, "Authentication", authSection(f)),
       ...connectionSections({ f, s }),
     ],
   }),

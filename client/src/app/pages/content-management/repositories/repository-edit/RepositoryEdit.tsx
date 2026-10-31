@@ -2,16 +2,7 @@ import type React from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  Label,
-  PageSection,
-} from "@patternfly/react-core";
-
-import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { EntityFormPage } from "@app/forms";
+import { EntityEditPage } from "@app/components/EntityEditPage";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
@@ -21,11 +12,8 @@ import {
   useSuspenseRepositoryDetailQuery,
 } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { buildResourceFilter } from "@app/utils/resourceFilter";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPulpType } from "@catalog";
-import { getEntityForm } from "@plugins";
 
 interface IRepositoryEditProps {
   pulpDomain: string;
@@ -43,25 +31,17 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
+  // Also covers a content change started from this tab, which the task probe can miss.
   const { running } = useRepositoryActivity({ repository });
-  const entry = getEntityForm({ entity: "repository", pulpType, mode: "edit" });
   const name = repository.name ?? extractIdFromHref(href);
 
   const updateMutation = useRepositoryUpdateMutation({
-    onSuccess: (data) => {
-      if ("task" in data) {
-        notifyTaskStarted({
-          addNotification,
-          taskHref: data.task,
-          title: `Repository "${name}" update started`,
-        });
-      } else {
-        addNotification({
-          title: `Repository "${name}" updated`,
-          variant: "success",
-        });
-      }
-    },
+    onSuccess: (data) =>
+      notifyUpdateResult({
+        addNotification,
+        data,
+        subject: `Repository "${name}"`,
+      }),
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({
@@ -82,57 +62,30 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
       params: detailParams,
     });
 
-  // The route loader only resolves for types with an edit form.
-  if (!entry) return null;
-
-  // The page is reachable by URL, so it checks for itself what the list's Edit action does.
-  if (!can("change")) {
-    return (
-      <PageSection>
-        <UnauthorizedState
-          description={`You don't have permission to change repository "${name}".`}
-        />
-      </PageSection>
-    );
-  }
-
   return (
-    <EntityFormPage
-      form={entry.form}
-      mode="edit"
-      entity={repository}
-      label={<Label color="blue">plugin: {pulpType}</Label>}
-      // Pulp queues an update behind the running task rather than refusing it.
-      notice={
-        running && (
-          <EditDuringTaskAlert entityLabel="repository" running={running} />
-        )
+    <EntityEditPage
+      entityType="repository"
+      pulpType={pulpType}
+      editedObject={repository}
+      name={name}
+      canChange={can("change")}
+      running={running}
+      listLink={
+        <Link
+          to="/content-management/$pulpDomain/repositories"
+          params={{ pulpDomain }}
+        >
+          Repositories
+        </Link>
       }
-      breadcrumbs={
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/repositories"
-              params={{ pulpDomain }}
-            >
-              Repositories
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId"
-              params={detailParams}
-            >
-              {name}
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Edit</BreadcrumbItem>
-        </Breadcrumb>
+      detailLink={
+        <Link
+          to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId"
+          params={detailParams}
+        >
+          {name}
+        </Link>
       }
-      resourceFilter={buildResourceFilter({
-        kind: "repository",
-        plugin: getPulpType(pulpType),
-      })}
       submitError={submitError}
       isSubmitting={updateMutation.isPending}
       onSubmit={(body, { saved }) => {

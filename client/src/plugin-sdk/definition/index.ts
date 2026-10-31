@@ -1,5 +1,6 @@
 export {
   createCatalog,
+  type IAcsFact,
   type IContentGuardType,
   type IContentType,
   type IPulpType,
@@ -22,5 +23,6 @@ export {
   type IRemoteDef,
   type IRepositoryDef,
   type PulpType,
+  type TypeSection,
   type TypesOf,
 } from "./types";

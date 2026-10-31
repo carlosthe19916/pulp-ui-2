@@ -9,8 +9,27 @@ import {
 
 const isVirtual = (field: IFieldDef): boolean => field.key.startsWith("$");
 
-const isSame = (a: unknown, b: unknown): boolean =>
-  JSON.stringify(a) === JSON.stringify(b);
+/** Structural equality of body values: key order doesn't matter (labels, headers). */
+const isSame = (a: unknown, b: unknown): boolean => {
+  if (Object.is(a, b)) return true;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((item, index) => isSame(item, b[index]))
+    );
+  }
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+  const aEntries = Object.entries(a);
+  return (
+    aEntries.length === Object.keys(b).length &&
+    aEntries.every(
+      ([key, value]) =>
+        key in b && isSame(value, (b as Record<string, unknown>)[key]),
+    )
+  );
+};
 
 /** A create body: the visible, non-empty values (empty ones keep the server default). */
 export const buildCreateBody = ({
@@ -24,16 +43,16 @@ export const buildCreateBody = ({
   const body: Record<string, unknown> = {};
   for (const field of visibleFields({ form, ctx })) {
     if (isVirtual(field)) continue;
-    const value = toApiValue({ field, value: values[field.key], values });
+    const value = toApiValue({ field, value: values[field.key] });
     if (value !== undefined) body[field.key] = value;
   }
-  return form.transformBody ? form.transformBody(body, ctx) : body;
+  return body;
 };
 
 /**
  * An edit body: only the fields the user changed. An emptied field sends its clear value,
- * and a field that was set but is now hidden is cleared too; read-only and create-only
- * fields are never sent.
+ * and a field that was set but is now hidden is cleared too; create-only fields are never
+ * sent.
  */
 export const buildPatchBody = ({
   form,
@@ -57,17 +76,8 @@ export const buildPatchBody = ({
     const sectionVisible = isSectionVisible({ section, ctx });
     for (const field of sectionFields(section)) {
       if (isVirtual(field)) continue;
-      if (
-        field.availability === "createOnly" ||
-        field.availability === "readOnlyOnEdit"
-      ) {
-        continue;
-      }
-      const before = toApiValue({
-        field,
-        value: initialValues[field.key],
-        values: initialValues,
-      });
+      if (field.availability === "createOnly") continue;
+      const before = toApiValue({ field, value: initialValues[field.key] });
       if (!sectionVisible || !isFieldVisible({ field, ctx })) {
         const wasVisible =
           isSectionVisible({ section, ctx: initialCtx }) &&
@@ -83,7 +93,7 @@ export const buildPatchBody = ({
         }
         continue;
       }
-      const after = toApiValue({ field, value: values[field.key], values });
+      const after = toApiValue({ field, value: values[field.key] });
       if (field.kind === "secret") {
         // A secret starts as "keep" (no body value): anything else is a change.
         if (after !== undefined) body[field.key] = after;
@@ -93,5 +103,5 @@ export const buildPatchBody = ({
       body[field.key] = after === undefined ? clearValue(field) : after;
     }
   }
-  return form.transformBody ? form.transformBody(body, ctx) : body;
+  return body;
 };

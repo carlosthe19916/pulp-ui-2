@@ -1,10 +1,15 @@
 import type React from "react";
 
 import type { ContentEndpoints } from "@app/client/pulpTypes.gen";
-import type { FormMode, IFormDef } from "@app/forms";
+import type { FormMode, IFormDef, IFormFor } from "@app/forms";
 import type { IEntityField } from "@app/utils/entityField";
 
-import type { IPluginDefinition, TypesOf } from "../definition";
+import type {
+  EntityType,
+  IEndpointsByEntity,
+  IPluginDefinition,
+  TypesOf,
+} from "../definition";
 import type {
   ClientSetup,
   IActionUi,
@@ -16,17 +21,36 @@ import type {
   IPluginBrowse,
   IRepositoryTab,
 } from "./contracts";
+import type { FormBody } from "./forms";
 
 /** Use the host's generic view for this piece (panel, Browse, client setup). */
 export const GENERIC: unique symbol = Symbol("generic");
 export type Generic = typeof GENERIC;
 
 /** The UI of one remote, distribution or publication type. */
-export interface ITypeUi {
+export interface ITypeUi<F extends IFormDef = IFormDef> {
   /** The name in the Type select; defaults to the plugin's label. */
   label?: string;
-  form: IFormDef;
+  form: F;
 }
+
+/**
+ * The form a type's slot takes: the one built for its collection (`remoteForm(def)`), so another
+ * type's form doesn't fit. Any form when read through the widened shape (`T` is `string`).
+ */
+type SlotForm<
+  E extends EntityType,
+  D extends IPluginDefinition,
+  T extends string,
+> = string extends T
+  ? IFormDef
+  : IFormFor<FormBody<E, SlotApiPath<E, D, T>>, `${E}:${SlotApiPath<E, D, T>}`>;
+
+type SlotApiPath<
+  E extends EntityType,
+  D extends IPluginDefinition,
+  T extends string,
+> = NonNullable<D[E]>[T]["apiPath"] & keyof IEndpointsByEntity[E] & string;
 
 type RemoteDefOf<D extends IPluginDefinition, T extends string> = NonNullable<
   D["remote"]
@@ -41,7 +65,8 @@ type CreateFromUi<A> =
 export type IRemoteTypeUi<
   D extends IPluginDefinition,
   T extends string,
-> = ITypeUi & CreateFromUi<RemoteDefOf<D, T>["createFrom"]>;
+> = ITypeUi<SlotForm<"remote", D, T>> &
+  CreateFromUi<RemoteDefOf<D, T>["createFrom"]>;
 
 type RepositoryDefOf<
   D extends IPluginDefinition,
@@ -62,7 +87,7 @@ type ActionsUi<A> =
 export type IRepositoryTypeUi<
   D extends IPluginDefinition,
   T extends string,
-> = ITypeUi & {
+> = ITypeUi<SlotForm<"repository", D, T>> & {
   /** `["edit"]` for types Pulp creates itself (container push). */
   modes?: readonly FormMode[];
   browse: IPluginBrowse<TypesOf<D, "content">> | Generic;
@@ -78,9 +103,12 @@ export interface IContentGuardTypeUi {
   fields: IEntityField[];
 }
 
-export interface IDistributionTypeUi extends ITypeUi {
+export type IDistributionTypeUi<
+  D extends IPluginDefinition = IPluginDefinition,
+  T extends string = string,
+> = ITypeUi<SlotForm<"distribution", D, T>> & {
   clientSetup: ClientSetup | Generic;
-}
+};
 
 type ListParams<P> = P extends keyof ContentEndpoints
   ? keyof NonNullable<ContentEndpoints[P]["list"]["query"]> & string
@@ -104,13 +132,20 @@ export type IContentTypeUi<D extends IPluginDefinition, T extends string> = {
 interface IUiSections<D extends IPluginDefinition> {
   remote: { [T in TypesOf<D, "remote">]: IRemoteTypeUi<D, T> };
   repository: { [T in TypesOf<D, "repository">]: IRepositoryTypeUi<D, T> };
-  distribution: { [T in TypesOf<D, "distribution">]: IDistributionTypeUi };
-  publication: { [T in TypesOf<D, "publication">]: ITypeUi };
+  distribution: {
+    [T in TypesOf<D, "distribution">]: IDistributionTypeUi<D, T>;
+  };
+  publication: {
+    [T in TypesOf<D, "publication">]: ITypeUi<SlotForm<"publication", D, T>>;
+  };
   content: { [T in TypesOf<D, "content">]: IContentTypeUi<D, T> };
-  /** Its alternate content source; `label` defaults to the plugin's. */
-  acs: { label?: string };
   contentGuard: { [T in TypesOf<D, "contentGuard">]: IContentGuardTypeUi };
 }
+
+/** An ACS's name, only when the definition declares one; it defaults to the plugin's label. */
+type AcsUi<D extends IPluginDefinition> = D extends { acs: object }
+  ? { acs?: { label?: string } }
+  : { acs?: never };
 
 /**
  * A plugin's UI, its shape derived from its definition: a section per section the definition
@@ -124,7 +159,7 @@ export type PluginUi<D extends IPluginDefinition> = {
   [
     S in keyof IUiSections<D> as S extends keyof D ? S : never
   ]: IUiSections<D>[S];
-};
+} & AcsUi<D>;
 
 /** Any plugin's UI read through one shape: what the registry walks once checked per plugin. */
 export interface IAnyPluginUi {
@@ -141,9 +176,9 @@ export interface IAnyPluginUi {
   contentGuard?: Readonly<Record<string, IContentGuardTypeUi>>;
 }
 
-/** A plugin's definition and its checked UI, the unit the UI registry holds. */
-export interface IPluginModule {
-  definition: IPluginDefinition;
+/** A plugin's checked UI under its plugin's id, the unit the UI registry holds. */
+export interface IPluginModule<I extends string = string> {
+  id: I;
   ui: IAnyPluginUi;
 }
 
@@ -154,4 +189,4 @@ export const definePluginUi = <D extends IPluginDefinition>({
 }: {
   definition: D;
   ui: PluginUi<D>;
-}): IPluginModule => ({ definition, ui });
+}): IPluginModule<D["id"]> => ({ id: definition.id, ui });

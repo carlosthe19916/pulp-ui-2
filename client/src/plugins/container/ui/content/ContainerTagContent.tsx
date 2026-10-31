@@ -7,10 +7,10 @@ import type {
 import {
   ContentHeader,
   ContentPanelLayout,
-  type IContentPanelProps,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 import { ManifestDetails } from "./ManifestDetails";
 

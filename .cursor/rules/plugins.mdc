@@ -33,8 +33,8 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 
 - **Definition** (`definition.ts`, `definePlugin`): the packages that mean it's installed, its
   types per entity keyed by `pulp_type` with their `apiPath`, what a repository syncs from and
-  publishes to, `contentChanges`, `archiveImport`, `scan`, `rolesManaged`, action endpoints
-  (`path`, `target`, `repositoryParam`), a remote's `createFrom` endpoints, content types
+  publishes to, `contentChanges`, `archiveImport`, `rolesManaged`, action endpoints
+  (`path`, `target`, `repositoryParam`; a version `scan/` action makes it scannable), a remote's `createFrom` endpoints, content types
   (`apiPath`, `upload`), the ACS endpoint, content guard types (`apiPath`, `rolesManaged`,
   `downloaderRole`).
   It imports only `@plugin-sdk/definition` (and generated types).
@@ -42,8 +42,10 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   repository tab, client setup snippets, action labels and fields, upload fields, content
   search, the plugin's own pages (`pages`: label, route, `Page`), a remote's create alternatives
   (`createFrom`: label, `Modal`), the archive import (`archiveImport`: label, `Modal`), the ACS label, content
-  guard labels, descriptions and fields. A panel, view or modal file exports one component, named like the file; the plugin's
-  queries sit in `ui/queries/`, reusing the base `*Keys` from `@app/queries`.
+  guard labels, descriptions and fields. A panel, page or modal file exports one component,
+  named like the file; a Browse file exports one view per section. The plugin's queries sit in
+  `ui/queries/`, reusing the base `*Keys` from `@app/queries`; its facts come from its own
+  `definition.ts`, never `@catalog`.
 
 ## Type-checked completeness
 
@@ -58,19 +60,24 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   `clientSetup`), `null` where the piece can be absent (`tab`, `search`). A type's `label`
   is optional and defaults to the plugin's.
 - Forms are typed from the definition: `remoteForm(rpm.remote["rpm.uln"])(({ f, s }) => …)`
-  edits that collection's create body (the update body when Pulp can't create it).
+  edits that collection's create body (the update body when Pulp can't create it), and a type's
+  slot in the UI only takes the form built for its collection.
 - `@plugins` maps every plugin id in `PLUGIN_DEFINITIONS` to its UI: a definition without one
   fails to compile.
 
 ## Hosts
 
 - Pages and components read facts from `@catalog` (`getPulpType`, `getAvailableTypes`,
-  `getContentType`, …) and UI from `@plugins` (`getEntityForm`, `getContentPanel`,
-  `getRepositoryBrowse`, `getRepositoryTab`, `getRepositoryActions`, `getClientSetup`,
-  `getContentSearch`, `getUploadFields`, `getPluginPages`, `getContentGuardTypes`,
-  `useCreateTypeSelect`), never
-  `pulp_type` string comparisons, plugin `switch` chains or a plugin's files.
-- Panels, Browse views and tabs are lazy (`lazyViews(() => import("./browse/X"))("XView")`);
+  `getContentType`, `getScannableRepositoryTypes`, …) and UI from `@plugins`
+  (`getEntityForm`, `getContentPanel`, `getRepositoryBrowse`, `getRepositoryTab`,
+  `getRepositoryActions`, `getClientSetup`, `getContentSearch`, `getUploadFields`,
+  `getCreateAlternatives`, `getArchiveImport`, `getAcsTypes`, `getContentGuardTypes`,
+  `getPluginPage`, `getPluginPages`) or the `useCreatableTypes` / `useCreateTypeSelect` hooks,
+  never `pulp_type` string comparisons, plugin `switch` chains or a plugin's files.
+- To show only installed plugins, pass `{ installed }` (`useApiStatus().plugins`) to a list
+  lookup; don't filter its result by hand.
+- Panels, Browse views, tabs, pages and modals are lazy: one
+  `const xView = lazyViews(() => import("./browse/X"))` per module, then `xView("XFiles")`;
   hosts render them inside `Suspense`.
 - Plugin actions run through `RepositoryActionModal` with the `IPluginAction` the registry
   returns (endpoint, label and fields together); no per-action modal.
@@ -87,8 +94,8 @@ through it.
 Pass/fail rubric for `/eval`.
 
 - [ ] A plugin's code sits in its own `plugins/<id>/` folder; its `definition.ts` holds only
-      facts and imports only `@plugin-sdk/definition`; its `ui/` never imports `@plugins`, a
-      host or another plugin.
+      facts and imports only `@plugin-sdk/definition`; its `ui/` never imports `@plugins`,
+      `@catalog`, a host or another plugin.
 - [ ] `plugin-sdk/**` imports no plugin and no registry.
 - [ ] New per-type behaviour is a definition field or a `PluginUi` piece with an explicit
       opt-out, not a new `pulp_type`-keyed map elsewhere.

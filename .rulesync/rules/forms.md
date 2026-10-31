@@ -57,19 +57,29 @@ forms** run everything else (plugin actions, admin objects, uploads).
   headers and labels are `keyValue`, pickers are `resource`. Something the kinds can't express
   is a `custom` field. `defineForm` also rejects a kind that can't hold the key's API type.
 - Labels are `createOnly`; an existing object's labels change through its labels editor.
+- A `resource` picker offers only the types its field's `pulpTypes` lists (`remoteField(f, {
+pulpTypes: def.compatibleRemoteTypes })`); the page passes no filter.
+- One file per plugin × type in `ui/forms/`: `<entity>.ts` for the plugin's main type,
+  `<variant><Entity>.ts` for the others, exporting `<plugin><Variant><Entity>Form`
+  (`pushRepository.ts` → `containerPushRepositoryForm`). Shared sections use `SECTION_IDS`.
 - The page (`pages/<area>/<entity>/<entity>-create/`, `<entity>-edit/`) owns `useSubmitError`,
-  the mutation, the toasts and the navigation; `EntityFormPage` is controlled and builds the
+  the mutation, the toasts and the navigation, and renders `EntityCreatePage` /
+  `EntityEditPage` (`@app/components`), the controlled frames that look up the form and add the
+  breadcrumb, Type select, permission gate and running-task notice. `EntityFormPage` builds the
   body (create: non-empty visible values; edit: only the changed fields, an emptied field as its
   clear value, never the whole object).
-- A create page takes its Type select, carried-over values, `apiPath` and resource filter from
-  `useCreateTypeSelect`; edit routes and pages take the form from `getEntityForm` (both
-  `@plugins`).
+- A create page takes its Type select, carried-over values and `apiPath` from
+  `useCreateTypeSelect` (`@app/hooks`); edit routes take the form from `getEntityForm`
+  (`@plugins`) and prime the object fresh.
+- An edit page passes `can("change")` and the running task (`useRunningTask`, or
+  `useRepositoryActivity` for a repository) to `EntityEditPage`, and toasts the update with
+  `notifyUpdateResult` (a task or the updated object).
 - The page's `onSubmit` runs the mutation and calls the `saved(href?)` helper from its
   call-level `onSuccess`; the kit lifts the leave prompt and calls `onSaved`, where the page
-  navigates (an edit → the detail page; a remote or repository create → its new detail page; a
-  distribution or publication create, which runs as a task → the list). An edit with
+  navigates (an edit → the detail page; a remote or repository create → its new detail page,
+  or the list when the response has no href; a distribution or publication create, which runs as a task → the list). An edit with
   nothing to send calls `onSaved` without a request. Nothing navigates in `onError`.
-- An edit page renders `UnauthorizedState` instead of the form when
+- `EntityEditPage` renders `UnauthorizedState` instead of the form when
   `useObjectPermissions({ href }).can("change")` is false; lists and detail pages disable Edit
   with `disabledProps("change")`. A create page isn't pre-checked (Pulp exposes no create
   permission).

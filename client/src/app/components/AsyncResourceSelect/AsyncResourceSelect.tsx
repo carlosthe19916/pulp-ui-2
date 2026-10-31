@@ -16,7 +16,7 @@ interface IAsyncResourceSelectProps {
   value: string;
   onChange: (value: string) => void;
   /** Compatible pulp_types, filtered server-side; unset offers every type. */
-  pulpTypes?: string[];
+  pulpTypes?: readonly string[];
   /** An optional field: the menu offers "No <label>" to clear the selection. */
   isClearable?: boolean;
 }
@@ -70,7 +70,7 @@ interface IAsyncResourceMultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
   /** Compatible pulp_types, filtered server-side; unset offers every type. */
-  pulpTypes?: string[];
+  pulpTypes?: readonly string[];
 }
 
 /**

@@ -18,7 +18,6 @@ import {
 } from "@app/queries/content-guards";
 import { buildDefaultValues } from "@app/utils/formSchema";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { isPluginInstalled } from "@catalog";
 import { getContentGuardTypes } from "@plugins";
 
 import { guardTypeOf } from "../utils/guardTypes";
@@ -34,13 +33,10 @@ export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
   guard,
   onClose,
 }) => {
-  const { status } = useApiStatus();
+  const { plugins } = useApiStatus();
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const installed = status?.versions ?? [];
-  const types = getContentGuardTypes().filter(({ pluginId }) =>
-    isPluginInstalled({ pluginId, installed }),
-  );
+  const types = getContentGuardTypes({ installed: plugins });
   const [pulpType, setPulpType] = useState(() =>
     guard ? guardTypeOf(guard.pulp_href ?? "")?.pulpType : types[0]?.pulpType,
   );

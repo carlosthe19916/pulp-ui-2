@@ -1,4 +1,4 @@
-import { relativePathField } from "@app/utils/entityField";
+import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
 import { file } from "../definition";
@@ -52,7 +52,5 @@ export const fileUi = definePluginUi({
         upload: [relativePathField({ required: true })],
       },
     },
-    // The ACS takes the plugin's label.
-    acs: {},
   },
 });

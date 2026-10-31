@@ -6,7 +6,7 @@ import type { IUploadItem } from "./useUploadQueue";
 
 /** A content type's upload fields entered per file, as text inputs. */
 export const perFileFields = (contentType?: IContentType) =>
-  (contentType?.uploadable ? getUploadFields(contentType.pulpType) : []).filter(
+  (contentType?.upload ? getUploadFields(contentType.pulpType) : []).filter(
     (field) => field.type === "text",
   );
 

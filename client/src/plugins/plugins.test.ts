@@ -15,33 +15,12 @@ import {
   getUploadFields,
 } from "@plugins";
 
-import { PLUGIN_UI } from "./registry";
-
 const definitions: readonly IPluginDefinition[] = PLUGIN_DEFINITIONS;
 
 /** Conformance: what every plugin module must hold, checked over the real plugins. */
 describe.each(definitions.map((definition) => [definition.id, definition]))(
   "plugin %s",
   (_id, definition) => {
-    it("syncs from and publishes to types it declares", () => {
-      for (const [pulpType, repository] of Object.entries(
-        definition.repository ?? {},
-      )) {
-        for (const remote of repository.compatibleRemoteTypes) {
-          expect(
-            getPulpType(remote)?.entities.remote,
-            `${pulpType} → ${remote}`,
-          ).toBeDefined();
-        }
-        for (const publication of repository.compatiblePublicationTypes) {
-          expect(
-            getPulpType(publication)?.entities.publication,
-            `${pulpType} → ${publication}`,
-          ).toBeDefined();
-        }
-      }
-    });
-
     it("has a form for every type, opening with its essentials", () => {
       for (const entity of ENTITY_TYPES) {
         for (const pulpType of Object.keys(definition[entity] ?? {})) {
@@ -59,18 +38,13 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
       }
     });
 
-    it("runs every declared action, and scans only through a scan action", () => {
+    it("runs every declared action", () => {
       for (const [pulpType, repository] of Object.entries(
         definition.repository ?? {},
       )) {
-        const actions = getRepositoryActions(pulpType);
-        expect(actions.map((action) => action.key)).toEqual(
-          Object.keys(repository.actions ?? {}),
-        );
-        const scans = actions.some(
-          (action) => action.target === "version" && action.path === "scan/",
-        );
-        expect(scans, `${pulpType} scan`).toBe(!!repository.scan);
+        expect(
+          getRepositoryActions(pulpType).map((action) => action.key),
+        ).toEqual(Object.keys(repository.actions ?? {}));
       }
     });
 
@@ -105,12 +79,9 @@ describe("plugin registry", () => {
     ).toMatchObject({ rolesManaged: true, downloaderRole: true });
   });
 
-  it("registers each plugin's UI under its own id", () => {
-    for (const definition of definitions) {
-      expect(
-        PLUGIN_UI[definition.id as keyof typeof PLUGIN_UI].definition,
-      ).toBe(definition);
-    }
+  it("scans the versions of repositories that declare a scan action", () => {
+    expect(getPulpType("rpm.rpm")?.entities.repository?.scan).toBe(true);
+    expect(getPulpType("file.file")?.entities.repository?.scan).toBe(false);
   });
 
   it("creates publications but never edits them", () => {

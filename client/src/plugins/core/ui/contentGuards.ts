@@ -1,4 +1,4 @@
-import { contentGuardBaseFields } from "@app/forms/fragments";
+import { contentGuardBaseFields } from "@app/utils/entityFieldPresets";
 import type { IContentGuardTypeUi } from "@plugin-sdk/ui";
 
 const headerName = {

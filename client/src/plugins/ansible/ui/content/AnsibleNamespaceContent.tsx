@@ -7,11 +7,11 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LinkList,
   links,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** Galaxy namespace page: the publisher, contact and links. */
 export const AnsibleNamespaceContent: React.FC<IContentPanelProps> = ({

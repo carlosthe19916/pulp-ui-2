@@ -6,12 +6,12 @@ import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 
 import {
   BrowseTable,
-  type IBrowseContext,
   PathBreadcrumb,
   pathSegments,
   useBrowseListState,
 } from "@app/components/BrowseShell";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
 interface IPathCellProps {
   path: string;

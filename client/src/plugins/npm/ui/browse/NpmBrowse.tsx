@@ -1,14 +1,11 @@
 import type React from "react";
 
-import {
-  BrowseTable,
-  type IBrowseContext,
-  useBrowseListState,
-} from "@app/components/BrowseShell";
+import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
+import type { IBrowseContext } from "@plugin-sdk/ui";
 
-import { npmInstall } from "./helpers";
+import { npmInstall } from "../helpers";
 
 /** npmjs style: each package with its versions, newest first. */
 export const NpmPackages: React.FC<IBrowseContext> = ({

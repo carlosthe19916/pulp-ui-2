@@ -8,6 +8,7 @@ import { ostreeRepositoryForm } from "./forms/repository";
 const ostreeBrowse = lazyViews(() => import("./browse/OstreeBrowse"));
 const ostreeContent = lazyViews(() => import("./content/OstreeContent"));
 const ostreeRefContent = lazyViews(() => import("./content/OstreeRefContent"));
+const ostreeImportModal = lazyViews(() => import("./modals/OstreeImportModal"));
 
 export const ostreeUi = definePluginUi({
   definition: ostree,
@@ -19,9 +20,7 @@ export const ostreeUi = definePluginUi({
         form: ostreeRepositoryForm,
         archiveImport: {
           label: "Import archive",
-          Modal: lazyViews(() => import("./modals/OstreeImportModal"))(
-            "OstreeImportModal",
-          ),
+          Modal: ostreeImportModal("OstreeImportModal"),
         },
         browse: {
           sections: [

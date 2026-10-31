@@ -56,7 +56,7 @@ const Fact: React.FC<IFactProps> = ({ term, children }) => (
   </DescriptionListGroup>
 );
 
-/** Key facts about a repository, then the plugin settings that hold a value. */
+/** Key facts about a repository, then its set settings grouped the way its form groups them. */
 export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   repository,
   latestVersion,
@@ -77,10 +77,13 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
     mode: "edit",
   })?.form;
   const settings = (form ? toDetailSections(form) : [])
-    .flatMap((section) => section.fields)
-    .filter(
-      (f) => !NON_SETTING_KEYS.includes(f.key) && !isEmptyValue(data[f.key]),
-    );
+    .map((section) => ({
+      ...section,
+      fields: section.fields.filter(
+        (f) => !NON_SETTING_KEYS.includes(f.key) && !isEmptyValue(data[f.key]),
+      ),
+    }))
+    .filter((section) => section.fields.length > 0);
   const latestNumber = repository.latest_version_href
     ? extractIdFromHref(repository.latest_version_href)
     : undefined;
@@ -149,18 +152,18 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
           </Fact>
         )}
       </DescriptionList>
-      {settings.length > 0 && (
-        <>
+      {settings.map((section) => (
+        <Stack key={section.id}>
           <Title headingLevel="h3" size="md">
-            Settings
+            {section.title}
           </Title>
           <EntityDetailFields
-            fields={settings}
+            fields={section.fields}
             data={data}
             columnModifier={COLUMNS}
           />
-        </>
-      )}
+        </Stack>
+      ))}
     </Stack>
   );
 };

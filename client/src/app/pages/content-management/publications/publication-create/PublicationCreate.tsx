@@ -2,14 +2,8 @@ import type React from "react";
 
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  PageSection,
-} from "@patternfly/react-core";
-
-import { TableEmptyState } from "@app/components/TableEmptyState";
-import { EntityFormPage } from "@app/forms";
+import { EntityCreatePage } from "@app/components/EntityCreatePage";
+import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -17,7 +11,6 @@ import { useSubmitError } from "@app/hooks/useSubmitError";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { useCreateTypeSelect } from "@plugins";
 
 const routeApi = getRouteApi(
   "/_authenticated/content-management/$pulpDomain/publications/create",
@@ -35,14 +28,7 @@ export const PublicationCreate: React.FC = () => {
     entityType: "publication",
   });
 
-  const {
-    pulpType,
-    entry,
-    apiPath,
-    resourceFilter,
-    typeSelect,
-    initialValues,
-  } = useCreateTypeSelect({
+  const selection = useCreateTypeSelect({
     entity: "publication",
     type,
     onTypeChange: (next) => {
@@ -76,38 +62,21 @@ export const PublicationCreate: React.FC = () => {
       params: { pulpDomain },
     });
 
-  if (!pulpType || !entry || !apiPath) {
-    return (
-      <PageSection>
-        <TableEmptyState title="No publication type can be created" />
-      </PageSection>
-    );
-  }
-
   return (
-    <EntityFormPage
-      key={pulpType}
-      form={entry.form}
-      mode="create"
-      initialValues={initialValues}
-      breadcrumbs={
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/publications"
-              params={{ pulpDomain }}
-            >
-              Publications
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Create</BreadcrumbItem>
-        </Breadcrumb>
+    <EntityCreatePage
+      entityType="publication"
+      selection={selection}
+      listLink={
+        <Link
+          to="/content-management/$pulpDomain/publications"
+          params={{ pulpDomain }}
+        >
+          Publications
+        </Link>
       }
-      typeSelect={typeSelect}
-      resourceFilter={resourceFilter}
       submitError={submitError}
       isSubmitting={createMutation.isPending}
-      onSubmit={(body, { saved }) => {
+      onSubmit={(body, { apiPath, saved }) => {
         clearSubmitError();
         createMutation.mutate({ apiPath, body }, { onSuccess: () => saved() });
       }}

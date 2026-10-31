@@ -20,6 +20,5 @@ export {
   type IAcsType,
   type IFormEntry,
   type IGuardType,
+  type IPluginPage,
 } from "./registry";
-export { useCreatableTypes } from "./useCreatableTypes";
-export { useCreateTypeSelect } from "./useCreateTypeSelect";

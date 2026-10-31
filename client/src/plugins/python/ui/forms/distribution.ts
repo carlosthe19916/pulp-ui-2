@@ -13,7 +13,7 @@ import { distributionForm } from "@plugin-sdk/ui";
 import { python } from "../../definition";
 
 /** A PyPI index: serves a repository or publication, and can pull packages through a remote. */
-export const pypiDistributionForm = distributionForm(
+export const pythonDistributionForm = distributionForm(
   python.distribution["python.pypi"],
 )(({ f, s }) => ({
   title: { create: "Create PyPI distribution", edit: "Edit PyPI distribution" },

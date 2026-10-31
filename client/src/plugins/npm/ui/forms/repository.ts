@@ -14,7 +14,12 @@ export const npmRepositoryForm = repositoryForm(npm.repository["npm.npm"])(
     title: { create: "Create npm repository", edit: "Edit npm repository" },
     docsUrl: "https://pulpproject.org/pulp_npm/",
     sections: [
-      s.essentials([...repositoryIdentity(f), remoteField(f)]),
+      s.essentials([
+        ...repositoryIdentity(f),
+        remoteField(f, {
+          pulpTypes: npm.repository["npm.npm"].compatibleRemoteTypes,
+        }),
+      ]),
       retentionSection({ f, s }),
       labelsSection({ f, s }),
     ],

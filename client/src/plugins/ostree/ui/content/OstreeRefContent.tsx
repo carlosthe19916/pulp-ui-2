@@ -12,10 +12,10 @@ import {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
-  type IContentPanelProps,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 const PAGE = 10;
 

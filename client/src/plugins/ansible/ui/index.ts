@@ -10,6 +10,15 @@ import { ansibleRoleRemoteForm } from "./forms/roleRemote";
 
 const ansibleBrowse = lazyViews(() => import("./browse/AnsibleBrowse"));
 const ansibleContent = lazyViews(() => import("./content/AnsibleContent"));
+const ansibleCollectionList = lazyViews(
+  () => import("./pages/AnsibleCollectionList"),
+);
+const ansibleNamespaceContent = lazyViews(
+  () => import("./content/AnsibleNamespaceContent"),
+);
+const ansibleRoleContent = lazyViews(
+  () => import("./content/AnsibleRoleContent"),
+);
 
 export const ansibleUi = definePluginUi({
   definition: ansible,
@@ -19,9 +28,7 @@ export const ansibleUi = definePluginUi({
       {
         label: "Ansible Collections",
         to: "/content-management/$pulpDomain/ansible-collections",
-        Page: lazyViews(() => import("./pages/AnsibleCollectionList"))(
-          "AnsibleCollectionList",
-        ),
+        Page: ansibleCollectionList("AnsibleCollectionList"),
       },
     ],
     remote: {
@@ -110,15 +117,11 @@ export const ansibleUi = definePluginUi({
         ],
       },
       "ansible.namespace": {
-        panel: lazyViews(() => import("./content/AnsibleNamespaceContent"))(
-          "AnsibleNamespaceContent",
-        ),
+        panel: ansibleNamespaceContent("AnsibleNamespaceContent"),
         search: null,
       },
       "ansible.role": {
-        panel: lazyViews(() => import("./content/AnsibleRoleContent"))(
-          "AnsibleRoleContent",
-        ),
+        panel: ansibleRoleContent("AnsibleRoleContent"),
         search: null,
       },
     },

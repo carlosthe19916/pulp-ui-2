@@ -20,7 +20,9 @@ export const ansibleRepositoryForm = repositoryForm(
   sections: [
     s.essentials([
       ...repositoryIdentity(f),
-      remoteField(f),
+      remoteField(f, {
+        pulpTypes: ansible.repository["ansible.ansible"].compatibleRemoteTypes,
+      }),
       f.switch("private", {
         label: "Private",
         help: "Hide the repository's collections from users without access to it.",

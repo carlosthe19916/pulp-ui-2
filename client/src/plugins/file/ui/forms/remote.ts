@@ -4,6 +4,7 @@ import {
   nameField,
   POLICY_OPTIONS,
   policyField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -27,7 +28,7 @@ export const fileRemoteForm = remoteForm(file.remote["file.file"])(
           POLICY_OPTIONS.streamed,
         ]),
       ]),
-      s.collapsible("auth", "Authentication", authSection(f)),
+      s.collapsible(SECTION_IDS.auth, "Authentication", authSection(f)),
       ...connectionSections({ f, s }),
     ],
   }),

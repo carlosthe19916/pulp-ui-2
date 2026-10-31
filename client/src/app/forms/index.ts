@@ -11,6 +11,7 @@ export type {
   ICustomFieldProps,
   IFormContext,
   IFormDef,
+  IFormFor,
 } from "./kit/types";
 export {
   defineForm,

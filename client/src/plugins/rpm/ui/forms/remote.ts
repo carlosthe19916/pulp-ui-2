@@ -4,6 +4,7 @@ import {
   nameField,
   POLICY_OPTIONS,
   policyField,
+  SECTION_IDS,
   urlField,
 } from "@app/forms/fragments";
 import { remoteForm } from "@plugin-sdk/ui";
@@ -26,7 +27,7 @@ export const rpmRemoteForm = remoteForm(rpm.remote["rpm.rpm"])(({ f, s }) => ({
         POLICY_OPTIONS.streamed,
       ]),
     ]),
-    s.collapsible("auth", "Authentication", [
+    s.collapsible(SECTION_IDS.auth, "Authentication", [
       ...authSection(f),
       f.text("sles_auth_token", {
         label: "SLES authentication token",

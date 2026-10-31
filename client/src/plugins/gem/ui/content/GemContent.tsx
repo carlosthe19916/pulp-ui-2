@@ -9,12 +9,12 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   InstallSnippet,
   LabelList,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** rubygems.org style: gem install + Gemfile line, runtime dependencies. */
 export const GemContent: React.FC<IContentPanelProps> = ({ href }) => {

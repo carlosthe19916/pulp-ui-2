@@ -46,7 +46,6 @@ import {
   notifyTaskStarted,
 } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-import { isPluginInstalled } from "@catalog";
 import { getAcsTypes } from "@plugins";
 
 import { AcsModal } from "./components/AcsModal";
@@ -60,14 +59,9 @@ interface IAcsFilters {
  * from instead of the remote. One plugin at a time — they have no shared list.
  */
 export const AcsList: React.FC = () => {
-  const { status } = useApiStatus();
+  const { plugins } = useApiStatus();
   const { addNotification } = useNotifications();
-  const types = getAcsTypes().filter((type) =>
-    isPluginInstalled({
-      pluginId: type.pluginId,
-      installed: status?.versions ?? [],
-    }),
-  );
+  const types = getAcsTypes({ installed: plugins });
   const [selectedPath, setSelectedPath] = useState<string>();
   const acsType =
     types.find((type) => type.apiPath === selectedPath) ?? types[0];

@@ -18,17 +18,18 @@ const widget = {
       compatibleRemoteTypes: ["widget.widget", "widget.git"],
       compatiblePublicationTypes: ["widget.widget"],
       contentChanges: "modify",
-      scan: true,
       actions: {
         prune: {
           path: "/widget/prune/",
           target: "repository",
           repositoryParam: { key: "repo_hrefs", list: true },
         },
+        scan: { path: "scan/", target: "version" },
       },
     },
     "widget.push": {
       apiPath: "container/container-push",
+      rolesManaged: false,
       compatibleRemoteTypes: [],
       compatiblePublicationTypes: [],
       contentChanges: null,
@@ -56,20 +57,24 @@ describe("createCatalog", () => {
   const catalog = createCatalog([widget, gadget]);
 
   it("groups what every entity offers under its pulp_type", () => {
-    const plugin = catalog.getPulpType("widget.widget");
-    expect(plugin?.pluginId).toBe("widget");
-    expect(Object.keys(plugin?.entities ?? {}).sort()).toEqual([
+    const typeInfo = catalog.getPulpType("widget.widget");
+    expect(typeInfo?.pluginId).toBe("widget");
+    expect(Object.keys(typeInfo?.entities ?? {}).sort()).toEqual([
       "publication",
       "remote",
       "repository",
     ]);
-    expect(plugin?.entities.repository).toMatchObject({
+    expect(typeInfo?.entities.repository).toMatchObject({
       compatibleRemoteTypes: ["widget.widget", "widget.git"],
       contentChanges: "modify",
       archiveImport: false,
       scan: true,
+      rolesManaged: true,
       contentTypes: ["widget.unit", "widget.part"],
     });
+    expect(
+      catalog.getPulpType("widget.push")?.entities.repository,
+    ).toMatchObject({ scan: false, rolesManaged: false });
     expect(catalog.getPulpType("bogus.bogus")).toBeUndefined();
   });
 
@@ -83,6 +88,7 @@ describe("createCatalog", () => {
         target: "repository",
         repositoryParam: { key: "repo_hrefs", list: true },
       },
+      { key: "scan", path: "scan/", target: "version" },
     ]);
   });
 
@@ -111,7 +117,7 @@ describe("createCatalog", () => {
           entity: "remote",
           installed: installed("gadget"),
         })
-        .map((plugin) => plugin.pulpType),
+        .map((typeInfo) => typeInfo.pulpType),
     ).toEqual(["gadget.gadget"]);
     expect(
       catalog
@@ -127,10 +133,8 @@ describe("createCatalog", () => {
   });
 
   it("answers the content and capability questions pages ask", () => {
-    expect(catalog.getContentType("widget.unit")?.uploadable).toEqual({
-      mechanism: "upload",
-    });
-    expect(catalog.getContentType("widget.part")?.uploadable).toBeUndefined();
+    expect(catalog.getContentType("widget.unit")?.upload).toBe("upload");
+    expect(catalog.getContentType("widget.part")?.upload).toBeUndefined();
     // A repository that can't change its content doesn't take new content.
     expect(catalog.getRepositoryTypesForContent("widget.unit")).toEqual([
       "widget.widget",
@@ -139,7 +143,10 @@ describe("createCatalog", () => {
       "widget.widget",
     ]);
     expect(catalog.getScannableRepositoryTypes()).toEqual(["widget.widget"]);
-    expect(catalog.getAcsSources()).toEqual([
+    expect(
+      catalog.getScannableRepositoryTypes({ installed: installed("gadget") }),
+    ).toEqual([]);
+    expect(catalog.getAcsFacts()).toEqual([
       {
         pluginId: "widget",
         apiPath: "widget/widget",
@@ -148,7 +155,7 @@ describe("createCatalog", () => {
     ]);
   });
 
-  it("resolves content guard types from their hrefs", () => {
+  it("resolves content guard types from their apiPaths", () => {
     const guards = createCatalog([
       {
         id: "guards",
@@ -160,23 +167,21 @@ describe("createCatalog", () => {
       } as unknown as IPluginDefinition,
     ]);
     expect(
-      guards.resolveContentGuardType("/pulp/api/v3/contentguards/core/rbac/1/"),
+      guards.resolveContentGuardTypeByApiPath({ apiPath: "core/rbac" }),
     ).toMatchObject({
       pulpType: "guards.open",
       rolesManaged: true,
       downloaderRole: true,
     });
     expect(
-      guards.resolveContentGuardType(
-        "/pulp/api/v3/contentguards/certguard/x509/1/",
-      ),
+      guards.resolveContentGuardTypeByApiPath({ apiPath: "certguard/x509" }),
     ).toMatchObject({
       pulpType: "guards.cert",
       rolesManaged: false,
       downloaderRole: false,
     });
     expect(
-      guards.resolveContentGuardType("/pulp/api/v3/contentguards/x/y/1/"),
+      guards.resolveContentGuardTypeByApiPath({ apiPath: "x/y" }),
     ).toBeUndefined();
   });
 
@@ -200,6 +205,14 @@ describe("createCatalog", () => {
     } as unknown as IPluginDefinition;
     expect(() => createCatalog([gadget, path])).toThrow(
       'Duplicate content apiPath "gem/gem".',
+    );
+    const sameEndpoint = {
+      id: "same",
+      packages: [],
+      remote: { "same.remote": { apiPath: "gem/gem" } },
+    } as unknown as IPluginDefinition;
+    expect(() => createCatalog([gadget, sameEndpoint])).toThrow(
+      'Duplicate remote apiPath "gem/gem".',
     );
   });
 });

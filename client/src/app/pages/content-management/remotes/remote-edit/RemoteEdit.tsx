@@ -2,30 +2,18 @@ import type React from "react";
 
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  Label,
-  PageSection,
-} from "@patternfly/react-core";
-
-import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
-import { UnauthorizedState } from "@app/components/UnauthorizedState";
-import { EntityFormPage } from "@app/forms";
+import { EntityEditPage } from "@app/components/EntityEditPage";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
-import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useRemoteUpdateMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { buildResourceFilter } from "@app/utils/resourceFilter";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getPulpType } from "@catalog";
-import { getEntityForm } from "@plugins";
 
 interface IRemoteEditProps {
   pulpDomain: string;
@@ -43,104 +31,57 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
-  // The form keeps its own values, so a settled task needs no refetch here.
-  const { getActiveCount, getTasks } = useResourceTasks({
-    entities: [remote],
-    onSettled: () => undefined,
-  });
-  const isRunning = getActiveCount(remote.prn) > 0;
-  const entry = getEntityForm({ entity: "remote", pulpType, mode: "edit" });
+  const running = useRunningTask(remote);
   const name = remote.name ?? extractIdFromHref(href);
 
   const updateMutation = useRemoteUpdateMutation({
-    onSuccess: (data) => {
-      if ("task" in data) {
-        notifyTaskStarted({
-          addNotification,
-          taskHref: data.task,
-          title: `Remote "${name}" update started`,
-        });
-      } else {
-        addNotification({
-          title: `Remote "${name}" updated`,
-          variant: "success",
-        });
-      }
-    },
+    onSuccess: (data) =>
+      notifyUpdateResult({
+        addNotification,
+        data,
+        subject: `Remote "${name}"`,
+      }),
     onError: (error) =>
       setSubmitError(
         getMutationErrorMessage({ error, fallback: "Failed to update remote" }),
       ),
   });
 
+  const detailParams = {
+    pulpDomain,
+    remoteType: pulpType,
+    remoteId: extractIdFromHref(href),
+  };
   const toDetail = () =>
     void navigate({
       to: "/content-management/$pulpDomain/remotes/$remoteType/$remoteId",
-      params: {
-        pulpDomain,
-        remoteType: pulpType,
-        remoteId: extractIdFromHref(href),
-      },
+      params: detailParams,
     });
 
-  // The route loader only resolves for types with an edit form.
-  if (!entry) return null;
-
-  // The page is reachable by URL, so it checks for itself what the list's Edit action does.
-  if (!can("change")) {
-    return (
-      <PageSection>
-        <UnauthorizedState
-          description={`You don't have permission to change remote "${name}".`}
-        />
-      </PageSection>
-    );
-  }
-
   return (
-    <EntityFormPage
-      form={entry.form}
-      mode="edit"
-      entity={remote}
-      label={<Label color="blue">plugin: {pulpType}</Label>}
-      // Pulp queues an update behind the running task rather than refusing it.
-      notice={
-        isRunning && (
-          <EditDuringTaskAlert
-            entityLabel="remote"
-            running={getTasks(remote.prn)[0] ?? {}}
-          />
-        )
+    <EntityEditPage
+      entityType="remote"
+      pulpType={pulpType}
+      editedObject={remote}
+      name={name}
+      canChange={can("change")}
+      running={running}
+      listLink={
+        <Link
+          to="/content-management/$pulpDomain/remotes"
+          params={{ pulpDomain }}
+        >
+          Remotes
+        </Link>
       }
-      breadcrumbs={
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/remotes"
-              params={{ pulpDomain }}
-            >
-              Remotes
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <Link
-              to="/content-management/$pulpDomain/remotes/$remoteType/$remoteId"
-              params={{
-                pulpDomain,
-                remoteType: pulpType,
-                remoteId: extractIdFromHref(href),
-              }}
-            >
-              {name}
-            </Link>
-          </BreadcrumbItem>
-          <BreadcrumbItem isActive>Edit</BreadcrumbItem>
-        </Breadcrumb>
+      detailLink={
+        <Link
+          to="/content-management/$pulpDomain/remotes/$remoteType/$remoteId"
+          params={detailParams}
+        >
+          {name}
+        </Link>
       }
-      resourceFilter={buildResourceFilter({
-        kind: "remote",
-        plugin: getPulpType(pulpType),
-      })}
       submitError={submitError}
       isSubmitting={updateMutation.isPending}
       onSubmit={(body, { saved }) => {

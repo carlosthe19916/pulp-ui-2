@@ -55,7 +55,6 @@ const renderPage = async (props: Partial<PageProps> = {}) => {
           form={testForm}
           mode="create"
           breadcrumbs={null}
-          resourceFilter={{}}
           submitError={null}
           isSubmitting={false}
           onSubmit={onSubmit}

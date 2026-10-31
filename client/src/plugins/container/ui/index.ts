@@ -9,18 +9,24 @@ import {
 
 import { container } from "../definition";
 import { containerActions, containerPushActions } from "./actions";
-import {
-  containerDistributionForm,
-  containerPullThroughDistributionForm,
-} from "./forms/distribution";
+import { containerDistributionForm } from "./forms/distribution";
+import { containerPullThroughDistributionForm } from "./forms/pullThroughDistribution";
 import { containerPullThroughRemoteForm } from "./forms/pullThroughRemote";
+import { containerPushRepositoryForm } from "./forms/pushRepository";
 import { containerRemoteForm } from "./forms/remote";
-import {
-  containerPushRepositoryForm,
-  containerRepositoryForm,
-} from "./forms/repository";
+import { containerRepositoryForm } from "./forms/repository";
+import { pullCommand } from "./helpers";
 
 const containerBrowse = lazyViews(() => import("./browse/ContainerBrowse"));
+const containerNamespaceList = lazyViews(
+  () => import("./pages/ContainerNamespaceList"),
+);
+const containerManifestContent = lazyViews(
+  () => import("./content/ContainerManifestContent"),
+);
+const containerTagContent = lazyViews(
+  () => import("./content/ContainerTagContent"),
+);
 
 const browse: IPluginBrowse<TypesOf<typeof container, "content">> = {
   sections: [
@@ -43,7 +49,7 @@ const clientSetup: ClientSetup = ({ registryPath }) =>
   registryPath
     ? {
         hint: "Pull an image by tag.",
-        code: `podman pull ${registryPath}:<tag>`,
+        code: pullCommand({ registryPath, tag: "<tag>" }),
       }
     : null;
 
@@ -55,9 +61,7 @@ export const containerUi = definePluginUi({
       {
         label: "Container Namespaces",
         to: "/content-management/$pulpDomain/container-namespaces",
-        Page: lazyViews(() => import("./pages/ContainerNamespaceList"))(
-          "ContainerNamespaceList",
-        ),
+        Page: containerNamespaceList("ContainerNamespaceList"),
       },
     ],
     remote: {
@@ -95,16 +99,12 @@ export const containerUi = definePluginUi({
     content: {
       "container.blob": { panel: GENERIC, search: null },
       "container.manifest": {
-        panel: lazyViews(() => import("./content/ContainerManifestContent"))(
-          "ContainerManifestContent",
-        ),
+        panel: containerManifestContent("ContainerManifestContent"),
         search: { param: "digest", label: "digest" },
       },
       "container.signature": { panel: GENERIC, search: null },
       "container.tag": {
-        panel: lazyViews(() => import("./content/ContainerTagContent"))(
-          "ContainerTagContent",
-        ),
+        panel: containerTagContent("ContainerTagContent"),
         search: { param: "name", label: "tag" },
       },
     },

@@ -1,5 +1,5 @@
-import { contentGuardBaseFields } from "@app/forms/fragments";
 import type { IEntityField } from "@app/utils/entityField";
+import { contentGuardBaseFields } from "@app/utils/entityFieldPresets";
 import { definePluginUi } from "@plugin-sdk/ui";
 
 import { certguard } from "../definition";

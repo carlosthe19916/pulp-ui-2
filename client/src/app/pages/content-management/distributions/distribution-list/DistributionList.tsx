@@ -43,6 +43,7 @@ import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useColumnSort } from "@app/hooks/useColumnSort";
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
@@ -63,7 +64,7 @@ import {
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
-import { getEntityForm, useCreatableTypes } from "@plugins";
+import { getEntityForm } from "@plugins";
 
 import { DistributionDetailPanel } from "./components/DistributionDetailPanel";
 

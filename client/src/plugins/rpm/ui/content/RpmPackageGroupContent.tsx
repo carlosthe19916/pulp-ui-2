@@ -8,11 +8,11 @@ import {
   ContentSection,
   FactList,
   facts,
-  type IContentPanelProps,
   LabelList,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** `dnf group info`: the group and the packages it pulls in. */
 export const RpmPackageGroupContent: React.FC<IContentPanelProps> = ({

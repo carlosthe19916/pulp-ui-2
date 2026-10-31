@@ -11,6 +11,10 @@ import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { pulpApiPath } from "@app/queries/utils/pulpApi";
 
+import { python } from "../../definition";
+
+const remote = python.remote["python.python"];
+
 /** Creates a Python remote from a Bandersnatch config file (synchronous). */
 export const useBandersnatchRemoteCreateMutation = (
   options?: IMutationCallbacks<
@@ -32,7 +36,10 @@ export const useBandersnatchRemoteCreateMutation = (
       if (policy) form.append("policy", policy);
       return (
         await axiosInstance.post<GenericRemoteResponse>(
-          pulpApiPath("remotes/python/python/from_bandersnatch/", domain),
+          pulpApiPath(
+            `remotes/${remote.apiPath}/${remote.createFrom.bandersnatch.path}`,
+            domain,
+          ),
           form,
         )
       ).data;

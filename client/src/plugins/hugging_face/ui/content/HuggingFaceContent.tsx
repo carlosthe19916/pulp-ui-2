@@ -9,12 +9,12 @@ import {
   ContentPanelLayout,
   FactList,
   facts,
-  type IContentPanelProps,
   InstallSnippet,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** Hub "Files and versions": one file of a repo at a revision. */
 export const HuggingFaceContent: React.FC<IContentPanelProps> = ({ href }) => {

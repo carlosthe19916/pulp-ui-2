@@ -19,7 +19,6 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { FormSubmitError } from "@app/components/FormSubmitError";
 import { toFieldRecord } from "@app/utils/formSchema";
-import type { ResourceFilterMap } from "@app/utils/resourceFilter";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
 import { buildCreateBody, buildPatchBody } from "../derive/body";
@@ -47,7 +46,7 @@ export interface ITypeSelectProps {
   options: ITypeOption[];
   value: string;
   /** Called with the current values so the page can carry the shared ones over. */
-  onChange: (pulpType: string, values: FormValues) => void;
+  onChange: (change: { pulpType: string; values: FormValues }) => void;
 }
 
 interface IEntityFormPageProps {
@@ -63,7 +62,6 @@ interface IEntityFormPageProps {
   typeSelect?: ITypeSelectProps;
   /** An inline alert about the object's state, shown above the fields. */
   notice?: React.ReactNode;
-  resourceFilter: ResourceFilterMap;
   submitError: IMutationErrorMessage | null;
   isSubmitting: boolean;
   /** Runs the request; call `saved()` from its success callback. */
@@ -87,7 +85,6 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
   label,
   typeSelect,
   notice,
-  resourceFilter,
   submitError,
   isSubmitting,
   onSubmit,
@@ -193,7 +190,7 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
           options={typeSelect.options}
           value={typeSelect.value}
           onChange={(pulpType) =>
-            typeSelect.onChange(pulpType, methods.getValues())
+            typeSelect.onChange({ pulpType, values: methods.getValues() })
           }
         />
       )}
@@ -204,7 +201,6 @@ export const EntityFormPage: React.FC<IEntityFormPageProps> = ({
           ctx={ctx}
           anchorId={anchorId(section.id)}
           idPrefix={formId}
-          resourceFilter={resourceFilter}
           isExpanded={expanded.has(section.id)}
           onToggle={(isExpanded) =>
             setSectionExpanded({ id: section.id, isExpanded })

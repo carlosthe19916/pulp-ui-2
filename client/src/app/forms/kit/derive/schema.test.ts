@@ -94,13 +94,4 @@ describe("buildFormSchema", () => {
     });
     expect(hidden).toEqual({});
   });
-
-  it("skips read-only fields on edit", async () => {
-    const values = { ...valid("edit"), base_path: "" };
-    const schema = buildFormSchema({
-      form: testForm,
-      ctx: { mode: "edit", values },
-    });
-    expect(Object.keys(schema.fields)).not.toContain("base_path");
-  });
 });

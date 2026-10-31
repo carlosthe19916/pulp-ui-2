@@ -12,7 +12,6 @@ describe("StringListField", () => {
         id="tags"
         label="Include tags"
         value={["latest"]}
-        isDisabled={false}
         onChange={onChange}
       />,
     );
@@ -28,7 +27,6 @@ describe("StringListField", () => {
         id="tags"
         label="Include tags"
         value={["latest", "stable"]}
-        isDisabled={false}
         onChange={onChange}
       />,
     );

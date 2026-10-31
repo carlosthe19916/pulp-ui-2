@@ -61,7 +61,7 @@ export const useResourceTasks = <T extends IResourceEntity>({
 }: {
   entities: T[];
   /** Called for a row when its active-task count drops (a task settled). */
-  onSettled: (event: IResourceTaskSettled<T>) => void;
+  onSettled?: (event: IResourceTaskSettled<T>) => void;
 }) => {
   const prns = entities
     .map((entity) => entity.prn)
@@ -111,7 +111,7 @@ export const useResourceTasks = <T extends IResourceEntity>({
       next.set(prn, count);
       if (count < (prev.get(prn) ?? 0)) {
         const entity = entityByPrn.get(prn);
-        if (entity) onSettledRef.current({ entity });
+        if (entity) onSettledRef.current?.({ entity });
       }
     });
     prevCountByPrnRef.current = next;

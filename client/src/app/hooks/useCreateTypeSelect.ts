@@ -5,22 +5,16 @@ import {
   type FormValues,
   type ITypeSelectProps,
 } from "@app/forms";
-import {
-  buildResourceFilter,
-  type ResourceFilterMap,
-} from "@app/utils/resourceFilter";
+import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { type EntityType, getPulpType } from "@catalog";
+import { getEntityForm, type IFormEntry } from "@plugins";
 
-import { getEntityForm, type IFormEntry } from "./registry";
-import { useCreatableTypes } from "./useCreatableTypes";
-
-interface ICreateTypeSelect {
+export interface ICreateTypeSelect {
   /** The selected type: `?type=` when creatable, else the first creatable one. */
   pulpType?: string;
   entry?: IFormEntry;
   /** The collection the create POST goes to. */
   apiPath?: string;
-  resourceFilter: ResourceFilterMap;
   typeSelect: ITypeSelectProps;
   /** Values carried over from the type the user switched away from. */
   initialValues?: FormValues;
@@ -51,18 +45,18 @@ export const useCreateTypeSelect = ({
   const entry = pulpType
     ? getEntityForm({ entity, pulpType, mode: "create" })
     : undefined;
-  const plugin = pulpType ? getPulpType(pulpType) : undefined;
 
   return {
     pulpType,
     entry,
-    apiPath: plugin?.entities[entity]?.apiPath,
-    resourceFilter: buildResourceFilter({ kind: entity, plugin }),
+    apiPath: pulpType
+      ? getPulpType(pulpType)?.entities[entity]?.apiPath
+      : undefined,
     initialValues: carried?.pulpType === pulpType ? carried.values : undefined,
     typeSelect: {
       options,
       value: pulpType ?? "",
-      onChange: (next, values) => {
+      onChange: ({ pulpType: next, values }) => {
         const nextEntry = getEntityForm({
           entity,
           pulpType: next,

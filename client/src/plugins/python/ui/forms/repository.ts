@@ -18,7 +18,12 @@ export const pythonRepositoryForm = repositoryForm(
   },
   docsUrl: "https://pulpproject.org/pulp_python/",
   sections: [
-    s.essentials([...repositoryIdentity(f), remoteField(f)]),
+    s.essentials([
+      ...repositoryIdentity(f),
+      remoteField(f, {
+        pulpTypes: python.repository["python.python"].compatibleRemoteTypes,
+      }),
+    ]),
     s.collapsible("packages", "Package policy", [
       f.switch("allow_package_substitution", {
         label: "Allow package substitution",

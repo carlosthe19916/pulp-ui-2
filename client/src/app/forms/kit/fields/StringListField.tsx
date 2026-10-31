@@ -15,7 +15,6 @@ interface IStringListFieldProps {
   id: string;
   label: string;
   value: string[];
-  isDisabled: boolean;
   onChange: (value: string[]) => void;
 }
 
@@ -30,7 +29,6 @@ export const StringListField: React.FC<IStringListFieldProps> = ({
   id,
   label,
   value,
-  isDisabled,
   onChange,
 }) => {
   const [draft, setDraft] = useState("");
@@ -44,7 +42,7 @@ export const StringListField: React.FC<IStringListFieldProps> = ({
   };
 
   return (
-    <TextInputGroup isDisabled={isDisabled}>
+    <TextInputGroup>
       <TextInputGroupMain
         inputId={id}
         aria-label={label}
@@ -70,11 +68,7 @@ export const StringListField: React.FC<IStringListFieldProps> = ({
               <Label
                 key={entry}
                 variant="outline"
-                onClose={
-                  isDisabled
-                    ? undefined
-                    : () => onChange(value.filter((item) => item !== entry))
-                }
+                onClose={() => onChange(value.filter((item) => item !== entry))}
               >
                 {entry}
               </Label>
@@ -82,7 +76,7 @@ export const StringListField: React.FC<IStringListFieldProps> = ({
           </LabelGroup>
         )}
       </TextInputGroupMain>
-      {value.length > 0 && !isDisabled && (
+      {value.length > 0 && (
         <TextInputGroupUtilities>
           <Button
             variant="plain"

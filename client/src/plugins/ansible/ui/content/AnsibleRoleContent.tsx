@@ -4,11 +4,11 @@ import type { AnsibleRoleResponse } from "@app/client";
 import {
   ContentHeader,
   ContentPanelLayout,
-  type IContentPanelProps,
   InstallSnippet,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { useContentDetailQuery } from "@app/queries/content";
+import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 /** Galaxy legacy role page: role name, version and install command. */
 export const AnsibleRoleContent: React.FC<IContentPanelProps> = ({ href }) => {

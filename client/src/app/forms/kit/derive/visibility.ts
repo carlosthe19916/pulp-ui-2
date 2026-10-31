@@ -49,13 +49,3 @@ export const visibleFields = ({
     .filter((section) => isSectionVisible({ section, ctx }))
     .flatMap(sectionFields)
     .filter((field) => isFieldVisible({ field, ctx }));
-
-export const isReadOnly = ({
-  field,
-  ctx,
-}: {
-  field: IFieldDef;
-  ctx: IFormContext;
-}): boolean =>
-  (ctx.mode === "edit" && field.availability === "readOnlyOnEdit") ||
-  (field.disabledWhen?.(ctx) ?? false);

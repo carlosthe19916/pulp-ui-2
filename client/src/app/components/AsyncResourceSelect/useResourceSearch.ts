@@ -48,7 +48,7 @@ interface IUseResourceSearchOptions {
    * Compatible pulp_types (e.g. a repository's remote types), sent as `pulp_type__in`
    * to the kinds that take it (repository, remote, publication); unset offers every type.
    */
-  pulpTypes?: string[];
+  pulpTypes?: readonly string[];
 }
 
 /**
