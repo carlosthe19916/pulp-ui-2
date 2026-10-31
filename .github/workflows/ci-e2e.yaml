@@ -327,3 +327,24 @@ jobs:
       - name: Stop Pulp
         if: always()
         run: oci-env -e compose.ci.env compose down -v
+
+  # Single required check for the whole e2e pipeline. A matrix job skipped by a
+  # job-level `if:` reports one unexpanded check instead of each leg, so the
+  # per-leg names can't be required; this job passes when e2e succeeded or was
+  # skipped (website-only change) and fails otherwise.
+  e2e-gate:
+    needs: [changes, build-backend, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check e2e results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Needed job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success | skipped) ;;
+              *) echo "e2e pipeline did not pass ($r)"; exit 1 ;;
+            esac
+          done
