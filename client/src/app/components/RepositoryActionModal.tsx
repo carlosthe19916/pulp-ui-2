@@ -1,19 +1,16 @@
 import type React from "react";
 
-import type { IRepositoryAction } from "@catalog";
-
 import type { RepositoryResponse } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
-import { getActionFields } from "@app/forms";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useRepositoryActionMutation } from "@app/queries/repositories";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
+import type { IPluginAction } from "@plugin-sdk/ui";
 
 interface IRepositoryActionModalProps {
-  action: IRepositoryAction;
+  action: IPluginAction;
   repository: RepositoryResponse;
   /** The repository, or the version a `target: "version"` action runs on. */
   targetHref: string;
@@ -21,7 +18,7 @@ interface IRepositoryActionModalProps {
   onClose: () => void;
 }
 
-/** Runs one catalog repository action through the shared action form. */
+/** Runs one plugin repository action through the shared action form. */
 export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
   action,
   repository,
@@ -66,10 +63,7 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
       title={`${action.label} — "${repository.name}"`}
       description={action.description}
       submitLabel={action.label}
-      fields={getActionFields({
-        repositoryType: resolvePulpType(repository.pulp_href) ?? "",
-        actionKey: action.key,
-      })}
+      fields={action.fields}
       initialValues={initialValues}
       repository={repository}
       isSubmitting={mutation.isPending}

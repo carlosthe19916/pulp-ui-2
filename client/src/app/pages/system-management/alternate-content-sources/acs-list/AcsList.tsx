@@ -46,10 +46,10 @@ import {
   notifyTaskStarted,
 } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
-import { getPlugin } from "@catalog";
+import { isPluginInstalled } from "@catalog";
+import { getAcsTypes } from "@plugins";
 
 import { AcsModal } from "./components/AcsModal";
-import { ACS_TYPES } from "./utils/acsTypes";
 
 interface IAcsFilters {
   name: string;
@@ -62,8 +62,11 @@ interface IAcsFilters {
 export const AcsList: React.FC = () => {
   const { status } = useApiStatus();
   const { addNotification } = useNotifications();
-  const types = ACS_TYPES.filter((type) =>
-    getPlugin(type.pluginType)?.isAvailable(status?.versions ?? []),
+  const types = getAcsTypes().filter((type) =>
+    isPluginInstalled({
+      pluginId: type.pluginId,
+      installed: status?.versions ?? [],
+    }),
   );
   const [selectedPath, setSelectedPath] = useState<string>();
   const acsType =

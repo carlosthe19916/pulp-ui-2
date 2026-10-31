@@ -51,7 +51,7 @@ Admin suites derive from the use cases in `e2e/specs/**/*.md`.
   detail goes in the `*-list` spec under one scenario ID.
 - An entity's **contract** test (`*.api.spec.ts`) and an entity with no surface split
   (`domains`) sit at the **entity root**. A whole-area spec sits at the **area root**
-  (`content-management/creation-forms.spec.ts`); a cross-area spec (smoke sweep, seed)
+  (`content-management/content-domain.spec.ts`); a cross-area spec (smoke sweep, seed)
   and `auth.setup.ts` at the `tests/` root.
 - Shared infra lives in **`e2e/support/`**, not under `tests/`: `fixtures.ts`, `pom/`,
   `helpers/`, `data/`. Helpers both surfaces of a split entity use go in

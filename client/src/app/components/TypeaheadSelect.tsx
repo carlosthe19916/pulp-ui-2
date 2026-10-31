@@ -43,6 +43,8 @@ interface ITypeaheadSelectProps {
   selectedLabel?: string;
   /** Whether the toggle stretches to its container (default true, for forms). */
   isToggleFullWidth?: boolean;
+  /** When set and a value is selected, the menu offers this option to clear it. */
+  clearLabel?: string;
 }
 
 /** Single-select typeahead built on PatternFly Select. */
@@ -59,6 +61,7 @@ export const TypeaheadSelect: React.FC<ITypeaheadSelectProps> = ({
   onOpenChange,
   selectedLabel: selectedLabelProp,
   isToggleFullWidth = true,
+  clearLabel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -140,6 +143,9 @@ export const TypeaheadSelect: React.FC<ITypeaheadSelectProps> = ({
       </MenuSearch>
       <Divider />
       <SelectList>
+        {clearLabel && value && (
+          <SelectOption value="">{clearLabel}</SelectOption>
+        )}
         {isLoading && (
           <SelectOption isDisabled>
             <Spinner size="sm" aria-label="Loading options" /> Loading…

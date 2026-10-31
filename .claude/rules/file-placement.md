@@ -64,18 +64,20 @@ client/src/app/
 
 ```
 forms/
-  index.ts  registry.ts      # public surface; per-entity registries by pulp_type
-  useCreateTypeSelect.ts     # a create page's Type select and carried-over values
+  index.ts                   # public surface: the kit
   kit/                       # the definition language, derivations and renderer
     types.ts  defineForm.ts  derive/
     EntityFormPage/  fields/ # component folders and flat field components
-  fragments/                 # shared fields and sections plugins opt into
-  remotes/  repositories/  distributions/  publications/   # <plugin>.ts + index.ts
-  actions/  uploads/         # plugin action fields and upload fields (modal forms)
+  fragments/                 # shared fields and sections plugin forms opt into (index.ts)
 ```
 
-Pages import it only through `@app/forms` (its `index.ts`). A module only one form page uses
-still lives in that page's directory.
+Pages import it only through `@app/forms`; plugin forms also use `@app/forms/fragments`. A
+module only one form page uses still lives in that page's directory.
+
+## Plugins (`plugins/`, `plugin-sdk/`)
+
+Plugin code sits outside `app/`, one folder per plugin, laid out as [plugins](plugins.md)
+describes. Within a plugin's `ui/`, the narrowest-scope rule above applies as usual.
 
 ## React Context
 
@@ -95,7 +97,7 @@ Pass/fail rubric for `/eval`.
 - [ ] Component folders are flat and hold an `index.ts`.
 - [ ] A page directory's root holds its main component and its route adapter, if any.
 - [ ] No `components/`, `hooks/`, `utils/` or `context/` under an area or entity directory.
-- [ ] Form definitions, fragments and kit modules follow the `forms/` layout; pages import it
-      through `@app/forms`.
+- [ ] Kit modules and fragments follow the `forms/` layout; pages import it through
+      `@app/forms`. Plugin forms, panels, Browse views and tabs sit in their plugin's `ui/`.
 - [ ] New contexts sit at the narrowest scope, split into `<Name>Context.ts` +
       `<Name>Provider.tsx` (in `context/<Name>/` outside a component folder).

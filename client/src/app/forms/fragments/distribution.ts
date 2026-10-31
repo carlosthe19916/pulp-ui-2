@@ -13,6 +13,10 @@ import { labelsField } from "./labels";
 export type DistributionSource =
   "repository" | "repository_version" | "publication";
 
+/** Help for the `checkpoint` switch of distributions that serve published content. */
+export const CHECKPOINT_HELP =
+  "Serve the checkpoint publications of the source, browsable by date.";
+
 const SOURCE_OPTIONS: Record<DistributionSource, IChoiceOption> = {
   repository: {
     value: "repository",
@@ -147,6 +151,21 @@ export const accessSection = <T extends IAccessKeys>({
     f.switch("hidden", {
       label: "Hidden",
       help: "Leave the distribution out of the content app's listing.",
+    }),
+  ]);
+
+/** The checkpoint switch of distributions that serve published content. */
+export const checkpointSection = <T extends { checkpoint?: unknown }>({
+  f,
+  s,
+}: {
+  f: IFieldBuilders<T>;
+  s: ISectionBuilders;
+}) =>
+  s.collapsible("checkpoints", "Checkpoints", [
+    f.switch("checkpoint", {
+      label: "Checkpoint distribution",
+      help: CHECKPOINT_HELP,
     }),
   ]);
 

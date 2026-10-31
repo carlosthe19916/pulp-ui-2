@@ -35,7 +35,9 @@ import {
 } from "@app/queries/repositories";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
-import { getPlugin, type IRepositoryAction } from "@catalog";
+import { getPlugin } from "@catalog";
+import type { IPluginAction } from "@plugin-sdk/ui";
+import { getRepositoryActions } from "@plugins";
 
 import { VersionVulnerabilityAlert } from "./components/VersionVulnerabilityAlert";
 
@@ -70,7 +72,7 @@ export const RepositoryVersionDetail: React.FC<
     repository,
   });
   const [action, setAction] = useState<VersionAction | null>(null);
-  const [versionAction, setVersionAction] = useState<IRepositoryAction | null>(
+  const [versionAction, setVersionAction] = useState<IPluginAction | null>(
     null,
   );
   const { disabledProps } = useObjectPermissions({ href: repositoryHref });
@@ -83,7 +85,7 @@ export const RepositoryVersionDetail: React.FC<
     repository.latest_version_href !== version.pulp_href;
   const repoEntity = getPlugin(pulpType)?.entities.repository;
   const canRestore = repoEntity?.contentChanges === "modify";
-  const versionActions = (repoEntity?.actions ?? []).filter(
+  const versionActions = getRepositoryActions(pulpType).filter(
     (item) => item.target === "version",
   );
 
@@ -172,7 +174,7 @@ export const RepositoryVersionDetail: React.FC<
               />
             </StackItem>
           )}
-          {versionActions.some((item) => item.key === "scan") && (
+          {repoEntity?.scan && (
             <StackItem>
               <VersionVulnerabilityAlert
                 pulpDomain={pulpDomain}

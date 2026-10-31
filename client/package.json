@@ -19,7 +19,7 @@
     "start:dev": "vite --port 3000 --host",
     "start": "vite preview",
     "test": "vitest",
-    "generate": "openapi-ts -f ./config/openapi-ts.config.ts && node ./scripts/patch-openapi-client.mjs",
+    "generate": "openapi-ts -f ./config/openapi-ts.config.ts && node ./scripts/patch-openapi-client.mjs && node ./scripts/generate-pulp-types.mjs",
     "coverage": "vitest run --coverage",
     "preview": "vite preview"
   },

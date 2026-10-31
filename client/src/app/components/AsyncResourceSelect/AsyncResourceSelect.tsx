@@ -17,6 +17,8 @@ interface IAsyncResourceSelectProps {
   onChange: (value: string) => void;
   /** Compatible pulp_types, filtered server-side; unset offers every type. */
   pulpTypes?: string[];
+  /** An optional field: the menu offers "No <label>" to clear the selection. */
+  isClearable?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export const AsyncResourceSelect: React.FC<IAsyncResourceSelectProps> = ({
   value,
   onChange,
   pulpTypes,
+  isClearable,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -55,6 +58,7 @@ export const AsyncResourceSelect: React.FC<IAsyncResourceSelectProps> = ({
       onOpenChange={setIsOpen}
       isLoading={isLoading}
       selectedLabel={selectedLabel}
+      clearLabel={isClearable ? `No ${label.toLowerCase()}` : undefined}
     />
   );
 };

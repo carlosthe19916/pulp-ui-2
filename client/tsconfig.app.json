@@ -18,8 +18,9 @@
     "types": ["vite/client"],
     "paths": {
       "@app/*": ["./src/app/*"],
-      "@catalog": ["./src/catalog"],
-      "@catalog/*": ["./src/catalog/*"]
+      "@catalog": ["./src/plugins/catalog"],
+      "@plugin-sdk/*": ["./src/plugin-sdk/*"],
+      "@plugins": ["./src/plugins"]
     },
     "esModuleInterop": true
   },

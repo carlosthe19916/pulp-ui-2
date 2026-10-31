@@ -112,7 +112,8 @@ throws on it, which renders `DetailRouteError`.
   detail-by-href (`<family>DetailQueryOptions`, generic over the response type when
   it varies by plugin; callers pass the concrete generated type, never a union).
 - Actions on an existing object take its href; only create builds the endpoint from the
-  catalog `apiPath`. Per-plugin body shape is modelled in the catalog, not by separate hooks.
+  plugin definition's `apiPath` (`@catalog`). Per-plugin body shape is modelled in the plugin,
+  not by separate hooks.
 - **`queries/<plugin>-<family>.ts`** holds only genuinely plugin-specific queries and reuses
   the base `*Keys`. No `<plugin><Family>DetailQueryOptions`.
 

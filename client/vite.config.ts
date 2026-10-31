@@ -103,7 +103,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@app": path.resolve(__dirname, "./src/app"),
-      "@catalog": path.resolve(__dirname, "./src/catalog"),
+      "@catalog": path.resolve(__dirname, "./src/plugins/catalog"),
+      "@plugin-sdk": path.resolve(__dirname, "./src/plugin-sdk"),
+      "@plugins": path.resolve(__dirname, "./src/plugins"),
     },
   },
   // Scan every source file for deps up front: coverage transforms untested files late,

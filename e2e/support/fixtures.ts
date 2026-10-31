@@ -105,8 +105,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Remotes",
         tableName: "Remotes table",
         singular: "Remote",
-        createButton: "Create remote",
-        form: "page",
       }),
     );
   },
@@ -117,7 +115,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Repositories",
         tableName: "Repositories table",
         singular: "Repository",
-        createButton: "Create repository",
       }),
     );
   },
@@ -128,7 +125,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Distributions",
         tableName: "Distributions table",
         singular: "Distribution",
-        createButton: "Create distribution",
       }),
     );
   },
@@ -139,7 +135,6 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
         heading: "Publications",
         tableName: "Publications table",
         singular: "Publication",
-        createButton: "Create publication",
       }),
     );
   },

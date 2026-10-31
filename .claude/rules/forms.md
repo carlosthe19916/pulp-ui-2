@@ -1,6 +1,7 @@
 ---
 paths:
   - client/src/app/forms/**
+  - client/src/plugins/*/ui/forms/**
   - client/src/app/pages/**/*-create/**
   - client/src/app/pages/**/*-edit/**
   - client/src/app/**/*Form.tsx
@@ -31,17 +32,20 @@ forms** run everything else (plugin actions, admin objects, uploads).
 - The primary button is `type="submit" form={formId}` with `<Form id={formId}>`, so Enter and
   click share one `onSubmit`.
 
-## Form pages (`client/src/app/forms/`)
+## Form pages
 
-- Each plugin × entity is one definition, `forms/<entities>/<plugin>.ts`, written with
-  `defineForm<<Op>CreateData["body"]>()` and registered by `pulp_type` in its entity's registry
-  (`REMOTE_FORMS`, …). **No generic fallback**: a type without an entry can't be created or
-  edited. A type that can only be edited (push repositories) registers `modes: ["edit"]`.
+- `client/src/app/forms/` is the kit (`defineForm`, derivations, `EntityFormPage`) and the
+  shared `fragments/`. Each plugin × type form lives in its plugin, `plugins/<id>/ui/forms/`,
+  typed from the definition (`remoteForm(rpm.remote["rpm.uln"])(…)`, see [plugins](plugins.md))
+  and registered in the plugin's UI. **No generic fallback**: every declared type needs a form.
+  A type Pulp creates itself (push repositories) sets `modes: ["edit"]`; publications are
+  create-only.
 - A definition renders or `omit`s every body key — `tsc` names the uncovered ones. Each `omit`
   entry gets a reason comment. Deprecated fields are omitted.
 - Layout is the plugin's: `s.essentials([...])` first (the 3–6 fields that define the object),
   then `s.collapsible(...)` sections, reusing `forms/fragments/` (`authSection`, `tlsSection`,
-  `proxySection`, `downloadsSection`, `timeoutsSection`, `labelsField`, …) where they fit.
+  `proxySection`, `downloadsSection`, `timeoutsSection`, `labelsField`, …, all from
+  `@app/forms/fragments`) where they fit.
 - Field kinds carry behaviour, so a definition never hand-writes it: write-only values are
   `secret` (never re-sent unless changed), PEM / YAML / JSON are `code`, lists are `stringList`,
   headers and labels are `keyValue`, pickers are `resource`. Something the kinds can't express
@@ -52,7 +56,8 @@ forms** run everything else (plugin actions, admin objects, uploads).
   body (create: non-empty visible values; edit: only the changed fields, an emptied field as its
   clear value, never the whole object).
 - A create page takes its Type select, carried-over values, `apiPath` and resource filter from
-  `useCreateTypeSelect`.
+  `useCreateTypeSelect`; edit routes and pages take the form from `getEntityForm` (both
+  `@plugins`).
 - The page's `onSubmit` runs the mutation and calls the `saved(href?)` helper from its
   call-level `onSuccess`; the kit lifts the leave prompt and calls `onSaved`, where the page
   navigates (an edit → the detail page; a remote or repository create → its new detail page; a
@@ -83,18 +88,19 @@ toasts.
 
 ## Checklist
 
-Pass/fail rubric for `/eval`. Check changed `forms/**`, `*-create/**`, `*-edit/**`, `*Form.tsx`,
-`use*Form.ts(x)` and `*Modal.tsx` (skip the out-of-scope batch and confirmation modals).
+Pass/fail rubric for `/eval`. Check changed `forms/**`, `plugins/*/ui/forms/**`, `*-create/**`,
+`*-edit/**`, `*Form.tsx`, `use*Form.ts(x)` and `*Modal.tsx` (skip the out-of-scope batch and
+confirmation modals).
 
 - [ ] Submission failures are shown in-form via `FormSubmitError` as the **first child of
       `<Form>`**, fed by `useSubmitError` and `getMutationErrorMessage` — **not** a danger
       toast; `clearSubmitError()` runs at the start of each submit.
 - [ ] The primary button is `type="submit" form={formId}` tied to `<Form id={formId}>`.
-- [ ] Repository, remote, distribution and publication create/edit is a form page: one
-      `defineForm` definition per plugin × entity, registered by `pulp_type`, no generic
+- [ ] Repository, remote, distribution and publication create/edit is a form page: one form
+      per plugin × type in `plugins/<id>/ui/forms/`, registered in the plugin's UI, no generic
       fallback, no wizard and no modal.
-- [ ] Definitions are typed from `<Op>CreateData["body"]`, compile with no uncovered keys, and
-      give each `omit` entry a reason.
+- [ ] Forms are typed from the plugin's definition (`remoteForm(…)` and siblings), compile
+      with no uncovered keys, and give each `omit` entry a reason.
 - [ ] Write-only fields are `secret`; PEM, YAML and JSON are `code`; labels are `createOnly`.
 - [ ] A form page navigates away only through `onSaved`, reached by calling `saved()` from the
       mutation's call-level `onSuccess`; edit sends the derived diff, never the whole object.

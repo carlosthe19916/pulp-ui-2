@@ -1,7 +1,8 @@
 import type React from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import {
+  Spinner,
   Tab,
   TabContentBody,
   Tabs,
@@ -10,9 +11,9 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
+import type { IBrowseContext, IPluginBrowse } from "@plugin-sdk/ui";
 
-import { visibleSections } from "./browseRegistry";
-import type { IBrowseContext, IPluginBrowse } from "./browseTypes";
+import { visibleSections } from "./visibleSections";
 
 interface IPluginBrowseProps {
   browse: IPluginBrowse;
@@ -35,7 +36,9 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
     const { View } = visible[0].section;
     return (
       <div className={spacing.ptMd}>
-        <View {...context} />
+        <Suspense fallback={<Spinner aria-label="Loading" />}>
+          <View {...context} />
+        </Suspense>
       </div>
     );
   }
@@ -66,7 +69,9 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
           }
         >
           <TabContentBody className={spacing.ptMd}>
-            <section.View {...context} />
+            <Suspense fallback={<Spinner aria-label="Loading" />}>
+              <section.View {...context} />
+            </Suspense>
           </TabContentBody>
         </Tab>
       ))}

@@ -178,7 +178,8 @@
         "react/only-export-components": [
           "error",
           {
-            "allowConstantExport": true
+            "allowConstantExport": true,
+            "allowCompoundComponents": true
           }
         ],
         "jsx-a11y/alt-text": "error",
@@ -339,7 +340,7 @@
               ["^\\u0000?react\\u0000?$", "^\\u0000?react-"],
               ["^\\u0000?@?\\w"],
               ["^\\u0000?@patternfly/"],
-              ["^\\u0000?@(app|catalog)(/|$)"],
+              ["^\\u0000?@(app|catalog|plugin-sdk|plugins)(/|$)"],
               ["^\\u0000?\\."]
             ]
           }
@@ -367,6 +368,28 @@
       "plugins": ["typescript"]
     },
     {
+      "files": ["client/src/app/**", "client/src/routes/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@patternfly/react-icons",
+                "message": "Import the icon from its deep path: @patternfly/react-icons/dist/esm/icons/<name>-icon."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@plugins/*", "@catalog/*"],
+                "message": "Reach plugins through the registries: @catalog (facts) and @plugins (UI), never a plugin's files."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": [
         "client/src/app/components/**",
         "client/src/app/hooks/**",
@@ -387,6 +410,92 @@
               {
                 "group": ["@app/pages", "@app/pages/*", "**/pages/*"],
                 "message": "App-root modules never import from pages/."
+              },
+              {
+                "group": ["@plugins/*", "@catalog/*"],
+                "message": "Reach plugins through the registries: @catalog (facts) and @plugins (UI), never a plugin's files."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["client/src/plugin-sdk/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@patternfly/react-icons",
+                "message": "Import the icon from its deep path: @patternfly/react-icons/dist/esm/icons/<name>-icon."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@plugins", "@plugins/*", "@catalog"],
+                "message": "The plugin SDK never imports the plugins or their registries."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "client/src/plugin-sdk/definition/**",
+        "client/src/plugins/*/definition.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@app/*",
+                  "!@app/client",
+                  "!@app/client/*",
+                  "react",
+                  "react-*",
+                  "@patternfly/*",
+                  "@plugin-sdk/ui",
+                  "@plugin-sdk/ui/*",
+                  "@plugins",
+                  "@plugins/*",
+                  "@catalog"
+                ],
+                "message": "A plugin definition holds facts only: no UI, app modules or registries."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["client/src/plugins/*/ui/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@patternfly/react-icons",
+                "message": "Import the icon from its deep path: @patternfly/react-icons/dist/esm/icons/<name>-icon."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "@plugins",
+                  "@plugins/*",
+                  "@app/pages/*",
+                  "@app/layout/*",
+                  "@app/components/PluginContentPanel",
+                  "@app/components/RepositoryContent"
+                ],
+                "message": "A plugin's UI never imports the UI registry, the hosts or another plugin."
               }
             ]
           }

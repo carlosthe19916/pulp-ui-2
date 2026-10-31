@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DetailRouteError } from "@app/components/DetailRouteError";
 import { DetailRoutePending } from "@app/components/DetailRoutePending";
-import { getEntityForm } from "@app/forms";
 import { RemoteEditRoute } from "@app/pages/content-management/remotes/remote-edit/RemoteEditRoute";
 import {
   buildRemoteHref,
@@ -10,6 +9,7 @@ import {
 } from "@app/queries/remotes";
 import { ensureDomainFromParam } from "@app/queries/utils/loaderDomain";
 import { prefetchEditPermissions } from "@app/queries/utils/loaderPermissions";
+import { getEntityForm } from "@plugins";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/remotes/$remoteType/$remoteId/edit",

@@ -7,6 +7,12 @@ import type { IChoiceOption, IFormContext } from "../kit/types";
  * UI-only `$publish` choice shows the matching picker.
  */
 
+/** The `checkpoint` switch of publications that support checkpoints. */
+export const CHECKPOINT = {
+  label: "Checkpoint",
+  help: "Keep this publication as a dated checkpoint that checkpoint distributions serve.",
+};
+
 const publishes =
   (choice: "latest" | "version") =>
   ({ values }: IFormContext): boolean =>

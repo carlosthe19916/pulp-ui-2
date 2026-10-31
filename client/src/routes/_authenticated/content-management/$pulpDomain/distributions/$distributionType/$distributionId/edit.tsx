@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DetailRouteError } from "@app/components/DetailRouteError";
 import { DetailRoutePending } from "@app/components/DetailRoutePending";
-import { getEntityForm } from "@app/forms";
 import { DistributionEditRoute } from "@app/pages/content-management/distributions/distribution-edit/DistributionEditRoute";
 import {
   buildDistributionHref,
@@ -10,6 +9,7 @@ import {
 } from "@app/queries/distributions";
 import { ensureDomainFromParam } from "@app/queries/utils/loaderDomain";
 import { prefetchEditPermissions } from "@app/queries/utils/loaderPermissions";
+import { getEntityForm } from "@plugins";
 
 export const Route = createFileRoute(
   "/_authenticated/content-management/$pulpDomain/distributions/$distributionType/$distributionId/edit",
