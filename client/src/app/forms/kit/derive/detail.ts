@@ -29,7 +29,7 @@ const toDetailField = (field: IFieldDef): IEntityField => {
 
 /**
  * A form's sections as detail-page groups, so a detail page labels and groups settings the
- * way the form does (ADR 0009). Create-only fields (labels) and UI-only fields are left out.
+ * way the form does (ADR 0010). Create-only fields (labels) and UI-only fields are left out.
  */
 export const toDetailSections = (form: IFormDef): IDetailSection[] =>
   form.sections

@@ -69,7 +69,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
     onSuccess: (result) => notifyLabelsResult({ addNotification, result }),
   });
   const data = toFieldRecord(repository);
-  // Labelled the way the repository's form labels them (ADR 0009).
+  // Labelled the way the repository's form labels them (ADR 0010).
   const form = getEntityForm({
     entity: "repository",
     pulpType,

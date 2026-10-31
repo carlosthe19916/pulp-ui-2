@@ -117,7 +117,7 @@ export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
   })?.form;
   const data = toFieldRecord(remote);
 
-  // Grouped and labelled the way the remote's form is (ADR 0009).
+  // Grouped and labelled the way the remote's form is (ADR 0010).
   const sections: ISection[] = [
     ...(form ? toDetailSections(form) : []).map((section) => ({
       id: section.id,

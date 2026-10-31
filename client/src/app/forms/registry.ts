@@ -20,7 +20,7 @@ export type FormRegistry = Record<PulpType, IFormEntry>;
 
 /**
  * Per-plugin forms by entity and pulp_type. Unlike the other per-type registries there is
- * no generic fallback: a type without a form can't be created or edited (ADR 0009).
+ * no generic fallback: a type without a form can't be created or edited (ADR 0010).
  */
 const FORMS_BY_ENTITY: Record<EntityType, FormRegistry> = {
   remote: REMOTE_FORMS,

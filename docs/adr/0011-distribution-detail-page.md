@@ -4,13 +4,13 @@ description: Distributions get a tabbed detail page (Details, Tasks, Access) tha
 status: Accepted
 ---
 
-# 0010. Distributions have a detail page
+# 0011. Distributions have a detail page
 
 ## Context
 
 [0003](0003-detail-pages-and-expandable-rows.md) kept distributions as expandable rows: a
 reference to what they serve and a few settings. Since
-[0009](0009-plugin-form-pages.md) gave them a per-plugin edit page, a distribution has settings
+[0010](0010-plugin-form-pages.md) gave them a per-plugin edit page, a distribution has settings
 worth reading on their own (serving URL, client setup, source, content guard, plugin options),
 its own task history, and roles; and an edit page that can't point back to the object it edits.
 

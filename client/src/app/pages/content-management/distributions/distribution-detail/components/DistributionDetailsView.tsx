@@ -49,7 +49,7 @@ const Fact: React.FC<IFactProps> = ({ term, children }) => (
 
 /**
  * A distribution's Details tab: where and how it is served, then its settings grouped the way
- * its form groups them (ADR 0009), then metadata.
+ * its form groups them (ADR 0010), then metadata.
  */
 export const DistributionDetailsView: React.FC<
   IDistributionDetailsViewProps

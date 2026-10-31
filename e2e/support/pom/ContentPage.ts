@@ -12,7 +12,7 @@ export interface IContentPageOptions {
   singular: string;
   /** Exact label of the create button, e.g. "Create remote". */
   createButton: string;
-  /** How create/edit open: a form page (ADR 0009) or, until migrated, a modal. */
+  /** How create/edit open: a form page (ADR 0010) or, until migrated, a modal. */
   form?: "page" | "dialog";
 }
 

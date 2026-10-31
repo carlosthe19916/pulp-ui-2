@@ -16,7 +16,7 @@ paths:
 # Forms
 
 Two kinds of form share one core: **form pages** create and edit repositories, remotes,
-distributions and publications ([ADR 0009](../../docs/adr/0009-plugin-form-pages.md)); **modal
+distributions and publications ([ADR 0010](../../docs/adr/0010-plugin-form-pages.md)); **modal
 forms** run everything else (plugin actions, admin objects, uploads).
 
 ## Shared core

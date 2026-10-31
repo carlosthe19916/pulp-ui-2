@@ -1,7 +1,7 @@
 ---
 name: async-task-feedback
 description: Async writes show started/finished toasts, server-derived task status on rows and pages, and pause repository writes while a task runs.
-status: Accepted (amended by 0009)
+status: Accepted (amended by 0010)
 ---
 
 # 0006. Long-running work is shown as tasks
@@ -19,7 +19,7 @@ the server answers with a task that runs later and may fail.
 - [ ] While any task runs on a repository, an inline alert says so and its write actions are
       disabled with a tooltip; browsing keeps working. Edit stays enabled: Pulp queues an
       update behind the running task, and the edit page warns instead
-      ([0009](0009-plugin-form-pages.md)).
+      ([0010](0010-plugin-form-pages.md)).
 - [ ] When a task finishes, the affected views refresh and a toast reports the outcome.
 - [ ] Failure messages start with "Could not …" or "Failed to …" and say nothing changed when
       that is the case.

@@ -4,7 +4,7 @@ description: Create and edit of repositories, remotes, distributions and publica
 status: Accepted
 ---
 
-# 0009. Create and edit are per-plugin form pages
+# 0010. Create and edit are per-plugin form pages
 
 ## Context
 
@@ -64,5 +64,5 @@ differ most in what they ask for when an object is made, so that part of
 - Supporting a new plugin now includes writing its forms: code, not only catalog data. The
   catalog keeps what the API needs (types, endpoints, capabilities).
 - Distribution and publication forms become linkable pages. Distributions later got a detail
-  page of their own ([0010](0010-distribution-detail-page.md)); publications still have none
+  page of their own ([0011](0011-distribution-detail-page.md)); publications still have none
   ([0003](0003-detail-pages-and-expandable-rows.md)).

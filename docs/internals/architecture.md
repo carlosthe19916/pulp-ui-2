@@ -24,7 +24,7 @@ generic screens ([ADR 0001](../adr/0001-plugin-specifics-are-data.md)). The exce
 create and edit forms of repositories, remotes, distributions and publications: each plugin has
 its own TypeScript form definition in `client/src/app/forms/`, typed against the generated API
 body and rendered by one form-page renderer
-([ADR 0009](../adr/0009-plugin-form-pages.md)). Supporting a new plugin is a catalog entry plus
+([ADR 0010](../adr/0010-plugin-form-pages.md)). Supporting a new plugin is a catalog entry plus
 its forms.
 
 ## Domain-scoped

@@ -8,7 +8,7 @@ routes:
 # Create and edit form pages
 
 Repositories, remotes, distributions and publications are created and edited on their own pages,
-one form per plugin type ([ADR 0009](../../docs/adr/0009-plugin-form-pages.md)). Every form page
+one form per plugin type ([ADR 0010](../../docs/adr/0010-plugin-form-pages.md)). Every form page
 shares the behaviour below; it is exercised once, on the **remote** form pages as the reference
 surface. Each entity's spec ([remotes](remotes.md), [repositories](repositories.md),
 [distributions](distributions.md), [publications](publications.md)) covers only its own journeys.

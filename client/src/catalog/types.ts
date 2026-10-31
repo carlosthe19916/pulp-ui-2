@@ -72,7 +72,7 @@ export interface IPluginRest {
 
 /**
  * One entity's resolved contribution for a pulp_type: its endpoint. Its create/edit form is
- * UI, not data: see `@app/forms` (ADR 0009).
+ * UI, not data: see `@app/forms` (ADR 0010).
  */
 export interface IPluginEntity {
   /** The `<app>/<slug>` collection segment, per entity (content pluralizes). */

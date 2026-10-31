@@ -11,7 +11,7 @@ The catalog (`client/src/catalog`, `@catalog`) is the data every screen needs ab
 plugins: each plugin is one `plugins/<plugin>.ts` definition (its `pulp_type`s, endpoint paths,
 capabilities and actions), and generic pages read it. Repository, remote, distribution and
 publication create/edit forms are UI, not data: each plugin's form lives in `@app/forms`
-([forms](forms.md), ADR 0009).
+([forms](forms.md), ADR 0010).
 
 ## Data only
 
