@@ -49,7 +49,8 @@ PULP_API_URL="http://localhost:8080" PULP_API_ROOT="/pulp" npm run start:dev
 Then open <http://localhost:3000>. With the default `AUTH=basic`, sign in through the browser
 login form. The Pulp domain defaults to `"default"` and is switched from within the app.
 
-Need a local Pulp backend to point at? See [CONTRIBUTING.md](CONTRIBUTING.md).
+Need a local Pulp backend to point at? See [CONTRIBUTING.md](CONTRIBUTING.md). To fill it with
+data for every plugin, run `npm run seed` (see [Seed data](docs/scripts.md#seed-data)).
 
 ## Environment variables
 
@@ -92,6 +93,7 @@ See the [full tech stack](docs/tech-stack.md) for the complete list.
 | `npm run test`      | Unit tests (Vitest)                       |
 | `npm run test:e2e`  | Playwright (needs Pulp; see CONTRIBUTING) |
 | `npm run generate`  | Regenerate the OpenAPI client             |
+| `npm run seed`      | Fill a Pulp backend with test data        |
 
 See the [full scripts reference](docs/scripts.md) for every available script.
 

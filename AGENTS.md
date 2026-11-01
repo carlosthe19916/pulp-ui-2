@@ -97,6 +97,9 @@ npm run test:ui -w e2e   # Playwright UI mode
 # Regenerate OpenAPI client from spec
 npm run generate
 
+# Seed the local Pulp backend with data for every plugin (re-runnable; --reset, --no-sync, --only)
+npm run seed
+
 # Regenerate .claude/ and .cursor/ rules and skills from .rulesync/
 npm run rules
 
