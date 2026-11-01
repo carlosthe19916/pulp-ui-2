@@ -29,6 +29,7 @@ workflows:
         - 'docker/metadata-action@v5'
         - 'docker/setup-buildx-action@v3'
         - 'docker/setup-qemu-action@v3'
+        - 'dorny/paths-filter@v3'
     '.github/workflows/plugin-versions-update.yaml':
         - 'actions/checkout@v6'
         - 'peter-evans/create-pull-request@v7'

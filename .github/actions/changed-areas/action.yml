@@ -1,6 +1,6 @@
 name: Detect changed areas
 description: >-
-  Classify a PR/push's changed files into "website" and "app" areas so workflows
+  Classify a PR/push's changed files into "website", "app" and "image" areas so workflows
   can gate expensive jobs with a job-level `if:` (which reports a skipped — and
   therefore passing — required check, unlike an `on: paths` filter). The calling
   job must check out the repo first so this local action can be resolved.
@@ -14,6 +14,13 @@ outputs:
       e2e, root/shared config, CI). Broad on purpose: unknown/shared files run
       the full client + e2e suite.
     value: ${{ steps.app.outputs.app }}
+  image:
+    description: >-
+      true when the container image's inputs changed: the npm dependencies of
+      client, common and server (their package.json and the shared root
+      package-lock.json), entrypoint.sh, the Dockerfile, .dockerignore or
+      image-build.yaml
+    value: ${{ steps.image.outputs.image }}
 runs:
   using: composite
   steps:
@@ -35,3 +42,17 @@ runs:
           app:
             - '**'
             - '!website/**'
+    - id: image
+      uses: dorny/paths-filter@v3
+      with:
+        filters: |
+          image:
+            - 'package.json'
+            - 'package-lock.json'
+            - 'client/package.json'
+            - 'common/package.json'
+            - 'server/package.json'
+            - 'entrypoint.sh'
+            - 'Dockerfile'
+            - '.dockerignore'
+            - '.github/workflows/image-build.yaml'
