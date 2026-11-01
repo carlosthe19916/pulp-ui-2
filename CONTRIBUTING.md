@@ -17,13 +17,28 @@ The app starts at `http://localhost:3000`
 
 ### Local Pulp for UI / e2e
 
-The backend is an **oci-env** Pulp served on `http://localhost:5003`. The `DEV_SOURCE_PATH` plugins
-in `compose.env` are built from source, so it carries the full catalog plugin set (including
-`pulp_npm` and `pulp_hugging_face`) — the same backend the e2e CI job provisions, pinned to the
-versions in [`plugin-versions.txt`](plugin-versions.txt).
+The UI and the e2e suite run against an **oci-env** Pulp on `http://localhost:5003`, configured by
+[`compose.env`](compose.env). It installs every catalog plugin from source, pinned to the versions
+in [`plugin-versions.txt`](plugin-versions.txt): the same backend the e2e CI job runs.
 
-Set it up once with the `dev-env-setup` skill, then start it and run the suite with the `e2e-local`
-skill. Default credentials: `admin` / `password` (`E2E_USERNAME` / `E2E_PASSWORD`).
+```bash
+npm run backend:setup   # once, and after plugin-versions.txt changes
+npm run backend:start   # http://localhost:5003, admin / password
+npm run backend:stop
+```
+
+Good to know:
+
+- The backend repos live in the gitignored `.backend/` folder, so checkouts you develop plugins in
+  are never touched. `backend:setup` force-resets every clone there to its pinned ref.
+- To try the UI with a few plugins instead of all, run `npm run backend:plugins -- rpm container`
+  (`-- all` to go back). **Each switch wipes the backend's data**; re-run `npm run seed` after it.
+- The stack runs as its own compose project, `pulp_ui_2_pinned`, but still needs port 5003: stop
+  any other backend on it first.
+
+All backend scripts are listed in [docs/scripts.md](docs/scripts.md#local-pulp-backend). With an
+AI agent, the `dev-env-setup` skill walks through first-time setup and the `e2e-local` skill runs
+the suite.
 
 ## Project structure
 

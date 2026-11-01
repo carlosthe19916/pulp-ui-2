@@ -1,6 +1,6 @@
 ---
 name: dev-env-setup
-description: Use when a developer asks about onboarding, getting started, setup, or bootstrapping their pulp-ui-2 development environment. Guides them through installing tools, cloning the Pulp backend repos, installing oci-env and building the backend images. Does not start the backend or the UI.
+description: Use when a developer asks about onboarding, getting started, setup, or bootstrapping their pulp-ui-2 development environment. Guides them through installing tools, cloning the pinned Pulp backend repos into .backend/, installing oci-env and building the backend images. Does not start the backend or the UI.
 ---
 
 # pulp-ui-2 Developer Setup
@@ -9,70 +9,48 @@ Walk the developer through setup ONE STEP AT A TIME. Do not summarize all steps 
 present a checklist. Complete each step, show the result, then move to the next. Ask before
 proceeding when indicated. Run every command from the repository root.
 
-## Step 1 — Check the layout
+## Step 1 — Check prerequisites
 
-oci-env mounts the parent directory as `/src` and resolves `COMPOSE_PROFILE=pulp-ui-2/...` by
-folder name, so this repo must be a folder named `pulp-ui-2` and every backend repo must be its
-sibling.
-
-If the folder is not named `pulp-ui-2`: STOP HERE and ask the user to rename or re-clone it.
-
-## Step 2 — Check prerequisites
-
-Check `git`, `node` (22+), `npm`, `python3`, `pip3`, `podman` and `podman-compose` (1.2+). Report
-what is missing.
+Check `git`, `node` (22+), `npm`, `python3` (with `venv`), `podman` and `podman-compose` (1.2+).
+Report what is missing.
 
 Do not run privileged installation commands (`sudo dnf`, `brew`) for the user. Point them at
 their platform package manager (nvm for Node) and wait for them to confirm.
 
-## Step 3 — Clone the backend repos
+## Step 2 — Clone the backend repos and install oci-env
 
-oci-env installs every entry of `DEV_SOURCE_PATH` in `compose.env` from source and fails to start
-if one is missing. Read that list from `compose.env`; do not hardcode it. Add `oci_env` and
-`pulp-openapi-generator` to it.
+    npm run backend:setup
 
-List which of them already exist as `../<repo>`. If all exist: say so and move to step 4.
+It clones every repo in `plugin-versions.txt` into the gitignored `.backend/` folder, pinned to
+its ref, and installs the oci-env CLI there; no global `oci-env` or `OCI_ENV_PATH` is needed.
 
-Otherwise, show the missing ones and ask before cloning each one from upstream:
+- It is safe to re-run, but it force-resets every `.backend/` clone, discarding local edits there.
+  It never touches the developer's other checkouts.
+- If it reports that `plugin-versions.txt` and `DEV_SOURCE_PATH` differ, show the diff and stop:
+  the two files must be fixed together.
 
-    git clone https://github.com/pulp/<repo>.git ../<repo>
-
-To match the versions CI builds against, clone the ref pinned for each repo in
-`plugin-versions.txt` (`git clone --branch <ref> ...`); that file is the record of which backend
-versions we clone, and its plugin rows must stay in sync with `DEV_SOURCE_PATH`.
-
-Never re-clone, pull, or touch a checkout that already exists.
-
-## Step 4 — Install oci-env
-
-If `oci-env` is not on `PATH`:
-
-    pip3 install --user -e ../oci_env/client
-
-Check that `OCI_ENV_PATH` points at `../oci_env` (absolute path). If it does not, ask the user to
-add `export OCI_ENV_PATH=<absolute path>/oci_env` to their shell rc file and open a new shell.
-Wait for them to confirm.
-
-## Step 5 — Install UI dependencies
+## Step 3 — Install UI dependencies
 
     npm ci
 
 The `prepare` script also generates the API client and installs the husky commit hooks.
 
-## Step 6 — Build the backend images
+## Step 4 — Build the backend images
 
 Ask before running it, because the first build takes several minutes:
 
-    oci-env -e compose.env compose build
+    npm run backend -- compose build
 
-This only builds images. Do not run `compose up`.
+This only builds images. Do not start the backend.
 
-## Step 7 — Orient the developer
+## Step 5 — Orient the developer
 
 Give a brief tour:
 
 - `compose.env` (backend: plugins, profiles, port 5003) and `.env` (UI: `AUTH`,
   `PULP_API_URL`). Their auth settings must match; see `profiles/keycloak/README.md`.
-- Start the backend and run e2e with the `e2e-local` skill; start the UI with
-  `npm run start:dev` (http://localhost:3000, `admin` / `password`).
+- `npm run backend:start` / `backend:stop` run the backend; `npm run backend:plugins` narrows the
+  installed plugins (switching wipes its data). The full list is in `docs/scripts.md`.
+- `npm run start:dev` starts the UI on http://localhost:3000 (`admin` / `password`); the
+  `e2e-local` skill runs the e2e suite.
 - AGENTS.md for repo structure, coding rules and commands.

@@ -1,7 +1,7 @@
 ---
 name: e2e-local
-description: Run the Playwright e2e suite locally against the oci-env Pulp backend defined by compose.env (API on localhost:5003). Reuses a running backend and starts it with oci-env only if it is down. Use when asked to run or debug e2e tests, a single spec, or "test against local pulp".
-allowed-tools: Bash(curl:*) Bash(oci-env:*) Bash(npm:*) Bash(npx:*)
+description: Run the Playwright e2e suite locally against the oci-env Pulp backend defined by compose.env (API on localhost:5003). Reuses a running backend and starts it with `npm run backend:start` only if it is down. Use when asked to run or debug e2e tests, a single spec, or "test against local pulp".
+allowed-tools: Bash(curl:*) Bash(npm:*) Bash(npx:*)
 ---
 
 # E2E against the local oci-env backend
@@ -23,16 +23,15 @@ curl -fsS -o /dev/null -w '%{http_code}\n' http://localhost:5003/api/pulp/api/v3
 
 ## 2. Start it only if it is down
 
-Requires `oci-env` on `PATH` and `OCI_ENV_PATH` pointing at the `oci_env` checkout.
-
 ```bash
-oci-env -e compose.env compose up -d
-# images missing? build first:
-# oci-env -e compose.env compose build
+npm run backend:start
 ```
 
-Poll the status endpoint until it answers `200` (first boot installs every `DEV_SOURCE_PATH`
-plugin from source and can take several minutes):
+If it says there is no pinned backend, run `npm run backend:setup` first (see the `dev-env-setup`
+skill). Missing images are built on the first start.
+
+Poll the status endpoint until it answers `200` (the first boot installs every plugin from source
+and can take several minutes):
 
 ```bash
 for i in $(seq 1 120); do
@@ -41,12 +40,12 @@ for i in $(seq 1 120); do
 done
 ```
 
-Still not ready after ~10 minutes → show `oci-env -e compose.env compose logs --tail=100` and stop.
+Still not ready after ~10 minutes → show `npm run backend -- compose logs --tail=100` and stop.
 
 The admin user is created from `DJANGO_SUPERUSER_*`. If the setup project fails to log in:
 
 ```bash
-oci-env -e compose.env pulpcore-manager reset-admin-password --password password
+npm run backend -- pulpcore-manager reset-admin-password --password password
 ```
 
 ## 3. Run the tests
@@ -66,6 +65,9 @@ and error of each failing test.
 
 ## Gotchas
 
+- **Plugin subset**: the suite expects every plugin. If `npm run backend:plugins` shows a subset,
+  tell the user and suggest `npm run backend:plugins -- all`; do not switch yourself, because
+  switching wipes the backend's data.
 - **Dev server reuse**: `playwright.local.ts` reuses anything already listening on `:3000`. Make
   sure it is the dev server pointed at `:5003` with `AUTH=basic` (the repo `.env` sets both);
   otherwise stop it and let Playwright start `npm run start:dev`.

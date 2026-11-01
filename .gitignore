@@ -60,5 +60,8 @@ test_suite_analysis/
 # Playwright saved auth state (contains credentials)
 .auth/
 
+# Pinned local Pulp backend (npm run backend:setup)
+/.backend/
+
 # Agent harness eval runs (answers, worktrees, summaries)
 .build/
