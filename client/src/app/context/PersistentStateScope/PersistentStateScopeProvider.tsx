@@ -11,7 +11,7 @@ interface IPersistentStateScopeProviderProps {
 
 /**
  * Namespaces every `usePersistentState` below it, so a reused list doesn't clash with the
- * screen's main list (ADR 0013). The screen that shows the list chooses the prefix.
+ * screen's main list (ADR 0014). The screen that shows the list chooses the prefix.
  */
 export const PersistentStateScopeProvider: React.FC<
   IPersistentStateScopeProviderProps

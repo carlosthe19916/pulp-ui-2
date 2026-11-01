@@ -12,6 +12,7 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 import type { ContentSummaryResponse } from "@app/client";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { getRepositoryActions, getRepositoryBrowse } from "@plugins";
 
 import { ContentDrawer } from "./ContentDrawer";
@@ -28,6 +29,11 @@ interface IRepositoryContentProps {
   writes?: IContentWrites;
 }
 
+const CONTENT_TABS = defineTabState({
+  tabs: ["browse", "all"],
+  defaultValue: "browse",
+});
+
 /**
  * A repository version's content: the plugin's own "Browse" view (when it has one) and
  * the generic "All content" list, each with its own selection.
@@ -40,7 +46,10 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
   writes,
 }) => {
   const browse = getRepositoryBrowse(repositoryType);
-  const [activeTab, setActiveTab] = useState<string | number>("browse");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...CONTENT_TABS,
+    storage: "url",
+  });
   const [selectedHref, setSelectedHref] = useState<string | null>(null);
   const served = useServedAt({ repositoryHref });
 
@@ -57,7 +66,7 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
   return (
     <Tabs
       activeKey={activeTab}
-      onSelect={(_event, key) => setActiveTab(key)}
+      onSelect={(_event, key) => selectTab(key)}
       aria-label="Repository content"
       mountOnEnter
       unmountOnExit

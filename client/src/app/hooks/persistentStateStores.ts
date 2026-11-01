@@ -6,7 +6,7 @@ import {
   toRawFields,
 } from "./persistentStateCodec";
 
-/** Where one persistent state's fields live (ADR 0013). */
+/** Where one persistent state's fields live (ADR 0014). */
 export interface IFieldStore {
   read: () => RawFields;
   /** Changes whenever `read()` may return something different. */

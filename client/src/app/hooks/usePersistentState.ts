@@ -34,7 +34,7 @@ import {
 
 export type { PersistentStateSchema } from "./persistentStateCodec";
 
-/** Where a state is kept, each with its natural lifetime (ADR 0013). */
+/** Where a state is kept, each with its natural lifetime (ADR 0014). */
 export type PersistentStorage = "url" | "session" | "local" | "state";
 
 /** What a state is, independent of where it's kept; declare it at module scope. */
@@ -155,7 +155,7 @@ const createSnapshotCache = (store: IFieldStore) => {
 
 /**
  * `useState` whose value is kept in the address, the tab, the browser or the component, as
- * `storage` says; nothing else changes with it (ADR 0013). The setter is stable when `schema`
+ * `storage` says; nothing else changes with it (ADR 0014). The setter is stable when `schema`
  * and `defaultValue` are (see `definePersistentState`).
  */
 export const usePersistentState = <S extends PersistentStateSchema>({

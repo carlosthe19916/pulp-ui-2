@@ -12,7 +12,7 @@ interface IUsePageInRangeOptions {
 }
 
 /**
- * Sends a list back to its first page when its page is past the end (ADR 0013): a stale link,
+ * Sends a list back to its first page when its page is past the end (ADR 0014): a stale link,
  * or the last row of the last page deleted.
  */
 export const usePageInRange = ({

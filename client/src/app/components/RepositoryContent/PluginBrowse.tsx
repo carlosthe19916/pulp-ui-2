@@ -1,5 +1,5 @@
 import type React from "react";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 
 import {
   Spinner,
@@ -12,6 +12,7 @@ import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import type { IBrowseContext, IPluginBrowse } from "@plugin-sdk/ui";
 
 import { visibleSections } from "./visibleSections";
@@ -21,6 +22,9 @@ interface IPluginBrowseProps {
   summary?: ContentSummaryResponse;
   context: IBrowseContext;
 }
+
+// Section keys come from the plugin, so they're checked against the visible ones at runtime.
+const SECTION_TABS = defineTabState({ param: "section", defaultValue: "" });
 
 /**
  * A plugin's Browse sections as sub-tabs; a single section renders without the tab bar. Each
@@ -32,9 +36,12 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
   context,
 }) => {
   const visible = visibleSections({ sections: browse.sections, summary });
-  const [activeKey, setActiveKey] = useState<string | number>(
-    visible[0]?.section.key ?? "",
-  );
+  // Falls back to the first visible section when the stored one isn't shown.
+  const { tab: active, selectTab } = usePersistentTab({
+    ...SECTION_TABS,
+    storage: "url",
+    available: visible.map(({ section }) => section.key),
+  });
 
   if (visible.length === 1) {
     const { key, View } = visible[0].section;
@@ -49,16 +56,12 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
     );
   }
 
-  const active = visible.some(({ section }) => section.key === activeKey)
-    ? activeKey
-    : visible[0]?.section.key;
-
   return (
     <Tabs
       isSubtab
       aria-label="Browse sections"
       activeKey={active}
-      onSelect={(_event, key) => setActiveKey(key)}
+      onSelect={(_event, key) => selectTab(key)}
       mountOnEnter
       unmountOnExit
     >

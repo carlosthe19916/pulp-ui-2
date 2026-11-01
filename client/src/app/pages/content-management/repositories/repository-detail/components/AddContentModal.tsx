@@ -30,6 +30,7 @@ import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import {
   type IRepositoryListParams,
   useRepositoriesListQuery,
@@ -122,6 +123,11 @@ const SourcePicker: React.FC<ISourcePickerProps> = ({
  * Adds existing content to a repository, picked from all content or from another
  * repository's version. One selection tray spans both tabs.
  */
+const ADD_CONTENT_TABS = defineTabState({
+  tabs: ["existing", "repository"],
+  defaultValue: "existing",
+});
+
 export const AddContentModal: React.FC<IAddContentModalProps> = ({
   repository,
   repositoryType,
@@ -142,7 +148,10 @@ export const AddContentModal: React.FC<IAddContentModalProps> = ({
       }),
   });
   const selection = useContentUnitSelection();
-  const [activeTab, setActiveTab] = useState<string | number>("existing");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...ADD_CONTENT_TABS,
+    storage: "state",
+  });
   const [sourceVersionHref, setSourceVersionHref] = useState<string>();
   const [overwrite, setOverwrite] = useState(true);
   const contentTypes = getRepositoryContentTypes(repositoryType).filter(
@@ -162,7 +171,7 @@ export const AddContentModal: React.FC<IAddContentModalProps> = ({
           <StackItem>
             <Tabs
               activeKey={activeTab}
-              onSelect={(_event, key) => setActiveTab(key)}
+              onSelect={(_event, key) => selectTab(key)}
               aria-label="Content source"
               mountOnEnter
             >

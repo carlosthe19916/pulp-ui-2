@@ -303,7 +303,7 @@ export default defineConfig([
     },
   },
   {
-    // List state lives in usePersistentState (ADR 0013, list-state rule), not DataView's own hooks.
+    // List state lives in usePersistentState (ADR 0014, list-state rule), not DataView's own hooks.
     files: ["client/src/**/*.ts", "client/src/**/*.tsx"],
     ignores: [
       "client/src/app/client/**",

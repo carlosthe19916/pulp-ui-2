@@ -39,6 +39,7 @@ import {
   useObjectPermissions,
   VERSION_ACTION_VERBS,
 } from "@app/hooks/useObjectPermissions";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
@@ -74,6 +75,17 @@ interface IRepositoryDetailProps {
   id: string;
   href: string;
 }
+
+const REPOSITORY_DETAIL_FIXED_TABS = [
+  "details",
+  "content",
+  "versions",
+  "publications",
+  "distributions",
+  "topology",
+];
+// The plugin tab's key comes from the registry, so the keys are checked at runtime.
+const REPOSITORY_DETAIL_TABS = defineTabState({ defaultValue: "details" });
 
 export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   pulpDomain,
@@ -140,7 +152,19 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       }),
   });
 
-  const [activeTab, setActiveTab] = useState<string | number>("details");
+  const {
+    tab: activeTab,
+    setTab: setActiveTab,
+    selectTab,
+  } = usePersistentTab({
+    ...REPOSITORY_DETAIL_TABS,
+    storage: "url",
+    available: [
+      ...REPOSITORY_DETAIL_FIXED_TABS,
+      ...(pluginTab ? [pluginTab.key] : []),
+      "access",
+    ],
+  });
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -288,7 +312,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           <StackItem>
             <Tabs
               activeKey={activeTab}
-              onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+              onSelect={(_e, tabKey) => selectTab(tabKey)}
               mountOnEnter
             >
               <Tab

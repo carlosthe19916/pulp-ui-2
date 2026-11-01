@@ -21,6 +21,7 @@ import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
@@ -39,6 +40,11 @@ interface IRemoteDetailProps {
   pulpType: string;
   href: string;
 }
+
+const REMOTE_DETAIL_TABS = defineTabState({
+  tabs: ["details", "tasks", "access"],
+  defaultValue: "details",
+});
 
 export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
   pulpDomain,
@@ -85,7 +91,10 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
     pulpType,
     mode: "edit",
   });
-  const [activeTab, setActiveTab] = useState<string | number>("details");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...REMOTE_DETAIL_TABS,
+    storage: "url",
+  });
 
   return (
     <>
@@ -149,7 +158,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          onSelect={(_e, tabKey) => selectTab(tabKey)}
           mountOnEnter
         >
           <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>

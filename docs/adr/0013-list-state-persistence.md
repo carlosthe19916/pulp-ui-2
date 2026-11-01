@@ -1,7 +1,7 @@
 ---
 name: list-state-persistence
 description: A list's filters, sort, page and page size are kept where the list chooses (the address, the browser tab, the browser, or only while on screen); several lists on one screen never clash, and bad or stale values fall back to defaults.
-status: Accepted
+status: Superseded by 0014
 ---
 
 # 0013. Where a list's state is kept

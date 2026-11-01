@@ -23,6 +23,7 @@ import { TasksTable } from "@app/components/TasksTable";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import {
   useDistributionDeleteMutation,
   useSuspenseDistributionDetailQuery,
@@ -43,6 +44,11 @@ interface IDistributionDetailProps {
   pulpType: string;
   href: string;
 }
+
+const DISTRIBUTION_DETAIL_TABS = defineTabState({
+  tabs: ["details", "tasks", "access"],
+  defaultValue: "details",
+});
 
 export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   pulpDomain,
@@ -90,7 +96,15 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
   });
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string | number>("details");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...DISTRIBUTION_DETAIL_TABS,
+    storage: "url",
+    available: [
+      "details",
+      "tasks",
+      ...(canManageRoles ? (["access"] as const) : []),
+    ],
+  });
 
   return (
     <>
@@ -154,7 +168,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_event, tabKey) => setActiveTab(tabKey)}
+          onSelect={(_event, tabKey) => selectTab(tabKey)}
           mountOnEnter
         >
           <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>
