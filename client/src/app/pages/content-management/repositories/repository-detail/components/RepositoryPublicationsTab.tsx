@@ -63,7 +63,7 @@ export const RepositoryPublicationsTab: React.FC<
             <ResourceHrefLink
               kind="publication"
               href={pub.pulp_href}
-              label={`Publication ${pubId}`}
+              label={pubId}
             />
           ) : (
             "—"

@@ -51,7 +51,7 @@ test.describe("Publication create page", () => {
         href,
       );
       expect(publication.repository_version).toBe(`${repoHref}versions/1/`);
-      await publicationsPage.expectRowVisible(`Publication ${idOf(href)}`);
+      await publicationsPage.expectRowVisible(idOf(href));
     },
   );
 
@@ -210,9 +210,9 @@ test.describe("Publication create page", () => {
 
           await expect(publicationsPage.heading).toBeVisible();
           const href = cleanup.href(await publicationOf(api, repoHref));
-          await expect(
-            publicationsPage.row(`Publication ${idOf(href)}`),
-          ).toContainText(row.listed);
+          await expect(publicationsPage.row(idOf(href))).toContainText(
+            row.listed,
+          );
           const publication = await api.getJson<{ structured?: boolean }>(href);
           expect(publication.structured).toBe(row.structured);
         });

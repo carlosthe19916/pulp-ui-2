@@ -85,10 +85,10 @@ Summary: A publication's name links to its detail page from the Publications lis
 
 Seed: a file publication of a file repository
 
-When I click "Publication <id>" in the Publications list
+When I click the publication's id in the Publications list
 Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
 the tabs Details and Access
-When I go to the repository's Publications tab and click "Publication <id>"
+When I go to the repository's Publications tab and click its id
 Then the same detail page opens
 
 ### PUB-DET-02 Details show its source, serving distributions and settings

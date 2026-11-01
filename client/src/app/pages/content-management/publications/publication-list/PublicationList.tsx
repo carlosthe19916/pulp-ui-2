@@ -134,11 +134,7 @@ export const PublicationList: React.FC = () => {
       row: [
         {
           cell: href ? (
-            <ResourceHrefLink
-              kind="publication"
-              href={href}
-              label={`Publication ${pubId}`}
-            />
+            <ResourceHrefLink kind="publication" href={href} label={pubId} />
           ) : (
             "—"
           ),

@@ -39,7 +39,7 @@ test.describe("Publications", () => {
       );
 
       await publicationsPage.goto();
-      const row = publicationsPage.row(`Publication ${idOf(href)}`);
+      const row = publicationsPage.row(idOf(href));
       await row.getByRole("button", { name: "Kebab toggle" }).click();
       await expect(
         page.getByRole("menuitem", { name: "Delete" }),
@@ -55,10 +55,10 @@ test.describe("Publications", () => {
    *
    * Seed: a file publication of a file repository
    *
-   * When I click "Publication <id>" in the Publications list
+   * When I click the publication's id in the Publications list
    * Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
    * the tabs Details and Access
-   * When I go to the repository's Publications tab and click "Publication <id>"
+   * When I go to the repository's Publications tab and click its id
    * Then the same detail page opens
    */
   test(
@@ -77,11 +77,11 @@ test.describe("Publications", () => {
           repository: repository.href,
         }),
       );
-      const name = `Publication ${idOf(href)}`;
+      const id = idOf(href);
 
       const expectDetailPage = async () => {
         await expect(
-          page.getByRole("heading", { level: 1, name }),
+          page.getByRole("heading", { level: 1, name: `Publication ${id}` }),
         ).toBeVisible();
         await expect(page.getByText("plugin: file.file")).toBeVisible();
         for (const tab of ["Details", "Access"]) {
@@ -92,7 +92,7 @@ test.describe("Publications", () => {
       };
 
       await publicationsPage.goto();
-      await publicationsPage.row(name).getByRole("link", { name }).click();
+      await publicationsPage.row(id).getByRole("link", { name: id }).click();
       await expectDetailPage();
 
       await page.goto(
@@ -101,7 +101,7 @@ test.describe("Publications", () => {
       await page.getByRole("tab", { name: /^Publications/ }).click();
       await page
         .getByRole("grid", { name: "Repository publications table" })
-        .getByRole("link", { name, exact: true })
+        .getByRole("link", { name: id, exact: true })
         .click();
       await expectDetailPage();
     },
