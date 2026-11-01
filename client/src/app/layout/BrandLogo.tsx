@@ -29,6 +29,8 @@ export const BrandLogo: React.FC<IBrandLogoProps> = ({ isCompact }) => {
         <SplitItem isFilled>
           <Title
             headingLevel={leftTitle.heading ?? "h1"}
+            // The page title is the page's only h1; the brand isn't a heading unless asked.
+            role={leftTitle.heading ? undefined : "presentation"}
             size={leftTitle.size ?? "2xl"}
           >
             {leftTitle.text}

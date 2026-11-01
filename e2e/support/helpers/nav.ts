@@ -6,12 +6,13 @@ import { expect } from "@playwright/test";
 const nav = (page: Page): Locator =>
   page.getByRole("navigation", { name: "Nav" });
 
-/** Reveal the Administration pages. The docked nav starts collapsed (icons only). */
-const openAdministration = async (page: Page): Promise<void> => {
-  await nav(page).getByRole("button", { name: "Administration" }).click();
-  await expect(
-    nav(page).getByRole("button", { name: "Administration" }),
-  ).toHaveAttribute("aria-expanded", "true");
+/** Reveal the Administration pages; clicking an open group would close it. */
+export const openAdministration = async (page: Page): Promise<void> => {
+  const group = nav(page).getByRole("button", { name: "Administration" });
+  if ((await group.getAttribute("aria-expanded")) !== "true") {
+    await group.click();
+  }
+  await expect(group).toHaveAttribute("aria-expanded", "true");
 };
 
 /** Open an admin page through the Administration nav; assert its heading and highlight. */

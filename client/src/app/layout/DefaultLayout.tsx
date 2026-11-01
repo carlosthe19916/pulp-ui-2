@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 import { Page, SkipToContent } from "@patternfly/react-core";
 
+import { useLocalStorage } from "@app/hooks/useStorage";
+
 import { DOCK_ID, DockApp } from "./DockApp";
 import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
 import { useIsMobile } from "./useIsMobile";
@@ -19,16 +21,19 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   );
 
   const isMobile = useIsMobile();
-  const [isDockExpanded, setIsDockExpanded] = useState(false);
-  // Opened by clicking a nav group in the collapsed dock: floats over the page
-  // and closes again once the user picks a page or clicks away.
-  const [isDockOverlay, setIsDockOverlay] = useState(false);
-  const isDockFloating = isDockExpanded && (isDockOverlay || isMobile);
+  // On desktop the dock starts expanded and remembers the user's toggle.
+  const [isDockPinned, setIsDockPinned] = useLocalStorage<boolean>({
+    key: "dock-expanded-preference",
+    defaultValue: true,
+  });
+  // Opened for a moment (mobile, or a nav group clicked in the collapsed dock): floats
+  // over the page and closes again once the user picks a page or clicks away.
+  const [isDockOpen, setIsDockOpen] = useState(false);
+  const isDockFloating = isDockOpen && (isMobile || !isDockPinned);
+  const isDockExpanded = isMobile ? isDockOpen : isDockPinned || isDockOpen;
+  const isDockOverlay = !isMobile && isDockFloating;
 
-  const closeDock = () => {
-    setIsDockExpanded(false);
-    setIsDockOverlay(false);
-  };
+  const closeDock = () => setIsDockOpen(false);
 
   useEffect(() => {
     if (!isDockFloating) {
@@ -57,17 +62,15 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   }, [isDockFloating]);
 
   const onToggleDock = () => {
-    if (isDockExpanded) {
-      closeDock();
-    } else {
-      setIsDockExpanded(true);
+    if (isMobile) {
+      setIsDockOpen(!isDockOpen);
+      return;
     }
+    closeDock();
+    setIsDockPinned(!isDockExpanded);
   };
 
-  const onOpenDock = () => {
-    setIsDockExpanded(true);
-    setIsDockOverlay(true);
-  };
+  const onOpenDock = () => setIsDockOpen(true);
 
   const onNavSelect = () => {
     if (isDockFloating) {

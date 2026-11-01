@@ -6,6 +6,7 @@ export interface IMastheadBrand {
 
 export interface IMastheadTitle {
   text: string;
+  /** Render the title as this heading; by default it is styled text, not a heading. */
   heading?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   size?: "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 }
