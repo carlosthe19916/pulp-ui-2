@@ -14,6 +14,25 @@ unless noted otherwise.
 | `npm run start:dev:server` | Run the Express server in watch mode only.                            |
 | `npm run start`            | Build `common` + `client`, then start the production Express server.  |
 
+### Seed data
+
+`npm run seed` fills a Pulp backend with data for manual testing: for every installed plugin a
+remote, a repository synced from it (mostly from <https://fixtures.pulpproject.org/>), a
+publication where the plugin publishes and a distribution. It also creates content guards, an
+alternate content source, a failed sync task, users, a group, a custom role with role
+assignments, and a second domain. Every object is named `seed-…`; re-running only adds what's
+missing.
+
+| Option          | What it does                                               |
+| --------------- | ---------------------------------------------------------- |
+| `-- --reset`    | Delete every `seed-…` object first, then seed again.       |
+| `-- --no-sync`  | Create the objects without syncing content from upstreams. |
+| `-- --only a,b` | Seed only these plugins (and `extras` for the rest).       |
+
+It targets `PULP_API_URL` (default `http://localhost:5003`, the oci-env backend) and
+`PULP_API_ROOT` (default `/api/pulp/`), as `PULP_USERNAME` / `PULP_PASSWORD` (default
+`admin` / `password`). Seeded users sign in with `seed-password-123`.
+
 ## Build
 
 | Script              | What it does                                            |
