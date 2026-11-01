@@ -1,7 +1,4 @@
-/**
- * What the Distributions list keeps (page, sort, filters). `DistributionList` reads each piece
- * with `usePersistentState`; its route passes `listSearch(DISTRIBUTION_LIST_STATE)` for typed links.
- */
+/** What the Distributions list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

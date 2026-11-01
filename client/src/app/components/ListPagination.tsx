@@ -25,7 +25,7 @@ const PER_PAGE_OPTIONS: PerPageOptions[] = PER_PAGE_VALUES.map((value) => ({
   value,
 }));
 
-/** Legacy `useDataViewPagination` state, which carries its own handlers. */
+/** `useDataViewPagination` state, which carries its own handlers. */
 interface IDataViewPagination {
   page: number;
   perPage: number;
@@ -39,7 +39,6 @@ type IListPaginationProps = {
 } & (
   | { pagination: IDataViewPagination; onPaginationChange?: never }
   | {
-      /** Pagination state from `usePersistentState` (list-state). */
       pagination: ListPaginationState;
       onPaginationChange: (next: ListPaginationState) => void;
     }

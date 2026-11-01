@@ -1,7 +1,4 @@
-/**
- * What the Remotes list keeps (page, sort, filters). `RemoteList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(REMOTE_LIST_STATE)` for typed links.
- */
+/** What the Remotes list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

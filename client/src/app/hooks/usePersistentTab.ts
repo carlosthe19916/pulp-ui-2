@@ -8,7 +8,7 @@ import {
   usePersistentState,
 } from "./usePersistentState";
 
-/** A tab group's active tab (ADR 0014); declare it at module scope with `defineTabState`. */
+/** A tab group's active tab (ADR 0013); declare it at module scope with `defineTabState`. */
 export interface ITabStateDefinition<K extends string> {
   /** The query param, `tab` unless a screen has a second group (`section`). */
   param: string;
@@ -18,7 +18,6 @@ export interface ITabStateDefinition<K extends string> {
   state: ReturnType<typeof definePersistentState>;
 }
 
-/** Defines a tab group: its keys (when fixed), its default tab and its query param. */
 export const defineTabState = <K extends string = string>({
   param = "tab",
   tabs,
@@ -47,7 +46,7 @@ interface IUsePersistentTabOptions<
 }
 
 /**
- * The active tab, kept where `storage` says (ADR 0014). `setTab` is type-checked; `selectTab`
+ * The active tab, kept where `storage` says (ADR 0013). `setTab` is type-checked; `selectTab`
  * takes PatternFly's `onSelect` key and ignores keys the group doesn't have.
  */
 export const usePersistentTab = <K extends string>({

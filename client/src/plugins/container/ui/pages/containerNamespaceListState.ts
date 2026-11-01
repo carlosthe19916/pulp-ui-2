@@ -1,7 +1,4 @@
-/**
- * What the Container namespaces list keeps (page, sort, filters). Its route is a plugin page, so
- * it isn't declared there; `ContainerNamespaceList` reads each piece with `usePersistentState`.
- */
+/** What the Container namespaces list keeps (page, sort, filters); its plugin route has no `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

@@ -57,10 +57,7 @@ export class DataTable {
     await Promise.all([fetched, this.filterInput(title).fill(value)]);
   }
 
-  /**
-   * Switch the toolbar's filter attribute to `title` (a `MultiSelectFilter`) and tick each of
-   * `options` in its menu, then close it.
-   */
+  /** Switch the filter attribute to `title` (a `MultiSelectFilter`), tick `options` and close the menu. */
   async pickFilterOptions(title: string, options: string[]): Promise<void> {
     const page = this.scope.page();
     await this.scope
@@ -69,7 +66,7 @@ export class DataTable {
       .first()
       .click();
     await page.getByRole("menuitem", { name: title, exact: true }).click();
-    // The attribute selector now also reads `title`; the filter's own toggle comes after it.
+    // The attribute selector also reads `title` after the pick; the filter's own toggle is last.
     await this.scope
       .getByRole("button", { name: title, exact: true })
       .last()

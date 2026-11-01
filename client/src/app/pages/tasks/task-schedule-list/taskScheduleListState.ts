@@ -1,7 +1,4 @@
-/**
- * What the Task schedules list keeps (page, sort, filters). `TaskScheduleList` reads each piece
- * with `usePersistentState`; its route passes `listSearch(TASK_SCHEDULE_LIST_STATE)` for typed links.
- */
+/** What the Task schedules list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

@@ -26,7 +26,7 @@ export const ARTIFACTS_TAB_STATE = defineListState({
     schema: z.object({ sha256: z.string() }),
     defaultValue: { sha256: "" },
   }),
-  // Its own piece so "Clear all filters" keeps the switch, as before.
+  // Its own piece, so "Clear all filters" keeps the switch.
   orphaned: definePersistentState({
     key: "orphaned",
     schema: z.object({ orphaned: z.stringbool() }),

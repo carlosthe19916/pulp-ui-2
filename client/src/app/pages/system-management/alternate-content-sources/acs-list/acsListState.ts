@@ -1,7 +1,4 @@
-/**
- * What the alternate content sources list keeps (page, filters). `AcsList` reads each piece
- * with `usePersistentState`; its route passes `listSearch(ACS_LIST_STATE)` for typed links.
- */
+/** What the alternate content sources list keeps (page, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

@@ -21,7 +21,7 @@ export interface IBrowseFilter<TParam extends string = string> {
   placeholder?: string;
 }
 
-/** A filter's name in the address: its param without the lookup (`name__icontains` → `name`). */
+/** A filter's name in the URL: its param without the lookup (`name__icontains` → `name`). */
 type FilterField<TParam extends string> =
   TParam extends `${infer Field}__${string}` ? Field : TParam;
 
@@ -68,10 +68,7 @@ export interface IBrowseListDefinition<
   filters: FiltersDefinition;
 }
 
-/**
- * A Browse list's sortable columns, default sort and toolbar filters. Call it at module scope,
- * so the definition keeps one identity: `const PACKAGES_LIST = defineBrowseListState({ … })`.
- */
+/** A Browse list's sortable columns, default sort and toolbar filters; call it at module scope. */
 export const defineBrowseListState = <
   const TSort extends string = never,
   const TFilter extends string = never,
@@ -105,8 +102,8 @@ export const defineBrowseListState = <
 };
 
 /**
- * Paging, column sort and toolbar filters for one Browse list, kept in the address: `BrowseShell`
- * state plus `params` the section spreads into its own query. The screen scopes each section.
+ * Paging, sort and filters for one Browse list, kept in the URL, plus the `params` the section
+ * spreads into its query. The screen scopes each section.
  */
 export const useBrowseListState = <
   TSort extends string,

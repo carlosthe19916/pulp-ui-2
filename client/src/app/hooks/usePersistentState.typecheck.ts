@@ -1,7 +1,4 @@
-/**
- * Compile-time checks of `definePersistentState` and `usePersistentState` (run by `tsc`, never
- * executed): each `@ts-expect-error` marks a definition that must not compile.
- */
+/** Compile-time checks, run by `tsc` and never executed: each `@ts-expect-error` must not compile. */
 import { expectTypeOf } from "vitest";
 import { z } from "zod";
 

@@ -6,7 +6,6 @@ export type RawFields = Record<string, string | string[]>;
 /** A raw write; `undefined` removes the field. */
 export type RawWrite = Record<string, string | string[] | undefined>;
 
-/** What one field of a persistent state can hold: a scalar or a list of scalars. */
 export type PersistentFieldValue =
   string | number | boolean | undefined | readonly (string | number)[];
 
@@ -62,8 +61,8 @@ const parseField = (fieldSchema: z.ZodType, input: unknown) => {
 };
 
 /**
- * The raw fields that are present and valid, typed; a single value for a list field
- * (`?type=file`) becomes a one-item list. The default only tells which fields are lists.
+ * The present, valid fields, typed; a lone value for a list field (`?type=file`) becomes a
+ * one-item list. The default only tells which fields are lists.
  */
 export const parseFields = <S extends PersistentStateSchema>({
   fields,
@@ -90,7 +89,7 @@ export const decode = <S extends PersistentStateSchema>(
   options: IDecodeOptions<S>,
 ): z.output<S> => ({ ...options.defaultValue, ...parseFields(options) });
 
-/** Typed value → raw write. Fields equal to their default are removed, so storage stays clean. */
+/** Typed value → raw write. Fields equal to their default are removed, so defaults stay out of the URL. */
 export const encode = <S extends PersistentStateSchema>({
   value,
   defaultValue,

@@ -1,7 +1,4 @@
-/**
- * What the Roles list keeps (page, sort, filters). `RoleList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(ROLE_LIST_STATE)`.
- */
+/** What the Roles list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

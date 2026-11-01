@@ -34,17 +34,14 @@ import {
 
 export type { PersistentStateSchema } from "./persistentStateCodec";
 
-/** Where a state is kept, each with its natural lifetime (ADR 0014). */
+/** Where a state is kept, each with its natural lifetime (ADR 0013). */
 export type PersistentStorage = "url" | "session" | "local" | "state";
 
 /** What a state is, independent of where it's kept; declare it at module scope. */
 export interface IPersistentStateDefinition<S extends PersistentStateSchema> {
   /** Names the state in session/local storage; URL params use the field names. */
   key: string;
-  /**
-   * One schema per field. Stored values arrive as strings (`z.coerce.number()`,
-   * `z.stringbool()`); a missing or invalid field falls back to its default.
-   */
+  /** One schema per field; stored values arrive as strings (`z.coerce.number()`, `z.stringbool()`). */
   schema: S;
   /** List fields need a list default (`[]`). */
   defaultValue: z.output<S>;
@@ -56,10 +53,9 @@ export interface IUsePersistentStateOptions<
   storage: PersistentStorage;
 }
 
-/** `useState`'s setter: a value, or a function of the latest value. */
 export type PersistentStateSetter<T> = (next: SetStateAction<T>) => void;
 
-/** Checks a definition's default against its schema and keeps both at a stable identity. */
+/** Type-checks a definition's default against its schema; declare it at module scope so the setter stays stable. */
 export const definePersistentState = <S extends PersistentStateSchema>(
   definition: IPersistentStateDefinition<S>,
 ): IPersistentStateDefinition<S> => definition;
@@ -154,9 +150,8 @@ const createSnapshotCache = (store: IFieldStore) => {
 };
 
 /**
- * `useState` whose value is kept in the address, the tab, the browser or the component, as
- * `storage` says; nothing else changes with it (ADR 0014). The setter is stable when `schema`
- * and `defaultValue` are (see `definePersistentState`).
+ * `useState` kept in the URL, the tab, the browser or the component, as `storage` says (ADR 0013).
+ * The setter is stable while `schema` and `defaultValue` are.
  */
 export const usePersistentState = <S extends PersistentStateSchema>({
   key,

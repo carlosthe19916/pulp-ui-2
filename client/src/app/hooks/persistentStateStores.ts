@@ -6,7 +6,7 @@ import {
   toRawFields,
 } from "./persistentStateCodec";
 
-/** Where one persistent state's fields live (ADR 0014). */
+/** Where one persistent state's fields live (ADR 0013). */
 export interface IFieldStore {
   read: () => RawFields;
   /** Changes whenever `read()` may return something different. */
@@ -31,9 +31,8 @@ const applyWrite = <V>({
 };
 
 /**
- * Fields in the address, one query param each. Reads history directly because it updates
- * synchronously; writes merge into the latest search with `replace`, so two writes in one tick
- * both land and no Back step is added.
+ * Fields in the URL, one param each. Reads history directly because it updates synchronously;
+ * writes merge with `replace`, so two writes in one tick both land and add no Back step.
  */
 export const createUrlStore = ({
   router,
@@ -150,10 +149,7 @@ export const createMemoryStore = (): IFieldStore => {
 
 const claimed = new Set<string>();
 
-/**
- * Claims the URL params or storage key one mounted state uses and returns the release. Throws
- * when another mounted state holds one, so a missing `PersistentStateScopeProvider` fails fast in dev.
- */
+/** Claims a mounted state's URL params or storage key; throws on a clash, so a missing scope fails fast in dev. */
 export const claimKeys = (keys: readonly string[]): (() => void) => {
   const taken = keys.find((key) => claimed.has(key));
   if (taken) {

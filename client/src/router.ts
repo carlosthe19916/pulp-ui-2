@@ -18,7 +18,7 @@ export const router = createRouter({
     auth: null,
   },
   defaultPreload: "intent",
-  // Plain-string query values (ADR 0014): schemas convert, arrays repeat the name.
+  // Plain-string URL params (ADR 0013): schemas convert them, arrays repeat the name.
   parseSearch,
   stringifySearch,
 });

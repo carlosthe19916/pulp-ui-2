@@ -1,6 +1,6 @@
 /**
- * Compile-time checks of `listSearch` (run by `tsc`, never executed), through the Remotes route as
- * a sample: each `@ts-expect-error` is a link that must not compile while a route declares its list.
+ * Compile-time checks of `listSearch` through the Remotes route, run by `tsc` and never executed:
+ * each `@ts-expect-error` is a link that must not compile.
  */
 import { linkOptions } from "@tanstack/react-router";
 import { z } from "zod";

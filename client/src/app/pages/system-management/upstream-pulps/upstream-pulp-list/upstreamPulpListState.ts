@@ -1,7 +1,4 @@
-/**
- * What the Upstream Pulps list keeps (page, filters). `UpstreamPulpList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(UPSTREAM_PULP_LIST_STATE)` for typed links.
- */
+/** What the Upstream Pulps list keeps (page, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

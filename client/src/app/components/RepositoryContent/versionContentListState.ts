@@ -1,7 +1,4 @@
-/**
- * What a version's content list keeps (page, bucket, filters). `VersionContentList` reads each
- * piece with `usePersistentState`; the screen scopes it (`all.page` next to Browse sections).
- */
+/** What a version's content list keeps (page, bucket, filters); the screen scopes it (`all.page`). */
 import { z } from "zod";
 
 import type { ContentSummaryResponse } from "@app/client";

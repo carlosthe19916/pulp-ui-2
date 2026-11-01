@@ -1,7 +1,4 @@
-/**
- * What the Users list keeps (page, sort, filters). `UserList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(USER_LIST_STATE)`.
- */
+/** What the Users list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

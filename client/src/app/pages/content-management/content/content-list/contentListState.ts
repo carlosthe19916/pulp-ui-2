@@ -1,7 +1,4 @@
-/**
- * What the Content list keeps (page, filters). `ContentList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(CONTENT_LIST_STATE)` for typed links.
- */
+/** What the Content list keeps (page, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

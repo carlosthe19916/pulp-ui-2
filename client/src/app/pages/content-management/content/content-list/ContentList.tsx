@@ -52,10 +52,8 @@ import {
 } from "./utils/versionFilterCodec";
 
 /**
- * The global Content list, backed by the aggregate `content/` endpoint. `pulp_type` is a closed
- * enum (multi-select → `pulp_type__in`); `pulp_label_select` and `orphaned_for` are text inputs;
- * `repo_version` and `version_diff` are composite dropdowns whose encoded value the page decodes
- * into the `repository_version*` / `*_between` params.
+ * The global Content list, backed by the aggregate `content/` endpoint. The page decodes the
+ * `repo_version` and `version_diff` filters into the `repository_version*` / `*_between` params.
  */
 export const ContentList: React.FC = () => {
   const [pagination, setPagination] = usePersistentState({

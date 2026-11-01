@@ -1,7 +1,4 @@
-/**
- * What the Publications list keeps (page, sort). `PublicationList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(PUBLICATION_LIST_STATE)` for typed links.
- */
+/** What the Publications list keeps (page, sort); its route types links with `listSearch`. */
 import type { IPublicationListParams } from "@app/queries/publications";
 import type { OrderingField } from "@app/queries/utils/listParams";
 import {

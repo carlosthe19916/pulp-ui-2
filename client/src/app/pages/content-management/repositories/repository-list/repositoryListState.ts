@@ -1,7 +1,4 @@
-/**
- * What the Repositories list keeps (page, sort, filters). `RepositoryList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(REPOSITORY_LIST_STATE)` for typed links.
- */
+/** What the Repositories list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

@@ -1,7 +1,4 @@
-/**
- * What the Access policies list keeps (page, sort, filters). `AccessPolicyList` reads each piece
- * with `usePersistentState`; its route passes `listSearch(ACCESS_POLICY_LIST_STATE)`.
- */
+/** What the Access policies list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

@@ -1,7 +1,4 @@
-/**
- * What the content guards list keeps (page, sort, filters). `ContentGuardList` reads each piece
- * with `usePersistentState`; its route passes `listSearch(CONTENT_GUARD_LIST_STATE)` for typed links.
- */
+/** What the content guards list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

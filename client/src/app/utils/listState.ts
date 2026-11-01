@@ -16,10 +16,7 @@ export type PerPage = (typeof PER_PAGE_VALUES)[number];
 export const isPerPage = (value: number): value is PerPage =>
   (PER_PAGE_VALUES as readonly number[]).includes(value);
 
-/**
- * A zod schema from a type guard: accepts the strings the guard accepts, typed as what it narrows
- * to (e.g. a generated API enum). `z.array(schemaFromGuard(isRemotePulpType))`.
- */
+/** A zod schema accepting the strings a type guard accepts, typed as what it narrows to (an API enum). */
 export const schemaFromGuard = <T extends string>(
   guard: (value: string) => value is T,
 ) => z.custom<T>((value) => typeof value === "string" && guard(value));
@@ -36,10 +33,7 @@ export const PAGINATION_STATE = definePersistentState({
 
 export type ListPaginationState = z.output<typeof PAGINATION_STATE.schema>;
 
-/**
- * A list's sort over its sortable column keys (the endpoint's `ordering` enum). Call it at
- * module scope, so the definition keeps one identity.
- */
+/** A list's sort over its sortable column keys (the endpoint's `ordering` enum); call it at module scope. */
 export const defineSortState = <K extends string>({
   columnKeys,
   defaultValue,
@@ -77,9 +71,8 @@ export type ListSearch<L extends ListState> = Partial<
 >;
 
 /**
- * Route options declaring a list's state, so links into the list are type-checked and leave
- * defaults out of the address. In the route file:
- * `const { validateSearch, search } = listSearch(REMOTE_LIST_STATE)`, then pass both.
+ * Route options declaring a list's state, so links into it are type-checked and defaults stay out
+ * of the URL: `const { validateSearch, search } = listSearch(REMOTE_LIST_STATE)`, then pass both.
  */
 export const listSearch = <L extends ListState>(list: L) => {
   const pieces = Object.values(list);

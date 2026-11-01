@@ -1,7 +1,4 @@
-/**
- * What the Groups list keeps (page, sort, filters). `GroupList` reads each piece with
- * `usePersistentState`; its route passes `listSearch(GROUP_LIST_STATE)`.
- */
+/** What the Groups list keeps (page, sort, filters); its route types links with `listSearch`. */
 import { z } from "zod";
 
 import { definePersistentState } from "@app/hooks/usePersistentState";

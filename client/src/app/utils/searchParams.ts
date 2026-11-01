@@ -1,4 +1,4 @@
-/** A parsed query string: one string per name, or an array when the name repeats. */
+/** Parsed URL params: one string per name, or an array when the name repeats. */
 export type SearchRecord = Record<string, string | string[]>;
 
 /**
