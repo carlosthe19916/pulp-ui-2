@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Installation
 
-Pulp UI is distributed as a container image. It's a small Node.js server that serves the web application and proxies API requests to your Pulp server, so it doesn't need a database or storage of its own.
+Pulp UI is distributed as a container image: a small, stateless Node.js server that serves the web application and proxies API requests to your Pulp server.
 
 ## Prerequisites
 

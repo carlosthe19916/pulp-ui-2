@@ -46,14 +46,13 @@ it). Plugins install into the container at boot, so a new container gets exactly
 The database volumes outlive containers, though, and the rows of a removed plugin break Pulp's
 generic repository and content endpoints. So every switch runs `compose down -v`, and the next
 start begins with an empty database. The UI catalog and `npm run seed` follow what `/status/`
-reports and need no change; the e2e suite does not, and expects every plugin.
+reports; the e2e suite expects every plugin.
 
 ## Why from source (not the stock image)
 
-CI previously booted the all-in-one `pulp/pulp:stable` image, which omits some plugins (e.g.
-`pulp_npm`, `pulp_hugging_face`). That meant CI and local dev tested different plugin sets, and
-plugin-specific specs for the omitted plugins could not run. Building the same oci-env backend
-developers use gives CI exact plugin parity with local dev. The trade-off is a slower, heavier CI
+The all-in-one `pulp/pulp:stable` image omits some plugins (e.g. `pulp_npm`,
+`pulp_hugging_face`). Building the same oci-env backend developers use gives CI exact plugin
+parity with local dev, so every plugin's specs run. The trade-off is a slower, heavier CI
 (plugins build from source); it is mitigated by publishing the base image (see below).
 
 ## Image vs plugins — what is where

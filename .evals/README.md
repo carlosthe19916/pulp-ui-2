@@ -1,8 +1,8 @@
 # AI guidance evals
 
 Checks that the repo's AI guidance actually steers the agent: `AGENTS.md`, the ADRs, the rules
-(`.rulesync/rules/` → `.claude/rules/`, `.cursor/rules/`), skills and project settings. It
-doesn't test application code. A standalone package (like `website/`), run by hand:
+(`.rulesync/rules/` → `.claude/rules/`, `.cursor/rules/`), skills and project settings. A
+standalone package (like `website/`), run by hand:
 
 ```bash
 cd .evals

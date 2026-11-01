@@ -97,7 +97,7 @@ Summary: Submitting Create group with an existing name surfaces the server's rej
 When I create a group with a name that already exists
 Then an in-form error shows the server's reason, no toast appears, and the modal stays open
 
-### GRP-CRE-05 Create is not gated for a non-superuser
+### GRP-CRE-05 Create is enabled for a non-superuser
 
 Summary: A non-superuser can open Create group, but submitting a valid form fails with a permission-denied error in the form.
 

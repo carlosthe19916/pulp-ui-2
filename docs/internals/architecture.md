@@ -10,9 +10,8 @@ flowchart LR
 
 ## What it is
 
-A React single-page app (Vite, TypeScript, PatternFly) that drives Pulp entirely through its
-public REST API — no private endpoints, no server-side rendering of app state
-([ADR 0007](../adr/0007-rest-api-only.md)).
+A React single-page app (Vite, TypeScript, PatternFly), rendered in the browser, that drives Pulp
+entirely through its public REST API ([ADR 0007](../adr/0007-rest-api-only.md)).
 
 ## Plugin-agnostic by design
 
@@ -37,11 +36,11 @@ part of the URL and the navigation ([ADR 0002](../adr/0002-navigation-and-domain
 
 ## Asynchronous by nature
 
-Many writes (sync, publish, content changes, …) don't finish inline — they return a background
-task. The UI tracks the task and refreshes the affected views once it settles, so the user sees
-progress and the eventual result without reloading ([ADR 0006](../adr/0006-async-task-feedback.md)).
+Many writes (sync, publish, content changes, …) return a background task. The UI tracks the
+task and refreshes the affected views once it settles, so the user sees progress and the eventual
+result without reloading ([ADR 0006](../adr/0006-async-task-feedback.md)).
 
 ## Permission-aware
 
-Actions are shown and enabled according to what the current user is allowed to do, so the UI
-never offers an operation the server would reject ([ADR 0008](../adr/0008-permission-aware-actions.md)).
+Actions the current user can't run stay visible but disabled, with a tooltip saying why
+([ADR 0008](../adr/0008-permission-aware-actions.md)).

@@ -211,7 +211,7 @@ test.describe("Repository create page", () => {
   /**
    * REP-CRE-03 · Push repositories can't be created
    *
-   * Summary: Push-only repository types are not offered on the create page but can still be edited.
+   * Summary: Push-only repository types are not offered on the create page but can be edited.
    *
    * Manual
    * Seed: a container push repository (only an image push creates one)
@@ -222,7 +222,7 @@ test.describe("Repository create page", () => {
    * Then its edit page opens and saving a new description persists it
    */
   test(
-    "Push-only repository types are not offered on the create page but can still be edited.",
+    "Push-only repository types are not offered on the create page but can be edited.",
     {
       tag: "@REP-CRE-03",
       annotation: {

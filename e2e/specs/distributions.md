@@ -11,7 +11,7 @@ routes:
 
 A distribution serves content at a base path. It serves exactly one source: a repository's latest
 version, one repository version, or a publication. Each distribution has a detail page (Details,
-Tasks, Access); list rows don't expand. Create and edit are form pages:
+Tasks, Access). Create and edit are form pages:
 creating returns to the list (the create runs as a task), editing returns to the detail page.
 The shared form-page behaviour is in [form-pages.md](form-pages.md).
 

@@ -535,15 +535,15 @@ test.describe("Roles", () => {
     );
 
     /**
-     * ROL-LOCK-02 · Locked roles can still be assigned
+     * ROL-LOCK-02 · Locked roles can be assigned
      *
-     * Summary: A locked role is still listed and selectable in Add Role, and assigning it succeeds.
+     * Summary: A locked role is listed and selectable in Add Role, and assigning it succeeds.
      *
      * When I open "Add Role" for a user or group
      * Then locked roles are listed and selectable, and adding one succeeds
      */
     test(
-      "A locked role is still listed and selectable in Add Role, and assigning it succeeds.",
+      "A locked role is listed and selectable in Add Role, and assigning it succeeds.",
       {
         tag: "@ROL-LOCK-02",
         annotation: {
@@ -618,7 +618,7 @@ test.describe("Roles", () => {
     );
 
     /**
-     * ROL-CRE-06 · Create is not gated for a non-superuser
+     * ROL-CRE-06 · Create is enabled for a non-superuser
      *
      * Summary: A non-superuser can open Create role, but submitting a valid form fails with a permission-denied error in the form.
      *

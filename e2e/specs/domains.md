@@ -5,9 +5,8 @@ routes: [/system-management/domains]
 
 # Domains
 
-Domains have no detail page; create, edit, migrate and labels all happen in modals from the list.
-The default domain cannot be edited or deleted. The whole page only exists when the backend has
-the domains feature enabled.
+Create, edit, migrate and labels all happen in modals from the list. The default domain cannot be
+edited or deleted. The page exists only when the backend has the domains feature enabled.
 
 ## List
 
@@ -55,7 +54,7 @@ Requires: domains
 When I open the row actions of the "default" domain
 Then Edit and Delete are disabled, with the tooltip "The default domain can't be edited or
 deleted" (Pulp forbids editing or deleting the default domain)
-And the Edit labels action stays enabled, since labels are editable on every domain
+And the Edit labels action is enabled, since labels are editable on every domain
 
 ## Create, edit and delete
 

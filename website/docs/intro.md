@@ -14,7 +14,7 @@ Pulp UI is an independent project maintained by an individual contributor in [th
 
 **Pulp UI** is a web console for [Pulp](https://pulpproject.org/), the open source platform for managing repositories of software packages and making them available to a large number of consumers.
 
-Pulp is API-first: everything it does is exposed through a REST API. Pulp UI puts a modern, [PatternFly](https://www.patternfly.org/)-based interface on top of that API so you can manage your content from the browser.
+Pulp is API-first: everything it does is exposed through a REST API. Pulp UI puts a [PatternFly](https://www.patternfly.org/)-based interface on top of that API so you can manage your content from the browser.
 
 ## Who is it for?
 

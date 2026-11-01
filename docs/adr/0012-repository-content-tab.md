@@ -17,7 +17,7 @@ drawer), so Details became a long page where the overview is lost above a second
 
 - [ ] The Repository page has a Content tab right after Details, titled with the latest version's
       unit count. It shows the latest version's content as [0004](0004-how-content-is-viewed.md)
-      describes (Browse and All content), with the same selection and Remove as before.
+      describes (Browse and All content), with bulk selection and Remove.
 - [ ] A repository whose latest version is empty shows an empty state on the Content tab.
 - [ ] Details is an overview: About and "Use this repository". Its content count opens the
       Content tab, with a per-type breakdown when the version holds more than one type.
@@ -27,4 +27,4 @@ drawer), so Details became a long page where the overview is lost above a second
 ## Consequences
 
 - Details is short and reads at a glance; content gets the full width and height of a tab.
-- Reaching the content takes one click more than before.
+- Reaching the content takes one extra click.
