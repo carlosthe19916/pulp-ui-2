@@ -3,8 +3,11 @@ import { useState } from "react";
 
 import {
   FormGroup,
+  FormHelperText,
   FormSelect,
   FormSelectOption,
+  HelperText,
+  HelperTextItem,
 } from "@patternfly/react-core";
 
 import { TaskActionModal } from "@app/components/TaskActionModal";
@@ -66,8 +69,6 @@ export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
 
   return (
     <TaskActionModal
-      // A new type is a new form.
-      key={guardType.pulpType}
       title={guard ? `Edit guard "${guard.name}"` : "Create content guard"}
       submitLabel={guard ? "Save" : "Create"}
       fields={guardType.fields}
@@ -76,6 +77,8 @@ export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
           ? buildDefaultValues({ fields: guardType.fields, source: guard })
           : {}
       }
+      // A new type is a new form; the modal and the type select stay put.
+      formKey={guardType.pulpType}
       beforeFields={
         <FormGroup label="Type" fieldId="guard-type" isRequired>
           <FormSelect
@@ -92,7 +95,11 @@ export const ContentGuardModal: React.FC<IContentGuardModalProps> = ({
               />
             ))}
           </FormSelect>
-          <div>{guardType.description}</div>
+          <FormHelperText>
+            <HelperText>
+              <HelperTextItem>{guardType.description}</HelperTextItem>
+            </HelperText>
+          </FormHelperText>
         </FormGroup>
       }
       isSubmitting={createMutation.isPending || updateMutation.isPending}
