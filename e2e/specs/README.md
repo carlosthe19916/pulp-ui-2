@@ -44,7 +44,7 @@ navigation end to end:
 | [remotes.md](remotes.md)                 | `RMT`  | Remotes list actions, per-plugin create, edit, detail settings, delete    |
 | [repositories.md](repositories.md)       | `REP`  | Repository create/edit pages, remote picker, push types, About settings   |
 | [distributions.md](distributions.md)     | `DST`  | Distribution create/edit pages, detail page, source choice, base path     |
-| [publications.md](publications.md)       | `PUB`  | Publication create page, version choice, publishable types, APT kinds     |
+| [publications.md](publications.md)       | `PUB`  | Publication create page, detail page, version choice, publishable types   |
 
 ## Writing a scenario
 

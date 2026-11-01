@@ -3,13 +3,15 @@ area: publications
 routes:
   - /content-management/:domain/publications
   - /content-management/:domain/publications/create
+  - /content-management/:domain/publications/:type/:id
 ---
 
-# Publications (create)
+# Publications (create and detail)
 
 A publication is an immutable, published snapshot of a repository version. It is created on a
-form page and never edited; it has no detail page, so creating returns to the list. The shared
-form-page behaviour is in [form-pages.md](form-pages.md).
+form page and never edited. Each publication has a detail page (Details, Access); list rows don't
+expand. Creating returns to the list (the create runs as a task). The shared form-page behaviour
+is in [form-pages.md](form-pages.md).
 
 ## Create
 
@@ -75,6 +77,45 @@ Then there is no "Edit" action
 
 Pulp itself allows only reading and deleting a publication.
 
+## Detail
+
+### PUB-DET-01 Open a publication's page from its name
+
+Summary: A publication's name links to its detail page from the Publications list and from its repository's Publications tab.
+
+Seed: a file publication of a file repository
+
+When I click "Publication <id>" in the Publications list
+Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
+the tabs Details and Access
+When I go to the repository's Publications tab and click "Publication <id>"
+Then the same detail page opens
+
+### PUB-DET-02 Details show its source, serving distributions and settings
+
+Summary: The Details tab shows the repository and version it was published from, the distributions serving it, its publishing settings and metadata.
+
+Seed: a file repository, a file publication of it, and a file distribution serving the publication
+
+When I open the publication's Details tab
+Then the "Source" card shows the repository and its version as links, and the distribution's name
+as a link
+And the "Publishing" card shows the manifest file name "PULP_MANIFEST"
+And the "Metadata" card shows its creation time and its PRN
+When I click the distribution's name
+Then the distribution's detail page opens, and its publication links back to this page
+
+### PUB-DET-03 Delete from the detail page
+
+Summary: The detail page offers Delete and no Edit; deleting removes the publication and returns to the list.
+
+Seed: a file publication
+
+When I open its detail page's actions menu
+Then there is "Delete" and no "Edit"
+When I choose "Delete" and confirm "Delete Publication"
+Then the toast "Publication "<id>" deleted" appears and the Publications list opens
+
 ## Other layers
 
 | Behaviour                                                                | Layer      |
@@ -83,3 +124,4 @@ Pulp itself allows only reading and deleting a publication.
 | Choosing a repository version instead of the repository swaps the picker | component  |
 | APT publication options show only for the APT type                       | component  |
 | Publication write rules (exactly one of repository or version)           | API        |
+| Details card layout: source links, settings from the form, no labels     | component  |

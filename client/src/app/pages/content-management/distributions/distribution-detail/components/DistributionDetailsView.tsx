@@ -17,6 +17,7 @@ import { EntityMetadataList } from "@app/components/EntityMetadataList";
 import { FormDetailSections } from "@app/components/FormDetailSections";
 import { NamedResourceHrefLink } from "@app/components/NamedResourceHrefLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
+import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { toDetailSections } from "@app/plugin-forms";
@@ -114,7 +115,9 @@ export const DistributionDetailsView: React.FC<
               </Fact>
             )}
             {sources.has("publication") && (
-              <Fact term="Publication">{publication ?? "—"}</Fact>
+              <Fact term="Publication">
+                <ResourceHrefLink kind="publication" href={publication} />
+              </Fact>
             )}
           </DescriptionList>
         </DetailSectionCard>

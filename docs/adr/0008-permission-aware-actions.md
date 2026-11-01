@@ -21,8 +21,9 @@ fail with a permission error.
       button) may be omitted instead.
 - [ ] Until permissions load, or when they can't be read, nothing is disabled; the server
       still enforces.
-- [ ] Objects with roles offer an **Access** tab (repository, remote) or a **Manage access**
-      action (distribution, publication and others) to grant users and groups roles on them.
+- [ ] Objects with roles offer an **Access** tab on their page (repository, remote,
+      distribution, publication) or a **Manage access** row action (distribution, content guard
+      and others) to grant users and groups roles on them.
 - [ ] A forbidden or unknown object shows an error or unauthorized state in place of the page,
       rather than a broken or empty page.
 

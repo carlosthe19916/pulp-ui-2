@@ -1,8 +1,9 @@
 import { expect, test } from "@support/fixtures";
+import { seedRepository } from "@support/helpers/distributions";
 import { idOf } from "@support/helpers/hrefs";
 import { uniqueName } from "@support/helpers/unique";
 
-// Scenarios: e2e/specs/publications.md (edit).
+// Scenarios: e2e/specs/publications.md (edit, detail page).
 
 test.describe("Publications", () => {
   /**
@@ -44,6 +45,65 @@ test.describe("Publications", () => {
         page.getByRole("menuitem", { name: "Delete" }),
       ).toBeVisible();
       await expect(page.getByRole("menuitem", { name: "Edit" })).toHaveCount(0);
+    },
+  );
+
+  /**
+   * PUB-DET-01 · Open a publication's page from its name
+   *
+   * Summary: A publication's name links to its detail page from the Publications list and from its repository's Publications tab.
+   *
+   * Seed: a file publication of a file repository
+   *
+   * When I click "Publication <id>" in the Publications list
+   * Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
+   * the tabs Details and Access
+   * When I go to the repository's Publications tab and click "Publication <id>"
+   * Then the same detail page opens
+   */
+  test(
+    "A publication's name links to its detail page from the Publications list and from its repository's Publications tab.",
+    {
+      tag: "@PUB-DET-01",
+      annotation: {
+        type: "spec",
+        description: "e2e/specs/publications.md#PUB-DET-01",
+      },
+    },
+    async ({ publicationsPage, api, cleanup, page }) => {
+      const repository = await seedRepository(api, cleanup);
+      const href = cleanup.href(
+        await api.createViaTask("publications/file/file", {
+          repository: repository.href,
+        }),
+      );
+      const name = `Publication ${idOf(href)}`;
+
+      const expectDetailPage = async () => {
+        await expect(
+          page.getByRole("heading", { level: 1, name }),
+        ).toBeVisible();
+        await expect(page.getByText("plugin: file.file")).toBeVisible();
+        for (const tab of ["Details", "Access"]) {
+          await expect(
+            page.getByRole("tab", { name: tab, exact: true }),
+          ).toBeVisible();
+        }
+      };
+
+      await publicationsPage.goto();
+      await publicationsPage.row(name).getByRole("link", { name }).click();
+      await expectDetailPage();
+
+      await page.goto(
+        `/content-management/default/repositories/file.file/${idOf(repository.href)}`,
+      );
+      await page.getByRole("tab", { name: /^Publications/ }).click();
+      await page
+        .getByRole("grid", { name: "Repository publications table" })
+        .getByRole("link", { name, exact: true })
+        .click();
+      await expectDetailPage();
     },
   );
 });

@@ -59,7 +59,15 @@ export const RepositoryPublicationsTab: React.FC<
       id: pub.pulp_href,
       row: [
         {
-          cell: pub.pulp_href ? `Publication ${pubId}` : "—",
+          cell: pub.pulp_href ? (
+            <ResourceHrefLink
+              kind="publication"
+              href={pub.pulp_href}
+              label={`Publication ${pubId}`}
+            />
+          ) : (
+            "—"
+          ),
           props: { dataLabel: "Publication" },
         },
         {

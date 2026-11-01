@@ -13,14 +13,12 @@ import {
   PageSection,
   PaginationVariant,
   Tooltip,
-  type TooltipProps,
 } from "@patternfly/react-core";
 import {
   DataView,
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  type ExpandableContent,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -30,10 +28,8 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
-import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -53,24 +49,15 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
 import {
   PUBLICATION_LIST_STATE,
   SORTABLE_COLUMN_KEYS,
 } from "./publicationListState";
 
-// Some types (hugging_face) have no role endpoints to manage access with.
-const NO_ROLES_TOOLTIP: TooltipProps = {
-  content: "This publication type doesn't support access management.",
-};
-
 export const PublicationList: React.FC = () => {
   const navigate = useNavigate();
   const { name: pulpDomain } = useSelectedDomain();
 
-  const [accessTarget, setAccessTarget] = useState<PublicationResponse | null>(
-    null,
-  );
   const [deleteTarget, setDeleteTarget] = useState<PublicationResponse | null>(
     null,
   );
@@ -122,6 +109,7 @@ export const PublicationList: React.FC = () => {
 
   const publications = data?.results ?? [];
 
+  // Some types (hugging_face) have no role endpoints to read permissions from.
   const { disabledProps } = useObjectsPermissions({
     hrefs: publications
       .filter((item) => hasRoleEndpoints(item.pulp_href))
@@ -141,12 +129,19 @@ export const PublicationList: React.FC = () => {
     const href = pub.pulp_href;
     const pubId = href ? extractIdFromHref(href) : "";
     const pulpType = resolvePulpType(pub.pulp_href);
-    const canManageRoles = hasRoleEndpoints(pub.pulp_href);
     return {
       id: href,
       row: [
         {
-          cell: href ? `Publication ${pubId}` : "—",
+          cell: href ? (
+            <ResourceHrefLink
+              kind="publication"
+              href={href}
+              label={`Publication ${pubId}`}
+            />
+          ) : (
+            "—"
+          ),
           props: { dataLabel: "Publication" },
         },
         {
@@ -173,18 +168,6 @@ export const PublicationList: React.FC = () => {
             <ActionsColumn
               items={[
                 {
-                  title: "Manage access",
-                  isAriaDisabled: !canManageRoles,
-                  tooltipProps: canManageRoles ? undefined : NO_ROLES_TOOLTIP,
-                  onClick: () => setAccessTarget(pub),
-                  ...(canManageRoles
-                    ? disabledProps({
-                        href: pub.pulp_href,
-                        verb: "manage_roles",
-                      })
-                    : {}),
-                },
-                {
                   title: "Delete",
                   onClick: () => setDeleteTarget(pub),
                   ...disabledProps({ href: pub.pulp_href, verb: "delete" }),
@@ -197,17 +180,6 @@ export const PublicationList: React.FC = () => {
       ],
     };
   });
-
-  const PUBLICATION_COLUMN_INDEX = 0;
-  const expandedRows: ExpandableContent[] = publications.map((pub) => ({
-    rowId: pub.pulp_href ?? "",
-    columnId: PUBLICATION_COLUMN_INDEX,
-    content: (
-      <RevealCellOnExpand>
-        {() => <PublicationDetailPanel publication={pub} />}
-      </RevealCellOnExpand>
-    ),
-  }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
@@ -278,9 +250,6 @@ export const PublicationList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
-            isExpandable
-            expandedRows={expandedRows}
-            indexBy="id"
           />
 
           <DataViewToolbar
@@ -294,14 +263,6 @@ export const PublicationList: React.FC = () => {
             }
           />
         </DataView>
-
-        {accessTarget && (
-          <ObjectAccessModal
-            href={accessTarget.pulp_href ?? ""}
-            name={`Publication ${extractIdFromHref(accessTarget.pulp_href ?? "")}`}
-            onClose={() => setAccessTarget(null)}
-          />
-        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

@@ -2,6 +2,7 @@ import type React from "react";
 
 import type { ResourceHrefKind } from "@app/components/ResourceHrefLink";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { useDistributionDetailQuery } from "@app/queries/distributions";
 import { useRemoteDetailQuery } from "@app/queries/remotes";
 import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { parseRepositoryVersionHref } from "@app/queries/utils/pulpHref";
@@ -32,7 +33,11 @@ export const NamedResourceHrefLink: React.FC<INamedResourceHrefLinkProps> = ({
     href: kind === "remote" ? (href ?? null) : null,
   });
 
-  const name = repository?.name ?? remote?.name;
+  const { data: distribution } = useDistributionDetailQuery({
+    href: kind === "distribution" ? (href ?? null) : null,
+  });
+
+  const name = repository?.name ?? remote?.name ?? distribution?.name;
   const label = name && version ? `${name} · Version ${version.number}` : name;
 
   return <ResourceHrefLink kind={kind} href={href} label={label} />;
