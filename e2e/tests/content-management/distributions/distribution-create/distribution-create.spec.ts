@@ -105,7 +105,7 @@ test.describe("Distribution create page", () => {
               filter: idOf(publication),
               option: `Publication ${idOf(publication)}`,
             }),
-          serves: publication,
+          serves: idOf(publication),
           stored: (record) => record?.publication,
           expected: publication,
         },

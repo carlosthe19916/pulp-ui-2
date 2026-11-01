@@ -21,8 +21,8 @@ interface IEntityMetadataListProps {
     pulp_href?: string;
   };
   pulpType: string;
-  /** The object's labels editor; its mutation is the caller's. */
-  labels: React.ReactNode;
+  /** The object's labels editor; its mutation is the caller's. Omit for unlabelled types. */
+  labels?: React.ReactNode;
 }
 
 interface IFactProps {
@@ -64,7 +64,7 @@ export const EntityMetadataList: React.FC<IEntityMetadataListProps> = ({
     <Fact term="Last updated">
       {formatDateTime(entity.pulp_last_updated) ?? "—"}
     </Fact>
-    <Fact term="Labels">{labels}</Fact>
+    {labels !== undefined && <Fact term="Labels">{labels}</Fact>}
     <Fact term="PRN">
       <CopyableValue value={entity.prn} />
     </Fact>

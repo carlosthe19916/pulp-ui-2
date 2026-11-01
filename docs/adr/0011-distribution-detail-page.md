@@ -1,6 +1,6 @@
 ---
 name: distribution-detail-page
-description: Distributions get a tabbed detail page (Details, Tasks, Access) that the list, the repository's Distributions tab and the edit page link to; publications expand inline.
+description: Distributions get a tabbed detail page (Details, Tasks, Access) that the list, the repository's Distributions tab and the edit page link to.
 status: Accepted
 ---
 

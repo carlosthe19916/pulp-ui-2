@@ -65,6 +65,5 @@ runs it once the task finishes.
   and edit.
 - Supporting a new plugin includes writing its forms in code. The catalog keeps what the API
   needs (types, endpoints, capabilities).
-- Distribution and publication forms are linkable pages. Distributions have a detail page
-  ([0011](0011-distribution-detail-page.md)); publications expand inline
-  ([0003](0003-detail-pages-and-expandable-rows.md)).
+- Distribution and publication forms are linkable pages, and both objects have a detail page
+  ([0011](0011-distribution-detail-page.md), [0003](0003-detail-pages-and-expandable-rows.md)).

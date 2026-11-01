@@ -22,8 +22,8 @@ fail with a permission error.
 - [ ] Until permissions load, or when they can't be read, nothing is disabled; the server
       still enforces.
 - [ ] Users and groups are granted roles on an object from its page's **Access** tab
-      (repository, remote, distribution), or from a **Manage access** row action for objects
-      without a page (publication and others).
+      (repository, remote, distribution, publication), or from a **Manage access** row action
+      for objects without a page (content guard and others).
 - [ ] A forbidden or unknown object shows an error or unauthorized state in place of the page,
       rather than a broken or empty page.
 

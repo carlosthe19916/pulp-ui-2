@@ -4,6 +4,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -14,12 +15,13 @@ import type {
   PublicationsListData,
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { getPulpType } from "@catalog";
 
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
 
@@ -97,6 +99,38 @@ export const usePublicationsListQuery = ({
   return useQuery(
     publicationsListQueryOptions({ domain, apiPath, params, options }),
   );
+};
+
+type PublicationDetailOptions = Omit<
+  UseQueryOptions<PublicationResponse, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
+/** Detail-by-href for a publication; the typed payload carries the plugin's fields. */
+export const publicationDetailQueryOptions = ({
+  href,
+  options,
+}: {
+  href: string;
+  options?: PublicationDetailOptions;
+}) =>
+  queryOptions<PublicationResponse, DrfAxiosError>({
+    ...options,
+    queryKey: publicationKeys.detail(href),
+    queryFn: async (): Promise<PublicationResponse> =>
+      (await axiosInstance.get<PublicationResponse>(toProxyHref(href))).data,
+  });
+
+export const useSuspensePublicationDetailQuery = ({ href }: { href: string }) =>
+  useSuspenseQuery(publicationDetailQueryOptions({ href }));
+
+export const buildPublicationHref = (
+  pulpType: string,
+  id: string,
+  domain: IPulpDomain,
+): string | null => {
+  const apiPath = getPulpType(pulpType)?.entities.publication?.apiPath;
+  return apiPath ? pulpHref(`publications/${apiPath}/${id}/`, domain) : null;
 };
 
 /** Deletes a publication — synchronous (204, no task), unlike the other families. */
