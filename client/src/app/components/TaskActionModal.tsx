@@ -1,4 +1,5 @@
 import type React from "react";
+import { useImperativeHandle, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -38,8 +39,10 @@ import { getContentType, type IContentType } from "@catalog";
 interface ITaskActionModalProps {
   title: string;
   description?: React.ReactNode;
-  /** Rendered above the fields (e.g. a type select that swaps them). */
+  /** Rendered above the fields (e.g. a type select that swaps them); stays mounted. */
   beforeFields?: React.ReactNode;
+  /** Changing it starts the fields over without remounting the modal (e.g. a new type). */
+  formKey?: string;
   submitLabel: string;
   fields: IEntityField[];
   /** Initial values by field key (e.g. the tag a row action runs on). */
@@ -73,6 +76,95 @@ const formSelection = ({
   clear: () => onChange([]),
 });
 
+interface ITaskActionFieldsHandle {
+  submit: () => void;
+}
+
+interface ITaskActionFieldsProps {
+  ref: React.Ref<ITaskActionFieldsHandle>;
+  fields: IEntityField[];
+  initialValues?: Record<string, unknown>;
+  repository?: RepositoryResponse;
+  resourceFilter?: ResourceFilterMap;
+  onSubmit: (body: Record<string, unknown>) => void;
+}
+
+/** The form state and fields; keyed by the modal so a new field set starts clean. */
+const TaskActionFields: React.FC<ITaskActionFieldsProps> = ({
+  ref,
+  fields,
+  initialValues,
+  repository,
+  resourceFilter,
+  onSubmit,
+}) => {
+  const { control, handleSubmit } = useForm<Record<string, unknown>>({
+    resolver: yupResolver(buildFieldSchema(fields)),
+    defaultValues: { ...buildDefaultValues({ fields }), ...initialValues },
+    mode: "onChange",
+  });
+  useImperativeHandle(ref, () => ({
+    submit: () =>
+      void handleSubmit((values) =>
+        onSubmit(fieldsToBody({ fields, values })),
+      )(),
+  }));
+  const contentFields = fields.filter((field) => field.type === "content");
+
+  return (
+    <>
+      <EntityFormFields
+        fields={fields}
+        control={control}
+        idPrefix="task-action"
+        resourceFilter={resourceFilter}
+      />
+      {repository &&
+        contentFields.map((field) => {
+          if (field.type !== "content") return null;
+          const contentTypes = field.pulpTypes
+            .map((pulpType) => getContentType(pulpType))
+            .filter((type): type is IContentType => !!type?.apiPath);
+          return (
+            <Controller
+              key={field.key}
+              name={field.key}
+              control={control}
+              render={({ field: rhfField, fieldState: { error } }) => (
+                <FormGroup
+                  label={field.label}
+                  fieldId={`task-action-${field.key}`}
+                  isRequired={field.required}
+                >
+                  <ContentPicker
+                    contentTypes={contentTypes}
+                    sourceVersionHref={
+                      repository.latest_version_href ?? undefined
+                    }
+                    repositoryName={repository.name}
+                    selection={formSelection({
+                      value: (rhfField.value as IContentUnitRef[]) ?? [],
+                      onChange: rhfField.onChange,
+                    })}
+                  />
+                  {error && (
+                    <FormHelperText>
+                      <HelperText>
+                        <HelperTextItem variant="error">
+                          {error.message}
+                        </HelperTextItem>
+                      </HelperText>
+                    </FormHelperText>
+                  )}
+                </FormGroup>
+              )}
+            />
+          );
+        })}
+    </>
+  );
+};
+
 /**
  * Form shell for task-starting actions (sync, sign, copy…) and simple field-driven forms;
  * submit hands the body to the caller. Mount only while open.
@@ -81,6 +173,7 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
   title,
   description,
   beforeFields,
+  formKey,
   submitLabel,
   fields,
   initialValues,
@@ -91,13 +184,8 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
   onSubmit,
   onClose,
 }) => {
-  const { control, handleSubmit } = useForm<Record<string, unknown>>({
-    resolver: yupResolver(buildFieldSchema(fields)),
-    defaultValues: { ...buildDefaultValues({ fields }), ...initialValues },
-    mode: "onChange",
-  });
-  const contentFields = fields.filter((field) => field.type === "content");
-  const hasContentField = contentFields.length > 0;
+  const fieldsRef = useRef<ITaskActionFieldsHandle>(null);
+  const hasContentField = fields.some((field) => field.type === "content");
 
   return (
     <Modal
@@ -111,62 +199,21 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
           id="task-action-form"
           onSubmit={(event) => {
             event.preventDefault();
-            void handleSubmit((values) =>
-              onSubmit(fieldsToBody({ fields, values })),
-            )();
+            fieldsRef.current?.submit();
           }}
         >
           <FormSubmitError error={submitError} />
           {description ? <Content component="p">{description}</Content> : null}
           {beforeFields}
-          <EntityFormFields
+          <TaskActionFields
+            key={formKey}
+            ref={fieldsRef}
             fields={fields}
-            control={control}
-            idPrefix="task-action"
+            initialValues={initialValues}
+            repository={repository}
             resourceFilter={resourceFilter}
+            onSubmit={onSubmit}
           />
-          {repository &&
-            contentFields.map((field) => {
-              if (field.type !== "content") return null;
-              const contentTypes = field.pulpTypes
-                .map((pulpType) => getContentType(pulpType))
-                .filter((type): type is IContentType => !!type?.apiPath);
-              return (
-                <Controller
-                  key={field.key}
-                  name={field.key}
-                  control={control}
-                  render={({ field: rhfField, fieldState: { error } }) => (
-                    <FormGroup
-                      label={field.label}
-                      fieldId={`task-action-${field.key}`}
-                      isRequired={field.required}
-                    >
-                      <ContentPicker
-                        contentTypes={contentTypes}
-                        sourceVersionHref={
-                          repository.latest_version_href ?? undefined
-                        }
-                        repositoryName={repository.name}
-                        selection={formSelection({
-                          value: (rhfField.value as IContentUnitRef[]) ?? [],
-                          onChange: rhfField.onChange,
-                        })}
-                      />
-                      {error && (
-                        <FormHelperText>
-                          <HelperText>
-                            <HelperTextItem variant="error">
-                              {error.message}
-                            </HelperTextItem>
-                          </HelperText>
-                        </FormHelperText>
-                      )}
-                    </FormGroup>
-                  )}
-                />
-              );
-            })}
         </Form>
       </ModalBody>
       <ModalFooter>
