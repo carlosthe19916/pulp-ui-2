@@ -543,6 +543,16 @@ export class PulpApi {
     return (await res.json()) as T;
   }
 
+  /** The name of one online task worker (workers are global; listed through the default domain). */
+  async onlineWorkerName(): Promise<string> {
+    const { results = [] } = await this.getJson<{
+      results?: { name?: string }[];
+    }>(this.collectionUrl("workers"), { online: "true", limit: 1 });
+    const name = results[0]?.name;
+    if (!name) throw new Error("No online Pulp worker");
+    return name;
+  }
+
   /** The HTTP status of a GET on an href (e.g. 404 once a record is gone). */
   async status(href: string): Promise<number> {
     return (await this.ctx.get(href)).status();

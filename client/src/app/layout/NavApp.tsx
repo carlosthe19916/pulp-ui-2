@@ -401,6 +401,11 @@ export const NavApp: React.FC<INavAppProps> = ({
               Task Schedules
             </Link>
           </NavItem>
+          <NavItem
+            isActive={!!matchRoute({ to: "/monitoring/workers", fuzzy: true })}
+          >
+            <Link to="/monitoring/workers">Workers</Link>
+          </NavItem>
           {canScan && (
             <NavItem
               isActive={
