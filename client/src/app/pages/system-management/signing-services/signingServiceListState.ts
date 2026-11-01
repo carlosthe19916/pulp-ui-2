@@ -12,6 +12,7 @@ import {
 
 export const SORTABLE_COLUMN_KEYS = [
   "name",
+  "pulp_created",
 ] as const satisfies readonly OrderingField<ISigningServiceListParams>[];
 
 export const SIGNING_SERVICE_LIST_STATE = defineListState({

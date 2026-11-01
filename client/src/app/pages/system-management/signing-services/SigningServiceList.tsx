@@ -5,6 +5,7 @@ import {
   ContentVariants,
   PageSection,
   PaginationVariant,
+  Truncate,
 } from "@patternfly/react-core";
 import {
   DataView,
@@ -13,18 +14,23 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
+  type ExpandableContent,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ListPagination } from "@app/components/ListPagination";
+import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
+import { formatDateTime } from "@app/utils/utils";
 
+import { FingerprintCopy } from "./components/FingerprintCopy";
+import { SigningServiceDetails } from "./components/SigningServiceDetails";
 import {
   SIGNING_SERVICE_LIST_STATE,
   SORTABLE_COLUMN_KEYS,
@@ -74,27 +80,44 @@ export const SigningServiceList: React.FC = () => {
 
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 25 } },
-    { cell: "Public Key Fingerprint", props: { width: 45 } },
-    { cell: "Script", props: { width: 30 } },
+    { cell: "Fingerprint", props: { width: 35 } },
+    { cell: "Script", props: { width: 25 } },
+    { cell: "Created", props: { sort: sortProps("pulp_created"), width: 15 } },
   ];
 
-  const rows: DataViewTr[] = services.map((service) => {
-    const fp = service.pubkey_fingerprint ?? "";
-    return {
-      id: service.pulp_href,
-      row: [
-        { cell: service.name, props: { dataLabel: "Name" } },
-        {
-          cell: fp || "—",
-          props: { dataLabel: "Public Key Fingerprint", modifier: "truncate" },
-        },
-        {
-          cell: service.script ?? "—",
-          props: { dataLabel: "Script", modifier: "truncate" },
-        },
-      ],
-    };
-  });
+  const rows: DataViewTr[] = services.map((service) => ({
+    id: service.pulp_href,
+    row: [
+      { cell: service.name, props: { dataLabel: "Name" } },
+      {
+        cell: <FingerprintCopy fingerprint={service.pubkey_fingerprint} />,
+        props: { dataLabel: "Fingerprint" },
+      },
+      {
+        // The file name is the telling part of the path, so keep both ends.
+        cell: service.script ? (
+          <Truncate content={service.script} position="middle" />
+        ) : (
+          "—"
+        ),
+        props: { dataLabel: "Script" },
+      },
+      {
+        cell: formatDateTime(service.pulp_created) ?? "—",
+        props: { dataLabel: "Created" },
+      },
+    ],
+  }));
+
+  const expandedRows: ExpandableContent[] = services.map((service) => ({
+    rowId: service.pulp_href ?? "",
+    columnId: 0,
+    content: (
+      <RevealCellOnExpand>
+        {() => <SigningServiceDetails service={service} />}
+      </RevealCellOnExpand>
+    ),
+  }));
 
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
@@ -106,7 +129,7 @@ export const SigningServiceList: React.FC = () => {
         title="No signing services found"
         body="Signing services aren't managed from this UI. Ask an administrator to provision one via the Pulp API or CLI."
         filteredTitle="No signing services found"
-        filteredBody="No signing services match the current filter. Try a different search term."
+        filteredBody="The name filter matches whole names only. Check the spelling, including case."
         isFiltered={Boolean(debouncedName)}
         onClearFilters={clearAllFilters}
       />
@@ -119,8 +142,10 @@ export const SigningServiceList: React.FC = () => {
       <PageSection>
         <Content component={ContentVariants.h1}>Signing Services</Content>
         <Content component={ContentVariants.p}>
-          Signing services are provisioned by an administrator via the Pulp API
-          or CLI; they can&apos;t be created, edited, or deleted from this UI.
+          A signing service signs repository metadata and packages with a GPG
+          key. Administrators provision them through the Pulp API or CLI; share
+          a service&apos;s public key with clients so they can verify what they
+          download. Expand a row to copy or download the key.
         </Content>
       </PageSection>
       <PageSection>
@@ -135,7 +160,11 @@ export const SigningServiceList: React.FC = () => {
                 }}
                 values={filters}
               >
-                <DataViewTextFilter filterId="name" title="Name" />
+                <DataViewTextFilter
+                  filterId="name"
+                  title="Name"
+                  placeholder="Filter by exact name"
+                />
               </DataViewFilters>
             }
             pagination={
@@ -153,6 +182,9 @@ export const SigningServiceList: React.FC = () => {
             columns={columns}
             rows={rows}
             bodyStates={bodyStates}
+            isExpandable
+            expandedRows={expandedRows}
+            indexBy="id"
           />
 
           <DataViewToolbar
