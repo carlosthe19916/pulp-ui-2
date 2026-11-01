@@ -8,6 +8,7 @@ import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclam
 import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 import { oidcClientSettings, oidcSignoutArgs } from "@app/oidc";
 import { useRecentTasksStore } from "@app/stores/useRecentTasksStore";
+import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 
 import { AuthContext, type IAuthContext } from "./AuthContext";
 
@@ -49,6 +50,7 @@ const OidcAuthBridge: React.FC<IOidcAuthBridgeProps> = ({ children }) => {
 
   const logout = useCallback(async () => {
     useRecentTasksStore.getState().reset();
+    useTrackedTasksStore.getState().reset();
     await auth.signoutRedirect(oidcSignoutArgs);
   }, [auth]);
 
