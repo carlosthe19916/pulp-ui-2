@@ -1,155 +1,86 @@
 import type React from "react";
 
-import { Link } from "@tanstack/react-router";
-import prettyBytes from "pretty-bytes";
-
 import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
   Content,
   ContentVariants,
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Gallery,
-  GalleryItem,
-  Label,
+  Grid,
+  GridItem,
   PageSection,
-  Spinner,
+  Stack,
+  Title,
 } from "@patternfly/react-core";
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
-import { useApiStatus } from "@app/hooks/useApiStatus";
+import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { getScannableRepositoryTypes } from "@catalog";
 
-import { VulnerabilitiesCard } from "./components/VulnerabilitiesCard";
-import { WorkersCard } from "./components/WorkersCard";
+import { ContentInventoryCard } from "./components/ContentInventoryCard";
+import { DetailsCard } from "./components/DetailsCard";
+import { FailedTasksCard } from "./components/FailedTasksCard";
+import { RecentTasksCard } from "./components/RecentTasksCard";
+import { StorageCard } from "./components/StorageCard";
+import { SystemHealthCard } from "./components/SystemHealthCard";
+import { TaskActivityCard } from "./components/TaskActivityCard";
+import { TaskTrendCard } from "./components/TaskTrendCard";
 
+/** Instance health and details, then the selected domain's tasks and content (ADR 0015). */
 export const Dashboard: React.FC = () => {
-  const { status, isLoading, error } = useApiStatus();
-  const { name: pulpDomain } = useSelectedDomain();
+  const { name: pulpDomain, enabled: domainsEnabled } = useSelectedDomain();
 
   return (
     <>
       <DocumentTitle title="Dashboard" />
-      {isLoading ? (
-        <PageSection>
-          <Spinner aria-label="Loading status" />
-        </PageSection>
-      ) : error || !status ? (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Dashboard</Content>
-          <Content component={ContentVariants.p}>
-            Failed to load Pulp status.
-          </Content>
-        </PageSection>
-      ) : (
-        <PageSection>
-          <Content component={ContentVariants.h1}>Dashboard</Content>
-          <Gallery hasGutter minWidths={{ default: "300px" }}>
-            <GalleryItem>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Plugins &amp; Versions</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <DescriptionList isCompact>
-                    {status.versions.map((v) => (
-                      <DescriptionListGroup key={v.component}>
-                        <DescriptionListTerm>{v.component}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          <Label isCompact>{v.version}</Label>
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                    ))}
-                  </DescriptionList>
-                </CardBody>
-              </Card>
-            </GalleryItem>
-
-            <GalleryItem>
-              <WorkersCard />
-            </GalleryItem>
-
-            {getScannableRepositoryTypes({ installed: status.versions })
-              .length > 0 && (
-              <GalleryItem>
-                <VulnerabilitiesCard pulpDomain={pulpDomain} />
-              </GalleryItem>
-            )}
-
-            {status.storage && (
-              <GalleryItem>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Storage</CardTitle>
-                  </CardHeader>
-                  <CardBody>
-                    <DescriptionList isCompact>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>Total</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {status.storage.total != null
-                            ? prettyBytes(status.storage.total)
-                            : "N/A"}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>Used</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {status.storage.used != null
-                            ? prettyBytes(status.storage.used)
-                            : "N/A"}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>Free</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {status.storage.free != null
-                            ? prettyBytes(status.storage.free)
-                            : "N/A"}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                    </DescriptionList>
-                  </CardBody>
-                </Card>
-              </GalleryItem>
-            )}
-
-            <GalleryItem>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Links</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <Content component="ul">
-                    <Content component="li">
-                      <Link
-                        to="/monitoring/$pulpDomain/tasks"
-                        params={{ pulpDomain }}
-                      >
-                        Tasks
-                      </Link>
-                    </Content>
-                    <Content component="li">
-                      <Link
-                        to="/content-management/$pulpDomain/repositories"
-                        params={{ pulpDomain }}
-                      >
-                        Repositories
-                      </Link>
-                    </Content>
-                  </Content>
-                </CardBody>
-              </Card>
-            </GalleryItem>
-          </Gallery>
-        </PageSection>
-      )}
+      <DomainContextSelector />
+      <PageSection>
+        <Content component={ContentVariants.h1}>Dashboard</Content>
+        <Content component={ContentVariants.p}>
+          How this Pulp is running, and what is happening in{" "}
+          {domainsEnabled ? `the ${pulpDomain} domain` : "it"}. Counts include
+          only what you have permission to see.
+        </Content>
+      </PageSection>
+      <PageSection aria-labelledby="dashboard-instance">
+        <Stack hasGutter>
+          <Title headingLevel="h2" id="dashboard-instance">
+            Pulp instance
+          </Title>
+          <Grid hasGutter>
+            <GridItem span={12} lg={8}>
+              <SystemHealthCard />
+            </GridItem>
+            <GridItem span={12} md={6} lg={4}>
+              <StorageCard />
+            </GridItem>
+            <GridItem span={12} md={6} lg={5}>
+              <DetailsCard />
+            </GridItem>
+            <GridItem span={12} lg={7}>
+              <RecentTasksCard />
+            </GridItem>
+          </Grid>
+        </Stack>
+      </PageSection>
+      <PageSection aria-labelledby="dashboard-domain">
+        <Stack hasGutter>
+          <Title headingLevel="h2" id="dashboard-domain">
+            {domainsEnabled ? `Domain ${pulpDomain}` : "Tasks and content"}
+          </Title>
+          <Grid hasGutter>
+            <GridItem span={12} md={6} lg={4}>
+              <TaskActivityCard />
+            </GridItem>
+            <GridItem span={12} lg={8}>
+              <TaskTrendCard />
+            </GridItem>
+            <GridItem span={12} md={6} lg={4}>
+              <ContentInventoryCard />
+            </GridItem>
+            <GridItem span={12} lg={8}>
+              <FailedTasksCard />
+            </GridItem>
+          </Grid>
+        </Stack>
+      </PageSection>
     </>
   );
 };

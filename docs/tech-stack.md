@@ -10,6 +10,7 @@ The main pieces, by area:
 | [React](https://react.dev/)               | 19      | UI library                          |
 | [PatternFly](https://www.patternfly.org/) | 6       | Component library and design system |
 | PatternFly Data view                      | 6       | Data tables and list views          |
+| PatternFly Charts (Victory)               | 8       | Dashboard charts                    |
 | [dayjs](https://day.js.org/)              | 1       | Date formatting                     |
 
 ## Data & routing
@@ -17,6 +18,7 @@ The main pieces, by area:
 | Technology                                                                              | Role                                   |
 | --------------------------------------------------------------------------------------- | -------------------------------------- |
 | [TanStack Query](https://tanstack.com/query)                                            | Server-state caching and data fetching |
+| [Zustand](https://zustand.docs.pmnd.rs/)                                                | Client state that outlives a page      |
 | [TanStack Router](https://tanstack.com/router)                                          | File-based, code-split routing         |
 | [Axios](https://axios-http.com/)                                                        | HTTP client                            |
 | [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup) | Forms and their validation             |

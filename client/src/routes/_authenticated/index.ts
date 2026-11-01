@@ -1,7 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { Dashboard } from "@app/pages/dashboard/Dashboard";
+import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 
+// The dashboard's domain cards are scoped by the URL like every domain page (ADR 0002).
 export const Route = createFileRoute("/_authenticated/")({
-  component: Dashboard,
+  beforeLoad: () => {
+    throw redirect({
+      to: "/dashboard/$pulpDomain",
+      params: { pulpDomain: DEFAULT_PULP_DOMAIN },
+      replace: true,
+    });
+  },
 });
