@@ -12,6 +12,7 @@ import {
   oidcClientSettings,
   oidcSignoutArgs,
 } from "@app/oidc";
+import { useRecentTasksStore } from "@app/stores/useRecentTasksStore";
 
 const getOidcUser = () => {
   const oidcStorage = sessionStorage.getItem(
@@ -41,6 +42,16 @@ export const axiosInstance = axios.create({
 });
 
 export const initInterceptors = () => {
+  // Every write that starts a task answers 202 with its href; remember it for the dashboard.
+  axiosInstance.interceptors.response.use((response) => {
+    const task: unknown = (response.data as { task?: unknown } | undefined)
+      ?.task;
+    if (response.status === 202 && typeof task === "string") {
+      useRecentTasksStore.getState().record(task);
+    }
+    return response;
+  });
+
   if (ENV.AUTH === "basic") {
     axiosInstance.interceptors.request.use((config) => {
       if (!config.headers.Authorization) {
