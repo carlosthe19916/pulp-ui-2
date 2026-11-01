@@ -19,7 +19,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useUploadDeleteMutation,
@@ -57,7 +56,6 @@ export const UploadsTab: React.FC = () => {
       ordering,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const deleteMutation = useUploadDeleteMutation({
     onSuccess: () =>
       addNotification({ title: "Upload deleted", variant: "success" }),

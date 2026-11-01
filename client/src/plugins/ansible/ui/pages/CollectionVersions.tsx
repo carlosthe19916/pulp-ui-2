@@ -5,7 +5,6 @@ import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
@@ -42,7 +41,6 @@ export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
     },
   });
   const versions = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   if (isLoading) return <>Loading versions…</>;
   if (versions.length === 0) return <>No versions match.</>;

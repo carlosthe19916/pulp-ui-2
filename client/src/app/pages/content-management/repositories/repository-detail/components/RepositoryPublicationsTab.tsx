@@ -12,7 +12,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -44,7 +43,6 @@ export const RepositoryPublicationsTab: React.FC<
   });
 
   const publications = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [

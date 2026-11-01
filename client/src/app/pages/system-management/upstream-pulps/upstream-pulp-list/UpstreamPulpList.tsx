@@ -33,7 +33,6 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
@@ -140,7 +139,6 @@ export const UpstreamPulpList: React.FC = () => {
   });
 
   const upstreams = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: upstreams.map((item) => item.pulp_href ?? ""),

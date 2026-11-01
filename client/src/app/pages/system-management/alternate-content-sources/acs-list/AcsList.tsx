@@ -32,7 +32,6 @@ import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   type AlternateContentSource,
@@ -126,7 +125,6 @@ export const AcsList: React.FC = () => {
   });
 
   const sources = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: sources.map((item) => item.pulp_href ?? ""),

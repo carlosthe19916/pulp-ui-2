@@ -20,7 +20,6 @@ import {
 } from "@patternfly/react-core";
 
 import { ListPagination } from "@app/components/ListPagination";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useWorkersListQuery } from "@app/queries/workers";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
@@ -41,7 +40,6 @@ export const WorkersCard: React.FC = () => {
       ordering: "name",
     },
   });
-  usePageInRange({ pagination, setPagination, count: online?.count });
   const { data: missing } = useWorkersListQuery({
     params: { limit: 1, offset: 0, missing: true },
   });

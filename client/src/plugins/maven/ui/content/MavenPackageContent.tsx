@@ -16,7 +16,6 @@ import {
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { ListPagination } from "@app/components/ListPagination";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useContentDetailQuery,
@@ -58,11 +57,6 @@ export const MavenPackageContent: React.FC<IContentPanelProps> = ({ href }) => {
       fields: ["pulp_href", "filename"],
     },
     options: { enabled: !!data?.version },
-  });
-  usePageInRange({
-    pagination: filesPagination,
-    setPagination: setFilesPagination,
-    count: files.data?.count,
   });
 
   const licenses = asArray<IMavenLicense>(data?.licenses);

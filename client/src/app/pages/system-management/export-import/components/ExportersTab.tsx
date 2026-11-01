@@ -23,7 +23,6 @@ import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
@@ -61,7 +60,6 @@ const ExportRuns: React.FC<IExportRunsProps> = ({ href }) => {
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   return (
     <RunsTable
       label="Exports"
@@ -103,7 +101,6 @@ export const ExportersTab: React.FC = () => {
       ordering: "name",
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const closeModal = () => {
     clearSubmitError();

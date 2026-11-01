@@ -21,7 +21,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { useMembershipRemoveMutation } from "@app/queries/memberships";
@@ -108,7 +107,6 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
     // An empty `id__in` is ignored by the server and would list every group.
     options: { enabled: groupIds.length > 0 },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const groups = data?.results ?? [];
   const totalCount = data?.count ?? 0;

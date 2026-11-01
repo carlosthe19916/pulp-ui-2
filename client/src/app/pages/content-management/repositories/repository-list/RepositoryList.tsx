@@ -42,7 +42,6 @@ import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -150,7 +149,6 @@ export const RepositoryList: React.FC = () => {
   });
 
   const repositories = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const { disabledProps } = useObjectsPermissions({
     hrefs: repositories
       .filter((repository) => hasRoleEndpoints(repository.pulp_href))

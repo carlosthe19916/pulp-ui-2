@@ -30,7 +30,6 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useGroupDeleteMutation,
@@ -106,7 +105,6 @@ export const GroupList: React.FC = () => {
   });
 
   const groups = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: groups.map((item) => item.pulp_href ?? ""),

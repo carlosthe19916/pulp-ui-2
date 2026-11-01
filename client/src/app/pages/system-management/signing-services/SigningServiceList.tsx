@@ -20,7 +20,6 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSigningServicesListQuery } from "@app/queries/signing-services";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -71,7 +70,6 @@ export const SigningServiceList: React.FC = () => {
   });
 
   const services = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [

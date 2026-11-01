@@ -82,8 +82,6 @@ These schemas are zod; yup is for forms only ([forms](forms.md)).
 ## The page
 
 - A filter, sort or page-size change also sets page 1, in the same handler.
-- `usePageInRange({ pagination, setPagination, count: data?.count })` (`@app/hooks/usePageInRange`)
-  sends a page past the end (stale link, last row deleted) back to page 1.
 - The toolbar reads the state itself (`values={filters}`), so restored filters show as chips;
   clearing sets the definition's `defaultValue` (`setFilters(REMOTE_LIST_STATE.filters.defaultValue)`).
 - `columnSort` (`@app/utils/sortHelpers`) gives `ordering` and `<Th>` sort props;
@@ -133,7 +131,7 @@ Pass/fail rubric for `/eval`. Check changed list pages, list components, hooks a
 - [ ] Schemas are flat zod objects that convert strings, with list defaults for list fields and
       no `.default()` / `.catch()`; enum filters are pickers typed with `schemaFromGuard`, with no
       cast in the params.
-- [ ] Filter, sort and page-size changes also set page 1; paged lists call `usePageInRange`.
+- [ ] Filter, sort and page-size changes also set page 1.
 - [ ] The toolbar's values are the state; clearing sets the definition's `defaultValue`.
 - [ ] No own history writes, default values or domain in keys for list state: the hook does them.
 - [ ] A reused list is namespaced by its screen with `PersistentStateScopeProvider`.

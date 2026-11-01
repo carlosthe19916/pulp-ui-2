@@ -20,7 +20,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useGroupUsersListQuery,
@@ -77,7 +76,6 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const users = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 

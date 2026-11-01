@@ -34,7 +34,6 @@ import {
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useContentListQuery } from "@app/queries/content";
@@ -130,7 +129,6 @@ export const ContentList: React.FC = () => {
 
   const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const isFiltered = Boolean(
     selectedTypes.length ||

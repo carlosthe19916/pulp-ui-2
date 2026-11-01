@@ -24,7 +24,6 @@ import { PageBulkSelect } from "@app/components/PageBulkSelect";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useRoleAssignmentsBatchCreateMutation,
@@ -92,7 +91,6 @@ const AddRoleAssignmentModalInner: React.FC<
       name__icontains: debouncedName || undefined,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const roles = data?.results ?? [];
 
   // Ask the server which visible roles are already assigned, instead of fetching

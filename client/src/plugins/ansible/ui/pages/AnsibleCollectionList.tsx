@@ -22,7 +22,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
@@ -77,7 +76,6 @@ export const AnsibleCollectionList: React.FC = () => {
     },
   });
   const collections = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
   const idOf = (collection: { namespace: string; name: string }) =>
     `${collection.namespace}.${collection.name}`;

@@ -29,7 +29,6 @@ import {
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
@@ -153,7 +152,6 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
 
   const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const isFiltered = Boolean(selectedTypes.length || debouncedLabel);
   // Only the present content can be removed.
   const bulkWrites = bucket.key === "present" ? writes : undefined;

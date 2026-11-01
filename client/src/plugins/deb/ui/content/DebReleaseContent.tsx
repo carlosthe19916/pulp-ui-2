@@ -13,7 +13,6 @@ import {
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { ListPagination } from "@app/components/ListPagination";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useContentDetailQuery,
@@ -49,7 +48,6 @@ const ReleaseComponents: React.FC<IReleaseValuesProps> = ({
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   return (
     <ContentSection title={`Components (${data?.count ?? 0})`}>
       <LabelList
@@ -88,7 +86,6 @@ const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   return (
     <ContentSection title={`Architectures (${data?.count ?? 0})`}>
       <LabelList

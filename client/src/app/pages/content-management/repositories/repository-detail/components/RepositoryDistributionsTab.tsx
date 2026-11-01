@@ -13,7 +13,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
@@ -40,7 +39,6 @@ export const RepositoryDistributionsTab: React.FC<
   });
 
   const distributions = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [

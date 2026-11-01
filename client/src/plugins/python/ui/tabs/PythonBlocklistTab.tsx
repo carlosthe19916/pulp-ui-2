@@ -32,7 +32,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { PAGINATION_STATE } from "@app/utils/listState";
@@ -88,7 +87,6 @@ export const PythonBlocklistTab: React.FC<IRepositoryTabProps> = ({
   });
 
   const entries = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
   const rows: DataViewTr[] = entries.map((entry) => ({
     id: entry.pulp_href,

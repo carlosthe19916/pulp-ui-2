@@ -21,14 +21,12 @@ import {
   type IContentUnitSelection,
   type IContentWrites,
 } from "@app/hooks/useContentUnitSelection";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 
 import type { IBrowseListView } from "./useBrowseListState";
 
 interface IBrowseShellProps {
   list: IBrowseListView;
-  /** The list's total; `undefined` while it loads. */
-  count: number | undefined;
+  count: number;
   activeState?: DataViewState;
   /** Shown above the toolbar, e.g. a path breadcrumb. */
   header?: React.ReactNode;
@@ -54,12 +52,6 @@ export const BrowseShell: React.FC<IBrowseShellProps> = ({
   pageUnits,
   children,
 }) => {
-  usePageInRange({
-    pagination: list.pagination,
-    setPagination: list.setPagination,
-    count,
-  });
-
   return (
     <DataView
       activeState={activeState}
@@ -112,7 +104,7 @@ export const BrowseShell: React.FC<IBrowseShellProps> = ({
         pagination={
           <ListPagination
             variant={PaginationVariant.top}
-            itemCount={count ?? 0}
+            itemCount={count}
             pagination={list.pagination}
             onPaginationChange={list.setPagination}
           />
@@ -123,7 +115,7 @@ export const BrowseShell: React.FC<IBrowseShellProps> = ({
         pagination={
           <ListPagination
             variant={PaginationVariant.bottom}
-            itemCount={count ?? 0}
+            itemCount={count}
             pagination={list.pagination}
             onPaginationChange={list.setPagination}
           />

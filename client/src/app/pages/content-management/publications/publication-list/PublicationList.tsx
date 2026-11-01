@@ -38,7 +38,6 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
@@ -122,7 +121,6 @@ export const PublicationList: React.FC = () => {
   });
 
   const publications = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: publications

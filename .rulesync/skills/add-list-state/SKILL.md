@@ -72,8 +72,7 @@ const [filters, setFilters] = usePersistentState({
   ...WIDGET_LIST_STATE.filters,
   storage: "url",
 });
-// query…, then:
-usePageInRange({ pagination, setPagination, count: data?.count });
+// then the list query, built from pagination, ordering and filters
 ```
 
 - Toolbar: `values={filters}`, `onChange` merges and goes to page 1; clearing sets

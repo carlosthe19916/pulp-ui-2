@@ -45,7 +45,6 @@ import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -162,7 +161,6 @@ export const DistributionList: React.FC = () => {
   });
 
   const distributions = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: distributions

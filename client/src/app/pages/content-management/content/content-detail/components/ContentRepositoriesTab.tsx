@@ -21,7 +21,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
@@ -78,7 +77,6 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   });
 
   const repositories = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   // A task on a row's repository (e.g. a sync started elsewhere) locks that row too.

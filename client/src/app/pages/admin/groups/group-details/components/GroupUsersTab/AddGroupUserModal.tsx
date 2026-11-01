@@ -24,7 +24,6 @@ import { PageBulkSelect } from "@app/components/PageBulkSelect";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSuspenseGroupDetailQuery } from "@app/queries/groups";
 import { useGroupUsersBatchAddMutation } from "@app/queries/memberships";
@@ -93,7 +92,6 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       username__icontains: debouncedUsername || undefined,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   // Each request settles on its own, so failures arrive in `result`, not onError.
   const batchAddMutation = useGroupUsersBatchAddMutation({

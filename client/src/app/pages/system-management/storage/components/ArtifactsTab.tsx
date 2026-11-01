@@ -21,7 +21,6 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useArtifactDeleteMutation,
@@ -77,7 +76,6 @@ export const ArtifactsTab: React.FC = () => {
       orphaned_for: orphanedOnly ? 0 : undefined,
     },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const deleteMutation = useArtifactDeleteMutation({
     onSuccess: () =>
       addNotification({ title: "Artifact deleted", variant: "success" }),

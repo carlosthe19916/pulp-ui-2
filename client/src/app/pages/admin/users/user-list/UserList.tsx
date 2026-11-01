@@ -30,7 +30,6 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UserModal } from "@app/components/UserModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
@@ -105,7 +104,6 @@ export const UserList: React.FC = () => {
   });
 
   const users = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [

@@ -35,7 +35,6 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import {
@@ -144,7 +143,6 @@ export const DomainList: React.FC = () => {
   });
 
   const domains = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const { getActiveCount, getTaskKinds } = useResourceTasks({

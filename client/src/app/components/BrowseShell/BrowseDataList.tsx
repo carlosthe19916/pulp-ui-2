@@ -26,8 +26,7 @@ interface IBrowseDataListProps<T> {
   ariaLabel: string;
   list: IBrowseListView;
   rows: T[];
-  /** The list's total; `undefined` while it loads. */
-  count: number | undefined;
+  count: number;
   isLoading: boolean;
   error: DrfAxiosError | null;
   rowHref: (row: T) => string;

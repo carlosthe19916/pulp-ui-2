@@ -30,7 +30,6 @@ import {
   type IContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useContentTypeListQuery } from "@app/queries/content";
 import type {
@@ -96,7 +95,6 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
     } as IContentTypeListParams<ContentTypeKey>,
     options: { enabled: !!pulpType },
   });
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const rows = (data?.results ?? []) as { pulp_href?: string | null }[];
   const units = toUnitRefs({
     rows,

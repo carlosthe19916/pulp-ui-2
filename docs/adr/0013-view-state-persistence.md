@@ -41,8 +41,7 @@ different things, but they need the same answer.
 
 - [ ] By default, a page's or a tab's main list keeps its state in the address; a list in a dialog,
       an expanded row, a drawer or a dashboard card keeps it on the screen only.
-- [ ] Changing a filter, the sort or the page size goes back to the first page; a page past the end
-      goes back to the first page.
+- [ ] Changing a filter, the sort or the page size goes back to the first page.
 - [ ] Filters restored from the browser tab or the browser show in the toolbar like any other
       filter, and clearing filters clears them wherever they're kept.
 - [ ] A link from another page that opens a filtered list shows those filters, and the list treats

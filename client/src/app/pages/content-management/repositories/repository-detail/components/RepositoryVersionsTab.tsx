@@ -16,7 +16,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import type { VersionAction } from "@app/components/VersionActionModal";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useRepositoryVersionsListQuery } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
@@ -65,7 +64,6 @@ export const RepositoryVersionsTab: React.FC<IRepositoryVersionsTabProps> = ({
   });
 
   const versions = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [

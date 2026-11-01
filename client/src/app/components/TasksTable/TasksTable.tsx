@@ -23,7 +23,6 @@ import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
@@ -163,7 +162,6 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   });
 
   const tasks = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: tasks.map((item) => item.pulp_href ?? ""),

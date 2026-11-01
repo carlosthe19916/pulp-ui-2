@@ -23,7 +23,6 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useTaskSchedulesListQuery } from "@app/queries/task-schedules";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -80,7 +79,6 @@ export const TaskScheduleList: React.FC = () => {
   });
 
   const schedules = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
   const columns: DataViewTh[] = [
     { cell: "Name", props: { sort: sortProps("name"), width: 25 } },

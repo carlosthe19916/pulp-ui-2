@@ -31,7 +31,6 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import { usePageInRange } from "@app/hooks/usePageInRange";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
@@ -133,7 +132,6 @@ export const ContainerNamespaceList: React.FC = () => {
   });
 
   const namespaces = data?.results ?? [];
-  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: namespaces.map((item) => item.pulp_href ?? ""),
