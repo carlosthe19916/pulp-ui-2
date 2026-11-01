@@ -1,5 +1,5 @@
 import type React from "react";
-import { useImperativeHandle, useRef } from "react";
+import { useEffect, useImperativeHandle, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -41,7 +41,10 @@ interface ITaskActionModalProps {
   description?: React.ReactNode;
   /** Rendered above the fields (e.g. a type select that swaps them); stays mounted. */
   beforeFields?: React.ReactNode;
-  /** Changing it starts the fields over without remounting the modal (e.g. a new type). */
+  /**
+   * Changing it starts the fields over without remounting the modal (e.g. a new type);
+   * values of fields both sets share (same key and type) carry over.
+   */
   formKey?: string;
   submitLabel: string;
   fields: IEntityField[];
@@ -76,6 +79,32 @@ const formSelection = ({
   clear: () => onChange([]),
 });
 
+interface ICarriedValues {
+  fields: IEntityField[];
+  values: Record<string, unknown>;
+}
+
+/** The values of `from` fields that `to` also has, with the same key and type. */
+const carryOverValues = ({
+  from,
+  to,
+}: {
+  from: ICarriedValues | null;
+  to: IEntityField[];
+}): Record<string, unknown> => {
+  if (!from) return {};
+  return Object.fromEntries(
+    to
+      .filter((field) =>
+        from.fields.some(
+          (old) => old.key === field.key && old.type === field.type,
+        ),
+      )
+      .filter((field) => from.values[field.key] !== undefined)
+      .map((field) => [field.key, from.values[field.key]]),
+  );
+};
+
 interface ITaskActionFieldsHandle {
   submit: () => void;
 }
@@ -86,6 +115,8 @@ interface ITaskActionFieldsProps {
   initialValues?: Record<string, unknown>;
   repository?: RepositoryResponse;
   resourceFilter?: ResourceFilterMap;
+  /** The last field set's values, kept by the modal across `formKey` changes. */
+  carriedRef: React.RefObject<ICarriedValues | null>;
   onSubmit: (body: Record<string, unknown>) => void;
 }
 
@@ -96,13 +127,32 @@ const TaskActionFields: React.FC<ITaskActionFieldsProps> = ({
   initialValues,
   repository,
   resourceFilter,
+  carriedRef,
   onSubmit,
 }) => {
-  const { control, handleSubmit } = useForm<Record<string, unknown>>({
-    resolver: yupResolver(buildFieldSchema(fields)),
-    defaultValues: { ...buildDefaultValues({ fields }), ...initialValues },
-    mode: "onChange",
-  });
+  const { control, handleSubmit, subscribe } = useForm<Record<string, unknown>>(
+    {
+      resolver: yupResolver(buildFieldSchema(fields)),
+      // Read once, at mount: a new `formKey` mounts a new form seeded from the last one.
+      defaultValues: {
+        ...buildDefaultValues({ fields }),
+        ...initialValues,
+        ...carryOverValues({ from: carriedRef.current, to: fields }),
+      },
+      mode: "onChange",
+    },
+  );
+  // The next field set renders before this one unmounts, so keep the values current as they change.
+  useEffect(
+    () =>
+      subscribe({
+        formState: { values: true },
+        callback: ({ values }) => {
+          carriedRef.current = { fields, values };
+        },
+      }),
+    [subscribe, fields, carriedRef],
+  );
   useImperativeHandle(ref, () => ({
     submit: () =>
       void handleSubmit((values) =>
@@ -185,6 +235,7 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
   onClose,
 }) => {
   const fieldsRef = useRef<ITaskActionFieldsHandle>(null);
+  const carriedRef = useRef<ICarriedValues | null>(null);
   const hasContentField = fields.some((field) => field.type === "content");
 
   return (
@@ -212,6 +263,7 @@ export const TaskActionModal: React.FC<ITaskActionModalProps> = ({
             initialValues={initialValues}
             repository={repository}
             resourceFilter={resourceFilter}
+            carriedRef={carriedRef}
             onSubmit={onSubmit}
           />
         </Form>
