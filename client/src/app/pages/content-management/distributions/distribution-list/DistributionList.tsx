@@ -34,7 +34,6 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
-import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
@@ -75,11 +74,6 @@ const UNAVAILABLE_TYPE_TOOLTIP: TooltipProps = {
   content: "This distribution's plugin type isn't available in the UI.",
 };
 
-// Some types (hugging_face, OpenPGP) have no role endpoints to manage access with.
-const NO_ROLES_TOOLTIP: TooltipProps = {
-  content: "This distribution type doesn't support access management.",
-};
-
 export const DistributionList: React.FC = () => {
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
@@ -95,9 +89,6 @@ export const DistributionList: React.FC = () => {
     label: getTypeLabel({ entity: "distribution", pulpType }),
   }));
 
-  const [accessTarget, setAccessTarget] = useState<DistributionResponse | null>(
-    null,
-  );
   const [deleteTarget, setDeleteTarget] = useState<DistributionResponse | null>(
     null,
   );
@@ -162,6 +153,7 @@ export const DistributionList: React.FC = () => {
 
   const distributions = data?.results ?? [];
 
+  // Some types (hugging_face, OpenPGP) have no role endpoints to read permissions from.
   const { disabledProps } = useObjectsPermissions({
     hrefs: distributions
       .filter((item) => hasRoleEndpoints(item.pulp_href))
@@ -196,12 +188,11 @@ export const DistributionList: React.FC = () => {
   const rows: DataViewTr[] = distributions.map((distribution) => {
     const pulpType = resolvePulpType(distribution.pulp_href);
     // Unmodelled types (e.g. core.artifact) are read-only here, so Edit and Delete gate
-    // on canEdit; access management instead needs the type's role endpoints.
+    // on canEdit.
     const canEdit = !!(
       pulpType &&
       getEntityForm({ entity: "distribution", pulpType, mode: "edit" })
     );
-    const canManageRoles = hasRoleEndpoints(distribution.pulp_href);
 
     return {
       id: distribution.pulp_href,
@@ -270,18 +261,6 @@ export const DistributionList: React.FC = () => {
                     ? disabledProps({
                         href: distribution.pulp_href,
                         verb: "change",
-                      })
-                    : {}),
-                },
-                {
-                  title: "Manage access",
-                  isAriaDisabled: !canManageRoles,
-                  tooltipProps: canManageRoles ? undefined : NO_ROLES_TOOLTIP,
-                  onClick: () => setAccessTarget(distribution),
-                  ...(canManageRoles
-                    ? disabledProps({
-                        href: distribution.pulp_href,
-                        verb: "manage_roles",
                       })
                     : {}),
                 },
@@ -423,14 +402,6 @@ export const DistributionList: React.FC = () => {
             }
           />
         </DataView>
-
-        {accessTarget && (
-          <ObjectAccessModal
-            href={accessTarget.pulp_href ?? ""}
-            name={accessTarget.name}
-            onClose={() => setAccessTarget(null)}
-          />
-        )}
 
         <ConfirmActionModal
           isOpen={!!deleteTarget}

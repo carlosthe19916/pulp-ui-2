@@ -24,8 +24,8 @@ its own task history and roles, and an edit page with nothing to return to.
       Distributions tab; the edit page's breadcrumb links back to it, and saving or cancelling
       an edit returns to it.
 - [ ] The page offers Edit and Delete; deleting returns to the Distributions list.
-- [ ] Distribution rows don't expand inline: the detail page is the one place to read a
-      distribution.
+- [ ] The detail page is the one place to read a distribution and manage its roles; list rows
+      offer Edit and Delete.
 
 ## Consequences
 
