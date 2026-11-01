@@ -17,6 +17,7 @@ The main pieces, by area:
 | Technology                                                                              | Role                                   |
 | --------------------------------------------------------------------------------------- | -------------------------------------- |
 | [TanStack Query](https://tanstack.com/query)                                            | Server-state caching and data fetching |
+| [Zustand](https://zustand.docs.pmnd.rs/)                                                | Client state that outlives a page      |
 | [TanStack Router](https://tanstack.com/router)                                          | File-based, code-split routing         |
 | [Axios](https://axios-http.com/)                                                        | HTTP client                            |
 | [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup) | Forms and their validation             |
