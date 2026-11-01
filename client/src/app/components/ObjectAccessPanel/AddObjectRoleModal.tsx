@@ -21,7 +21,6 @@ import { useAddObjectRoleMutation } from "@app/queries/access";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { useRolesListQuery } from "@app/queries/roles";
 import { useUsersListQuery } from "@app/queries/users";
-import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { NameMultiSelect } from "./NameMultiSelect";
@@ -50,14 +49,13 @@ export const AddObjectRoleModal: React.FC<IAddObjectRoleModalProps> = ({
   const debouncedUser = useDebouncedValue({ value: userTerm });
   const debouncedGroup = useDebouncedValue({ value: groupTerm });
 
-  // Roles of the object's plugin ("file.filerepository_owner"); tasks etc. are core.
-  const app = resolvePulpType(href)?.split(".")[0] ?? "core";
+  // Only roles whose permissions all target this object's type; add_role rejects roles with none.
   const roles = useRolesListQuery({
     params: {
       limit: DROPDOWN_PAGE_SIZE,
       offset: 0,
       ordering: "name",
-      name__startswith: `${app}.`,
+      for_object_type: href,
       name__icontains: debouncedRole || undefined,
     },
   });
