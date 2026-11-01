@@ -1,24 +1,18 @@
 import { useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-
 import type {
   RepositoryAddRemoveContent,
   RepositoryResponse,
 } from "@app/client";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { useWatchedTask } from "@app/hooks/useWatchedTask";
-import { repositoryKeys } from "@app/queries/repositories";
 import {
-  extractIdFromHref,
-  parseRepositoryVersionHref,
-  resolvePulpType,
-} from "@app/queries/utils/pulpHref";
+  type ITrackedContentChange,
+  type ITrackedTask,
+  useTrackedTasksStore,
+} from "@app/stores/useTrackedTasksStore";
 import { contentChangeTitle } from "@app/utils/contentChangeNotify";
 import { latestVersionNumber } from "@app/utils/latestVersionNumber";
-import { extractTaskDomain } from "@app/utils/taskHref";
-import { notifyTaskFailed, notifyTaskStarted } from "@app/utils/taskNotify";
+import { notifyTaskStarted } from "@app/utils/taskNotify";
 
 export interface IContentChangeWatchParams {
   taskHref: string;
@@ -28,87 +22,40 @@ export interface IContentChangeWatchParams {
   title?: string;
 }
 
+const isContentChange = (task: ITrackedTask): task is ITrackedContentChange =>
+  task.kind === "content-change";
+
 /**
- * Follows one content change task (modify, add, remove, import): toasts its start and
- * outcome, refreshes the repository, and keeps a failure for an inline alert.
+ * Starts following a content change task (modify, add, remove, import): toasts its start
+ * and hands it to `TaskTracker`, which reports the outcome even after this page is gone.
+ * With `repositoryHref`, `task` and `failure` are that repository's; without it, `task`
+ * is the change this caller started.
  */
-export const useContentChangeTask = () => {
-  const queryClient = useQueryClient();
+export const useContentChangeTask = ({
+  repositoryHref,
+}: { repositoryHref?: string } = {}) => {
   const { addNotification } = useNotifications();
-  const [task, setTask] = useState<{
-    taskHref: string;
-    repository: RepositoryResponse;
-  } | null>(null);
-  const [failure, setFailure] = useState<{
-    taskHref: string;
-    message?: string;
-  } | null>(null);
+  const track = useTrackedTasksStore((state) => state.track);
+  const clearFailure = useTrackedTasksStore((state) => state.clearFailure);
+  const [startedHref, setStartedHref] = useState<string>();
 
-  useWatchedTask({
-    taskHref: task?.taskHref,
-    onSettled: (outcome) => {
-      if (!task) return;
-      setTask(null);
-      const { repository } = task;
-      void queryClient.invalidateQueries({
-        queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
-      });
-      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-      const name = `"${repository.name}"`;
-
-      if (outcome.failed) {
-        notifyTaskFailed({
-          addNotification,
-          taskHref: outcome.taskHref,
-          title: `Could not change the content of ${name}`,
-          description: outcome.errorMessage,
-        });
-        setFailure({
-          taskHref: outcome.taskHref,
-          message: outcome.errorMessage,
-        });
-        return;
-      }
-
-      const version = outcome.createdResources
-        .map((href) => parseRepositoryVersionHref(href))
-        .find((parsed) => !!parsed);
-      if (!version) {
-        const latestNumber = latestVersionNumber(repository);
-        addNotification({
-          title: "No changes",
-          variant: "info",
-          description:
-            latestNumber === undefined
-              ? `${name} is unchanged.`
-              : `${name} is still at version ${latestNumber}.`,
-        });
-        return;
-      }
-      addNotification({
-        title: `Version ${version.number} of ${name} created`,
-        variant: "success",
-        description: (
-          <Link
-            to="/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId/versions/$versionNumber"
-            params={{
-              pulpDomain: extractTaskDomain(version.repositoryHref),
-              repositoryType: resolvePulpType(version.repositoryHref) ?? "",
-              repositoryId: extractIdFromHref(version.repositoryHref),
-              versionNumber: version.number,
-            }}
-          >
-            View version {version.number}
-          </Link>
-        ),
-      });
-    },
-  });
+  const task = useTrackedTasksStore((state) =>
+    state.tasks
+      .filter(isContentChange)
+      .find((tracked) =>
+        repositoryHref
+          ? tracked.repositoryHref === repositoryHref
+          : tracked.taskHref === startedHref,
+      ),
+  );
+  const failure = useTrackedTasksStore((state) =>
+    repositoryHref ? state.failures[repositoryHref] : undefined,
+  );
 
   return {
     /** The change being watched, while it runs. */
-    task,
-    failure,
+    task: task ?? null,
+    failure: failure ?? null,
     watch: ({
       taskHref,
       repository,
@@ -125,9 +72,17 @@ export const useContentChangeTask = () => {
             body: body ?? {},
           }),
       });
-      setFailure(null);
-      setTask({ taskHref, repository });
+      setStartedHref(taskHref);
+      track({
+        kind: "content-change",
+        taskHref,
+        repositoryHref: repository.pulp_href ?? "",
+        repositoryName: repository.name,
+        latestVersion: latestVersionNumber(repository),
+      });
     },
-    clearFailure: () => setFailure(null),
+    clearFailure: () => {
+      if (repositoryHref) clearFailure(repositoryHref);
+    },
   };
 };

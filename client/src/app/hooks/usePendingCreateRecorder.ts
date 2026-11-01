@@ -1,12 +1,12 @@
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import {
   type PendingCreateEntityType,
-  usePendingCreatesStore,
-} from "@app/hooks/usePendingCreatesStore";
-import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+  useTrackedTasksStore,
+} from "@app/stores/useTrackedTasksStore";
 
 /**
- * Records an async create (202 + task) as pending so its list shows progress; callers
- * pass only the per-create `taskHref`/`name`.
+ * Tracks an async create (202 + task) so its list shows progress and `TaskTracker`
+ * refreshes it when done; callers pass only the per-create `taskHref`/`name`.
  */
 export const usePendingCreateRecorder = ({
   entityType,
@@ -15,7 +15,7 @@ export const usePendingCreateRecorder = ({
 }): {
   recordPendingCreate: (args: { taskHref: string; name: string }) => void;
 } => {
-  const { add } = usePendingCreatesStore();
+  const track = useTrackedTasksStore((state) => state.track);
   const domain = useSelectedDomain();
 
   const recordPendingCreate = ({
@@ -24,7 +24,14 @@ export const usePendingCreateRecorder = ({
   }: {
     taskHref: string;
     name: string;
-  }) => add({ taskHref, entityType, domainName: domain.name, name });
+  }) =>
+    track({
+      kind: "create",
+      taskHref,
+      entityType,
+      domainName: domain.name,
+      name,
+    });
 
   return { recordPendingCreate };
 };

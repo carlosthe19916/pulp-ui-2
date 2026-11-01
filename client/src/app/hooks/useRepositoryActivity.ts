@@ -21,7 +21,9 @@ export const useRepositoryActivity = ({
   repository?: RepositoryResponse;
 }) => {
   const queryClient = useQueryClient();
-  const contentChange = useContentChangeTask();
+  const contentChange = useContentChangeTask({
+    repositoryHref: repository?.pulp_href ?? undefined,
+  });
   // A settled task (e.g. sync) may have bumped the latest version: refresh it.
   const { getActiveCount, getTasks } = useResourceTasks({
     entities: repository ? [repository] : [],

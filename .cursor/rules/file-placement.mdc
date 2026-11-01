@@ -16,6 +16,8 @@ count):
 | One page           | Page directory   | The page's `components/`, `hooks/`, `utils/` or `context/`    |
 | More than one page | App root         | `@app/components`, `@app/hooks`, `@app/utils`, `@app/context` |
 
+Zustand stores are always app-wide and live in `@app/stores` ([stores](stores.md)).
+
 Only its users decide a module's scope, never its kind: a hook, helper or type used by one
 component goes in that component's folder, not `@app/hooks` or `@app/utils`.
 
