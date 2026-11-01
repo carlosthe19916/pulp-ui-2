@@ -8,7 +8,7 @@ routes:
 # Publications (create)
 
 A publication is an immutable, published snapshot of a repository version. It is created on a
-form page and never edited; it has no detail page, so creating returns to the list. The shared
+form page; creating returns to the list. The shared
 form-page behaviour is in [form-pages.md](form-pages.md).
 
 ## Create

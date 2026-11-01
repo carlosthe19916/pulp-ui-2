@@ -68,7 +68,7 @@ Then the RPM remote is offered and the file remote is not
 
 ### REP-CRE-03 Push repositories can't be created
 
-Summary: Push-only repository types are not offered on the create page but can still be edited.
+Summary: Push-only repository types are not offered on the create page but can be edited.
 
 Manual
 Seed: a container push repository (only an image push creates one)

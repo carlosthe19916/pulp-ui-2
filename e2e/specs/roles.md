@@ -5,8 +5,8 @@ routes: [/admin/roles]
 
 # Roles
 
-Roles have no detail page. Assigning roles to users and groups is covered on those detail pages
-(users.md Roles tab, groups.md Roles tab).
+Assigning roles to users and groups is covered on those detail pages (users.md Roles tab,
+groups.md Roles tab).
 
 ## List
 
@@ -64,9 +64,9 @@ Then Edit is <edit> and Delete is <delete>, and clicking a disabled action opens
 Pulp itself refuses to change or delete a locked role ("The role is locked."), so the disabled
 actions match the backend.
 
-### ROL-LOCK-02 Locked roles can still be assigned
+### ROL-LOCK-02 Locked roles can be assigned
 
-Summary: A locked role is still listed and selectable in Add Role, and assigning it succeeds.
+Summary: A locked role is listed and selectable in Add Role, and assigning it succeeds.
 
 When I open "Add Role" for a user or group
 Then locked roles are listed and selectable, and adding one succeeds
@@ -81,7 +81,7 @@ When I click "Create Role", enter a name and one or more permissions, and submit
 Then the modal closes, the toast `Role "<name>" created` appears, and the role is in the Roles
 list with Locked No and the permissions I added
 
-### ROL-CRE-06 Create is not gated for a non-superuser
+### ROL-CRE-06 Create is enabled for a non-superuser
 
 Summary: A non-superuser can open Create role, but submitting a valid form fails with a permission-denied error in the form.
 

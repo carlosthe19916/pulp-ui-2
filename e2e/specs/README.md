@@ -14,7 +14,7 @@ regenerates that block and enforces that every `### ID` here has a tagged test a
 - **Component (Vitest)** — `client/src/app/**/*.test.tsx`: client-only behaviour with the data
   hooks mocked — form validation messages, modal defaults and submit wiring, confirm-dialog
   content/style/dismissal, the permission tag input, permission-gated disabling + tooltips, and
-  the shared-component mechanics that used to be checked per surface in e2e (the `DataViewList`
+  the shared-component mechanics (the `DataViewList`
   table's sort/paging/filter controls, the add-modal selection state, `DocumentTitle`).
 - **API / contract (Playwright `api` project)** — `e2e/tests/api/*.api.spec.ts`: the server's own
   accept/reject rules over REST, no browser — duplicate / length / blank, password and email

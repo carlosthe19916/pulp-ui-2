@@ -63,8 +63,8 @@ runs it once the task finishes.
 
 - Each type gets a form designed around what matters for it, and the same form serves create
   and edit.
-- Supporting a new plugin now includes writing its forms: code, not only catalog data. The
-  catalog keeps what the API needs (types, endpoints, capabilities).
-- Distribution and publication forms become linkable pages. Distributions later got a detail
-  page of their own ([0011](0011-distribution-detail-page.md)); publications still have none
+- Supporting a new plugin includes writing its forms in code. The catalog keeps what the API
+  needs (types, endpoints, capabilities).
+- Distribution and publication forms are linkable pages. Distributions have a detail page
+  ([0011](0011-distribution-detail-page.md)); publications expand inline
   ([0003](0003-detail-pages-and-expandable-rows.md)).

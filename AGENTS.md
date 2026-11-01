@@ -152,13 +152,13 @@ changed files. In Claude Code, `/eval` does this.
 
 Builds `common` once, then concurrently watches `common` (rollup rebuild on change) and runs the Vite dev server on port 3000 with HMR.
 
-The **`server/` workspace is not started** in dev mode — Vite handles both static serving and API proxying directly:
+Vite handles both static serving and API proxying (the `server/` workspace isn't needed):
 
 | Path   | Proxied to     | Default                 |
 | ------ | -------------- | ----------------------- |
 | `/api` | `PULP_API_URL` | `http://localhost:8080` |
 
-The `/api` proxy rewrites `/api/pulp` to Pulp's `API_ROOT` (`PULP_API_ROOT`, default `/pulp`) via `rewritePulpApiPath`, and forwards session cookies (`cookieDomainRewrite: ""`). Basic Auth is **not** injected at the proxy — session/cookie auth handles it.
+The `/api` proxy rewrites `/api/pulp` to Pulp's `API_ROOT` (`PULP_API_ROOT`, default `/pulp`) via `rewritePulpApiPath`, and forwards session cookies (`cookieDomainRewrite: ""`). Authentication is the session cookie: the proxy injects no Basic Auth.
 
 Environment variables and branding are injected into `index.html` via `ViteEjsPlugin` at startup.
 
@@ -171,7 +171,7 @@ The Express server (`server/src/index.ts`):
 - Serves `client/dist/` as static files
 - Renders `index.html.ejs` per-request via EJS, injecting runtime env vars
 
-Use this mode only if you want to see how you app behaves with minified JS, CSS, etc. resources, just like when it will be deployed in production.
+Use this mode to see how the app behaves with minified resources, as deployed in production.
 
 ## Testing
 

@@ -116,7 +116,7 @@ test.describe("Domains (enabled)", () => {
    * When I open the row actions of the "default" domain
    * Then Edit and Delete are disabled, with the tooltip "The default domain can't be edited or
    * deleted" (Pulp forbids editing or deleting the default domain)
-   * And the Edit labels action stays enabled, since labels are editable on every domain
+   * And the Edit labels action is enabled, since labels are editable on every domain
    */
   test(
     "The default domain's Edit and Delete row actions are disabled.",

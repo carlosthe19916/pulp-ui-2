@@ -1,6 +1,6 @@
 ---
 name: distribution-detail-page
-description: Distributions get a tabbed detail page (Details, Tasks, Access) that the list, the repository's Distributions tab and the edit page link to; publications still expand inline.
+description: Distributions get a tabbed detail page (Details, Tasks, Access) that the list, the repository's Distributions tab and the edit page link to; publications expand inline.
 status: Accepted
 ---
 
@@ -30,5 +30,5 @@ its own task history and roles, and an edit page with nothing to return to.
 ## Consequences
 
 - Distributions can be linked to directly, and their tasks and access have a home.
-- Creating a distribution still returns to the list: the create task hasn't produced the object
+- Creating a distribution returns to the list, since the create task hasn't produced the object
   yet when the form leaves.

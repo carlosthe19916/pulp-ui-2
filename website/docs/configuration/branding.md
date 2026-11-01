@@ -15,7 +15,7 @@ You can rebrand Pulp UI with your own logo, product name and links. Branding is 
 - Support URL
 - PWA manifest
 
-Colors, layout and behavior follow PatternFly and are not part of branding.
+Colors, layout and behavior follow PatternFly.
 
 ## Create a custom branding
 
