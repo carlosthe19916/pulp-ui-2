@@ -1,7 +1,7 @@
 ---
 name: detail-pages-and-expandable-rows
 description: Repository is the hub; which entities get a tabbed page and which are expandable rows; Sync/Publish only when the plugin can.
-status: Accepted (amended by 0010 and 0011)
+status: Accepted (amended by 0010, 0011 and 0012)
 ---
 
 # 0003. Repository is the hub; which entities get a page
@@ -13,8 +13,9 @@ distributions are small records: a reference to what they serve and a few settin
 
 ## Rules
 
-- [ ] Objects with depth get a page with tabs: Repository (Details, Versions, Publications,
-      Distributions, Access, plus plugin tabs), Repository version, Remote (Details, Tasks,
+- [ ] Objects with depth get a page with tabs: Repository (Details, Content
+      ([0012](0012-repository-content-tab.md)), Versions, Publications, Distributions, Access,
+      plus plugin tabs), Repository version, Remote (Details, Tasks,
       Access), Distribution (Details, Tasks, Access; [0011](0011-distribution-detail-page.md)),
       Content (Details, Artifacts, Repositories), Task, Task group, User and Group.
 - [ ] Publications have no detail page: their details expand inline in the list.

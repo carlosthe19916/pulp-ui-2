@@ -2,7 +2,7 @@ import { expect, test } from "@support/fixtures";
 import { uniqueName } from "@support/helpers/unique";
 
 /**
- * A repository's latest version content renders as "Browse" (the plugin's own view, here
+ * A repository's Content tab shows its latest version as "Browse" (the plugin's own view, here
  * File's path browser over `content/file/files/?relative_path__startswith=`) next to
  * "All content" (the generic list). Clicking a row opens the unit in the side drawer.
  */
@@ -22,6 +22,14 @@ test.describe("Repository browse", () => {
     await repositoriesPage.row(name).getByRole("link", { name }).click();
     const page = repositoriesPage.page;
 
+    // Details is an overview: its content count opens the Content tab.
+    await page
+      .getByRole("main")
+      .getByRole("button", { name: "2 units", exact: true })
+      .click();
+    await expect(
+      page.getByRole("tab", { name: "Content (2)" }),
+    ).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("tab", { name: "Browse" })).toHaveAttribute(
       "aria-selected",
       "true",

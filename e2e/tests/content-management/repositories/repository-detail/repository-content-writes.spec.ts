@@ -6,7 +6,7 @@ import { mockInFlightTask } from "@support/helpers/taskMock";
 import { uniqueName } from "@support/helpers/unique";
 import type { ContentPage } from "@support/pom/ContentPage";
 
-/** Opens a repository's detail page from the list. */
+/** Opens a repository's detail page from the list, on its Content tab. */
 const openRepository = async (
   repositoriesPage: ContentPage,
   name: string,
@@ -15,7 +15,7 @@ const openRepository = async (
   await repositoriesPage.filterBy("Name", name);
   await repositoriesPage.row(name).getByRole("link", { name }).click();
   const page = repositoriesPage.page;
-  await expect(page.getByText("Latest version content")).toBeVisible();
+  await page.getByRole("tab", { name: /^Content/ }).click();
   return page;
 };
 
@@ -33,7 +33,7 @@ const textFile = (name: string) => ({
 
 /**
  * Content changes on a repository: every one creates a new version, the outcome toast
- * names it, and the content block refreshes. Seeded through the API; File only.
+ * names it, and the Content tab refreshes. Seeded through the API; File only.
  */
 test.describe("Repository content writes", () => {
   test("removes selected files from Browse", async ({

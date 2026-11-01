@@ -3,6 +3,7 @@ import type React from "react";
 import { Link } from "@tanstack/react-router";
 
 import {
+  Button,
   ClipboardCopy,
   Content,
   DescriptionList,
@@ -27,7 +28,7 @@ import { toDetailSections } from "@app/plugin-forms";
 import { useRepositoryLabelsMutation } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
-import { summaryTotal } from "@app/utils/contentSummary";
+import { summaryEntries, summaryTotal } from "@app/utils/contentSummary";
 import { toFieldRecord } from "@app/utils/formSchema";
 import { formatDateTime, isEmptyValue } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
@@ -37,6 +38,7 @@ interface IRepositoryAboutProps {
   latestVersion?: RepositoryVersionResponse;
   pulpType: string;
   pulpDomain: string;
+  onViewContent: () => void;
 }
 
 const COLUMNS = { default: "1Col", md: "2Col", xl: "3Col" } as const;
@@ -62,6 +64,7 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
   latestVersion,
   pulpType,
   pulpDomain,
+  onViewContent,
 }) => {
   const href = repository.pulp_href ?? "";
   const { disabledProps } = useObjectPermissions({ href });
@@ -84,6 +87,11 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
       ),
     }))
     .filter((section) => section.fields.length > 0);
+  const present = latestVersion?.content_summary?.present;
+  const total = summaryTotal(present);
+  const byType = summaryEntries(present)
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count);
   const latestNumber = repository.latest_version_href
     ? extractIdFromHref(repository.latest_version_href)
     : undefined;
@@ -120,10 +128,23 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
           )}
         </Fact>
         <Fact term="Content">
-          {summaryTotal(
-            latestVersion?.content_summary?.present,
-          ).toLocaleString()}{" "}
-          units
+          {total > 0 ? (
+            <Button variant="link" isInline onClick={onViewContent}>
+              {total.toLocaleString()} {total === 1 ? "unit" : "units"}
+            </Button>
+          ) : (
+            "0 units"
+          )}
+          {byType.length > 1 && (
+            <Content component="small">
+              {byType
+                .map(
+                  (entry) =>
+                    `${entry.pulpType} ${entry.count.toLocaleString()}`,
+                )
+                .join(" · ")}
+            </Content>
+          )}
         </Fact>
         {repository.remote && (
           <Fact term="Remote">
