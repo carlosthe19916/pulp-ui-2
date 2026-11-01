@@ -29,6 +29,11 @@
     "test": "npm run test -w common -w client -w server --if-present --",
     "test:e2e": "npm run test -w e2e",
     "test:e2e:local": "npm run test:local -w e2e --",
+    "backend": "scripts/backend/oci-env.sh",
+    "backend:plugins": "scripts/backend/plugins.sh",
+    "backend:setup": "scripts/backend/setup.sh",
+    "backend:start": "scripts/backend/oci-env.sh compose up",
+    "backend:stop": "scripts/backend/oci-env.sh compose down",
     "plugin:new": "npm run plugin:new -w client --",
     "seed": "node scripts/seed-data.mjs"
   },

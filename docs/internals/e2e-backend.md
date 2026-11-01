@@ -8,8 +8,45 @@ from source with oci-env.
 Both CI and local dev run the **oci-env** Pulp on port 5003, configured by
 [`compose.env`](../../compose.env). Its `DEV_SOURCE_PATH` installs every plugin the UI catalog knows
 about **from source**, including `pulp_npm` and `pulp_hugging_face`, so e2e exercises the whole
-catalog. Locally, set it up with the `dev-env-setup` skill and run the suite with the `e2e-local`
-skill (`npm run test:local -w e2e`).
+catalog. Locally, `npm run backend:setup` and `npm run backend:start` run it (see below) and
+`npm run test:local -w e2e` runs the suite against it.
+
+## Local backend
+
+CI clones the backend repos as siblings of its checkout, which is safe there because the runner
+workspace starts empty. Locally the siblings are usually checkouts someone develops plugins in, so
+the `scripts/backend/` scripts build the same pinned layout in their own gitignored folder,
+`.backend/`:
+
+```
+.backend/
+├── .pulp-ui-backend         # marker: setup.sh only resets checkouts in a folder it created
+├── oci_env/ pulpcore/ …     # one clone per plugin-versions.txt row, detached at its ref
+├── pulp-ui-2/profiles/      # copy of profiles/, refreshed on every command
+├── .venv/                   # oci-env CLI, installed from the pinned oci_env
+└── plugins                  # plugin selection (backend:plugins); absent = every plugin
+```
+
+- **`setup.sh`** fetches each row's ref and force-checks it out, discarding local edits but
+  keeping ignored files such as `oci_env/.compiled`. It fails if the plugin rows of
+  `plugin-versions.txt` and `DEV_SOURCE_PATH` diverge, the same check CI runs.
+- **`oci-env.sh`** runs oci-env with `compose.env`, overriding `SRC_DIR`, `OCI_ENV_PATH` and
+  `COMPOSE_PROJECT_NAME`. A globally exported `OCI_ENV_PATH` is therefore ignored, and the
+  stack's containers and volumes (`pulp_ui_2_pinned_*`) stay apart from any other oci-env stack.
+- **Profiles are copied, not linked.** oci-env resolves `COMPOSE_PROFILE=pulp-ui-2/<name>` as
+  `SRC_DIR/pulp-ui-2/profiles/<name>` and runs it from `/src` inside the container, where a
+  symlink to the repository would not resolve.
+
+### Choosing plugins
+
+`plugins.sh` narrows the installed plugins, to check the UI with a few plugins instead of the
+whole catalog. `oci-env.sh` exports the selection as `DEV_SOURCE_PATH` (`pulpcore` is always in
+it). Plugins install into the container at boot, so a new container gets exactly that set.
+
+The database volumes outlive containers, though, and the rows of a removed plugin break Pulp's
+generic repository and content endpoints. So every switch runs `compose down -v`, and the next
+start begins with an empty database. The UI catalog and `npm run seed` follow what `/status/`
+reports and need no change; the e2e suite does not, and expects every plugin.
 
 ## Why from source (not the stock image)
 

@@ -94,6 +94,13 @@ npm run test:e2e         # run all e2e specs (root; delegates to -w e2e)
 npm test -w e2e          # same, run directly in the e2e workspace
 npm run test:ui -w e2e   # Playwright UI mode
 
+# Local Pulp backend on :5003 (compose.env, repos pinned by plugin-versions.txt in .backend/)
+npm run backend:setup    # clone/force-reset .backend/ to the pinned refs (re-runnable)
+npm run backend:start
+npm run backend:stop
+npm run backend:plugins  # show the plugin set; `-- rpm container` / `-- all` switch it (wipes data)
+npm run backend -- compose logs -f   # any other oci-env command
+
 # Regenerate OpenAPI client from spec
 npm run generate
 
@@ -181,7 +188,7 @@ Use this mode only if you want to see how you app behaves with minified JS, CSS,
 - Plain Playwright `.spec.ts` files in `e2e/tests/`, nested to mirror `client/src/app/pages/` down to the list/detail surface folder (`content-management/remotes/remote-list/remotes.spec.ts`, `admin/users/user-list/user-list.spec.ts`, `admin/users/user-details/user-details.spec.ts`). An entity's contract test (`users.api.spec.ts`) and an entity with no surface split (`system-management/domains/domains.spec.ts`) sit at the entity root; area-wide specs at the area root (`content-management/content-domain.spec.ts`); cross-area specs (`seed`, `system-pages`) at the `tests/` root.
 - `auth.setup.ts` is a setup project that authenticates once; shared logic lives in `e2e/support/` (`helpers/`, `fixtures.ts`, the page objects in `pom/`), imported through the `@support/*` alias.
 - Run from the `e2e` workspace (`npm test -w e2e`) or via the root `npm run test:e2e`.
-- **Backend:** CI (`.github/workflows/ci-e2e.yaml`) runs the oci-env backend so it has the same plugin set as local dev (`DEV_SOURCE_PATH` in `compose.env`, including `pulp_npm` and `pulp_hugging_face`). The cloned backend versions are pinned to release tags in `plugin-versions.txt` (its plugin rows must match `DEV_SOURCE_PATH`), bumped daily by `plugin-versions-update.yaml`. A `build-backend` job publishes the oci-env **base** image (no plugins baked in — they install from `/src` at container startup) to `ghcr.io/<repo>/pulp-backend`, keyed by the oci_env `base/` tree so plugin bumps reuse it; the matrix pulls it and installs the pinned plugins at boot. Run the local suite against the same backend with `npm run test:local -w e2e` (see the `e2e-local` skill); details in `docs/internals/e2e-backend.md`.
+- **Backend:** CI (`.github/workflows/ci-e2e.yaml`) runs the oci-env backend so it has the same plugin set as local dev (`DEV_SOURCE_PATH` in `compose.env`, including `pulp_npm` and `pulp_hugging_face`). The cloned backend versions are pinned to release tags in `plugin-versions.txt` (its plugin rows must match `DEV_SOURCE_PATH`), bumped daily by `plugin-versions-update.yaml`. A `build-backend` job publishes the oci-env **base** image (no plugins baked in — they install from `/src` at container startup) to `ghcr.io/<repo>/pulp-backend`, keyed by the oci_env `base/` tree so plugin bumps reuse it; the matrix pulls it and installs the pinned plugins at boot. Locally, `npm run backend:setup` clones the same pinned repos into the gitignored `.backend/` and `npm run backend:start` runs them; `npm run test:local -w e2e` runs the suite against it (see the `e2e-local` skill). Details in `docs/internals/e2e-backend.md`.
 
 ## Branding
 

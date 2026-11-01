@@ -14,6 +14,27 @@ unless noted otherwise.
 | `npm run start:dev:server` | Run the Express server in watch mode only.                            |
 | `npm run start`            | Build `common` + `client`, then start the production Express server.  |
 
+### Local Pulp backend
+
+The oci-env Pulp from `compose.env`, built from the repos pinned in `plugin-versions.txt` and
+cloned into the gitignored `.backend/` folder. How it works:
+[docs/internals/e2e-backend.md](internals/e2e-backend.md#local-backend).
+
+| Script                                     | What it does                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| `npm run backend:setup`                    | Clone `.backend/` and force each repo onto its pinned ref. Re-runnable. |
+| `npm run backend:start`                    | Start the backend on `http://localhost:5003`.                           |
+| `npm run backend:stop`                     | Stop it, keeping its data.                                              |
+| `npm run backend:plugins`                  | Show the installed plugin set and the available plugins.                |
+| `npm run backend:plugins -- rpm container` | Install only these plugins (`-- all`: every one). **Wipes the data.**   |
+| `npm run backend:plugins -- none`          | Install no plugins, only pulpcore. **Wipes the data.**                  |
+| `npm run backend -- <args>`                | Any other oci-env command, e.g. `compose logs -f`.                      |
+
+| Variable               | Default            | What it does                                   |
+| ---------------------- | ------------------ | ---------------------------------------------- |
+| `PULP_BACKEND_DIR`     | `.backend`         | Where the backend repos are cloned.            |
+| `PULP_BACKEND_PROJECT` | `pulp_ui_2_pinned` | Compose project (containers and volumes) name. |
+
 ### Seed data
 
 `npm run seed` fills a Pulp backend with data for manual testing: for every installed plugin a
