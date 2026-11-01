@@ -1,4 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
@@ -47,12 +53,18 @@ const setActiveCount = (count: number) => {
   });
 };
 
-const renderList = () =>
-  render(
+// The list keeps its state in the URL, so it needs a router.
+const renderList = () => {
+  const router = createRouter({
+    routeTree: createRootRoute({ component: DomainList }),
+    history: createMemoryHistory({ initialEntries: ["/"] }),
+  });
+  return render(
     <QueryClientProvider client={new QueryClient()}>
-      <DomainList />
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+};
 
 beforeEach(() => {
   vi.mocked(useDomainsListQuery).mockReturnValue({

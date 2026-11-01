@@ -1,10 +1,10 @@
 import type React from "react";
-import { useState } from "react";
 
 import { Tab, Tabs, TabTitleText } from "@patternfly/react-core";
 
 import { ContentSection } from "@app/components/ContentPanelLayout";
 import { Snippet } from "@app/components/Snippet";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 
 interface IMavenInstallProps {
   groupId: string;
@@ -12,18 +12,28 @@ interface IMavenInstallProps {
   version: string;
 }
 
+// A preference: the browser remembers the build tool across visits.
+const BUILD_TOOL_TABS = defineTabState({
+  param: "tool",
+  tabs: ["maven", "gradle"],
+  defaultValue: "maven",
+});
+
 /** Maven / Gradle dependency snippets for one GAV, as Maven Central shows them. */
 export const MavenInstall: React.FC<IMavenInstallProps> = ({
   groupId,
   artifactId,
   version,
 }) => {
-  const [tool, setTool] = useState<string | number>("maven");
+  const { tab: tool, selectTab } = usePersistentTab({
+    ...BUILD_TOOL_TABS,
+    storage: "local",
+  });
   return (
     <ContentSection title="Install">
       <Tabs
         activeKey={tool}
-        onSelect={(_e, key) => setTool(key)}
+        onSelect={(_e, key) => selectTab(key)}
         isSubtab
         aria-label="Build tool"
       >

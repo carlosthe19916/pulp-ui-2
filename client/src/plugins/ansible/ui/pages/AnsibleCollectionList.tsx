@@ -13,8 +13,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
@@ -23,40 +21,47 @@ import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import type { OrderingField } from "@app/queries/utils/listParams";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 
+import { useAnsibleCollectionsListQuery } from "../queries/ansible-collections";
 import {
-  type IAnsibleCollectionListParams,
-  useAnsibleCollectionsListQuery,
-} from "../queries/ansible-collections";
+  ANSIBLE_COLLECTION_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./ansibleCollectionListState";
 import { CollectionVersions } from "./CollectionVersions";
-
-const SORTABLE_COLUMN_KEYS = [
-  "namespace",
-  "name",
-] as const satisfies readonly OrderingField<IAnsibleCollectionListParams>[];
-
-interface ICollectionFilters {
-  namespace: string;
-  name: string;
-  tags: string;
-}
 
 /** Ansible collections (namespace + name), each expanding to its versions. */
 export const AnsibleCollectionList: React.FC = () => {
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "namespace", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ANSIBLE_COLLECTION_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<ICollectionFilters>({
-      initialFilters: { namespace: "", name: "", tags: "" },
-    });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ANSIBLE_COLLECTION_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ANSIBLE_COLLECTION_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ANSIBLE_COLLECTION_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const namespace = useDebouncedValue({ value: filters.namespace });
   const name = useDebouncedValue({ value: filters.name });
   const tags = useDebouncedValue({ value: filters.tags });
@@ -136,8 +141,8 @@ export const AnsibleCollectionList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -155,6 +160,7 @@ export const AnsibleCollectionList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -173,6 +179,7 @@ export const AnsibleCollectionList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

@@ -4,7 +4,11 @@ import prettyBytes from "pretty-bytes";
 
 import { Label } from "@patternfly/react-core";
 
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { nevra } from "@app/utils/pluginContentFormat";
@@ -13,6 +17,17 @@ import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { severityColor } from "./helpers";
 
+const RPM_PACKAGES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["name", "arch"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [
+    { param: "name__contains", label: "Name" },
+    { param: "arch", label: "Arch", placeholder: "Exact arch, e.g. x86_64" },
+  ],
+});
+
 export const RpmPackages: React.FC<IBrowseContext> = ({
   versionHref,
   served,
@@ -20,16 +35,7 @@ export const RpmPackages: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["name", "arch"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [
-      { param: "name__contains", label: "Name" },
-      { param: "arch", label: "Arch", placeholder: "Exact arch, e.g. x86_64" },
-    ] as const,
-  });
+  const list = useBrowseListState(RPM_PACKAGES_LIST);
   // Package rows carry files and changelogs; list only what the table shows.
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "rpm.package",
@@ -100,6 +106,22 @@ export const RpmPackages: React.FC<IBrowseContext> = ({
   );
 };
 
+const RPM_ADVISORIES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["id", "issued_date", "severity", "type"],
+    defaultValue: { sortBy: "issued_date", direction: "desc" },
+  },
+  filters: [
+    { param: "id", label: "ID", placeholder: "Exact ID" },
+    {
+      param: "type",
+      label: "Type",
+      placeholder: "security, bugfix, enhancement",
+    },
+    { param: "severity", label: "Severity", placeholder: "Exact severity" },
+  ],
+});
+
 /** Satellite "Errata": newest first, with type and severity. */
 export const RpmAdvisories: React.FC<IBrowseContext> = ({
   versionHref,
@@ -107,21 +129,7 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["id", "issued_date", "severity", "type"] as const,
-      initial: { sortBy: "issued_date", direction: "desc" },
-    },
-    filters: [
-      { param: "id", label: "ID", placeholder: "Exact ID" },
-      {
-        param: "type",
-        label: "Type",
-        placeholder: "security, bugfix, enhancement",
-      },
-      { param: "severity", label: "Severity", placeholder: "Exact severity" },
-    ] as const,
-  });
+  const list = useBrowseListState(RPM_ADVISORIES_LIST);
   // `pkglist` and `description` can be large; the drawer loads the full advisory.
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "rpm.advisory",
@@ -188,21 +196,23 @@ export const RpmAdvisories: React.FC<IBrowseContext> = ({
   );
 };
 
+const RPM_MODULE_STREAMS_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["name", "version"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [
+    { param: "name", label: "Module", placeholder: "Exact module name" },
+  ],
+});
+
 export const RpmModuleStreams: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["name", "version"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [
-      { param: "name", label: "Module", placeholder: "Exact module name" },
-    ] as const,
-  });
+  const list = useBrowseListState(RPM_MODULE_STREAMS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "rpm.modulemd",
     params: {
@@ -269,6 +279,8 @@ export const RpmModuleStreams: React.FC<IBrowseContext> = ({
   );
 };
 
+const RPM_PACKAGE_GROUPS_LIST = defineBrowseListState();
+
 /** Comps groups (`dnf group list`); environments and categories stay in All content. */
 export const RpmPackageGroups: React.FC<IBrowseContext> = ({
   versionHref,
@@ -276,7 +288,7 @@ export const RpmPackageGroups: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState();
+  const list = useBrowseListState(RPM_PACKAGE_GROUPS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "rpm.packagegroup",
     params: {

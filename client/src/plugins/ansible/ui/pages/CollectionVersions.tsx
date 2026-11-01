@@ -1,13 +1,15 @@
 import type React from "react";
 
 import { Label, LabelGroup, PaginationVariant } from "@patternfly/react-core";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
+
+import { COLLECTION_VERSIONS_STATE } from "./collectionVersionsState";
 
 interface ICollectionVersionsProps {
   namespace: string;
@@ -22,7 +24,10 @@ export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
   name,
   tags,
 }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...COLLECTION_VERSIONS_STATE.pagination,
+    storage: "state",
+  });
   const { data, isLoading } = useContentTypeListQuery({
     pulpType: "ansible.collection_version",
     params: {
@@ -83,6 +88,7 @@ export const CollectionVersions: React.FC<ICollectionVersionsProps> = ({
         variant={PaginationVariant.bottom}
         itemCount={data?.count ?? 0}
         pagination={pagination}
+        onPaginationChange={setPagination}
       />
     </>
   );

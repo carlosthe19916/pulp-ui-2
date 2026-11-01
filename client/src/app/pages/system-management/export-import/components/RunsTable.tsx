@@ -3,10 +3,10 @@ import type React from "react";
 import { Link } from "@tanstack/react-router";
 
 import { PaginationVariant } from "@patternfly/react-core";
-import type { useDataViewPagination } from "@patternfly/react-data-view";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 
 import { ListPagination } from "@app/components/ListPagination";
+import type { ListPaginationState } from "@app/utils/listState";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
 
@@ -15,7 +15,8 @@ interface IRunsTableProps {
   runs: { pulp_href?: string; pulp_created?: string; task?: string | null }[];
   /** Total runs across all pages. */
   count: number;
-  pagination: ReturnType<typeof useDataViewPagination>;
+  pagination: ListPaginationState;
+  onPaginationChange: (next: ListPaginationState) => void;
   isLoading: boolean;
 }
 
@@ -25,6 +26,7 @@ export const RunsTable: React.FC<IRunsTableProps> = ({
   runs,
   count,
   pagination,
+  onPaginationChange,
   isLoading,
 }) => {
   if (isLoading) return <>Loading…</>;
@@ -67,6 +69,7 @@ export const RunsTable: React.FC<IRunsTableProps> = ({
         variant={PaginationVariant.bottom}
         itemCount={count}
         pagination={pagination}
+        onPaginationChange={onPaginationChange}
       />
     </>
   );

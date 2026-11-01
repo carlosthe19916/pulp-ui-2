@@ -1,9 +1,21 @@
 import type React from "react";
 
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
 import type { IBrowseContext } from "@plugin-sdk/ui";
+
+const OSTREE_BRANCHES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["name"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [{ param: "name__icontains", label: "Branch" }],
+});
 
 /** `ostree refs` style: branches and the commit each points at; history opens in the drawer. */
 export const OstreeBranches: React.FC<IBrowseContext> = ({
@@ -13,13 +25,7 @@ export const OstreeBranches: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["name"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [{ param: "name__icontains", label: "Branch" }] as const,
-  });
+  const list = useBrowseListState(OSTREE_BRANCHES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "ostree.refs",
     params: {

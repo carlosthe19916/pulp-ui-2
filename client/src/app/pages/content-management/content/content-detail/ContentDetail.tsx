@@ -21,7 +21,9 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useSuspenseContentDetailQuery } from "@app/queries/content";
 import { getRepositoryTypesForContent } from "@catalog";
@@ -36,6 +38,11 @@ interface IContentDetailProps {
   href: string;
 }
 
+const CONTENT_DETAIL_TABS = defineTabState({
+  tabs: ["details", "artifacts", "repositories"],
+  defaultValue: "details",
+});
+
 export const ContentDetail: React.FC<IContentDetailProps> = ({
   pulpDomain,
   pulpType,
@@ -45,7 +52,10 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
   const { data } = useSuspenseContentDetailQuery({ href });
   const prn = data.prn ?? id;
 
-  const [activeTab, setActiveTab] = useState<string | number>("details");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...CONTENT_DETAIL_TABS,
+    storage: "url",
+  });
   const canAdd = getRepositoryTypesForContent(pulpType).length > 0;
   const unit = { href, label: prn, pulpType };
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -93,7 +103,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          onSelect={(_e, tabKey) => selectTab(tabKey)}
           mountOnEnter
         >
           <Tab eventKey="details" title={<TabTitleText>Details</TabTitleText>}>
@@ -114,11 +124,13 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
             title={<TabTitleText>Repositories</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ContentRepositoriesTab
-                href={href}
-                onRemoveFromRepository={setRemoveFrom}
-                isLocked={isChanging}
-              />
+              <PersistentStateScopeProvider prefix="repositories">
+                <ContentRepositoriesTab
+                  href={href}
+                  onRemoveFromRepository={setRemoveFrom}
+                  isLocked={isChanging}
+                />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

@@ -12,8 +12,6 @@ import {
   DataViewFilters,
   DataViewTextFilter,
   DataViewToolbar,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
@@ -36,8 +34,8 @@ import {
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
-import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
 import type { IContentUnit } from "@app/utils/contentUnit";
 import { contentUnitRef } from "@app/utils/contentUnitRef";
@@ -46,27 +44,22 @@ import { getContentTypes } from "@catalog";
 import { OrphanedForFilter } from "./components/OrphanedForFilter";
 import { RepositoryVersionFilter } from "./components/RepositoryVersionFilter";
 import { VersionDiffFilter } from "./components/VersionDiffFilter";
+import { CONTENT_LIST_STATE } from "./contentListState";
 import {
   decodeRepositoryVersion,
   decodeVersionDiff,
 } from "./utils/versionFilterCodec";
 
 /**
- * Filters for the global Content list, all backed by the aggregate `content/` endpoint.
- * `pulp_type` is a closed enum (multi-select → `pulp_type__in`); `pulp_label_select` and
- * `orphaned_for` are text inputs; `repo_version` and `version_diff` are composite dropdowns
- * whose encoded value the page decodes into the `repository_version*` / `*_between` params.
+ * The global Content list, backed by the aggregate `content/` endpoint. The page decodes the
+ * `repo_version` and `version_diff` filters into the `repository_version*` / `*_between` params.
  */
-interface IContentFilters {
-  pulp_type: string[];
-  pulp_label_select?: string;
-  orphaned_for?: string;
-  repo_version?: string;
-  version_diff?: string;
-}
-
 export const ContentList: React.FC = () => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...CONTENT_LIST_STATE.pagination,
+    storage: "url",
+  });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
   const selection = useContentUnitSelection();
   const contentChange = useContentChangeTask();
   const [addUnits, setAddUnits] = useState<IContentUnitRef[] | null>(null);
@@ -75,13 +68,19 @@ export const ContentList: React.FC = () => {
   const isChanging = !!contentChange.task;
   const lockedProps = isChanging ? REPOSITORY_LOCKED_PROPS : {};
 
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IContentFilters>({ initialFilters: { pulp_type: [] } });
+  const [filters, setFilters] = usePersistentState({
+    ...CONTENT_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(CONTENT_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedLabel = useDebouncedValue({
     value: filters.pulp_label_select,
   });
   const debouncedOrphaned = useDebouncedValue({ value: filters.orphaned_for });
-  const selectedTypes = filters.pulp_type ?? [];
+  const selectedTypes = filters.pulp_type;
 
   // Type options are the catalog's content types for installed plugins, grouped by owning app.
   const installedTypes = getContentTypes({ installed: useApiStatus().plugins });
@@ -93,8 +92,8 @@ export const ContentList: React.FC = () => {
   }));
 
   const orphanedNum = Number(debouncedOrphaned);
-  const repoVersion = decodeRepositoryVersion(filters.repo_version ?? "");
-  const diff = decodeVersionDiff(filters.version_diff ?? "");
+  const repoVersion = decodeRepositoryVersion(filters.repo_version);
+  const diff = decodeVersionDiff(filters.version_diff);
   const diffPair =
     diff.baseHref && diff.targetHref
       ? [diff.baseHref, diff.targetHref]
@@ -105,9 +104,7 @@ export const ContentList: React.FC = () => {
     params: {
       limit: pagination.perPage,
       offset: (pagination.page - 1) * pagination.perPage,
-      pulp_type__in: selectedTypes.length
-        ? (selectedTypes as IContentListParams["pulp_type__in"])
-        : undefined,
+      pulp_type__in: selectedTypes.length ? selectedTypes : undefined,
       pulp_label_select: debouncedLabel || undefined,
       orphaned_for:
         debouncedOrphaned && Number.isFinite(orphanedNum)
@@ -182,8 +179,8 @@ export const ContentList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -216,6 +213,7 @@ export const ContentList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -237,8 +235,8 @@ export const ContentList: React.FC = () => {
               },
             ]}
             onLabelClick={(selector) => {
-              onSetFilters({ ...filters, pulp_label_select: selector });
-              pagination.onSetPage(undefined, 1);
+              setFilters((prev) => ({ ...prev, pulp_label_select: selector }));
+              toFirstPage();
             }}
             emptyState={
               <TableEmptyState
@@ -255,6 +253,7 @@ export const ContentList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

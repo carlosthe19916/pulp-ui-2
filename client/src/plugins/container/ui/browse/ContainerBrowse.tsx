@@ -8,6 +8,7 @@ import { Content, ContentVariants } from "@patternfly/react-core";
 import type { ContainerManifestResponse } from "@app/client";
 import {
   BrowseTable,
+  defineBrowseListState,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
@@ -64,6 +65,14 @@ const useSignedManifests = ({
   );
 };
 
+const CONTAINER_TAGS_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["name"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [{ param: "name", label: "Tag", placeholder: "Exact tag" }],
+});
+
 /** Quay / Docker Hub "Tags": each tag with its image's digest, platforms, size and signature. */
 export const ContainerTags: React.FC<IBrowseContext> = ({
   versionHref,
@@ -82,15 +91,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
   const { data: repository } = useRepositoryDetailQuery({
     href: untag ? repositoryHref : null,
   });
-  const list = useBrowseListState({
-    sort: {
-      keys: ["name"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [
-      { param: "name", label: "Tag", placeholder: "Exact tag" },
-    ] as const,
-  });
+  const list = useBrowseListState(CONTAINER_TAGS_LIST);
   const tags = useContentTypeListQuery({
     pulpType: "container.tag",
     params: {
@@ -240,6 +241,14 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
   );
 };
 
+const CONTAINER_MANIFESTS_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["digest", "media_type", "architecture"],
+    defaultValue: { sortBy: "digest", direction: "asc" },
+  },
+  filters: [{ param: "digest", label: "Digest", placeholder: "Exact digest" }],
+});
+
 /** Harbor-style "Artifacts": every manifest, tagged or not. */
 export const ContainerManifests: React.FC<IBrowseContext> = ({
   versionHref,
@@ -247,15 +256,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["digest", "media_type", "architecture"] as const,
-      initial: { sortBy: "digest", direction: "asc" },
-    },
-    filters: [
-      { param: "digest", label: "Digest", placeholder: "Exact digest" },
-    ] as const,
-  });
+  const list = useBrowseListState(CONTAINER_MANIFESTS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "container.manifest",
     params: {

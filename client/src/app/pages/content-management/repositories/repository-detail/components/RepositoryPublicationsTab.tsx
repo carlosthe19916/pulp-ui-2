@@ -6,19 +6,20 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import { formatDateTime } from "@app/utils/utils";
 
 interface IRepositoryPublicationsTabProps {
@@ -28,7 +29,10 @@ interface IRepositoryPublicationsTabProps {
 export const RepositoryPublicationsTab: React.FC<
   IRepositoryPublicationsTabProps
 > = ({ repositoryHref }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "url",
+  });
   const { data, isLoading, error } = usePublicationsListQuery({
     params: {
       repository: repositoryHref,
@@ -101,6 +105,7 @@ export const RepositoryPublicationsTab: React.FC<
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />

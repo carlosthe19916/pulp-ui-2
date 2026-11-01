@@ -4,6 +4,7 @@ import prettyBytes from "pretty-bytes";
 
 import {
   BrowseTable,
+  defineBrowseListState,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
@@ -13,6 +14,10 @@ import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { pipInstall } from "../helpers";
 
+const PYTHON_PACKAGES_LIST = defineBrowseListState({
+  filters: [{ param: "name__contains", label: "Project" }],
+});
+
 /** PyPI style: each project's files grouped under it, newest release first. */
 export const PythonPackages: React.FC<IBrowseContext> = ({
   versionHref,
@@ -21,9 +26,7 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    filters: [{ param: "name__contains", label: "Project" }] as const,
-  });
+  const list = useBrowseListState(PYTHON_PACKAGES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "python.python",
     params: {
@@ -99,6 +102,8 @@ export const PythonPackages: React.FC<IBrowseContext> = ({
   );
 };
 
+const PYTHON_YANKS_LIST = defineBrowseListState();
+
 /**
  * Yanked releases (PEP 592). A yank names a release only by project and version, and the
  * endpoint can't filter by either, so it is listed here rather than as a badge.
@@ -109,7 +114,7 @@ export const PythonYanks: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState();
+  const list = useBrowseListState(PYTHON_YANKS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "python.python_yank",
     params: {

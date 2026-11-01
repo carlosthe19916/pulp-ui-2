@@ -32,12 +32,14 @@ import {
   type VersionAction,
   VersionActionModal,
 } from "@app/components/VersionActionModal";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
   useObjectPermissions,
   VERSION_ACTION_VERBS,
 } from "@app/hooks/useObjectPermissions";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
@@ -73,6 +75,17 @@ interface IRepositoryDetailProps {
   id: string;
   href: string;
 }
+
+const REPOSITORY_DETAIL_FIXED_TABS = [
+  "details",
+  "content",
+  "versions",
+  "publications",
+  "distributions",
+  "topology",
+];
+// The plugin tab's key comes from the registry, so the keys are checked at runtime.
+const REPOSITORY_DETAIL_TABS = defineTabState({ defaultValue: "details" });
 
 export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   pulpDomain,
@@ -139,7 +152,19 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       }),
   });
 
-  const [activeTab, setActiveTab] = useState<string | number>("details");
+  const {
+    tab: activeTab,
+    setTab: setActiveTab,
+    selectTab,
+  } = usePersistentTab({
+    ...REPOSITORY_DETAIL_TABS,
+    storage: "url",
+    available: [
+      ...REPOSITORY_DETAIL_FIXED_TABS,
+      ...(pluginTab ? [pluginTab.key] : []),
+      "access",
+    ],
+  });
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -287,7 +312,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           <StackItem>
             <Tabs
               activeKey={activeTab}
-              onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+              onSelect={(_e, tabKey) => selectTab(tabKey)}
               mountOnEnter
             >
               <Tab
@@ -314,23 +339,25 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 }
               >
                 <TabContentBody hasPadding>
-                  <RepositoryContentTab
-                    repository={repository}
-                    pulpType={pulpType}
-                    latestVersion={latestVersion}
-                    writes={
-                      canChangeContent
-                        ? {
-                            onRemove: setRemoveUnits,
-                            isLocked: isRunning,
-                            actionProps: {
-                              ...lockedProps,
-                              ...disabledProps("modify"),
-                            },
-                          }
-                        : undefined
-                    }
-                  />
+                  <PersistentStateScopeProvider prefix="content">
+                    <RepositoryContentTab
+                      repository={repository}
+                      pulpType={pulpType}
+                      latestVersion={latestVersion}
+                      writes={
+                        canChangeContent
+                          ? {
+                              onRemove: setRemoveUnits,
+                              isLocked: isRunning,
+                              actionProps: {
+                                ...lockedProps,
+                                ...disabledProps("modify"),
+                              },
+                            }
+                          : undefined
+                      }
+                    />
+                  </PersistentStateScopeProvider>
                 </TabContentBody>
               </Tab>
               <Tab
@@ -342,19 +369,21 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 }
               >
                 <TabContentBody hasPadding>
-                  <RepositoryVersionsTab
-                    onVersionAction={setVersionAction}
-                    latestHref={repository.latest_version_href ?? undefined}
-                    canRestore={repoEntity?.contentChanges === "modify"}
-                    actionProps={(action) => ({
-                      ...lockedProps,
-                      ...disabledProps(VERSION_ACTION_VERBS[action]),
-                    })}
-                    repositoryHref={href}
-                    id={id}
-                    pulpType={pulpType}
-                    pulpDomain={pulpDomain}
-                  />
+                  <PersistentStateScopeProvider prefix="versions">
+                    <RepositoryVersionsTab
+                      onVersionAction={setVersionAction}
+                      latestHref={repository.latest_version_href ?? undefined}
+                      canRestore={repoEntity?.contentChanges === "modify"}
+                      actionProps={(action) => ({
+                        ...lockedProps,
+                        ...disabledProps(VERSION_ACTION_VERBS[action]),
+                      })}
+                      repositoryHref={href}
+                      id={id}
+                      pulpType={pulpType}
+                      pulpDomain={pulpDomain}
+                    />
+                  </PersistentStateScopeProvider>
                 </TabContentBody>
               </Tab>
               <Tab
@@ -366,7 +395,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 }
               >
                 <TabContentBody hasPadding>
-                  <RepositoryPublicationsTab repositoryHref={href} />
+                  <PersistentStateScopeProvider prefix="publications">
+                    <RepositoryPublicationsTab repositoryHref={href} />
+                  </PersistentStateScopeProvider>
                 </TabContentBody>
               </Tab>
               <Tab
@@ -378,7 +409,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                 }
               >
                 <TabContentBody hasPadding>
-                  <RepositoryDistributionsTab repositoryHref={href} />
+                  <PersistentStateScopeProvider prefix="distributions">
+                    <RepositoryDistributionsTab repositoryHref={href} />
+                  </PersistentStateScopeProvider>
                 </TabContentBody>
               </Tab>
               <Tab
@@ -400,9 +433,11 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   title={<TabTitleText>{pluginTab.title}</TabTitleText>}
                 >
                   <TabContentBody hasPadding>
-                    <Suspense fallback={<Spinner aria-label="Loading" />}>
-                      <pluginTab.Tab repository={repository} />
-                    </Suspense>
+                    <PersistentStateScopeProvider prefix={pluginTab.key}>
+                      <Suspense fallback={<Spinner aria-label="Loading" />}>
+                        <pluginTab.Tab repository={repository} />
+                      </Suspense>
+                    </PersistentStateScopeProvider>
                   </TabContentBody>
                 </Tab>
               )}

@@ -19,8 +19,10 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { GroupModal } from "@app/components/GroupModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RoleAssignmentsTab } from "@app/components/RoleAssignmentsTab";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import {
   useGroupDeleteMutation,
   useGroupUsersListQuery,
@@ -34,6 +36,11 @@ import { GroupUsersTab } from "./components/GroupUsersTab";
 interface IGroupDetailProps {
   groupHref: string;
 }
+
+const GROUP_DETAIL_TABS = defineTabState({
+  tabs: ["users", "roles"],
+  defaultValue: "users",
+});
 
 export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
   const navigate = useNavigate();
@@ -69,7 +76,10 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
       }),
   });
 
-  const [activeTab, setActiveTab] = useState<string | number>("users");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...GROUP_DETAIL_TABS,
+    storage: "url",
+  });
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
@@ -116,7 +126,7 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          onSelect={(_e, tabKey) => selectTab(tabKey)}
           mountOnEnter
         >
           <Tab
@@ -124,7 +134,9 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
             title={<TabTitleText>Users ({userCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupUsersTab groupHref={groupHref} />
+              <PersistentStateScopeProvider prefix="users">
+                <GroupUsersTab groupHref={groupHref} />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab
@@ -132,11 +144,13 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <RoleAssignmentsTab
-                kind="group"
-                href={groupHref}
-                name={group.name}
-              />
+              <PersistentStateScopeProvider prefix="roles">
+                <RoleAssignmentsTab
+                  kind="group"
+                  href={groupHref}
+                  name={group.name}
+                />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

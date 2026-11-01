@@ -1,11 +1,21 @@
 import type React from "react";
 
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
 import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { npmInstall } from "../helpers";
+
+const NPM_PACKAGES_LIST = defineBrowseListState({
+  filters: [
+    { param: "name", label: "Package", placeholder: "Exact package name" },
+  ],
+});
 
 /** npmjs style: each package with its versions, newest first. */
 export const NpmPackages: React.FC<IBrowseContext> = ({
@@ -15,11 +25,7 @@ export const NpmPackages: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    filters: [
-      { param: "name", label: "Package", placeholder: "Exact package name" },
-    ] as const,
-  });
+  const list = useBrowseListState(NPM_PACKAGES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "npm.package",
     params: {

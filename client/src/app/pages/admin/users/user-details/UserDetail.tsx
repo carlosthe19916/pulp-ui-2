@@ -19,7 +19,9 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RoleAssignmentsTab } from "@app/components/RoleAssignmentsTab";
 import { UserModal } from "@app/components/UserModal";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useRoleAssignmentsListQuery } from "@app/queries/roleAssignments";
 import {
   useSuspenseUserDetailQuery,
@@ -32,6 +34,11 @@ import { UserGroupsTab } from "./components/UserGroupsTab";
 interface IUserDetailProps {
   userHref: string;
 }
+
+const USER_DETAIL_TABS = defineTabState({
+  tabs: ["groups", "roles"],
+  defaultValue: "groups",
+});
 
 export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
   const navigate = useNavigate();
@@ -64,7 +71,10 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
       }),
   });
 
-  const [activeTab, setActiveTab] = useState<string | number>("groups");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...USER_DETAIL_TABS,
+    storage: "url",
+  });
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
@@ -109,7 +119,7 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_e, tabKey) => setActiveTab(tabKey)}
+          onSelect={(_e, tabKey) => selectTab(tabKey)}
           mountOnEnter
         >
           <Tab
@@ -117,7 +127,9 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
             title={<TabTitleText>Groups ({groupCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <UserGroupsTab userHref={userHref} />
+              <PersistentStateScopeProvider prefix="groups">
+                <UserGroupsTab userHref={userHref} />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab
@@ -125,11 +137,13 @@ export const UserDetail: React.FC<IUserDetailProps> = ({ userHref }) => {
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <RoleAssignmentsTab
-                kind="user"
-                href={userHref}
-                name={user.username}
-              />
+              <PersistentStateScopeProvider prefix="roles">
+                <RoleAssignmentsTab
+                  kind="user"
+                  href={userHref}
+                  name={user.username}
+                />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

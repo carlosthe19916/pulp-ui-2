@@ -9,8 +9,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -19,29 +17,22 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import type { IRoleAssignmentListParams } from "@app/queries/roleAssignments";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useRoleAssignmentDeleteMutation,
   useRoleAssignmentsListQuery,
 } from "@app/queries/roleAssignments";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { AddRoleAssignmentModal } from "./AddRoleAssignmentModal";
-
-const SORTABLE_COLUMN_KEYS = [
-  "role",
-  "description",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IRoleAssignmentListParams>[];
-
-interface IRoleFilters {
-  role: IRoleAssignmentListParams["role__icontains"];
-}
+import {
+  ROLE_ASSIGNMENTS_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./roleAssignmentsState";
 
 interface IRoleAssignmentsTabProps {
   kind: "user" | "group";
@@ -79,14 +70,33 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
       }),
   });
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "role", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ROLE_ASSIGNMENTS_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRoleFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ROLE_ASSIGNMENTS_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ROLE_ASSIGNMENTS_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ROLE_ASSIGNMENTS_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedRole = useDebouncedValue({ value: filters.role });
 
   const { data, isLoading, error } = useRoleAssignmentsListQuery({
@@ -174,8 +184,8 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
           filters={
             <DataViewFilters
               onChange={(_key, newFilters) => {
-                onSetFilters(newFilters);
-                pagination.onSetPage(undefined, 1);
+                setFilters((prev) => ({ ...prev, ...newFilters }));
+                toFirstPage();
               }}
               values={filters}
             >
@@ -192,6 +202,7 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />
@@ -207,6 +218,7 @@ export const RoleAssignmentsTab: React.FC<IRoleAssignmentsTabProps> = ({
               variant={PaginationVariant.bottom}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

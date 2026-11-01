@@ -51,72 +51,76 @@ export const BrowseShell: React.FC<IBrowseShellProps> = ({
   selection,
   pageUnits,
   children,
-}) => (
-  <DataView
-    activeState={activeState}
-    selection={
-      writes
-        ? dataViewSelection({
-            selection,
-            units: pageUnits,
-            isSelectDisabled: () => writes.isLocked,
-          })
-        : undefined
-    }
-  >
-    {header ? <div className={spacing.mbMd}>{header}</div> : null}
-    <DataViewToolbar
-      bulkSelect={
-        writes ? (
-          <ContentBulkSelect
-            pageUnits={pageUnits}
-            selection={selection}
-            isDisabled={writes.isLocked}
+}) => {
+  return (
+    <DataView
+      activeState={activeState}
+      selection={
+        writes
+          ? dataViewSelection({
+              selection,
+              units: pageUnits,
+              isSelectDisabled: () => writes.isLocked,
+            })
+          : undefined
+      }
+    >
+      {header ? <div className={spacing.mbMd}>{header}</div> : null}
+      <DataViewToolbar
+        bulkSelect={
+          writes ? (
+            <ContentBulkSelect
+              pageUnits={pageUnits}
+              selection={selection}
+              isDisabled={writes.isLocked}
+            />
+          ) : undefined
+        }
+        actions={
+          writes ? (
+            <RemoveSelectedButton selection={selection} writes={writes} />
+          ) : undefined
+        }
+        clearAllFilters={
+          list.filterDefs.length ? list.clearAllFilters : undefined
+        }
+        filters={
+          list.filterDefs.length ? (
+            <DataViewFilters
+              onChange={(_key, next) => list.setFilters(next)}
+              values={list.filters}
+            >
+              {list.filterDefs.map((filter) => (
+                <DataViewTextFilter
+                  key={filter.field}
+                  filterId={filter.field}
+                  title={filter.label}
+                  placeholder={filter.placeholder}
+                />
+              ))}
+            </DataViewFilters>
+          ) : undefined
+        }
+        pagination={
+          <ListPagination
+            variant={PaginationVariant.top}
+            itemCount={count}
+            pagination={list.pagination}
+            onPaginationChange={list.setPagination}
           />
-        ) : undefined
-      }
-      actions={
-        writes ? (
-          <RemoveSelectedButton selection={selection} writes={writes} />
-        ) : undefined
-      }
-      clearAllFilters={
-        list.filterDefs.length ? list.clearAllFilters : undefined
-      }
-      filters={
-        list.filterDefs.length ? (
-          <DataViewFilters
-            onChange={(_key, next) => list.setFilters(next)}
-            values={list.filters}
-          >
-            {list.filterDefs.map((filter) => (
-              <DataViewTextFilter
-                key={filter.param}
-                filterId={filter.param}
-                title={filter.label}
-                placeholder={filter.placeholder}
-              />
-            ))}
-          </DataViewFilters>
-        ) : undefined
-      }
-      pagination={
-        <ListPagination
-          variant={PaginationVariant.top}
-          itemCount={count}
-          pagination={list.pagination}
-        />
-      }
-    />
-    {children}
-    <DataViewToolbar
-      pagination={
-        <ListPagination
-          variant={PaginationVariant.bottom}
-          itemCount={count}
-          pagination={list.pagination}
-        />
-      }
-    />
-  </DataView>
-);
+        }
+      />
+      {children}
+      <DataViewToolbar
+        pagination={
+          <ListPagination
+            variant={PaginationVariant.bottom}
+            itemCount={count}
+            pagination={list.pagination}
+            onPaginationChange={list.setPagination}
+          />
+        }
+      />
+    </DataView>
+  );
+};

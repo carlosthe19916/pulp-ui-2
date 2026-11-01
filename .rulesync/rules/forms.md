@@ -28,6 +28,9 @@ forms** run everything else (plugin actions, admin objects, uploads).
 
 ## Shared core
 
+Form validation is yup (react-hook-form's resolver); zod is for URL and storage state only
+([list-state](list-state.md)).
+
 **A submission failure is shown _in the form_, not as a toast**: an inline `Alert` at the top of
 `<Form>`, and the form stays for retry. Success toasts and list/detail error toasts stay toasts.
 

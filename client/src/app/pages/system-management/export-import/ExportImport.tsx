@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 
 import {
   Content,
@@ -13,13 +12,23 @@ import {
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 
 import { ExportersTab } from "./components/ExportersTab";
 import { ImportersTab } from "./components/ImportersTab";
 
 /** Move repositories between Pulp instances (or to disk) through files. */
+const EXPORT_IMPORT_TABS = defineTabState({
+  tabs: ["exporters", "importers"],
+  defaultValue: "exporters",
+});
+
 export const ExportImport: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string | number>("exporters");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...EXPORT_IMPORT_TABS,
+    storage: "url",
+  });
   return (
     <>
       <DocumentTitle title="Export and import" />
@@ -34,7 +43,7 @@ export const ExportImport: React.FC = () => {
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_event, key) => setActiveTab(key)}
+          onSelect={(_event, key) => selectTab(key)}
           mountOnEnter
         >
           <Tab
@@ -42,7 +51,9 @@ export const ExportImport: React.FC = () => {
             title={<TabTitleText>Exporters</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ExportersTab />
+              <PersistentStateScopeProvider prefix="exporters">
+                <ExportersTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab
@@ -50,7 +61,9 @@ export const ExportImport: React.FC = () => {
             title={<TabTitleText>Importers</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ImportersTab />
+              <PersistentStateScopeProvider prefix="importers">
+                <ImportersTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

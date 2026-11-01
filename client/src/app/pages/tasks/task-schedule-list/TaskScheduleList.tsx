@@ -15,8 +15,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
@@ -24,14 +22,11 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import {
-  type ITaskScheduleListParams,
-  useTaskSchedulesListQuery,
-} from "@app/queries/task-schedules";
-import type { OrderingField } from "@app/queries/utils/listParams";
+import { usePersistentState } from "@app/hooks/usePersistentState";
+import { useTaskSchedulesListQuery } from "@app/queries/task-schedules";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import {
   extractTaskDomain,
   extractTaskId,
@@ -39,26 +34,40 @@ import {
 } from "@app/utils/taskHref";
 import { formatDateTime } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "task_name",
-  "next_dispatch",
-] as const satisfies readonly OrderingField<ITaskScheduleListParams>[];
-
-interface IScheduleFilters {
-  name: string;
-}
+import {
+  SORTABLE_COLUMN_KEYS,
+  TASK_SCHEDULE_LIST_STATE,
+} from "./taskScheduleListState";
 
 /** Tasks Pulp dispatches on a schedule (read-only; plugins define them). */
 export const TaskScheduleList: React.FC = () => {
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "next_dispatch", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...TASK_SCHEDULE_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IScheduleFilters>({ initialFilters: { name: "" } });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...TASK_SCHEDULE_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...TASK_SCHEDULE_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(TASK_SCHEDULE_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
   const { data, isLoading, error } = useTaskSchedulesListQuery({
     params: {
@@ -147,8 +156,8 @@ export const TaskScheduleList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -160,6 +169,7 @@ export const TaskScheduleList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -175,6 +185,7 @@ export const TaskScheduleList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

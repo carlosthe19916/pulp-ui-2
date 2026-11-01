@@ -3,16 +3,7 @@ import { useState } from "react";
 
 import { Link } from "@tanstack/react-router";
 
-import {
-  Button,
-  MenuToggle,
-  type MenuToggleElement,
-  PaginationVariant,
-  Select,
-  SelectList,
-  SelectOption,
-  ToolbarItem,
-} from "@patternfly/react-core";
+import { Button, PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
   DataViewFilters,
@@ -20,32 +11,30 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
+import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
   isCancelable,
   isTerminalTaskState,
-  type TaskState,
   useTaskCancelMutation,
   useTaskDeleteMutation,
   useTaskPurgeMutation,
   useTasksListQuery,
 } from "@app/queries/tasks";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import {
   extractTaskDomain,
   extractTaskId,
@@ -54,28 +43,16 @@ import {
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-const TASK_STATES: Array<TaskState | ""> = [
-  "",
-  "waiting",
-  "running",
-  "completed",
-  "failed",
-  "canceled",
-  "canceling",
-  "skipped",
-];
+import {
+  SORTABLE_COLUMN_KEYS,
+  TASK_STATES,
+  TASKS_TABLE_STATE,
+} from "./tasksTableState";
 
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "state",
-  "started_at",
-  "finished_at",
-  "pulp_created",
-] as const satisfies readonly OrderingField<ITaskListParams>[];
-
-interface ITaskFilters {
-  name: ITaskListParams["name"];
-}
+const STATE_OPTIONS = TASK_STATES.map((state) => ({
+  value: state,
+  label: state,
+}));
 
 interface ITasksTableProps {
   /**
@@ -96,8 +73,6 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   lockedParams,
   showPurge = false,
 }) => {
-  const [stateFilter, setStateFilter] = useState<TaskState | "">("");
-  const [isStateOpen, setIsStateOpen] = useState(false);
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
   const [cancelTaskHref, setCancelTaskHref] = useState<string | null>(null);
   const [deleteTaskHref, setDeleteTaskHref] = useState<string | null>(null);
@@ -146,14 +121,33 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   const isCanceling = cancelMutation.isPending;
   const isPurging = purgeMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...TASKS_TABLE_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<ITaskFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...TASKS_TABLE_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...TASKS_TABLE_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(TASKS_TABLE_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useTasksListQuery({
@@ -162,7 +156,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
       offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__contains: debouncedName || undefined,
-      state: stateFilter || undefined,
+      state__in: filters.state.length ? filters.state : undefined,
       ...lockedParams,
     },
   });
@@ -255,43 +249,11 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
     emptyState: (
       <TableEmptyState
         title="No tasks found"
-        isFiltered={Boolean(debouncedName) || Boolean(stateFilter)}
+        isFiltered={Boolean(debouncedName) || filters.state.length > 0}
         onClearFilters={clearAllFilters}
       />
     ),
   });
-
-  const stateSelect = (
-    <ToolbarItem>
-      <Select
-        isOpen={isStateOpen}
-        selected={stateFilter}
-        onSelect={(_e, value) => {
-          setStateFilter((value as TaskState | "") ?? "");
-          setIsStateOpen(false);
-          pagination.onSetPage(undefined, 1);
-        }}
-        onOpenChange={setIsStateOpen}
-        toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-          <MenuToggle
-            ref={toggleRef}
-            onClick={() => setIsStateOpen(!isStateOpen)}
-            isExpanded={isStateOpen}
-          >
-            {stateFilter || "All states"}
-          </MenuToggle>
-        )}
-      >
-        <SelectList>
-          {TASK_STATES.map((state) => (
-            <SelectOption key={state || "all"} value={state}>
-              {state || "All states"}
-            </SelectOption>
-          ))}
-        </SelectList>
-      </Select>
-    </ToolbarItem>
-  );
 
   const handleCancel = () => {
     if (!cancelTaskHref) return;
@@ -313,18 +275,20 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
         <DataViewToolbar
           clearAllFilters={clearAllFilters}
           filters={
-            <>
-              <DataViewFilters
-                onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
-                }}
-                values={filters}
-              >
-                <DataViewTextFilter filterId="name" title="Name" />
-              </DataViewFilters>
-              {stateSelect}
-            </>
+            <DataViewFilters
+              onChange={(_key, newFilters) => {
+                setFilters((prev) => ({ ...prev, ...newFilters }));
+                toFirstPage();
+              }}
+              values={filters}
+            >
+              <DataViewTextFilter filterId="name" title="Name" />
+              <MultiSelectFilter
+                filterId="state"
+                title="State"
+                options={STATE_OPTIONS}
+              />
+            </DataViewFilters>
           }
           actions={
             showPurge ? (
@@ -338,6 +302,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />
@@ -355,6 +320,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
               variant={PaginationVariant.bottom}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

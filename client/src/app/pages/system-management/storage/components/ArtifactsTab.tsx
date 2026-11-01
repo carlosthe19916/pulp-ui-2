@@ -11,8 +11,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -21,41 +19,53 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
-  type IArtifactListParams,
   useArtifactDeleteMutation,
   useArtifactsListQuery,
 } from "@app/queries/artifacts";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "size",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IArtifactListParams>[];
-
-interface IArtifactFilters {
-  sha256: string;
-}
+import { ARTIFACTS_TAB_STATE, SORTABLE_COLUMN_KEYS } from "./artifactsTabState";
 
 export const ArtifactsTab: React.FC = () => {
   const { addNotification } = useNotifications();
-  const [orphanedOnly, setOrphanedOnly] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ArtifactResponse | null>(
     null,
   );
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ARTIFACTS_TAB_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IArtifactFilters>({ initialFilters: { sha256: "" } });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+  const [sort, setSort] = usePersistentState({
+    ...ARTIFACTS_TAB_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+  const [filters, setFilters] = usePersistentState({
+    ...ARTIFACTS_TAB_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ARTIFACTS_TAB_STATE.filters.defaultValue);
+    toFirstPage();
+  };
+  const [{ orphaned: orphanedOnly }, setOrphaned] = usePersistentState({
+    ...ARTIFACTS_TAB_STATE.orphaned,
+    storage: "url",
+  });
   const sha256 = useDebouncedValue({ value: filters.sha256 });
   const { data, isLoading, error } = useArtifactsListQuery({
     params: {
@@ -138,8 +148,8 @@ export const ArtifactsTab: React.FC = () => {
           <>
             <DataViewFilters
               onChange={(_key, newFilters) => {
-                onSetFilters(newFilters);
-                pagination.onSetPage(undefined, 1);
+                setFilters((prev) => ({ ...prev, ...newFilters }));
+                toFirstPage();
               }}
               values={filters}
             >
@@ -151,8 +161,8 @@ export const ArtifactsTab: React.FC = () => {
                 label="Only orphaned"
                 isChecked={orphanedOnly}
                 onChange={(_event, checked) => {
-                  setOrphanedOnly(checked);
-                  pagination.onSetPage(undefined, 1);
+                  setOrphaned({ orphaned: checked });
+                  toFirstPage();
                 }}
               />
             </ToolbarItem>
@@ -163,6 +173,7 @@ export const ArtifactsTab: React.FC = () => {
             variant={PaginationVariant.top}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />
@@ -178,6 +189,7 @@ export const ArtifactsTab: React.FC = () => {
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />

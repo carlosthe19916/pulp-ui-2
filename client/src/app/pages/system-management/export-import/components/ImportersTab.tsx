@@ -7,7 +7,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -19,6 +18,7 @@ import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   useImportCheckMutation,
@@ -39,6 +39,8 @@ import {
   IMPORT_FIELDS,
   IMPORTER_FIELDS,
 } from "../utils/exporterTypes";
+import { IMPORTERS_TAB_STATE } from "./importersTabState";
+import { RUNS_STATE } from "./runsState";
 import { RunsTable } from "./RunsTable";
 
 interface IImportRunsProps {
@@ -46,7 +48,10 @@ interface IImportRunsProps {
 }
 
 const ImportRuns: React.FC<IImportRunsProps> = ({ href }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...RUNS_STATE.pagination,
+    storage: "state",
+  });
   const { data, isLoading } = useImportsListQuery({
     href,
     params: {
@@ -60,6 +65,7 @@ const ImportRuns: React.FC<IImportRunsProps> = ({ href }) => {
       runs={data?.results ?? []}
       count={data?.count ?? 0}
       pagination={pagination}
+      onPaginationChange={setPagination}
       isLoading={isLoading}
     />
   );
@@ -78,7 +84,10 @@ export const ImportersTab: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<PulpImporterResponse | null>(
     null,
   );
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...IMPORTERS_TAB_STATE.pagination,
+    storage: "url",
+  });
   const { data, isLoading, error } = useImportersListQuery({
     params: {
       limit: pagination.perPage,
@@ -235,6 +244,7 @@ export const ImportersTab: React.FC = () => {
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

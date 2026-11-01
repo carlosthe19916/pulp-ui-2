@@ -22,8 +22,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -33,37 +31,32 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import type { IRoleListParams } from "@app/queries/roles";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useRoleDeleteMutation, useRolesListQuery } from "@app/queries/roles";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { RoleModal } from "./components/RoleModal";
+import {
+  isLockedFilter,
+  type LockedFilter,
+  ROLE_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./roleListState";
 
 /** Roles are namespaced like `<plugin>.<role_name>`; fall back to "other". */
 const getRolePlugin = (name: string): string => {
   return name.includes(".") ? name.split(".")[0] : "other";
 };
 
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "locked",
-] as const satisfies readonly OrderingField<IRoleListParams>[];
-
-interface IRoleFilters {
-  name: IRoleListParams["name"];
-}
-
 const LOCKED_OPTIONS = [
   { value: "", label: "All roles" },
   { value: "true", label: "Locked" },
   { value: "false", label: "Unlocked" },
-] as const;
-type LockedFilter = (typeof LOCKED_OPTIONS)[number]["value"];
+] as const satisfies readonly { value: LockedFilter; label: string }[];
 
 export const RoleList: React.FC = () => {
   const [modalState, setModalState] = useState<"create" | RoleResponse | null>(
@@ -72,7 +65,6 @@ export const RoleList: React.FC = () => {
   const roleToEdit =
     modalState === "create" ? undefined : (modalState ?? undefined);
   const [deleteTarget, setDeleteTarget] = useState<RoleResponse | null>(null);
-  const [lockedFilter, setLockedFilter] = useState<LockedFilter>("");
   const [isLockedOpen, setIsLockedOpen] = useState(false);
 
   const { addNotification } = useNotifications();
@@ -90,20 +82,39 @@ export const RoleList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ROLE_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRoleFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ROLE_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ROLE_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ROLE_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
-  const clearFilters = () => {
-    clearAllFilters();
-    setLockedFilter("");
-    pagination.onSetPage(undefined, 1);
+  const lockedFilter = filters.locked;
+  const setLockedFilter = (locked: LockedFilter) => {
+    setFilters((prev) => ({ ...prev, locked }));
+    toFirstPage();
   };
 
   const { data, isLoading, error } = useRolesListQuery({
@@ -209,7 +220,7 @@ export const RoleList: React.FC = () => {
       <TableEmptyState
         title="No roles found"
         isFiltered={Boolean(debouncedName || lockedFilter)}
-        onClearFilters={clearFilters}
+        onClearFilters={clearAllFilters}
       />
     ),
   });
@@ -224,18 +235,15 @@ export const RoleList: React.FC = () => {
     <ToolbarFilter
       categoryName="Locked"
       labels={lockedFilter && lockedLabel ? [lockedLabel] : []}
-      deleteLabel={() => {
-        setLockedFilter("");
-        pagination.onSetPage(undefined, 1);
-      }}
+      deleteLabel={() => setLockedFilter("")}
     >
       <Select
         isOpen={isLockedOpen}
         selected={lockedFilter}
         onSelect={(_e, value) => {
-          setLockedFilter((value as LockedFilter) ?? "");
+          const next = String(value ?? "");
+          setLockedFilter(isLockedFilter(next) ? next : "");
           setIsLockedOpen(false);
-          pagination.onSetPage(undefined, 1);
         }}
         onOpenChange={setIsLockedOpen}
         toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
@@ -274,13 +282,13 @@ export const RoleList: React.FC = () => {
       <PageSection>
         <DataView activeState={activeState}>
           <DataViewToolbar
-            clearAllFilters={clearFilters}
+            clearAllFilters={clearAllFilters}
             filters={
               <>
                 <DataViewFilters
                   onChange={(_key, newFilters) => {
-                    onSetFilters(newFilters);
-                    pagination.onSetPage(undefined, 1);
+                    setFilters((prev) => ({ ...prev, ...newFilters }));
+                    toFirstPage();
                   }}
                   values={filters}
                 >
@@ -299,6 +307,7 @@ export const RoleList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -316,6 +325,7 @@ export const RoleList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

@@ -19,7 +19,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -33,7 +32,9 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import type { IRepositoryTabProps } from "@plugin-sdk/ui";
 
@@ -58,7 +59,10 @@ export const PythonBlocklistTab: React.FC<IRepositoryTabProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [deleteTarget, setDeleteTarget] =
     useState<PythonPythonBlocklistEntryResponse | null>(null);
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "url",
+  });
   const { data, isLoading, error } = usePythonBlocklistQuery({
     repositoryHref,
     params: {
@@ -142,6 +146,7 @@ export const PythonBlocklistTab: React.FC<IRepositoryTabProps> = ({
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

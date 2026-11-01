@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 
 import {
   Content,
@@ -13,13 +12,23 @@ import {
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 
 import { ArtifactsTab } from "./components/ArtifactsTab";
 import { UploadsTab } from "./components/UploadsTab";
 
 /** Stored files: artifacts (content files) and chunked uploads. */
+const STORAGE_TABS = defineTabState({
+  tabs: ["artifacts", "uploads"],
+  defaultValue: "artifacts",
+});
+
 export const Storage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string | number>("artifacts");
+  const { tab: activeTab, selectTab } = usePersistentTab({
+    ...STORAGE_TABS,
+    storage: "url",
+  });
   return (
     <>
       <DocumentTitle title="Storage" />
@@ -33,7 +42,7 @@ export const Storage: React.FC = () => {
       <PageSection>
         <Tabs
           activeKey={activeTab}
-          onSelect={(_event, key) => setActiveTab(key)}
+          onSelect={(_event, key) => selectTab(key)}
           mountOnEnter
         >
           <Tab
@@ -41,12 +50,16 @@ export const Storage: React.FC = () => {
             title={<TabTitleText>Artifacts</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ArtifactsTab />
+              <PersistentStateScopeProvider prefix="artifacts">
+                <ArtifactsTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab eventKey="uploads" title={<TabTitleText>Uploads</TabTitleText>}>
             <TabContentBody hasPadding>
-              <UploadsTab />
+              <PersistentStateScopeProvider prefix="uploads">
+                <UploadsTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

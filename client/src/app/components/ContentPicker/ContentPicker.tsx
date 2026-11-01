@@ -20,7 +20,6 @@ import {
   DataView,
   DataViewTable,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 
@@ -31,6 +30,7 @@ import {
   type IContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useContentTypeListQuery } from "@app/queries/content";
 import type {
   ContentTypeKey,
@@ -39,6 +39,7 @@ import type {
 import { toUnitRefs } from "@app/utils/contentUnitLabel";
 import { getContentSearch } from "@plugins";
 
+import { CONTENT_PICKER_STATE } from "./contentPickerState";
 import { notInVersionQuery } from "./notInVersionQuery";
 
 interface IContentPickerProps {
@@ -68,7 +69,10 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
   const debouncedSearch = useDebouncedValue({ value: search });
   // From another repository, the point is what the target is missing: hide the rest.
   const [hidePresent, setHidePresent] = useState(!!sourceVersionHref);
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...CONTENT_PICKER_STATE.pagination,
+    storage: "state",
+  });
   const searchDef = getContentSearch(pulpType);
   const typeKey = pulpType as ContentTypeKey;
 
@@ -117,7 +121,7 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
     ),
   );
 
-  const resetPage = () => pagination.onSetPage(undefined, 1);
+  const resetPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
 
   const tbody: DataViewTr[] = units.map((unit) => ({
     id: unit.href,
@@ -213,7 +217,10 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
                   setSearch(value);
                   resetPage();
                 }}
-                onClear={() => setSearch("")}
+                onClear={() => {
+                  setSearch("");
+                  resetPage();
+                }}
               />
             </ToolbarItem>
           )}
@@ -239,6 +246,7 @@ export const ContentPicker: React.FC<IContentPickerProps> = ({
               variant={PaginationVariant.top}
               itemCount={data?.count ?? 0}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           </ToolbarItem>
         </ToolbarContent>

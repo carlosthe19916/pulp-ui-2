@@ -18,8 +18,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -34,6 +32,7 @@ import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   type AlternateContentSource,
   useAcsDeleteMutation,
@@ -48,11 +47,8 @@ import {
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { getAcsTypes } from "@plugins";
 
+import { ACS_LIST_STATE } from "./acsListState";
 import { AcsModal } from "./components/AcsModal";
-
-interface IAcsFilters {
-  name: string;
-}
 
 /**
  * Alternate content sources: places (e.g. a local mirror) a sync fetches content
@@ -71,9 +67,20 @@ export const AcsList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] =
     useState<AlternateContentSource | null>(null);
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IAcsFilters>({ initialFilters: { name: "" } });
+  const [pagination, setPagination] = usePersistentState({
+    ...ACS_LIST_STATE.pagination,
+    storage: "url",
+  });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [filters, setFilters] = usePersistentState({
+    ...ACS_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ACS_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
   const { data, isLoading, error } = useAcsListQuery({
     apiPath: acsType?.apiPath ?? "",
@@ -218,7 +225,7 @@ export const AcsList: React.FC = () => {
                         isSelected={type.apiPath === acsType?.apiPath}
                         onChange={() => {
                           setSelectedPath(type.apiPath);
-                          pagination.onSetPage(undefined, 1);
+                          toFirstPage();
                         }}
                       />
                     ))}
@@ -226,8 +233,8 @@ export const AcsList: React.FC = () => {
                 </ToolbarItem>
                 <DataViewFilters
                   onChange={(_key, newFilters) => {
-                    onSetFilters(newFilters);
-                    pagination.onSetPage(undefined, 1);
+                    setFilters((prev) => ({ ...prev, ...newFilters }));
+                    toFirstPage();
                   }}
                   values={filters}
                 >
@@ -249,6 +256,7 @@ export const AcsList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -264,6 +272,7 @@ export const AcsList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

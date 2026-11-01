@@ -19,8 +19,6 @@ import {
   DataViewToolbar,
   type DataViewTr,
   type ExpandableContent,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -35,43 +33,32 @@ import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { DEFAULT_PULP_DOMAIN } from "@app/constants";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
-import type { IDomainListParams } from "@app/queries/domains";
 import {
   domainKeys,
   useDomainDeleteMutation,
   useDomainLabelsMutation,
   useDomainsListQuery,
 } from "@app/queries/domains";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
 import { DomainModal } from "./components/DomainModal";
 import { DomainStorageDetails } from "./components/DomainStorageDetails";
+import { DOMAIN_LIST_STATE, SORTABLE_COLUMN_KEYS } from "./domainListState";
 import { storageClassLabel } from "./utils/storageBackends";
-
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "description",
-  "storage_class",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IDomainListParams>[];
 
 // Compound-expandable column positions. Status sits right after Created and only when a task is
 // in flight, so its index is fixed too.
 const STORAGE_COLUMN_INDEX = 2;
 const STATUS_COLUMN_INDEX = 6;
-
-interface IDomainFilters {
-  name: IDomainListParams["name"];
-}
 
 interface IYesNoLabelProps {
   value?: boolean;
@@ -117,16 +104,33 @@ export const DomainList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...DOMAIN_LIST_STATE.pagination,
+    storage: "url",
+  });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
 
-  const { ordering, sortProps } = useColumnSort({
+  const [sort, setSort] = usePersistentState({
+    ...DOMAIN_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
   });
 
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IDomainFilters>({});
+  const [filters, setFilters] = usePersistentState({
+    ...DOMAIN_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(DOMAIN_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useDomainsListQuery({
@@ -316,8 +320,8 @@ export const DomainList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -334,6 +338,7 @@ export const DomainList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -354,6 +359,7 @@ export const DomainList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

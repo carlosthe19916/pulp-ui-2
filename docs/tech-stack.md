@@ -19,7 +19,8 @@ The main pieces, by area:
 | [TanStack Query](https://tanstack.com/query)                                            | Server-state caching and data fetching |
 | [TanStack Router](https://tanstack.com/router)                                          | File-based, code-split routing         |
 | [Axios](https://axios-http.com/)                                                        | HTTP client                            |
-| [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup) | Forms and validation                   |
+| [react-hook-form](https://react-hook-form.com/) + [yup](https://github.com/jquense/yup) | Forms and their validation             |
+| [zod](https://zod.dev/)                                                                 | URL and storage state validation       |
 | [react-oidc-context](https://github.com/authts/react-oidc-context) + oidc-client-ts     | OIDC authentication                    |
 
 ## Build tooling

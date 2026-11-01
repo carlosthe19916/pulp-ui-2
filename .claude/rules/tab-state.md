@@ -1,0 +1,52 @@
+---
+paths:
+  - client/src/app/pages/**
+  - client/src/app/components/**
+  - client/src/plugins/*/ui/**
+---
+
+# Tab state (active tab)
+
+[ADR 0013](../../docs/adr/0013-view-state-persistence.md) decides where a tab group's active tab
+is kept. It shares the mechanism with lists ([list-state](list-state.md)): `usePersistentTab`
+(`@app/hooks/usePersistentTab`) is built on `usePersistentState`, with tab-specific definitions.
+
+```ts
+// module scope
+const REMOTE_DETAIL_TABS = defineTabState({
+  tabs: ["details", "tasks", "access"],
+  defaultValue: "details",
+});
+
+// component
+const { tab, setTab, selectTab } = usePersistentTab({
+  ...REMOTE_DETAIL_TABS,
+  storage: "url",
+});
+<Tabs activeKey={tab} onSelect={(_e, key) => selectTab(key)} … />
+```
+
+- Every `Tabs` group keeps its active tab with `usePersistentTab`, never a bare `useState`.
+- `storage`: `"url"` for a page's tabs and the tabs nested in them, `"state"` for tabs in a
+  modal, `"local"` for a tab group that is a preference (the Maven / Gradle install switcher).
+- `setTab("versions")` is type-checked against `tabs`; `onSelect` uses `selectTab`, which takes
+  PatternFly's `string | number` key and ignores keys the group doesn't have, so no cast.
+- Keys known only at runtime (plugin Browse sections, a registry tab) omit `tabs` and pass the
+  rendered keys as `available`; so does a group with a tab shown conditionally (Access only for
+  users who may manage roles). A stored key that isn't available opens the first available tab.
+- The param is `tab`. A second group on the same screen uses its own `param` (`section`); a
+  nested group under a scope gets the scope's prefix (`content.tab`).
+- Switching tabs replaces the address (no Back step) and the default tab stays out of it; the
+  hook does both.
+
+## Checklist
+
+Pass/fail rubric for `/eval`. Check changed files that render `Tabs`.
+
+- [ ] The active tab comes from `usePersistentTab` with a module-scope `defineTabState`, not a
+      bare `useState`.
+- [ ] `storage` is `"url"` for page and nested tabs, `"state"` in modals, `"local"` only for a
+      preference.
+- [ ] `onSelect` calls `selectTab`; programmatic switches call `setTab` with a declared key.
+- [ ] Runtime or conditional tabs pass `available`; a second group on one screen has its own
+      `param` or scope.

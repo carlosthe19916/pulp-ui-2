@@ -515,6 +515,28 @@
       }
     },
     {
+      "files": ["client/src/**/*.ts", "client/src/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@patternfly/react-data-view",
+                "importNames": [
+                  "useDataViewPagination",
+                  "useDataViewFilters",
+                  "useDataViewSort"
+                ],
+                "message": "Keep list state with usePersistentState (see the list-state rule)."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": ["typescript"]
+    },
+    {
       "files": ["client/src/plugins/catalog.ts"],
       "rules": {
         "no-restricted-imports": [

@@ -18,15 +18,20 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 
 import { ListPagination } from "@app/components/ListPagination";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useWorkersListQuery } from "@app/queries/workers";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
+import { WORKERS_CARD_STATE } from "./workersCardState";
+
 /** Online workers with the task each one runs, and how many went missing. */
 export const WorkersCard: React.FC = () => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...WORKERS_CARD_STATE.pagination,
+    storage: "state",
+  });
   const { data: online } = useWorkersListQuery({
     params: {
       limit: pagination.perPage,
@@ -93,6 +98,7 @@ export const WorkersCard: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={onlineCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             </StackItem>
           )}

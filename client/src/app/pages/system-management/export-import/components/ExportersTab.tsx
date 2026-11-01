@@ -13,7 +13,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -24,6 +23,7 @@ import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
   type Exporter,
@@ -39,7 +39,9 @@ import { buildDefaultValues } from "@app/utils/formSchema";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-import { EXPORTER_TYPES, type IExporterType } from "../utils/exporterTypes";
+import { EXPORTER_TYPES } from "../utils/exporterTypes";
+import { EXPORTERS_TAB_STATE } from "./exportersTabState";
+import { RUNS_STATE } from "./runsState";
 import { RunsTable } from "./RunsTable";
 
 interface IExportRunsProps {
@@ -47,7 +49,10 @@ interface IExportRunsProps {
 }
 
 const ExportRuns: React.FC<IExportRunsProps> = ({ href }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...RUNS_STATE.pagination,
+    storage: "state",
+  });
   const { data, isLoading } = useExportsListQuery({
     href,
     params: {
@@ -61,6 +66,7 @@ const ExportRuns: React.FC<IExportRunsProps> = ({ href }) => {
       runs={data?.results ?? []}
       count={data?.count ?? 0}
       pagination={pagination}
+      onPaginationChange={setPagination}
       isLoading={isLoading}
     />
   );
@@ -74,12 +80,19 @@ type Modal =
 export const ExportersTab: React.FC = () => {
   const { addNotification } = useNotifications();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const [exporterType, setExporterType] = useState<IExporterType>(
-    EXPORTER_TYPES[0],
-  );
   const [modal, setModal] = useState<Modal | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Exporter | null>(null);
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...EXPORTERS_TAB_STATE.pagination,
+    storage: "url",
+  });
+  const [filters, setFilters] = usePersistentState({
+    ...EXPORTERS_TAB_STATE.filters,
+    storage: "url",
+  });
+  const exporterType =
+    EXPORTER_TYPES.find(({ apiPath }) => apiPath === filters.type) ??
+    EXPORTER_TYPES[0];
   const { data, isLoading, error } = useExportersListQuery({
     apiPath: exporterType.apiPath,
     params: {
@@ -214,8 +227,8 @@ export const ExportersTab: React.FC = () => {
                     text={type.label}
                     isSelected={type.apiPath === exporterType.apiPath}
                     onChange={() => {
-                      setExporterType(type);
-                      pagination.onSetPage(undefined, 1);
+                      setFilters({ type: type.apiPath });
+                      setPagination((prev) => ({ ...prev, page: 1 }));
                     }}
                   />
                 ))}
@@ -235,6 +248,7 @@ export const ExportersTab: React.FC = () => {
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

@@ -15,8 +15,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -27,26 +25,25 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
-  type IAccessPolicyListParams,
   useAccessPoliciesListQuery,
   useAccessPolicyResetMutation,
   useAccessPolicyUpdateMutation,
 } from "@app/queries/access-policies";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@app/utils/entityField";
 import { buildDefaultValues } from "@app/utils/formSchema";
+import { columnSort } from "@app/utils/sortHelpers";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "viewset_name",
-  "customized",
-] as const satisfies readonly OrderingField<IAccessPolicyListParams>[];
+import {
+  ACCESS_POLICY_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./accessPolicyListState";
 
 const POLICY_FIELDS: IEntityField[] = [
   {
@@ -70,10 +67,6 @@ const POLICY_FIELDS: IEntityField[] = [
   },
 ];
 
-interface IPolicyFilters {
-  viewset_name: string;
-}
-
 /** Who may call each API endpoint (viewset); defaults come from the plugins. */
 export const AccessPolicyList: React.FC = () => {
   const { addNotification } = useNotifications();
@@ -84,16 +77,33 @@ export const AccessPolicyList: React.FC = () => {
   const [resetTarget, setResetTarget] = useState<AccessPolicyResponse | null>(
     null,
   );
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "viewset_name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ACCESS_POLICY_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IPolicyFilters>({
-      initialFilters: { viewset_name: "" },
-    });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ACCESS_POLICY_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ACCESS_POLICY_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(ACCESS_POLICY_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.viewset_name });
   const { data, isLoading, error } = useAccessPoliciesListQuery({
     params: {
@@ -214,8 +224,8 @@ export const AccessPolicyList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -227,6 +237,7 @@ export const AccessPolicyList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -242,6 +253,7 @@ export const AccessPolicyList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

@@ -225,7 +225,8 @@ export default defineConfig([
           patterns: [
             {
               group: ["@plugins", "@catalog"],
-              message: "The plugin SDK never imports the plugins or their registries.",
+              message:
+                "The plugin SDK never imports the plugins or their registries.",
             },
             pluginInternals,
           ],
@@ -302,6 +303,35 @@ export default defineConfig([
     },
   },
   {
+    // List state lives in usePersistentState (ADR 0013, list-state rule), not DataView's own hooks.
+    files: ["client/src/**/*.ts", "client/src/**/*.tsx"],
+    ignores: [
+      "client/src/app/client/**",
+      "client/src/routeTree.gen.ts",
+      "client/src/vite-env.d.ts",
+    ],
+    plugins: { "@typescript-eslint": tseslint.plugin },
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@patternfly/react-data-view",
+              importNames: [
+                "useDataViewPagination",
+                "useDataViewFilters",
+                "useDataViewSort",
+              ],
+              message:
+                "Keep list state with usePersistentState (see the list-state rule).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // @catalog is pure facts: it joins the definitions, never a plugin's UI.
     files: ["client/src/plugins/catalog.ts"],
     rules: {
@@ -310,7 +340,14 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ["./*/ui", "./*/ui/*", "@plugin-sdk/ui", "@plugin-sdk/ui/*", "react", "react-*"],
+              group: [
+                "./*/ui",
+                "./*/ui/*",
+                "@plugin-sdk/ui",
+                "@plugin-sdk/ui/*",
+                "react",
+                "react-*",
+              ],
               message: "The catalog imports plugin definitions only, never UI.",
             },
           ],
