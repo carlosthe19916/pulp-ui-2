@@ -4,18 +4,17 @@ description: A screen's view state — each list's filters, sort, page and page 
 status: Accepted
 ---
 
-# 0014. Where a screen's view state is kept
-
-Supersedes [0013](0013-list-state-persistence.md), which covered lists only; tabs now follow the
-same rules.
+# 0013. Where a screen's view state is kept
 
 ## Context
 
-Lists kept their filters, sort and page ([0013](0013-list-state-persistence.md)), but tabs didn't:
-a reload or a copied link always opened a detail page on its first tab, so a link to a
-repository's versions landed on Details, and a tab's list kept its page in the address while the
-tab itself was forgotten. A list and a tab are different things, but they need the same answer:
-where the state lives, how long it lives, and how several on one screen stay apart.
+Lists lose their filters, sort and page on reload, on Back and when the user leaves and comes
+back, and none of it can be shared as a link. Tabs have the same problem: a reload or a copied
+link opens a detail page on its first tab. Not every list or tab group wants the same lifetime: a
+main list should be shareable, a page size or a build tool is a personal preference, and a picker
+in a dialog should start fresh. Screens also show several lists and tab groups at once, which
+overwrite each other if they keep their state under the same names. A list and a tab are
+different things, but they need the same answer.
 
 ## Rules
 

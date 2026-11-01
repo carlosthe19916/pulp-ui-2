@@ -8,7 +8,7 @@ paths:
 
 # List state (filters, sort, page)
 
-[ADR 0014](../../docs/adr/0014-view-state-persistence.md) decides where a list's state is kept; tabs use the same mechanism ([tab-state](tab-state.md)).
+[ADR 0013](../../docs/adr/0013-view-state-persistence.md) decides where a list's state is kept; tabs use the same mechanism ([tab-state](tab-state.md)).
 In code that is **only state management**: `usePersistentState` (`@app/hooks/usePersistentState`)
 replaces `useState`; PatternFly props, debouncing and API params stay in the page.
 
@@ -41,7 +41,7 @@ const [pagination, setPagination] = usePersistentState({
 
 - Pagination, sort and filters are one `usePersistentState` call each. It returns
   `[value, setValue]` with a stable setter; changing `storage` changes no other line.
-- `storage` follows ADR 0014's default: `"url"` for a page's or tab's main list; `"state"` for a
+- `storage` follows ADR 0013's default: `"url"` for a page's or tab's main list; `"state"` for a
   list that isn't a screen's main list or can be shown several times at once (modals, expanded
   rows, drawers, dashboard cards); `"session"` / `"local"` only where the screen should remember.
 - A list's definitions are one `defineListState({ … })` object, `<LIST>_STATE`, in

@@ -1,6 +1,6 @@
 ---
 name: add-list-state
-description: Use when adding a paged list or changing where its filters, sort or pagination are kept (URL, tab, browser, component) with usePersistentState (ADR 0014), or when a lint error says DataView's state hooks are restricted. Step-by-step recipe with the Remotes list as the worked example.
+description: Use when adding a paged list or changing where its filters, sort or pagination are kept (URL, tab, browser, component) with usePersistentState (ADR 0013), or when a lint error says DataView's state hooks are restricted. Step-by-step recipe with the Remotes list as the worked example.
 targets: ["*"]
 ---
 

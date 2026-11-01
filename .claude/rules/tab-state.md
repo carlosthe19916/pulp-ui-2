@@ -7,7 +7,7 @@ paths:
 
 # Tab state (active tab)
 
-[ADR 0014](../../docs/adr/0014-view-state-persistence.md) decides where a tab group's active tab
+[ADR 0013](../../docs/adr/0013-view-state-persistence.md) decides where a tab group's active tab
 is kept. It shares the mechanism with lists ([list-state](list-state.md)): `usePersistentTab`
 (`@app/hooks/usePersistentTab`) is built on `usePersistentState`, with tab-specific definitions.
 
