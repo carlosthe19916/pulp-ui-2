@@ -6,7 +6,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
@@ -14,9 +13,12 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { PAGINATION_STATE } from "@app/utils/listState";
 
 interface IRepositoryDistributionsTabProps {
   repositoryHref: string;
@@ -25,7 +27,10 @@ interface IRepositoryDistributionsTabProps {
 export const RepositoryDistributionsTab: React.FC<
   IRepositoryDistributionsTabProps
 > = ({ repositoryHref }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "url",
+  });
   const { data, isLoading, error } = useDistributionsListQuery({
     params: {
       repository: repositoryHref,
@@ -35,6 +40,7 @@ export const RepositoryDistributionsTab: React.FC<
   });
 
   const distributions = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -99,6 +105,7 @@ export const RepositoryDistributionsTab: React.FC<
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />

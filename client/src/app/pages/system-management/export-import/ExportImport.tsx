@@ -13,6 +13,7 @@ import {
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 
 import { ExportersTab } from "./components/ExportersTab";
 import { ImportersTab } from "./components/ImportersTab";
@@ -42,7 +43,9 @@ export const ExportImport: React.FC = () => {
             title={<TabTitleText>Exporters</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ExportersTab />
+              <PersistentStateScopeProvider prefix="exporters">
+                <ExportersTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab
@@ -50,7 +53,9 @@ export const ExportImport: React.FC = () => {
             title={<TabTitleText>Importers</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ImportersTab />
+              <PersistentStateScopeProvider prefix="importers">
+                <ImportersTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

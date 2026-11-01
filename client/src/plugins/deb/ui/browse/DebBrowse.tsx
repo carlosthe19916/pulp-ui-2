@@ -2,7 +2,11 @@ import type React from "react";
 
 import { Label, LabelGroup } from "@patternfly/react-core";
 
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { Snippet } from "@app/components/Snippet";
 import { useContentTypeListQuery } from "@app/queries/content";
 import type { IBrowseContext } from "@plugin-sdk/ui";
@@ -26,6 +30,12 @@ const Labels: React.FC<ILabelsProps> = ({ items }) =>
     "—"
   );
 
+const DEB_RELEASES_LIST = defineBrowseListState({
+  filters: [
+    { param: "codename", label: "Codename", placeholder: "Exact codename" },
+  ],
+});
+
 /** Dists as packages.ubuntu.com shows them: codename, suite, components, architectures. */
 export const DebReleases: React.FC<IBrowseContext> = ({
   versionHref,
@@ -34,11 +44,7 @@ export const DebReleases: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    filters: [
-      { param: "codename", label: "Codename", placeholder: "Exact codename" },
-    ] as const,
-  });
+  const list = useBrowseListState(DEB_RELEASES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "deb.release",
     params: { ...list.params, repository_version: versionHref },
@@ -54,7 +60,7 @@ export const DebReleases: React.FC<IBrowseContext> = ({
       ariaLabel="Releases"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No releases"
@@ -93,26 +99,28 @@ export const DebReleases: React.FC<IBrowseContext> = ({
   );
 };
 
+const DEB_PACKAGES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["package", "version", "architecture"],
+    defaultValue: { sortBy: "package", direction: "asc" },
+  },
+  filters: [
+    { param: "package__icontains", label: "Package" },
+    {
+      param: "architecture",
+      label: "Architecture",
+      placeholder: "Exact architecture",
+    },
+  ],
+});
+
 export const DebPackages: React.FC<IBrowseContext> = ({
   versionHref,
   selectedHref,
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["package", "version", "architecture"] as const,
-      initial: { sortBy: "package", direction: "asc" },
-    },
-    filters: [
-      { param: "package__icontains", label: "Package" },
-      {
-        param: "architecture",
-        label: "Architecture",
-        placeholder: "Exact architecture",
-      },
-    ] as const,
-  });
+  const list = useBrowseListState(DEB_PACKAGES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "deb.package",
     params: {
@@ -135,7 +143,7 @@ export const DebPackages: React.FC<IBrowseContext> = ({
       ariaLabel="Packages"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No packages"
@@ -175,6 +183,16 @@ export const DebPackages: React.FC<IBrowseContext> = ({
   );
 };
 
+const DEB_SOURCE_PACKAGES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["source", "version"],
+    defaultValue: { sortBy: "source", direction: "asc" },
+  },
+  filters: [
+    { param: "source", label: "Source", placeholder: "Exact source name" },
+  ],
+});
+
 /** Launchpad-style source packages with the binaries built from them. */
 export const DebSourcePackages: React.FC<IBrowseContext> = ({
   versionHref,
@@ -182,15 +200,7 @@ export const DebSourcePackages: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["source", "version"] as const,
-      initial: { sortBy: "source", direction: "asc" },
-    },
-    filters: [
-      { param: "source", label: "Source", placeholder: "Exact source name" },
-    ] as const,
-  });
+  const list = useBrowseListState(DEB_SOURCE_PACKAGES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "deb.source_package",
     params: {
@@ -212,7 +222,7 @@ export const DebSourcePackages: React.FC<IBrowseContext> = ({
       ariaLabel="Source packages"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No source packages"

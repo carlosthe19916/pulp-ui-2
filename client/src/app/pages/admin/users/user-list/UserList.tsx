@@ -18,8 +18,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -30,24 +28,17 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UserModal } from "@app/components/UserModal";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import type { IUserListParams } from "@app/queries/users";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useUserDeleteMutation, useUsersListQuery } from "@app/queries/users";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "username",
-  "date_joined",
-] as const satisfies readonly OrderingField<IUserListParams>[];
-
-interface IUserFilters {
-  username: IUserListParams["username"];
-}
+import { SORTABLE_COLUMN_KEYS, USER_LIST_STATE } from "./userListState";
 
 export const UserList: React.FC = () => {
   const [modalState, setModalState] = useState<"create" | UserResponse | null>(
@@ -75,14 +66,33 @@ export const UserList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "username", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...USER_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IUserFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...USER_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...USER_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(USER_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedUsername = useDebouncedValue({ value: filters.username });
 
   const { data, isLoading, error } = useUsersListQuery({
@@ -95,6 +105,7 @@ export const UserList: React.FC = () => {
   });
 
   const users = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   const columns: DataViewTh[] = [
@@ -194,8 +205,8 @@ export const UserList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -212,6 +223,7 @@ export const UserList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -229,6 +241,7 @@ export const UserList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

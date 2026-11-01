@@ -26,6 +26,18 @@ Then the create page opens with the title of the first installed type's form
 When I go back and choose "Edit" in the file remote's row actions
 Then "Edit file remote" opens with that remote's values filled in
 
+### RMT-LIST-02 The filter and sort survive a reload
+
+Summary: The Remotes list keeps its name and type filters and sort in the address, so a reload shows the same list.
+
+Seed: two file remotes whose names share a unique prefix
+
+When I filter the Remotes list by that prefix, pick Type "File" and sort by Name descending
+Then the address holds both filters and the sort
+When I reload the page
+Then the Name filter still holds the prefix, the Type filter shows "File", and both remotes are
+listed, sorted by Name descending
+
 ## Create
 
 ### RMT-CRE-01 Create a remote of each distinctive form

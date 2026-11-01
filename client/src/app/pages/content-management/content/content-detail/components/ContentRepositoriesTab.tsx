@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Label, PaginationVariant } from "@patternfly/react-core";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 import {
   ActionsColumn,
   Caption,
@@ -22,6 +21,8 @@ import { ListPagination } from "@app/components/ListPagination";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -33,6 +34,7 @@ import {
   extractIdFromHref,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import { formatDateTime } from "@app/utils/utils";
 import { getPulpType } from "@catalog";
 
@@ -62,7 +64,10 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   isLocked,
 }) => {
   const { name: pulpDomain } = useSelectedDomain();
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "url",
+  });
   const { data, isLoading, error } = useRepositoriesListQuery({
     params: {
       latest_with_content: href,
@@ -73,6 +78,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   });
 
   const repositories = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const totalCount = data?.count ?? 0;
 
   // A task on a row's repository (e.g. a sync started elsewhere) locks that row too.
@@ -193,6 +199,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
         variant={PaginationVariant.bottom}
         itemCount={totalCount}
         pagination={pagination}
+        onPaginationChange={setPagination}
       />
     </>
   );

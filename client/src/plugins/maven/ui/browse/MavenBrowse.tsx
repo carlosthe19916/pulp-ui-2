@@ -9,7 +9,11 @@ import {
 } from "@patternfly/react-core";
 
 import type { MavenRepositoryPackageResponse } from "@app/client";
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { formatDateTime } from "@app/utils/utils";
 import type { IBrowseContext } from "@plugin-sdk/ui";
 
@@ -27,6 +31,20 @@ const artifactKey = ({
   artifact_id,
 }: MavenRepositoryPackageResponse) => `${group_id}:${artifact_id}`;
 
+const MAVEN_ARTIFACTS_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["group_id", "artifact_id", "last_updated"],
+    defaultValue: { sortBy: "group_id", direction: "asc" },
+  },
+  filters: [
+    {
+      param: "search",
+      label: "Artifact",
+      placeholder: "group or group:artifact",
+    },
+  ],
+});
+
 /** Maven Central style: one row per groupId:artifactId with its versions, newest first. */
 export const MavenArtifacts: React.FC<IBrowseContext> = ({
   versionHref,
@@ -37,19 +55,7 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
   const lookupPackageHref = useMavenPackageHrefLookup();
   // The artifact whose version is open in the drawer, for the row highlight.
   const [openedArtifact, setOpenedArtifact] = useState<string | null>(null);
-  const list = useBrowseListState({
-    sort: {
-      keys: ["group_id", "artifact_id", "last_updated"] as const,
-      initial: { sortBy: "group_id", direction: "asc" },
-    },
-    filters: [
-      {
-        param: "search",
-        label: "Artifact",
-        placeholder: "group or group:artifact",
-      },
-    ] as const,
-  });
+  const list = useBrowseListState(MAVEN_ARTIFACTS_LIST);
   const packages = useMavenPackagesListQuery({
     repositoryHref,
     params: { ...list.params, repository_version: versionHref },
@@ -87,7 +93,7 @@ export const MavenArtifacts: React.FC<IBrowseContext> = ({
       ariaLabel="Artifacts"
       list={list}
       rows={packages.data?.results ?? []}
-      count={packages.data?.count ?? 0}
+      count={packages.data?.count}
       isLoading={packages.isLoading}
       error={packages.error}
       emptyTitle="No artifacts"

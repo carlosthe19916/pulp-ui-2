@@ -26,7 +26,7 @@ of:
 - **Count-only** — `limit: 1`, read `.count` (tab counts, dashboard cards). Never `results[0]`,
   except an **active-item probe** (e.g. "is a task running on this object?") that sets an
   explicit `ordering` and shows the sample only alongside the count.
-- **Paged table** — `perPage` from `useDataViewPagination` + `ListPagination`, offset
+- **Paged table** — `perPage` from the list's pagination state ([list-state](list-state.md)), offset
   `(page - 1) * perPage`. Expanded-row sub-lists page too.
 - **Dropdown** — `DROPDOWN_PAGE_SIZE` (`@app/constants`), `offset: 0`, with a server filter on
   the typed term (`name__icontains`) when the endpoint has one.

@@ -1,7 +1,6 @@
 import type React from "react";
 
 import { PaginationVariant } from "@patternfly/react-core";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 
 import type { MavenMavenPackageResponse } from "@app/client";
 import {
@@ -17,6 +16,8 @@ import {
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { ListPagination } from "@app/components/ListPagination";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useContentDetailQuery,
   useContentTypeListQuery,
@@ -24,6 +25,7 @@ import {
 import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 import { MavenInstall } from "./MavenInstall";
+import { MAVEN_PACKAGE_FILES_STATE } from "./mavenPackageContentState";
 
 interface IMavenLicense {
   name?: string;
@@ -41,7 +43,10 @@ interface IMavenDependency {
 export const MavenPackageContent: React.FC<IContentPanelProps> = ({ href }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<MavenMavenPackageResponse>({ href });
-  const filesPagination = useDataViewPagination({ perPage: 10 });
+  const [filesPagination, setFilesPagination] = usePersistentState({
+    ...MAVEN_PACKAGE_FILES_STATE.pagination,
+    storage: "state",
+  });
   const files = useContentTypeListQuery({
     pulpType: "maven.artifact",
     params: {
@@ -53,6 +58,11 @@ export const MavenPackageContent: React.FC<IContentPanelProps> = ({ href }) => {
       fields: ["pulp_href", "filename"],
     },
     options: { enabled: !!data?.version },
+  });
+  usePageInRange({
+    pagination: filesPagination,
+    setPagination: setFilesPagination,
+    count: files.data?.count,
   });
 
   const licenses = asArray<IMavenLicense>(data?.licenses);
@@ -106,6 +116,7 @@ export const MavenPackageContent: React.FC<IContentPanelProps> = ({ href }) => {
             variant={PaginationVariant.bottom}
             itemCount={files.data.count}
             pagination={filesPagination}
+            onPaginationChange={setFilesPagination}
           />
         ) : null}
       </ContentSection>

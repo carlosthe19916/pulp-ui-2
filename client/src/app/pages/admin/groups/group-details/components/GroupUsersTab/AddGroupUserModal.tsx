@@ -15,8 +15,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTrObject,
-  useDataViewFilters,
-  useDataViewPagination,
   useDataViewSelection,
 } from "@patternfly/react-data-view";
 
@@ -24,31 +22,27 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { PageBulkSelect } from "@app/components/PageBulkSelect";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSuspenseGroupDetailQuery } from "@app/queries/groups";
 import { useGroupUsersBatchAddMutation } from "@app/queries/memberships";
-import type { IUserListParams } from "@app/queries/users";
 import { useUsersListQuery } from "@app/queries/users";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { notifyBatchResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 
-const SORTABLE_COLUMN_KEYS = [
-  "username",
-  "email",
-] as const satisfies readonly OrderingField<IUserListParams>[];
+import {
+  ADD_GROUP_USER_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./addGroupUserState";
 
 /** Rows carry the username so a selection spanning pages still knows each one. */
 type UserRow = DataViewTrObject & {
   username: string;
   isMember: boolean;
 };
-
-interface IUserFilters {
-  username: string;
-}
 
 interface IAddGroupUserModalInnerProps {
   groupHref: string;
@@ -62,14 +56,33 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
   const { data: group } = useSuspenseGroupDetailQuery({ href: groupHref });
   const { addNotification } = useNotifications();
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "username", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ADD_GROUP_USER_STATE.pagination,
+    storage: "state",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IUserFilters>({ initialFilters: { username: "" } });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ADD_GROUP_USER_STATE.sort,
+    storage: "state",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ADD_GROUP_USER_STATE.filters,
+    storage: "state",
+  });
+  const clearAllFilters = () => {
+    setFilters(ADD_GROUP_USER_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedUsername = useDebouncedValue({ value: filters.username });
 
   const { data, isLoading, error } = useUsersListQuery({
@@ -80,6 +93,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
       username__icontains: debouncedUsername || undefined,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   // Each request settles on its own, so failures arrive in `result`, not onError.
   const batchAddMutation = useGroupUsersBatchAddMutation({
@@ -178,8 +192,8 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -191,6 +205,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -206,6 +221,7 @@ const AddGroupUserModalInner: React.FC<IAddGroupUserModalInnerProps> = ({
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

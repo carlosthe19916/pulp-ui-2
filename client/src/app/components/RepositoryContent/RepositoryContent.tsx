@@ -10,6 +10,7 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import type { IContentWrites } from "@app/hooks/useContentUnitSelection";
 import { getRepositoryActions, getRepositoryBrowse } from "@plugins";
 
@@ -85,11 +86,14 @@ export const RepositoryContent: React.FC<IRepositoryContentProps> = ({
       </Tab>
       <Tab eventKey="all" title={<TabTitleText>All content</TabTitleText>}>
         <TabContentBody className={spacing.ptMd}>
-          <VersionContent
-            versionHref={versionHref}
-            summary={summary}
-            writes={writes}
-          />
+          {/* Browse sections scope by their own keys; this keeps All content apart. */}
+          <PersistentStateScopeProvider prefix="all">
+            <VersionContent
+              versionHref={versionHref}
+              summary={summary}
+              writes={writes}
+            />
+          </PersistentStateScopeProvider>
         </TabContentBody>
       </Tab>
     </Tabs>

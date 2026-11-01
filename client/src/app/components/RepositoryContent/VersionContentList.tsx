@@ -1,5 +1,4 @@
 import type React from "react";
-import { useState } from "react";
 
 import {
   PaginationVariant,
@@ -11,8 +10,6 @@ import {
   DataViewFilters,
   DataViewTextFilter,
   DataViewToolbar,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import type { ContentSummaryResponse } from "@app/client";
@@ -32,14 +29,21 @@ import {
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import type { IContentListParams } from "@app/queries/content";
 import { useContentListQuery } from "@app/queries/content";
 import { summaryEntries, summaryTotal } from "@app/utils/contentSummary";
 import type { IContentUnit } from "@app/utils/contentUnit";
 import { contentUnitRef } from "@app/utils/contentUnitRef";
 
+import {
+  type BUCKET_KEYS,
+  VERSION_CONTENT_LIST_STATE,
+} from "./versionContentListState";
+
 interface IBucket {
-  key: keyof ContentSummaryResponse;
+  key: (typeof BUCKET_KEYS)[number];
   param: keyof Pick<
     IContentListParams,
     | "repository_version"
@@ -94,11 +98,6 @@ const typeOptions = ({
   }));
 };
 
-interface IVersionContentFilters {
-  pulp_type: string[];
-  pulp_label_select?: string;
-}
-
 interface IVersionContentListProps {
   versionHref: string;
   summary?: ContentSummaryResponse;
@@ -116,41 +115,53 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
   onSelect,
   writes,
 }) => {
-  const [bucket, setBucket] = useState(BUCKETS[0]);
   const selection = useContentUnitSelection();
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...VERSION_CONTENT_LIST_STATE.pagination,
+    storage: "url",
+  });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
 
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IVersionContentFilters>({
-      initialFilters: { pulp_type: [] },
-    });
+  const [{ bucket: bucketKey }, setBucket] = usePersistentState({
+    ...VERSION_CONTENT_LIST_STATE.bucket,
+    storage: "url",
+  });
+  const bucket = BUCKETS.find(({ key }) => key === bucketKey) ?? BUCKETS[0];
+
+  const [filters, setFilters] = usePersistentState({
+    ...VERSION_CONTENT_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(VERSION_CONTENT_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedLabel = useDebouncedValue({
     value: filters.pulp_label_select,
   });
-  const selectedTypes = filters.pulp_type ?? [];
+  const selectedTypes = filters.pulp_type;
 
   const { data, isLoading, error } = useContentListQuery({
     params: {
       limit: pagination.perPage,
       offset: (pagination.page - 1) * pagination.perPage,
       [bucket.param]: versionHref,
-      pulp_type__in: selectedTypes.length
-        ? (selectedTypes as IContentListParams["pulp_type__in"])
-        : undefined,
+      pulp_type__in: selectedTypes.length ? selectedTypes : undefined,
       pulp_label_select: debouncedLabel || undefined,
     },
   });
 
   const content = (data?.results ?? []) as IContentUnit[];
   const totalCount = data?.count ?? 0;
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const isFiltered = Boolean(selectedTypes.length || debouncedLabel);
   // Only the present content can be removed.
   const bulkWrites = bucket.key === "present" ? writes : undefined;
   const pageUnits = content.map(contentUnitRef);
 
-  const applyFilters = (next: Partial<IVersionContentFilters>) => {
-    onSetFilters(next);
-    pagination.onSetPage(undefined, 1);
+  const applyFilters = (next: Partial<typeof filters>) => {
+    setFilters((prev) => ({ ...prev, ...next }));
+    toFirstPage();
   };
 
   return (
@@ -179,9 +190,9 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
                 text={`${b.label} (${summaryTotal(summary?.[b.key])})`}
                 isSelected={bucket.key === b.key}
                 onChange={() => {
-                  setBucket(b);
+                  setBucket({ bucket: b.key });
                   selection.clear();
-                  pagination.onSetPage(undefined, 1);
+                  toFirstPage();
                 }}
               />
             ))}
@@ -206,6 +217,7 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
             variant={PaginationVariant.top}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />
@@ -240,6 +252,7 @@ export const VersionContentList: React.FC<IVersionContentListProps> = ({
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />

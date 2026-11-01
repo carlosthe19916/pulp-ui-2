@@ -9,7 +9,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -21,6 +20,8 @@ import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useGroupUsersListQuery,
   useSuspenseGroupDetailQuery,
@@ -31,6 +32,7 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { AddGroupUserModal } from "./AddGroupUserModal";
+import { GROUP_USERS_STATE } from "./groupUsersState";
 
 interface IGroupUsersTabProps {
   groupHref: string;
@@ -62,7 +64,10 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
       }),
   });
 
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...GROUP_USERS_STATE.pagination,
+    storage: "url",
+  });
   // `groups_users_list` supports only limit/offset (no ordering or filters), so the
   // members table only pages.
   const { data, isLoading, error } = useGroupUsersListQuery({
@@ -72,6 +77,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const users = data?.results ?? [];
   const totalCount = data?.count ?? 0;
 
@@ -148,6 +154,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />
@@ -163,6 +170,7 @@ export const GroupUsersTab: React.FC<IGroupUsersTabProps> = ({ groupHref }) => {
               variant={PaginationVariant.bottom}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

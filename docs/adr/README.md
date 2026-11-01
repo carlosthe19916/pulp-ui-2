@@ -26,6 +26,7 @@ To change a decision, add a new record with the next number, set the old one's `
 | [0010](0010-plugin-form-pages.md)                | Create and edit are per-plugin form pages                |
 | [0011](0011-distribution-detail-page.md)         | Distributions have a detail page                         |
 | [0012](0012-repository-content-tab.md)           | A repository's content has its own tab                   |
+| [0013](0013-list-state-persistence.md)           | Where a list's state is kept                             |
 
 ## Template
 

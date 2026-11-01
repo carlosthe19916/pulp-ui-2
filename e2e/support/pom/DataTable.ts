@@ -57,6 +57,29 @@ export class DataTable {
     await Promise.all([fetched, this.filterInput(title).fill(value)]);
   }
 
+  /**
+   * Switch the toolbar's filter attribute to `title` (a `MultiSelectFilter`) and tick each of
+   * `options` in its menu, then close it.
+   */
+  async pickFilterOptions(title: string, options: string[]): Promise<void> {
+    const page = this.scope.page();
+    await this.scope
+      .locator('[data-ouia-component-id="DataViewFilters"]')
+      .getByRole("button")
+      .first()
+      .click();
+    await page.getByRole("menuitem", { name: title, exact: true }).click();
+    // The attribute selector now also reads `title`; the filter's own toggle comes after it.
+    await this.scope
+      .getByRole("button", { name: title, exact: true })
+      .last()
+      .click();
+    for (const option of options) {
+      await page.getByRole("menuitem", { name: option, exact: true }).click();
+    }
+    await page.keyboard.press("Escape");
+  }
+
   /** The toolbar's "Clear filters" button (PatternFly's label; the empty state's says "Clear all filters"). */
   clearAllFiltersInToolbar(): Locator {
     return this.scope.getByRole("button", {

@@ -17,8 +17,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -29,27 +27,21 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { GroupModal } from "@app/components/GroupModal";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
-import type { IGroupListParams } from "@app/queries/groups";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useGroupDeleteMutation,
   useGroupsListQuery,
 } from "@app/queries/groups";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-] as const satisfies readonly OrderingField<IGroupListParams>[];
-
-interface IGroupFilters {
-  name: IGroupListParams["name"];
-}
+import { GROUP_LIST_STATE, SORTABLE_COLUMN_KEYS } from "./groupListState";
 
 export const GroupList: React.FC = () => {
   const [modalState, setModalState] = useState<"create" | GroupResponse | null>(
@@ -75,14 +67,33 @@ export const GroupList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...GROUP_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IGroupFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...GROUP_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...GROUP_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(GROUP_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useGroupsListQuery({
@@ -95,6 +106,7 @@ export const GroupList: React.FC = () => {
   });
 
   const groups = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: groups.map((item) => item.pulp_href ?? ""),
@@ -180,8 +192,8 @@ export const GroupList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -198,6 +210,7 @@ export const GroupList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -215,6 +228,7 @@ export const GroupList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

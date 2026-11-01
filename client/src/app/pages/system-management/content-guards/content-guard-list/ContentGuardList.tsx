@@ -16,8 +16,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -30,35 +28,28 @@ import { ListPagination } from "@app/components/ListPagination";
 import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
 import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
-  type IContentGuardListParams,
   useContentGuardDeleteMutation,
   useContentGuardDetailQuery,
   useContentGuardsListQuery,
 } from "@app/queries/content-guards";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { hasRoleEndpoints } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { getContentGuardTypes } from "@plugins";
 
 import { ContentGuardModal } from "./components/ContentGuardModal";
+import {
+  CONTENT_GUARD_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./contentGuardListState";
 import { guardTypeOf } from "./utils/guardTypes";
-
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "pulp_type",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IContentGuardListParams>[];
-
-interface IGuardFilters {
-  name: string;
-  pulp_type: string[];
-}
 
 /** Content guards: who may download what a distribution serves. */
 export const ContentGuardList: React.FC = () => {
@@ -76,16 +67,33 @@ export const ContentGuardList: React.FC = () => {
     href: editHref ?? "",
   });
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...CONTENT_GUARD_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IGuardFilters>({
-      initialFilters: { name: "", pulp_type: [] },
-    });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...CONTENT_GUARD_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...CONTENT_GUARD_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(CONTENT_GUARD_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
   const { data, isLoading, error } = useContentGuardsListQuery({
     params: {
@@ -93,9 +101,7 @@ export const ContentGuardList: React.FC = () => {
       offset: (pagination.page - 1) * pagination.perPage,
       ordering,
       name__icontains: debouncedName || undefined,
-      pulp_type__in: filters.pulp_type?.length
-        ? (filters.pulp_type as IContentGuardListParams["pulp_type__in"])
-        : undefined,
+      pulp_type__in: filters.pulp_type.length ? filters.pulp_type : undefined,
     },
   });
   const deleteMutation = useContentGuardDeleteMutation({
@@ -112,6 +118,7 @@ export const ContentGuardList: React.FC = () => {
   });
 
   const guards = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: guards
@@ -182,7 +189,7 @@ export const ContentGuardList: React.FC = () => {
     };
   });
 
-  const isFiltered = !!debouncedName || !!filters.pulp_type?.length;
+  const isFiltered = !!debouncedName || filters.pulp_type.length > 0;
   const { activeState, bodyStates } = dataViewBodyStates({
     columnCount: columns.length,
     isLoading,
@@ -215,8 +222,8 @@ export const ContentGuardList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -241,6 +248,7 @@ export const ContentGuardList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -256,6 +264,7 @@ export const ContentGuardList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

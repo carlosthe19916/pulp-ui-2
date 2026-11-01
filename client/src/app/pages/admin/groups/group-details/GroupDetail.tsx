@@ -19,6 +19,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { GroupModal } from "@app/components/GroupModal";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { RoleAssignmentsTab } from "@app/components/RoleAssignmentsTab";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
@@ -124,7 +125,9 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
             title={<TabTitleText>Users ({userCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <GroupUsersTab groupHref={groupHref} />
+              <PersistentStateScopeProvider prefix="users">
+                <GroupUsersTab groupHref={groupHref} />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab
@@ -132,11 +135,13 @@ export const GroupDetail: React.FC<IGroupDetailProps> = ({ groupHref }) => {
             title={<TabTitleText>Roles ({roleCount})</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <RoleAssignmentsTab
-                kind="group"
-                href={groupHref}
-                name={group.name}
-              />
+              <PersistentStateScopeProvider prefix="roles">
+                <RoleAssignmentsTab
+                  kind="group"
+                  href={groupHref}
+                  name={group.name}
+                />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

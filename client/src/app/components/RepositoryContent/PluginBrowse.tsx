@@ -11,6 +11,7 @@ import {
 import spacing from "@patternfly/react-styles/css/utilities/Spacing/spacing";
 
 import type { ContentSummaryResponse } from "@app/client";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import type { IBrowseContext, IPluginBrowse } from "@plugin-sdk/ui";
 
 import { visibleSections } from "./visibleSections";
@@ -21,7 +22,10 @@ interface IPluginBrowseProps {
   context: IBrowseContext;
 }
 
-/** A plugin's Browse sections as sub-tabs; a single section renders without the tab bar. */
+/**
+ * A plugin's Browse sections as sub-tabs; a single section renders without the tab bar. Each
+ * section's list state is scoped by its key (`packages.page`), so sections don't share it.
+ */
 export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
   browse,
   summary,
@@ -33,12 +37,14 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
   );
 
   if (visible.length === 1) {
-    const { View } = visible[0].section;
+    const { key, View } = visible[0].section;
     return (
       <div className={spacing.ptMd}>
-        <Suspense fallback={<Spinner aria-label="Loading" />}>
-          <View {...context} />
-        </Suspense>
+        <PersistentStateScopeProvider prefix={key}>
+          <Suspense fallback={<Spinner aria-label="Loading" />}>
+            <View {...context} />
+          </Suspense>
+        </PersistentStateScopeProvider>
       </div>
     );
   }
@@ -69,9 +75,11 @@ export const PluginBrowse: React.FC<IPluginBrowseProps> = ({
           }
         >
           <TabContentBody className={spacing.ptMd}>
-            <Suspense fallback={<Spinner aria-label="Loading" />}>
-              <section.View {...context} />
-            </Suspense>
+            <PersistentStateScopeProvider prefix={section.key}>
+              <Suspense fallback={<Spinner aria-label="Loading" />}>
+                <section.View {...context} />
+              </Suspense>
+            </PersistentStateScopeProvider>
           </TabContentBody>
         </Tab>
       ))}

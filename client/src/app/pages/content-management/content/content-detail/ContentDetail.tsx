@@ -21,6 +21,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useSuspenseContentDetailQuery } from "@app/queries/content";
@@ -114,11 +115,13 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
             title={<TabTitleText>Repositories</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ContentRepositoriesTab
-                href={href}
-                onRemoveFromRepository={setRemoveFrom}
-                isLocked={isChanging}
-              />
+              <PersistentStateScopeProvider prefix="repositories">
+                <ContentRepositoriesTab
+                  href={href}
+                  onRemoveFromRepository={setRemoveFrom}
+                  isLocked={isChanging}
+                />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

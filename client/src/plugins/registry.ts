@@ -215,6 +215,15 @@ export const getEntityForm = ({
   return entry?.modes.includes(mode) ? entry : undefined;
 };
 
+/** A type's name as the UI shows it (its Type select label), or the pulp_type when unknown. */
+export const getTypeLabel = ({
+  entity,
+  pulpType,
+}: {
+  entity: EntityType;
+  pulpType: PulpType;
+}): string => forms[entity].get(pulpType)?.label ?? pulpType;
+
 /** A content type's own detail panel, or `undefined` for the generic one. */
 export const getContentPanel = (
   contentType: PulpType,

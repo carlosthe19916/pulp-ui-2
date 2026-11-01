@@ -13,6 +13,7 @@ import {
 
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 
 import { ArtifactsTab } from "./components/ArtifactsTab";
 import { UploadsTab } from "./components/UploadsTab";
@@ -41,12 +42,16 @@ export const Storage: React.FC = () => {
             title={<TabTitleText>Artifacts</TabTitleText>}
           >
             <TabContentBody hasPadding>
-              <ArtifactsTab />
+              <PersistentStateScopeProvider prefix="artifacts">
+                <ArtifactsTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           <Tab eventKey="uploads" title={<TabTitleText>Uploads</TabTitleText>}>
             <TabContentBody hasPadding>
-              <UploadsTab />
+              <PersistentStateScopeProvider prefix="uploads">
+                <UploadsTab />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
         </Tabs>

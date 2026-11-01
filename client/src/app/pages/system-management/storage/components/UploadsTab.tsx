@@ -9,7 +9,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -18,31 +17,38 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
-  type IUploadListParams,
   useUploadDeleteMutation,
   useUploadsListQuery,
 } from "@app/queries/uploads";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
-const SORTABLE_COLUMN_KEYS = [
-  "size",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IUploadListParams>[];
+import { SORTABLE_COLUMN_KEYS, UPLOADS_TAB_STATE } from "./uploadsTabState";
 
 export const UploadsTab: React.FC = () => {
   const { addNotification } = useNotifications();
   const [deleteTarget, setDeleteTarget] = useState<UploadResponse | null>(null);
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
+  const [pagination, setPagination] = usePersistentState({
+    ...UPLOADS_TAB_STATE.pagination,
+    storage: "url",
+  });
+  const [sort, setSort] = usePersistentState({
+    ...UPLOADS_TAB_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    },
   });
   const { data, isLoading, error } = useUploadsListQuery({
     params: {
@@ -51,6 +57,7 @@ export const UploadsTab: React.FC = () => {
       ordering,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const deleteMutation = useUploadDeleteMutation({
     onSuccess: () =>
       addNotification({ title: "Upload deleted", variant: "success" }),
@@ -133,6 +140,7 @@ export const UploadsTab: React.FC = () => {
             variant={PaginationVariant.top}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />
@@ -148,6 +156,7 @@ export const UploadsTab: React.FC = () => {
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />

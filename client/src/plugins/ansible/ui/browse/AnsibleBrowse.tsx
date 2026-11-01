@@ -13,6 +13,7 @@ import {
 import {
   BrowseDataList,
   BrowseTable,
+  defineBrowseListState,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
@@ -24,6 +25,18 @@ import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { fqcn } from "./helpers";
 
+const ANSIBLE_COLLECTIONS_LIST = defineBrowseListState({
+  filters: [
+    {
+      param: "namespace",
+      label: "Namespace",
+      placeholder: "Exact namespace",
+    },
+    { param: "name", label: "Name", placeholder: "Exact name" },
+    { param: "tags", label: "Tag", placeholder: "Comma-separated tags" },
+  ],
+});
+
 /** Galaxy-style collection rows: newest version first within each collection. */
 export const AnsibleCollections: React.FC<IBrowseContext> = ({
   versionHref,
@@ -31,17 +44,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    filters: [
-      {
-        param: "namespace",
-        label: "Namespace",
-        placeholder: "Exact namespace",
-      },
-      { param: "name", label: "Name", placeholder: "Exact name" },
-      { param: "tags", label: "Tag", placeholder: "Comma-separated tags" },
-    ] as const,
-  });
+  const list = useBrowseListState(ANSIBLE_COLLECTIONS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "ansible.collection_version",
     params: {
@@ -81,7 +84,7 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
       ariaLabel="Collections"
       list={list}
       rows={collections}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No collections"
@@ -148,6 +151,8 @@ export const AnsibleCollections: React.FC<IBrowseContext> = ({
   );
 };
 
+const ANSIBLE_DEPRECATIONS_LIST = defineBrowseListState();
+
 /**
  * Deprecated collections. A deprecation names a collection only by namespace and name,
  * and the endpoint can't filter by either, so it is listed here rather than as a badge.
@@ -158,7 +163,7 @@ export const AnsibleDeprecations: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState();
+  const list = useBrowseListState(ANSIBLE_DEPRECATIONS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "ansible.collection_deprecation",
     params: {
@@ -173,7 +178,7 @@ export const AnsibleDeprecations: React.FC<IBrowseContext> = ({
       ariaLabel="Deprecated collections"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No deprecated collections"
@@ -189,6 +194,14 @@ export const AnsibleDeprecations: React.FC<IBrowseContext> = ({
   );
 };
 
+const ANSIBLE_NAMESPACES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["name", "company"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [{ param: "name__icontains", label: "Name" }],
+});
+
 /** Publishers, as Galaxy lists namespaces. */
 export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
   versionHref,
@@ -196,13 +209,7 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["name", "company"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [{ param: "name__icontains", label: "Name" }] as const,
-  });
+  const list = useBrowseListState(ANSIBLE_NAMESPACES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "ansible.namespace",
     params: {
@@ -217,7 +224,7 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
       ariaLabel="Namespaces"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No namespaces"
@@ -250,6 +257,21 @@ export const AnsibleNamespaces: React.FC<IBrowseContext> = ({
   );
 };
 
+const ANSIBLE_ROLES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["namespace", "name", "version"],
+    defaultValue: { sortBy: "name", direction: "asc" },
+  },
+  filters: [
+    {
+      param: "namespace",
+      label: "Namespace",
+      placeholder: "Exact namespace",
+    },
+    { param: "name", label: "Name", placeholder: "Exact name" },
+  ],
+});
+
 /** Legacy standalone roles. */
 export const AnsibleRoles: React.FC<IBrowseContext> = ({
   versionHref,
@@ -257,20 +279,7 @@ export const AnsibleRoles: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["namespace", "name", "version"] as const,
-      initial: { sortBy: "name", direction: "asc" },
-    },
-    filters: [
-      {
-        param: "namespace",
-        label: "Namespace",
-        placeholder: "Exact namespace",
-      },
-      { param: "name", label: "Name", placeholder: "Exact name" },
-    ] as const,
-  });
+  const list = useBrowseListState(ANSIBLE_ROLES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "ansible.role",
     params: { ...list.params, repository_version: versionHref },
@@ -281,7 +290,7 @@ export const AnsibleRoles: React.FC<IBrowseContext> = ({
       ariaLabel="Roles"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No roles"

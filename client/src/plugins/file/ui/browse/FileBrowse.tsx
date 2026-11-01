@@ -6,6 +6,7 @@ import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 
 import {
   BrowseTable,
+  defineBrowseListState,
   PathBreadcrumb,
   pathSegments,
   useBrowseListState,
@@ -54,6 +55,20 @@ const PathCell: React.FC<IPathCellProps> = ({ path, prefix, onNavigate }) => {
   );
 };
 
+const FILE_FILES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["relative_path"],
+    defaultValue: { sortBy: "relative_path", direction: "asc" },
+  },
+  filters: [
+    {
+      param: "relative_path__icontains",
+      label: "Path",
+      placeholder: "Filter by path",
+    },
+  ],
+});
+
 /** S3-console style: files under a path prefix, folders navigable via the breadcrumb. */
 export const FileFiles: React.FC<IBrowseContext> = ({
   versionHref,
@@ -63,19 +78,7 @@ export const FileFiles: React.FC<IBrowseContext> = ({
   writes,
 }) => {
   const [prefix, setPrefix] = useState("");
-  const list = useBrowseListState({
-    sort: {
-      keys: ["relative_path"] as const,
-      initial: { sortBy: "relative_path", direction: "asc" },
-    },
-    filters: [
-      {
-        param: "relative_path__icontains",
-        label: "Path",
-        placeholder: "Filter by path",
-      },
-    ] as const,
-  });
+  const list = useBrowseListState(FILE_FILES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "file.file",
     params: {
@@ -89,7 +92,7 @@ export const FileFiles: React.FC<IBrowseContext> = ({
 
   const navigate = (next: string) => {
     setPrefix(next);
-    list.pagination.onSetPage(undefined, 1);
+    list.toFirstPage();
   };
 
   return (
@@ -97,7 +100,7 @@ export const FileFiles: React.FC<IBrowseContext> = ({
       ariaLabel="Files"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       header={

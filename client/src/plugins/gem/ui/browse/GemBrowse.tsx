@@ -2,6 +2,7 @@ import type React from "react";
 
 import {
   BrowseTable,
+  defineBrowseListState,
   StatusBadges,
   useBrowseListState,
 } from "@app/components/BrowseShell";
@@ -11,6 +12,10 @@ import type { IBrowseContext } from "@plugin-sdk/ui";
 
 import { gemInstall } from "../helpers";
 
+const GEM_GEMS_LIST = defineBrowseListState({
+  filters: [{ param: "name", label: "Gem", placeholder: "Exact gem name" }],
+});
+
 /** rubygems.org style: each gem with its versions and platforms, newest first. */
 export const GemGems: React.FC<IBrowseContext> = ({
   versionHref,
@@ -19,11 +24,7 @@ export const GemGems: React.FC<IBrowseContext> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    filters: [
-      { param: "name", label: "Gem", placeholder: "Exact gem name" },
-    ] as const,
-  });
+  const list = useBrowseListState(GEM_GEMS_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "gem.gem",
     // No `fields`: pulp_gem's list answers 500 to any field selection.
@@ -40,7 +41,7 @@ export const GemGems: React.FC<IBrowseContext> = ({
       ariaLabel="Gems"
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle="No gems"

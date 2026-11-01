@@ -15,8 +15,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTrObject,
-  useDataViewFilters,
-  useDataViewPagination,
   useDataViewSelection,
 } from "@patternfly/react-data-view";
 
@@ -24,29 +22,25 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { PageBulkSelect } from "@app/components/PageBulkSelect";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useRoleAssignmentsBatchCreateMutation,
   useRoleAssignmentsListQuery,
 } from "@app/queries/roleAssignments";
-import type { IRoleListParams } from "@app/queries/roles";
 import { useRolesListQuery } from "@app/queries/roles";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { notifyBatchResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "description",
-] as const satisfies readonly OrderingField<IRoleListParams>[];
+import {
+  ADD_ROLE_ASSIGNMENT_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./addRoleAssignmentState";
 
 type RoleRow = DataViewTrObject & { roleName: string };
-
-interface IRoleFilters {
-  name: string;
-}
 
 interface IAddRoleAssignmentModalInnerProps {
   kind: "user" | "group";
@@ -61,14 +55,33 @@ const AddRoleAssignmentModalInner: React.FC<
 > = ({ kind, href, name, onClose }) => {
   const { addNotification } = useNotifications();
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...ADD_ROLE_ASSIGNMENT_STATE.pagination,
+    storage: "state",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IRoleFilters>({ initialFilters: { name: "" } });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...ADD_ROLE_ASSIGNMENT_STATE.sort,
+    storage: "state",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...ADD_ROLE_ASSIGNMENT_STATE.filters,
+    storage: "state",
+  });
+  const clearAllFilters = () => {
+    setFilters(ADD_ROLE_ASSIGNMENT_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
   const { data, isLoading, error } = useRolesListQuery({
@@ -79,6 +92,7 @@ const AddRoleAssignmentModalInner: React.FC<
       name__icontains: debouncedName || undefined,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const roles = data?.results ?? [];
 
   // Ask the server which visible roles are already assigned, instead of fetching
@@ -197,8 +211,8 @@ const AddRoleAssignmentModalInner: React.FC<
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -210,6 +224,7 @@ const AddRoleAssignmentModalInner: React.FC<
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -225,6 +240,7 @@ const AddRoleAssignmentModalInner: React.FC<
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

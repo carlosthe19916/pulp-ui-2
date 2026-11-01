@@ -11,8 +11,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -21,27 +19,20 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
-import type { IGroupListParams } from "@app/queries/groups";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useGroupsListQuery } from "@app/queries/groups";
 import { useMembershipRemoveMutation } from "@app/queries/memberships";
 import { useSuspenseUserDetailQuery } from "@app/queries/users";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { AddUserGroupModal } from "./AddUserGroupModal";
-
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-] as const satisfies readonly OrderingField<IGroupListParams>[];
-
-interface IUserGroupsFilters {
-  name: IGroupListParams["name__icontains"];
-}
+import { SORTABLE_COLUMN_KEYS, USER_GROUPS_STATE } from "./userGroupsState";
 
 interface IUserGroupsTabProps {
   userHref: string;
@@ -70,14 +61,33 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
       }),
   });
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...USER_GROUPS_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<IUserGroupsFilters>({});
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...USER_GROUPS_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...USER_GROUPS_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(USER_GROUPS_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
 
   // There is no `users/{id}/groups/` endpoint, so page the groups collection
@@ -98,6 +108,7 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
     // An empty `id__in` is ignored by the server and would list every group.
     options: { enabled: groupIds.length > 0 },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const groups = data?.results ?? [];
   const totalCount = data?.count ?? 0;
@@ -163,8 +174,8 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
           filters={
             <DataViewFilters
               onChange={(_key, newFilters) => {
-                onSetFilters(newFilters);
-                pagination.onSetPage(undefined, 1);
+                setFilters((prev) => ({ ...prev, ...newFilters }));
+                toFirstPage();
               }}
               values={filters}
             >
@@ -181,6 +192,7 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
               variant={PaginationVariant.top}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />
@@ -196,6 +208,7 @@ export const UserGroupsTab: React.FC<IUserGroupsTabProps> = ({ userHref }) => {
               variant={PaginationVariant.bottom}
               itemCount={totalCount}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

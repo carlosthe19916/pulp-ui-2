@@ -2,6 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 
 import type { IAuthContext } from "@app/context/Auth/AuthContext";
 import { queryClient } from "@app/queries/config";
+import { parseSearch, stringifySearch } from "@app/utils/searchParams";
 
 import { routeTree } from "./routeTree.gen";
 
@@ -17,6 +18,9 @@ export const router = createRouter({
     auth: null,
   },
   defaultPreload: "intent",
+  // Plain-string query values (ADR 0013): schemas convert, arrays repeat the name.
+  parseSearch,
+  stringifySearch,
 });
 
 export type AppRouter = typeof router;

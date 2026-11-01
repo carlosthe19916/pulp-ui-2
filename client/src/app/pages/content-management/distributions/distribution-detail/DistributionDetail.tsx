@@ -20,6 +20,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { TasksTable } from "@app/components/TasksTable";
+import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import {
@@ -171,7 +172,9 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
             }
           >
             <TabContentBody hasPadding>
-              <TasksTable lockedParams={{ reserved_resources: prn }} />
+              <PersistentStateScopeProvider prefix="tasks">
+                <TasksTable lockedParams={{ reserved_resources: prn }} />
+              </PersistentStateScopeProvider>
             </TabContentBody>
           </Tab>
           {canManageRoles && (

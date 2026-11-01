@@ -2,10 +2,10 @@ import type React from "react";
 
 import type { ISortBy, ThProps } from "@patternfly/react-table";
 
-/** `onSort` handler shape returned by react-data-view's `useDataViewSort`. */
-type DataViewOnSort = (
+/** `onSort` handler shape of react-data-view's `useDataViewSort`, narrowed to the column keys. */
+type ColumnOnSort<K extends string> = (
   event: React.MouseEvent | React.KeyboardEvent | MouseEvent | undefined,
-  sortBy: string,
+  sortBy: K,
   direction: ISortBy["direction"],
 ) => void;
 
@@ -15,7 +15,7 @@ interface IBuildThSortOptions<K extends string> {
   columnKey: K;
   sortBy: string | undefined;
   direction: ISortBy["direction"];
-  onSort: DataViewOnSort;
+  onSort: ColumnOnSort<K>;
 }
 
 /**
@@ -53,3 +53,34 @@ export const buildThSort = <K extends string>({
     columnIndex,
   };
 };
+
+/** Sort state as `usePersistentState` keeps it (`defineSortState`). */
+export interface IColumnSortState<K extends string> {
+  sortBy: K;
+  direction: "asc" | "desc";
+}
+
+interface IColumnSortOptions<K extends string> {
+  /** Sortable column keys; each key's array index is its logical sort id. */
+  columnKeys: readonly K[];
+  sort: IColumnSortState<K>;
+  onSort: (sort: IColumnSortState<K>) => void;
+}
+
+/** A Pulp `ordering` param and a `sortProps(key)` builder for each sortable `<Th>`, from sort state. */
+export const columnSort = <K extends string>({
+  columnKeys,
+  sort,
+  onSort,
+}: IColumnSortOptions<K>) => ({
+  ordering: toOrderingParam(sort),
+  sortProps: (columnKey: K) =>
+    buildThSort({
+      columnKeys,
+      columnKey,
+      sortBy: sort.sortBy,
+      direction: sort.direction,
+      onSort: (_event, sortBy, direction) =>
+        onSort({ sortBy, direction: direction === "desc" ? "desc" : "asc" }),
+    }),
+});

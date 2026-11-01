@@ -3,7 +3,11 @@ import type React from "react";
 import prettyBytes from "pretty-bytes";
 
 import type { RepoTypeEnum } from "@app/client";
-import { BrowseTable, useBrowseListState } from "@app/components/BrowseShell";
+import {
+  BrowseTable,
+  defineBrowseListState,
+  useBrowseListState,
+} from "@app/components/BrowseShell";
 import { useContentTypeListQuery } from "@app/queries/content";
 import { formatDateTime } from "@app/utils/utils";
 import type { IBrowseContext } from "@plugin-sdk/ui";
@@ -13,6 +17,21 @@ interface IRepoTypeFilesProps extends IBrowseContext {
   repoType: RepoTypeEnum;
 }
 
+const REPO_TYPE_FILES_LIST = defineBrowseListState({
+  sort: {
+    columnKeys: ["repo_id", "relative_path", "size", "last_modified"],
+    defaultValue: { sortBy: "repo_id", direction: "asc" },
+  },
+  filters: [
+    {
+      param: "repo_id",
+      label: "Repository",
+      placeholder: "Exact repo id, e.g. org/model",
+    },
+    { param: "revision", label: "Revision", placeholder: "Exact revision" },
+  ],
+});
+
 const RepoTypeFiles: React.FC<IRepoTypeFilesProps> = ({
   repoType,
   versionHref,
@@ -20,20 +39,7 @@ const RepoTypeFiles: React.FC<IRepoTypeFilesProps> = ({
   onSelect,
   writes,
 }) => {
-  const list = useBrowseListState({
-    sort: {
-      keys: ["repo_id", "relative_path", "size", "last_modified"] as const,
-      initial: { sortBy: "repo_id", direction: "asc" },
-    },
-    filters: [
-      {
-        param: "repo_id",
-        label: "Repository",
-        placeholder: "Exact repo id, e.g. org/model",
-      },
-      { param: "revision", label: "Revision", placeholder: "Exact revision" },
-    ] as const,
-  });
+  const list = useBrowseListState(REPO_TYPE_FILES_LIST);
   const { data, isLoading, error } = useContentTypeListQuery({
     pulpType: "hugging_face.hugging-face",
     params: {
@@ -48,7 +54,7 @@ const RepoTypeFiles: React.FC<IRepoTypeFilesProps> = ({
       ariaLabel={`Hugging Face ${repoType}`}
       list={list}
       rows={data?.results ?? []}
-      count={data?.count ?? 0}
+      count={data?.count}
       isLoading={isLoading}
       error={error}
       emptyTitle={`No ${repoType}`}

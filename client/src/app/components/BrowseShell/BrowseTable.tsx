@@ -37,7 +37,8 @@ interface IBrowseTableProps<T> {
   ariaLabel: string;
   list: IBrowseListView;
   rows: T[];
-  count: number;
+  /** The list's total; `undefined` while it loads. */
+  count: number | undefined;
   isLoading: boolean;
   error: DrfAxiosError | null;
   columns: IBrowseColumn<T>[];

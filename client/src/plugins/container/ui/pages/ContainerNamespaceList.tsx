@@ -15,8 +15,6 @@ import {
   DataViewTextFilter,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewFilters,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -30,36 +28,31 @@ import { ObjectAccessModal } from "@app/components/ObjectAccessModal";
 import { PulpLabelChips } from "@app/components/PulpLabelChips";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskActionModal } from "@app/components/TaskActionModal";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@app/utils/entityField";
+import { columnSort } from "@app/utils/sortHelpers";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import {
-  type IContainerNamespaceListParams,
   useContainerNamespaceCreateMutation,
   useContainerNamespaceDeleteMutation,
   useContainerNamespacesListQuery,
 } from "../queries/container-namespaces";
-
-const SORTABLE_COLUMN_KEYS = [
-  "name",
-  "pulp_created",
-] as const satisfies readonly OrderingField<IContainerNamespaceListParams>[];
+import {
+  CONTAINER_NAMESPACE_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./containerNamespaceListState";
 
 const CREATE_FIELDS: IEntityField[] = [
   { key: "name", label: "Name", type: "text", required: true },
 ];
-
-interface INamespaceFilters {
-  name: string;
-}
 
 /** Container namespaces: the first path segment of pushed repositories. */
 export const ContainerNamespaceList: React.FC = () => {
@@ -71,14 +64,33 @@ export const ContainerNamespaceList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] =
     useState<ContainerContainerNamespaceResponse | null>(null);
 
-  const pagination = useDataViewPagination({ perPage: 10 });
-  const { ordering, sortProps } = useColumnSort({
-    columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "name", direction: "asc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+  const [pagination, setPagination] = usePersistentState({
+    ...CONTAINER_NAMESPACE_LIST_STATE.pagination,
+    storage: "url",
   });
-  const { filters, onSetFilters, clearAllFilters } =
-    useDataViewFilters<INamespaceFilters>({ initialFilters: { name: "" } });
+  const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
+
+  const [sort, setSort] = usePersistentState({
+    ...CONTAINER_NAMESPACE_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
+    columnKeys: SORTABLE_COLUMN_KEYS,
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      toFirstPage();
+    },
+  });
+
+  const [filters, setFilters] = usePersistentState({
+    ...CONTAINER_NAMESPACE_LIST_STATE.filters,
+    storage: "url",
+  });
+  const clearAllFilters = () => {
+    setFilters(CONTAINER_NAMESPACE_LIST_STATE.filters.defaultValue);
+    toFirstPage();
+  };
   const debouncedName = useDebouncedValue({ value: filters.name });
   const { data, isLoading, error } = useContainerNamespacesListQuery({
     params: {
@@ -121,6 +133,7 @@ export const ContainerNamespaceList: React.FC = () => {
   });
 
   const namespaces = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: namespaces.map((item) => item.pulp_href ?? ""),
@@ -211,8 +224,8 @@ export const ContainerNamespaceList: React.FC = () => {
             filters={
               <DataViewFilters
                 onChange={(_key, newFilters) => {
-                  onSetFilters(newFilters);
-                  pagination.onSetPage(undefined, 1);
+                  setFilters((prev) => ({ ...prev, ...newFilters }));
+                  toFirstPage();
                 }}
                 values={filters}
               >
@@ -229,6 +242,7 @@ export const ContainerNamespaceList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -244,6 +258,7 @@ export const ContainerNamespaceList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

@@ -21,21 +21,16 @@ to use; generic PatternFly usage (imports, composition, tokens) is out of its sc
 ## Layout
 
 - Tables: `@patternfly/react-data-view` with `dataViewBodyStates`, `ListPagination`,
-  `useColumnSort` / `buildThSort` (sketch below); paging, sorting and filtering are
-  server-side. `useDataViewPagination({ perPage: 10 })` by default, never above 20
-  (`ListPagination` caps it to bound per-row task probes).
+  `columnSort` / `buildThSort` (sketch below); paging, sorting and filtering are
+  server-side, their state kept with `usePersistentState` ([list-state](list-state.md)).
+  `PAGINATION_STATE` (10 per page) by default, never above 20 (`PER_PAGE_VALUES` caps it
+  to bound per-row task probes).
 - Text filters go through `useDebouncedValue`; long cells use the column's
   `modifier: "truncate"`; data column `width`s sum to 100, action columns stay unsized.
 
 ```tsx
-const pagination = useDataViewPagination({ perPage: 10 });
-const { ordering, sortProps } = useColumnSort({
-  columnKeys: SORTABLE_COLUMN_KEYS, // from the endpoint's ordering enum
-  initialSort: { sortBy: "name", direction: "asc" },
-  onSortChange: () => pagination.onSetPage(undefined, 1),
-});
-const { filters, onSetFilters, clearAllFilters } =
-  useDataViewFilters<IWidgetFilters>({});
+// pagination, sort (ordering, sortProps) and filters (setFilters, clearAllFilters,
+// toFirstPage): one usePersistentState each, set up as in list-state
 const debouncedName = useDebouncedValue({ value: filters.name });
 
 const { data, isLoading, error } = useWidgetsListQuery({
@@ -81,8 +76,8 @@ return (
             <DataViewFilters
               values={filters}
               onChange={(_key, next) => {
-                onSetFilters(next);
-                pagination.onSetPage(undefined, 1);
+                setFilters((prev) => ({ ...prev, ...next }));
+                toFirstPage();
               }}
             >
               <DataViewTextFilter filterId="name" title="Name" />
@@ -93,6 +88,7 @@ return (
               variant={PaginationVariant.top}
               itemCount={data?.count ?? 0}
               pagination={pagination}
+              onPaginationChange={setPagination}
             />
           }
         />

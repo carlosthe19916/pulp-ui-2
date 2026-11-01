@@ -1,7 +1,6 @@
 import type React from "react";
 
 import { PaginationVariant } from "@patternfly/react-core";
-import { useDataViewPagination } from "@patternfly/react-data-view";
 
 import type { DebReleaseResponse } from "@app/client";
 import {
@@ -14,11 +13,15 @@ import {
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
 import { ListPagination } from "@app/components/ListPagination";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   useContentDetailQuery,
   useContentTypeListQuery,
 } from "@app/queries/content";
 import type { IContentPanelProps } from "@plugin-sdk/ui";
+
+import { RELEASE_VALUES_STATE } from "./debReleaseContentState";
 
 interface IReleaseValuesProps {
   /** The release's `distribution` name, which its component/architecture units carry. */
@@ -31,7 +34,10 @@ const ReleaseComponents: React.FC<IReleaseValuesProps> = ({
   distribution,
   versionHref,
 }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...RELEASE_VALUES_STATE.pagination,
+    storage: "state",
+  });
   const { data } = useContentTypeListQuery({
     pulpType: "deb.release_component",
     params: {
@@ -43,6 +49,7 @@ const ReleaseComponents: React.FC<IReleaseValuesProps> = ({
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   return (
     <ContentSection title={`Components (${data?.count ?? 0})`}>
       <LabelList
@@ -54,6 +61,7 @@ const ReleaseComponents: React.FC<IReleaseValuesProps> = ({
           variant={PaginationVariant.bottom}
           itemCount={data.count}
           pagination={pagination}
+          onPaginationChange={setPagination}
         />
       ) : null}
     </ContentSection>
@@ -65,7 +73,10 @@ const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
   distribution,
   versionHref,
 }) => {
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...RELEASE_VALUES_STATE.pagination,
+    storage: "state",
+  });
   const { data } = useContentTypeListQuery({
     pulpType: "deb.release_architecture",
     params: {
@@ -77,6 +88,7 @@ const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
       offset: (pagination.page - 1) * pagination.perPage,
     },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   return (
     <ContentSection title={`Architectures (${data?.count ?? 0})`}>
       <LabelList
@@ -88,6 +100,7 @@ const ReleaseArchitectures: React.FC<IReleaseValuesProps> = ({
           variant={PaginationVariant.bottom}
           itemCount={data.count}
           pagination={pagination}
+          onPaginationChange={setPagination}
         />
       ) : null}
     </ContentSection>

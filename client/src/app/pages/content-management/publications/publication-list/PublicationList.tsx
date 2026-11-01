@@ -21,7 +21,6 @@ import {
   DataViewToolbar,
   type DataViewTr,
   type ExpandableContent,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 import { ActionsColumn } from "@patternfly/react-table";
 
@@ -36,30 +35,30 @@ import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
-import { useColumnSort } from "@app/hooks/useColumnSort";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import type { IPublicationListParams } from "@app/queries/publications";
 import {
   usePublicationDeleteMutation,
   usePublicationsListQuery,
 } from "@app/queries/publications";
-import type { OrderingField } from "@app/queries/utils/listParams";
 import {
   extractIdFromHref,
   hasRoleEndpoints,
   resolvePulpType,
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
+import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { PublicationDetailPanel } from "./components/PublicationDetailPanel";
-
-const SORTABLE_COLUMN_KEYS = [
-  "pulp_created",
-] as const satisfies readonly OrderingField<IPublicationListParams>[];
+import {
+  PUBLICATION_LIST_STATE,
+  SORTABLE_COLUMN_KEYS,
+} from "./publicationListState";
 
 // Some types (hugging_face) have no role endpoints to manage access with.
 const NO_ROLES_TOOLTIP: TooltipProps = {
@@ -96,12 +95,22 @@ export const PublicationList: React.FC = () => {
   });
   const isDeleting = deleteMutation.isPending;
 
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...PUBLICATION_LIST_STATE.pagination,
+    storage: "url",
+  });
 
-  const { ordering, sortProps } = useColumnSort({
+  const [sort, setSort] = usePersistentState({
+    ...PUBLICATION_LIST_STATE.sort,
+    storage: "url",
+  });
+  const { ordering, sortProps } = columnSort({
     columnKeys: SORTABLE_COLUMN_KEYS,
-    initialSort: { sortBy: "pulp_created", direction: "desc" },
-    onSortChange: () => pagination.onSetPage(undefined, 1),
+    sort,
+    onSort: (next) => {
+      setSort(next);
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    },
   });
 
   const { data, isLoading, error } = usePublicationsListQuery({
@@ -113,6 +122,7 @@ export const PublicationList: React.FC = () => {
   });
 
   const publications = data?.results ?? [];
+  usePageInRange({ pagination, setPagination, count: data?.count });
 
   const { disabledProps } = useObjectsPermissions({
     hrefs: publications
@@ -260,6 +270,7 @@ export const PublicationList: React.FC = () => {
                 variant={PaginationVariant.top}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />
@@ -280,6 +291,7 @@ export const PublicationList: React.FC = () => {
                 variant={PaginationVariant.bottom}
                 itemCount={totalCount}
                 pagination={pagination}
+                onPaginationChange={setPagination}
               />
             }
           />

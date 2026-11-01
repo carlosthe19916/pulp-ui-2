@@ -14,7 +14,6 @@ import {
   DataViewTable,
   DataViewToolbar,
   type DataViewTr,
-  useDataViewPagination,
 } from "@patternfly/react-data-view";
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
@@ -24,6 +23,8 @@ import { TableEmptyState } from "@app/components/TableEmptyState";
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
+import { usePageInRange } from "@app/hooks/usePageInRange";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import {
   isTerminalTaskState,
   PRN_TASK_STATES,
@@ -33,6 +34,8 @@ import {
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
+
+import { RESOURCE_TASK_TABLE_STATE } from "./resourceTaskTableState";
 
 /** Operation label from a Pulp task name. */
 const actionLabel = (name?: string | null): string => {
@@ -54,7 +57,10 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
   prn,
 }) => {
   const { addNotification } = useNotifications();
-  const pagination = useDataViewPagination({ perPage: 10 });
+  const [pagination, setPagination] = usePersistentState({
+    ...RESOURCE_TASK_TABLE_STATE.pagination,
+    storage: "state",
+  });
   const { page, perPage } = pagination;
   const { data, isLoading, error } = useTasksListQuery({
     params: {
@@ -73,6 +79,7 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
     },
     options: { enabled: !!prn },
   });
+  usePageInRange({ pagination, setPagination, count: data?.count });
   const cancelMutation = useTaskCancelMutation({
     onSuccess: () =>
       addNotification({
@@ -184,6 +191,7 @@ export const ResourceTaskTable: React.FC<IResourceTaskTableProps> = ({
             variant={PaginationVariant.bottom}
             itemCount={totalCount}
             pagination={pagination}
+            onPaginationChange={setPagination}
           />
         }
       />
