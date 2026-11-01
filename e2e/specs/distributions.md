@@ -28,6 +28,15 @@ Then the create page opens with its Type select
 When I choose "Edit" in the file distribution's row actions
 Then "Edit file distribution" opens with its values filled in
 
+### DST-LIST-02 Row actions are Edit and Delete
+
+Summary: A distribution's row actions are Edit and Delete; its roles are managed on its detail page.
+
+Seed: a file distribution
+
+When I open its row actions
+Then the actions are "Edit" and "Delete"
+
 ## Create
 
 ### DST-CRE-01 Create a distribution serving each kind of source

@@ -49,6 +49,38 @@ test.describe("Distributions", () => {
   );
 
   /**
+   * DST-LIST-02 · Row actions are Edit and Delete
+   *
+   * Summary: A distribution's row actions are Edit and Delete; its roles are managed on its detail page.
+   *
+   * Seed: a file distribution
+   *
+   * When I open its row actions
+   * Then the actions are "Edit" and "Delete"
+   */
+  test(
+    "A distribution's row actions are Edit and Delete; its roles are managed on its detail page.",
+    {
+      tag: "@DST-LIST-02",
+      annotation: {
+        type: "spec",
+        description: "e2e/specs/distributions.md#DST-LIST-02",
+      },
+    },
+    async ({ distributionsPage, api, cleanup, page }) => {
+      const { name } = await seedDistribution(api, cleanup);
+
+      await distributionsPage.goto();
+      await distributionsPage.filterBy("Name", name);
+      await distributionsPage
+        .row(name)
+        .getByRole("button", { name: "Kebab toggle" })
+        .click();
+      await expect(page.getByRole("menuitem")).toHaveText(["Edit", "Delete"]);
+    },
+  );
+
+  /**
    * DST-DET-01 · Open a distribution's page from its name
    *
    * Summary: A distribution's name links to its detail page from the Distributions list and from its repository's Distributions tab.
