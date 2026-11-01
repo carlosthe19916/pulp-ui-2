@@ -101,7 +101,7 @@ The message reads `name` from the variables, never from `deleteTarget`.
 
 Toast and `navigate()` both go in the hook-level `onSuccess`, which **returns** the
 `navigate()` promise: the delete hook awaits it before dropping the record from the cache, so
-the still-mounted page never refetches a 404. On error the dialog simply stays open.
+the still-mounted page never refetches a 404. On error the dialog stays open.
 
 ```ts
 const deleteMutation = useWidgetDeleteMutation({

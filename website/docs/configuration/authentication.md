@@ -30,4 +30,4 @@ Register Pulp UI in your identity provider as a public client, with the Pulp UI 
 
 ## `none`
 
-No login screen. Requests are sent to Pulp without credentials. Only use this when Pulp allows anonymous access, or when an upstream proxy handles authentication.
+Pulp UI skips the login screen and sends requests to Pulp anonymously. Only use this when Pulp allows anonymous access, or when an upstream proxy handles authentication.

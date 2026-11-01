@@ -9,9 +9,8 @@ routes:
 # Publications (create and detail)
 
 A publication is an immutable, published snapshot of a repository version. It is created on a
-form page and never edited. Each publication has a detail page (Details, Access); list rows don't
-expand. Creating returns to the list (the create runs as a task). The shared form-page behaviour
-is in [form-pages.md](form-pages.md).
+form page; creating returns to the list (the create runs as a task). Each publication has a detail
+page (Details, Access). The shared form-page behaviour is in [form-pages.md](form-pages.md).
 
 ## Create
 

@@ -25,12 +25,11 @@ it, its plugin's publishing settings, its roles), and it needs an address others
       published from (the repository and its version), the distributions serving it, its
       settings grouped and labelled the way its create form groups them, and its type, creation
       time and PRN.
-- [ ] A publication's name links to its page from the Publications list, from a repository's
+- [ ] A publication's id links to its page from the Publications list, from a repository's
       Publications tab and from the Details of a distribution serving it.
-- [ ] The Publication page offers Delete, which returns to the Publications list, and no Edit:
-      a publication is immutable.
-- [ ] Publication rows don't expand inline and offer no **Manage access**: the page is the one
-      place to read a publication and manage its roles.
+- [ ] A publication is immutable: its one action is Delete, in its list row and on its page
+      (which then returns to the Publications list). The page is the one place to read a
+      publication and manage its roles.
 - [ ] The Repository page is where its content is viewed and changed, and shows how to consume
       it (client setup for the serving distribution).
 - [ ] Sync appears only for repositories whose plugin can sync; Publish only for those that
@@ -41,5 +40,5 @@ it, its plugin's publishing settings, its roles), and it needs an address others
 
 - Almost all repository work happens without leaving the repository page.
 - Publications can be linked to directly, and their access has a home next to their details.
-- Creating a publication still returns to the list: the create task hasn't produced the object
+- Creating a publication returns to the list, since the create task hasn't produced the object
   yet when the form leaves.

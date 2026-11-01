@@ -483,7 +483,7 @@ test.describe("Groups", () => {
   );
 
   /**
-   * GRP-CRE-05 · Create is not gated for a non-superuser
+   * GRP-CRE-05 · Create is enabled for a non-superuser
    *
    * Summary: A non-superuser can open Create group, but submitting a valid form fails with a permission-denied error in the form.
    *

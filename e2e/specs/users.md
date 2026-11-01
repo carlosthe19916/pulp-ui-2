@@ -86,7 +86,7 @@ When I open "Create user" and submit a username that already exists
 Then an in-form error shows the server's reason "This field must be unique.", no toast appears,
 and the modal stays open with my values kept
 
-### USR-CRE-10 Create is not gated for a non-superuser
+### USR-CRE-10 Create is enabled for a non-superuser
 
 Summary: A non-superuser can open Create user, but submitting a valid form fails with a permission-denied error in the form.
 

@@ -93,7 +93,7 @@ createFileRoute("…/remotes/")({ validateSearch, search, component: RemoteList 
 ```
 
 - The page and the route import the same `<LIST>_STATE`, so they can't drift.
-- The route only declares: the list still reads its state through `usePersistentState`, and
+- The route only declares: the list reads its state through `usePersistentState`, and
   other lists' params pass through. A prefixed list (inside a `PersistentStateScopeProvider`) isn't
   declared, since its prefix depends on the screen.
 - No per-list type test: `utils/listState.typecheck.ts` guards `listSearch` for every list.

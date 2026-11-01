@@ -11,7 +11,7 @@ routes:
 
 A distribution serves content at a base path. It serves exactly one source: a repository's latest
 version, one repository version, or a publication. Each distribution has a detail page (Details,
-Tasks, Access); list rows don't expand. Create and edit are form pages:
+Tasks, Access). Create and edit are form pages:
 creating returns to the list (the create runs as a task), editing returns to the detail page.
 The shared form-page behaviour is in [form-pages.md](form-pages.md).
 
@@ -27,6 +27,15 @@ When I click "Create distribution" on the Distributions list
 Then the create page opens with its Type select
 When I choose "Edit" in the file distribution's row actions
 Then "Edit file distribution" opens with its values filled in
+
+### DST-LIST-02 Row actions are Edit and Delete
+
+Summary: A distribution's row actions are Edit and Delete; its roles are managed on its detail page.
+
+Seed: a file distribution
+
+When I open its row actions
+Then the actions are "Edit" and "Delete"
 
 ## Create
 

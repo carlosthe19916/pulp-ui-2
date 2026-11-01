@@ -33,7 +33,7 @@ Good to know:
   are never touched. `backend:setup` force-resets every clone there to its pinned ref.
 - To try the UI with a few plugins instead of all, run `npm run backend:plugins -- rpm container`
   (`-- all` to go back). **Each switch wipes the backend's data**; re-run `npm run seed` after it.
-- The stack runs as its own compose project, `pulp_ui_2_pinned`, but still needs port 5003: stop
+- The stack runs as its own compose project, `pulp_ui_2_pinned`, on port 5003: stop
   any other backend on it first.
 
 All backend scripts are listed in [docs/scripts.md](docs/scripts.md#local-pulp-backend). With an
@@ -77,7 +77,7 @@ npm run format      # Prettier check
 npm run lint:fix    # ESLint auto-fix
 npm run format:fix  # Prettier auto-fix
 
-# Fast inner loop, mostly for coding agents (CI still runs the commands above)
+# Fast inner loop, mostly for coding agents (CI runs the commands above)
 npm run lint:fast        # oxlint (subset of the ESLint rules)
 npm run format:fast:fix  # oxfmt (close to Prettier; follow with format:fix)
 npm run oxlint:sync      # regenerate .oxlintrc.json after editing eslint.config.mjs

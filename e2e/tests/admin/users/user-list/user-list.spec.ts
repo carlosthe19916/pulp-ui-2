@@ -360,7 +360,7 @@ test.describe("Users", () => {
   );
 
   /**
-   * USR-CRE-10 · Create is not gated for a non-superuser
+   * USR-CRE-10 · Create is enabled for a non-superuser
    *
    * Summary: A non-superuser can open Create user, but submitting a valid form fails with a permission-denied error in the form.
    *
