@@ -98,9 +98,15 @@ export const NavApp: React.FC<INavAppProps> = ({
   const section = useLocation({
     select: (location) => location.pathname.split("/")[1],
   });
+  // The current page's group opens on load and whenever navigation enters another group.
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
-    {},
+    () => ({ [section]: true }),
   );
+  const [openedSection, setOpenedSection] = useState(section);
+  if (openedSection !== section) {
+    setOpenedSection(section);
+    setExpandedGroups((prev) => ({ ...prev, [section]: true }));
+  }
   const groupProps = (segment: string) => ({
     isActive: section === segment,
     isExpanded: !!expandedGroups[segment],
