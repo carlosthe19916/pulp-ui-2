@@ -1,5 +1,6 @@
 import { expect, test } from "@support/fixtures";
 import { delayApi } from "@support/helpers/delayApi";
+import { openAdministration } from "@support/helpers/nav";
 import { recordApiNotFound } from "@support/helpers/notFound";
 import { uniqueName } from "@support/helpers/unique";
 import { COL, cell, groupId, openDetail } from "@support/helpers/users";
@@ -322,9 +323,11 @@ test.describe("Users", () => {
           .getByRole("link", { name: username, exact: true }),
       ).toBeVisible();
 
-      const nav = page.getByRole("navigation", { name: "Nav" });
-      await nav.getByRole("button", { name: "Administration" }).click();
-      await nav.getByRole("link", { name: "Users", exact: true }).click();
+      await openAdministration(page);
+      await page
+        .getByRole("navigation", { name: "Nav" })
+        .getByRole("link", { name: "Users", exact: true })
+        .click();
       const usersGrid = page.getByRole("grid", { name: "Users table" });
       await expect(usersGrid).toBeVisible();
       await page.getByPlaceholder("Filter by Username").fill(username);

@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import type { Cleanup } from "./cleanup";
+import { openAdministration } from "./nav";
 import type { IGroupRecord, PulpApi } from "./pulp-api";
 import { uniqueName } from "./unique";
 
@@ -161,9 +162,11 @@ export async function navigateInApp(
   page: Page,
   item: "Users" | "Groups",
 ): Promise<void> {
-  const nav = page.getByRole("navigation", { name: "Nav" });
-  await nav.getByRole("button", { name: "Administration" }).click();
-  await nav.getByRole("link", { name: item, exact: true }).click();
+  await openAdministration(page);
+  await page
+    .getByRole("navigation", { name: "Nav" })
+    .getByRole("link", { name: item, exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { level: 1, name: item }),
   ).toBeVisible();
