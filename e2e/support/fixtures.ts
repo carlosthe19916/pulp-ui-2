@@ -14,6 +14,7 @@ import { GroupsPage } from "./pom/GroupsPage";
 import { RolesPage } from "./pom/RolesPage";
 import { Toasts } from "./pom/Toasts";
 import { UsersPage } from "./pom/UsersPage";
+import { WorkersPage } from "./pom/WorkersPage";
 
 interface ITestFixtures {
   usersPage: UsersPage;
@@ -28,6 +29,7 @@ interface ITestFixtures {
   distributionsPage: ContentPage;
   publicationsPage: ContentPage;
   contentPage: ContentListPage;
+  workersPage: WorkersPage;
   /** A create/edit form page (repositories, remotes, distributions, publications). */
   formPage: EntityFormPage;
   /** Register test-created names here; leftovers are removed in teardown. */
@@ -94,6 +96,9 @@ export const test = base.extend<ITestFixtures, IWorkerFixtures>({
   },
   domainsPage: async ({ page }, provide) => {
     await provide(new DomainsPage(page));
+  },
+  workersPage: async ({ page }, provide) => {
+    await provide(new WorkersPage(page));
   },
   formPage: async ({ page }, provide) => {
     await provide(new EntityFormPage(page));

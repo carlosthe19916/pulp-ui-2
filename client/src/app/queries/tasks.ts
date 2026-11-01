@@ -291,6 +291,9 @@ export const useTasksListQuery = ({
   });
 };
 
+export const useTaskDetailQuery = ({ href }: { href: string }) =>
+  useQuery({ ...taskDetailQueryOptions({ href }), enabled: !!href });
+
 export const useSuspenseTaskDetailQuery = ({ href }: { href: string }) =>
   useSuspenseQuery({
     ...taskDetailQueryOptions({ href }),
