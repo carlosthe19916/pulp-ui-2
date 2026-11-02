@@ -27,6 +27,8 @@ import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
 import { SyncModal } from "@app/components/SyncModal";
+import { TabHelpAction } from "@app/components/TabHelpAction";
+import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import {
   type VersionAction,
@@ -49,6 +51,7 @@ import {
   useRepositoryVersionsListQuery,
   useSuspenseRepositoryDetailQuery,
 } from "@app/queries/repositories";
+import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
@@ -129,6 +132,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const { data: distributionsCount } = useDistributionsListQuery({
     params: { repository: href, limit: 1 },
   });
+  const { data: tasksCount } = useTasksListQuery({
+    params: { reserved_resources: repository.prn ?? "", limit: 1 },
+  });
 
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) => {
@@ -162,6 +168,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
     available: [
       ...REPOSITORY_DETAIL_FIXED_TABS,
       ...(pluginTab ? [pluginTab.key] : []),
+      "tasks",
       "access",
     ],
   });
@@ -441,6 +448,23 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   </TabContentBody>
                 </Tab>
               )}
+              <Tab
+                eventKey="tasks"
+                title={
+                  <TabTitleText>Tasks ({tasksCount?.count ?? 0})</TabTitleText>
+                }
+                actions={
+                  <TabHelpAction
+                    tabName="Tasks"
+                    headerContent="Task history"
+                    bodyContent="Tasks that worked on this repository: syncs, content changes and uploads, publishes, version deletion and repair, exports, edits and deletion. Tasks in every state are listed. The task that created the repository isn't included."
+                  />
+                }
+              >
+                <TabContentBody hasPadding>
+                  <TaskHistoryTab prn={repository.prn ?? ""} />
+                </TabContentBody>
+              </Tab>
               <Tab
                 eventKey="access"
                 title={<TabTitleText>Access</TabTitleText>}

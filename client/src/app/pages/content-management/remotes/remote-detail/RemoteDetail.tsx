@@ -19,6 +19,8 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
+import { TabHelpAction } from "@app/components/TabHelpAction";
+import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
@@ -33,7 +35,6 @@ import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
 import { RemoteDetailsView } from "./components/RemoteDetailsView";
-import { RemoteTasksTab } from "./components/RemoteTasksTab";
 
 interface IRemoteDetailProps {
   pulpDomain: string;
@@ -171,9 +172,16 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
             title={
               <TabTitleText>Tasks ({tasksCount?.count ?? 0})</TabTitleText>
             }
+            actions={
+              <TabHelpAction
+                tabName="Tasks"
+                headerContent="Task history"
+                bodyContent="Tasks that used or changed this remote: syncs that pulled from it, edits and deletion. Tasks in every state are listed. The task that created the remote isn't included."
+              />
+            }
           >
             <TabContentBody hasPadding>
-              <RemoteTasksTab prn={prn} />
+              <TaskHistoryTab prn={prn} />
             </TabContentBody>
           </Tab>
           <Tab eventKey="access" title={<TabTitleText>Access</TabTitleText>}>
