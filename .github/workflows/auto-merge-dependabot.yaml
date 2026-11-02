@@ -2,7 +2,10 @@ name: Auto-merge dependabot PRs
 
 # Approves and enables auto-merge on every Dependabot PR — patch, minor and major.
 # GitHub's native auto-merge then merges the PR only once the required status checks
-# (branch protection on main) pass, so CI remains the real gate.
+# (branch protection on main) pass, so CI remains the real gate. Approval and auto-merge use the
+# pulp-ui-bot App token: a merge enabled with GITHUB_TOKEN would not trigger the push workflows
+# on main. Dependabot runs read secrets from the Dependabot store, so BOT_APP_PRIVATE_KEY must
+# be set there too.
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
@@ -25,9 +28,16 @@ jobs:
         with:
           github-token: ${{ github.token }}
 
+      - name: Get bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
       - name: Approve PR
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh pr review "$PR_NUMBER" --repo "${{ github.repository }}" --approve \
@@ -35,7 +45,7 @@ jobs:
 
       - name: Enable auto-merge
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh pr merge "$PR_NUMBER" --repo "${{ github.repository }}" --auto --squash

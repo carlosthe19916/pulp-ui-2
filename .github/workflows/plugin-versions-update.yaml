@@ -6,15 +6,10 @@ name: Update Pulp plugin versions
 # latest Pulp without ever merging a breaking bump by hand. oci_env has no releases,
 # so it tracks main and is bumped manually.
 #
-# Setup required for the gate to work end to end:
-#   * Secret PLUGIN_BUMP_TOKEN — a PAT (or GitHub App token) with contents:write +
-#     pull-requests:write. A PR opened with the default GITHUB_TOKEN does NOT trigger
-#     other workflows (anti-recursion), so without this token e2e will not run on the
-#     PR. With GITHUB_TOKEN as fallback the PR is still opened, but a maintainer must
-#     kick e2e (e.g. close/reopen) and merge by hand.
-#   * If branch protection on main requires an approving review, auto-merge needs an
-#     approval from an identity other than the PR author (a bot cannot approve its own
-#     PR) — approve manually, or add a second-token approval step.
+# Setup required: the pulp-ui-bot GitHub App (contents + pull-requests write), with its App ID
+# in the BOT_APP_ID variable and its private key in the BOT_APP_PRIVATE_KEY secret. The PR is
+# opened and auto-merge enabled with the App's token: GITHUB_TOKEN would neither trigger e2e on
+# the PR nor the push workflows (image, website) on main after the merge.
 on:
   schedule:
     - cron: "0 6 * * *"
@@ -28,6 +23,20 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Get bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - name: Get bot user id
+        id: bot-user
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: echo "id=$(gh api "/users/${SLUG}%5Bbot%5D" --jq .id)" >>"$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v6
 
       - name: Bump plugin rows to latest releases
@@ -71,8 +80,9 @@ jobs:
         if: steps.bump.outputs.changed == '1'
         uses: peter-evans/create-pull-request@v7
         with:
-          # PAT so the PR triggers e2e; GITHUB_TOKEN fallback still opens the PR.
-          token: ${{ secrets.PLUGIN_BUMP_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
+          author: ${{ steps.app-token.outputs.app-slug }}[bot] <${{ steps.bot-user.outputs.id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>
+          committer: ${{ steps.app-token.outputs.app-slug }}[bot] <${{ steps.bot-user.outputs.id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>
           branch: ci/bump-plugin-versions
           delete-branch: true
           commit-message: "ci(deps): bump Pulp plugin versions to latest releases"
@@ -87,7 +97,7 @@ jobs:
       - name: Enable auto-merge
         if: steps.cpr.outputs.pull-request-number
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR: ${{ steps.cpr.outputs.pull-request-number }}
           REPO: ${{ github.repository }}
         run: gh pr merge "$PR" --repo "$REPO" --auto --squash

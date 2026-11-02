@@ -4,6 +4,7 @@
 version: 'v0.0.3'
 workflows:
     '.github/workflows/auto-merge-dependabot.yaml':
+        - 'actions/create-github-app-token@v2.2.2'
         - 'dependabot/fetch-metadata@v3'
     '.github/workflows/ci-e2e.yaml':
         - 'actions/cache@v4'
@@ -32,6 +33,7 @@ workflows:
         - 'dorny/paths-filter@v3'
     '.github/workflows/plugin-versions-update.yaml':
         - 'actions/checkout@v6'
+        - 'actions/create-github-app-token@v2.2.2'
         - 'peter-evans/create-pull-request@v7'
     '.github/workflows/release.yaml':
         - 'actions/checkout@v6'
@@ -75,6 +77,11 @@ dependencies:
         commit: 'sha1-d23441a48e516b6c34aea4fa41551a30e30af803'
         owner_id: 44036562
         repo_id: 197814629
+    'actions/create-github-app-token@v2.2.2':
+        ref: 'v2.2.2'
+        commit: 'sha1-fee1f7d63c2ff003460e3d139729b119787bc349'
+        owner_id: 44036562
+        repo_id: 642580244
     'actions/deploy-pages@v4':
         ref: 'v4'
         commit: 'sha1-d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e'
