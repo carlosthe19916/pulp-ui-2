@@ -11,6 +11,7 @@ import { taskKeys } from "@app/queries/tasks";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import { toProxyHref } from "@app/queries/utils/pulpApi";
+import { recordTask } from "@app/queries/utils/recordTask";
 
 /**
  * Imports an uploaded OSTree archive (an artifact) into a new repository version:
@@ -34,7 +35,7 @@ export const useOstreeImportMutation = (
         `${toProxyHref(repository.pulp_href ?? "")}${action}/`,
         body,
       );
-      return response.data;
+      return recordTask(response.data);
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });

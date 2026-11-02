@@ -24,6 +24,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const RemotesQueryKey = "remotes";
@@ -101,11 +102,13 @@ export const useRemoteDeleteMutation = (
     mutationFn: async (
       remote: GenericRemoteResponse,
     ): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(remote.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(remote.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, remote) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({
@@ -219,12 +222,13 @@ export const useRemoteUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<GenericRemoteResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<
-          GenericRemoteResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+    }): Promise<GenericRemoteResponse | AsyncOperationResponse> => {
+      const { data } = await axiosInstance.patch<
+        GenericRemoteResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      if ("task" in data) recordTask(data);
+      return data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({

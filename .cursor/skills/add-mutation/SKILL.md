@@ -40,11 +40,13 @@ export const useWidgetDeleteMutation = (
   const queryClient = useQueryClient();
   return useMutation<AsyncOperationResponse, DrfAxiosError, WidgetResponse>({
     mutationFn: async (widget) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(widget.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(widget.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, widget) => {
       void queryClient.invalidateQueries({ queryKey: widgetKeys.list() });
       void queryClient.invalidateQueries({

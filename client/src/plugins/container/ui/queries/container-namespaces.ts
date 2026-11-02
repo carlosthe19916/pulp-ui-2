@@ -20,6 +20,7 @@ import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "@app/queries/utils/pulpApi";
+import { recordTask } from "@app/queries/utils/recordTask";
 
 export const ContainerNamespacesQueryKey = "container-namespaces";
 
@@ -111,11 +112,13 @@ export const useContainerNamespaceDeleteMutation = (
     ContainerContainerNamespaceResponse
   >({
     mutationFn: async (namespace) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(namespace.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(namespace.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, namespace) => {
       void queryClient.invalidateQueries({
         queryKey: containerNamespaceKeys.list(),

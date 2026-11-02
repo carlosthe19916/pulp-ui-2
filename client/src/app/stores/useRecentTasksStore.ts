@@ -19,7 +19,7 @@ export const RECENT_TASKS_LIMIT = 5;
 
 /**
  * The tasks this browser started, newest first; the Tasks API can't filter by creator,
- * so the browser remembers them. Recorded by the axios response interceptor.
+ * so the browser remembers them. Recorded by `recordTask` in each write that starts one.
  */
 export const useRecentTasksStore = create<IRecentTasksState>()(
   persist(

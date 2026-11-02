@@ -22,6 +22,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 export const PublicationsQueryKey = "publications";
 
@@ -177,12 +178,14 @@ export const usePublicationCreateMutation = (
       apiPath: string;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`publications/${apiPath}/`, domain),
-          body,
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            pulpApiPath(`publications/${apiPath}/`, domain),
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: publicationKeys.list() });
       options?.onSuccess?.(data, variables);

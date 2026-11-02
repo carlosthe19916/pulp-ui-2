@@ -39,7 +39,7 @@ part of the URL and the navigation ([ADR 0002](../adr/0002-navigation-and-domain
 Many writes (sync, publish, content changes, …) return a background task. The UI tracks the
 task and refreshes the affected views once it settles, so the user sees progress and the eventual
 result without reloading ([ADR 0006](../adr/0006-async-task-feedback.md)).
-The axios response interceptor also records each task a `202` starts in a persisted Zustand store
+Each write whose spec answers `202` with a task also records it in a persisted Zustand store
 (`stores/useRecentTasksStore.ts`), which the dashboard lists as "Your recent tasks": the Tasks API
 can't filter by who started a task.
 Tasks the user starts from a page are also tracked in `stores/useTrackedTasksStore.ts`; a

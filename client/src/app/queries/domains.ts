@@ -25,6 +25,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const DomainsQueryKey = "domains";
@@ -132,6 +133,7 @@ export const useDomainUpdateMutation = (
       const response = await axiosInstance.patch<
         DomainResponse | AsyncOperationResponse
       >(toProxyHref(href), body);
+      if ("task" in response.data) recordTask(response.data);
       return response.data;
     },
     onSuccess: (data, variables) => {
@@ -156,7 +158,7 @@ export const useDomainDeleteMutation = (
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(domain.pulp_href ?? ""),
       );
-      return response.data;
+      return recordTask(response.data);
     },
     onSuccess: (data, domain) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
@@ -191,12 +193,17 @@ export const useDomainMigrateMutation = (
     IDomainMigrateVariables
   >({
     mutationFn: async ({ domainName, body }) =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath("domains/migrate/", { enabled: true, name: domainName }),
-          body,
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            pulpApiPath("domains/migrate/", {
+              enabled: true,
+              name: domainName,
+            }),
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });

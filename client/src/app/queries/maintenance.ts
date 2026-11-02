@@ -8,6 +8,7 @@ import { taskKeys } from "./tasks";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import { pulpApiPath } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 /** Domain-wide maintenance operations; each starts a task. */
 export type MaintenanceOperation =
@@ -29,12 +30,14 @@ export const useMaintenanceMutation = (
     IMaintenanceVariables
   >({
     mutationFn: async ({ operation, body }) =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(operation, domain),
-          body,
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            pulpApiPath(operation, domain),
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });
       options?.onSuccess?.(data, vars);

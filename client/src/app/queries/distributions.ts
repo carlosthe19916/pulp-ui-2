@@ -25,6 +25,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const DistributionsQueryKey = "distributions";
@@ -134,11 +135,13 @@ export const useDistributionDeleteMutation = (
     mutationFn: async (
       distribution: DistributionResponse,
     ): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(distribution.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(distribution.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, distribution) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
@@ -225,12 +228,14 @@ export const useDistributionCreateMutation = (
       apiPath: string;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`distributions/${apiPath}/`, domain),
-          body,
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            pulpApiPath(`distributions/${apiPath}/`, domain),
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       options?.onSuccess?.(data, variables);
@@ -258,12 +263,13 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<DistributionResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<
-          DistributionResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+    }): Promise<DistributionResponse | AsyncOperationResponse> => {
+      const { data } = await axiosInstance.patch<
+        DistributionResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      if ("task" in data) recordTask(data);
+      return data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({

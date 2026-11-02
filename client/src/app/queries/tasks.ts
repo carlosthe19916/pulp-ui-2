@@ -29,6 +29,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 export const TasksQueryKey = "tasks";
 
@@ -424,7 +425,7 @@ export const useTaskPurgeMutation = (
           states: body.states,
         },
       );
-      return response.data;
+      return recordTask(response.data);
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.all() });

@@ -31,6 +31,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const ContentQueryKey = "content";
@@ -287,6 +288,7 @@ export const useContentUploadMutation = (
           onProgress?.(event.total ? event.loaded / event.total : 0),
       });
       if ("task" in data) {
+        recordTask(data);
         const task = await waitForTask(data.task);
         return task.created_resources?.[0] ?? "";
       }

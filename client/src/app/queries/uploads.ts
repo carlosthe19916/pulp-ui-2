@@ -23,6 +23,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 interface IPutChunksParams {
   domain: IPulpDomain;
@@ -129,6 +130,7 @@ export const useArtifactUploadMutation = (
         `${toProxyHref(upload)}commit/`,
         { sha256 },
       );
+      recordTask(data);
       const task = await waitForTask(data.task);
       return task.created_resources?.[0] ?? "";
     },

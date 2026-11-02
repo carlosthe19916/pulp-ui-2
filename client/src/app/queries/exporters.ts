@@ -23,6 +23,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 export const ExportersQueryKey = "exporters";
 
@@ -170,13 +171,16 @@ export const useExporterUpdateMutation = (
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
-    mutationFn: async ({ href, body }) =>
-      (
-        await axiosInstance.patch<Exporter | AsyncOperationResponse>(
-          toProxyHref(href),
-          body,
-        )
-      ).data,
+    mutationFn: async ({ href, body }) => {
+      const response = await axiosInstance.patch<
+        Exporter | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      // `Exporter` is open-ended, so `"task" in` can't tell them apart; the spec's 202 is the task.
+      if (response.status === 202) {
+        recordTask(response.data as AsyncOperationResponse);
+      }
+      return response.data;
+    },
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       options?.onSuccess?.(data, vars);
@@ -191,11 +195,13 @@ export const useExporterDeleteMutation = (
   const queryClient = useQueryClient();
   return useMutation<AsyncOperationResponse, DrfAxiosError, Exporter>({
     mutationFn: async (exporter) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(exporter.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(exporter.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, exporter) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });
@@ -219,12 +225,14 @@ export const useExportMutation = (
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          `${toProxyHref(href)}exports/`,
-          body,
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            `${toProxyHref(href)}exports/`,
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({
         queryKey: exporterKeys.exports(vars.href),

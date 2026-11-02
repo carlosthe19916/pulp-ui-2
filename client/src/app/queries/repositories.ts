@@ -35,6 +35,7 @@ import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
 import { parseRepositoryVersionHref, resolvePulpType } from "./utils/pulpHref";
+import { recordTask } from "./utils/recordTask";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const RepositoriesQueryKey = "repositories";
@@ -122,11 +123,13 @@ export const useRepositoryDeleteMutation = (
       mutationFn: async (
         repository: RepositoryResponse,
       ): Promise<AsyncOperationResponse> =>
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(repository.pulp_href ?? ""),
-          )
-        ).data,
+        recordTask(
+          (
+            await axiosInstance.delete<AsyncOperationResponse>(
+              toProxyHref(repository.pulp_href ?? ""),
+            )
+          ).data,
+        ),
       onSuccess: (data, repository) => {
         void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
         void queryClient.invalidateQueries({
@@ -177,7 +180,7 @@ export const useRepositorySyncMutation = (
         `${toProxyHref(href)}sync/`,
         body,
       );
-      return response.data;
+      return recordTask(response.data);
     },
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
@@ -242,12 +245,12 @@ export const useRepositoryActionMutation = (
       const url = path.startsWith("/")
         ? pulpApiPath(path.slice(1), domain)
         : `${toProxyHref(targetHref)}${path}`;
-      return (
-        await axiosInstance.post<ActionOperationResponse>(
-          url,
-          toActionBody(body),
-        )
-      ).data;
+      const { data } = await axiosInstance.post<ActionOperationResponse>(
+        url,
+        toActionBody(body),
+      );
+      if ("task" in data) recordTask(data);
+      return data;
     },
     onSuccess: (data, vars) => {
       const repositoryHref =
@@ -304,13 +307,13 @@ export const useRepositoryModifyMutation = (
               : body.add_content_units,
           },
         );
-        return response.data;
+        return recordTask(response.data);
       }
       const response = await axiosInstance.post<AsyncOperationResponse>(
         `${base}modify/`,
         body,
       );
-      return response.data;
+      return recordTask(response.data);
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
@@ -343,11 +346,13 @@ export const useRepositoryVersionDeleteMutation = (
     RepositoryVersionResponse
   >({
     mutationFn: async (version: RepositoryVersionResponse) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(version.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(version.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, version) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({
@@ -376,12 +381,14 @@ export const useRepositoryVersionRepairMutation = (
     RepositoryVersionResponse
   >({
     mutationFn: async (version: RepositoryVersionResponse) =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          `${toProxyHref(version.pulp_href ?? "")}repair/`,
-          { verify_checksums: true },
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            `${toProxyHref(version.pulp_href ?? "")}repair/`,
+            { verify_checksums: true },
+          )
+        ).data,
+      ),
     onSuccess: (data, version) => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
       options?.onSuccess?.(data, version);
@@ -579,13 +586,13 @@ export const useRepositoryUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<RepositoryResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
-          toProxyHref(href),
-          body,
-        )
-      ).data,
+    }): Promise<RepositoryResponse | AsyncOperationResponse> => {
+      const { data } = await axiosInstance.patch<
+        RepositoryResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      if ("task" in data) recordTask(data);
+      return data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({

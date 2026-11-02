@@ -21,6 +21,7 @@ import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
 import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { recordTask } from "./utils/recordTask";
 
 export const AcsQueryKey = "acs";
 
@@ -120,12 +121,13 @@ export const useAcsUpdateMutation = (
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
-    mutationFn: async ({ href, body }) =>
-      (
-        await axiosInstance.patch<
-          AlternateContentSource | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+    mutationFn: async ({ href, body }) => {
+      const { data } = await axiosInstance.patch<
+        AlternateContentSource | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      if ("task" in data) recordTask(data);
+      return data;
+    },
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: acsKeys.list() });
       options?.onSuccess?.(data, vars);
@@ -144,11 +146,13 @@ export const useAcsDeleteMutation = (
     AlternateContentSource
   >({
     mutationFn: async (acs) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(acs.pulp_href ?? ""),
-        )
-      ).data,
+      recordTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(acs.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, acs) => {
       void queryClient.invalidateQueries({ queryKey: acsKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });

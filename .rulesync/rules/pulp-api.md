@@ -21,6 +21,9 @@ or the generated client: its params, filters, `ordering` enum and declared respo
 - Type a write by the responses its operation declares; don't assume a task. Code that needs
   the task checks for `task` in the response; a `202`'s new object is `created_resources[0]` on
   the finished task.
+- A write that receives a task records it with `recordTask` (`queries/utils/recordTask.ts`) in its
+  `mutationFn`, behind the `task` check when the response may also be an entity; the dashboard's
+  recent tasks come only from there.
 - Task completion uses `isTerminalTaskState` (`queries/tasks.ts`), which includes `skipped`;
   never `state === "completed"` alone.
 - Cancel is `PATCH {task_href}` `{ state: "canceled" }`; `DELETE` removes the task record and
@@ -70,7 +73,7 @@ Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and
 definitions.
 
 - [ ] Write responses are typed from the operation's declared statuses; task handling doesn't
-      assume every write returns `202`.
+      assume every write returns `202`; a received task goes through `recordTask`.
 - [ ] Task completion uses `isTerminalTaskState` (includes `skipped`); cancel is a `PATCH` with
       `state: "canceled"`.
 - [ ] API errors become text via `getMutationErrorMessage`; no ad hoc error parsing.
