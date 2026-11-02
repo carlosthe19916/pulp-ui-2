@@ -213,8 +213,15 @@ export const taskDetailQueryOptions = ({
  * Polls a dispatched task until it ends and returns it; rejects with the task's
  * failure detail. For a mutation that must hand back what the task created.
  */
+/**
+ * How long `waitForTask` waits before its next check: 1 s, 2 s, … up to the poll interval,
+ * so short tasks still resolve fast and long ones (uploads) aren't checked every second.
+ */
+export const taskPollDelay = (attempt: number): number =>
+  Math.min(1000 * attempt, DEFAULT_REFETCH_INTERVAL);
+
 export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
-  for (;;) {
+  for (let attempt = 1; ; attempt++) {
     const { data: task } = await axiosInstance.get<TaskResponse>(
       toProxyHref(taskHref),
     );
@@ -222,7 +229,7 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
     if (isTerminalTaskState(task.state)) {
       throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, taskPollDelay(attempt)));
   }
 };
 
