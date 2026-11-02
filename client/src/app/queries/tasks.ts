@@ -229,6 +229,7 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {
   state?: string;
+  name?: string;
   notFound: boolean;
   /** The task's failure detail, when it ended in `failed` (see `getTaskErrorMessage`). */
   errorMessage?: string;
@@ -264,6 +265,7 @@ export const useTaskDetailQueries = ({
         const result = results[index];
         byHref.set(taskHref, {
           state: result?.data?.state,
+          name: result?.data?.name,
           notFound: result?.error?.response?.status === 404,
           errorMessage: getTaskErrorMessage(result?.data),
           createdResources: result?.data?.created_resources ?? [],
@@ -272,6 +274,33 @@ export const useTaskDetailQueries = ({
       return byHref;
     },
   });
+
+/**
+ * One count probe (`limit: 1`, read `.count`) per params entry in the selected domain,
+ * for series the API can't group (tasks per day).
+ */
+export const useTasksCountQueries = ({
+  paramsList,
+  refetchInterval,
+}: {
+  paramsList: Omit<ITaskListParams, "limit" | "offset">[];
+  refetchInterval?: number;
+}): { counts: (number | undefined)[]; isLoading: boolean } => {
+  const domain = useSelectedDomain();
+  const results = useQueries({
+    queries: paramsList.map((params) =>
+      tasksListQueryOptions({
+        domain,
+        params: { ...params, limit: 1, offset: 0 },
+        options: { refetchInterval },
+      }),
+    ),
+  });
+  return {
+    counts: results.map((result) => result.data?.count),
+    isLoading: results.some((result) => result.isLoading),
+  };
+};
 
 /** Polls while any task on the page is still active. */
 export const useTasksListQuery = ({

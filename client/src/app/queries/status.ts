@@ -34,6 +34,9 @@ export const statusQueryOptions = queryOptions<StatusResponse, DrfAxiosError>({
   retry: false,
 });
 
-export const useStatusQuery = () => {
-  return useQuery(statusQueryOptions);
+/** `refetchInterval` keeps a health view current; the shared status otherwise stays cached. */
+export const useStatusQuery = ({
+  refetchInterval,
+}: { refetchInterval?: number } = {}) => {
+  return useQuery({ ...statusQueryOptions, refetchInterval });
 };

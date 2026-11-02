@@ -1,6 +1,7 @@
 import { createRootRouteWithContext } from "@tanstack/react-router";
 
 import "@patternfly/react-core/dist/styles/base.css";
+import "@patternfly/patternfly/patternfly-charts.css";
 
 import { RouteErrorFallback } from "@app/components/RouteErrorFallback";
 import { RootComponent } from "@app/layout/RootLayout";

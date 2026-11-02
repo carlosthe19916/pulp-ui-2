@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type UseQueryOptions,
 } from "@tanstack/react-query";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
@@ -30,14 +31,22 @@ export const vulnReportKeys = {
     [...vulnReportKeys.list(), domain, params] as const,
 };
 
+type VulnReportListOptions = Omit<
+  UseQueryOptions<PaginatedVulnerabilityReportResponseList, DrfAxiosError>,
+  "queryKey" | "queryFn"
+>;
+
 export const vulnReportsListQueryOptions = ({
   domain,
   params,
+  options,
 }: {
   domain: IPulpDomain;
   params: IVulnReportListParams;
+  options?: VulnReportListOptions;
 }) =>
   queryOptions<PaginatedVulnerabilityReportResponseList, DrfAxiosError>({
+    ...options,
     queryKey: vulnReportKeys.listQuery(domain, params),
     queryFn: async () =>
       (
@@ -55,11 +64,13 @@ export const vulnReportsListQueryOptions = ({
 
 export const useVulnReportsListQuery = ({
   params,
+  options,
 }: {
   params: IVulnReportListParams;
+  options?: VulnReportListOptions;
 }) => {
   const domain = useSelectedDomain();
-  return useQuery(vulnReportsListQueryOptions({ domain, params }));
+  return useQuery(vulnReportsListQueryOptions({ domain, params, options }));
 };
 
 export const useVulnReportDeleteMutation = (

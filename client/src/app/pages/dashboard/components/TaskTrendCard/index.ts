@@ -1,0 +1,1 @@
+export { TaskTrendCard } from "./TaskTrendCard";

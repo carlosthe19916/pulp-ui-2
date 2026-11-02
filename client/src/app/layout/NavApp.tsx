@@ -94,7 +94,7 @@ export const NavApp: React.FC<INavAppProps> = ({
   const hasAcs = getAcsTypes({ installed }).length > 0;
   const canScan = getScannableRepositoryTypes({ installed }).length > 0;
 
-  // Each group owns one top-level URL segment ("" for the dashboard).
+  // Each group owns one top-level URL segment.
   const section = useLocation({
     select: (location) => location.pathname.split("/")[1],
   });
@@ -126,9 +126,23 @@ export const NavApp: React.FC<INavAppProps> = ({
   return (
     <Nav id="nav-sidebar" aria-label="Nav" variant="docked" onSelect={onSelect}>
       <NavList>
-        <NavGroup title="Main" icon={<RhUiHomeIcon />} {...groupProps("")}>
-          <NavItem isActive={!!matchRoute({ to: "/" })}>
-            <Link to="/">Dashboard</Link>
+        <NavGroup
+          title="Main"
+          icon={<RhUiHomeIcon />}
+          {...groupProps("dashboard")}
+        >
+          <NavItem
+            isActive={
+              !!matchRoute({
+                to: "/dashboard/$pulpDomain",
+                params: { pulpDomain },
+                fuzzy: true,
+              })
+            }
+          >
+            <Link to="/dashboard/$pulpDomain" params={{ pulpDomain }}>
+              Dashboard
+            </Link>
           </NavItem>
         </NavGroup>
 
