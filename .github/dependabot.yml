@@ -1,11 +1,138 @@
 version: 2
+
+# Every Dependabot PR auto-merges once CI passes (auto-merge-dependabot.yaml), so the cooldown
+# keeps freshly published (possibly compromised) releases out; security updates skip it.
+# Groups: packages that must move together (peer deps) take every update type; tooling groups
+# take minor/patch only, so a breaking major arrives as its own PR instead of blocking the group.
+# Runtime libraries without a group get one PR each, so their updates stay visible.
 updates:
   - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci(deps): "
+    groups:
+      github-actions:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    open-pull-requests-limit: 15
     commit-message:
-      prefix: "ci(deps): "
+      prefix: "chore(deps): "
+    allow:
+      - dependency-type: direct
+    ignore:
+      # Types track the runtime Node major (22 in the Dockerfile and CI), bumped by hand.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+    groups:
+      # @patternfly/react-charts peer-depends on the victory-* packages.
+      patternfly:
+        patterns:
+          - "@patternfly/*"
+          - "victory-*"
+
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+
+      # @tanstack/router-plugin peer-depends on the exact @tanstack/react-router range.
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+        exclude-patterns:
+          - "@tanstack/eslint-plugin-*"
+
+      forms:
+        patterns:
+          - "react-hook-form"
+          - "@hookform/*"
+          - "yup"
+          - "zod"
+
+      oidc:
+        patterns:
+          - "oidc-client-ts"
+          - "react-oidc-context"
+
+      monaco:
+        patterns:
+          - "monaco-editor"
+          - "@monaco-editor/*"
+
+      server:
+        patterns:
+          - "express"
+          - "@types/express"
+          - "ejs"
+          - "@types/ejs"
+          - "http-proxy-middleware"
+          - "http-terminator"
+
+      # @vitest/browser-playwright pins vitest exactly.
+      vite-vitest:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "vite"
+          - "vite-plugin-*"
+          - "@vitejs/*"
+          - "vitest"
+          - "vitest-*"
+          - "@vitest/*"
+
+      playwright:
+        patterns:
+          - "@playwright/test"
+          - "playwright"
+
+      rollup:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "rollup"
+          - "rollup-*"
+          - "@rollup/*"
+
+      # typescript-eslint caps the supported typescript version.
+      typescript-linting:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "typescript"
+          - "typescript-eslint"
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@eslint-react/*"
+          - "@tanstack/eslint-plugin-*"
+          - "globals"
+          - "prettier"
+          - "oxlint"
+          - "oxlint-*"
+          - "@oxlint/*"
+          - "oxfmt"
+
+      # Pre-1.0 openapi-ts (minors can break the generated client) stays out of this group.
+      dev-tooling:
+        dependency-type: development
+        update-types: ["minor", "patch"]
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@hey-api/*"
 
   # The website is a standalone package, not a root workspace, so it needs its
   # own npm entry. These PRs touch only website/** and auto-merge once the
@@ -14,6 +141,9 @@ updates:
     directory: "/website"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     commit-message:
       prefix: "chore(deps): "
     allow:
@@ -23,54 +153,12 @@ updates:
         patterns:
           - "@docusaurus/*"
           - "@mdx-js/*"
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    commit-message:
-      prefix: "chore(deps): "
-
-    allow:
-      - dependency-type: direct
-
-    groups:
-      patternfly:
+      react:
         patterns:
-          - "@patternfly/*"
-
-      "server dependencies":
+          - "react"
+          - "react-dom"
+          - "@types/react"
+      website-other:
+        update-types: ["minor", "patch"]
         patterns:
-          - cookie
-          - ejs
-          - express
-          - http-proxy-middleware
-          - http-terminator
-
-      rollup:
-        patterns:
-          - "@rollup/*"
-          - "rollup"
-          - "rollup-*"
-
-      linting-formatting:
-        patterns:
-          - "eslint"
-          - "eslint-*"
-          - "@eslint-*"
-          - "@eslint/*"
-          - "*-eslint"
-          - "typescript-eslint"
-          - "prettier"
-          - "oxlint"
-          - "oxfmt"
-          - "@oxlint/*"
-
-      tools:
-        patterns:
-          - "vite"
-          - "vite-*"
-          - "vitest"
-          - "@vitest/*"
-          - "@vitejs/*"
-          - "@hey-api/*"
+          - "*"
