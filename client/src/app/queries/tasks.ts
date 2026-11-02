@@ -275,24 +275,31 @@ export const useTaskDetailQueries = ({
     },
   });
 
+/** One task count for `useTasksCountQueries`. */
+export interface ITaskCountProbe {
+  params: Omit<ITaskListParams, "limit" | "offset">;
+  /** A window in the past whose count can't change: read once, never polled. */
+  closed?: boolean;
+}
+
 /**
- * One count probe (`limit: 1`, read `.count`) per params entry in the selected domain,
- * for series the API can't group (tasks per day).
+ * One count probe (`limit: 1`, read `.count`) per entry in the selected domain, for
+ * series the API can't group (tasks per day).
  */
 export const useTasksCountQueries = ({
-  paramsList,
+  probes,
   refetchInterval,
 }: {
-  paramsList: Omit<ITaskListParams, "limit" | "offset">[];
+  probes: ITaskCountProbe[];
   refetchInterval?: number;
 }): { counts: (number | undefined)[]; isLoading: boolean } => {
   const domain = useSelectedDomain();
   const results = useQueries({
-    queries: paramsList.map((params) =>
+    queries: probes.map(({ params, closed }) =>
       tasksListQueryOptions({
         domain,
         params: { ...params, limit: 1, offset: 0 },
-        options: { refetchInterval },
+        options: closed ? { staleTime: Infinity } : { refetchInterval },
       }),
     ),
   });

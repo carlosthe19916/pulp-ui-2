@@ -96,11 +96,13 @@ const disabledPropsFor = ({
 
 /**
  * `my_permissions/` leaves out superuser status, so a superuser, or a user whose status
- * is still loading, may do anything.
+ * is still loading, may do anything. The reads are skipped only for those two; a failed
+ * superuser check still reads them.
  */
-const useMayDoAnything = (): boolean => {
+const useSuperuserGate = () => {
   const { data: isSuperuser, isPending } = useIsSuperuserQuery();
-  return isPending || !!isSuperuser;
+  const mayDoAnything = isPending || !!isSuperuser;
+  return { mayDoAnything, needsPermissions: !mayDoAnything };
 };
 
 /**
@@ -108,8 +110,8 @@ const useMayDoAnything = (): boolean => {
  * (or when they can't be read) nothing is disabled — the server still enforces.
  */
 export const useObjectPermissions = ({ href }: { href: string }) => {
-  const { data } = useMyPermissionsQuery({ href });
-  const mayDoAnything = useMayDoAnything();
+  const { mayDoAnything, needsPermissions } = useSuperuserGate();
+  const { data } = useMyPermissionsQuery({ href, enabled: needsPermissions });
 
   const can = (verb: PermissionVerb): boolean =>
     mayDoAnything ||
@@ -124,8 +126,11 @@ export const useObjectPermissions = ({ href }: { href: string }) => {
 
 /** `useObjectPermissions` for several objects at once (a list page's rows). */
 export const useObjectsPermissions = ({ hrefs }: { hrefs: string[] }) => {
-  const byHref = useMyPermissionsQueries({ hrefs });
-  const mayDoAnything = useMayDoAnything();
+  const { mayDoAnything, needsPermissions } = useSuperuserGate();
+  const byHref = useMyPermissionsQueries({
+    hrefs,
+    enabled: needsPermissions,
+  });
 
   const can = ({
     href,

@@ -17,8 +17,14 @@ export const prefetchEditPermissions = async ({
   href: string;
 }): Promise<void> => {
   const domain = await ensureDefaultDomain(queryClient);
-  await Promise.all([
-    queryClient.query(myPermissionsQueryOptions({ href })).catch(() => null),
-    queryClient.query(isSuperuserQueryOptions({ domain })).catch(() => null),
-  ]);
+  const isSuperuser = await queryClient
+    .query(isSuperuserQueryOptions({ domain }))
+    .catch(() => null);
+  // `useObjectPermissions` skips `my_permissions/` only for a known superuser. This runs
+  // after the superuser check (usually cached for the session) to skip that useless read.
+  if (isSuperuser !== true) {
+    await queryClient
+      .query(myPermissionsQueryOptions({ href }))
+      .catch(() => null);
+  }
 };

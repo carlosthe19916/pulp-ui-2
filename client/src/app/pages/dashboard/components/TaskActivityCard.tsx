@@ -41,10 +41,10 @@ export const TaskActivityCard: React.FC = () => {
     counts: [running, waiting, failed],
     isLoading,
   } = useTasksCountQueries({
-    paramsList: [
-      { state: "running" },
-      { state: "waiting" },
-      { state: "failed", finished_at__gte: since },
+    probes: [
+      { params: { state: "running" } },
+      { params: { state: "waiting" } },
+      { params: { state: "failed", finished_at__gte: since } },
     ],
     refetchInterval: DASHBOARD_REFRESH_INTERVAL,
   });
