@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTaskHref } from "./tasks";
+import { buildTaskHref, taskPollDelay } from "./tasks";
 
 describe("buildTaskHref", () => {
   it("builds a domain-scoped task href when domains are enabled", () => {
@@ -13,5 +13,13 @@ describe("buildTaskHref", () => {
     expect(buildTaskHref("abc-123", { enabled: false, name: "default" })).toBe(
       "/pulp/api/v3/tasks/abc-123/",
     );
+  });
+});
+
+describe("taskPollDelay", () => {
+  it("backs off by a second per check, up to the poll interval", () => {
+    expect([1, 2, 3, 4, 5, 6, 20].map(taskPollDelay)).toEqual([
+      1000, 2000, 3000, 4000, 5000, 5000, 5000,
+    ]);
   });
 });
