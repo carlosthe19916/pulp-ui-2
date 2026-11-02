@@ -85,20 +85,26 @@ export const permissionsFor = ({
 
 /**
  * Resolve once the permission checks a fresh page load starts have answered and
- * rendered: `my_permissions/` and the superuser probe (`users/{id}/`). Until then
- * nothing is disabled, so asserting "enabled" earlier would pass vacuously.
+ * rendered: the superuser probe (`users/{id}/`) and, for a non-superuser only,
+ * `my_permissions/` (the UI skips it for a superuser). Until then nothing is disabled,
+ * so asserting "enabled" earlier would pass vacuously.
  */
 export function permissionsSettled(page: Page): () => Promise<void> {
-  const settled = Promise.all(
-    [/\/my_permissions\/$/, /\/users\/\d+\/$/].map((url) =>
-      page
-        .waitForResponse(
-          (r) =>
-            r.request().method() === "GET" && url.test(r.url().split("?")[0]),
-        )
-        .then((r) => r.finished()),
-    ),
-  );
+  const response = (url: RegExp) =>
+    page.waitForResponse(
+      (r) => r.request().method() === "GET" && url.test(r.url().split("?")[0]),
+    );
+  // Both waits start now so neither response is missed.
+  const superuserProbe = response(/\/users\/\d+\/$/);
+  const permissions = response(/\/my_permissions\/$/);
+  // Never awaited for a superuser; don't let it fail the test when the page closes.
+  permissions.catch(() => undefined);
+  const settled = superuserProbe.then(async (probe) => {
+    await probe.finished();
+    // 200: a superuser, whose `my_permissions/` is never read. 403: wait for it.
+    if (probe.ok()) return;
+    await (await permissions).finished();
+  });
   return async () => {
     await settled;
     // Two animation frames: React has committed the re-render the answers caused.

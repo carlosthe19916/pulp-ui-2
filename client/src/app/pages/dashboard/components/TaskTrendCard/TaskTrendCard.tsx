@@ -17,7 +17,7 @@ import { t_chart_color_red_orange_200 as failedColorLight } from "@patternfly/re
 
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useTheme } from "@app/hooks/useTheme";
-import { type ITaskListParams, useTasksCountQueries } from "@app/queries/tasks";
+import { type ITaskCountProbe, useTasksCountQueries } from "@app/queries/tasks";
 
 import {
   DASHBOARD_REFRESH_INTERVAL,
@@ -48,16 +48,15 @@ export const TaskTrendCard: React.FC = () => {
   };
   // Fixed at mount so the query keys don't change every render.
   const [days] = useState(() => lastDays(TREND_DAYS));
-  const paramsList: Omit<ITaskListParams, "limit" | "offset">[] = days.flatMap(
-    (day) =>
-      SERIES.map(({ state }) => ({
-        state,
-        finished_at__gte: day.gte,
-        finished_at__lt: day.lt,
-      })),
+  const probes: ITaskCountProbe[] = days.flatMap((day, index) =>
+    SERIES.map(({ state }) => ({
+      params: { state, finished_at__gte: day.gte, finished_at__lt: day.lt },
+      // Only today (the last day) can still change.
+      closed: index < days.length - 1,
+    })),
   );
   const { counts, isLoading } = useTasksCountQueries({
-    paramsList,
+    probes,
     refetchInterval: DASHBOARD_REFRESH_INTERVAL,
   });
 

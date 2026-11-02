@@ -82,14 +82,26 @@ export const myPermissionsQueryOptions = ({
     staleTime: 60_000,
   });
 
-export const useMyPermissionsQuery = ({ href }: { href: string }) =>
-  useQuery({ ...myPermissionsQueryOptions({ href }), enabled: !!href });
+/** `enabled: false` skips the read (a superuser's answer would be ignored). */
+export const useMyPermissionsQuery = ({
+  href,
+  enabled = true,
+}: {
+  href: string;
+  enabled?: boolean;
+}) =>
+  useQuery({
+    ...myPermissionsQueryOptions({ href }),
+    enabled: enabled && !!href,
+  });
 
 /** One `my_permissions/` read per href (a list page's rows), keyed by href. */
 export const useMyPermissionsQueries = ({
   hrefs,
+  enabled = true,
 }: {
   hrefs: string[];
+  enabled?: boolean;
 }): Map<string, MyPermissionsResponse> => {
   // `combine` must be referentially stable or useQueries returns a new Map every
   // render; key it on the href list's content, not the (often fresh) array.
@@ -110,7 +122,7 @@ export const useMyPermissionsQueries = ({
   return useQueries({
     queries: hrefs.map((href) => ({
       ...myPermissionsQueryOptions({ href }),
-      enabled: !!href,
+      enabled: enabled && !!href,
     })),
     combine,
   });
