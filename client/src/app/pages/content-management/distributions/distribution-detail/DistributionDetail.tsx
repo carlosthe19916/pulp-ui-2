@@ -19,8 +19,8 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
-import { TasksTable } from "@app/components/TasksTable";
-import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { TabHelpAction } from "@app/components/TabHelpAction";
+import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
@@ -184,11 +184,16 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
             title={
               <TabTitleText>Tasks ({tasksCount?.count ?? 0})</TabTitleText>
             }
+            actions={
+              <TabHelpAction
+                tabName="Tasks"
+                headerContent="Task history"
+                bodyContent="Tasks that changed this distribution: edits and deletion. Tasks in every state are listed. The task that created the distribution isn't included."
+              />
+            }
           >
             <TabContentBody hasPadding>
-              <PersistentStateScopeProvider prefix="tasks">
-                <TasksTable lockedParams={{ reserved_resources: prn }} />
-              </PersistentStateScopeProvider>
+              <TaskHistoryTab prn={prn} />
             </TabContentBody>
           </Tab>
           {canManageRoles && (

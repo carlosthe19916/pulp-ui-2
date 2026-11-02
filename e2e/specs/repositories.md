@@ -124,6 +124,16 @@ Then its settings use the form's labels ("Remote", "Retained versions", "Metadat
 service", …), the remote links to the remote's page and the signing service shows its name
 "pulp-ui-dev-signing"
 
+### REP-DET-02 A repository's task history
+
+Summary: The Tasks tab lists the tasks run on the repository, their count in the tab title, and its help says what it lists.
+
+Seed: a file repository, edited once so an update task ran
+
+When I open its Tasks tab
+Then the tab title counts one task and the update task is listed
+And its help button opens the "Task history" popover
+
 ## Other layers
 
 | Behaviour                                                                       | Layer      |
