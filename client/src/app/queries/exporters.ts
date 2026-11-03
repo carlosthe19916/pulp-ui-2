@@ -18,6 +18,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
+import { type ISettledTask, settleTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -160,23 +161,24 @@ export const useExporterCreateMutation = (
 /** Pulp answers with the exporter or, when it must, a task. */
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
-    Exporter | AsyncOperationResponse,
+    Exporter | ISettledTask,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    Exporter | AsyncOperationResponse,
+    Exporter | ISettledTask,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
-    mutationFn: async ({ href, body }) =>
-      (
-        await axiosInstance.patch<Exporter | AsyncOperationResponse>(
-          toProxyHref(href),
-          body,
-        )
-      ).data,
+    mutationFn: async ({ href, body }) => {
+      const response = await axiosInstance.patch<
+        Exporter | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      return response.status === 202
+        ? settleTask(response.data as AsyncOperationResponse)
+        : (response.data as Exporter);
+    },
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       options?.onSuccess?.(data, vars);
@@ -186,16 +188,18 @@ export const useExporterUpdateMutation = (
 };
 
 export const useExporterDeleteMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, Exporter>,
+  options?: IMutationCallbacks<ISettledTask, Exporter>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<AsyncOperationResponse, DrfAxiosError, Exporter>({
+  return useMutation<ISettledTask, DrfAxiosError, Exporter>({
     mutationFn: async (exporter) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(exporter.pulp_href ?? ""),
-        )
-      ).data,
+      settleTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(exporter.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, exporter) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });

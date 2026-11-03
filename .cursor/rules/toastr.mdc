@@ -46,6 +46,11 @@ Toasts must fire even if the component unmounts mid-request.
 - A response that carries a task is reported with `taskStarted({ taskHref, title })` from
   `useTaskStarted()`: one toast now, and the task in the task drawer, which shows its outcome.
   Nothing polls a task to raise a later toast ([ADR 0017](../../docs/adr/0017-task-feedback.md)).
+- A configuration write (edit, delete, create of a remote, distribution, repository, ACS,
+  exporter, domain, namespace) waits for its task in the mutation hook with `settleTask`, so
+  its hook-level `onSuccess` gets an `ISettledTask` and calls `notifyTaskSettled` (a success
+  toast, or `taskStarted` when still running); a failed task arrives at `onError`. Data work
+  (sync, publish, content changes, …) keeps `taskStarted`.
 
 ## Variables and message
 

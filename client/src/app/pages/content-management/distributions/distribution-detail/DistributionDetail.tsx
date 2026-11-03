@@ -34,6 +34,7 @@ import {
   extractIdFromHref,
   hasRoleEndpoints,
 } from "@app/queries/utils/pulpHref";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
@@ -76,9 +77,12 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name: deletedName }) => {
-      taskStarted({
-        taskHref: data.task,
-        title: `Distribution "${deletedName}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Distribution "${deletedName}" deleted`,
+        startedTitle: `Distribution "${deletedName}" deletion started`,
       });
       void navigate({
         to: "/content-management/$pulpDomain/distributions",

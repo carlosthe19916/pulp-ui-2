@@ -20,6 +20,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type ISettledTask, settleTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -123,22 +124,20 @@ export const useDistributionsListQuery = ({
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
 export const useDistributionDeleteMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, DistributionResponse>,
+  options?: IMutationCallbacks<ISettledTask, DistributionResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<
-    AsyncOperationResponse,
-    DrfAxiosError,
-    DistributionResponse
-  >({
+  return useMutation<ISettledTask, DrfAxiosError, DistributionResponse>({
     mutationFn: async (
       distribution: DistributionResponse,
-    ): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(distribution.pulp_href ?? ""),
-        )
-      ).data,
+    ): Promise<ISettledTask> =>
+      settleTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(distribution.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, distribution) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
@@ -207,14 +206,14 @@ export const buildDistributionHref = (
  */
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
-    AsyncOperationResponse,
+    ISettledTask,
     { apiPath: string; body: Record<string, unknown> }
   >,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
-    AsyncOperationResponse,
+    ISettledTask,
     DrfAxiosError,
     { apiPath: string; body: Record<string, unknown> }
   >({
@@ -224,13 +223,15 @@ export const useDistributionCreateMutation = (
     }: {
       apiPath: string;
       body: Record<string, unknown>;
-    }): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`distributions/${apiPath}/`, domain),
-          body,
-        )
-      ).data,
+    }): Promise<ISettledTask> =>
+      settleTask(
+        (
+          await axiosInstance.post<AsyncOperationResponse>(
+            pulpApiPath(`distributions/${apiPath}/`, domain),
+            body,
+          )
+        ).data,
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       options?.onSuccess?.(data, variables);
@@ -242,13 +243,13 @@ export const useDistributionCreateMutation = (
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
-    DistributionResponse | AsyncOperationResponse,
+    DistributionResponse | ISettledTask,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DistributionResponse | AsyncOperationResponse,
+    DistributionResponse | ISettledTask,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -258,12 +259,14 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<DistributionResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<
-          DistributionResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+    }): Promise<DistributionResponse | ISettledTask> => {
+      const response = await axiosInstance.patch<
+        DistributionResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      return "task" in response.data
+        ? settleTask(response.data)
+        : response.data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({

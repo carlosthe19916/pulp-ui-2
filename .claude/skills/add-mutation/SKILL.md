@@ -30,6 +30,10 @@ use a made-up `widget` resource.
 A 202 response (task) goes through `taskStarted({ taskHref, title })` from `useTaskStarted()`,
 which toasts once and lists the task in the task drawer; a sync response toasts the entity
 (`addNotification({ title, variant: "success" })`). Never toast a task's outcome by polling it.
+A configuration write (edit/delete/create of a remote, distribution, …) instead waits for its
+task: its `mutationFn` returns `settleTask(data)` (`TData` is `ISettledTask`) and the caller
+reports with `notifyTaskSettled({ addNotification, taskStarted, settled, doneTitle,
+startedTitle })`.
 
 ## 1. Mutation hook (`queries/<family>.ts`)
 

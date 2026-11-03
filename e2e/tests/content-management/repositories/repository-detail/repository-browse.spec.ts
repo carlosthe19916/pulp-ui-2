@@ -44,9 +44,10 @@ test.describe("Repository browse", () => {
     await expect(files).not.toContainText("README.txt");
 
     await files.getByRole("row", { name: /intro\.txt/ }).click();
-    await expect(page.locator(".pf-v6-c-drawer__panel")).toContainText(
-      "intro.txt",
-    );
+    // The page also keeps the (hidden) task drawer panel: match the visible one.
+    await expect(
+      page.locator(".pf-v6-c-drawer__panel").filter({ visible: true }),
+    ).toContainText("intro.txt");
 
     // The generic list is still one tab away.
     await page.getByRole("tab", { name: "All content" }).click();

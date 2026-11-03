@@ -20,6 +20,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type ISettledTask, settleTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -112,13 +113,13 @@ export const useDomainCreateMutation = (
 
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
-    DomainResponse | AsyncOperationResponse,
+    DomainResponse | ISettledTask,
     { href: string; body: PatchedDomain }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DomainResponse | AsyncOperationResponse,
+    DomainResponse | ISettledTask,
     DrfAxiosError,
     { href: string; body: PatchedDomain }
   >({
@@ -132,7 +133,9 @@ export const useDomainUpdateMutation = (
       const response = await axiosInstance.patch<
         DomainResponse | AsyncOperationResponse
       >(toProxyHref(href), body);
-      return response.data;
+      return "task" in response.data
+        ? settleTask(response.data)
+        : response.data;
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
@@ -148,15 +151,15 @@ export const useDomainUpdateMutation = (
 };
 
 export const useDomainDeleteMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, DomainResponse>,
+  options?: IMutationCallbacks<ISettledTask, DomainResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<AsyncOperationResponse, DrfAxiosError, DomainResponse>({
+  return useMutation<ISettledTask, DrfAxiosError, DomainResponse>({
     mutationFn: async (domain: DomainResponse) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(domain.pulp_href ?? ""),
       );
-      return response.data;
+      return settleTask(response.data);
     },
     onSuccess: (data, domain) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });

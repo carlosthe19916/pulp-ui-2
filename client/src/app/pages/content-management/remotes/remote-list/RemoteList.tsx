@@ -56,6 +56,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes } from "@catalog";
 import { getCreateAlternatives, getEntityForm, getTypeLabel } from "@plugins";
@@ -93,9 +94,12 @@ export const RemoteList: React.FC = () => {
   const openModal = alternatives.find(({ key }) => key === openAlternative);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskStarted({
-        taskHref: data.task,
-        title: `Remote "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Remote "${name}" deleted`,
+        startedTitle: `Remote "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

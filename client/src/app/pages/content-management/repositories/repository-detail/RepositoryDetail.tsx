@@ -55,6 +55,7 @@ import {
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPulpType, getRepositoryContentTypes } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
@@ -139,9 +140,12 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) => {
-      taskStarted({
-        taskHref: data.task,
-        title: `Repository "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Repository "${name}" deleted`,
+        startedTitle: `Repository "${name}" deletion started`,
       });
       void navigate({
         to: "/content-management/$pulpDomain/repositories",

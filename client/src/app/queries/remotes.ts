@@ -19,6 +19,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type ISettledTask, settleTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -90,22 +91,18 @@ export const useRemotesListQuery = ({
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRemoteDeleteMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, GenericRemoteResponse>,
+  options?: IMutationCallbacks<ISettledTask, GenericRemoteResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<
-    AsyncOperationResponse,
-    DrfAxiosError,
-    GenericRemoteResponse
-  >({
-    mutationFn: async (
-      remote: GenericRemoteResponse,
-    ): Promise<AsyncOperationResponse> =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(remote.pulp_href ?? ""),
-        )
-      ).data,
+  return useMutation<ISettledTask, DrfAxiosError, GenericRemoteResponse>({
+    mutationFn: async (remote: GenericRemoteResponse): Promise<ISettledTask> =>
+      settleTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(remote.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, remote) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({
@@ -203,13 +200,13 @@ export const useRemoteCreateMutation = (
 /** PATCHes a remote by its own `pulp_href` (which embeds plugin + type). */
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
-    GenericRemoteResponse | AsyncOperationResponse,
+    GenericRemoteResponse | ISettledTask,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    GenericRemoteResponse | AsyncOperationResponse,
+    GenericRemoteResponse | ISettledTask,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -219,12 +216,14 @@ export const useRemoteUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<GenericRemoteResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<
-          GenericRemoteResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+    }): Promise<GenericRemoteResponse | ISettledTask> => {
+      const response = await axiosInstance.patch<
+        GenericRemoteResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      return "task" in response.data
+        ? settleTask(response.data)
+        : response.data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({

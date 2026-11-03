@@ -42,6 +42,7 @@ import {
 } from "@app/queries/acs";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { getAcsTypes } from "@plugins";
 
@@ -108,9 +109,12 @@ export const AcsList: React.FC = () => {
   });
   const deleteMutation = useAcsDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskStarted({
-        taskHref: result.task,
-        title: `Deletion of "${name}" started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: result,
+        doneTitle: `Source "${name}" deleted`,
+        startedTitle: `Deletion of "${name}" started`,
       }),
     onError: (err, { name }) =>
       addNotification({

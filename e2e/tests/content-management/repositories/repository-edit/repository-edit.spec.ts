@@ -25,7 +25,7 @@ test.describe("Repository edit page", () => {
    * Seed: a file repository with a description, a remote and 5 retained versions
    *
    * When I open its edit page, empty Description, remove the remote, set 2 retained versions and save
-   * Then the toast "Repository "<name>" update started" appears (an edit runs as a task) and its
+   * Then the toast "Repository "<name>" updated" appears (the edit's task is waited for) and its
    * detail page opens
    * And once the task finishes, the server has no description (null: Pulp rejects a blank one), no
    * remote and 2 retained versions
@@ -64,7 +64,7 @@ test.describe("Repository edit page", () => {
       await formPage.submit("Save");
 
       await expect(
-        toasts.info(`Repository "${name}" update started`),
+        toasts.success(`Repository "${name}" updated`),
       ).toBeVisible();
       await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
       await expect
@@ -94,7 +94,7 @@ test.describe("Repository edit page", () => {
    * Then the alert "Sync in progress" says "You can still save: your changes are applied when the
    * task finishes." and links to the task
    * When I change the description and save
-   * Then the toast "Repository "<name>" update started" appears and the detail page opens
+   * Then the toast "Repository "<name>" updated" appears and the detail page opens
    * And once the sync finishes, the server has the new description
    *
    * Pulp queues the update behind the repository's lock and runs it when the sync finishes.
@@ -147,7 +147,7 @@ test.describe("Repository edit page", () => {
       await formPage.fill({ Description: "Saved during a sync" });
       await formPage.submit("Save");
       await expect(
-        toasts.info(`Repository "${name}" update started`),
+        toasts.success(`Repository "${name}" updated`),
       ).toBeVisible();
       await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
       await expect

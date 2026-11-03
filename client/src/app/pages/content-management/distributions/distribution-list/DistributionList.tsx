@@ -57,6 +57,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -94,9 +95,12 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskStarted({
-        taskHref: data.task,
-        title: `Distribution "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Distribution "${name}" deleted`,
+        startedTitle: `Distribution "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

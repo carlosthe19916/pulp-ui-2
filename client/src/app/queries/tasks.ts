@@ -233,6 +233,51 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
   }
 };
 
+/**
+ * How long a configuration write (edit, delete, create of a remote, distribution, …) waits
+ * for its task before handing it to the task drawer (ADR 0017).
+ */
+export const SETTLE_TIMEOUT_MS = 10_000;
+const SETTLE_POLL_DELAYS_MS = [250, 500, 1000];
+
+/** A write that ran as a task; `finished` is the task when it ended within the wait. */
+export interface ISettledTask {
+  taskHref: string;
+  finished?: TaskResponse;
+}
+
+/** Tells a waited-for task from the entity a `200 | 202` update may return. */
+export const isSettledTask = (data: object): data is ISettledTask =>
+  "taskHref" in data;
+
+/**
+ * Waits up to `SETTLE_TIMEOUT_MS` for a dispatched task, so a quick write reports like a
+ * synchronous one; rejects with the task's error if it failed. A task still running when
+ * the wait ends comes back without `finished`.
+ */
+export const settleTask = async ({
+  task: taskHref,
+}: AsyncOperationResponse): Promise<ISettledTask> => {
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  for (let attempt = 0; ; attempt++) {
+    const { data: task } = await axiosInstance.get<TaskResponse>(
+      toProxyHref(taskHref),
+    );
+    if (task.state === "completed" || task.state === "skipped") {
+      return { taskHref, finished: task };
+    }
+    if (isTerminalTaskState(task.state)) {
+      throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+    }
+    const delay =
+      SETTLE_POLL_DELAYS_MS[
+        Math.min(attempt, SETTLE_POLL_DELAYS_MS.length - 1)
+      ] ?? 1000;
+    if (Date.now() + delay > deadline) return { taskHref };
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+};
+
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {
   state?: string;

@@ -35,8 +35,10 @@ import {
   useExportMutation,
   useExportsListQuery,
 } from "@app/queries/exporters";
+import { isSettledTask } from "@app/queries/tasks";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { buildDefaultValues } from "@app/utils/formSchema";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EXPORTER_TYPES } from "../utils/exporterTypes";
@@ -119,10 +121,13 @@ export const ExportersTab: React.FC = () => {
   });
   const updateMutation = useExporterUpdateMutation({
     onSuccess: (result) =>
-      "task" in result
-        ? taskStarted({
-            taskHref: String(result.task),
-            title: "Exporter update started",
+      isSettledTask(result)
+        ? notifyTaskSettled({
+            addNotification,
+            taskStarted,
+            settled: result,
+            doneTitle: "Exporter saved",
+            startedTitle: "Exporter update started",
           })
         : addNotification({ title: "Exporter saved", variant: "success" }),
     onError: onFormError("Failed to save exporter"),
@@ -137,9 +142,12 @@ export const ExportersTab: React.FC = () => {
   });
   const deleteMutation = useExporterDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskStarted({
-        taskHref: result.task,
-        title: `Deletion of exporter "${name}" started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: result,
+        doneTitle: `Exporter "${name}" deleted`,
+        startedTitle: `Deletion of exporter "${name}" started`,
       }),
     onError: (err, { name }) =>
       addNotification({

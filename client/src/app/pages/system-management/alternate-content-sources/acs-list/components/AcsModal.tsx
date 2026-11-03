@@ -11,7 +11,9 @@ import {
   useAcsCreateMutation,
   useAcsUpdateMutation,
 } from "@app/queries/acs";
+import { isSettledTask } from "@app/queries/tasks";
 import { buildDefaultValues } from "@app/utils/formSchema";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { ACS_FIELDS } from "../utils/acsTypes";
@@ -48,10 +50,13 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   });
   const updateMutation = useAcsUpdateMutation({
     onSuccess: (data) =>
-      "task" in data
-        ? taskStarted({
-            taskHref: data.task,
-            title: `Update of "${acs?.name}" started`,
+      isSettledTask(data)
+        ? notifyTaskSettled({
+            addNotification,
+            taskStarted,
+            settled: data,
+            doneTitle: `Source "${acs?.name}" saved`,
+            startedTitle: `Update of "${acs?.name}" started`,
           })
         : addNotification({
             title: `Source "${data.name}" saved`,

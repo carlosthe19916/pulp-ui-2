@@ -86,7 +86,7 @@ Seed: a file remote with a URL, a CA certificate, a download concurrency of 5 an
 
 When I open its edit page, change the URL, empty the CA certificate and Download concurrency, and
 save
-Then the toast "Remote "<name>" update started" appears (an edit runs as a task) and its detail
+Then the toast "Remote "<name>" updated" appears (the edit's task is waited for) and its detail
 page opens
 And once the task finishes, the server has the new URL, no CA certificate and no download
 concurrency, and every other setting unchanged

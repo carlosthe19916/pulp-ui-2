@@ -67,7 +67,7 @@ Seed: a container remote with include tag "latest"
 When I open its detail page and choose "Edit" in the actions menu
 Then "Edit container remote" opens
 When I add the include tag "stable", remove "latest" and save
-Then the toast "Remote "<name>" update started" appears and the detail page opens
+Then the toast "Remote "<name>" updated" appears and the detail page opens
 And once the update task finishes, its include tags are only "stable"
 
 ### RMT-EDT-02 Cancel leaves without saving
@@ -103,7 +103,7 @@ Summary: Deleting a remote from the list removes it after confirmation.
 Seed: a file remote
 
 When I choose "Delete" in its row actions and confirm "Delete Remote"
-Then the toast "Remote "<name>" deletion started" appears and the row disappears
+Then the toast "Remote "<name>" deleted" appears and the row disappears
 
 ## Other layers
 

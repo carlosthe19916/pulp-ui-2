@@ -16,6 +16,7 @@ import {
   useDomainCreateMutation,
   useDomainUpdateMutation,
 } from "@app/queries/domains";
+import { isSettledTask } from "@app/queries/tasks";
 import {
   getMutationErrorMessage,
   type IMutationErrorMessage,
@@ -136,11 +137,10 @@ export const useDomainForm = ({
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { body }) => {
-      // Update may be sync (200) or async (202 + task) — branch on the response.
-      const taskHref = (data as { task?: string | null }).task;
-      if (taskHref) {
+      // Update may be sync (200) or a task (202) still running after the wait.
+      if (isSettledTask(data) && !data.finished) {
         taskStarted({
-          taskHref,
+          taskHref: data.taskHref,
           title: `Domain "${body.name}" update started`,
         });
       } else {

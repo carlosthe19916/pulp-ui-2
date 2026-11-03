@@ -1,6 +1,30 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildTaskHref, taskPollDelay } from "./tasks";
+import type * as ApiInit from "@app/axios-config/apiInit";
+import { axiosInstance } from "@app/axios-config/apiInit";
+
+import {
+  buildTaskHref,
+  SETTLE_TIMEOUT_MS,
+  settleTask,
+  taskPollDelay,
+} from "./tasks";
+
+vi.mock(import("@app/axios-config/apiInit"), () => {
+  const axiosInstance = { get: vi.fn() };
+  return {
+    axiosInstance,
+    initInterceptors: vi.fn(),
+  } as unknown as typeof ApiInit;
+});
+
+const taskHref = "/pulp/default/api/v3/tasks/1/";
+const reads = (...states: string[]) =>
+  states.forEach((state) =>
+    vi.mocked(axiosInstance.get).mockResolvedValueOnce({
+      data: { state, name: "x", logging_cid: "" },
+    }),
+  );
 
 describe("buildTaskHref", () => {
   it("builds a domain-scoped task href when domains are enabled", () => {
@@ -21,5 +45,43 @@ describe("taskPollDelay", () => {
     expect([1, 2, 3, 4, 5, 6, 20].map(taskPollDelay)).toEqual([
       1000, 2000, 3000, 4000, 5000, 5000, 5000,
     ]);
+  });
+});
+
+describe("settleTask", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.mocked(axiosInstance.get).mockReset();
+  });
+
+  it("returns the finished task once it completes", async () => {
+    reads("waiting", "running", "completed");
+    const settled = await settleTask({ task: taskHref });
+    expect(settled.taskHref).toBe(taskHref);
+    expect(settled.finished?.state).toBe("completed");
+  });
+
+  it("rejects with the task's error when it fails", async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValueOnce({
+      data: {
+        state: "failed",
+        name: "x",
+        logging_cid: "",
+        error: { description: "Remote is in use" },
+      },
+    });
+    await expect(settleTask({ task: taskHref })).rejects.toThrow(
+      "Remote is in use",
+    );
+  });
+
+  it("hands back a task still running when the wait ends", async () => {
+    vi.useFakeTimers();
+    vi.mocked(axiosInstance.get).mockResolvedValue({
+      data: { state: "running", name: "x", logging_cid: "" },
+    });
+    const settled = settleTask({ task: taskHref });
+    await vi.advanceTimersByTimeAsync(SETTLE_TIMEOUT_MS);
+    await expect(settled).resolves.toEqual({ taskHref });
   });
 });

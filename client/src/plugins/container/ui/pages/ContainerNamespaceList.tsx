@@ -37,6 +37,7 @@ import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@app/utils/entityField";
 import { columnSort } from "@app/utils/sortHelpers";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import {
@@ -117,9 +118,12 @@ export const ContainerNamespaceList: React.FC = () => {
   });
   const deleteMutation = useContainerNamespaceDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskStarted({
-        taskHref: result.task,
-        title: `Namespace "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: result,
+        doneTitle: `Namespace "${name}" deleted`,
+        startedTitle: `Namespace "${name}" deletion started`,
       }),
     onError: (err, { name }) =>
       addNotification({

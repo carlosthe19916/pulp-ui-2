@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { Link } from "@tanstack/react-router";
 
+import { type ISettledTask, isSettledTask } from "@app/queries/tasks";
+
 import { extractTaskDomain, extractTaskId } from "./taskHref";
 
 interface INotifyFn {
@@ -48,7 +50,7 @@ export interface INotifyUpdateResultOptions {
   addNotification: INotifyFn;
   /** Reports a started task (`useTaskStarted`). */
   taskStarted: (task: { taskHref: string; title: string }) => void;
-  /** The update response: a task (202) or the updated object (200). */
+  /** The updated object (200), or the task it ran as (202), waited for briefly. */
   data: object;
   /** What was updated, e.g. `Remote "foo"`. */
   subject: string;
@@ -61,8 +63,11 @@ export const notifyUpdateResult = ({
   data,
   subject,
 }: INotifyUpdateResultOptions) => {
-  if ("task" in data && typeof data.task === "string") {
-    taskStarted({ taskHref: data.task, title: `${subject} update started` });
+  if (isSettledTask(data) && !data.finished) {
+    taskStarted({
+      taskHref: data.taskHref,
+      title: `${subject} update started`,
+    });
   } else {
     addNotification({ title: `${subject} updated`, variant: "success" });
   }
@@ -98,4 +103,30 @@ export const notifyTaskGroupStarted = ({
       </>
     ),
   });
+};
+
+export interface INotifyTaskSettledOptions {
+  addNotification: INotifyFn;
+  /** Reports a started task (`useTaskStarted`). */
+  taskStarted: (task: { taskHref: string; title: string }) => void;
+  settled: ISettledTask;
+  /** When the task finished within the wait, e.g. `Remote "foo" deleted`. */
+  doneTitle: string;
+  /** When it is still running and moves to the task drawer. */
+  startedTitle: string;
+}
+
+/** A configuration write that ran as a task: its outcome, or its start if still running. */
+export const notifyTaskSettled = ({
+  addNotification,
+  taskStarted,
+  settled,
+  doneTitle,
+  startedTitle,
+}: INotifyTaskSettledOptions) => {
+  if (settled.finished) {
+    addNotification({ title: doneTitle, variant: "success" });
+  } else {
+    taskStarted({ taskHref: settled.taskHref, title: startedTitle });
+  }
 };

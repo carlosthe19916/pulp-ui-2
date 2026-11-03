@@ -90,7 +90,7 @@ test.describe("Distribution detail page", () => {
    * When I choose "Cancel"
    * Then the detail page opens
    * When I choose "Delete" in the actions menu and confirm "Delete Distribution"
-   * Then the toast "Distribution "<name>" deletion started" appears and the Distributions list opens
+   * Then the toast "Distribution "<name>" deleted" appears and the Distributions list opens
    */
   test(
     "The detail page's Edit opens the edit page, whose breadcrumb leads back; Delete removes the distribution and returns to the list.",
@@ -122,7 +122,7 @@ test.describe("Distribution detail page", () => {
       await page.getByRole("menuitem", { name: "Delete" }).click();
       await new ConfirmModal(page, "Delete Distribution").confirm("Delete");
       await expect(
-        toasts.info(`Distribution "${name}" deletion started`),
+        toasts.success(`Distribution "${name}" deleted`),
       ).toBeVisible();
       await expect(distributionsPage.heading).toBeVisible();
     },

@@ -95,7 +95,8 @@ RQ v5 doesn't infer `TError`; declare it on every `queryOptions` / `useMutation`
 `TData` mirrors the declared 2xx response, never `any`/`unknown`: one code → that type (`201`
 entity, `202` `AsyncOperationResponse`, `204` `void`); `200` **and** `202` (e.g. a PATCH that
 may finish inline or dispatch a task) → `EntityResponse | AsyncOperationResponse`. A
-plugin-neutral write body stays `Record<string, unknown>`.
+configuration write that waits for its task with `settleTask` returns `ISettledTask` in place
+of `AsyncOperationResponse`. A plugin-neutral write body stays `Record<string, unknown>`.
 
 ## No `throw` in a `queryFn`
 

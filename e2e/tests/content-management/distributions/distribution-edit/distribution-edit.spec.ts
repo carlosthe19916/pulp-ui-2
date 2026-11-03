@@ -18,7 +18,7 @@ test.describe("Distribution edit page", () => {
    * Seed: a file distribution serving a publication
    *
    * When I open its edit page, choose "Repository" as the source, pick a repository and save
-   * Then the toast "Distribution "<name>" update started" appears and the detail page opens
+   * Then the toast "Distribution "<name>" updated" appears and the detail page opens
    * And once the task finishes, the server has the repository set and no publication
    *
    * Pulp refuses a distribution with both a repository and a publication, so the save must clear the
@@ -60,7 +60,7 @@ test.describe("Distribution edit page", () => {
       await formPage.submit("Save");
 
       await expect(
-        toasts.info(`Distribution "${name}" update started`),
+        toasts.success(`Distribution "${name}" updated`),
       ).toBeVisible();
       await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
       await expect

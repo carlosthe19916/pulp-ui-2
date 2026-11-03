@@ -4,10 +4,12 @@ import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityCreatePage } from "@app/components/EntityCreatePage";
 import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
+import { useNotifications } from "@app/hooks/useNotifications";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import { useDistributionCreateMutation } from "@app/queries/distributions";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const routeApi = getRouteApi(
@@ -19,6 +21,7 @@ export const DistributionCreate: React.FC = () => {
   const navigateSearch = routeApi.useNavigate();
   const { type } = routeApi.useSearch();
   const { name: pulpDomain } = useSelectedDomain();
+  const { addNotification } = useNotifications();
   const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
@@ -31,13 +34,16 @@ export const DistributionCreate: React.FC = () => {
     },
   });
 
-  // Creating a distribution is a task (202): the list shows it once the task finishes.
+  // Creating a distribution is a task (202), waited for briefly so the list shows it.
   const createMutation = useDistributionCreateMutation({
     onSuccess: (data, { body }) => {
       const name = String(body.name ?? "");
-      taskStarted({
-        taskHref: data.task,
-        title: `Distribution "${name}" creation started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Distribution "${name}" created`,
+        startedTitle: `Distribution "${name}" creation started`,
       });
     },
     onError: (error) =>

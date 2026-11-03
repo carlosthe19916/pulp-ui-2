@@ -29,6 +29,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type ISettledTask, settleTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -114,31 +115,29 @@ export const useRepositoriesListQuery = ({
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRepositoryDeleteMutation = (
-  options?: IMutationCallbacks<AsyncOperationResponse, RepositoryResponse>,
+  options?: IMutationCallbacks<ISettledTask, RepositoryResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<AsyncOperationResponse, DrfAxiosError, RepositoryResponse>(
-    {
-      mutationFn: async (
-        repository: RepositoryResponse,
-      ): Promise<AsyncOperationResponse> =>
+  return useMutation<ISettledTask, DrfAxiosError, RepositoryResponse>({
+    mutationFn: async (repository: RepositoryResponse): Promise<ISettledTask> =>
+      settleTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(repository.pulp_href ?? ""),
           )
         ).data,
-      onSuccess: (data, repository) => {
-        void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-        void queryClient.invalidateQueries({
-          queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
-        });
-        // Surface the new delete task on the row without waiting for the next poll.
-        void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-        options?.onSuccess?.(data, repository);
-      },
-      onError: options?.onError,
+      ),
+    onSuccess: (data, repository) => {
+      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+      void queryClient.invalidateQueries({
+        queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
+      });
+      // Surface the new delete task on the row without waiting for the next poll.
+      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+      options?.onSuccess?.(data, repository);
     },
-  );
+    onError: options?.onError,
+  });
 };
 
 /**
@@ -563,13 +562,13 @@ export const useRepositoryCreateMutation = (
 /** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
-    RepositoryResponse | AsyncOperationResponse,
+    RepositoryResponse | ISettledTask,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    RepositoryResponse | AsyncOperationResponse,
+    RepositoryResponse | ISettledTask,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -579,13 +578,14 @@ export const useRepositoryUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<RepositoryResponse | AsyncOperationResponse> =>
-      (
-        await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
-          toProxyHref(href),
-          body,
-        )
-      ).data,
+    }): Promise<RepositoryResponse | ISettledTask> => {
+      const response = await axiosInstance.patch<
+        RepositoryResponse | AsyncOperationResponse
+      >(toProxyHref(href), body);
+      return "task" in response.data
+        ? settleTask(response.data)
+        : response.data;
+    },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({

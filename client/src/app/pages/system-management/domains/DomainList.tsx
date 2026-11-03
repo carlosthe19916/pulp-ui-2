@@ -47,6 +47,7 @@ import {
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
@@ -89,9 +90,12 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskStarted({
-        taskHref: data.task,
-        title: `Domain "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Domain "${name}" deleted`,
+        startedTitle: `Domain "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

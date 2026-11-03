@@ -58,6 +58,7 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes, getPulpType } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -94,9 +95,12 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskStarted({
-        taskHref: data.task,
-        title: `Repository "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Repository "${name}" deleted`,
+        startedTitle: `Repository "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

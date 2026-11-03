@@ -31,6 +31,7 @@ import {
 } from "@app/queries/remotes";
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
+import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
@@ -67,9 +68,12 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) => {
-      taskStarted({
-        taskHref: data.task,
-        title: `Remote "${name}" deletion started`,
+      notifyTaskSettled({
+        addNotification,
+        taskStarted,
+        settled: data,
+        doneTitle: `Remote "${name}" deleted`,
+        startedTitle: `Remote "${name}" deletion started`,
       });
       void navigate({
         to: "/content-management/$pulpDomain/remotes",
