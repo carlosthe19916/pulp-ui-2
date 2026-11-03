@@ -48,7 +48,9 @@ test.describe("Plugin uploads", () => {
       });
       const page = await openRepository(repositoriesPage, name);
 
-      await headerAction(page, "Upload content…");
+      await page
+        .getByRole("button", { name: "Upload content", exact: true })
+        .click();
       const dialog = page.getByRole("dialog", { name: /Upload content to/ });
       await dialog.locator('input[type="file"]').setInputFiles(dataFile(file));
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();

@@ -237,8 +237,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
               },
               uploadableTypes.length > 0 && {
                 key: "upload",
+                isPromoted: true,
                 dropdownItemProps: {
-                  children: "Upload content…",
+                  children: "Upload content",
                   onClick: () => setIsUploadOpen(true),
                   ...lockedProps,
                   ...disabledProps("modify"),

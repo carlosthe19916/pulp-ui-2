@@ -139,7 +139,9 @@ test.describe("Repository content writes", () => {
     const repository = await api.createFileRepository(name);
     const page = await openRepository(repositoriesPage, name);
 
-    await headerAction(page, "Upload content…");
+    await page
+      .getByRole("button", { name: "Upload content", exact: true })
+      .click();
     const dialog = page.getByRole("dialog", { name: /Upload content to/ });
     await dialog
       .locator('input[type="file"]')
@@ -175,7 +177,9 @@ test.describe("Repository content writes", () => {
         : route.continue(),
     );
 
-    await headerAction(page, "Upload content…");
+    await page
+      .getByRole("button", { name: "Upload content", exact: true })
+      .click();
     const dialog = page.getByRole("dialog", { name: /Upload content to/ });
     await dialog
       .locator('input[type="file"]')
@@ -207,10 +211,22 @@ test.describe("Repository content writes", () => {
     await expect(
       page.getByRole("button", { name: "Remove", exact: true }),
     ).toBeDisabled();
+    const upload = page.getByRole("button", {
+      name: "Upload content",
+      exact: true,
+    });
+    await expect(upload).toHaveAttribute("aria-disabled", "true");
+    await upload.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Wait for the running task to finish",
+    );
     await page.getByRole("button", { name: "Actions", exact: true }).click();
     await expect(
       page.getByRole("menuitem", { name: "Add content…" }),
     ).toHaveAttribute("aria-disabled", "true");
+    await expect(
+      page.getByRole("menuitem", { name: /^Upload content/ }),
+    ).toHaveCount(0);
   });
 
   test("restores an older version as the latest", async ({

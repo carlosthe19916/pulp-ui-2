@@ -21,8 +21,9 @@ drawer), so Details became a long page where the overview is lost above a second
 - [ ] A repository whose latest version is empty shows an empty state on the Content tab.
 - [ ] Details is an overview: About and "Use this repository". Its content count opens the
       Content tab, with a per-type breakdown when the version holds more than one type.
-- [ ] Content changes (upload, add, remove all, plugin actions) stay in the page's actions menu,
-      so they're reachable from any tab.
+- [ ] Content changes stay in the page header, so they're reachable from any tab: **Upload
+      content** is a button beside the actions menu (inside the menu on narrow screens); add,
+      remove all and plugin actions stay in the menu.
 
 ## Consequences
 
