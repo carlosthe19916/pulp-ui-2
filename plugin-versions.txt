@@ -11,7 +11,7 @@ oci_env              main
 pulpcore             3.123.1
 pulp_rpm             3.39.5
 pulp_container       2.30.1
-pulp_python          3.37.1
+pulp_python          3.38.0
 pulp_gem             0.8.0
 pulp_maven           0.37.0
 pulp_npm             0.10.2
