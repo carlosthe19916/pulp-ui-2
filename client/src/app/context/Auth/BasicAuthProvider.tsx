@@ -3,7 +3,6 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { redirect } from "@tanstack/react-router";
 
-import { useRecentTasksStore } from "@app/stores/useRecentTasksStore";
 import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 
 import { router } from "../../../router.ts";
@@ -47,7 +46,6 @@ export const BasicAuthProvider: React.FC<IBasicAuthProviderProps> = ({
 
   const logout = useCallback(() => {
     clearCredentials();
-    useRecentTasksStore.getState().reset();
     useTrackedTasksStore.getState().reset();
     void router.navigate({ to: "/login" });
   }, []);
