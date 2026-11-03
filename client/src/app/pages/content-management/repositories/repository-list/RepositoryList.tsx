@@ -35,7 +35,6 @@ import { PublishModal } from "@app/components/PublishModal";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
-import { SyncModal } from "@app/components/SyncModal";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
@@ -86,7 +85,6 @@ export const RepositoryList: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<RepositoryResponse | null>(
     null,
   );
-  const [syncTarget, setSyncTarget] = useState<RepositoryResponse | null>(null);
   const [publishTarget, setPublishTarget] = useState<RepositoryResponse | null>(
     null,
   );
@@ -222,7 +220,6 @@ export const RepositoryList: React.FC = () => {
       pulpType &&
       getEntityForm({ entity: "repository", pulpType, mode: "edit" })
     );
-    const canSync = (repo?.compatibleRemoteTypes.length ?? 0) > 0;
     const canPublish = (repo?.compatiblePublicationTypes.length ?? 0) > 0;
 
     const actionItems: IAction[] = [
@@ -249,13 +246,6 @@ export const RepositoryList: React.FC = () => {
             }),
       },
     ];
-    if (canSync) {
-      actionItems.push({
-        title: "Sync",
-        onClick: () => setSyncTarget(repository),
-        ...disabledProps({ href: repository.pulp_href, verb: "sync" }),
-      });
-    }
     if (canPublish) {
       actionItems.push({
         title: "Publish",
@@ -422,14 +412,6 @@ export const RepositoryList: React.FC = () => {
             }
           />
         </DataView>
-
-        {syncTarget && (
-          <SyncModal
-            isOpen
-            onClose={() => setSyncTarget(null)}
-            repository={syncTarget}
-          />
-        )}
 
         {publishTarget && (
           <PublishModal

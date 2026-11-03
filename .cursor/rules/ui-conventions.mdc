@@ -123,6 +123,10 @@ return (
   `useRepositoryActivity` so they are disabled while a task runs on the repository. Edit is
   the exception: Pulp queues an update behind the task, so Edit stays enabled and the edit
   page shows `EditDuringTaskAlert` instead.
+- A header action shown as a button beside the kebab (the repository page's **Upload
+  content**, [ADR 0012](../../docs/adr/0012-repository-content-tab.md)) is a
+  `PageHeaderActionsMenu` entry with `isPromoted`, not a hand-placed button: it keeps its
+  `lockedProps` / `disabledProps` and folds into the kebab below the `md` breakpoint.
 
 ## Checklist
 
