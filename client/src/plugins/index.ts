@@ -16,6 +16,7 @@ export {
   getRepositoryActions,
   getRepositoryBrowse,
   getRepositoryTab,
+  getTypeIcon,
   getTypeLabel,
   getUploadFields,
   type IAcsType,

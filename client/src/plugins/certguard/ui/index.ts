@@ -1,3 +1,5 @@
+import CertificateIcon from "@patternfly/react-icons/dist/esm/icons/certificate-icon";
+
 import type { IEntityField } from "@app/utils/entityField";
 import { contentGuardBaseFields } from "@app/utils/entityFieldPresets";
 import { definePluginUi } from "@plugin-sdk/ui";
@@ -17,6 +19,7 @@ export const certguardUi = definePluginUi({
   definition: certguard,
   ui: {
     label: "Certguard",
+    icon: CertificateIcon,
     contentGuard: {
       "certguard.x509": {
         label: "X.509 certificate",

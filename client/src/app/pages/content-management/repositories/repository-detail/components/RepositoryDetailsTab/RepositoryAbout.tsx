@@ -10,7 +10,6 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Label,
   Stack,
   Title,
 } from "@patternfly/react-core";
@@ -102,9 +101,6 @@ export const RepositoryAbout: React.FC<IRepositoryAboutProps> = ({
         <Content component="p">{repository.description}</Content>
       )}
       <DescriptionList columnModifier={COLUMNS} isCompact>
-        <Fact term="Type">
-          <Label color="blue">{pulpType}</Label>
-        </Fact>
         <Fact term="Latest version">
           {latestNumber != null ? (
             <Link

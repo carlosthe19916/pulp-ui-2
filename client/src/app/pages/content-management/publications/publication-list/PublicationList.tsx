@@ -7,7 +7,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -26,6 +25,7 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
@@ -138,7 +138,11 @@ export const PublicationList: React.FC = () => {
           props: { dataLabel: "Publication" },
         },
         {
-          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
+          cell: pulpType ? (
+            <PulpTypeLabel entity="publication" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
           props: { dataLabel: "Type" },
         },
         {

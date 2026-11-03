@@ -58,6 +58,7 @@ export const widgetUi = definePluginUi({
   definition: widget,
   ui: {
     label: "Widget",
+    icon: CubeIcon, // a PatternFly icon that represents the plugin
     remote: { "widget.widget": { form: widgetRemoteForm } },
     repository: {
       "widget.widget": {

@@ -107,7 +107,7 @@ export const PublicationDetailsView: React.FC<IPublicationDetailsViewProps> = ({
       <FormDetailSections sections={settings} data={data} />
       <StackItem>
         <DetailSectionCard id="metadata" title="Metadata">
-          <EntityMetadataList entity={publication} pulpType={pulpType} />
+          <EntityMetadataList entity={publication} />
         </DetailSectionCard>
       </StackItem>
     </Stack>

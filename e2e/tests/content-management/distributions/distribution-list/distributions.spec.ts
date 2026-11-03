@@ -88,7 +88,7 @@ test.describe("Distributions", () => {
    * Seed: a file repository and a file distribution serving it
    *
    * When I click the distribution's name in the Distributions list
-   * Then its detail page opens with the title of its name, the label "plugin: file.file" and the
+   * Then its detail page opens with the title of its name, the type label "File" (its tooltip "file.file") and the
    * tabs Details, Tasks and Access
    * When I go to the repository's Distributions tab and click the distribution's name
    * Then the same detail page opens
@@ -111,7 +111,10 @@ test.describe("Distributions", () => {
 
       const expectDetailPage = async () => {
         await expect(heading).toBeVisible();
-        await expect(page.getByText("plugin: file.file")).toBeVisible();
+        const typeLabel = page.getByText("File", { exact: true });
+        await expect(typeLabel).toBeVisible();
+        await typeLabel.hover();
+        await expect(page.getByRole("tooltip")).toHaveText("file.file");
         for (const tab of [/^Details$/, /^Tasks \(\d+\)$/, /^Access$/]) {
           await expect(page.getByRole("tab", { name: tab })).toBeVisible();
         }

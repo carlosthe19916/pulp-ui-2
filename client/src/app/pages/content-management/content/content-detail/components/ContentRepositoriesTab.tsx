@@ -3,7 +3,7 @@ import type React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { Label, PaginationVariant } from "@patternfly/react-core";
+import { PaginationVariant } from "@patternfly/react-core";
 import {
   ActionsColumn,
   Caption,
@@ -18,6 +18,7 @@ import {
 import type { RepositoryResponse } from "@app/client";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
@@ -140,7 +141,11 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                     />
                   </Td>
                   <Td dataLabel="Type">
-                    {pulpType ? <Label color="blue">{pulpType}</Label> : "—"}
+                    {pulpType ? (
+                      <PulpTypeLabel entity="repository" pulpType={pulpType} />
+                    ) : (
+                      "—"
+                    )}
                   </Td>
                   <Td dataLabel="Latest version">
                     {pulpType && latestNumber != null ? (

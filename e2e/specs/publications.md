@@ -55,10 +55,10 @@ When I create a publication of Type <type> with <options>
 Then once its task finishes, the list shows it with the type <listed>
 And the server has <stored>
 
-| type           | options       | listed                   | stored           |
-| -------------- | ------------- | ------------------------ | ---------------- |
-| APT            | Structured on | deb.apt-publication      | structured: true |
-| APT (verbatim) | (none)        | deb.verbatim-publication | —                |
+| type           | options       | listed         | stored           |
+| -------------- | ------------- | -------------- | ---------------- |
+| APT            | Structured on | APT            | structured: true |
+| APT (verbatim) | (none)        | APT (verbatim) | —                |
 
 Signing an APT publication is a manual check: the e2e backend has no APT release signing
 service.
@@ -85,7 +85,7 @@ Summary: A publication's name links to its detail page from the Publications lis
 Seed: a file publication of a file repository
 
 When I click the publication's id in the Publications list
-Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
+Then its detail page opens with the title "Publication <id>", the type label "File" (its tooltip "file.file") and
 the tabs Details and Access
 When I go to the repository's Publications tab and click its id
 Then the same detail page opens

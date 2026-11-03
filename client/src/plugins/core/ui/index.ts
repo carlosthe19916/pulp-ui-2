@@ -1,3 +1,5 @@
+import KeyIcon from "@patternfly/react-icons/dist/esm/icons/key-icon";
+
 import { definePluginUi, GENERIC } from "@plugin-sdk/ui";
 
 import { core } from "../definition";
@@ -9,6 +11,7 @@ export const coreUi = definePluginUi({
   definition: core,
   ui: {
     label: "OpenPGP keyring",
+    icon: KeyIcon,
     repository: {
       "core.openpgp": {
         form: coreRepositoryForm,

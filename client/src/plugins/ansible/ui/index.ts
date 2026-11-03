@@ -1,3 +1,5 @@
+import AnsibleTowerIcon from "@patternfly/react-icons/dist/esm/icons/ansible-tower-icon";
+
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { ansible } from "../definition";
@@ -24,6 +26,7 @@ export const ansibleUi = definePluginUi({
   definition: ansible,
   ui: {
     label: "Ansible",
+    icon: AnsibleTowerIcon,
     pages: [
       {
         label: "Ansible Collections",

@@ -56,7 +56,7 @@ test.describe("Publications", () => {
    * Seed: a file publication of a file repository
    *
    * When I click the publication's id in the Publications list
-   * Then its detail page opens with the title "Publication <id>", the label "plugin: file.file" and
+   * Then its detail page opens with the title "Publication <id>", the type label "File" (its tooltip "file.file") and
    * the tabs Details and Access
    * When I go to the repository's Publications tab and click its id
    * Then the same detail page opens
@@ -83,7 +83,10 @@ test.describe("Publications", () => {
         await expect(
           page.getByRole("heading", { level: 1, name: `Publication ${id}` }),
         ).toBeVisible();
-        await expect(page.getByText("plugin: file.file")).toBeVisible();
+        const typeLabel = page.getByText("File", { exact: true });
+        await expect(typeLabel).toBeVisible();
+        await typeLabel.hover();
+        await expect(page.getByRole("tooltip")).toHaveText("file.file");
         for (const tab of ["Details", "Access"]) {
           await expect(
             page.getByRole("tab", { name: tab, exact: true }),

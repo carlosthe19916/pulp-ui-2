@@ -107,6 +107,8 @@ return (
 - List and detail pages put the header in its own `<PageSection>` and render
   `<DocumentTitle>`. A tab's content never renders a `<PageSection>`; `Tabs` whose content
   runs queries set `mountOnEnter`.
+- A `pulp_type` renders as `PulpTypeLabel` (plugin icon and friendly name, the raw type in its
+  tooltip; pass `entity` except for content types), never a bare `<Label>{pulpType}</Label>`.
 - Expanded-row content goes in `RevealCellOnExpand`; detail fields in `EntityDetailFields`;
   confirmations in `ConfirmActionModal`, never a hand-rolled `Modal`.
 - No inline `style` or custom CSS where a PatternFly component, layout or token exists.
@@ -148,6 +150,7 @@ Pass/fail rubric for `/eval`. Check changed files under `pages/` and `components
       `<PageSection>`; query-running tabs use `mountOnEnter`.
 - [ ] `RevealCellOnExpand`, `EntityDetailFields`, `ConfirmActionModal` used where they apply;
       no custom styling where PatternFly has an equivalent.
+- [ ] Pulp types render through `PulpTypeLabel`, not a bare `Label`.
 - [ ] No red row actions, menu items or toolbar buttons; danger confirm only for irreversible
       deletes.
 - [ ] Empty states have no actions except **Clear filters**.

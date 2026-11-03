@@ -48,9 +48,9 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
   (`apiPath`, `upload`), the ACS endpoint, content guard types (`apiPath`, `rolesManaged`,
   `downloaderRole`).
   It imports only `@plugin-sdk/definition` (and generated types).
-- **UI** (`ui/`, `definePluginUi`): labels, forms, content panels, Browse sections, the
-  repository tab, client setup snippets, action labels and fields, upload fields, content
-  search, the plugin's own pages (`pages`: label, route, `Page`), a remote's create alternatives
+- **UI** (`ui/`, `definePluginUi`): labels, the plugin's icon (a PatternFly icon), forms,
+  content panels, Browse sections, the repository tab, client setup snippets, action labels
+  and fields, upload fields, content search, the plugin's own pages (`pages`: label, route, `Page`), a remote's create alternatives
   (`createFrom`: label, `Modal`), the archive import (`archiveImport`: label, `Modal`), the ACS label, content
   guard labels, descriptions and fields. A panel, page or modal file exports one component,
   named like the file; a Browse file exports one view per section. The plugin's queries sit in

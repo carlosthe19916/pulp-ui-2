@@ -1,6 +1,6 @@
 import type React from "react";
 
-import { Label, PaginationVariant } from "@patternfly/react-core";
+import { PaginationVariant } from "@patternfly/react-core";
 import {
   DataView,
   DataViewTable,
@@ -11,6 +11,7 @@ import {
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { ListPagination } from "@app/components/ListPagination";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { usePersistentState } from "@app/hooks/usePersistentState";
@@ -72,7 +73,11 @@ export const RepositoryDistributionsTab: React.FC<
           props: { dataLabel: "Base URL", modifier: "truncate" },
         },
         {
-          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
+          cell: pulpType ? (
+            <PulpTypeLabel entity="distribution" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
           props: { dataLabel: "Type" },
         },
       ],

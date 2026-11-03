@@ -131,7 +131,6 @@ export const DistributionDetailsView: React.FC<
         <DetailSectionCard id="metadata" title="Metadata">
           <EntityMetadataList
             entity={distribution}
-            pulpType={pulpType}
             labels={
               <EditablePulpLabels
                 labels={distribution.pulp_labels}

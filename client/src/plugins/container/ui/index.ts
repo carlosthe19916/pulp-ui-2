@@ -1,3 +1,5 @@
+import DockerIcon from "@patternfly/react-icons/dist/esm/icons/docker-icon";
+
 import type { TypesOf } from "@plugin-sdk/definition";
 import {
   type ClientSetup,
@@ -57,6 +59,7 @@ export const containerUi = definePluginUi({
   definition: container,
   ui: {
     label: "Container",
+    icon: DockerIcon,
     pages: [
       {
         label: "Container Namespaces",

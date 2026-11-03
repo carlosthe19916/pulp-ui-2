@@ -5,11 +5,11 @@ import type { EntityType } from "@catalog";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Label,
   PageSection,
 } from "@patternfly/react-core";
 
 import { EditDuringTaskAlert } from "@app/components/EditDuringTaskAlert";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { UnauthorizedState } from "@app/components/UnauthorizedState";
 import type { IRunningTask } from "@app/hooks/useRunningTask";
 import { EntityFormPage, type ISubmitHelpers } from "@app/plugin-forms";
@@ -75,7 +75,7 @@ export const EntityEditPage: React.FC<IEntityEditPageProps> = ({
       form={entry.form}
       mode="edit"
       entity={editedObject}
-      label={<Label color="blue">plugin: {pulpType}</Label>}
+      label={<PulpTypeLabel entity={entityType} pulpType={pulpType} />}
       notice={
         running && (
           <EditDuringTaskAlert entityLabel={entityType} running={running} />

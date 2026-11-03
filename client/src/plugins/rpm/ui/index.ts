@@ -1,3 +1,5 @@
+import RedhatIcon from "@patternfly/react-icons/dist/esm/icons/redhat-icon";
+
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { rpm } from "../definition";
@@ -24,6 +26,7 @@ export const rpmUi = definePluginUi({
   definition: rpm,
   ui: {
     label: "RPM",
+    icon: RedhatIcon,
     remote: {
       "rpm.rpm": { form: rpmRemoteForm },
       "rpm.uln": { label: "RPM (ULN)", form: rpmUlnRemoteForm },
