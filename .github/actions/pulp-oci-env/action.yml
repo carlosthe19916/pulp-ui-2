@@ -39,8 +39,11 @@ runs:
             continue
           fi
           echo "Cloning $repo @ $ref"
-          git clone --depth 1 --branch "$ref" \
-            "https://github.com/pulp/$repo.git" "../$repo"
+          # Fetch + FETCH_HEAD handles tags, branches and SHAs alike (clone --branch can't take a SHA).
+          git init -q "../$repo"
+          git -C "../$repo" remote add origin "https://github.com/pulp/$repo.git"
+          git -C "../$repo" fetch -q --depth 1 origin "$ref"
+          git -C "../$repo" checkout -q --detach FETCH_HEAD
         done < plugin-versions.txt
 
     - name: Check plugin-versions.txt matches DEV_SOURCE_PATH

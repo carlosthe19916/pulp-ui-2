@@ -6,7 +6,9 @@
 # backend image (the e2e CI tags the published image by this file's hash). They are
 # bumped automatically by the daily plugin-versions-update.yaml workflow, which opens
 # a PR to the latest release of each plugin and lets e2e gate the merge. oci_env has
-# no releases, so it tracks main and is bumped by hand.
+# no releases, so it tracks main and is bumped by hand. A plugin with no GitHub release
+# yet (pulp_rust) is pinned to a commit SHA and bumped by hand until it publishes one;
+# the daily workflow then moves it to the release tag.
 oci_env              main
 pulpcore             3.123.1
 pulp_rpm             3.39.5
@@ -19,3 +21,4 @@ pulp_hugging_face    0.3.2
 pulp_ansible         0.30.3
 pulp_deb             3.11.1
 pulp_ostree          2.6.1
+pulp_rust            81633863f193c4b930d85692772e62ad642e58d1

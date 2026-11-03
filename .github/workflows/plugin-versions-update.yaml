@@ -4,7 +4,8 @@ name: Update Pulp plugin versions
 # release and open a PR. The PR's e2e run clones those pinned tags into /src and
 # tests them; auto-merge lands it once the required checks pass — so we track the
 # latest Pulp without ever merging a breaking bump by hand. oci_env has no releases,
-# so it tracks main and is bumped manually.
+# so it tracks main and is bumped manually. A plugin with no release yet (pinned to a SHA)
+# is left as is until it publishes one, then moved to that release tag.
 #
 # Setup required: the pulp-ui-bot GitHub App (contents + pull-requests write), with its App ID
 # in the BOT_APP_ID variable and its private key in the BOT_APP_PRIVATE_KEY secret. The PR is

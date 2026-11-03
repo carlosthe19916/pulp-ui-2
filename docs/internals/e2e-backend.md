@@ -7,7 +7,7 @@ from source with oci-env.
 
 Both CI and local dev run the **oci-env** Pulp on port 5003, configured by
 [`compose.env`](../../compose.env). Its `DEV_SOURCE_PATH` installs every plugin the UI catalog knows
-about **from source**, including `pulp_npm` and `pulp_hugging_face`, so e2e exercises the whole
+about **from source**, including `pulp_npm`, `pulp_hugging_face` and `pulp_rust`, so e2e exercises the whole
 catalog. Locally, `npm run backend:setup` and `npm run backend:start` run it (see below) and
 `npm run test:local -w e2e` runs the suite against it.
 
@@ -97,3 +97,7 @@ The shared clone/install/env-file steps live in the composite action
 = one reproducible backend. The `plugin-versions-update.yaml` workflow bumps these to the latest
 release daily and opens an auto-merging PR that the e2e suite gates. To change versions by hand,
 edit the file directly; `oci_env` tracks `main` and is bumped manually (it publishes no releases).
+A plugin that has no GitHub release yet (`pulp_rust`) is pinned to a commit SHA, still never
+`main`, and bumped by hand; the daily workflow leaves it alone until a release exists, then moves
+it to that tag. The CI clone step fetches the ref and checks out `FETCH_HEAD`, so tags, branches
+and SHAs all work.
