@@ -1,119 +1,78 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Page, SkipToContent } from "@patternfly/react-core";
 
 import { useLocalStorage } from "@app/hooks/useStorage";
 
-import { DOCK_ID, DockApp } from "./DockApp";
-import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
+import { HeaderApp } from "./HeaderApp";
+import { SidebarApp } from "./SidebarApp";
 import {
   TASK_DRAWER_ID,
   TASK_DRAWER_TOGGLE_ID,
   TaskDrawer,
 } from "./TaskDrawer";
 import { TaskFinishRefresher } from "./TaskFinishRefresher";
-import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
   children?: React.ReactNode;
 }
 
-/** PatternFly's docked nav layout: https://www.patternfly.org/components/navigation/react-demos#docked-nav */
+/** PatternFly's masthead + sidebar layout: https://www.patternfly.org/components/navigation#expandable */
 export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
-  const pageId = "main-content-page-layout-docked-nav";
+  const pageId = "main-content-page-layout-expandable-nav";
   const PageSkipToContent = (
     <SkipToContent href={`#${pageId}`}>Skip to content</SkipToContent>
   );
 
-  const isMobile = useIsMobile();
-  // On desktop the dock starts expanded and remembers the user's toggle.
-  const [isDockPinned, setIsDockPinned] = useLocalStorage<boolean>({
-    key: "dock-expanded-preference",
-    defaultValue: true,
-  });
-  // Opened for a moment (mobile, or a nav group clicked in the collapsed dock): floats
-  // over the page and closes again once the user picks a page or clicks away.
-  const [isDockOpen, setIsDockOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  // On desktop the sidebar starts open and remembers the user's toggle.
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] =
+    useLocalStorage<boolean>({
+      key: "sidebar-expanded-preference",
+      defaultValue: true,
+    });
+  // On mobile the sidebar overlays the page, so it starts closed and closes after a pick.
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isTaskDrawerExpanded, setIsTaskDrawerExpanded] = useState(false);
-  const isDockFloating = isDockOpen && (isMobile || !isDockPinned);
-  const isDockExpanded = isMobile ? isDockOpen : isDockPinned || isDockOpen;
-  const isDockOverlay = !isMobile && isDockFloating;
 
-  const closeDock = () => setIsDockOpen(false);
+  const isSidebarOpen = isMobile ? isMobileSidebarOpen : isDesktopSidebarOpen;
 
-  useEffect(() => {
-    if (!isDockFloating) {
-      return;
-    }
-    const onClick = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const isInside = [DOCK_ID, MOBILE_DOCK_TOGGLE_ID].some((id) =>
-        document.getElementById(id)?.contains(target),
-      );
-      if (!isInside) {
-        closeDock();
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeDock();
-      }
-    };
-    window.addEventListener("click", onClick);
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("click", onClick);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [isDockFloating]);
-
-  const onToggleDock = () => {
+  const onSidebarToggle = () => {
     if (isMobile) {
-      setIsDockOpen(!isDockOpen);
-      return;
+      setIsMobileSidebarOpen(!isMobileSidebarOpen);
+    } else {
+      setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
     }
-    closeDock();
-    setIsDockPinned(!isDockExpanded);
   };
 
-  const onOpenDock = () => setIsDockOpen(true);
+  const onNavSelect = () => {
+    if (isMobile) {
+      setIsMobileSidebarOpen(false);
+    }
+  };
 
   const closeTaskDrawer = () => {
     setIsTaskDrawerExpanded(false);
     document.getElementById(TASK_DRAWER_TOGGLE_ID)?.focus();
   };
 
-  const onNavSelect = () => {
-    if (isDockFloating) {
-      closeDock();
-    }
-  };
-
   return (
     <Page
-      variant="docked"
-      isDockExpanded={isDockExpanded}
-      isDockOverlay={isDockOverlay}
       masthead={
         <HeaderApp
-          isDockExpanded={isDockExpanded}
-          onToggleDock={onToggleDock}
-        />
-      }
-      dockContent={
-        <DockApp
-          isDockExpanded={isDockExpanded}
-          isHidden={isMobile && !isDockExpanded}
-          onToggleDock={onToggleDock}
-          onOpenDock={onOpenDock}
-          onNavSelect={onNavSelect}
+          isSidebarOpen={isSidebarOpen}
+          onSidebarToggle={onSidebarToggle}
           isTaskDrawerExpanded={isTaskDrawerExpanded}
           onToggleTaskDrawer={() =>
             setIsTaskDrawerExpanded(!isTaskDrawerExpanded)
           }
         />
       }
+      sidebar={
+        <SidebarApp isSidebarOpen={isSidebarOpen} onNavSelect={onNavSelect} />
+      }
+      onPageResize={(_event, { mobileView }) => setIsMobile(mobileView)}
       notificationDrawer={<TaskDrawer onClose={closeTaskDrawer} />}
       isNotificationDrawerExpanded={isTaskDrawerExpanded}
       onNotificationDrawerExpand={() =>

@@ -4,12 +4,7 @@ import { Brand, Split, SplitItem, Title } from "@patternfly/react-core";
 
 import { getBranding } from "@app/utils/branding";
 
-interface IBrandLogoProps {
-  /** Show only the brand image, for the collapsed dock. */
-  isCompact?: boolean;
-}
-
-export const BrandLogo: React.FC<IBrandLogoProps> = ({ isCompact }) => {
+export const BrandLogo: React.FC = () => {
   const {
     masthead: { leftBrand, leftTitle },
   } = getBranding();
@@ -25,7 +20,7 @@ export const BrandLogo: React.FC<IBrandLogoProps> = ({ isCompact }) => {
           />
         ) : null}
       </SplitItem>
-      {!isCompact && leftTitle ? (
+      {leftTitle ? (
         <SplitItem isFilled>
           <Title
             headingLevel={leftTitle.heading ?? "h1"}
