@@ -24,8 +24,10 @@ it, its plugin's publishing settings, its roles), and it needs an address others
       Content (Details, Artifacts, Repositories), Task, Task group, User and Group.
 - [ ] A publication's Access tab shows only for types with roles. Its Details shows what it was
       published from (the repository and its version), the distributions serving it, its
-      settings grouped and labelled the way its create form groups them, and its type, creation
-      time and PRN.
+      settings grouped and labelled the way its create form groups them, and its creation time
+      and PRN.
+- [ ] A typed object's page shows its type in the header, as its plugin's icon and name with the
+      raw type on hover; the Details tab doesn't repeat it.
 - [ ] A publication's id links to its page from the Publications list, from a repository's
       Publications tab and from the Details of a distribution serving it.
 - [ ] A publication is immutable: its one action is Delete, in its list row and on its page

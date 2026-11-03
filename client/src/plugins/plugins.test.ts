@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import JavaIcon from "@patternfly/react-icons/dist/esm/icons/java-icon";
+
 import {
   ENTITY_TYPES,
   getContentType,
@@ -12,6 +14,7 @@ import {
   getEntityForm,
   getRepositoryActions,
   getRepositoryBrowse,
+  getTypeIcon,
   getUploadFields,
 } from "@plugins";
 
@@ -64,6 +67,12 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
 );
 
 describe("plugin registry", () => {
+  it("gives every type its plugin's icon, and none to an unknown type", () => {
+    expect(getTypeIcon("maven.maven")).toBe(JavaIcon);
+    expect(getTypeIcon("maven.package")).toBe(JavaIcon);
+    expect(getTypeIcon("unknown.unknown")).toBeUndefined();
+  });
+
   it("offers every declared content guard type with its UI", () => {
     const declared = definitions.flatMap((definition) =>
       Object.keys(definition.contentGuard ?? {}),

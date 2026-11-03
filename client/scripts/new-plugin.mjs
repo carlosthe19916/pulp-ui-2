@@ -46,7 +46,9 @@ export const ${variable} = definePlugin({
 );
 writeFileSync(
   join(folder, "ui/index.ts"),
-  `import { definePluginUi } from "@plugin-sdk/ui";
+  `import CubeIcon from "@patternfly/react-icons/dist/esm/icons/cube-icon";
+
+import { definePluginUi } from "@plugin-sdk/ui";
 
 import { ${variable} } from "../definition";
 
@@ -54,6 +56,8 @@ export const ${variable}Ui = definePluginUi({
   definition: ${variable},
   ui: {
     label: "${label}",
+    // Pick an icon that represents the plugin.
+    icon: CubeIcon,
   },
 });
 `,

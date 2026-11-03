@@ -8,7 +8,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Label,
   PageSection,
   PaginationVariant,
   Tooltip,
@@ -32,6 +31,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
@@ -209,7 +209,11 @@ export const DistributionList: React.FC = () => {
           props: { dataLabel: "Base Path", modifier: "truncate" },
         },
         {
-          cell: pulpType ? <Label color="blue">{pulpType}</Label> : "—",
+          cell: pulpType ? (
+            <PulpTypeLabel entity="distribution" pulpType={pulpType} />
+          ) : (
+            "—"
+          ),
           props: { dataLabel: "Type" },
         },
         {

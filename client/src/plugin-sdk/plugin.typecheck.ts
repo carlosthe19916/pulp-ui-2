@@ -35,8 +35,11 @@ const widget = definePlugin({
   },
 });
 
+const Icon = () => null;
+
 const ui = {
   label: "Widget",
+  icon: Icon,
   remote: { "widget.widget": { form } },
   repository: {
     "widget.widget": {
@@ -178,6 +181,7 @@ const importer = definePlugin({
 
 const importerUi = {
   label: "Importer",
+  icon: Icon,
   remote: {
     "importer.importer": {
       form,
@@ -257,6 +261,7 @@ definePluginUi({
   definition: guarded,
   ui: {
     label: "Guarded",
+    icon: Icon,
     // @ts-expect-error "guarded.header" has no label, description or fields.
     contentGuard: {},
   },

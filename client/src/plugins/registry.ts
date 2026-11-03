@@ -114,6 +114,7 @@ const createAlternatives = new Map<
 >();
 const archiveImports = new Map<PulpType, IArchiveImportUi>();
 const guardUis = new Map<PulpType, IContentGuardTypeUi>();
+const icons = new Map<PulpType, React.ComponentType>();
 
 // Walk the plugins in declaration order, so lists (nav pages, ACS types) follow it.
 for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
@@ -128,7 +129,14 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
         form: typeUi.form,
         modes: modes ?? DEFAULT_MODES[entity],
       });
+      icons.set(pulpType, ui.icon);
     }
+  }
+  for (const pulpType of [
+    ...Object.keys(ui.content ?? {}),
+    ...Object.keys(ui.contentGuard ?? {}),
+  ]) {
+    icons.set(pulpType, ui.icon);
   }
   for (const [pulpType, remoteUi] of Object.entries(ui.remote ?? {})) {
     if (remoteUi.createFrom) {
@@ -223,6 +231,11 @@ export const getTypeLabel = ({
   entity: EntityType;
   pulpType: PulpType;
 }): string => forms[entity].get(pulpType)?.label ?? pulpType;
+
+/** The icon of the plugin a type belongs to, or `undefined` when unknown. */
+export const getTypeIcon = (
+  pulpType: PulpType,
+): React.ComponentType | undefined => icons.get(pulpType);
 
 /** A content type's own detail panel, or `undefined` for the generic one. */
 export const getContentPanel = (

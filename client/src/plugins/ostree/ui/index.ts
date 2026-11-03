@@ -1,3 +1,5 @@
+import CodeBranchIcon from "@patternfly/react-icons/dist/esm/icons/code-branch-icon";
+
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { ostree } from "../definition";
@@ -14,6 +16,7 @@ export const ostreeUi = definePluginUi({
   definition: ostree,
   ui: {
     label: "OSTree",
+    icon: CodeBranchIcon,
     remote: { "ostree.ostree": { form: ostreeRemoteForm } },
     repository: {
       "ostree.ostree": {

@@ -1,3 +1,5 @@
+import GemIcon from "@patternfly/react-icons/dist/esm/icons/gem-icon";
+
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
 import { gem } from "../definition";
@@ -14,6 +16,7 @@ export const gemUi = definePluginUi({
   definition: gem,
   ui: {
     label: "Gem",
+    icon: GemIcon,
     remote: { "gem.gem": { form: gemRemoteForm } },
     repository: {
       "gem.gem": {

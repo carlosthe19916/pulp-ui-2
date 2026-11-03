@@ -23,6 +23,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PublishModal } from "@app/components/PublishModal";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { RepositoryActionModal } from "@app/components/RepositoryActionModal";
 import { RepositoryTaskAlert } from "@app/components/RepositoryTaskAlert";
@@ -193,6 +194,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
       <DocumentTitle title={`Repository · ${repository.name}`} />
       <PageHeader
         title={repository.name ?? extractIdFromHref(href)}
+        label={<PulpTypeLabel entity="repository" pulpType={pulpType} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>

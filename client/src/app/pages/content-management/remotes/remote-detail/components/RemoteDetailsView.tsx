@@ -48,7 +48,6 @@ export const RemoteDetailsView: React.FC<IRemoteDetailsViewProps> = ({
         <DetailSectionCard id="metadata" title="Metadata">
           <EntityMetadataList
             entity={remote}
-            pulpType={pulpType}
             labels={
               <EditablePulpLabels
                 labels={remote.pulp_labels}

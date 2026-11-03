@@ -7,7 +7,6 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Label,
   PageSection,
   Tab,
   TabContentBody,
@@ -20,6 +19,7 @@ import { AddToRepositoryModal } from "@app/components/AddToRepositoryModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
@@ -67,7 +67,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
       <DocumentTitle title={`Content · ${pulpType}`} />
       <PageHeader
         title={prn}
-        label={<Label color="blue">{pulpType}</Label>}
+        label={<PulpTypeLabel pulpType={pulpType} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>

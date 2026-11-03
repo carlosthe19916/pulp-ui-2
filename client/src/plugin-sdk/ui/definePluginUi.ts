@@ -154,6 +154,8 @@ type AcsUi<D extends IPluginDefinition> = D extends { acs: object }
 export type PluginUi<D extends IPluginDefinition> = {
   /** The plugin's name; the default label of its types. */
   label: string;
+  /** The plugin's icon, shown beside its label (a repository page's header). */
+  icon: React.ComponentType;
   pages?: readonly INavPage[];
 } & {
   [
@@ -164,6 +166,7 @@ export type PluginUi<D extends IPluginDefinition> = {
 /** Any plugin's UI read through one shape: what the registry walks once checked per plugin. */
 export interface IAnyPluginUi {
   label: string;
+  icon: React.ComponentType;
   pages?: readonly INavPage[];
   remote?: Readonly<Record<string, IRemoteTypeUi<IPluginDefinition, string>>>;
   repository?: Readonly<

@@ -1,3 +1,5 @@
+import NpmIcon from "@patternfly/react-icons/dist/esm/icons/npm-icon";
+
 import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
@@ -14,6 +16,7 @@ export const npmUi = definePluginUi({
   definition: npm,
   ui: {
     label: "npm",
+    icon: NpmIcon,
     remote: { "npm.npm": { form: npmRemoteForm } },
     repository: {
       "npm.npm": {

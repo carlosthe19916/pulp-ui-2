@@ -161,10 +161,10 @@ test.describe("Publication create page", () => {
    * Then once its task finishes, the list shows it with the type <listed>
    * And the server has <stored>
    *
-   * | type           | options       | listed                   | stored           |
-   * | -------------- | ------------- | ------------------------ | ---------------- |
-   * | APT            | Structured on | deb.apt-publication      | structured: true |
-   * | APT (verbatim) | (none)        | deb.verbatim-publication | —                |
+   * | type           | options       | listed         | stored           |
+   * | -------------- | ------------- | -------------- | ---------------- |
+   * | APT            | Structured on | APT            | structured: true |
+   * | APT (verbatim) | (none)        | APT (verbatim) | —                |
    *
    * Signing an APT publication is a manual check: the e2e backend has no APT release signing
    * service.
@@ -180,10 +180,10 @@ test.describe("Publication create page", () => {
     },
     async ({ publicationsPage, formPage, api, cleanup, page }) => {
       const rows = [
-        { type: "APT", listed: "deb.apt-publication", structured: true },
+        { type: "APT", listed: "APT", structured: true },
         {
           type: "APT (verbatim)",
-          listed: "deb.verbatim-publication",
+          listed: "APT (verbatim)",
           structured: undefined,
         },
       ];
@@ -210,9 +210,11 @@ test.describe("Publication create page", () => {
 
           await expect(publicationsPage.heading).toBeVisible();
           const href = cleanup.href(await publicationOf(api, repoHref));
-          await expect(publicationsPage.row(idOf(href))).toContainText(
-            row.listed,
-          );
+          await expect(
+            publicationsPage
+              .row(idOf(href))
+              .getByText(row.listed, { exact: true }),
+          ).toBeVisible();
           const publication = await api.getJson<{ structured?: boolean }>(href);
           expect(publication.structured).toBe(row.structured);
         });

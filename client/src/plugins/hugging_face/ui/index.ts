@@ -1,3 +1,5 @@
+import RobotIcon from "@patternfly/react-icons/dist/esm/icons/robot-icon";
+
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
 import { huggingFace } from "../definition";
@@ -17,6 +19,7 @@ export const huggingFaceUi = definePluginUi({
   definition: huggingFace,
   ui: {
     label: "Hugging Face",
+    icon: RobotIcon,
     remote: { "hugging_face.hugging-face": { form: huggingFaceRemoteForm } },
     repository: {
       "hugging_face.hugging-face": {

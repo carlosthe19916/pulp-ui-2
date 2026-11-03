@@ -7,7 +7,6 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Label,
   PageSection,
   Tab,
   TabContentBody,
@@ -19,6 +18,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
@@ -91,7 +91,7 @@ export const PublicationDetail: React.FC<IPublicationDetailProps> = ({
       <DocumentTitle title={`Publication · ${id}`} />
       <PageHeader
         title={name}
-        label={<Label color="blue">plugin: {pulpType}</Label>}
+        label={<PulpTypeLabel entity="publication" pulpType={pulpType} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>

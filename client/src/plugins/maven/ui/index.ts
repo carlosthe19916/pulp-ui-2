@@ -1,3 +1,5 @@
+import JavaIcon from "@patternfly/react-icons/dist/esm/icons/java-icon";
+
 import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
@@ -18,6 +20,7 @@ export const mavenUi = definePluginUi({
   definition: maven,
   ui: {
     label: "Maven",
+    icon: JavaIcon,
     remote: { "maven.maven": { form: mavenRemoteForm } },
     repository: {
       "maven.maven": {

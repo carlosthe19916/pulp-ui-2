@@ -1,3 +1,5 @@
+import PythonIcon from "@patternfly/react-icons/dist/esm/icons/python-icon";
+
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
 import { python } from "../definition";
@@ -19,6 +21,7 @@ export const pythonUi = definePluginUi({
   definition: python,
   ui: {
     label: "Python",
+    icon: PythonIcon,
     remote: {
       "python.python": {
         form: pythonRemoteForm,

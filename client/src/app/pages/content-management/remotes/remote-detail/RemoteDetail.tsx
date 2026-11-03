@@ -7,7 +7,6 @@ import { PageHeader } from "@patternfly/react-component-groups/dist/dynamic/Page
 import {
   Breadcrumb,
   BreadcrumbItem,
-  Label,
   PageSection,
   Tab,
   TabContentBody,
@@ -19,6 +18,7 @@ import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { ObjectAccessPanel } from "@app/components/ObjectAccessPanel";
 import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
+import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { TabHelpAction } from "@app/components/TabHelpAction";
 import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -98,7 +98,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
       <DocumentTitle title={`Remote · ${remote.name}`} />
       <PageHeader
         title={remote.name ?? extractIdFromHref(href)}
-        label={<Label color="blue">plugin: {pulpType}</Label>}
+        label={<PulpTypeLabel entity="remote" pulpType={pulpType} />}
         breadcrumbs={
           <Breadcrumb>
             <BreadcrumbItem>

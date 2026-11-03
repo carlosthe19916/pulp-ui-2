@@ -1,3 +1,5 @@
+import UbuntuIcon from "@patternfly/react-icons/dist/esm/icons/ubuntu-icon";
+
 import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, GENERIC, lazyViews } from "@plugin-sdk/ui";
 
@@ -23,6 +25,7 @@ export const debUi = definePluginUi({
   definition: deb,
   ui: {
     label: "APT",
+    icon: UbuntuIcon,
     remote: { "deb.apt-remote": { form: debRemoteForm } },
     repository: {
       "deb.deb": {

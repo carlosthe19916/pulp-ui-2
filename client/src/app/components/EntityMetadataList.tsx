@@ -6,7 +6,6 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
-  Label,
 } from "@patternfly/react-core";
 
 import { formatDateTime } from "@app/utils/utils";
@@ -20,7 +19,6 @@ interface IEntityMetadataListProps {
     prn?: string;
     pulp_href?: string;
   };
-  pulpType: string;
   /** The object's labels editor; its mutation is the caller's. Omit for unlabelled types. */
   labels?: React.ReactNode;
 }
@@ -50,16 +48,12 @@ const CopyableValue: React.FC<ICopyableValueProps> = ({ value }) =>
     <>—</>
   );
 
-/** The Metadata facts every detail page shows: type, timestamps, labels, PRN and HREF. */
+/** The Metadata facts every detail page shows: timestamps, labels, PRN and HREF. */
 export const EntityMetadataList: React.FC<IEntityMetadataListProps> = ({
   entity,
-  pulpType,
   labels,
 }) => (
   <DescriptionList columnModifier={COLUMNS}>
-    <Fact term="Type">
-      <Label color="blue">{pulpType}</Label>
-    </Fact>
     <Fact term="Created">{formatDateTime(entity.pulp_created) ?? "—"}</Fact>
     <Fact term="Last updated">
       {formatDateTime(entity.pulp_last_updated) ?? "—"}

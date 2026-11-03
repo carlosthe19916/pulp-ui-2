@@ -1,3 +1,5 @@
+import FileIcon from "@patternfly/react-icons/dist/esm/icons/file-icon";
+
 import { relativePathField } from "@app/utils/entityFieldPresets";
 import { definePluginUi, lazyViews } from "@plugin-sdk/ui";
 
@@ -15,6 +17,7 @@ export const fileUi = definePluginUi({
   definition: file,
   ui: {
     label: "File",
+    icon: FileIcon,
     remote: {
       "file.file": { form: fileRemoteForm },
       "file.git": { label: "File (Git)", form: fileGitRemoteForm },
