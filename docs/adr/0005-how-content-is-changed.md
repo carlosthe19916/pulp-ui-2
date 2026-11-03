@@ -39,7 +39,7 @@ can't be uploaded at all (sync or push only).
       touching the repository and offers to retry them or add the ones that succeeded; half a
       batch is never added silently. Closing during upload asks for confirmation; once the
       repository step starts, the modal may close and task feedback takes over
-      ([0017](0017-task-feedback.md)).
+      ([0006](0006-how-tasks-are-reported.md)).
 - [ ] Every confirmation says a new version is created and older versions keep their content.
       Every result names the version it made ("Version 8 created"), with a link, in the task
       drawer.

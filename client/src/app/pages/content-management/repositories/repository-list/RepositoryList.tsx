@@ -45,7 +45,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   repositoryKeys,
   useRepositoriesListQuery,
@@ -69,7 +69,7 @@ import {
 
 export const RepositoryList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Repository "${name}" deleted`,
         startedTitle: `Repository "${name}" deletion started`,

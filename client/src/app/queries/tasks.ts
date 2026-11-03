@@ -250,7 +250,7 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
 
 /**
  * How long a configuration write (edit, delete, create of a remote, distribution, …) waits
- * for its task before handing it to the task drawer (ADR 0017).
+ * for its task before handing it to the task drawer (ADR 0006).
  */
 export const BRIEF_TASK_WAIT_MS = 10_000;
 const BRIEF_TASK_POLL_DELAYS_MS = [250, 500, 1000];

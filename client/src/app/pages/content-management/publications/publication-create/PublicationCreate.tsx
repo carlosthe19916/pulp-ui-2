@@ -6,7 +6,7 @@ import { EntityCreatePage } from "@app/components/EntityCreatePage";
 import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -20,7 +20,7 @@ export const PublicationCreate: React.FC = () => {
   const navigateSearch = routeApi.useNavigate();
   const { type } = routeApi.useSearch();
   const { name: pulpDomain } = useSelectedDomain();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
   const selection = useCreateTypeSelect({
@@ -35,7 +35,7 @@ export const PublicationCreate: React.FC = () => {
   // Publishing is a task (202): the list shows the publication once it finishes.
   const createMutation = usePublicationCreateMutation({
     onSuccess: (data) => {
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: "Publication creation started",
       });

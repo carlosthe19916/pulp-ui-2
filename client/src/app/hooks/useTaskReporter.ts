@@ -13,11 +13,11 @@ export interface IReportWriteParams {
 }
 
 /**
- * What the user is told about a write that runs as a Pulp task (ADR 0017): `reportStarted`
+ * Reports a write that runs as a Pulp task to the user (ADR 0006): `reportStarted`
  * for data work, which goes to the task drawer; `reportWrite` for a configuration write,
  * which reports its outcome, or hands over to the drawer if its task is still running.
  */
-export const useTaskFeedback = () => {
+export const useTaskReporter = () => {
   const { addNotification } = useNotifications();
   const track = useTrackedTasksStore((state) => state.track);
 

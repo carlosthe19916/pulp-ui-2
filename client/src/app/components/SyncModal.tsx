@@ -3,7 +3,7 @@ import type React from "react";
 import type { RepositoryResponse } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { useRepositorySyncMutation } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import type { IEntityField } from "@app/utils/entityField";
@@ -41,13 +41,13 @@ const SyncForm: React.FC<Omit<ISyncModalProps, "isOpen">> = ({
   onClose,
   repository,
 }) => {
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const plugin = getPulpType(resolvePulpType(repository.pulp_href) ?? "");
 
   const syncMutation = useRepositorySyncMutation({
     onSuccess: (data) =>
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Sync of "${repository.name}" started`,
       }),

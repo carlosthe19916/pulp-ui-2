@@ -43,7 +43,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   remoteKeys,
   useRemoteDeleteMutation,
@@ -64,7 +64,7 @@ import { REMOTE_LIST_STATE, SORTABLE_COLUMN_KEYS } from "./remoteListState";
 
 export const RemoteList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export const RemoteList: React.FC = () => {
   const openModal = alternatives.find(({ key }) => key === openAlternative);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Remote "${name}" deleted`,
         startedTitle: `Remote "${name}" deletion started`,

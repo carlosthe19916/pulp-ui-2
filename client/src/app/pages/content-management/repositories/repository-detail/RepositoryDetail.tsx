@@ -44,7 +44,7 @@ import {
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useReportContentChangeStarted } from "@app/hooks/useReportContentChangeStarted";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -99,7 +99,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
 
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const reportContentChangeStarted = useReportContentChangeStarted();
@@ -142,7 +142,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Repository "${name}" deleted`,
         startedTitle: `Repository "${name}" deletion started`,

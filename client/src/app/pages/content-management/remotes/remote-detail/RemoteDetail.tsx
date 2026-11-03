@@ -24,7 +24,7 @@ import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
@@ -54,7 +54,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { disabledProps } = useObjectPermissions({ href });
@@ -67,7 +67,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Remote "${name}" deleted`,
         startedTitle: `Remote "${name}" deletion started`,

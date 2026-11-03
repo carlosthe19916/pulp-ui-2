@@ -44,7 +44,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   distributionKeys,
   useDistributionDeleteMutation,
@@ -73,7 +73,7 @@ const UNAVAILABLE_TYPE_TOOLTIP: TooltipProps = {
 
 export const DistributionList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Distribution "${name}" deleted`,
         startedTitle: `Distribution "${name}" deletion started`,

@@ -24,7 +24,7 @@ import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useDistributionDeleteMutation,
   useSuspenseDistributionDetailQuery,
@@ -57,7 +57,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { disabledProps } = useObjectPermissions({ href });
   const prn = distribution.prn ?? "";
@@ -76,7 +76,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name: deletedName }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Distribution "${deletedName}" deleted`,
         startedTitle: `Distribution "${deletedName}" deletion started`,

@@ -6,7 +6,7 @@ import { EntityEditPage } from "@app/components/EntityEditPage";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRemoteUpdateMutation,
   useSuspenseRemoteDetailQuery,
@@ -26,7 +26,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -35,7 +35,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Remote "${name}" updated`,
         startedTitle: `Remote "${name}" update started`,

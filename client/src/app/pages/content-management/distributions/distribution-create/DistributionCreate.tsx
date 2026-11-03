@@ -6,7 +6,7 @@ import { EntityCreatePage } from "@app/components/EntityCreatePage";
 import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { useDistributionCreateMutation } from "@app/queries/distributions";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
@@ -19,7 +19,7 @@ export const DistributionCreate: React.FC = () => {
   const navigateSearch = routeApi.useNavigate();
   const { type } = routeApi.useSearch();
   const { name: pulpDomain } = useSelectedDomain();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
 
   const selection = useCreateTypeSelect({
@@ -35,7 +35,7 @@ export const DistributionCreate: React.FC = () => {
   const createMutation = useDistributionCreateMutation({
     onSuccess: (data, { body }) => {
       const name = String(body.name ?? "");
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Distribution "${name}" created`,
         startedTitle: `Distribution "${name}" creation started`,

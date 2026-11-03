@@ -6,7 +6,7 @@ import { EntityEditPage } from "@app/components/EntityEditPage";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRepositoryUpdateMutation,
   useSuspenseRepositoryDetailQuery,
@@ -26,7 +26,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -36,7 +36,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
 
   const updateMutation = useRepositoryUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Repository "${name}" updated`,
         startedTitle: `Repository "${name}" update started`,

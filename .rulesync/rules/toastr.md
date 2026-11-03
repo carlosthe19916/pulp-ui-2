@@ -51,14 +51,14 @@ Toasts must fire even if the component unmounts mid-request.
 
 ## Tasks
 
-- Task feedback goes through `useTaskFeedback()` ([ADR 0017](../../docs/adr/0017-task-feedback.md));
-  no toast is raised by polling a task.
+- Tasks are reported through `useTaskReporter()`
+  ([ADR 0006](../../docs/adr/0006-how-tasks-are-reported.md)); no toast is raised by polling a task.
 - A configuration write (create, edit, delete) that may answer `202` waits briefly for its task in
   its mutation hook (`waitBrieflyForTask`, or `toWriteResult` for `200 | 202`; `TError`
-  `TaskWriteError`); the page calls `taskFeedback.reportWrite({ result, finishedTitle,
+  `TaskWriteError`); the page calls `taskReporter.reportWrite({ result, finishedTitle,
 startedTitle })`, and a failed task arrives at `onError`.
 - Data work (sync, publish, content changes, export, import, …) calls
-  `taskFeedback.reportStarted({ taskHref, title })`.
+  `taskReporter.reportStarted({ taskHref, title })`.
 - Navigating after a write that may wait (a detail-page delete) is call-level.
 
 ## Variables and message
@@ -98,7 +98,7 @@ Pass/fail rubric for `/eval`.
 - [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**, shown
       in-form via `FormSubmitError`.
-- [ ] Task writes report through `useTaskFeedback()` (`reportWrite` after `waitBrieflyForTask` /
+- [ ] Task writes report through `useTaskReporter()` (`reportWrite` after `waitBrieflyForTask` /
       `toWriteResult`, else `reportStarted`); no toast from polling; post-write navigation is
       call-level.
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature `useXActions`

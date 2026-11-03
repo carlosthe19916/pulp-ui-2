@@ -2,7 +2,7 @@ import type {
   RepositoryAddRemoveContent,
   RepositoryResponse,
 } from "@app/client";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { contentChangeTitle } from "@app/utils/contentChangeNotify";
 
 export interface IContentChangeStartedParams {
@@ -18,7 +18,7 @@ export interface IContentChangeStartedParams {
  * the task drawer.
  */
 export const useReportContentChangeStarted = () => {
-  const { reportStarted } = useTaskFeedback();
+  const { reportStarted } = useTaskReporter();
   return ({ taskHref, repository, body, title }: IContentChangeStartedParams) =>
     reportStarted({
       taskHref,

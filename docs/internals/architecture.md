@@ -38,7 +38,7 @@ part of the URL and the navigation ([ADR 0002](../adr/0002-navigation-and-domain
 
 Many writes (sync, publish, content changes, …) return a background task. The UI tracks the
 task and refreshes the affected views once it settles, so the user sees progress and the eventual
-result without reloading ([ADR 0017](../adr/0017-task-feedback.md)).
+result without reloading ([ADR 0006](../adr/0006-how-tasks-are-reported.md)).
 Tasks the user starts are tracked in a persisted Zustand store (`stores/useTrackedTasksStore.ts`)
 behind the masthead task drawer; the app shell polls their state.
 

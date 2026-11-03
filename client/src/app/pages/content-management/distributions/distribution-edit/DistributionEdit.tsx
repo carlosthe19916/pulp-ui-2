@@ -6,7 +6,7 @@ import { EntityEditPage } from "@app/components/EntityEditPage";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useDistributionUpdateMutation,
   useSuspenseDistributionDetailQuery,
@@ -26,7 +26,7 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -35,7 +35,7 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
 
   const updateMutation = useDistributionUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Distribution "${name}" updated`,
         startedTitle: `Distribution "${name}" update started`,

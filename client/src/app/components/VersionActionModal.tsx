@@ -7,7 +7,7 @@ import type {
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRepositoryModifyMutation,
   useRepositoryVersionDeleteMutation,
@@ -38,7 +38,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   onDeleted,
 }) => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const number = String(version.number);
   const name = `"${repository.name}"`;
   const notifyError = ({
@@ -55,7 +55,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
 
   const deleteMutation = useRepositoryVersionDeleteMutation({
     onSuccess: (data) => {
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Deleting version ${number} of ${name}`,
       });
@@ -66,7 +66,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   });
   const repairMutation = useRepositoryVersionRepairMutation({
     onSuccess: (data) =>
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Repairing version ${number} of ${name}`,
       }),

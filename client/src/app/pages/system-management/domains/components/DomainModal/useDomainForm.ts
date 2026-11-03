@@ -11,7 +11,7 @@ import type {
 } from "@app/client";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useDomainCreateMutation,
   useDomainUpdateMutation,
@@ -119,7 +119,7 @@ export const useDomainForm = ({
   onClose,
 }: IUseDomainFormOptions): IUseDomainFormResult => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !domain;
 
@@ -136,7 +136,7 @@ export const useDomainForm = ({
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { body }) => {
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Domain "${body.name}" updated`,
         startedTitle: `Domain "${body.name}" update started`,

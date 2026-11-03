@@ -37,7 +37,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   domainKeys,
   useDomainDeleteMutation,
@@ -72,7 +72,7 @@ const YesNoLabel: React.FC<IYesNoLabelProps> = ({ value }) => (
 
 export const DomainList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
@@ -89,7 +89,7 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Domain "${name}" deleted`,
         startedTitle: `Domain "${name}" deletion started`,

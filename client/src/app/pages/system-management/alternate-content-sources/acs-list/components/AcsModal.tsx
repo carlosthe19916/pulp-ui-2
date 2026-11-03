@@ -5,7 +5,7 @@ import type { IAcsType } from "@plugins";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type AlternateContentSource,
   useAcsCreateMutation,
@@ -29,7 +29,7 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   onClose,
 }) => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const onError = (error: unknown) =>
     setSubmitError(
@@ -48,7 +48,7 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   });
   const updateMutation = useAcsUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result: data,
         finishedTitle: `Source "${acs?.name}" saved`,
         startedTitle: `Update of "${acs?.name}" started`,

@@ -17,7 +17,7 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type MaintenanceOperation,
   useMaintenanceMutation,
@@ -87,12 +87,12 @@ const OPERATIONS: IOperation[] = [
 
 /** Domain-wide storage maintenance, each operation a task. */
 export const Maintenance: React.FC = () => {
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const [active, setActive] = useState<IOperation | null>(null);
   const mutation = useMaintenanceMutation({
     onSuccess: (data, { operation }) =>
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `${OPERATIONS.find((item) => item.operation === operation)?.title ?? "Maintenance"} started`,
       }),

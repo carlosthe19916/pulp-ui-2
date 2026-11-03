@@ -1,10 +1,10 @@
 ---
-name: task-feedback
+name: how-tasks-are-reported
 description: Quick configuration writes wait for their task and report the outcome; other tasks toast once and go to a masthead task drawer; rows and pages show server-derived task status and pause repository writes while a task runs.
-status: Accepted
+status: Accepted (amended by 0010)
 ---
 
-# 0017. Task feedback: toasts once, then the task drawer
+# 0006. How tasks are reported
 
 ## Context
 
@@ -12,7 +12,7 @@ Most Pulp writes (sync, publish, content changes, most deletes and updates) are 
 the server answers with a task that runs later and may fail. A toast can only report what is
 known when the response arrives; the outcome comes later, when the user may have moved on or
 reloaded. The Tasks API can't filter by who started a task, so "the user's tasks" can only be
-the ones started in this browser. Supersedes [0006](0006-async-task-feedback.md).
+the ones started in this browser.
 
 ## Rules
 

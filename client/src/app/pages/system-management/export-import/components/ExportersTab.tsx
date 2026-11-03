@@ -25,7 +25,7 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type Exporter,
   useExporterCreateMutation,
@@ -79,7 +79,7 @@ type Modal =
 
 export const ExportersTab: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const [modal, setModal] = useState<Modal | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Exporter | null>(null);
@@ -119,7 +119,7 @@ export const ExportersTab: React.FC = () => {
   });
   const updateMutation = useExporterUpdateMutation({
     onSuccess: (result) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result,
         finishedTitle: "Exporter saved",
         startedTitle: "Exporter update started",
@@ -128,7 +128,7 @@ export const ExportersTab: React.FC = () => {
   });
   const exportMutation = useExportMutation({
     onSuccess: (result) =>
-      taskFeedback.reportStarted({
+      taskReporter.reportStarted({
         taskHref: result.task,
         title: "Export started",
       }),
@@ -136,7 +136,7 @@ export const ExportersTab: React.FC = () => {
   });
   const deleteMutation = useExporterDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result,
         finishedTitle: `Exporter "${name}" deleted`,
         startedTitle: `Deletion of exporter "${name}" started`,

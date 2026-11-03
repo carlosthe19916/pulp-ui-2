@@ -33,7 +33,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
-import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type AlternateContentSource,
   useAcsDeleteMutation,
@@ -55,7 +55,7 @@ import { AcsModal } from "./components/AcsModal";
 export const AcsList: React.FC = () => {
   const { plugins } = useApiStatus();
   const { addNotification } = useNotifications();
-  const taskFeedback = useTaskFeedback();
+  const taskReporter = useTaskReporter();
   const types = getAcsTypes({ installed: plugins });
   const [selectedPath, setSelectedPath] = useState<string>();
   const acsType =
@@ -108,7 +108,7 @@ export const AcsList: React.FC = () => {
   });
   const deleteMutation = useAcsDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskFeedback.reportWrite({
+      taskReporter.reportWrite({
         result,
         finishedTitle: `Source "${name}" deleted`,
         startedTitle: `Deletion of "${name}" started`,
