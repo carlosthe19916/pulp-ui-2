@@ -42,6 +42,8 @@ result without reloading ([ADR 0006](../adr/0006-async-task-feedback.md)).
 The axios response interceptor also records each task a `202` starts in a persisted Zustand store
 (`stores/useRecentTasksStore.ts`), which the dashboard lists as "Your recent tasks": the Tasks API
 can't filter by who started a task.
+Tasks the user starts from a page are also tracked in `stores/useTrackedTasksStore.ts`; a
+`TaskTracker` in the app shell polls them and reports each outcome, wherever the user is by then.
 
 ## Permission-aware
 

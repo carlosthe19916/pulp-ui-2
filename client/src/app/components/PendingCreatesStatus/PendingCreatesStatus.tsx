@@ -7,10 +7,12 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 
-import type { PendingCreateEntityType } from "@app/hooks/usePendingCreatesStore";
-
-import { getEntityLabel } from "./entityLabel";
-import { usePendingCreates } from "./usePendingCreates";
+import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import {
+  type PendingCreateEntityType,
+  useTrackedTasksStore,
+} from "@app/stores/useTrackedTasksStore";
+import { getEntityLabel } from "@app/utils/entityLabel";
 
 interface IPendingCreatesStatusProps {
   entityType: PendingCreateEntityType;
@@ -23,7 +25,17 @@ interface IPendingCreatesStatusProps {
 export const PendingCreatesStatus: React.FC<IPendingCreatesStatusProps> = ({
   entityType,
 }) => {
-  const { pendingCount } = usePendingCreates({ entityType });
+  const domain = useSelectedDomain();
+  // Scoped to this list's type and domain; `TaskTracker` drops each create once it settles.
+  const pendingCount = useTrackedTasksStore(
+    (state) =>
+      state.tasks.filter(
+        (task) =>
+          task.kind === "create" &&
+          task.entityType === entityType &&
+          task.domainName === domain.name,
+      ).length,
+  );
   if (pendingCount === 0) return null;
 
   const noun = getEntityLabel(entityType).toLowerCase();
