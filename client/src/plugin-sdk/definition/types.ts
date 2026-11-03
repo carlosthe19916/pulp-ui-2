@@ -43,7 +43,14 @@ interface IEntityTypeDef<E extends EntityType> {
 }
 
 /**
- * A POST that starts a task. `path` is relative to the target's href (`sign/`), or a
+ * What an action's operation answers, as the OpenAPI spec declares it: `task` (`202`
+ * `AsyncOperationResponse`), `taskGroup` (`202` `TaskGroupOperationResponse`) or `result`
+ * (`200`, done inline).
+ */
+export type ActionResponse = "task" | "taskGroup" | "result";
+
+/**
+ * A plugin action's POST. `path` is relative to the target's href (`sign/`), or a
  * collection endpoint when it starts with `/` (`/rpm/copy/`).
  */
 export interface IActionDef {
@@ -51,6 +58,8 @@ export interface IActionDef {
   target: "repository" | "version";
   /** For collection endpoints: the body field the repository href fills (`list`: as a list). */
   repositoryParam?: { key: string; list?: boolean };
+  /** What the operation answers; default `task`. */
+  response?: ActionResponse;
 }
 
 /** Another way to create an object of a type: a POST relative to its collection. */

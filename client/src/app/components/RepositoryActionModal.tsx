@@ -6,6 +6,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import { useRepositoryActionMutation } from "@app/queries/repositories";
+import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import type { IPluginAction } from "@plugin-sdk/ui";
 
@@ -31,13 +32,25 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useRepositoryActionMutation({
     onSuccess: (data) => {
-      if ("task" in data) {
-        taskFeedback.started({
-          taskHref: data.task,
-          title: `${action.label} started`,
-        });
-      } else {
-        addNotification({ title: `${action.label} started`, variant: "info" });
+      switch (data.kind) {
+        case "task":
+          taskFeedback.started({
+            taskHref: data.task.task,
+            title: `${action.label} started`,
+          });
+          return;
+        case "taskGroup":
+          notifyTaskGroupStarted({
+            addNotification,
+            taskGroupHref: data.taskGroup.task_group,
+            title: `${action.label} started`,
+          });
+          return;
+        case "result":
+          addNotification({
+            title: `${action.label} done`,
+            variant: "success",
+          });
       }
     },
     onError: (error) =>
@@ -71,7 +84,12 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
       onSubmit={(body) => {
         clearSubmitError();
         mutation.mutate(
-          { targetHref, path: action.path, body: withRepository(body) },
+          {
+            targetHref,
+            path: action.path,
+            response: action.response,
+            body: withRepository(body),
+          },
           { onSuccess: onClose },
         );
       }}

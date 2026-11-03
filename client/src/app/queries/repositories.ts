@@ -26,6 +26,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getPulpType } from "@catalog";
+import type { ActionResponse } from "@plugin-sdk/definition";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
@@ -202,16 +203,19 @@ export const useRepositorySyncMutation = (
  * A plugin action's 2xx: one task (most actions), a task group (`/rpm/prune/`), or a
  * synchronous result (container `remove_signatures/` answers `200`).
  */
-export type ActionOperationResponse =
-  | AsyncOperationResponse
-  | TaskGroupOperationResponse
-  | RemoveSignaturesResponse;
+/** A plugin action's answer, read as its definition declares (`response`). */
+export type ActionOperationResult =
+  | { kind: "task"; task: AsyncOperationResponse }
+  | { kind: "taskGroup"; taskGroup: TaskGroupOperationResponse }
+  | { kind: "result"; result: RemoveSignaturesResponse };
 
 export interface IRepositoryActionVariables {
   /** The repository or repository version the action runs on. */
   targetHref: string;
   /** Relative to `targetHref`, or a collection endpoint when it starts with `/`. */
   path: string;
+  /** What the operation answers, from the action's definition; default `task`. */
+  response?: ActionResponse;
   body: Record<string, unknown>;
 }
 
@@ -236,27 +240,37 @@ const toActionBody = (body: Record<string, unknown>) => {
  */
 export const useRepositoryActionMutation = (
   options?: IMutationCallbacks<
-    ActionOperationResponse,
+    ActionOperationResult,
     IRepositoryActionVariables
   >,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
-    ActionOperationResponse,
+    ActionOperationResult,
     DrfAxiosError,
     IRepositoryActionVariables
   >({
-    mutationFn: async ({ targetHref, path, body }) => {
+    mutationFn: async ({ targetHref, path, response = "task", body }) => {
       const url = path.startsWith("/")
         ? pulpApiPath(path.slice(1), domain)
         : `${toProxyHref(targetHref)}${path}`;
-      return (
-        await axiosInstance.post<ActionOperationResponse>(
-          url,
-          toActionBody(body),
-        )
-      ).data;
+      const { data } = await axiosInstance.post<unknown>(
+        url,
+        toActionBody(body),
+      );
+      // Each action's operation declares one answer; its definition says which.
+      switch (response) {
+        case "task":
+          return { kind: "task", task: data as AsyncOperationResponse };
+        case "taskGroup":
+          return {
+            kind: "taskGroup",
+            taskGroup: data as TaskGroupOperationResponse,
+          };
+        case "result":
+          return { kind: "result", result: data as RemoveSignaturesResponse };
+      }
     },
     onSuccess: (data, vars) => {
       const repositoryHref =
