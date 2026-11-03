@@ -115,10 +115,9 @@ test.describe("Remote edit page", () => {
    *
    * When I open its edit page, change the URL, empty the CA certificate and Download concurrency, and
    * save
-   * Then the toast "Remote "<name>" updated" appears (the edit's task is waited for) and its detail
-   * page opens
-   * And once the task finishes, the server has the new URL, no CA certificate and no download
-   * concurrency, and every other setting unchanged
+   * Then the toast "Remote "<name>" updated" appears and its detail page opens
+   * And the server has the new URL, no CA certificate and no download concurrency, and every other
+   * setting unchanged
    */
   test(
     "Saving an edit changes only the edited fields; a field emptied by the user is cleared on the server.",
@@ -423,7 +422,7 @@ test.describe("Remote edit page", () => {
    * Then "Edit container remote" opens
    * When I add the include tag "stable", remove "latest" and save
    * Then the toast "Remote "<name>" updated" appears and the detail page opens
-   * And once the update task finishes, its include tags are only "stable"
+   * And its include tags are only "stable"
    */
   test(
     "Editing a remote from its detail page saves the change and returns to the detail page.",

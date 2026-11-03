@@ -47,7 +47,7 @@ Seed: a file repository with two versions and a publication of version 1
 
 When I create a file distribution with a base path and choose <source>
 Then the Distributions list opens with the toast "Distribution "<name>" created"
-And when the task finishes, its detail page opened from the list shows <serves>
+And its detail page opened from the list shows <serves>
 
 | source                                  | serves                      |
 | --------------------------------------- | --------------------------- |
@@ -84,7 +84,7 @@ Seed: a file distribution serving a publication
 
 When I open its edit page, choose "Repository" as the source, pick a repository and save
 Then the toast "Distribution "<name>" updated" appears and the detail page opens
-And once the task finishes, the server has the repository set and no publication
+And the server has the repository set and no publication
 
 Pulp refuses a distribution with both a repository and a publication, so the save must clear the
 old source.

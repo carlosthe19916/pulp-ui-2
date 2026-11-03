@@ -68,7 +68,7 @@ When I open its detail page and choose "Edit" in the actions menu
 Then "Edit container remote" opens
 When I add the include tag "stable", remove "latest" and save
 Then the toast "Remote "<name>" updated" appears and the detail page opens
-And once the update task finishes, its include tags are only "stable"
+And its include tags are only "stable"
 
 ### RMT-EDT-02 Cancel leaves without saving
 

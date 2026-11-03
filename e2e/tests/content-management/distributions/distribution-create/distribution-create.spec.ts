@@ -33,7 +33,7 @@ test.describe("Distribution create page", () => {
    *
    * When I create a file distribution with a base path and choose <source>
    * Then the Distributions list opens with the toast "Distribution "<name>" created"
-   * And when the task finishes, its detail page opened from the list shows <serves>
+   * And its detail page opened from the list shows <serves>
    *
    * | source                                  | serves                      |
    * | --------------------------------------- | --------------------------- |

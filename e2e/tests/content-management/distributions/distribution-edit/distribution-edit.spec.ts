@@ -19,7 +19,7 @@ test.describe("Distribution edit page", () => {
    *
    * When I open its edit page, choose "Repository" as the source, pick a repository and save
    * Then the toast "Distribution "<name>" updated" appears and the detail page opens
-   * And once the task finishes, the server has the repository set and no publication
+   * And the server has the repository set and no publication
    *
    * Pulp refuses a distribution with both a repository and a publication, so the save must clear the
    * old source.

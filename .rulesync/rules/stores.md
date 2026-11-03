@@ -30,8 +30,7 @@ else has an owner already:
 - Code outside React (auth providers, axios interceptors, route guards) uses
   `useXStore.getState()`.
 - A store never fetches, toasts or invalidates queries. The component that reacts to it does
-  (the task drawer reads each tracked task's state from Pulp; `TaskFinishRefresher` refreshes queries
-  when one finishes).
+  (`TaskFinishRefresher` refreshes queries when a tracked task finishes).
 
 ## Persistence
 

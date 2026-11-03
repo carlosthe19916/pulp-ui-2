@@ -1,6 +1,6 @@
 ---
 name: task-feedback
-description: A configuration write (edit, delete, create of a remote, distribution, repository, …) waits briefly for its task and reports the outcome; other tasks show a toast once and go to a drawer opened from a masthead badge, which lists the tasks this browser started with their live state and result; rows and pages show server-derived task status and pause repository writes while a task runs.
+description: Quick configuration writes wait for their task and report the outcome; other tasks toast once and go to a masthead task drawer; rows and pages show server-derived task status and pause repository writes while a task runs.
 status: Accepted
 ---
 
@@ -50,9 +50,8 @@ the ones started in this browser. Supersedes [0006](0006-async-task-feedback.md)
 
 ## Consequences
 
-- Users never wait on a spinner for more than a few seconds; a quick configuration change is
-  confirmed where it happened, with fresh data on screen, and the outcome of slower work is in
-  the drawer instead of a toast they may have missed.
+- Users never wait on a spinner for more than 10 seconds; a quick configuration change is
+  confirmed where it happened, and slower work's outcome is in the drawer.
 - Whether a configuration change is quick is decided by its task, not guessed: one queued
   behind other work (a remote delete waiting for a sync that uses it) moves to the drawer.
 - A content change that made no new version shows as completed with no version link; there

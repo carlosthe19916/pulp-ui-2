@@ -27,14 +27,10 @@ use a made-up `widget` resource.
 | One-off action (cancel, purge)         | the page/component with the handler        | `mutate(vars, { onSettled: closeDialog })`                | danger toast                         |
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |
 
-A write that runs as a Pulp task reports through `useTaskFeedback()`. A configuration write
-(create, edit or delete of an object) waits for its task in the hook (`settleTask`, or
-`settleWrite` for a `200 | 202` update, which reads the status; `TData` `ISettledTask` or
-`ISettledWrite<Entity>`, `TError` `TaskWriteError`) and
-the caller calls `taskFeedback.settled({ result, doneTitle, startedTitle })`. Data work (sync,
-publish, content changes) calls `taskFeedback.started({ taskHref, title })`, which toasts once
-and lists the task in the drawer. A sync response toasts the entity
-(`addNotification({ title, variant: "success" })`). Never toast a task's outcome by polling it.
+A write that runs as a Pulp task reports through `useTaskFeedback()` (see `toastr.md` § Tasks):
+a configuration write settles in its hook and the caller calls `taskFeedback.settled(...)`; data
+work calls `taskFeedback.started(...)`. A sync response toasts the entity
+(`addNotification({ title, variant: "success" })`).
 
 ## 1. Mutation hook (`queries/<family>.ts`)
 
@@ -46,7 +42,6 @@ export const useWidgetDeleteMutation = (
 ) => {
   const queryClient = useQueryClient();
   return useMutation<ISettledTask, TaskWriteError, WidgetResponse>({
-    // A configuration write: resolves once its task is done (or still running at the cap).
     mutationFn: async (widget) =>
       settleTask(
         (
