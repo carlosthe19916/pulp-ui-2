@@ -71,6 +71,7 @@ export interface IRepositoryTab {
 /** Where a distribution serves its content, as a client needs it; empty strings when it doesn't. */
 export interface IClientServedAt extends IServedAt {
   name: string;
+  basePath: string;
   /** The Galaxy client URL (Ansible). */
   clientUrl: string;
 }

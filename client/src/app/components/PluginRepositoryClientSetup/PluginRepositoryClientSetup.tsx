@@ -25,6 +25,7 @@ export const PluginRepositoryClientSetup: React.FC<
   const record = distribution as Record<string, unknown>;
   const served: IClientServedAt = {
     name: distribution.name,
+    basePath: distribution.base_path,
     baseUrl: asString(record.base_url),
     registryPath: asString(record.registry_path),
     clientUrl: asString(record.client_url),
