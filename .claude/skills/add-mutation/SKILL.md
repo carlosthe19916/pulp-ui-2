@@ -27,11 +27,9 @@ use a made-up `widget` resource.
 | One-off action (cancel, purge)         | the page/component with the handler        | `mutate(vars, { onSettled: closeDialog })`                | danger toast                         |
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |
 
-A write that runs as a Pulp task reports through `useTaskReporter()` (see `toastr.md` § Tasks):
-a configuration write waits briefly for its task in its hook and the caller calls
-`taskReporter.reportWrite(...)`; data work calls `taskReporter.reportStarted(...)`. A sync
-response toasts the entity
-(`addNotification({ title, variant: "success" })`).
+A write that starts a Pulp task reports through `useTaskReporter()` (see `toastr.md` § Tasks):
+`taskReporter.reportStarted(...)`, or `taskReporter.reportWrite(...)` for a `200 | 202` update. A
+sync response toasts the entity (`addNotification({ title, variant: "success" })`).
 
 ## 1. Mutation hook (`queries/<family>.ts`)
 
@@ -39,18 +37,20 @@ Invalidation only; caller callbacks run after it.
 
 ```ts
 export const useWidgetDeleteMutation = (
-  options?: IMutationCallbacks<IWaitedTask, WidgetResponse, TaskWriteError>,
+  options?: IMutationCallbacks<
+    AsyncOperationResponse,
+    WidgetResponse,
+    DrfAxiosError
+  >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, WidgetResponse>({
+  return useMutation<AsyncOperationResponse, DrfAxiosError, WidgetResponse>({
     mutationFn: async (widget) =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(widget.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(widget.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, widget) => {
       void queryClient.invalidateQueries({ queryKey: widgetKeys.list() });
       void queryClient.invalidateQueries({
@@ -73,10 +73,9 @@ const [deleteTarget, setDeleteTarget] = useState<WidgetResponse | null>(null);
 
 const deleteMutation = useWidgetDeleteMutation({
   onSuccess: (data, { name }) =>
-    taskReporter.reportWrite({
-      result: data,
-      finishedTitle: `Widget "${name}" deleted`,
-      startedTitle: `Widget "${name}" deletion started`,
+    taskReporter.reportStarted({
+      taskHref: data.task,
+      title: `Widget "${name}" deletion started`,
     }),
   onError: (error, { name }) =>
     addNotification({

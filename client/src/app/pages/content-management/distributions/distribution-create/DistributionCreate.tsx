@@ -35,10 +35,9 @@ export const DistributionCreate: React.FC = () => {
   const createMutation = useDistributionCreateMutation({
     onSuccess: (data, { body }) => {
       const name = String(body.name ?? "");
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Distribution "${name}" created`,
-        startedTitle: `Distribution "${name}" creation started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Distribution "${name}" creation started`,
       });
     },
     onError: (error) =>

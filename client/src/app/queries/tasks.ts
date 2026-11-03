@@ -248,60 +248,19 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
   }
 };
 
-/**
- * How long a configuration write (edit, delete, create of a remote, distribution, …) waits
- * for its task before handing it to the task drawer (ADR 0006).
- */
-export const BRIEF_TASK_WAIT_MS = 10_000;
-const BRIEF_TASK_POLL_DELAYS_MS = [250, 500, 1000];
-
-/** A write that ran as a task (`202`); `finished` is the task when it ended within the wait. */
-export interface IWaitedTask {
-  kind: "task";
-  taskHref: string;
-  finished?: TaskResponse;
-}
-
-/** A write whose operation declares `200` (the object) and `202` (a task, waited for). */
-export type IWriteResult<T> = { kind: "object"; object: T } | IWaitedTask;
-
-/**
- * Waits up to `BRIEF_TASK_WAIT_MS` for a dispatched task, so a quick write reports like a
- * synchronous one; rejects with the task's error if it failed. A task still running when
- * the wait ends comes back without `finished`.
- */
-export const waitBrieflyForTask = async ({
-  task: taskHref,
-}: AsyncOperationResponse): Promise<IWaitedTask> => {
-  const deadline = Date.now() + BRIEF_TASK_WAIT_MS;
-  for (let attempt = 0; ; attempt++) {
-    const { data: task } = await axiosInstance.get<TaskResponse>(
-      toProxyHref(taskHref),
-    );
-    if (task.state === "completed" || task.state === "skipped") {
-      return { kind: "task", taskHref, finished: task };
-    }
-    if (isTerminalTaskState(task.state)) {
-      throw new TaskFailedError(task);
-    }
-    const delay =
-      BRIEF_TASK_POLL_DELAYS_MS[
-        Math.min(attempt, BRIEF_TASK_POLL_DELAYS_MS.length - 1)
-      ] ?? 1000;
-    if (Date.now() + delay > deadline) return { kind: "task", taskHref };
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-};
+/** A `200 | 202` write: the object it returned, or the task it started. */
+export type IWriteResult<T> =
+  { kind: "object"; object: T } | { kind: "task"; taskHref: string };
 
 /**
  * Reads a write whose operation declares `200` (the object) and `202` (a task) by its
- * status, as the spec does; a task is waited for with `waitBrieflyForTask`.
+ * status, as the spec does.
  */
-export const toWriteResult = async <T>(
+export const toWriteResult = <T>(
   response: AxiosResponse<T | AsyncOperationResponse>,
-): Promise<IWriteResult<T>> =>
+): IWriteResult<T> =>
   response.status === 202
-    ? waitBrieflyForTask(response.data as AsyncOperationResponse)
+    ? { kind: "task", taskHref: (response.data as AsyncOperationResponse).task }
     : { kind: "object", object: response.data as T };
 
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */

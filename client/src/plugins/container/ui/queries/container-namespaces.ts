@@ -15,11 +15,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "@app/queries/tasks";
-import {
-  type IWaitedTask,
-  type TaskWriteError,
-  waitBrieflyForTask,
-} from "@app/queries/tasks";
+import {} from "@app/queries/tasks";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
@@ -105,25 +101,22 @@ export const useContainerNamespaceCreateMutation = (
 /** Deletes a namespace and its repositories; returns the task. */
 export const useContainerNamespaceDeleteMutation = (
   options?: IMutationCallbacks<
-    IWaitedTask,
-    ContainerContainerNamespaceResponse,
-    TaskWriteError
+    AsyncOperationResponse,
+    ContainerContainerNamespaceResponse
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    IWaitedTask,
-    TaskWriteError,
+    AsyncOperationResponse,
+    DrfAxiosError,
     ContainerContainerNamespaceResponse
   >({
     mutationFn: async (namespace) =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(namespace.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(namespace.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, namespace) => {
       void queryClient.invalidateQueries({
         queryKey: containerNamespaceKeys.list(),

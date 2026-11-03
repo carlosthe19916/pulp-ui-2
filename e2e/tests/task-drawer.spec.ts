@@ -12,7 +12,7 @@ test.describe("Task drawer", () => {
     const repository = await api.createFileRepository(name);
     await api.addFileContent(repository.pulp_href, "a.txt");
 
-    // A content change goes to the drawer at once (configuration writes are waited for).
+    // A content change starts a task, which the drawer follows.
     await repositoriesPage.goto();
     await repositoriesPage.filterBy("Name", name);
     await repositoriesPage.row(name).getByRole("link", { name }).click();

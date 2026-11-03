@@ -20,13 +20,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -120,14 +114,13 @@ export const useDomainCreateMutation = (
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<DomainResponse>,
-    { href: string; body: PatchedDomain },
-    TaskWriteError
+    { href: string; body: PatchedDomain }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<DomainResponse>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: PatchedDomain }
   >({
     mutationFn: async ({ href, body }: { href: string; body: PatchedDomain }) =>
@@ -151,15 +144,15 @@ export const useDomainUpdateMutation = (
 };
 
 export const useDomainDeleteMutation = (
-  options?: IMutationCallbacks<IWaitedTask, DomainResponse, TaskWriteError>,
+  options?: IMutationCallbacks<AsyncOperationResponse, DomainResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, DomainResponse>({
+  return useMutation<AsyncOperationResponse, DrfAxiosError, DomainResponse>({
     mutationFn: async (domain: DomainResponse) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(domain.pulp_href ?? ""),
       );
-      return waitBrieflyForTask(response.data);
+      return response.data;
     },
     onSuccess: (data, domain) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });

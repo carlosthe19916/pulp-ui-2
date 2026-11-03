@@ -19,13 +19,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -97,22 +91,22 @@ export const useRemotesListQuery = ({
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRemoteDeleteMutation = (
-  options?: IMutationCallbacks<
-    IWaitedTask,
-    GenericRemoteResponse,
-    TaskWriteError
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, GenericRemoteResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, GenericRemoteResponse>({
-    mutationFn: async (remote: GenericRemoteResponse): Promise<IWaitedTask> =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(remote.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    GenericRemoteResponse
+  >({
+    mutationFn: async (
+      remote: GenericRemoteResponse,
+    ): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(remote.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, remote) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({
@@ -211,14 +205,13 @@ export const useRemoteCreateMutation = (
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<GenericRemoteResponse>,
-    { href: string; body: Record<string, unknown> },
-    TaskWriteError
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<GenericRemoteResponse>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({

@@ -136,10 +136,9 @@ export const ExportersTab: React.FC = () => {
   });
   const deleteMutation = useExporterDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskReporter.reportWrite({
-        result,
-        finishedTitle: `Exporter "${name}" deleted`,
-        startedTitle: `Deletion of exporter "${name}" started`,
+      taskReporter.reportStarted({
+        taskHref: result.task,
+        title: `Deletion of exporter "${name}" started`,
       }),
     onError: (err, { name }) =>
       addNotification({

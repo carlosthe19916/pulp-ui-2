@@ -20,13 +20,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -130,24 +124,22 @@ export const useDistributionsListQuery = ({
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
 export const useDistributionDeleteMutation = (
-  options?: IMutationCallbacks<
-    IWaitedTask,
-    DistributionResponse,
-    TaskWriteError
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, DistributionResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, DistributionResponse>({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    DistributionResponse
+  >({
     mutationFn: async (
       distribution: DistributionResponse,
-    ): Promise<IWaitedTask> =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(distribution.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+    ): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(distribution.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, distribution) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
@@ -216,16 +208,15 @@ export const buildDistributionHref = (
  */
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
-    IWaitedTask,
-    { apiPath: string; body: Record<string, unknown> },
-    TaskWriteError
+    AsyncOperationResponse,
+    { apiPath: string; body: Record<string, unknown> }
   >,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
-    IWaitedTask,
-    TaskWriteError,
+    AsyncOperationResponse,
+    DrfAxiosError,
     { apiPath: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
@@ -234,15 +225,13 @@ export const useDistributionCreateMutation = (
     }: {
       apiPath: string;
       body: Record<string, unknown>;
-    }): Promise<IWaitedTask> =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.post<AsyncOperationResponse>(
-            pulpApiPath(`distributions/${apiPath}/`, domain),
-            body,
-          )
-        ).data,
-      ),
+    }): Promise<AsyncOperationResponse> =>
+      (
+        await axiosInstance.post<AsyncOperationResponse>(
+          pulpApiPath(`distributions/${apiPath}/`, domain),
+          body,
+        )
+      ).data,
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       options?.onSuccess?.(data, variables);
@@ -255,14 +244,13 @@ export const useDistributionCreateMutation = (
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<DistributionResponse>,
-    { href: string; body: Record<string, unknown> },
-    TaskWriteError
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<DistributionResponse>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({

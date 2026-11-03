@@ -76,10 +76,9 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name: deletedName }) =>
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Distribution "${deletedName}" deleted`,
-        startedTitle: `Distribution "${deletedName}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Distribution "${deletedName}" deletion started`,
       }),
 
     onError: (error, { name: deletedName }) =>

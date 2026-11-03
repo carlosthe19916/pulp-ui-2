@@ -94,10 +94,9 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Distribution "${name}" deleted`,
-        startedTitle: `Distribution "${name}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Distribution "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

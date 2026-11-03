@@ -108,10 +108,9 @@ export const AcsList: React.FC = () => {
   });
   const deleteMutation = useAcsDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskReporter.reportWrite({
-        result,
-        finishedTitle: `Source "${name}" deleted`,
-        startedTitle: `Deletion of "${name}" started`,
+      taskReporter.reportStarted({
+        taskHref: result.task,
+        title: `Deletion of "${name}" started`,
       }),
     onError: (err, { name }) =>
       addNotification({

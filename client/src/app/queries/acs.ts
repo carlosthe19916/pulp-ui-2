@@ -16,13 +16,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -118,14 +112,13 @@ export const useAcsCreateMutation = (
 export const useAcsUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<AlternateContentSource>,
-    { href: string; body: Record<string, unknown> },
-    TaskWriteError
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<AlternateContentSource>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
@@ -143,22 +136,20 @@ export const useAcsUpdateMutation = (
 };
 
 export const useAcsDeleteMutation = (
-  options?: IMutationCallbacks<
-    IWaitedTask,
-    AlternateContentSource,
-    TaskWriteError
-  >,
+  options?: IMutationCallbacks<AsyncOperationResponse, AlternateContentSource>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, AlternateContentSource>({
+  return useMutation<
+    AsyncOperationResponse,
+    DrfAxiosError,
+    AlternateContentSource
+  >({
     mutationFn: async (acs) =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(acs.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(acs.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, acs) => {
       void queryClient.invalidateQueries({ queryKey: acsKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });

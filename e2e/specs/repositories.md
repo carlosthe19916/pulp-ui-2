@@ -87,9 +87,10 @@ Summary: Editing a repository saves changed settings and clears the ones the use
 Seed: a file repository with a description, a remote and 5 retained versions
 
 When I open its edit page, empty Description, remove the remote, set 2 retained versions and save
-Then the toast "Repository "<name>" updated" appears and its detail page opens
-And the server has no description (null: Pulp rejects a blank one), no remote and 2 retained
-versions
+Then the toast "Repository "<name>" update started" appears (an edit runs as a task) and its
+detail page opens
+And once the task finishes, the server has no description (null: Pulp rejects a blank one), no
+remote and 2 retained versions
 
 ### REP-EDT-02 Editing while a task runs
 
@@ -104,8 +105,7 @@ When I choose "Edit"
 Then the alert "Sync in progress" says "You can still save: your changes are applied when the
 task finishes." and links to the task
 When I change the description and save
-Then the toast "Repository "<name>" updated" appears ("update started" if the sync outlasts the
-10-second wait) and the detail page opens
+Then the toast "Repository "<name>" update started" appears and the detail page opens
 And once the sync finishes, the server has the new description
 
 Pulp queues the update behind the repository's lock and runs it when the sync finishes.

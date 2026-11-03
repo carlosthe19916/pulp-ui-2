@@ -4,18 +4,18 @@ import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
 export interface IReportWriteParams {
-  /** What a configuration write resolved to: its task (waited for), or its object. */
+  /** What a `200 | 202` write returned: its object, or the task it started. */
   result: IWriteResult<unknown>;
-  /** When the write finished, e.g. `Remote "foo" deleted`. */
+  /** When it applied at once (`200`), e.g. `Remote "foo" updated`. */
   finishedTitle: string;
-  /** When its task is still running and moves to the task drawer. */
+  /** When it started a task (`202`), which goes to the task drawer. */
   startedTitle: string;
 }
 
 /**
- * Reports a write that runs as a Pulp task to the user (ADR 0006): `reportStarted`
- * for data work, which goes to the task drawer; `reportWrite` for a configuration write,
- * which reports its outcome, or hands over to the drawer if its task is still running.
+ * Reports a write to the user (ADR 0006): `reportStarted` for one that started a Pulp task,
+ * which goes to the task drawer; `reportWrite` for a `200 | 202` write, which reports the
+ * change or the task it started.
  */
 export const useTaskReporter = () => {
   const { addNotification } = useNotifications();
@@ -37,7 +37,7 @@ export const useTaskReporter = () => {
     finishedTitle,
     startedTitle,
   }: IReportWriteParams) => {
-    if (result.kind === "task" && !result.finished) {
+    if (result.kind === "task") {
       reportStarted({ taskHref: result.taskHref, title: startedTitle });
     } else {
       addNotification({ title: finishedTitle, variant: "success" });

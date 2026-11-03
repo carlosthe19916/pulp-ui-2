@@ -22,24 +22,6 @@ describe("useTaskReporter", () => {
     useTrackedTasksStore.getState().reset();
   });
 
-  it("confirms a write whose task finished, without tracking it", async () => {
-    const { result } = await renderHook(() => useTaskReporter());
-    result.current.reportWrite({
-      result: {
-        kind: "task",
-        taskHref,
-        finished: { state: "completed", name: "x", logging_cid: "" },
-      },
-      finishedTitle: "Remote deleted",
-      startedTitle: "Remote deletion started",
-    });
-    expect(addNotification).toHaveBeenCalledWith({
-      title: "Remote deleted",
-      variant: "success",
-    });
-    expect(tracked()).toEqual([]);
-  });
-
   it("confirms an update that returned the object", async () => {
     const { result } = await renderHook(() => useTaskReporter());
     result.current.reportWrite({
@@ -53,7 +35,7 @@ describe("useTaskReporter", () => {
     });
   });
 
-  it("hands a task still running to the drawer", async () => {
+  it("reports the task an update started, and tracks it", async () => {
     const { result } = await renderHook(() => useTaskReporter());
     result.current.reportWrite({
       result: { kind: "task", taskHref },

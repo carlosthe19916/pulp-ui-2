@@ -89,10 +89,9 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Domain "${name}" deleted`,
-        startedTitle: `Domain "${name}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Domain "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

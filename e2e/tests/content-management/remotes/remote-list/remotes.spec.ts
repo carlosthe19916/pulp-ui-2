@@ -109,7 +109,7 @@ test.describe("Remotes", () => {
    * Seed: a file remote
    *
    * When I choose "Delete" in its row actions and confirm "Delete Remote"
-   * Then the toast "Remote "<name>" deleted" appears and the row disappears
+   * Then the toast "Remote "<name>" deletion started" appears and the row disappears
    */
   test(
     "Deleting a remote from the list removes it after confirmation.",
@@ -129,7 +129,9 @@ test.describe("Remotes", () => {
       await remotesPage.rowAction(name, "Delete");
       await new ConfirmModal(page, "Delete Remote").confirm("Delete");
 
-      await expect(toasts.success(`Remote "${name}" deleted`)).toBeVisible();
+      await expect(
+        toasts.info(`Remote "${name}" deletion started`),
+      ).toBeVisible();
       await remotesPage.expectRowGone(name);
     },
   );

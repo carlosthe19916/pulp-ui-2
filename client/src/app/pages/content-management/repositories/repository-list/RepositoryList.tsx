@@ -94,10 +94,9 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Repository "${name}" deleted`,
-        startedTitle: `Repository "${name}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Repository "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

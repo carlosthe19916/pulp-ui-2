@@ -173,7 +173,9 @@ test.describe("Delete async-vs-sync contract (real backend)", () => {
     await repositoriesPage.expectRowVisible(name);
 
     await repositoriesPage.delete(name);
-    await expect(page.getByText(`Repository "${name}" deleted`)).toBeVisible();
+    await expect(
+      page.getByText(`Repository "${name}" deletion started`),
+    ).toBeVisible();
 
     await repositoriesPage.goto();
     await repositoriesPage.filterBy("Name", name);
@@ -194,7 +196,9 @@ test.describe("Delete async-vs-sync contract (real backend)", () => {
     await remotesPage.expectRowVisible(name);
 
     await remotesPage.delete(name);
-    await expect(page.getByText(`Remote "${name}" deleted`)).toBeVisible();
+    await expect(
+      page.getByText(`Remote "${name}" deletion started`),
+    ).toBeVisible();
 
     await remotesPage.goto();
     await remotesPage.filterBy("Name", name);
@@ -216,7 +220,7 @@ test.describe("Delete async-vs-sync contract (real backend)", () => {
 
     await distributionsPage.delete(name);
     await expect(
-      page.getByText(`Distribution "${name}" deleted`),
+      page.getByText(`Distribution "${name}" deletion started`),
     ).toBeVisible();
 
     await distributionsPage.goto();
@@ -239,7 +243,9 @@ test.describe("Delete async-vs-sync contract (real backend)", () => {
     await domainsPage.expectRowVisible(name);
 
     await domainsPage.delete(name);
-    await expect(page.getByText(`Domain "${name}" deleted`)).toBeVisible();
+    await expect(
+      page.getByText(`Domain "${name}" deletion started`),
+    ).toBeVisible();
 
     await domainsPage.goto();
     await domainsPage.filterBy("Name", name);

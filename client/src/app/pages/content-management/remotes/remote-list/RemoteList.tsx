@@ -93,10 +93,9 @@ export const RemoteList: React.FC = () => {
   const openModal = alternatives.find(({ key }) => key === openAlternative);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskReporter.reportWrite({
-        result: data,
-        finishedTitle: `Remote "${name}" deleted`,
-        startedTitle: `Remote "${name}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: data.task,
+        title: `Remote "${name}" deletion started`,
       }),
     onError: (error, { name }) =>
       addNotification({

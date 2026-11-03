@@ -117,10 +117,9 @@ export const ContainerNamespaceList: React.FC = () => {
   });
   const deleteMutation = useContainerNamespaceDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskReporter.reportWrite({
-        result,
-        finishedTitle: `Namespace "${name}" deleted`,
-        startedTitle: `Namespace "${name}" deletion started`,
+      taskReporter.reportStarted({
+        taskHref: result.task,
+        title: `Namespace "${name}" deletion started`,
       }),
     onError: (err, { name }) =>
       addNotification({

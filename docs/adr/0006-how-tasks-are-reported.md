@@ -1,6 +1,6 @@
 ---
 name: how-tasks-are-reported
-description: Quick configuration writes wait for their task and report the outcome; other tasks toast once and go to a masthead task drawer; rows and pages show server-derived task status and pause repository writes while a task runs.
+description: Starting a task shows a toast once and adds the task to a masthead task drawer that follows it to the end; rows and pages show server-derived task status and pause repository writes while a task runs.
 status: Accepted (amended by 0010)
 ---
 
@@ -18,16 +18,9 @@ the ones started in this browser.
 
 - [ ] A toast reports a response when it arrives and is never raised later by watching a
       task. Starting a task shows an info toast naming the action, with a link to the task.
-- [ ] A configuration write that runs as a task (editing, deleting or creating a remote,
-      distribution, repository, ACS, exporter, domain or namespace) waits up to 10 seconds for
-      it, then reports like a synchronous write: a success toast ("Remote "foo" deleted"), or
-      the error in the form or as a toast. Still running after 10 seconds, it shows the
-      started toast and goes to the task drawer.
-- [ ] Data work (sync, publish, content changes, version delete and repair, export, import,
-      storage migration, purge, maintenance, plugin actions) goes to the task drawer at once.
 - [ ] A toast still appears if the user closed the modal or left the page before the request
       settled.
-- [ ] Every task handed to the drawer is listed there, opened from a notification badge
+- [ ] Every task the user starts is listed in the task drawer, opened from a notification badge
       in the masthead: newest first, with the action, its live state, when it started, its
       error when it failed, the repository version it created, and a link to the task.
 - [ ] The badge counts the tasks still running and calls for attention while a failed or
@@ -50,10 +43,8 @@ the ones started in this browser.
 
 ## Consequences
 
-- Users never wait on a spinner for more than 10 seconds; a quick configuration change is
-  confirmed where it happened, and slower work's outcome is in the drawer.
-- Whether a configuration change is quick is decided by its task, not guessed: one queued
-  behind other work (a remote delete waiting for a sync that uses it) moves to the drawer.
+- Users never wait on a spinner for a task; its outcome is in the drawer and on the object,
+  even for a change that finishes in a moment.
 - A content change that made no new version shows as completed with no version link; there
   is no separate "No changes" message.
 - The drawer lists only this browser's tasks: tasks started from another browser, the CLI, or

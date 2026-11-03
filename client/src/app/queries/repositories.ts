@@ -29,14 +29,7 @@ import { getPulpType } from "@catalog";
 import type { ActionResponseKind } from "@plugin-sdk/definition";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  taskKeys,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, taskKeys, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -122,29 +115,31 @@ export const useRepositoriesListQuery = ({
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRepositoryDeleteMutation = (
-  options?: IMutationCallbacks<IWaitedTask, RepositoryResponse, TaskWriteError>,
+  options?: IMutationCallbacks<AsyncOperationResponse, RepositoryResponse>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, RepositoryResponse>({
-    mutationFn: async (repository: RepositoryResponse): Promise<IWaitedTask> =>
-      waitBrieflyForTask(
+  return useMutation<AsyncOperationResponse, DrfAxiosError, RepositoryResponse>(
+    {
+      mutationFn: async (
+        repository: RepositoryResponse,
+      ): Promise<AsyncOperationResponse> =>
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(repository.pulp_href ?? ""),
           )
         ).data,
-      ),
-    onSuccess: (data, repository) => {
-      void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
-      void queryClient.invalidateQueries({
-        queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
-      });
-      // Surface the new delete task on the row without waiting for the next poll.
-      void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
-      options?.onSuccess?.(data, repository);
+      onSuccess: (data, repository) => {
+        void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
+        void queryClient.invalidateQueries({
+          queryKey: repositoryKeys.detail(repository.pulp_href ?? ""),
+        });
+        // Surface the new delete task on the row without waiting for the next poll.
+        void queryClient.invalidateQueries({ queryKey: taskKeys.byPrn() });
+        options?.onSuccess?.(data, repository);
+      },
+      onError: options?.onError,
     },
-    onError: options?.onError,
-  });
+  );
 };
 
 /**
@@ -582,14 +577,13 @@ export const useRepositoryCreateMutation = (
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<RepositoryResponse>,
-    { href: string; body: Record<string, unknown> },
-    TaskWriteError
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<RepositoryResponse>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({

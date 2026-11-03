@@ -46,8 +46,8 @@ Summary: A distribution can serve a repository's latest version, one repository 
 Seed: a file repository with two versions and a publication of version 1
 
 When I create a file distribution with a base path and choose <source>
-Then the Distributions list opens with the toast "Distribution "<name>" created"
-And its detail page opened from the list shows <serves>
+Then the Distributions list opens with the toast "Distribution "<name>" creation started"
+And when the task finishes, its detail page opened from the list shows <serves>
 
 | source                                  | serves                      |
 | --------------------------------------- | --------------------------- |
@@ -83,8 +83,8 @@ Summary: Changing a distribution's source to another kind stops serving the old 
 Seed: a file distribution serving a publication
 
 When I open its edit page, choose "Repository" as the source, pick a repository and save
-Then the toast "Distribution "<name>" updated" appears and the detail page opens
-And the server has the repository set and no publication
+Then the toast "Distribution "<name>" update started" appears and the detail page opens
+And once the task finishes, the server has the repository set and no publication
 
 Pulp refuses a distribution with both a repository and a publication, so the save must clear the
 old source.
@@ -137,7 +137,7 @@ detail page
 When I choose "Cancel"
 Then the detail page opens
 When I choose "Delete" in the actions menu and confirm "Delete Distribution"
-Then the toast "Distribution "<name>" deleted" appears and the Distributions list opens
+Then the toast "Distribution "<name>" deletion started" appears and the Distributions list opens
 
 ### DST-DET-04 A distribution's task history
 

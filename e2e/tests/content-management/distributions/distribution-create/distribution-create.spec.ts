@@ -32,8 +32,8 @@ test.describe("Distribution create page", () => {
    * Seed: a file repository with two versions and a publication of version 1
    *
    * When I create a file distribution with a base path and choose <source>
-   * Then the Distributions list opens with the toast "Distribution "<name>" created"
-   * And its detail page opened from the list shows <serves>
+   * Then the Distributions list opens with the toast "Distribution "<name>" creation started"
+   * And when the task finishes, its detail page opened from the list shows <serves>
    *
    * | source                                  | serves                      |
    * | --------------------------------------- | --------------------------- |
@@ -122,7 +122,7 @@ test.describe("Distribution create page", () => {
           await formPage.submit("Create");
 
           await expect(
-            toasts.success(`Distribution "${name}" created`),
+            toasts.info(`Distribution "${name}" creation started`),
           ).toBeVisible();
           await expect(distributionsPage.heading).toBeVisible();
           await expectCreated(api, name);
@@ -175,7 +175,7 @@ test.describe("Distribution create page", () => {
         formPage.submitError("Failed to create distribution"),
       ).toBeVisible();
       await expect(page.getByText("This field must be unique.")).toBeVisible();
-      await expect(toasts.success(/created/)).toHaveCount(0);
+      await expect(toasts.info(/creation started/)).toHaveCount(0);
       await expect(formPage.heading("Create file distribution")).toBeVisible();
       await expect(formPage.textbox("Name")).toHaveValue(name);
       await expect(formPage.textbox("Base path")).toHaveValue(taken.basePath);

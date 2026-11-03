@@ -18,13 +18,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
-import {
-  type IWaitedTask,
-  type IWriteResult,
-  type TaskWriteError,
-  toWriteResult,
-  waitBrieflyForTask,
-} from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -168,14 +162,13 @@ export const useExporterCreateMutation = (
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
     IWriteResult<Exporter>,
-    { href: string; body: Record<string, unknown> },
-    TaskWriteError
+    { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     IWriteResult<Exporter>,
-    TaskWriteError,
+    DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
@@ -194,18 +187,16 @@ export const useExporterUpdateMutation = (
 };
 
 export const useExporterDeleteMutation = (
-  options?: IMutationCallbacks<IWaitedTask, Exporter, TaskWriteError>,
+  options?: IMutationCallbacks<AsyncOperationResponse, Exporter>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<IWaitedTask, TaskWriteError, Exporter>({
+  return useMutation<AsyncOperationResponse, DrfAxiosError, Exporter>({
     mutationFn: async (exporter) =>
-      waitBrieflyForTask(
-        (
-          await axiosInstance.delete<AsyncOperationResponse>(
-            toProxyHref(exporter.pulp_href ?? ""),
-          )
-        ).data,
-      ),
+      (
+        await axiosInstance.delete<AsyncOperationResponse>(
+          toProxyHref(exporter.pulp_href ?? ""),
+        )
+      ).data,
     onSuccess: (data, exporter) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       void queryClient.invalidateQueries({ queryKey: taskKeys.list() });
