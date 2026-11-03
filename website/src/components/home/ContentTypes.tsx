@@ -11,6 +11,7 @@ const CONTENT_TYPES = [
   "Ruby Gems",
   "OSTree",
   "Hugging Face",
+  "Rust",
   "File",
 ];
 

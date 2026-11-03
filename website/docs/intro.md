@@ -37,7 +37,7 @@ Pulp is API-first: everything it does is exposed through a REST API. Pulp UI put
 
 ## Supported content types
 
-Pulp UI works with the content plugins installed on your Pulp server, including RPM, Container, Python, Ansible, Debian, Maven, npm, Ruby Gems, OSTree, Hugging Face and File. Pulp UI detects which plugins are installed and only offers to create resources for those.
+Pulp UI works with the content plugins installed on your Pulp server, including RPM, Container, Python, Ansible, Debian, Maven, npm, Ruby Gems, OSTree, Hugging Face, Rust and File. Pulp UI detects which plugins are installed and only offers to create resources for those.
 
 ## Next steps
 

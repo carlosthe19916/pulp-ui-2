@@ -245,6 +245,17 @@ const PLUGINS = [
     distribution: "distributions/hugging_face/hugging-face",
     pullThrough: true,
   },
+  // Pull-through: pulp_rust's sync task isn't implemented yet.
+  {
+    id: "rust",
+    remote: [
+      "remotes/rust/rust",
+      { url: "sparse+https://index.crates.io/", policy: "on_demand" },
+    ],
+    repository: ["repositories/rust/rust", {}],
+    distribution: "distributions/rust/rust",
+    pullThrough: true,
+  },
 ];
 
 async function seedPlugin(plugin) {

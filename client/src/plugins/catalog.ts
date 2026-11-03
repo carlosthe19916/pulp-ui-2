@@ -23,6 +23,7 @@ import { npm } from "./npm/definition";
 import { ostree } from "./ostree/definition";
 import { python } from "./python/definition";
 import { rpm } from "./rpm/definition";
+import { rust } from "./rust/definition";
 
 /** Every plugin's definition, in display order. */
 export const PLUGIN_DEFINITIONS = [
@@ -34,6 +35,7 @@ export const PLUGIN_DEFINITIONS = [
   npm,
   maven,
   huggingFace,
+  rust,
   ostree,
   deb,
   ansible,

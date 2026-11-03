@@ -44,6 +44,7 @@ import { npmUi } from "./npm/ui";
 import { ostreeUi } from "./ostree/ui";
 import { pythonUi } from "./python/ui";
 import { rpmUi } from "./rpm/ui";
+import { rustUi } from "./rust/ui";
 
 /**
  * Every plugin's UI, keyed by its own id: a plugin defined in `@catalog` without one, or a UI
@@ -58,6 +59,7 @@ const PLUGIN_UI: { [I in PluginId]: IPluginModule<I> } = {
   npm: npmUi,
   maven: mavenUi,
   hugging_face: huggingFaceUi,
+  rust: rustUi,
   ostree: ostreeUi,
   deb: debUi,
   ansible: ansibleUi,
