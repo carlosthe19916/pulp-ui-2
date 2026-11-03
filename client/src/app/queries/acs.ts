@@ -18,8 +18,9 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import {
   type ISettledTask,
-  settleIfTask,
+  type ISettledWrite,
   settleTask,
+  settleWrite,
   type TaskWriteError,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
@@ -116,19 +117,19 @@ export const useAcsCreateMutation = (
 /** Updates an ACS; Pulp answers with the source or, when it must, a task. */
 export const useAcsUpdateMutation = (
   options?: IMutationCallbacks<
-    AlternateContentSource | ISettledTask,
+    ISettledWrite<AlternateContentSource>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    AlternateContentSource | ISettledTask,
+    ISettledWrite<AlternateContentSource>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      settleIfTask(
+      settleWrite(
         await axiosInstance.patch<
           AlternateContentSource | AsyncOperationResponse
         >(toProxyHref(href), body),

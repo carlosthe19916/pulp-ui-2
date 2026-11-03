@@ -1,3 +1,4 @@
+import type { AxiosResponse } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type * as ApiInit from "@app/axios-config/apiInit";
@@ -7,6 +8,7 @@ import {
   buildTaskHref,
   SETTLE_TIMEOUT_MS,
   settleTask,
+  settleWrite,
   taskPollDelay,
 } from "./tasks";
 
@@ -82,6 +84,29 @@ describe("settleTask", () => {
     });
     const settled = settleTask({ task: taskHref });
     await vi.advanceTimersByTimeAsync(SETTLE_TIMEOUT_MS);
-    await expect(settled).resolves.toEqual({ taskHref });
+    await expect(settled).resolves.toEqual({ kind: "task", taskHref });
+  });
+});
+
+describe("settleWrite", () => {
+  afterEach(() => vi.mocked(axiosInstance.get).mockReset());
+
+  it("returns the object a 200 answers with, without reading any task", async () => {
+    const object = { name: "foo", task: "not-a-task-href" };
+    await expect(
+      settleWrite({ status: 200, data: object } as AxiosResponse<
+        typeof object
+      >),
+    ).resolves.toEqual({ kind: "object", object });
+    expect(axiosInstance.get).not.toHaveBeenCalled();
+  });
+
+  it("waits for the task a 202 answers with", async () => {
+    reads("completed");
+    const settled = await settleWrite({
+      status: 202,
+      data: { task: taskHref },
+    } as AxiosResponse<{ task: string }>);
+    expect(settled).toMatchObject({ kind: "task", taskHref });
   });
 });

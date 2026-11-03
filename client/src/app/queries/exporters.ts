@@ -20,8 +20,9 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "./tasks";
 import {
   type ISettledTask,
-  settleIfTask,
+  type ISettledWrite,
   settleTask,
+  settleWrite,
   type TaskWriteError,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
@@ -166,19 +167,19 @@ export const useExporterCreateMutation = (
 /** Pulp answers with the exporter or, when it must, a task. */
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
-    Exporter | ISettledTask,
+    ISettledWrite<Exporter>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    Exporter | ISettledTask,
+    ISettledWrite<Exporter>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      settleIfTask(
+      settleWrite(
         await axiosInstance.patch<Exporter | AsyncOperationResponse>(
           toProxyHref(href),
           body,

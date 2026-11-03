@@ -255,15 +255,15 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
 export const SETTLE_TIMEOUT_MS = 10_000;
 const SETTLE_POLL_DELAYS_MS = [250, 500, 1000];
 
-/** A write that ran as a task; `finished` is the task when it ended within the wait. */
+/** A write that ran as a task (`202`); `finished` is the task when it ended within the wait. */
 export interface ISettledTask {
+  kind: "task";
   taskHref: string;
   finished?: TaskResponse;
 }
 
-/** Tells a waited-for task from the entity a `200 | 202` update may return. */
-export const isSettledTask = (data: object): data is ISettledTask =>
-  "taskHref" in data;
+/** A write whose operation declares `200` (the object) and `202` (a task, waited for). */
+export type ISettledWrite<T> = { kind: "object"; object: T } | ISettledTask;
 
 /**
  * Waits up to `SETTLE_TIMEOUT_MS` for a dispatched task, so a quick write reports like a
@@ -279,7 +279,7 @@ export const settleTask = async ({
       toProxyHref(taskHref),
     );
     if (task.state === "completed" || task.state === "skipped") {
-      return { taskHref, finished: task };
+      return { kind: "task", taskHref, finished: task };
     }
     if (isTerminalTaskState(task.state)) {
       throw new TaskFailedError(task);
@@ -288,21 +288,21 @@ export const settleTask = async ({
       SETTLE_POLL_DELAYS_MS[
         Math.min(attempt, SETTLE_POLL_DELAYS_MS.length - 1)
       ] ?? 1000;
-    if (Date.now() + delay > deadline) return { taskHref };
+    if (Date.now() + delay > deadline) return { kind: "task", taskHref };
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 };
 
 /**
- * A `200 | 202` write: the object it returned, or the task it answered with, waited for
- * with `settleTask`.
+ * Reads a write whose operation declares `200` (the object) and `202` (a task) by its
+ * status, as the spec does; a task is waited for with `settleTask`.
  */
-export const settleIfTask = async <T extends object>(
+export const settleWrite = async <T>(
   response: AxiosResponse<T | AsyncOperationResponse>,
-): Promise<T | ISettledTask> =>
-  "task" in response.data
+): Promise<ISettledWrite<T>> =>
+  response.status === 202
     ? settleTask(response.data as AsyncOperationResponse)
-    : (response.data as T);
+    : { kind: "object", object: response.data as T };
 
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {

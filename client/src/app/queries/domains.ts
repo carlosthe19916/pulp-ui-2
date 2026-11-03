@@ -22,8 +22,9 @@ import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import {
   type ISettledTask,
-  settleIfTask,
+  type ISettledWrite,
   settleTask,
+  settleWrite,
   type TaskWriteError,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
@@ -118,19 +119,19 @@ export const useDomainCreateMutation = (
 
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
-    DomainResponse | ISettledTask,
+    ISettledWrite<DomainResponse>,
     { href: string; body: PatchedDomain },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DomainResponse | ISettledTask,
+    ISettledWrite<DomainResponse>,
     TaskWriteError,
     { href: string; body: PatchedDomain }
   >({
     mutationFn: async ({ href, body }: { href: string; body: PatchedDomain }) =>
-      settleIfTask(
+      settleWrite(
         await axiosInstance.patch<DomainResponse | AsyncOperationResponse>(
           toProxyHref(href),
           body,

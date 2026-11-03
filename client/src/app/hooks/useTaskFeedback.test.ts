@@ -26,6 +26,7 @@ describe("useTaskFeedback", () => {
     const { result } = await renderHook(() => useTaskFeedback());
     result.current.settled({
       result: {
+        kind: "task",
         taskHref,
         finished: { state: "completed", name: "x", logging_cid: "" },
       },
@@ -42,7 +43,7 @@ describe("useTaskFeedback", () => {
   it("confirms an update that returned the object", async () => {
     const { result } = await renderHook(() => useTaskFeedback());
     result.current.settled({
-      result: { pulp_href: "/r/1/", name: "foo" },
+      result: { kind: "object", object: { name: "foo" } },
       doneTitle: "Remote updated",
       startedTitle: "Remote update started",
     });
@@ -55,7 +56,7 @@ describe("useTaskFeedback", () => {
   it("hands a task still running to the drawer", async () => {
     const { result } = await renderHook(() => useTaskFeedback());
     result.current.settled({
-      result: { taskHref },
+      result: { kind: "task", taskHref },
       doneTitle: "Remote deleted",
       startedTitle: "Remote deletion started",
     });

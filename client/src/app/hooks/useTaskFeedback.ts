@@ -1,11 +1,11 @@
 import { useNotifications } from "@app/hooks/useNotifications";
-import { isSettledTask } from "@app/queries/tasks";
+import type { ISettledWrite } from "@app/queries/tasks";
 import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
 export interface ITaskSettledFeedback {
-  /** What a write resolved to: a task waited for, or the object a `200` returned. */
-  result: object;
+  /** What a configuration write resolved to: its task (waited for), or its object. */
+  result: ISettledWrite<unknown>;
   /** When the write is done, e.g. `Remote "foo" deleted`. */
   doneTitle: string;
   /** When its task is still running and moves to the task drawer. */
@@ -37,7 +37,7 @@ export const useTaskFeedback = () => {
     doneTitle,
     startedTitle,
   }: ITaskSettledFeedback) => {
-    if (isSettledTask(result) && !result.finished) {
+    if (result.kind === "task" && !result.finished) {
       started({ taskHref: result.taskHref, title: startedTitle });
     } else {
       addNotification({ title: doneTitle, variant: "success" });

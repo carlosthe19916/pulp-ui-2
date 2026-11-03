@@ -31,8 +31,9 @@ import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import {
   type ISettledTask,
-  settleIfTask,
+  type ISettledWrite,
   settleTask,
+  settleWrite,
   type TaskWriteError,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
@@ -571,14 +572,14 @@ export const useRepositoryCreateMutation = (
 /** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
-    RepositoryResponse | ISettledTask,
+    ISettledWrite<RepositoryResponse>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    RepositoryResponse | ISettledTask,
+    ISettledWrite<RepositoryResponse>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -588,8 +589,8 @@ export const useRepositoryUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<RepositoryResponse | ISettledTask> =>
-      settleIfTask(
+    }): Promise<ISettledWrite<RepositoryResponse>> =>
+      settleWrite(
         await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
           toProxyHref(href),
           body,

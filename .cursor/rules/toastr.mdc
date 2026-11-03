@@ -46,7 +46,7 @@ Toasts must fire even if the component unmounts mid-request.
 - What the user is told about a write that runs as a Pulp task goes through `useTaskFeedback()`
   ([ADR 0017](../../docs/adr/0017-task-feedback.md)). Nothing polls a task to raise a later toast.
 - A write that changes an object's configuration (creating, editing or deleting it) and may
-  answer `202` waits for its task in its mutation hook: `settleTask`, or `settleIfTask` for a
+  answer `202` waits for its task in its mutation hook: `settleTask`, or `settleWrite` for a
   `200 | 202` update, with `TError` `TaskWriteError`. The page reports it with
   `taskFeedback.settled({ result, doneTitle, startedTitle })`; a failed task arrives at
   `onError`.
@@ -93,7 +93,7 @@ Pass/fail rubric for `/eval`.
       `variant: "danger"` — **except modal create/update/action form submissions**, shown
       in-form via `FormSubmitError`.
 - [ ] Task-running writes report through `useTaskFeedback()`: a configuration write settles in
-      its hook (`settleTask` / `settleIfTask`, `TaskWriteError`) and calls `settled`; data work
+      its hook (`settleTask` / `settleWrite`, `TaskWriteError`) and calls `settled`; data work
       calls `started`; no toast is raised by polling a task; post-write navigation is
       call-level.
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature `useXActions`

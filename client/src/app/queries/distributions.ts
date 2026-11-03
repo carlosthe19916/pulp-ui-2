@@ -22,8 +22,9 @@ import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import {
   type ISettledTask,
-  settleIfTask,
+  type ISettledWrite,
   settleTask,
+  settleWrite,
   type TaskWriteError,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
@@ -253,14 +254,14 @@ export const useDistributionCreateMutation = (
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
-    DistributionResponse | ISettledTask,
+    ISettledWrite<DistributionResponse>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DistributionResponse | ISettledTask,
+    ISettledWrite<DistributionResponse>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -270,8 +271,8 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<DistributionResponse | ISettledTask> =>
-      settleIfTask(
+    }): Promise<ISettledWrite<DistributionResponse>> =>
+      settleWrite(
         await axiosInstance.patch<
           DistributionResponse | AsyncOperationResponse
         >(toProxyHref(href), body),

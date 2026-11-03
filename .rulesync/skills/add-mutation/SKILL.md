@@ -25,7 +25,8 @@ use a made-up `widget` resource.
 
 A write that runs as a Pulp task reports through `useTaskFeedback()`. A configuration write
 (create, edit or delete of an object) waits for its task in the hook (`settleTask`, or
-`settleIfTask` for a `200 | 202` update; `TData` `ISettledTask`, `TError` `TaskWriteError`) and
+`settleWrite` for a `200 | 202` update, which reads the status; `TData` `ISettledTask` or
+`ISettledWrite<Entity>`, `TError` `TaskWriteError`) and
 the caller calls `taskFeedback.settled({ result, doneTitle, startedTitle })`. Data work (sync,
 publish, content changes) calls `taskFeedback.started({ taskHref, title })`, which toasts once
 and lists the task in the drawer. A sync response toasts the entity
