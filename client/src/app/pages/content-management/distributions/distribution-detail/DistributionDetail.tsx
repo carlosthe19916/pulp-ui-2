@@ -76,9 +76,9 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name: deletedName }) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Distribution "${deletedName}" deleted`,
+        finishedTitle: `Distribution "${deletedName}" deleted`,
         startedTitle: `Distribution "${deletedName}" deletion started`,
       }),
 

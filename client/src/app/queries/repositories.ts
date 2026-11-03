@@ -26,16 +26,16 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getPulpType } from "@catalog";
-import type { ActionResponse } from "@plugin-sdk/definition";
+import type { ActionResponseKind } from "@plugin-sdk/definition";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
-import { taskKeys } from "./tasks";
 import {
-  type ISettledTask,
-  type ISettledWrite,
-  settleTask,
-  settleWrite,
+  type IWaitedTask,
+  type IWriteResult,
+  taskKeys,
   type TaskWriteError,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -122,16 +122,12 @@ export const useRepositoriesListQuery = ({
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRepositoryDeleteMutation = (
-  options?: IMutationCallbacks<
-    ISettledTask,
-    RepositoryResponse,
-    TaskWriteError
-  >,
+  options?: IMutationCallbacks<IWaitedTask, RepositoryResponse, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, RepositoryResponse>({
-    mutationFn: async (repository: RepositoryResponse): Promise<ISettledTask> =>
-      settleTask(
+  return useMutation<IWaitedTask, TaskWriteError, RepositoryResponse>({
+    mutationFn: async (repository: RepositoryResponse): Promise<IWaitedTask> =>
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(repository.pulp_href ?? ""),
@@ -199,15 +195,11 @@ export const useRepositorySyncMutation = (
   });
 };
 
-/**
- * A plugin action's 2xx: one task (most actions), a task group (`/rpm/prune/`), or a
- * synchronous result (container `remove_signatures/` answers `200`).
- */
-/** A plugin action's answer, read as its definition declares (`response`). */
+/** A plugin action's answer, read as its definition declares (`responseKind`). */
 export type ActionOperationResult =
   | { kind: "task"; task: AsyncOperationResponse }
   | { kind: "taskGroup"; taskGroup: TaskGroupOperationResponse }
-  | { kind: "result"; result: RemoveSignaturesResponse };
+  | { kind: "inline"; summary: RemoveSignaturesResponse };
 
 export interface IRepositoryActionVariables {
   /** The repository or repository version the action runs on. */
@@ -215,7 +207,7 @@ export interface IRepositoryActionVariables {
   /** Relative to `targetHref`, or a collection endpoint when it starts with `/`. */
   path: string;
   /** What the operation answers, from the action's definition; default `task`. */
-  response?: ActionResponse;
+  responseKind?: ActionResponseKind;
   body: Record<string, unknown>;
 }
 
@@ -251,7 +243,7 @@ export const useRepositoryActionMutation = (
     DrfAxiosError,
     IRepositoryActionVariables
   >({
-    mutationFn: async ({ targetHref, path, response = "task", body }) => {
+    mutationFn: async ({ targetHref, path, responseKind = "task", body }) => {
       const url = path.startsWith("/")
         ? pulpApiPath(path.slice(1), domain)
         : `${toProxyHref(targetHref)}${path}`;
@@ -260,7 +252,7 @@ export const useRepositoryActionMutation = (
         toActionBody(body),
       );
       // Each action's operation declares one answer; its definition says which.
-      switch (response) {
+      switch (responseKind) {
         case "task":
           return { kind: "task", task: data as AsyncOperationResponse };
         case "taskGroup":
@@ -268,8 +260,11 @@ export const useRepositoryActionMutation = (
             kind: "taskGroup",
             taskGroup: data as TaskGroupOperationResponse,
           };
-        case "result":
-          return { kind: "result", result: data as RemoveSignaturesResponse };
+        case "inline":
+          return {
+            kind: "inline",
+            summary: data as RemoveSignaturesResponse,
+          };
       }
     },
     onSuccess: (data, vars) => {
@@ -586,14 +581,14 @@ export const useRepositoryCreateMutation = (
 /** PATCHes a repository by its own `pulp_href` (which embeds plugin + type). */
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
-    ISettledWrite<RepositoryResponse>,
+    IWriteResult<RepositoryResponse>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledWrite<RepositoryResponse>,
+    IWriteResult<RepositoryResponse>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -603,8 +598,8 @@ export const useRepositoryUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<ISettledWrite<RepositoryResponse>> =>
-      settleWrite(
+    }): Promise<IWriteResult<RepositoryResponse>> =>
+      toWriteResult(
         await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
           toProxyHref(href),
           body,

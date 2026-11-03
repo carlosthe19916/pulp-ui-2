@@ -28,13 +28,13 @@ import {
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import { useApiStatus } from "@app/hooks/useApiStatus";
-import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import {
   type IContentUnitRef,
   useContentUnitSelection,
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { usePersistentState } from "@app/hooks/usePersistentState";
+import { useReportContentChangeStarted } from "@app/hooks/useReportContentChangeStarted";
 import { useContentListQuery } from "@app/queries/content";
 import type { IContentUnit } from "@app/utils/contentUnit";
 import { contentUnitRef } from "@app/utils/contentUnitRef";
@@ -60,7 +60,7 @@ export const ContentList: React.FC = () => {
   });
   const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
   const selection = useContentUnitSelection();
-  const contentChangeStarted = useContentChangeStarted();
+  const reportContentChangeStarted = useReportContentChangeStarted();
   const [addUnits, setAddUnits] = useState<IContentUnitRef[] | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
@@ -257,7 +257,7 @@ export const ContentList: React.FC = () => {
         <UploadContentModal
           contentTypes={uploadableTypes}
           onClose={() => setIsUploadOpen(false)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
 
@@ -267,7 +267,7 @@ export const ContentList: React.FC = () => {
           onClose={() => setAddUnits(null)}
           onStarted={(started) => {
             selection.clear();
-            contentChangeStarted(started);
+            reportContentChangeStarted(started);
           }}
         />
       )}

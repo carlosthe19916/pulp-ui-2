@@ -46,7 +46,7 @@ export const DomainMigrateModal: React.FC<IDomainMigrateModalProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useDomainMigrateMutation({
     onSuccess: (data, { domainName }) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `Storage migration of "${domainName}" started`,
       }),

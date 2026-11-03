@@ -2,9 +2,9 @@ import type React from "react";
 
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
+import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { getMutationErrorMessage } from "@app/utils/utils";
@@ -17,7 +17,7 @@ interface IRemoveContentModalProps {
   /** The units to remove; absent removes all content (typed confirmation). */
   units?: IContentUnitRef[];
   onClose: () => void;
-  onStarted: (change: IContentChangeStarted) => void;
+  onStarted: (change: IContentChangeStartedParams) => void;
 }
 
 /** Confirms removing content from a repository, then runs the change. */

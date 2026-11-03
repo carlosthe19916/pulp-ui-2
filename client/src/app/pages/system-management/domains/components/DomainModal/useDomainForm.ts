@@ -136,9 +136,9 @@ export const useDomainForm = ({
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { body }) => {
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Domain "${body.name}" updated`,
+        finishedTitle: `Domain "${body.name}" updated`,
         startedTitle: `Domain "${body.name}" update started`,
       });
     },

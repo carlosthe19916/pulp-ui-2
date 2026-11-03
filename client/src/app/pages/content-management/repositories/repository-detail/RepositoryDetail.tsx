@@ -35,7 +35,6 @@ import {
   VersionActionModal,
 } from "@app/components/VersionActionModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
-import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -43,6 +42,7 @@ import {
   VERSION_ACTION_VERBS,
 } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
+import { useReportContentChangeStarted } from "@app/hooks/useReportContentChangeStarted";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import { useDistributionsListQuery } from "@app/queries/distributions";
@@ -102,7 +102,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const taskFeedback = useTaskFeedback();
 
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
-  const contentChangeStarted = useContentChangeStarted();
+  const reportContentChangeStarted = useReportContentChangeStarted();
   const { isRunning, running, lockedProps } = useRepositoryActivity({
     repository,
   });
@@ -142,9 +142,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Repository "${name}" deleted`,
+        finishedTitle: `Repository "${name}" deleted`,
         startedTitle: `Repository "${name}" deletion started`,
       }),
 
@@ -494,7 +494,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           {...versionAction}
           repository={repository}
           onClose={() => setVersionAction(null)}
-          onRestoreStarted={contentChangeStarted}
+          onRestoreStarted={reportContentChangeStarted}
         />
       )}
 
@@ -512,7 +512,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           contentTypes={uploadableTypes}
           repository={repository}
           onClose={() => setIsUploadOpen(false)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
 
@@ -521,7 +521,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           <archiveImport.Modal
             repository={repository}
             onClose={() => setIsImportOpen(false)}
-            onStarted={contentChangeStarted}
+            onStarted={reportContentChangeStarted}
           />
         </Suspense>
       )}
@@ -531,7 +531,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           repository={repository}
           repositoryType={pulpType}
           onClose={() => setIsAddContentOpen(false)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
 
@@ -540,7 +540,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           repository={repository}
           units={removeUnits === "all" ? undefined : removeUnits}
           onClose={() => setRemoveUnits(null)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
 

@@ -5,8 +5,8 @@ import type {
   RepositoryVersionResponse,
 } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { useNotifications } from "@app/hooks/useNotifications";
+import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
 import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useRepositoryModifyMutation,
@@ -23,7 +23,7 @@ interface IVersionActionModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   /** Restore is a content change: the page follows it to the end. */
-  onRestoreStarted: (change: IContentChangeStarted) => void;
+  onRestoreStarted: (change: IContentChangeStartedParams) => void;
   /** Called after a delete is accepted (e.g. to leave the deleted version's page). */
   onDeleted?: () => void;
 }
@@ -55,7 +55,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
 
   const deleteMutation = useRepositoryVersionDeleteMutation({
     onSuccess: (data) => {
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `Deleting version ${number} of ${name}`,
       });
@@ -66,7 +66,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   });
   const repairMutation = useRepositoryVersionRepairMutation({
     onSuccess: (data) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `Repairing version ${number} of ${name}`,
       }),

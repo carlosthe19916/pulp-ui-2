@@ -119,16 +119,16 @@ export const ExportersTab: React.FC = () => {
   });
   const updateMutation = useExporterUpdateMutation({
     onSuccess: (result) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result,
-        doneTitle: "Exporter saved",
+        finishedTitle: "Exporter saved",
         startedTitle: "Exporter update started",
       }),
     onError: onFormError("Failed to save exporter"),
   });
   const exportMutation = useExportMutation({
     onSuccess: (result) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: result.task,
         title: "Export started",
       }),
@@ -136,9 +136,9 @@ export const ExportersTab: React.FC = () => {
   });
   const deleteMutation = useExporterDeleteMutation({
     onSuccess: (result, { name }) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result,
-        doneTitle: `Exporter "${name}" deleted`,
+        finishedTitle: `Exporter "${name}" deleted`,
         startedTitle: `Deletion of exporter "${name}" started`,
       }),
     onError: (err, { name }) =>

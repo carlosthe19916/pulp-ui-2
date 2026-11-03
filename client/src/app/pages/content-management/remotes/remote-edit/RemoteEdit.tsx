@@ -35,9 +35,9 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Remote "${name}" updated`,
+        finishedTitle: `Remote "${name}" updated`,
         startedTitle: `Remote "${name}" update started`,
       }),
     onError: (error) =>

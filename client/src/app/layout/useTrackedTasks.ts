@@ -27,7 +27,7 @@ export const useTrackedTasks = (): ITrackedTaskStatus[] => {
   return tasks.map((task) => {
     const probe = probes.get(task.taskHref);
     const notFound = probe?.notFound ?? false;
-    const isUnreadable = !!probe?.isError && !probe.state;
+    const isUnreadable = !!probe?.isReadError && !probe.state;
     return {
       ...task,
       state: probe?.state,

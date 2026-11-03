@@ -105,7 +105,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   });
   const purgeMutation = useTaskPurgeMutation({
     onSuccess: (data) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: "Purge task started",
       }),

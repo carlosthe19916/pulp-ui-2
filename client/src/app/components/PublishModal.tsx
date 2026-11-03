@@ -127,7 +127,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
           selectedRepoLabel ??
           repositoryOptions.find((option) => option.value === values.repository)
             ?.label;
-        taskFeedback.started({
+        taskFeedback.reportStarted({
           taskHref,
           title: repositoryName
             ? `Publication started for "${repositoryName}"`

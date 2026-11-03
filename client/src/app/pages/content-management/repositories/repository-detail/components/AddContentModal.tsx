@@ -26,11 +26,11 @@ import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { VersionSelect } from "@app/components/VersionSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
-import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
+import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
 import {
   type IRepositoryListParams,
   useRepositoriesListQuery,
@@ -43,7 +43,7 @@ interface IAddContentModalProps {
   repository: RepositoryResponse;
   repositoryType: string;
   onClose: () => void;
-  onStarted: (change: IContentChangeStarted) => void;
+  onStarted: (change: IContentChangeStartedParams) => void;
 }
 
 interface ISourcePickerProps {

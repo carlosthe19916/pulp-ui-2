@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { PLUGIN_DEFINITIONS } from "@catalog";
-import type { ActionResponse, IPluginDefinition } from "@plugin-sdk/definition";
+import type {
+  ActionResponseKind,
+  IPluginDefinition,
+} from "@plugin-sdk/definition";
 
 import specSource from "../../openapi/pulp.json?raw";
 
@@ -21,18 +24,21 @@ const V3 = "/api/pulp/{pulp_domain}/api/v3/";
 const definitions: readonly IPluginDefinition[] = PLUGIN_DEFINITIONS;
 
 /** The status codes and response schemas a POST declares, e.g. `202 AsyncOperationResponse`. */
-const declared = (path: string): string[] =>
+const declaredResponses = (path: string): string[] =>
   Object.entries(paths[path]?.post?.responses ?? {}).map(([code, response]) => {
     const ref = Object.values(response.content ?? {})[0]?.schema?.$ref;
     return `${code} ${ref?.split("/").pop() ?? ""}`.trim();
   });
 
-const ANSWER: Record<ActionResponse, (responses: string[]) => boolean> = {
+const MATCHES_DECLARED: Record<
+  ActionResponseKind,
+  (responses: string[]) => boolean
+> = {
   task: (responses) =>
     responses.length === 1 && responses[0] === "202 AsyncOperationResponse",
   taskGroup: (responses) =>
     responses.length === 1 && responses[0] === "202 TaskGroupOperationResponse",
-  result: (responses) =>
+  inline: (responses) =>
     responses.length === 1 && responses[0]?.startsWith("200 ") === true,
 };
 
@@ -55,10 +61,10 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
       for (const repository of Object.values(definition.repository ?? {})) {
         for (const [key, action] of Object.entries(repository.actions ?? {})) {
           const path = actionPath(repository.apiPath, action);
-          const response = action.response ?? "task";
+          const responseKind = action.responseKind ?? "task";
           expect(
-            ANSWER[response](declared(path)),
-            `${key} (${path}) is "${response}", the spec declares ${declared(path).join(", ") || "nothing"}`,
+            MATCHES_DECLARED[responseKind](declaredResponses(path)),
+            `${key} (${path}) is "${responseKind}", the spec declares ${declaredResponses(path).join(", ") || "nothing"}`,
           ).toBe(true);
         }
       }
@@ -73,11 +79,11 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
           content.upload === "upload"
             ? `${V3}content/${content.apiPath}/upload/`
             : `${V3}content/${content.apiPath}/`;
-        const responses = declared(path);
+        const responses = declaredResponses(path);
         const expected =
           content.upload === "upload"
             ? responses.length === 1 && responses[0]?.startsWith("201 ")
-            : ANSWER.task(responses);
+            : MATCHES_DECLARED.task(responses);
         expect(
           expected,
           `${pulpType} "${content.upload}" (${path}): the spec declares ${responses.join(", ") || "nothing"}`,

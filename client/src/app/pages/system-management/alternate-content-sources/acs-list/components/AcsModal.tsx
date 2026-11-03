@@ -48,9 +48,9 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   });
   const updateMutation = useAcsUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Source "${acs?.name}" saved`,
+        finishedTitle: `Source "${acs?.name}" saved`,
         startedTitle: `Update of "${acs?.name}" started`,
       }),
     onError,

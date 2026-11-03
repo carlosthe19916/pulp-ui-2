@@ -25,10 +25,10 @@ interface ITaskDrawerProps {
 export const TaskDrawer: React.FC<ITaskDrawerProps> = ({ onClose }) => {
   const tasks = useTrackedTasks();
   const untrack = useTrackedTasksStore((state) => state.untrack);
-  const finished = tasks
+  const clearableHrefs = tasks
     .filter((task) => !task.isActive)
     .map((task) => task.taskHref);
-  const activeCount = tasks.length - finished.length;
+  const activeCount = tasks.length - clearableHrefs.length;
 
   return (
     <NotificationDrawer
@@ -43,8 +43,12 @@ export const TaskDrawer: React.FC<ITaskDrawerProps> = ({ onClose }) => {
         onClose={onClose}
         closeButtonAriaLabel="Close tasks"
       >
-        {finished.length > 0 && (
-          <Button variant="link" isInline onClick={() => untrack(finished)}>
+        {clearableHrefs.length > 0 && (
+          <Button
+            variant="link"
+            isInline
+            onClick={() => untrack(clearableHrefs)}
+          >
             Clear finished
           </Button>
         )}

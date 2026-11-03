@@ -19,11 +19,11 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
 import {
-  type ISettledTask,
-  type ISettledWrite,
-  settleTask,
-  settleWrite,
+  type IWaitedTask,
+  type IWriteResult,
   type TaskWriteError,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -167,19 +167,19 @@ export const useExporterCreateMutation = (
 /** Pulp answers with the exporter or, when it must, a task. */
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
-    ISettledWrite<Exporter>,
+    IWriteResult<Exporter>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledWrite<Exporter>,
+    IWriteResult<Exporter>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      settleWrite(
+      toWriteResult(
         await axiosInstance.patch<Exporter | AsyncOperationResponse>(
           toProxyHref(href),
           body,
@@ -194,12 +194,12 @@ export const useExporterUpdateMutation = (
 };
 
 export const useExporterDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, Exporter, TaskWriteError>,
+  options?: IMutationCallbacks<IWaitedTask, Exporter, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, Exporter>({
+  return useMutation<IWaitedTask, TaskWriteError, Exporter>({
     mutationFn: async (exporter) =>
-      settleTask(
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(exporter.pulp_href ?? ""),

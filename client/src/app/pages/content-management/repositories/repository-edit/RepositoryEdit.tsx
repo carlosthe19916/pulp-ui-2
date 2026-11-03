@@ -36,9 +36,9 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
 
   const updateMutation = useRepositoryUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Repository "${name}" updated`,
+        finishedTitle: `Repository "${name}" updated`,
         startedTitle: `Repository "${name}" update started`,
       }),
     onError: (error) =>

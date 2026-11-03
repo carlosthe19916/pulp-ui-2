@@ -26,10 +26,10 @@ export const TaskFinishRefresher: React.FC = () => {
 
   const prevRunningRef = useRef(runningSignature);
   useEffect(() => {
-    const before = prevRunningRef.current.split("|").filter(Boolean);
+    const wasRunning = prevRunningRef.current.split("|").filter(Boolean);
     prevRunningRef.current = runningSignature;
-    const now = new Set(runningSignature.split("|"));
-    if (before.some((href) => !now.has(href))) {
+    const runningNow = new Set(runningSignature.split("|"));
+    if (wasRunning.some((href) => !runningNow.has(href))) {
       void queryClient.invalidateQueries({
         // Finished task details don't change; the tracker's own reads stay as they are.
         predicate: ({ queryKey }) =>

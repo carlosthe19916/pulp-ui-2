@@ -92,7 +92,7 @@ export const Maintenance: React.FC = () => {
   const [active, setActive] = useState<IOperation | null>(null);
   const mutation = useMaintenanceMutation({
     onSuccess: (data, { operation }) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `${OPERATIONS.find((item) => item.operation === operation)?.title ?? "Maintenance"} started`,
       }),

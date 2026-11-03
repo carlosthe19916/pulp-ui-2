@@ -17,11 +17,11 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
 import {
-  type ISettledTask,
-  type ISettledWrite,
-  settleTask,
-  settleWrite,
+  type IWaitedTask,
+  type IWriteResult,
   type TaskWriteError,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -117,19 +117,19 @@ export const useAcsCreateMutation = (
 /** Updates an ACS; Pulp answers with the source or, when it must, a task. */
 export const useAcsUpdateMutation = (
   options?: IMutationCallbacks<
-    ISettledWrite<AlternateContentSource>,
+    IWriteResult<AlternateContentSource>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledWrite<AlternateContentSource>,
+    IWriteResult<AlternateContentSource>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      settleWrite(
+      toWriteResult(
         await axiosInstance.patch<
           AlternateContentSource | AsyncOperationResponse
         >(toProxyHref(href), body),
@@ -144,15 +144,15 @@ export const useAcsUpdateMutation = (
 
 export const useAcsDeleteMutation = (
   options?: IMutationCallbacks<
-    ISettledTask,
+    IWaitedTask,
     AlternateContentSource,
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, AlternateContentSource>({
+  return useMutation<IWaitedTask, TaskWriteError, AlternateContentSource>({
     mutationFn: async (acs) =>
-      settleTask(
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(acs.pulp_href ?? ""),

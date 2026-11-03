@@ -5,11 +5,11 @@ import type * as ApiInit from "@app/axios-config/apiInit";
 import { axiosInstance } from "@app/axios-config/apiInit";
 
 import {
+  BRIEF_TASK_WAIT_MS,
   buildTaskHref,
-  SETTLE_TIMEOUT_MS,
-  settleTask,
-  settleWrite,
   taskPollDelay,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 
 vi.mock(import("@app/axios-config/apiInit"), () => {
@@ -50,7 +50,7 @@ describe("taskPollDelay", () => {
   });
 });
 
-describe("settleTask", () => {
+describe("waitBrieflyForTask", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.mocked(axiosInstance.get).mockReset();
@@ -58,7 +58,7 @@ describe("settleTask", () => {
 
   it("returns the finished task once it completes", async () => {
     reads("waiting", "running", "completed");
-    const settled = await settleTask({ task: taskHref });
+    const settled = await waitBrieflyForTask({ task: taskHref });
     expect(settled.taskHref).toBe(taskHref);
     expect(settled.finished?.state).toBe("completed");
   });
@@ -72,7 +72,7 @@ describe("settleTask", () => {
         error: { description: "Remote is in use" },
       },
     });
-    await expect(settleTask({ task: taskHref })).rejects.toThrow(
+    await expect(waitBrieflyForTask({ task: taskHref })).rejects.toThrow(
       "Remote is in use",
     );
   });
@@ -82,19 +82,19 @@ describe("settleTask", () => {
     vi.mocked(axiosInstance.get).mockResolvedValue({
       data: { state: "running", name: "x", logging_cid: "" },
     });
-    const settled = settleTask({ task: taskHref });
-    await vi.advanceTimersByTimeAsync(SETTLE_TIMEOUT_MS);
+    const settled = waitBrieflyForTask({ task: taskHref });
+    await vi.advanceTimersByTimeAsync(BRIEF_TASK_WAIT_MS);
     await expect(settled).resolves.toEqual({ kind: "task", taskHref });
   });
 });
 
-describe("settleWrite", () => {
+describe("toWriteResult", () => {
   afterEach(() => vi.mocked(axiosInstance.get).mockReset());
 
   it("returns the object a 200 answers with, without reading any task", async () => {
     const object = { name: "foo", task: "not-a-task-href" };
     await expect(
-      settleWrite({ status: 200, data: object } as AxiosResponse<
+      toWriteResult({ status: 200, data: object } as AxiosResponse<
         typeof object
       >),
     ).resolves.toEqual({ kind: "object", object });
@@ -103,7 +103,7 @@ describe("settleWrite", () => {
 
   it("waits for the task a 202 answers with", async () => {
     reads("completed");
-    const settled = await settleWrite({
+    const settled = await toWriteResult({
       status: 202,
       data: { task: taskHref },
     } as AxiosResponse<{ task: string }>);

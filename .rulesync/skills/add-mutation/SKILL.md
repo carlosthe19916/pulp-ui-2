@@ -24,8 +24,9 @@ use a made-up `widget` resource.
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |
 
 A write that runs as a Pulp task reports through `useTaskFeedback()` (see `toastr.md` § Tasks):
-a configuration write settles in its hook and the caller calls `taskFeedback.settled(...)`; data
-work calls `taskFeedback.started(...)`. A sync response toasts the entity
+a configuration write waits briefly for its task in its hook and the caller calls
+`taskFeedback.reportWrite(...)`; data work calls `taskFeedback.reportStarted(...)`. A sync
+response toasts the entity
 (`addNotification({ title, variant: "success" })`).
 
 ## 1. Mutation hook (`queries/<family>.ts`)
@@ -34,12 +35,12 @@ Invalidation only; caller callbacks run after it.
 
 ```ts
 export const useWidgetDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, WidgetResponse, TaskWriteError>,
+  options?: IMutationCallbacks<IWaitedTask, WidgetResponse, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, WidgetResponse>({
+  return useMutation<IWaitedTask, TaskWriteError, WidgetResponse>({
     mutationFn: async (widget) =>
-      settleTask(
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(widget.pulp_href ?? ""),
@@ -68,9 +69,9 @@ const [deleteTarget, setDeleteTarget] = useState<WidgetResponse | null>(null);
 
 const deleteMutation = useWidgetDeleteMutation({
   onSuccess: (data, { name }) =>
-    taskFeedback.settled({
+    taskFeedback.reportWrite({
       result: data,
-      doneTitle: `Widget "${name}" deleted`,
+      finishedTitle: `Widget "${name}" deleted`,
       startedTitle: `Widget "${name}" deletion started`,
     }),
   onError: (error, { name }) =>
@@ -179,7 +180,7 @@ export const ResetWidgetModal: React.FC<IResetWidgetModalProps> = ({
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const resetMutation = useWidgetResetMutation({
     onSuccess: (data) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `Reset of "${widget.name}" started`,
       }),
@@ -222,7 +223,7 @@ const onSubmit = async (values: IWidgetPublishValues) => {
     const result = await publishMutation.mutateAsync({
       body: valuesToBody(values),
     });
-    taskFeedback.started({
+    taskFeedback.reportStarted({
       taskHref: result.task,
       title: `Publication of "${sourceLabel}" started`, // result + local form state
     });

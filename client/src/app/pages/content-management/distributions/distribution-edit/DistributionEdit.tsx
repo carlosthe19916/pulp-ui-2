@@ -35,9 +35,9 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
 
   const updateMutation = useDistributionUpdateMutation({
     onSuccess: (data) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Distribution "${name}" updated`,
+        finishedTitle: `Distribution "${name}" updated`,
         startedTitle: `Distribution "${name}" update started`,
       }),
     onError: (error) =>

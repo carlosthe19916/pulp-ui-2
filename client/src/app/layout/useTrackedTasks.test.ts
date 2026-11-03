@@ -14,7 +14,7 @@ vi.mock(import("@app/queries/tasks"), () => ({
 
 const probe = (fields: Partial<ITaskStateProbe>): ITaskStateProbe => ({
   notFound: false,
-  isError: false,
+  isReadError: false,
   createdResources: [],
   ...fields,
 });
@@ -36,7 +36,7 @@ describe("useTrackedTasks", () => {
         ["/t/done/", probe({ state: "completed" })],
         ["/t/run/", probe({ state: "running" })],
         ["/t/gone/", probe({ notFound: true })],
-        ["/t/err/", probe({ isError: true })],
+        ["/t/err/", probe({ isReadError: true })],
         ["/t/new/", probe({})],
       ]),
     );

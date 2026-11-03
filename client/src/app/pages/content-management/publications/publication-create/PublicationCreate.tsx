@@ -35,7 +35,7 @@ export const PublicationCreate: React.FC = () => {
   // Publishing is a task (202): the list shows the publication once it finishes.
   const createMutation = usePublicationCreateMutation({
     onSuccess: (data) => {
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: "Publication creation started",
       });

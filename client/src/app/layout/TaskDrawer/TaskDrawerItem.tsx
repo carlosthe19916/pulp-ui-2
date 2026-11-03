@@ -18,7 +18,7 @@ import {
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
 import type { ITrackedTaskStatus } from "../useTrackedTasks";
-import { taskVariant } from "./taskVariant";
+import { taskStateVariant } from "./taskStateVariant";
 
 interface ITaskDrawerItemProps {
   task: ITrackedTaskStatus;
@@ -31,7 +31,7 @@ export const TaskDrawerItem: React.FC<ITaskDrawerItemProps> = ({
   task,
   onNavigate,
 }) => {
-  const variant = taskVariant(task.state);
+  const variant = taskStateVariant(task.state);
   const versions = task.createdResources
     .map((href) => parseRepositoryVersionHref(href))
     .filter((version) => !!version);

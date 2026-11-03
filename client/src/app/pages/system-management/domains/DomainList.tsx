@@ -89,9 +89,9 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Domain "${name}" deleted`,
+        finishedTitle: `Domain "${name}" deleted`,
         startedTitle: `Domain "${name}" deletion started`,
       }),
     onError: (error, { name }) =>

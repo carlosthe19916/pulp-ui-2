@@ -21,11 +21,11 @@ import { getPulpType } from "@catalog";
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import {
-  type ISettledTask,
-  type ISettledWrite,
-  settleTask,
-  settleWrite,
+  type IWaitedTask,
+  type IWriteResult,
   type TaskWriteError,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -131,17 +131,17 @@ export const useDistributionsListQuery = ({
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
 export const useDistributionDeleteMutation = (
   options?: IMutationCallbacks<
-    ISettledTask,
+    IWaitedTask,
     DistributionResponse,
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, DistributionResponse>({
+  return useMutation<IWaitedTask, TaskWriteError, DistributionResponse>({
     mutationFn: async (
       distribution: DistributionResponse,
-    ): Promise<ISettledTask> =>
-      settleTask(
+    ): Promise<IWaitedTask> =>
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(distribution.pulp_href ?? ""),
@@ -216,7 +216,7 @@ export const buildDistributionHref = (
  */
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
-    ISettledTask,
+    IWaitedTask,
     { apiPath: string; body: Record<string, unknown> },
     TaskWriteError
   >,
@@ -224,7 +224,7 @@ export const useDistributionCreateMutation = (
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledTask,
+    IWaitedTask,
     TaskWriteError,
     { apiPath: string; body: Record<string, unknown> }
   >({
@@ -234,8 +234,8 @@ export const useDistributionCreateMutation = (
     }: {
       apiPath: string;
       body: Record<string, unknown>;
-    }): Promise<ISettledTask> =>
-      settleTask(
+    }): Promise<IWaitedTask> =>
+      waitBrieflyForTask(
         (
           await axiosInstance.post<AsyncOperationResponse>(
             pulpApiPath(`distributions/${apiPath}/`, domain),
@@ -254,14 +254,14 @@ export const useDistributionCreateMutation = (
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
-    ISettledWrite<DistributionResponse>,
+    IWriteResult<DistributionResponse>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledWrite<DistributionResponse>,
+    IWriteResult<DistributionResponse>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -271,8 +271,8 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<ISettledWrite<DistributionResponse>> =>
-      settleWrite(
+    }): Promise<IWriteResult<DistributionResponse>> =>
+      toWriteResult(
         await axiosInstance.patch<
           DistributionResponse | AsyncOperationResponse
         >(toProxyHref(href), body),

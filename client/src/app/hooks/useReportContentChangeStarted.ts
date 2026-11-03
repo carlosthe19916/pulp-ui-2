@@ -5,7 +5,7 @@ import type {
 import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import { contentChangeTitle } from "@app/utils/contentChangeNotify";
 
-export interface IContentChangeStarted {
+export interface IContentChangeStartedParams {
   taskHref: string;
   repository: RepositoryResponse;
   body?: RepositoryAddRemoveContent;
@@ -17,10 +17,10 @@ export interface IContentChangeStarted {
  * Reports a content change (modify, add, remove, import) the user just started; it goes to
  * the task drawer.
  */
-export const useContentChangeStarted = () => {
-  const { started } = useTaskFeedback();
-  return ({ taskHref, repository, body, title }: IContentChangeStarted) =>
-    started({
+export const useReportContentChangeStarted = () => {
+  const { reportStarted } = useTaskFeedback();
+  return ({ taskHref, repository, body, title }: IContentChangeStartedParams) =>
+    reportStarted({
       taskHref,
       title:
         title ??

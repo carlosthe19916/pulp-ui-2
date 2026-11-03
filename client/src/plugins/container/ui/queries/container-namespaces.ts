@@ -16,9 +16,9 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "@app/queries/tasks";
 import {
-  type ISettledTask,
-  settleTask,
+  type IWaitedTask,
   type TaskWriteError,
+  waitBrieflyForTask,
 } from "@app/queries/tasks";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
@@ -105,19 +105,19 @@ export const useContainerNamespaceCreateMutation = (
 /** Deletes a namespace and its repositories; returns the task. */
 export const useContainerNamespaceDeleteMutation = (
   options?: IMutationCallbacks<
-    ISettledTask,
+    IWaitedTask,
     ContainerContainerNamespaceResponse,
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledTask,
+    IWaitedTask,
     TaskWriteError,
     ContainerContainerNamespaceResponse
   >({
     mutationFn: async (namespace) =>
-      settleTask(
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(namespace.pulp_href ?? ""),

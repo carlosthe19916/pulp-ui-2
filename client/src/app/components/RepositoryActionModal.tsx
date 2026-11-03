@@ -34,7 +34,7 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
     onSuccess: (data) => {
       switch (data.kind) {
         case "task":
-          taskFeedback.started({
+          taskFeedback.reportStarted({
             taskHref: data.task.task,
             title: `${action.label} started`,
           });
@@ -46,7 +46,7 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
             title: `${action.label} started`,
           });
           return;
-        case "result":
+        case "inline":
           addNotification({
             title: `${action.label} done`,
             variant: "success",
@@ -87,7 +87,7 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
           {
             targetHref,
             path: action.path,
-            response: action.response,
+            responseKind: action.responseKind,
             body: withRepository(body),
           },
           { onSuccess: onClose },

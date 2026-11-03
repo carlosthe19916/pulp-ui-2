@@ -67,9 +67,9 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      taskFeedback.settled({
+      taskFeedback.reportWrite({
         result: data,
-        doneTitle: `Remote "${name}" deleted`,
+        finishedTitle: `Remote "${name}" deleted`,
         startedTitle: `Remote "${name}" deletion started`,
       }),
 

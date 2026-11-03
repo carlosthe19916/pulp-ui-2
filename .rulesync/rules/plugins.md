@@ -43,7 +43,7 @@ The litmus: **would it change if the UI were redesigned?** Then it's UI.
 - **Definition** (`definition.ts`, `definePlugin`): the packages that mean it's installed, its
   types per entity keyed by `pulp_type` with their `apiPath`, what a repository syncs from and
   publishes to, `contentChanges`, `archiveImport`, `rolesManaged`, action endpoints
-  (`path`, `target`, `repositoryParam`, `response` unless a task; a version `scan/` action makes
+  (`path`, `target`, `repositoryParam`, `responseKind` unless a task; a version `scan/` action makes
   it scannable), a remote's `createFrom` endpoints, content types
   (`apiPath`, `upload`), the ACS endpoint, content guard types (`apiPath`, `rolesManaged`,
   `downloaderRole`).

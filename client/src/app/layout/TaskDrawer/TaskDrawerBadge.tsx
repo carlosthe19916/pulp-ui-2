@@ -21,14 +21,16 @@ export const TaskDrawerBadge: React.FC<ITaskDrawerBadgeProps> = ({
 }) => {
   const tasks = useTrackedTasks();
   const activeCount = tasks.filter((task) => task.isActive).length;
-  const hasFailed = tasks.some(
+  const needsAttention = tasks.some(
     (task) => task.state === "failed" || task.state === "canceled",
   );
 
   return (
     <NotificationBadge
       id={TASK_DRAWER_TOGGLE_ID}
-      variant={hasFailed ? "attention" : activeCount > 0 ? "unread" : "read"}
+      variant={
+        needsAttention ? "attention" : activeCount > 0 ? "unread" : "read"
+      }
       count={activeCount}
       isExpanded={isExpanded}
       onClick={onToggle}

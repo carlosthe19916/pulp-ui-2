@@ -7,14 +7,14 @@ import type { PulpApi } from "./pulp-api";
  * from Pulp: the UI reports the outcome in the task drawer, not in a toast. Pass a larger
  * `timeout` for a flow that waits on two tasks (e.g. create then modify).
  */
-export async function expectVersionCreated({
+export async function expectLatestVersion({
   api,
-  name,
+  repositoryName,
   version,
   timeout = 15_000,
 }: {
   api: PulpApi;
-  name: string;
+  repositoryName: string;
   version: number;
   timeout?: number;
 }): Promise<void> {
@@ -23,7 +23,7 @@ export async function expectVersionCreated({
       async () => {
         const repository = await api.findByName<{ pulp_href: string }>(
           "repositories",
-          name,
+          repositoryName,
         );
         return repository
           ? api.latestVersionNumber(repository.pulp_href)

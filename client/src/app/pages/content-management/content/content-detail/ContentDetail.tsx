@@ -22,8 +22,8 @@ import { PageHeaderActionsMenu } from "@app/components/PageHeaderActionsMenu";
 import { PluginContentPanel } from "@app/components/PluginContentPanel";
 import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
-import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
+import { useReportContentChangeStarted } from "@app/hooks/useReportContentChangeStarted";
 import { useSuspenseContentDetailQuery } from "@app/queries/content";
 import { getRepositoryTypesForContent } from "@catalog";
 
@@ -60,7 +60,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [removeFrom, setRemoveFrom] = useState<RepositoryResponse | null>(null);
 
-  const contentChangeStarted = useContentChangeStarted();
+  const reportContentChangeStarted = useReportContentChangeStarted();
 
   return (
     <>
@@ -135,7 +135,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
         <AddToRepositoryModal
           units={[unit]}
           onClose={() => setIsAddOpen(false)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
 
@@ -144,7 +144,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
           repository={removeFrom}
           units={[unit]}
           onClose={() => setRemoveFrom(null)}
-          onStarted={contentChangeStarted}
+          onStarted={reportContentChangeStarted}
         />
       )}
     </>

@@ -20,11 +20,11 @@ import { getPulpType } from "@catalog";
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
 import {
-  type ISettledTask,
-  type ISettledWrite,
-  settleTask,
-  settleWrite,
+  type IWaitedTask,
+  type IWriteResult,
   type TaskWriteError,
+  toWriteResult,
+  waitBrieflyForTask,
 } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -98,15 +98,15 @@ export const useRemotesListQuery = ({
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRemoteDeleteMutation = (
   options?: IMutationCallbacks<
-    ISettledTask,
+    IWaitedTask,
     GenericRemoteResponse,
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, TaskWriteError, GenericRemoteResponse>({
-    mutationFn: async (remote: GenericRemoteResponse): Promise<ISettledTask> =>
-      settleTask(
+  return useMutation<IWaitedTask, TaskWriteError, GenericRemoteResponse>({
+    mutationFn: async (remote: GenericRemoteResponse): Promise<IWaitedTask> =>
+      waitBrieflyForTask(
         (
           await axiosInstance.delete<AsyncOperationResponse>(
             toProxyHref(remote.pulp_href ?? ""),
@@ -210,14 +210,14 @@ export const useRemoteCreateMutation = (
 /** PATCHes a remote by its own `pulp_href` (which embeds plugin + type). */
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
-    ISettledWrite<GenericRemoteResponse>,
+    IWriteResult<GenericRemoteResponse>,
     { href: string; body: Record<string, unknown> },
     TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    ISettledWrite<GenericRemoteResponse>,
+    IWriteResult<GenericRemoteResponse>,
     TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -227,8 +227,8 @@ export const useRemoteUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<ISettledWrite<GenericRemoteResponse>> =>
-      settleWrite(
+    }): Promise<IWriteResult<GenericRemoteResponse>> =>
+      toWriteResult(
         await axiosInstance.patch<
           GenericRemoteResponse | AsyncOperationResponse
         >(toProxyHref(href), body),

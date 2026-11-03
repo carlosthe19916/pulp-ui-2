@@ -47,7 +47,7 @@ const SyncForm: React.FC<Omit<ISyncModalProps, "isOpen">> = ({
 
   const syncMutation = useRepositorySyncMutation({
     onSuccess: (data) =>
-      taskFeedback.started({
+      taskFeedback.reportStarted({
         taskHref: data.task,
         title: `Sync of "${repository.name}" started`,
       }),

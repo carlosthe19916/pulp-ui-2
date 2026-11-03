@@ -24,13 +24,13 @@ describe("useTaskFeedback", () => {
 
   it("confirms a write whose task finished, without tracking it", async () => {
     const { result } = await renderHook(() => useTaskFeedback());
-    result.current.settled({
+    result.current.reportWrite({
       result: {
         kind: "task",
         taskHref,
         finished: { state: "completed", name: "x", logging_cid: "" },
       },
-      doneTitle: "Remote deleted",
+      finishedTitle: "Remote deleted",
       startedTitle: "Remote deletion started",
     });
     expect(addNotification).toHaveBeenCalledWith({
@@ -42,9 +42,9 @@ describe("useTaskFeedback", () => {
 
   it("confirms an update that returned the object", async () => {
     const { result } = await renderHook(() => useTaskFeedback());
-    result.current.settled({
+    result.current.reportWrite({
       result: { kind: "object", object: { name: "foo" } },
-      doneTitle: "Remote updated",
+      finishedTitle: "Remote updated",
       startedTitle: "Remote update started",
     });
     expect(addNotification).toHaveBeenCalledWith({
@@ -55,9 +55,9 @@ describe("useTaskFeedback", () => {
 
   it("hands a task still running to the drawer", async () => {
     const { result } = await renderHook(() => useTaskFeedback());
-    result.current.settled({
+    result.current.reportWrite({
       result: { kind: "task", taskHref },
-      doneTitle: "Remote deleted",
+      finishedTitle: "Remote deleted",
       startedTitle: "Remote deletion started",
     });
     expect(addNotification).toHaveBeenCalledWith(

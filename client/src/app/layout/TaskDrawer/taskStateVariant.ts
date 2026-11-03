@@ -1,6 +1,6 @@
-type TaskVariant = "success" | "danger" | "warning" | "info";
+type TaskStateVariant = "success" | "danger" | "warning" | "info";
 
-const VARIANT_BY_STATE: Record<string, TaskVariant> = {
+const VARIANT_BY_STATE: Record<string, TaskStateVariant> = {
   completed: "success",
   failed: "danger",
   canceled: "warning",
@@ -8,5 +8,5 @@ const VARIANT_BY_STATE: Record<string, TaskVariant> = {
 };
 
 /** The notification variant for a task state; running, waiting and skipped are info. */
-export const taskVariant = (state?: string): TaskVariant =>
+export const taskStateVariant = (state?: string): TaskStateVariant =>
   VARIANT_BY_STATE[state ?? ""] ?? "info";
