@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { RepositoryResponse } from "@app/client";
-import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { repositoryKeys } from "@app/queries/repositories";
 
@@ -21,7 +20,6 @@ export const useRepositoryActivity = ({
   repository?: RepositoryResponse;
 }) => {
   const queryClient = useQueryClient();
-  const contentChange = useContentChangeTask();
   // A settled task (e.g. sync) may have bumped the latest version: refresh it.
   const { getActiveCount, getTasks } = useResourceTasks({
     entities: repository ? [repository] : [],
@@ -36,7 +34,6 @@ export const useRepositoryActivity = ({
   const isRunning = getActiveCount(repository?.prn) > 0;
 
   return {
-    contentChange,
     isRunning,
     running: isRunning
       ? { taskHref: activeTask?.taskHref, kind: activeTask?.kind }

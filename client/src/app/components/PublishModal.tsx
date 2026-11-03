@@ -24,7 +24,7 @@ import {
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
@@ -51,7 +51,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   repoHref,
   repoVersionHref,
 }) => {
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const createMutation = usePublicationCreateMutation();
 
@@ -127,7 +127,7 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
           selectedRepoLabel ??
           repositoryOptions.find((option) => option.value === values.repository)
             ?.label;
-        taskStarted({
+        taskFeedback.started({
           taskHref,
           title: repositoryName
             ? `Publication started for "${repositoryName}"`

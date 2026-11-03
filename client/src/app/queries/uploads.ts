@@ -16,7 +16,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
-import { waitForTask } from "./tasks";
+import { type TaskWriteError, waitForTask } from "./tasks";
 import { CHUNK_SIZE, contentRange, planChunks } from "./utils/chunks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
@@ -91,13 +91,14 @@ const sha256Hex = async (file: File) => {
 export const useArtifactUploadMutation = (
   options?: IMutationCallbacks<
     string,
-    { file: File; onProgress?: (fraction: number) => void }
+    { file: File; onProgress?: (fraction: number) => void },
+    TaskWriteError
   >,
 ) => {
   const domain = useSelectedDomain();
   return useMutation<
     string,
-    DrfAxiosError,
+    TaskWriteError,
     { file: File; onProgress?: (fraction: number) => void }
   >({
     mutationFn: async ({ file, onProgress }) => {

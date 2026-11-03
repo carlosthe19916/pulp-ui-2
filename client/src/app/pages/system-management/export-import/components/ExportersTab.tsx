@@ -25,7 +25,7 @@ import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   type Exporter,
   useExporterCreateMutation,
@@ -35,10 +35,8 @@ import {
   useExportMutation,
   useExportsListQuery,
 } from "@app/queries/exporters";
-import { isSettledTask } from "@app/queries/tasks";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { buildDefaultValues } from "@app/utils/formSchema";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { EXPORTER_TYPES } from "../utils/exporterTypes";
@@ -81,7 +79,7 @@ type Modal =
 
 export const ExportersTab: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const [modal, setModal] = useState<Modal | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Exporter | null>(null);
@@ -121,20 +119,16 @@ export const ExportersTab: React.FC = () => {
   });
   const updateMutation = useExporterUpdateMutation({
     onSuccess: (result) =>
-      isSettledTask(result)
-        ? notifyTaskSettled({
-            addNotification,
-            taskStarted,
-            settled: result,
-            doneTitle: "Exporter saved",
-            startedTitle: "Exporter update started",
-          })
-        : addNotification({ title: "Exporter saved", variant: "success" }),
+      taskFeedback.settled({
+        result,
+        doneTitle: "Exporter saved",
+        startedTitle: "Exporter update started",
+      }),
     onError: onFormError("Failed to save exporter"),
   });
   const exportMutation = useExportMutation({
     onSuccess: (result) =>
-      taskStarted({
+      taskFeedback.started({
         taskHref: result.task,
         title: "Export started",
       }),
@@ -142,10 +136,8 @@ export const ExportersTab: React.FC = () => {
   });
   const deleteMutation = useExporterDeleteMutation({
     onSuccess: (result, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: result,
+      taskFeedback.settled({
+        result,
         doneTitle: `Exporter "${name}" deleted`,
         startedTitle: `Deletion of exporter "${name}" started`,
       }),

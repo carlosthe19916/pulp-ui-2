@@ -12,8 +12,8 @@ import {
 
 import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 
+import { useTrackedTasks } from "../useTrackedTasks";
 import { TaskDrawerItem } from "./TaskDrawerItem";
-import { useTrackedTasks } from "./useTrackedTasks";
 
 export const TASK_DRAWER_ID = "task-drawer";
 

@@ -2,7 +2,7 @@ import type React from "react";
 
 import type { RepositoryResponse } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
@@ -17,7 +17,7 @@ interface IRemoveContentModalProps {
   /** The units to remove; absent removes all content (typed confirmation). */
   units?: IContentUnitRef[];
   onClose: () => void;
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onStarted: (change: IContentChangeStarted) => void;
 }
 
 /** Confirms removing content from a repository, then runs the change. */

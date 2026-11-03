@@ -24,14 +24,13 @@ import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
@@ -55,7 +54,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { disabledProps } = useObjectPermissions({ href });
@@ -67,19 +66,13 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
   });
 
   const deleteMutation = useRemoteDeleteMutation({
-    onSuccess: (data, { name }) => {
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+    onSuccess: (data, { name }) =>
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Remote "${name}" deleted`,
         startedTitle: `Remote "${name}" deletion started`,
-      });
-      void navigate({
-        to: "/content-management/$pulpDomain/remotes",
-        params: { pulpDomain },
-      });
-    },
+      }),
+
     onError: (error, { name }) =>
       addNotification({
         ...getMutationErrorMessage({
@@ -202,8 +195,13 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
         body={`Are you sure you want to delete remote "${remote.name}"? This action cannot be undone.`}
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
+          // Leaving is call-level: skipped if the user already left while it ran.
           deleteMutation.mutate(remote, {
-            onSuccess: () => setIsDeleteOpen(false),
+            onSuccess: () =>
+              void navigate({
+                to: "/content-management/$pulpDomain/remotes",
+                params: { pulpDomain },
+              }),
           })
         }
         onCancel={() => setIsDeleteOpen(false)}

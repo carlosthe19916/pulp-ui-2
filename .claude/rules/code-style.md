@@ -35,7 +35,7 @@ export const RepositoryCard: React.FC<IRepositoryCardProps> = ({ repository }) =
 
 A function with two or more params, any `boolean` param, or optional params after the first
 takes one destructured object, so each argument names itself at the call site:
-`notifyUpdateResult({ addNotification, taskStarted, data, subject })`.
+`notifyTaskStarted({ addNotification, taskHref: data.task, title })`.
 
 - Type a one-off object of up to two fields inline (`({ href }: { href: string })`); name it
   `I<Name>Options` / `I<Name>Params` when it's reused or has three or more fields.

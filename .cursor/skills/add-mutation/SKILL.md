@@ -22,13 +22,13 @@ use a made-up `widget` resource.
 | One-off action (cancel, purge)         | the page/component with the handler        | `mutate(vars, { onSettled: closeDialog })`                | danger toast                         |
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |
 
-A 202 response (task) goes through `taskStarted({ taskHref, title })` from `useTaskStarted()`,
-which toasts once and lists the task in the task drawer; a sync response toasts the entity
+A write that runs as a Pulp task reports through `useTaskFeedback()`. A configuration write
+(create, edit or delete of an object) waits for its task in the hook (`settleTask`, or
+`settleIfTask` for a `200 | 202` update; `TData` `ISettledTask`, `TError` `TaskWriteError`) and
+the caller calls `taskFeedback.settled({ result, doneTitle, startedTitle })`. Data work (sync,
+publish, content changes) calls `taskFeedback.started({ taskHref, title })`, which toasts once
+and lists the task in the drawer. A sync response toasts the entity
 (`addNotification({ title, variant: "success" })`). Never toast a task's outcome by polling it.
-A configuration write (edit/delete/create of a remote, distribution, …) instead waits for its
-task: its `mutationFn` returns `settleTask(data)` (`TData` is `ISettledTask`) and the caller
-reports with `notifyTaskSettled({ addNotification, taskStarted, settled, doneTitle,
-startedTitle })`.
 
 ## 1. Mutation hook (`queries/<family>.ts`)
 
@@ -36,20 +36,19 @@ Invalidation only; caller callbacks run after it.
 
 ```ts
 export const useWidgetDeleteMutation = (
-  options?: IMutationCallbacks<
-    AsyncOperationResponse,
-    WidgetResponse,
-    DrfAxiosError
-  >,
+  options?: IMutationCallbacks<ISettledTask, WidgetResponse, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<AsyncOperationResponse, DrfAxiosError, WidgetResponse>({
+  return useMutation<ISettledTask, TaskWriteError, WidgetResponse>({
+    // A configuration write: resolves once its task is done (or still running at the cap).
     mutationFn: async (widget) =>
-      (
-        await axiosInstance.delete<AsyncOperationResponse>(
-          toProxyHref(widget.pulp_href ?? ""),
-        )
-      ).data,
+      settleTask(
+        (
+          await axiosInstance.delete<AsyncOperationResponse>(
+            toProxyHref(widget.pulp_href ?? ""),
+          )
+        ).data,
+      ),
     onSuccess: (data, widget) => {
       void queryClient.invalidateQueries({ queryKey: widgetKeys.list() });
       void queryClient.invalidateQueries({
@@ -72,9 +71,10 @@ const [deleteTarget, setDeleteTarget] = useState<WidgetResponse | null>(null);
 
 const deleteMutation = useWidgetDeleteMutation({
   onSuccess: (data, { name }) =>
-    taskStarted({
-      taskHref: data.task,
-      title: `Widget "${name}" deletion started`,
+    taskFeedback.settled({
+      result: data,
+      doneTitle: `Widget "${name}" deleted`,
+      startedTitle: `Widget "${name}" deletion started`,
     }),
   onError: (error, { name }) =>
     addNotification({
@@ -178,11 +178,11 @@ export const ResetWidgetModal: React.FC<IResetWidgetModalProps> = ({
   widget,
   onClose,
 }) => {
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const resetMutation = useWidgetResetMutation({
     onSuccess: (data) =>
-      taskStarted({
+      taskFeedback.started({
         taskHref: data.task,
         title: `Reset of "${widget.name}" started`,
       }),
@@ -225,7 +225,7 @@ const onSubmit = async (values: IWidgetPublishValues) => {
     const result = await publishMutation.mutateAsync({
       body: valuesToBody(values),
     });
-    taskStarted({
+    taskFeedback.started({
       taskHref: result.task,
       title: `Publication of "${sourceLabel}" started`, // result + local form state
     });

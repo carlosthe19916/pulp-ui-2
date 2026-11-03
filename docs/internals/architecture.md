@@ -41,7 +41,7 @@ task and refreshes the affected views once it settles, so the user sees progress
 result without reloading ([ADR 0017](../adr/0017-task-feedback.md)).
 Each task the user starts is also recorded in a persisted Zustand store
 (`stores/useTrackedTasksStore.ts`), which backs the task drawer opened from the masthead; the
-drawer polls each task's state, and `TaskTracker` refreshes the views when one finishes.
+drawer polls each task's state, and `TaskFinishRefresher` refreshes the views when one finishes.
 
 ## Permission-aware
 

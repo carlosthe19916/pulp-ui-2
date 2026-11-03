@@ -33,7 +33,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   type AlternateContentSource,
   useAcsDeleteMutation,
@@ -42,7 +42,6 @@ import {
 } from "@app/queries/acs";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { getAcsTypes } from "@plugins";
 
@@ -56,7 +55,7 @@ import { AcsModal } from "./components/AcsModal";
 export const AcsList: React.FC = () => {
   const { plugins } = useApiStatus();
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const types = getAcsTypes({ installed: plugins });
   const [selectedPath, setSelectedPath] = useState<string>();
   const acsType =
@@ -109,10 +108,8 @@ export const AcsList: React.FC = () => {
   });
   const deleteMutation = useAcsDeleteMutation({
     onSuccess: (result, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: result,
+      taskFeedback.settled({
+        result,
         doneTitle: `Source "${name}" deleted`,
         startedTitle: `Deletion of "${name}" started`,
       }),

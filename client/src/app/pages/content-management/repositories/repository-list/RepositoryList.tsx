@@ -45,7 +45,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   repositoryKeys,
   useRepositoriesListQuery,
@@ -58,7 +58,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes, getPulpType } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -70,7 +69,7 @@ import {
 
 export const RepositoryList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -95,10 +94,8 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Repository "${name}" deleted`,
         startedTitle: `Repository "${name}" deletion started`,
       }),

@@ -43,14 +43,17 @@ Toasts must fire even if the component unmounts mid-request.
 
 ## Tasks
 
-- A response that carries a task is reported with `taskStarted({ taskHref, title })` from
-  `useTaskStarted()`: one toast now, and the task in the task drawer, which shows its outcome.
-  Nothing polls a task to raise a later toast ([ADR 0017](../../docs/adr/0017-task-feedback.md)).
-- A configuration write (edit, delete, create of a remote, distribution, repository, ACS,
-  exporter, domain, namespace) waits for its task in the mutation hook with `settleTask`, so
-  its hook-level `onSuccess` gets an `ISettledTask` and calls `notifyTaskSettled` (a success
-  toast, or `taskStarted` when still running); a failed task arrives at `onError`. Data work
-  (sync, publish, content changes, …) keeps `taskStarted`.
+- What the user is told about a write that runs as a Pulp task goes through `useTaskFeedback()`
+  ([ADR 0017](../../docs/adr/0017-task-feedback.md)). Nothing polls a task to raise a later toast.
+- A write that changes an object's configuration (creating, editing or deleting it) and may
+  answer `202` waits for its task in its mutation hook: `settleTask`, or `settleIfTask` for a
+  `200 | 202` update, with `TError` `TaskWriteError`. The page reports it with
+  `taskFeedback.settled({ result, doneTitle, startedTitle })`; a failed task arrives at
+  `onError`.
+- Data work (sync, publish, content changes, export, import, …) reports with
+  `taskFeedback.started({ taskHref, title })`: one toast, and the task in the drawer.
+- Navigation after a write that may wait (a detail-page delete) is call-level, so a user who
+  already left isn't pulled back.
 
 ## Variables and message
 
@@ -89,6 +92,9 @@ Pass/fail rubric for `/eval`.
 - [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**, shown
       in-form via `FormSubmitError`.
-- [ ] A started task goes through `useTaskStarted()`; no toast is raised by polling a task.
+- [ ] Task-running writes report through `useTaskFeedback()`: a configuration write settles in
+      its hook (`settleTask` / `settleIfTask`, `TaskWriteError`) and calls `settled`; data work
+      calls `started`; no toast is raised by polling a task; post-write navigation is
+      call-level.
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature `useXActions`
       toast-hub reintroduced (batch/selection modals excepted).

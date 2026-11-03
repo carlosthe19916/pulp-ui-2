@@ -44,7 +44,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   distributionKeys,
   useDistributionDeleteMutation,
@@ -57,7 +57,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -74,7 +73,7 @@ const UNAVAILABLE_TYPE_TOOLTIP: TooltipProps = {
 
 export const DistributionList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -95,10 +94,8 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Distribution "${name}" deleted`,
         startedTitle: `Distribution "${name}" deletion started`,
       }),

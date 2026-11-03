@@ -15,7 +15,11 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "@app/queries/tasks";
-import { type ISettledTask, settleTask } from "@app/queries/tasks";
+import {
+  type ISettledTask,
+  settleTask,
+  type TaskWriteError,
+} from "@app/queries/tasks";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
@@ -102,13 +106,14 @@ export const useContainerNamespaceCreateMutation = (
 export const useContainerNamespaceDeleteMutation = (
   options?: IMutationCallbacks<
     ISettledTask,
-    ContainerContainerNamespaceResponse
+    ContainerContainerNamespaceResponse,
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     ContainerContainerNamespaceResponse
   >({
     mutationFn: async (namespace) =>

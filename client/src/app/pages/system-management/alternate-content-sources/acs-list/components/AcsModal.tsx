@@ -5,15 +5,13 @@ import type { IAcsType } from "@plugins";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   type AlternateContentSource,
   useAcsCreateMutation,
   useAcsUpdateMutation,
 } from "@app/queries/acs";
-import { isSettledTask } from "@app/queries/tasks";
 import { buildDefaultValues } from "@app/utils/formSchema";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { ACS_FIELDS } from "../utils/acsTypes";
@@ -31,7 +29,7 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   onClose,
 }) => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const onError = (error: unknown) =>
     setSubmitError(
@@ -50,18 +48,11 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   });
   const updateMutation = useAcsUpdateMutation({
     onSuccess: (data) =>
-      isSettledTask(data)
-        ? notifyTaskSettled({
-            addNotification,
-            taskStarted,
-            settled: data,
-            doneTitle: `Source "${acs?.name}" saved`,
-            startedTitle: `Update of "${acs?.name}" started`,
-          })
-        : addNotification({
-            title: `Source "${data.name}" saved`,
-            variant: "success",
-          }),
+      taskFeedback.settled({
+        result: data,
+        doneTitle: `Source "${acs?.name}" saved`,
+        startedTitle: `Update of "${acs?.name}" started`,
+      }),
     onError,
   });
 

@@ -18,7 +18,12 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
-import { type ISettledTask, settleTask } from "./tasks";
+import {
+  type ISettledTask,
+  settleIfTask,
+  settleTask,
+  type TaskWriteError,
+} from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -162,23 +167,23 @@ export const useExporterCreateMutation = (
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
     Exporter | ISettledTask,
-    { href: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> },
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     Exporter | ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
-    mutationFn: async ({ href, body }) => {
-      const response = await axiosInstance.patch<
-        Exporter | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return response.status === 202
-        ? settleTask(response.data as AsyncOperationResponse)
-        : (response.data as Exporter);
-    },
+    mutationFn: async ({ href, body }) =>
+      settleIfTask(
+        await axiosInstance.patch<Exporter | AsyncOperationResponse>(
+          toProxyHref(href),
+          body,
+        ),
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       options?.onSuccess?.(data, vars);
@@ -188,10 +193,10 @@ export const useExporterUpdateMutation = (
 };
 
 export const useExporterDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, Exporter>,
+  options?: IMutationCallbacks<ISettledTask, Exporter, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, DrfAxiosError, Exporter>({
+  return useMutation<ISettledTask, TaskWriteError, Exporter>({
     mutationFn: async (exporter) =>
       settleTask(
         (

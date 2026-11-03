@@ -2,7 +2,7 @@ import type React from "react";
 
 import { NotificationBadge } from "@patternfly/react-core";
 
-import { useTrackedTasks } from "./useTrackedTasks";
+import { useTrackedTasks } from "../useTrackedTasks";
 
 export const TASK_DRAWER_TOGGLE_ID = "task-drawer-toggle";
 

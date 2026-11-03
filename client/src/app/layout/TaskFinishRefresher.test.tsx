@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
-import { TaskTracker } from "./TaskTracker";
+import { TaskFinishRefresher } from "./TaskFinishRefresher";
 import { type ITrackedTaskStatus, useTrackedTasks } from "./useTrackedTasks";
 
 vi.mock(import("./useTrackedTasks"), () => ({ useTrackedTasks: vi.fn() }));
@@ -24,21 +24,21 @@ const setup = async (state?: string) => {
   vi.mocked(useTrackedTasks).mockReturnValue([task(state)]);
   const screen = await render(
     <QueryClientProvider client={queryClient}>
-      <TaskTracker />
+      <TaskFinishRefresher />
     </QueryClientProvider>,
   );
   const rerenderWith = (next?: string) => {
     vi.mocked(useTrackedTasks).mockReturnValue([task(next)]);
     return screen.rerender(
       <QueryClientProvider client={queryClient}>
-        <TaskTracker />
+        <TaskFinishRefresher />
       </QueryClientProvider>,
     );
   };
   return { invalidate, rerenderWith };
 };
 
-describe("TaskTracker", () => {
+describe("TaskFinishRefresher", () => {
   it("refreshes the views when a task seen running finishes", async () => {
     const { invalidate, rerenderWith } = await setup("running");
     await rerenderWith("completed");

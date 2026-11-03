@@ -17,8 +17,8 @@ import {
 } from "@app/queries/utils/pulpHref";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
+import type { ITrackedTaskStatus } from "../useTrackedTasks";
 import { taskVariant } from "./taskVariant";
-import type { ITrackedTaskStatus } from "./useTrackedTasks";
 
 interface ITaskDrawerItemProps {
   task: ITrackedTaskStatus;

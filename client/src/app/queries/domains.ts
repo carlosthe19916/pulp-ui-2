@@ -20,7 +20,12 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import { type ISettledTask, settleTask } from "./tasks";
+import {
+  type ISettledTask,
+  settleIfTask,
+  settleTask,
+  type TaskWriteError,
+} from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -114,29 +119,23 @@ export const useDomainCreateMutation = (
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
     DomainResponse | ISettledTask,
-    { href: string; body: PatchedDomain }
+    { href: string; body: PatchedDomain },
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     DomainResponse | ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { href: string; body: PatchedDomain }
   >({
-    mutationFn: async ({
-      href,
-      body,
-    }: {
-      href: string;
-      body: PatchedDomain;
-    }) => {
-      const response = await axiosInstance.patch<
-        DomainResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return "task" in response.data
-        ? settleTask(response.data)
-        : response.data;
-    },
+    mutationFn: async ({ href, body }: { href: string; body: PatchedDomain }) =>
+      settleIfTask(
+        await axiosInstance.patch<DomainResponse | AsyncOperationResponse>(
+          toProxyHref(href),
+          body,
+        ),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({
@@ -151,10 +150,10 @@ export const useDomainUpdateMutation = (
 };
 
 export const useDomainDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, DomainResponse>,
+  options?: IMutationCallbacks<ISettledTask, DomainResponse, TaskWriteError>,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, DrfAxiosError, DomainResponse>({
+  return useMutation<ISettledTask, TaskWriteError, DomainResponse>({
     mutationFn: async (domain: DomainResponse) => {
       const response = await axiosInstance.delete<AsyncOperationResponse>(
         toProxyHref(domain.pulp_href ?? ""),

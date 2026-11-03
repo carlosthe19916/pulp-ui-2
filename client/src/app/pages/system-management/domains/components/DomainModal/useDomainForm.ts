@@ -11,12 +11,11 @@ import type {
 } from "@app/client";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useDomainCreateMutation,
   useDomainUpdateMutation,
 } from "@app/queries/domains";
-import { isSettledTask } from "@app/queries/tasks";
 import {
   getMutationErrorMessage,
   type IMutationErrorMessage,
@@ -120,7 +119,7 @@ export const useDomainForm = ({
   onClose,
 }: IUseDomainFormOptions): IUseDomainFormResult => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !domain;
 
@@ -137,18 +136,11 @@ export const useDomainForm = ({
   });
   const updateMutation = useDomainUpdateMutation({
     onSuccess: (data, { body }) => {
-      // Update may be sync (200) or a task (202) still running after the wait.
-      if (isSettledTask(data) && !data.finished) {
-        taskStarted({
-          taskHref: data.taskHref,
-          title: `Domain "${body.name}" update started`,
-        });
-      } else {
-        addNotification({
-          title: `Domain "${body.name}" updated`,
-          variant: "success",
-        });
-      }
+      taskFeedback.settled({
+        result: data,
+        doneTitle: `Domain "${body.name}" updated`,
+        startedTitle: `Domain "${body.name}" update started`,
+      });
     },
     onError: (error) =>
       setSubmitError(

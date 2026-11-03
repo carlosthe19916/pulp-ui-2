@@ -10,6 +10,7 @@ import {
   type UseQueryResult,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import type { AxiosResponse } from "axios";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -213,6 +214,20 @@ export const taskDetailQueryOptions = ({
  * Polls a dispatched task until it ends and returns it; rejects with the task's
  * failure detail. For a mutation that must hand back what the task created.
  */
+/** A dispatched task ended failed or canceled; the message is Pulp's error. */
+export class TaskFailedError extends Error {
+  readonly task: TaskResponse;
+
+  constructor(task: TaskResponse) {
+    super(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+    this.name = "TaskFailedError";
+    this.task = task;
+  }
+}
+
+/** What a write that waits for its task can reject with. */
+export type TaskWriteError = DrfAxiosError | TaskFailedError;
+
 /**
  * How long `waitForTask` waits before its next check: 1 s, 2 s, … up to the poll interval,
  * so short tasks still resolve fast and long ones (uploads) aren't checked every second.
@@ -227,7 +242,7 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
     );
     if (task.state === "completed") return task;
     if (isTerminalTaskState(task.state)) {
-      throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+      throw new TaskFailedError(task);
     }
     await new Promise((resolve) => setTimeout(resolve, taskPollDelay(attempt)));
   }
@@ -267,7 +282,7 @@ export const settleTask = async ({
       return { taskHref, finished: task };
     }
     if (isTerminalTaskState(task.state)) {
-      throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+      throw new TaskFailedError(task);
     }
     const delay =
       SETTLE_POLL_DELAYS_MS[
@@ -277,6 +292,17 @@ export const settleTask = async ({
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 };
+
+/**
+ * A `200 | 202` write: the object it returned, or the task it answered with, waited for
+ * with `settleTask`.
+ */
+export const settleIfTask = async <T extends object>(
+  response: AxiosResponse<T | AsyncOperationResponse>,
+): Promise<T | ISettledTask> =>
+  "task" in response.data
+    ? settleTask(response.data as AsyncOperationResponse)
+    : (response.data as T);
 
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {

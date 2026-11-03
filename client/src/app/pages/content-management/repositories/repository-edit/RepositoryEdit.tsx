@@ -3,17 +3,15 @@ import type React from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityEditPage } from "@app/components/EntityEditPage";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useRepositoryUpdateMutation,
   useSuspenseRepositoryDetailQuery,
 } from "@app/queries/repositories";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface IRepositoryEditProps {
@@ -28,8 +26,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -39,11 +36,10 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
 
   const updateMutation = useRepositoryUpdateMutation({
     onSuccess: (data) =>
-      notifyUpdateResult({
-        addNotification,
-        taskStarted,
-        data,
-        subject: `Repository "${name}"`,
+      taskFeedback.settled({
+        result: data,
+        doneTitle: `Repository "${name}" updated`,
+        startedTitle: `Repository "${name}" update started`,
       }),
     onError: (error) =>
       setSubmitError(

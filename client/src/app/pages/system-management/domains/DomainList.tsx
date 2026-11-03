@@ -37,7 +37,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   domainKeys,
   useDomainDeleteMutation,
@@ -47,7 +47,6 @@ import {
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
@@ -73,7 +72,7 @@ const YesNoLabel: React.FC<IYesNoLabelProps> = ({ value }) => (
 
 export const DomainList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
@@ -90,10 +89,8 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Domain "${name}" deleted`,
         startedTitle: `Domain "${name}" deletion started`,
       }),

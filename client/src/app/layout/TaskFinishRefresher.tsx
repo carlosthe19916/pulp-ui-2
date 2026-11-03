@@ -10,11 +10,12 @@ import { useTrackedTasks } from "./useTrackedTasks";
 const [TASKS_ROOT_KEY] = taskKeys.all();
 
 /**
- * Mounted once in the app shell: when a tracked task seen running finishes, refreshes
- * what's on screen, since it may have created or changed anything (a new distribution
- * row, a repository's latest version). Renders nothing.
+ * Mounted once in the app shell: when a task in the drawer that was seen running finishes,
+ * refreshes what's on screen, since it may have created or changed anything (a new
+ * distribution row, a repository's latest version). Tasks started elsewhere are refreshed
+ * per row by `useResourceTasks`. Renders nothing.
  */
-export const TaskTracker: React.FC = () => {
+export const TaskFinishRefresher: React.FC = () => {
   const queryClient = useQueryClient();
   // Only tasks whose running state was read: a task still loading after a reload isn't
   // "finishing" when its first read says completed.

@@ -11,8 +11,8 @@ import {
   TASK_DRAWER_ID,
   TASK_DRAWER_TOGGLE_ID,
   TaskDrawer,
-  TaskTracker,
 } from "./TaskDrawer";
+import { TaskFinishRefresher } from "./TaskFinishRefresher";
 import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
@@ -125,7 +125,7 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
       mainContainerId={pageId}
     >
       {children}
-      <TaskTracker />
+      <TaskFinishRefresher />
     </Page>
   );
 };

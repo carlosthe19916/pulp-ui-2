@@ -35,6 +35,7 @@ import {
   VersionActionModal,
 } from "@app/components/VersionActionModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -43,7 +44,7 @@ import {
 } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -55,7 +56,6 @@ import {
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPulpType, getRepositoryContentTypes } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
@@ -99,11 +99,13 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
 
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
-  const { contentChange, isRunning, running, lockedProps } =
-    useRepositoryActivity({ repository });
+  const contentChangeStarted = useContentChangeStarted();
+  const { isRunning, running, lockedProps } = useRepositoryActivity({
+    repository,
+  });
   const { data: latestVersion } = useRepositoryVersionDetailQuery({
     href: repository.latest_version_href ?? null,
   });
@@ -139,19 +141,13 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   });
 
   const deleteMutation = useRepositoryDeleteMutation({
-    onSuccess: (data, { name }) => {
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+    onSuccess: (data, { name }) =>
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Repository "${name}" deleted`,
         startedTitle: `Repository "${name}" deletion started`,
-      });
-      void navigate({
-        to: "/content-management/$pulpDomain/repositories",
-        params: { pulpDomain },
-      });
-    },
+      }),
+
     onError: (error, { name }) =>
       addNotification({
         ...getMutationErrorMessage({
@@ -498,7 +494,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           {...versionAction}
           repository={repository}
           onClose={() => setVersionAction(null)}
-          onRestoreStarted={contentChange.watch}
+          onRestoreStarted={contentChangeStarted}
         />
       )}
 
@@ -516,7 +512,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           contentTypes={uploadableTypes}
           repository={repository}
           onClose={() => setIsUploadOpen(false)}
-          onStarted={contentChange.watch}
+          onStarted={contentChangeStarted}
         />
       )}
 
@@ -525,7 +521,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           <archiveImport.Modal
             repository={repository}
             onClose={() => setIsImportOpen(false)}
-            onStarted={contentChange.watch}
+            onStarted={contentChangeStarted}
           />
         </Suspense>
       )}
@@ -535,7 +531,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           repository={repository}
           repositoryType={pulpType}
           onClose={() => setIsAddContentOpen(false)}
-          onStarted={contentChange.watch}
+          onStarted={contentChangeStarted}
         />
       )}
 
@@ -544,7 +540,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
           repository={repository}
           units={removeUnits === "all" ? undefined : removeUnits}
           onClose={() => setRemoveUnits(null)}
-          onStarted={contentChange.watch}
+          onStarted={contentChangeStarted}
         />
       )}
 
@@ -554,8 +550,13 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
         body={`Are you sure you want to delete repository "${repository.name}"? This action cannot be undone.`}
         isConfirming={deleteMutation.isPending}
         onConfirm={() =>
+          // Leaving is call-level: skipped if the user already left while it ran.
           deleteMutation.mutate(repository, {
-            onSuccess: () => setIsDeleteOpen(false),
+            onSuccess: () =>
+              void navigate({
+                to: "/content-management/$pulpDomain/repositories",
+                params: { pulpDomain },
+              }),
           })
         }
         onCancel={() => setIsDeleteOpen(false)}

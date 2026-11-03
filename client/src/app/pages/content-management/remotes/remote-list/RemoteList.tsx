@@ -43,7 +43,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   remoteKeys,
   useRemoteDeleteMutation,
@@ -56,7 +56,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskSettled } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes } from "@catalog";
 import { getCreateAlternatives, getEntityForm, getTypeLabel } from "@plugins";
@@ -65,7 +64,7 @@ import { REMOTE_LIST_STATE, SORTABLE_COLUMN_KEYS } from "./remoteListState";
 
 export const RemoteList: React.FC = () => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -94,10 +93,8 @@ export const RemoteList: React.FC = () => {
   const openModal = alternatives.find(({ key }) => key === openAlternative);
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskSettled({
-        addNotification,
-        taskStarted,
-        settled: data,
+      taskFeedback.settled({
+        result: data,
         doneTitle: `Remote "${name}" deleted`,
         startedTitle: `Remote "${name}" deletion started`,
       }),

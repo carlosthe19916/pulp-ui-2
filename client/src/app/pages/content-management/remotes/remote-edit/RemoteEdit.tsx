@@ -3,17 +3,15 @@ import type React from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityEditPage } from "@app/components/EntityEditPage";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useRemoteUpdateMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface IRemoteEditProps {
@@ -28,8 +26,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -38,11 +35,10 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (data) =>
-      notifyUpdateResult({
-        addNotification,
-        taskStarted,
-        data,
-        subject: `Remote "${name}"`,
+      taskFeedback.settled({
+        result: data,
+        doneTitle: `Remote "${name}" updated`,
+        startedTitle: `Remote "${name}" update started`,
       }),
     onError: (error) =>
       setSubmitError(

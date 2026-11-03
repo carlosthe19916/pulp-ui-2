@@ -19,7 +19,12 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import { type ISettledTask, settleTask } from "./tasks";
+import {
+  type ISettledTask,
+  settleIfTask,
+  settleTask,
+  type TaskWriteError,
+} from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -91,10 +96,14 @@ export const useRemotesListQuery = ({
 
 /** Deletes a remote by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRemoteDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, GenericRemoteResponse>,
+  options?: IMutationCallbacks<
+    ISettledTask,
+    GenericRemoteResponse,
+    TaskWriteError
+  >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, DrfAxiosError, GenericRemoteResponse>({
+  return useMutation<ISettledTask, TaskWriteError, GenericRemoteResponse>({
     mutationFn: async (remote: GenericRemoteResponse): Promise<ISettledTask> =>
       settleTask(
         (
@@ -201,13 +210,14 @@ export const useRemoteCreateMutation = (
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
     GenericRemoteResponse | ISettledTask,
-    { href: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> },
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     GenericRemoteResponse | ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
@@ -216,14 +226,12 @@ export const useRemoteUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<GenericRemoteResponse | ISettledTask> => {
-      const response = await axiosInstance.patch<
-        GenericRemoteResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return "task" in response.data
-        ? settleTask(response.data)
-        : response.data;
-    },
+    }): Promise<GenericRemoteResponse | ISettledTask> =>
+      settleIfTask(
+        await axiosInstance.patch<
+          GenericRemoteResponse | AsyncOperationResponse
+        >(toProxyHref(href), body),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({

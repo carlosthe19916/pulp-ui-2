@@ -11,7 +11,7 @@ import {
 
 import type { RepositoryResponse } from "@app/client";
 import { GatedButton } from "@app/components/GatedButton";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useRepositoryModifyMutation } from "@app/queries/repositories";
@@ -30,7 +30,7 @@ interface IUploadContentModalProps {
   repository?: RepositoryResponse;
   onClose: () => void;
   /** The uploaded content was sent to the repository: the page follows the change. */
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onStarted: (change: IContentChangeStarted) => void;
 }
 
 /**

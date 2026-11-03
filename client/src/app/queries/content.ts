@@ -25,7 +25,7 @@ import type {
   IContentTypeListParams,
 } from "./contentTypes";
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
-import { waitForTask } from "./tasks";
+import { type TaskWriteError, waitForTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -258,11 +258,11 @@ export interface IContentUploadVariables {
  * callers add the hrefs in one `modify/` so a batch makes one version.
  */
 export const useContentUploadMutation = (
-  options?: IMutationCallbacks<string, IContentUploadVariables>,
+  options?: IMutationCallbacks<string, IContentUploadVariables, TaskWriteError>,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation<string, DrfAxiosError, IContentUploadVariables>({
+  return useMutation<string, TaskWriteError, IContentUploadVariables>({
     mutationFn: async ({
       apiPath,
       mechanism,

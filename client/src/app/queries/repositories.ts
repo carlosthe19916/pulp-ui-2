@@ -29,7 +29,12 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import { type ISettledTask, settleTask } from "./tasks";
+import {
+  type ISettledTask,
+  settleIfTask,
+  settleTask,
+  type TaskWriteError,
+} from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -115,10 +120,14 @@ export const useRepositoriesListQuery = ({
 
 /** Deletes a repository by `pulp_href`, returning the Pulp 202 task to track. */
 export const useRepositoryDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, RepositoryResponse>,
+  options?: IMutationCallbacks<
+    ISettledTask,
+    RepositoryResponse,
+    TaskWriteError
+  >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, DrfAxiosError, RepositoryResponse>({
+  return useMutation<ISettledTask, TaskWriteError, RepositoryResponse>({
     mutationFn: async (repository: RepositoryResponse): Promise<ISettledTask> =>
       settleTask(
         (
@@ -563,13 +572,14 @@ export const useRepositoryCreateMutation = (
 export const useRepositoryUpdateMutation = (
   options?: IMutationCallbacks<
     RepositoryResponse | ISettledTask,
-    { href: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> },
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     RepositoryResponse | ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
@@ -578,14 +588,13 @@ export const useRepositoryUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<RepositoryResponse | ISettledTask> => {
-      const response = await axiosInstance.patch<
-        RepositoryResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return "task" in response.data
-        ? settleTask(response.data)
-        : response.data;
-    },
+    }): Promise<RepositoryResponse | ISettledTask> =>
+      settleIfTask(
+        await axiosInstance.patch<RepositoryResponse | AsyncOperationResponse>(
+          toProxyHref(href),
+          body,
+        ),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: repositoryKeys.list() });
       void queryClient.invalidateQueries({

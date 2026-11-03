@@ -24,6 +24,7 @@ import {
   type VersionAction,
   VersionActionModal,
 } from "@app/components/VersionActionModal";
+import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import {
   useObjectPermissions,
   VERSION_ACTION_VERBS,
@@ -68,7 +69,8 @@ export const RepositoryVersionDetail: React.FC<
   const { data: repository } = useRepositoryDetailQuery({
     href: repositoryHref,
   });
-  const { contentChange, running, lockedProps } = useRepositoryActivity({
+  const contentChangeStarted = useContentChangeStarted();
+  const { running, lockedProps } = useRepositoryActivity({
     repository,
   });
   const [action, setAction] = useState<VersionAction | null>(null);
@@ -223,7 +225,7 @@ export const RepositoryVersionDetail: React.FC<
           version={version}
           repository={repository}
           onClose={() => setAction(null)}
-          onRestoreStarted={contentChange.watch}
+          onRestoreStarted={contentChangeStarted}
           onDeleted={() =>
             void navigate({
               to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId",

@@ -28,7 +28,7 @@ import {
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { UploadContentModal } from "@app/components/UploadContentModal";
 import { useApiStatus } from "@app/hooks/useApiStatus";
-import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import { useContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import {
   type IContentUnitRef,
   useContentUnitSelection,
@@ -60,7 +60,7 @@ export const ContentList: React.FC = () => {
   });
   const toFirstPage = () => setPagination((prev) => ({ ...prev, page: 1 }));
   const selection = useContentUnitSelection();
-  const contentChange = useContentChangeTask();
+  const contentChangeStarted = useContentChangeStarted();
   const [addUnits, setAddUnits] = useState<IContentUnitRef[] | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
@@ -257,7 +257,7 @@ export const ContentList: React.FC = () => {
         <UploadContentModal
           contentTypes={uploadableTypes}
           onClose={() => setIsUploadOpen(false)}
-          onStarted={contentChange.watch}
+          onStarted={contentChangeStarted}
         />
       )}
 
@@ -267,7 +267,7 @@ export const ContentList: React.FC = () => {
           onClose={() => setAddUnits(null)}
           onStarted={(started) => {
             selection.clear();
-            contentChange.watch(started);
+            contentChangeStarted(started);
           }}
         />
       )}

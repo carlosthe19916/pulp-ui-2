@@ -26,7 +26,7 @@ import { ContentPicker } from "@app/components/ContentPicker";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { VersionSelect } from "@app/components/VersionSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { useContentUnitSelection } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
@@ -43,7 +43,7 @@ interface IAddContentModalProps {
   repository: RepositoryResponse;
   repositoryType: string;
   onClose: () => void;
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onStarted: (change: IContentChangeStarted) => void;
 }
 
 interface ISourcePickerProps {

@@ -5,9 +5,9 @@ import type {
   RepositoryVersionResponse,
 } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
+import type { IContentChangeStarted } from "@app/hooks/useContentChangeStarted";
 import { useNotifications } from "@app/hooks/useNotifications";
-import { useTaskStarted } from "@app/hooks/useTaskStarted";
+import { useTaskFeedback } from "@app/hooks/useTaskFeedback";
 import {
   useRepositoryModifyMutation,
   useRepositoryVersionDeleteMutation,
@@ -23,7 +23,7 @@ interface IVersionActionModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   /** Restore is a content change: the page follows it to the end. */
-  onRestoreStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onRestoreStarted: (change: IContentChangeStarted) => void;
   /** Called after a delete is accepted (e.g. to leave the deleted version's page). */
   onDeleted?: () => void;
 }
@@ -38,7 +38,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   onDeleted,
 }) => {
   const { addNotification } = useNotifications();
-  const taskStarted = useTaskStarted();
+  const taskFeedback = useTaskFeedback();
   const number = String(version.number);
   const name = `"${repository.name}"`;
   const notifyError = ({
@@ -55,7 +55,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
 
   const deleteMutation = useRepositoryVersionDeleteMutation({
     onSuccess: (data) => {
-      taskStarted({
+      taskFeedback.started({
         taskHref: data.task,
         title: `Deleting version ${number} of ${name}`,
       });
@@ -66,7 +66,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   });
   const repairMutation = useRepositoryVersionRepairMutation({
     onSuccess: (data) =>
-      taskStarted({
+      taskFeedback.started({
         taskHref: data.task,
         title: `Repairing version ${number} of ${name}`,
       }),

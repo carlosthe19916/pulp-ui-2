@@ -20,7 +20,12 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
-import { type ISettledTask, settleTask } from "./tasks";
+import {
+  type ISettledTask,
+  settleIfTask,
+  settleTask,
+  type TaskWriteError,
+} from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -124,10 +129,14 @@ export const useDistributionsListQuery = ({
 
 /** Deletes a distribution by `pulp_href`, returning the Pulp 202 task to track. */
 export const useDistributionDeleteMutation = (
-  options?: IMutationCallbacks<ISettledTask, DistributionResponse>,
+  options?: IMutationCallbacks<
+    ISettledTask,
+    DistributionResponse,
+    TaskWriteError
+  >,
 ) => {
   const queryClient = useQueryClient();
-  return useMutation<ISettledTask, DrfAxiosError, DistributionResponse>({
+  return useMutation<ISettledTask, TaskWriteError, DistributionResponse>({
     mutationFn: async (
       distribution: DistributionResponse,
     ): Promise<ISettledTask> =>
@@ -207,14 +216,15 @@ export const buildDistributionHref = (
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
     ISettledTask,
-    { apiPath: string; body: Record<string, unknown> }
+    { apiPath: string; body: Record<string, unknown> },
+    TaskWriteError
   >,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
   return useMutation<
     ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { apiPath: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
@@ -244,13 +254,14 @@ export const useDistributionCreateMutation = (
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
     DistributionResponse | ISettledTask,
-    { href: string; body: Record<string, unknown> }
+    { href: string; body: Record<string, unknown> },
+    TaskWriteError
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
     DistributionResponse | ISettledTask,
-    DrfAxiosError,
+    TaskWriteError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({
@@ -259,14 +270,12 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<DistributionResponse | ISettledTask> => {
-      const response = await axiosInstance.patch<
-        DistributionResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return "task" in response.data
-        ? settleTask(response.data)
-        : response.data;
-    },
+    }): Promise<DistributionResponse | ISettledTask> =>
+      settleIfTask(
+        await axiosInstance.patch<
+          DistributionResponse | AsyncOperationResponse
+        >(toProxyHref(href), body),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({
