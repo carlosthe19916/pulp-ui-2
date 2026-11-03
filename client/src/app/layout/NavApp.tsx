@@ -1,20 +1,9 @@
 import type React from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { Link, useLocation, useMatchRoute } from "@tanstack/react-router";
 
-import {
-  Nav,
-  NavExpandable,
-  NavItem,
-  NavList,
-  Tooltip,
-} from "@patternfly/react-core";
-import RhUiCubesIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-cubes-icon";
-import RhUiHomeIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-home-icon";
-import RhUiMonitoringIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-monitoring-icon";
-import RhUiServerStackIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-server-stack-icon";
-import RhUiUsersIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-users-icon";
+import { Nav, NavExpandable, NavItem, NavList } from "@patternfly/react-core";
 
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
@@ -22,65 +11,11 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getScannableRepositoryTypes } from "@catalog";
 import { getAcsTypes, getPluginPages } from "@plugins";
 
-interface INavGroupProps {
-  title: string;
-  icon: React.ReactNode;
-  isActive: boolean;
-  isExpanded: boolean;
-  isDockExpanded: boolean;
-  onExpand: (isExpanded: boolean) => void;
-  children: React.ReactNode;
-}
-
-/** A nav group that shows only its icon, with a tooltip, while the dock is collapsed. */
-const NavGroup: React.FC<INavGroupProps> = ({
-  title,
-  icon,
-  isActive,
-  isExpanded,
-  isDockExpanded,
-  onExpand,
-  children,
-}) => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  return (
-    <>
-      <NavExpandable
-        title={title}
-        icon={icon}
-        isActive={isActive}
-        isExpanded={isExpanded}
-        hasExpandableIcon
-        buttonProps={{ ref: buttonRef, "aria-label": title }}
-        onExpand={(_event, value) => onExpand(value)}
-      >
-        {children}
-      </NavExpandable>
-      {!isDockExpanded && (
-        <Tooltip
-          aria="none"
-          aria-live="off"
-          triggerRef={buttonRef}
-          content={title}
-        />
-      )}
-    </>
-  );
-};
-
 interface INavAppProps {
-  isDockExpanded: boolean;
-  /** Opens the collapsed dock as an overlay, so a clicked group can show its pages. */
-  onOpenDock: () => void;
   onSelect: () => void;
 }
 
-export const NavApp: React.FC<INavAppProps> = ({
-  isDockExpanded,
-  onOpenDock,
-  onSelect,
-}) => {
+export const NavApp: React.FC<INavAppProps> = ({ onSelect }) => {
   // `matchRoute` matches against the route tree (param segments included) with
   // proper segment-boundary matching — no manual pathname string/regex work.
   const matchRoute = useMatchRoute();
@@ -110,27 +45,14 @@ export const NavApp: React.FC<INavAppProps> = ({
   const groupProps = (segment: string) => ({
     isActive: section === segment,
     isExpanded: !!expandedGroups[segment],
-    isDockExpanded,
-    onExpand: (isExpanded: boolean) => {
-      // A collapsed dock can't show a group's pages: open it with this group.
-      if (!isDockExpanded) {
-        onOpenDock();
-      }
-      setExpandedGroups((prev) => ({
-        ...prev,
-        [segment]: isDockExpanded ? isExpanded : true,
-      }));
-    },
+    onExpand: (_event: React.MouseEvent, isExpanded: boolean) =>
+      setExpandedGroups((prev) => ({ ...prev, [segment]: isExpanded })),
   });
 
   return (
-    <Nav id="nav-sidebar" aria-label="Nav" variant="docked" onSelect={onSelect}>
+    <Nav id="nav-sidebar" aria-label="Nav" onSelect={onSelect}>
       <NavList>
-        <NavGroup
-          title="Main"
-          icon={<RhUiHomeIcon />}
-          {...groupProps("dashboard")}
-        >
+        <NavExpandable title="Main" {...groupProps("dashboard")}>
           <NavItem
             isActive={
               !!matchRoute({
@@ -144,11 +66,10 @@ export const NavApp: React.FC<INavAppProps> = ({
               Dashboard
             </Link>
           </NavItem>
-        </NavGroup>
+        </NavExpandable>
 
-        <NavGroup
+        <NavExpandable
           title="System Management"
-          icon={<RhUiServerStackIcon />}
           {...groupProps("system-management")}
         >
           {domainsEnabled && (
@@ -273,14 +194,13 @@ export const NavApp: React.FC<INavAppProps> = ({
               Maintenance
             </Link>
           </NavItem>
-        </NavGroup>
+        </NavExpandable>
 
         {/* Ordered to follow the Pulp content pipeline: a Remote feeds a
               Repository, which is snapshotted as a Publication and served by a
               Distribution; Content lists the individual units. */}
-        <NavGroup
+        <NavExpandable
           title="Content Management"
-          icon={<RhUiCubesIcon />}
           {...groupProps("content-management")}
         >
           <NavItem
@@ -379,13 +299,9 @@ export const NavApp: React.FC<INavAppProps> = ({
               </Link>
             </NavItem>
           ))}
-        </NavGroup>
+        </NavExpandable>
 
-        <NavGroup
-          title="Monitoring"
-          icon={<RhUiMonitoringIcon />}
-          {...groupProps("monitoring")}
-        >
+        <NavExpandable title="Monitoring" {...groupProps("monitoring")}>
           <NavItem
             isActive={
               !!matchRoute({
@@ -438,13 +354,9 @@ export const NavApp: React.FC<INavAppProps> = ({
               </Link>
             </NavItem>
           )}
-        </NavGroup>
+        </NavExpandable>
 
-        <NavGroup
-          title="Administration"
-          icon={<RhUiUsersIcon />}
-          {...groupProps("admin")}
-        >
+        <NavExpandable title="Administration" {...groupProps("admin")}>
           <NavItem isActive={!!matchRoute({ to: "/admin/users", fuzzy: true })}>
             <Link to="/admin/users">Users</Link>
           </NavItem>
@@ -463,7 +375,7 @@ export const NavApp: React.FC<INavAppProps> = ({
           >
             <Link to="/admin/access-policies">Access policies</Link>
           </NavItem>
-        </NavGroup>
+        </NavExpandable>
       </NavList>
     </Nav>
   );

@@ -34,7 +34,6 @@ export const TaskDrawerBadge: React.FC<ITaskDrawerBadgeProps> = ({
       count={activeCount}
       isExpanded={isExpanded}
       onClick={onToggle}
-      isDocked
       aria-label={activeCount > 0 ? `Tasks, ${activeCount} running` : "Tasks"}
     />
   );
