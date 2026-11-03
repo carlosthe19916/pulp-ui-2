@@ -10,9 +10,10 @@ import {
   NotificationDrawerList,
 } from "@patternfly/react-core";
 
-import { useTaskTracker } from "@app/hooks/useTaskTracker";
+import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 
 import { TaskDrawerItem } from "./TaskDrawerItem";
+import { useTrackedTasks } from "./useTrackedTasks";
 
 interface ITaskDrawerProps {
   onClose: () => void;
@@ -20,9 +21,12 @@ interface ITaskDrawerProps {
 
 /** The tasks this browser started, newest first, with their live state. */
 export const TaskDrawer: React.FC<ITaskDrawerProps> = ({ onClose }) => {
-  const { tasks, clearFinished } = useTaskTracker();
-  const activeCount = tasks.filter((task) => task.isActive).length;
-  const hasFinished = activeCount < tasks.length;
+  const tasks = useTrackedTasks();
+  const untrack = useTrackedTasksStore((state) => state.untrack);
+  const finished = tasks
+    .filter((task) => !task.isActive)
+    .map((task) => task.taskHref);
+  const activeCount = tasks.length - finished.length;
 
   return (
     <NotificationDrawer>
@@ -32,8 +36,8 @@ export const TaskDrawer: React.FC<ITaskDrawerProps> = ({ onClose }) => {
         onClose={onClose}
         closeButtonAriaLabel="Close tasks"
       >
-        {hasFinished && (
-          <Button variant="link" isInline onClick={clearFinished}>
+        {finished.length > 0 && (
+          <Button variant="link" isInline onClick={() => untrack(finished)}>
             Clear finished
           </Button>
         )}

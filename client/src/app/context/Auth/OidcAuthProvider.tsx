@@ -6,8 +6,8 @@ import { Bullseye } from "@patternfly/react-core";
 import ExclamationCircleIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 
 import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
-import { clearTrackedTasks } from "@app/context/TaskTracker/TaskTrackerContext";
 import { oidcClientSettings, oidcSignoutArgs } from "@app/oidc";
+import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 
 import { AuthContext, type IAuthContext } from "./AuthContext";
 
@@ -48,7 +48,7 @@ const OidcAuthBridge: React.FC<IOidcAuthBridgeProps> = ({ children }) => {
   );
 
   const logout = useCallback(async () => {
-    clearTrackedTasks();
+    useTrackedTasksStore.getState().reset();
     await auth.signoutRedirect(oidcSignoutArgs);
   }, [auth]);
 

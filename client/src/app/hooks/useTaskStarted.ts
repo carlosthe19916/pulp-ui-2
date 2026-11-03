@@ -1,5 +1,5 @@
 import { useNotifications } from "@app/hooks/useNotifications";
-import { useTaskTracker } from "@app/hooks/useTaskTracker";
+import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 import { notifyTaskStarted } from "@app/utils/taskNotify";
 
 /**
@@ -8,7 +8,7 @@ import { notifyTaskStarted } from "@app/utils/taskNotify";
  */
 export const useTaskStarted = () => {
   const { addNotification } = useNotifications();
-  const { trackTask } = useTaskTracker();
+  const track = useTrackedTasksStore((state) => state.track);
   return ({
     taskHref,
     title = "Task started",
@@ -17,6 +17,6 @@ export const useTaskStarted = () => {
     title?: string;
   }) => {
     notifyTaskStarted({ addNotification, taskHref, title });
-    trackTask({ taskHref, title });
+    track({ taskHref, title });
   };
 };

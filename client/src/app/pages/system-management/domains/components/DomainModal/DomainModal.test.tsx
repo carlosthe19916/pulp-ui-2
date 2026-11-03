@@ -24,9 +24,6 @@ vi.mock(import("@app/queries/domains"), () => ({
 vi.mock(import("@app/hooks/useNotifications"), () => ({
   useNotifications: () => ({ addNotification: vi.fn() }),
 }));
-vi.mock(import("@app/hooks/useTaskStarted"), () => ({
-  useTaskStarted: () => vi.fn(),
-}));
 
 const fileSystemDomain = {
   name: "alpha",

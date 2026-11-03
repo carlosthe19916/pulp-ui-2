@@ -11,10 +11,12 @@ import { App } from "@app/App";
 import { initInterceptors } from "@app/axios-config/apiInit";
 import { AuthProvider } from "@app/context/Auth/AuthProvider";
 import { queryClient } from "@app/queries/config";
+import { syncTrackedTasksAcrossTabs } from "@app/stores/useTrackedTasksStore";
 
 import { router } from "./router";
 
 initInterceptors();
+syncTrackedTasksAcrossTabs();
 
 const container = document.getElementById("root");
 const root = createRoot(container!);

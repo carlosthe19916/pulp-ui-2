@@ -120,7 +120,3 @@ export const useLocalStorage = <T>(
   options: UseStorageTypeOptions<T>,
 ): [T, React.Dispatch<React.SetStateAction<T>>] =>
   useStorage({ ...options, type: "localStorage" });
-
-/** Removes a `useLocalStorage` key from outside React; every reader in this tab updates. */
-export const removeFromLocalStorage = (key: string): void =>
-  setValueInStorage({ storageType: "localStorage", key, newValue: undefined });

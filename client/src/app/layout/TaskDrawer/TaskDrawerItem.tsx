@@ -10,7 +10,6 @@ import {
 } from "@patternfly/react-core";
 
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
-import type { ITrackedTaskStatus } from "@app/context/TaskTracker/TaskTrackerContext";
 import {
   extractIdFromHref,
   parseRepositoryVersionHref,
@@ -19,6 +18,7 @@ import {
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
 import { taskVariant } from "./taskVariant";
+import type { ITrackedTaskStatus } from "./useTrackedTasks";
 
 interface ITaskDrawerItemProps {
   task: ITrackedTaskStatus;

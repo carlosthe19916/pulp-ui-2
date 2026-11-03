@@ -7,7 +7,7 @@ import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { DOCK_ID, DockApp } from "./DockApp";
 import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
-import { TaskDrawer } from "./TaskDrawer";
+import { TaskDrawer, TaskTracker } from "./TaskDrawer";
 import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
@@ -112,6 +112,7 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
       mainContainerId={pageId}
     >
       {children}
+      <TaskTracker />
     </Page>
   );
 };

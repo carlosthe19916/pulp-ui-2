@@ -2,7 +2,7 @@ import type React from "react";
 
 import { NotificationBadge } from "@patternfly/react-core";
 
-import { useTaskTracker } from "@app/hooks/useTaskTracker";
+import { useTrackedTasks } from "./useTrackedTasks";
 
 export const TASK_DRAWER_TOGGLE_ID = "task-drawer-toggle";
 
@@ -19,7 +19,7 @@ export const TaskDrawerBadge: React.FC<ITaskDrawerBadgeProps> = ({
   isExpanded,
   onToggle,
 }) => {
-  const { tasks } = useTaskTracker();
+  const tasks = useTrackedTasks();
   const activeCount = tasks.filter((task) => task.isActive).length;
   const hasFailed = tasks.some(
     (task) => task.state === "failed" || task.state === "canceled",
