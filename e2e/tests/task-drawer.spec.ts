@@ -18,7 +18,7 @@ test.describe("Task drawer", () => {
     await repositoriesPage.expectRowGone(name);
 
     const openDrawer = () =>
-      page.getByRole("button", { name: /^Tasks/ }).click();
+      page.getByRole("button", { name: /^Tasks(, \d+ running)?$/ }).click();
     const item = page
       .getByRole("list", { name: "Tasks" })
       .getByRole("listitem")

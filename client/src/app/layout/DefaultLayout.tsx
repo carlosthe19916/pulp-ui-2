@@ -7,7 +7,12 @@ import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { DOCK_ID, DockApp } from "./DockApp";
 import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
-import { TaskDrawer, TaskTracker } from "./TaskDrawer";
+import {
+  TASK_DRAWER_ID,
+  TASK_DRAWER_TOGGLE_ID,
+  TaskDrawer,
+  TaskTracker,
+} from "./TaskDrawer";
 import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
@@ -74,6 +79,11 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
 
   const onOpenDock = () => setIsDockOpen(true);
 
+  const closeTaskDrawer = () => {
+    setIsTaskDrawerExpanded(false);
+    document.getElementById(TASK_DRAWER_TOGGLE_ID)?.focus();
+  };
+
   const onNavSelect = () => {
     if (isDockFloating) {
       closeDock();
@@ -104,10 +114,13 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
           }
         />
       }
-      notificationDrawer={
-        <TaskDrawer onClose={() => setIsTaskDrawerExpanded(false)} />
-      }
+      notificationDrawer={<TaskDrawer onClose={closeTaskDrawer} />}
       isNotificationDrawerExpanded={isTaskDrawerExpanded}
+      onNotificationDrawerExpand={() =>
+        document
+          .querySelector<HTMLElement>(`#${TASK_DRAWER_ID} button`)
+          ?.focus()
+      }
       skipToContent={PageSkipToContent}
       mainContainerId={pageId}
     >

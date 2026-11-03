@@ -47,7 +47,9 @@ export const useTrackedTasksStore = create<ITrackedTasksState>()(
     }),
     {
       name: TRACKED_TASKS_KEY,
-      version: 1,
+      // Version 1 kept a different entry shape; those entries are dropped.
+      version: 2,
+      migrate: () => ({ tasks: [] }),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ tasks: state.tasks }),
       merge: (persisted, current) => ({

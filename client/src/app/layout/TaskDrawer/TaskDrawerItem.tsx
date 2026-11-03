@@ -49,6 +49,8 @@ export const TaskDrawerItem: React.FC<ITaskDrawerItemProps> = ({
       >
         {task.notFound ? (
           "This task was removed."
+        ) : task.isUnreadable ? (
+          "Its state can't be read right now."
         ) : (
           <>
             {task.state && <TaskStateLabel state={task.state} isCompact />}{" "}

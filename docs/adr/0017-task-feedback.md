@@ -36,8 +36,8 @@ the ones started in this browser. Supersedes [0006](0006-async-task-feedback.md)
       disabled with a tooltip; browsing keeps working. Edit stays enabled: Pulp queues an
       update behind the running task, and the edit page warns instead
       ([0010](0010-plugin-form-pages.md)).
-- [ ] Failure messages start with "Could not …" or "Failed to …" and say nothing changed when
-      that is the case.
+- [ ] Failure messages the UI writes start with "Could not …" or "Failed to …" and say nothing
+      changed when that is the case; a failed task shows Pulp's error as returned.
 - [ ] A form's submission error shows inside the form and the form stays open; a success closes
       it.
 
@@ -45,6 +45,8 @@ the ones started in this browser. Supersedes [0006](0006-async-task-feedback.md)
 
 - Users never wait on a spinner for minutes, and the outcome of a task they left is in the
   drawer instead of a toast they may have missed.
+- A content change that made no new version shows as completed with no version link; there
+  is no separate "No changes" message.
 - The drawer lists only this browser's tasks: tasks started from another browser, the CLI, or
   before signing in here don't show; the Tasks page lists every task.
 - Concurrent writes to one repository are avoided by the UI, not only by the server.

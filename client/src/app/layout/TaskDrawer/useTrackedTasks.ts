@@ -9,6 +9,8 @@ export interface ITrackedTaskStatus extends ITrackedTask {
   state?: string;
   /** The task was purged before it could be read. */
   notFound: boolean;
+  /** Its state couldn't be read (403, 5xx, network) and isn't known yet. */
+  isUnreadable: boolean;
   errorMessage?: string;
   /** Hrefs the task created (e.g. a new repository version). */
   createdResources: readonly string[];
@@ -25,13 +27,16 @@ export const useTrackedTasks = (): ITrackedTaskStatus[] => {
   return tasks.map((task) => {
     const probe = probes.get(task.taskHref);
     const notFound = probe?.notFound ?? false;
+    const isUnreadable = !!probe?.isError && !probe.state;
     return {
       ...task,
       state: probe?.state,
       notFound,
+      isUnreadable,
       errorMessage: probe?.errorMessage,
       createdResources: probe?.createdResources ?? [],
-      isActive: !notFound && !isTerminalTaskState(probe?.state),
+      isActive:
+        !notFound && !isUnreadable && !isTerminalTaskState(probe?.state),
     };
   });
 };

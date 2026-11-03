@@ -46,10 +46,22 @@ describe("useTrackedTasksStore", () => {
             { taskHref: "/t/old/", title: "Old", startedAt: 0 },
           ],
         },
-        version: 1,
+        version: 2,
       }),
     );
     await useTrackedTasksStore.persist.rehydrate();
     expect(hrefs()).toEqual(["/t/new/"]);
+  });
+
+  it("drops entries saved in the previous shape", async () => {
+    localStorage.setItem(
+      TRACKED_TASKS_KEY,
+      JSON.stringify({
+        state: { tasks: [{ kind: "create", taskHref: "/t/1/", startedAt: 1 }] },
+        version: 1,
+      }),
+    );
+    await useTrackedTasksStore.persist.rehydrate();
+    expect(hrefs()).toEqual([]);
   });
 });

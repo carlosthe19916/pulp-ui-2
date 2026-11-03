@@ -238,6 +238,8 @@ export interface ITaskStateProbe {
   state?: string;
   name?: string;
   notFound: boolean;
+  /** The last read failed for another reason (403, 5xx, network). */
+  isError: boolean;
   /** The task's failure detail, when it ended in `failed` (see `getTaskErrorMessage`). */
   errorMessage?: string;
   /** Hrefs the task created (e.g. a new repository version). */
@@ -274,6 +276,7 @@ export const useTaskDetailQueries = ({
           state: result?.data?.state,
           name: result?.data?.name,
           notFound: result?.error?.response?.status === 404,
+          isError: !!result?.error && result.error.response?.status !== 404,
           errorMessage: getTaskErrorMessage(result?.data),
           createdResources: result?.data?.created_resources ?? [],
         });

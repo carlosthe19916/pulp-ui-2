@@ -15,6 +15,8 @@ import { useTrackedTasksStore } from "@app/stores/useTrackedTasksStore";
 import { TaskDrawerItem } from "./TaskDrawerItem";
 import { useTrackedTasks } from "./useTrackedTasks";
 
+export const TASK_DRAWER_ID = "task-drawer";
+
 interface ITaskDrawerProps {
   onClose: () => void;
 }
@@ -29,7 +31,12 @@ export const TaskDrawer: React.FC<ITaskDrawerProps> = ({ onClose }) => {
   const activeCount = tasks.length - finished.length;
 
   return (
-    <NotificationDrawer>
+    <NotificationDrawer
+      id={TASK_DRAWER_ID}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onClose();
+      }}
+    >
       <NotificationDrawerHeader
         title="Tasks"
         customText={activeCount > 0 ? `${activeCount} running` : undefined}
