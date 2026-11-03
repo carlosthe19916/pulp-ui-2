@@ -36,6 +36,7 @@ import {
   VersionActionModal,
 } from "@app/components/VersionActionModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
+import { useActionSupport } from "@app/hooks/useActionSupport";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useNotifications } from "@app/hooks/useNotifications";
 import {
@@ -119,6 +120,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
   const repositoryActions = getRepositoryActions(pulpType).filter(
     (action) => action.target === "repository",
   );
+  const actionSupportProps = useActionSupport(pulpType);
   const canSync = (repoEntity?.compatibleRemoteTypes.length ?? 0) > 0;
   const canPublish = (repoEntity?.compatiblePublicationTypes.length ?? 0) > 0;
   const canChangeContent = !!repoEntity?.contentChanges;
@@ -282,6 +284,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
                   onClick: () => setRepoAction(action),
                   ...lockedProps,
                   ...disabledProps("modify"),
+                  ...actionSupportProps(action),
                 },
               })),
               canPublish && {

@@ -60,6 +60,11 @@ export interface IActionDef {
   repositoryParam?: { key: string; list?: boolean };
   /** What the operation answers; default `task`. */
   responseKind?: ActionResponseKind;
+  /**
+   * The plugin version that first serves this collection endpoint inside a domain. With
+   * domains enabled, older versions serve it only outside any domain, so it can't run.
+   */
+  domainScopedSince?: string;
 }
 
 /** Another way to create an object of a type: a POST relative to its collection. */

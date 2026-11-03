@@ -15,12 +15,34 @@ interface IOperation {
   >;
 }
 
-const paths = (
-  JSON.parse(specSource) as {
-    paths: Record<string, { post?: IOperation }>;
-  }
-).paths;
+const spec = JSON.parse(specSource) as {
+  info: { "x-pulp-app-versions": Record<string, string> };
+  paths: Record<string, { post?: IOperation }>;
+};
+const paths = spec.paths;
 const V3 = "/api/pulp/{pulp_domain}/api/v3/";
+const V3_NO_DOMAIN = "/api/pulp/api/v3/";
+
+/** Whether the spec's plugin predates `minimum`, by numeric parts. */
+const specPredates = ({
+  pluginId,
+  minimum,
+}: {
+  pluginId: string;
+  minimum: string;
+}) => {
+  const parts = (v: string) =>
+    v.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const [have, need] = [
+    parts(spec.info["x-pulp-app-versions"][pluginId] ?? "0"),
+    parts(minimum),
+  ];
+  for (let i = 0; i < Math.max(have.length, need.length); i++) {
+    const diff = (have[i] ?? 0) - (need[i] ?? 0);
+    if (diff !== 0) return diff < 0;
+  }
+  return false;
+};
 const definitions: readonly IPluginDefinition[] = PLUGIN_DEFINITIONS;
 
 /** The status codes and response schemas a POST declares, e.g. `202 AsyncOperationResponse`. */
@@ -60,6 +82,20 @@ describe.each(definitions.map((definition) => [definition.id, definition]))(
     it("declares what each repository action answers", () => {
       for (const repository of Object.values(definition.repository ?? {})) {
         for (const [key, action] of Object.entries(repository.actions ?? {})) {
+          const minimum = action.domainScopedSince;
+          if (minimum && specPredates({ pluginId: definition.id, minimum })) {
+            // The spec's plugin serves it only outside a domain, which is why it is gated.
+            const outside = `${V3_NO_DOMAIN}${action.path.slice(1)}`;
+            expect(
+              declaredResponses(actionPath(repository.apiPath, action)),
+              `${key} is gated from ${minimum} but the spec already serves it in a domain`,
+            ).toEqual([]);
+            expect(
+              declaredResponses(outside).length,
+              `${key} is gated from ${minimum} but ${outside} is missing`,
+            ).toBe(1);
+            continue;
+          }
           const path = actionPath(repository.apiPath, action);
           const responseKind = action.responseKind ?? "task";
           expect(

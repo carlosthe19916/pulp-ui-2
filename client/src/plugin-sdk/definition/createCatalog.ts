@@ -79,6 +79,34 @@ const installedCheck =
         packages.includes(version.package ?? ""),
     );
 
+/** The installed version of a plugin's package, if any. */
+const installedVersion =
+  (packages: readonly string[]) =>
+  (installed: VersionResponse[]): string | undefined =>
+    installed.find(
+      (version) =>
+        packages.includes(version.component ?? "") ||
+        packages.includes(version.package ?? ""),
+    )?.version;
+
+/** Whether `version` is at least `minimum`, by numeric parts (`0.31.0.dev` counts as 0.31.0). */
+const isVersionAtLeast = ({
+  version,
+  minimum,
+}: {
+  version: string;
+  minimum: string;
+}): boolean => {
+  const parts = (v: string) =>
+    v.split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const [have, need] = [parts(version), parts(minimum)];
+  for (let i = 0; i < Math.max(have.length, need.length); i++) {
+    const diff = (have[i] ?? 0) - (need[i] ?? 0);
+    if (diff !== 0) return diff > 0;
+  }
+  return true;
+};
+
 const contentTypesOf = (definition: IPluginDefinition): IContentType[] =>
   Object.entries(definition.content ?? {}).map(([pulpType, content]) => ({
     pulpType,
@@ -105,10 +133,15 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
   const guardsByType = new Map<PulpType, IContentGuardType>();
   const acsFacts: IAcsFact[] = [];
   const isInstalledById = new Map<string, IsInstalled>();
+  const versionById = new Map<
+    string,
+    (installed: VersionResponse[]) => string | undefined
+  >();
 
   for (const definition of definitions) {
     const isAvailable = installedCheck(definition.packages);
     isInstalledById.set(definition.id, isAvailable);
+    versionById.set(definition.id, installedVersion(definition.packages));
     const contentTypes = contentTypesOf(definition);
     contentByPlugin.set(definition.id, contentTypes);
 
@@ -223,6 +256,28 @@ export const createCatalog = (definitions: readonly IPluginDefinition[]) => {
 
     /** Whether any of a plugin's packages is installed. */
     isPluginInstalled,
+
+    /**
+     * Whether a repository action can run on this server: `false` only when it needs a newer
+     * plugin to run inside a domain. An unknown installed version doesn't block it.
+     */
+    isActionSupported: ({
+      pulpType,
+      action,
+      domainEnabled,
+      installed,
+    }: {
+      pulpType: PulpType;
+      action: IActionDef;
+      domainEnabled: boolean;
+      installed: VersionResponse[];
+    }): boolean => {
+      const minimum = action.domainScopedSince;
+      if (!minimum || !domainEnabled) return true;
+      const pluginId = byType.get(pulpType)?.pluginId ?? "";
+      const version = versionById.get(pluginId)?.(installed);
+      return !version || isVersionAtLeast({ version, minimum });
+    },
 
     /** The content type for a content pulp_type, or `undefined` if not modelled. */
     getContentType: (pulpType: PulpType): IContentType | undefined =>

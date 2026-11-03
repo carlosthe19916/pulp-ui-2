@@ -24,6 +24,7 @@ import {
   type VersionAction,
   VersionActionModal,
 } from "@app/components/VersionActionModal";
+import { useActionSupport } from "@app/hooks/useActionSupport";
 import {
   useObjectPermissions,
   VERSION_ACTION_VERBS,
@@ -90,6 +91,7 @@ export const RepositoryVersionDetail: React.FC<
   const versionActions = getRepositoryActions(pulpType).filter(
     (item) => item.target === "version",
   );
+  const actionSupportProps = useActionSupport(pulpType);
 
   const repositoryParams = {
     pulpDomain,
@@ -156,6 +158,7 @@ export const RepositoryVersionDetail: React.FC<
                     onClick: () => setVersionAction(item),
                     ...lockedProps,
                     ...disabledProps("modify"),
+                    ...actionSupportProps(item),
                   },
                 })),
               ]}

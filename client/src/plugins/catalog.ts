@@ -81,6 +81,7 @@ export const {
   getRepositoryTypesForContent,
   getRepositoryTypesForPublication,
   getScannableRepositoryTypes,
+  isActionSupported,
   isPluginInstalled,
   resolveContentGuardTypeByApiPath,
   resolveContentTypeByApiPath,

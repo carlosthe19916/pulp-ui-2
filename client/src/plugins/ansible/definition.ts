@@ -32,7 +32,12 @@ export const ansible = definePlugin({
           target: "repository",
         },
         "rebuild-metadata": { path: "rebuild_metadata/", target: "repository" },
-        copy: { path: "/ansible/copy/", target: "repository" },
+        // Released pulp_ansible serves copy only outside any domain (pulp/pulp_ansible#2589).
+        copy: {
+          path: "/ansible/copy/",
+          target: "repository",
+          domainScopedSince: "0.31.0",
+        },
       },
     },
   },

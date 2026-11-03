@@ -216,3 +216,78 @@ describe("createCatalog", () => {
     );
   });
 });
+
+describe("isActionSupported", () => {
+  const sprocket = {
+    id: "sprocket",
+    packages: ["sprocket"],
+    repository: {
+      "sprocket.sprocket": {
+        apiPath: "file/file",
+        compatibleRemoteTypes: [],
+        compatiblePublicationTypes: [],
+        contentChanges: "modify",
+        actions: {
+          copy: {
+            path: "/sprocket/copy/",
+            target: "repository",
+            domainScopedSince: "0.31.0",
+          },
+          prune: { path: "prune/", target: "repository" },
+        },
+      },
+    },
+  } as unknown as IPluginDefinition;
+  const catalog = createCatalog([sprocket]);
+  const actions =
+    catalog.getPulpType("sprocket.sprocket")?.entities.repository?.actions ??
+    [];
+  const action = (key: string) => actions.find((a) => a.key === key)!;
+  const withVersion = (version: string) => [
+    { component: "sprocket", version } as VersionResponse,
+  ];
+  const supported = (
+    key: string,
+    { domainEnabled, version }: { domainEnabled: boolean; version?: string },
+  ) =>
+    catalog.isActionSupported({
+      pulpType: "sprocket.sprocket",
+      action: action(key),
+      domainEnabled,
+      installed: version ? withVersion(version) : [],
+    });
+
+  it("blocks a domain-scoped endpoint on an older plugin with domains enabled", () => {
+    expect(supported("copy", { domainEnabled: true, version: "0.30.3" })).toBe(
+      false,
+    );
+  });
+
+  it("allows it from the version that serves it inside a domain", () => {
+    expect(supported("copy", { domainEnabled: true, version: "0.31.0" })).toBe(
+      true,
+    );
+    expect(
+      supported("copy", { domainEnabled: true, version: "0.31.0.dev" }),
+    ).toBe(true);
+    expect(supported("copy", { domainEnabled: true, version: "1.2.0" })).toBe(
+      true,
+    );
+  });
+
+  it("allows it without domains, where both routes are the same", () => {
+    expect(supported("copy", { domainEnabled: false, version: "0.30.3" })).toBe(
+      true,
+    );
+  });
+
+  it("doesn't block when the installed version is unknown", () => {
+    expect(supported("copy", { domainEnabled: true })).toBe(true);
+  });
+
+  it("never blocks an action without a minimum version", () => {
+    expect(supported("prune", { domainEnabled: true, version: "0.1.0" })).toBe(
+      true,
+    );
+  });
+});
