@@ -43,6 +43,12 @@ Toasts must fire even if the component unmounts mid-request.
   cancel that closes its confirmation and stays on the page. These raise the toast **before**
   closing.
 
+## Tasks
+
+- A response that carries a task is reported with `taskStarted({ taskHref, title })` from
+  `useTaskStarted()`: one toast now, and the task in the task drawer, which shows its outcome.
+  Nothing polls a task to raise a later toast ([ADR 0017](../../docs/adr/0017-task-feedback.md)).
+
 ## Variables and message
 
 - A mutation's variables are exactly what the request needs, as domain values: no field only
@@ -80,5 +86,6 @@ Pass/fail rubric for `/eval`.
 - [ ] Error toasts use `getMutationErrorMessage({ error, fallback })` with
       `variant: "danger"` — **except modal create/update/action form submissions**, shown
       in-form via `FormSubmitError`.
+- [ ] A started task goes through `useTaskStarted()`; no toast is raised by polling a task.
 - [ ] No `useMutationAction` / `runAction` wrapper and no general per-feature `useXActions`
       toast-hub reintroduced (batch/selection modals excepted).

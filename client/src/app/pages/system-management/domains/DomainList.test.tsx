@@ -37,6 +37,9 @@ vi.mock(import("@app/hooks/useResourceTasks"), () => ({
 vi.mock(import("@app/hooks/useNotifications"), () => ({
   useNotifications: () => ({ addNotification: vi.fn() }),
 }));
+vi.mock(import("@app/hooks/useTaskStarted"), () => ({
+  useTaskStarted: () => vi.fn(),
+}));
 
 const domain: DomainResponse = {
   name: "alpha",

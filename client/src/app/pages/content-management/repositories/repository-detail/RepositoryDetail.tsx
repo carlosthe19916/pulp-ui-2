@@ -43,6 +43,7 @@ import {
 } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import { useDistributionsListQuery } from "@app/queries/distributions";
 import { usePublicationsListQuery } from "@app/queries/publications";
 import {
@@ -54,7 +55,6 @@ import {
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPulpType, getRepositoryContentTypes } from "@catalog";
 import type { IPluginAction } from "@plugin-sdk/ui";
@@ -98,6 +98,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
 
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { contentChange, isRunning, running, lockedProps } =
@@ -138,8 +139,7 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) => {
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Repository "${name}" deletion started`,
       });
@@ -306,14 +306,9 @@ export const RepositoryDetail: React.FC<IRepositoryDetailProps> = ({
 
       <PageSection>
         <Stack hasGutter>
-          {(running || contentChange.failure) && (
+          {running && (
             <StackItem>
-              <RepositoryTaskAlert
-                repository={repository}
-                running={running}
-                failure={contentChange.failure}
-                onCloseFailure={contentChange.clearFailure}
-              />
+              <RepositoryTaskAlert running={running} />
             </StackItem>
           )}
           <StackItem>

@@ -7,6 +7,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useRepositoryUpdateMutation,
   useSuspenseRepositoryDetailQuery,
@@ -28,6 +29,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: repository } = useSuspenseRepositoryDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -39,6 +41,7 @@ export const RepositoryEdit: React.FC<IRepositoryEditProps> = ({
     onSuccess: (data) =>
       notifyUpdateResult({
         addNotification,
+        taskStarted,
         data,
         subject: `Repository "${name}"`,
       }),

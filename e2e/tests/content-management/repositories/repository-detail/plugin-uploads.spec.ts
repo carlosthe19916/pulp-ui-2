@@ -54,7 +54,7 @@ test.describe("Plugin uploads", () => {
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
 
       // The async create waits for two tasks (create, then modify).
-      await expectVersionCreated(page, name, 1, 30_000);
+      await expectVersionCreated({ api, name, version: 1, timeout: 30_000 });
       expect(await api.latestContentCount(repositoryHref)).toBe(1);
     });
   }
@@ -80,7 +80,7 @@ test.describe("Plugin uploads", () => {
       .fill("small");
     await dialog.getByRole("button", { name: "Import", exact: true }).click();
 
-    await expectVersionCreated(page, name, 1, 30_000);
+    await expectVersionCreated({ api, name, version: 1, timeout: 30_000 });
     expect(await api.latestContentCount(repositoryHref)).toBeGreaterThan(0);
   });
 });

@@ -29,7 +29,7 @@ test.describe("Content writes", () => {
       .fill(repository);
     await page.getByRole("option", { name: repository }).click();
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await expectVersionCreated(page, repository, 1);
+    await expectVersionCreated({ api, name: repository, version: 1 });
 
     await page.getByRole("tab", { name: "Repositories" }).click();
     const row = page.getByRole("row", { name: new RegExp(repository) });
@@ -41,9 +41,9 @@ test.describe("Content writes", () => {
       .getByRole("dialog", { name: /Remove 1 unit from/ })
       .getByRole("button", { name: "Remove", exact: true })
       .click();
-    await expectVersionCreated(page, repository, 2);
+    await expectVersionCreated({ api, name: repository, version: 2 });
     await expect(
       page.getByRole("heading", { name: "Not in any repository" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
   });
 });

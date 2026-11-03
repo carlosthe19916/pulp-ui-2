@@ -164,14 +164,9 @@ export const RepositoryVersionDetail: React.FC<
 
       <PageSection>
         <Stack hasGutter>
-          {repository && (running || contentChange.failure) && (
+          {running && (
             <StackItem>
-              <RepositoryTaskAlert
-                repository={repository}
-                running={running}
-                failure={contentChange.failure}
-                onCloseFailure={contentChange.clearFailure}
-              />
+              <RepositoryTaskAlert running={running} />
             </StackItem>
           )}
           {repoEntity?.scan && (

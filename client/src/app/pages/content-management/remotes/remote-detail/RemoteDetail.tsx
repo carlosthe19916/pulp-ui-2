@@ -24,13 +24,13 @@ import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useRemoteDeleteMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
 import { useTasksListQuery } from "@app/queries/tasks";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
@@ -54,6 +54,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
 
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { disabledProps } = useObjectPermissions({ href });
@@ -66,8 +67,7 @@ export const RemoteDetail: React.FC<IRemoteDetailProps> = ({
 
   const deleteMutation = useRemoteDeleteMutation({
     onSuccess: (data, { name }) => {
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Remote "${name}" deletion started`,
       });

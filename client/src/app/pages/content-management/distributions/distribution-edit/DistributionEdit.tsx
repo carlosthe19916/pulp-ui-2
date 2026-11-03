@@ -7,6 +7,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useDistributionUpdateMutation,
   useSuspenseDistributionDetailQuery,
@@ -28,6 +29,7 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -38,6 +40,7 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
     onSuccess: (data) =>
       notifyUpdateResult({
         addNotification,
+        taskStarted,
         data,
         subject: `Distribution "${name}"`,
       }),

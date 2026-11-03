@@ -46,6 +46,8 @@ export const notifyTaskStarted = ({
 
 export interface INotifyUpdateResultOptions {
   addNotification: INotifyFn;
+  /** Reports a started task (`useTaskStarted`). */
+  taskStarted: (task: { taskHref: string; title: string }) => void;
   /** The update response: a task (202) or the updated object (200). */
   data: object;
   /** What was updated, e.g. `Remote "foo"`. */
@@ -55,15 +57,12 @@ export interface INotifyUpdateResultOptions {
 /** Toast for an update that Pulp may run as a task or apply at once. */
 export const notifyUpdateResult = ({
   addNotification,
+  taskStarted,
   data,
   subject,
 }: INotifyUpdateResultOptions) => {
   if ("task" in data && typeof data.task === "string") {
-    notifyTaskStarted({
-      addNotification,
-      taskHref: data.task,
-      title: `${subject} update started`,
-    });
+    taskStarted({ taskHref: data.task, title: `${subject} update started` });
   } else {
     addNotification({ title: `${subject} updated`, variant: "success" });
   }
@@ -96,41 +95,6 @@ export const notifyTaskGroupStarted = ({
           task group
         </Link>{" "}
         page.
-      </>
-    ),
-  });
-};
-
-export interface INotifyTaskFailedOptions {
-  addNotification: INotifyFn;
-  taskHref: string;
-  title?: string;
-  /** The task's failure detail (e.g. `getTaskErrorMessage(task)`), shown inline. */
-  description?: string;
-}
-
-/** Toast helper for a task that ended in failure/cancellation. */
-export const notifyTaskFailed = ({
-  addNotification,
-  taskHref,
-  title = "Task failed",
-  description,
-}: INotifyTaskFailedOptions) => {
-  const taskId = extractTaskId(taskHref);
-  const pulpDomain = extractTaskDomain(taskHref);
-  addNotification({
-    title,
-    variant: "danger",
-    description: (
-      <>
-        {description ? <>{description} </> : "See the "}
-        <Link
-          to="/monitoring/$pulpDomain/tasks/$taskId"
-          params={{ pulpDomain, taskId }}
-        >
-          task detail
-        </Link>{" "}
-        page for the error.
       </>
     ),
   });

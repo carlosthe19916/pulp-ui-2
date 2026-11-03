@@ -43,7 +43,7 @@ runs it once the task finishes.
       copy, and are checked for well-formedness before submitting.
 - [ ] A failed submit shows the error at the top of the form and keeps what was typed. A
       successful one leaves the page, with the task feedback of
-      [0006](0006-async-task-feedback.md): an edit to the object's detail page, a create to the
+      [0017](0017-task-feedback.md): an edit to the object's detail page, a create to the
       new remote's or repository's detail page, or, for a distribution or publication (whose
       create runs as a task), to its list.
 - [ ] Leaving a form with unsaved changes asks for confirmation.

@@ -7,8 +7,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Flex,
-  FlexItem,
   Label,
   PageSection,
   PaginationVariant,
@@ -28,7 +26,6 @@ import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
-import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { TableEmptyState } from "@app/components/TableEmptyState";
 import { useCreatableTypes } from "@app/hooks/useCreatableTypes";
@@ -202,34 +199,25 @@ export const PublicationList: React.FC = () => {
         <DataView activeState={activeState}>
           <DataViewToolbar
             actions={
-              <Flex
-                spaceItems={{ default: "spaceItemsMd" }}
-                alignItems={{ default: "alignItemsCenter" }}
-                flexWrap={{ default: "nowrap" }}
-              >
-                <FlexItem>
-                  {canCreate ? (
-                    <Button
-                      variant="primary"
-                      onClick={() =>
-                        void navigate({
-                          to: "/content-management/$pulpDomain/publications/create",
-                          params: { pulpDomain },
-                        })
-                      }
-                    >
-                      Create publication
-                    </Button>
-                  ) : (
-                    <Tooltip content="No publication plugin is available. Install a content plugin (e.g. pulp_file) to create publications.">
-                      <Button variant="primary" isAriaDisabled>
-                        Create publication
-                      </Button>
-                    </Tooltip>
-                  )}
-                </FlexItem>
-                <PendingCreatesStatus entityType="publication" />
-              </Flex>
+              canCreate ? (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/publications/create",
+                      params: { pulpDomain },
+                    })
+                  }
+                >
+                  Create publication
+                </Button>
+              ) : (
+                <Tooltip content="No publication plugin is available. Install a content plugin (e.g. pulp_file) to create publications.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create publication
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={
               <ListPagination

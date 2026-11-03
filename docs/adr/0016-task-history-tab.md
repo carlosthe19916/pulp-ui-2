@@ -9,7 +9,7 @@ status: Accepted
 ## Context
 
 Work on a remote, repository or distribution runs as Pulp tasks
-([0006](0006-async-task-feedback.md)). Pulp records which objects each task reserved, so it can
+([0017](0017-task-feedback.md)). Pulp records which objects each task reserved, so it can
 list the tasks that touched one object. That list answers "what happened to this, and did it
 work?" without searching the global task list. It isn't obvious which tasks a list built this
 way contains: a task the object only took part in (a sync, for its remote) is listed, while the

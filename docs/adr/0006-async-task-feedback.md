@@ -1,7 +1,7 @@
 ---
 name: async-task-feedback
 description: Async writes show started/finished toasts, server-derived task status on rows and pages, and pause repository writes while a task runs.
-status: Accepted (amended by 0010)
+status: Superseded by 0017
 ---
 
 # 0006. Long-running work is shown as tasks

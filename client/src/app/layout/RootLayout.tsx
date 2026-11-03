@@ -9,6 +9,7 @@ import { FullPageEmptyState } from "@app/components/FullPageEmptyState";
 import { LoadingWrapper } from "@app/components/LoadingWrapper";
 import { ApiStatusProvider } from "@app/context/ApiStatus/ApiStatusProvider";
 import { NotificationsProvider } from "@app/context/Notifications/NotificationsProvider";
+import { TaskTrackerProvider } from "@app/context/TaskTracker/TaskTrackerProvider";
 import {
   type ContrastMode,
   type ThemeMode,
@@ -44,11 +45,13 @@ export const RootComponent: React.FC = () => {
       setContrast={setContrast}
     >
       <NotificationsProvider>
-        <ApiStatusProvider>
-          <WaitForApiStatus>
-            <RootLayout />
-          </WaitForApiStatus>
-        </ApiStatusProvider>
+        <TaskTrackerProvider>
+          <ApiStatusProvider>
+            <WaitForApiStatus>
+              <RootLayout />
+            </WaitForApiStatus>
+          </ApiStatusProvider>
+        </TaskTrackerProvider>
       </NotificationsProvider>
     </ThemeProvider>
   );

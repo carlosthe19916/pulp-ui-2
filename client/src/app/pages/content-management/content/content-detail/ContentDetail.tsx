@@ -24,7 +24,6 @@ import { RemoveContentModal } from "@app/components/RemoveContentModal";
 import { PersistentStateScopeProvider } from "@app/context/PersistentStateScope/PersistentStateScopeProvider";
 import { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
-import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useSuspenseContentDetailQuery } from "@app/queries/content";
 import { getRepositoryTypesForContent } from "@catalog";
 
@@ -61,9 +60,7 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [removeFrom, setRemoveFrom] = useState<RepositoryResponse | null>(null);
 
-  // One change at a time: actions wait until the running one settles.
   const contentChange = useContentChangeTask();
-  const isChanging = !!contentChange.task;
 
   return (
     <>
@@ -92,7 +89,6 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
                 dropdownItemProps: {
                   children: "Add to repository…",
                   onClick: () => setIsAddOpen(true),
-                  ...(isChanging ? REPOSITORY_LOCKED_PROPS : {}),
                 },
               },
             ]}
@@ -128,7 +124,6 @@ export const ContentDetail: React.FC<IContentDetailProps> = ({
                 <ContentRepositoriesTab
                   href={href}
                   onRemoveFromRepository={setRemoveFrom}
-                  isLocked={isChanging}
                 />
               </PersistentStateScopeProvider>
             </TabContentBody>

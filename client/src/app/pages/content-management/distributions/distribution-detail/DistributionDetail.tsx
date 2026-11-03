@@ -24,6 +24,7 @@ import { TaskHistoryTab } from "@app/components/TaskHistoryTab";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { defineTabState, usePersistentTab } from "@app/hooks/usePersistentTab";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useDistributionDeleteMutation,
   useSuspenseDistributionDetailQuery,
@@ -33,7 +34,6 @@ import {
   extractIdFromHref,
   hasRoleEndpoints,
 } from "@app/queries/utils/pulpHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getEntityForm } from "@plugins";
 
@@ -57,6 +57,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { disabledProps } = useObjectPermissions({ href });
   const prn = distribution.prn ?? "";
@@ -75,8 +76,7 @@ export const DistributionDetail: React.FC<IDistributionDetailProps> = ({
 
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name: deletedName }) => {
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Distribution "${deletedName}" deletion started`,
       });

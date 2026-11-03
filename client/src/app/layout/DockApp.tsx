@@ -35,6 +35,7 @@ import { getBranding } from "@app/utils/branding";
 import { AboutApp } from "./AboutApp";
 import { BrandLogo } from "./BrandLogo";
 import { NavApp } from "./NavApp";
+import { TASK_DRAWER_TOGGLE_ID, TaskDrawerBadge } from "./TaskDrawer";
 
 export const DOCK_ID = "docked-masthead";
 
@@ -51,6 +52,8 @@ interface IDockAppProps {
   onToggleDock: () => void;
   onOpenDock: () => void;
   onNavSelect: () => void;
+  isTaskDrawerExpanded: boolean;
+  onToggleTaskDrawer: () => void;
 }
 
 /** The vertical masthead of the docked layout: brand, navigation and user tools. */
@@ -60,6 +63,8 @@ export const DockApp: React.FC<IDockAppProps> = ({
   onToggleDock,
   onOpenDock,
   onNavSelect,
+  isTaskDrawerExpanded,
+  onToggleTaskDrawer,
 }) => {
   const auth = useAuth();
   const {
@@ -115,6 +120,14 @@ export const DockApp: React.FC<IDockAppProps> = ({
                 align={{ default: "alignEnd" }}
                 gap={{ default: "gapNone", md: "gapMd" }}
               >
+                {isLoggedIn && (
+                  <ToolbarItem>
+                    <TaskDrawerBadge
+                      isExpanded={isTaskDrawerExpanded}
+                      onToggle={onToggleTaskDrawer}
+                    />
+                  </ToolbarItem>
+                )}
                 <ToolbarItem>
                   <Dropdown
                     isOpen={isHelpDropdownOpen}
@@ -218,6 +231,16 @@ export const DockApp: React.FC<IDockAppProps> = ({
                     triggerRef={() => document.getElementById(HELP_TOGGLE_ID)!}
                     content="Help"
                   />
+                  {isLoggedIn && (
+                    <Tooltip
+                      aria="none"
+                      aria-live="off"
+                      triggerRef={() =>
+                        document.getElementById(TASK_DRAWER_TOGGLE_ID)!
+                      }
+                      content="Tasks"
+                    />
+                  )}
                   {isLoggedIn && (
                     <Tooltip
                       aria="none"

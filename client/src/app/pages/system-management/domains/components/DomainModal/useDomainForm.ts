@@ -11,11 +11,11 @@ import type {
 } from "@app/client";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useDomainCreateMutation,
   useDomainUpdateMutation,
 } from "@app/queries/domains";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import {
   getMutationErrorMessage,
   type IMutationErrorMessage,
@@ -119,6 +119,7 @@ export const useDomainForm = ({
   onClose,
 }: IUseDomainFormOptions): IUseDomainFormResult => {
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const isCreate = !domain;
 
@@ -138,8 +139,7 @@ export const useDomainForm = ({
       // Update may be sync (200) or async (202 + task) — branch on the response.
       const taskHref = (data as { task?: string | null }).task;
       if (taskHref) {
-        notifyTaskStarted({
-          addNotification,
+        taskStarted({
           taskHref,
           title: `Domain "${body.name}" update started`,
         });

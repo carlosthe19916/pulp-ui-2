@@ -35,7 +35,6 @@ import {
 } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { usePersistentState } from "@app/hooks/usePersistentState";
-import { REPOSITORY_LOCKED_PROPS } from "@app/hooks/useRepositoryActivity";
 import { useContentListQuery } from "@app/queries/content";
 import type { IContentUnit } from "@app/utils/contentUnit";
 import { contentUnitRef } from "@app/utils/contentUnitRef";
@@ -64,9 +63,6 @@ export const ContentList: React.FC = () => {
   const contentChange = useContentChangeTask();
   const [addUnits, setAddUnits] = useState<IContentUnitRef[] | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  // One change at a time: actions wait until the running one settles.
-  const isChanging = !!contentChange.task;
-  const lockedProps = isChanging ? REPOSITORY_LOCKED_PROPS : {};
 
   const [filters, setFilters] = usePersistentState({
     ...CONTENT_LIST_STATE.filters,
@@ -161,16 +157,14 @@ export const ContentList: React.FC = () => {
                   <GatedButton
                     variant="primary"
                     onClick={() => setIsUploadOpen(true)}
-                    {...lockedProps}
                   >
                     Upload content
                   </GatedButton>
                 )}
                 <GatedButton
                   variant="secondary"
-                  isDisabled={!isChanging && selection.selected.length === 0}
+                  isDisabled={selection.selected.length === 0}
                   onClick={() => setAddUnits(selection.selected)}
-                  {...lockedProps}
                 >
                   Add to repository
                 </GatedButton>
@@ -230,7 +224,6 @@ export const ContentList: React.FC = () => {
                 dropdownItemProps: {
                   children: "Add to repository…",
                   onClick: () => setAddUnits([contentUnitRef(unit)]),
-                  ...lockedProps,
                 },
               },
             ]}

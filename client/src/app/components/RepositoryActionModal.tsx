@@ -4,8 +4,8 @@ import type { RepositoryResponse } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import { useRepositoryActionMutation } from "@app/queries/repositories";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import type { IPluginAction } from "@plugin-sdk/ui";
 
@@ -27,12 +27,12 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
   onClose,
 }) => {
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useRepositoryActionMutation({
     onSuccess: (data) => {
       if ("task" in data) {
-        notifyTaskStarted({
-          addNotification,
+        taskStarted({
           taskHref: data.task,
           title: `${action.label} started`,
         });

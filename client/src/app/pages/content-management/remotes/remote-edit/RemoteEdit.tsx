@@ -7,6 +7,7 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useRemoteUpdateMutation,
   useSuspenseRemoteDetailQuery,
@@ -28,6 +29,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -38,6 +40,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
     onSuccess: (data) =>
       notifyUpdateResult({
         addNotification,
+        taskStarted,
         data,
         subject: `Remote "${name}"`,
       }),

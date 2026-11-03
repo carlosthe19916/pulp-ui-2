@@ -12,8 +12,8 @@ export const REPOSITORY_LOCKED_PROPS = {
 };
 
 /**
- * What runs on a repository (its active task or this page's content change); while
- * anything runs, content changes are paused and `lockedProps` says why.
+ * What runs on a repository (its active task, from the server); while anything runs,
+ * content changes are paused and `lockedProps` says why.
  */
 export const useRepositoryActivity = ({
   repository,
@@ -21,9 +21,7 @@ export const useRepositoryActivity = ({
   repository?: RepositoryResponse;
 }) => {
   const queryClient = useQueryClient();
-  const contentChange = useContentChangeTask({
-    repositoryHref: repository?.pulp_href,
-  });
+  const contentChange = useContentChangeTask();
   // A settled task (e.g. sync) may have bumped the latest version: refresh it.
   const { getActiveCount, getTasks } = useResourceTasks({
     entities: repository ? [repository] : [],
@@ -35,17 +33,13 @@ export const useRepositoryActivity = ({
   });
 
   const activeTask = getTasks(repository?.prn)[0];
-  const changeTaskHref = contentChange.task?.taskHref;
-  const isRunning = getActiveCount(repository?.prn) > 0 || !!changeTaskHref;
+  const isRunning = getActiveCount(repository?.prn) > 0;
 
   return {
     contentChange,
     isRunning,
     running: isRunning
-      ? {
-          taskHref: activeTask?.taskHref ?? changeTaskHref,
-          kind: activeTask?.kind ?? (changeTaskHref ? "modify" : undefined),
-        }
+      ? { taskHref: activeTask?.taskHref, kind: activeTask?.kind }
       : undefined,
     lockedProps: isRunning ? REPOSITORY_LOCKED_PROPS : {},
   };

@@ -7,7 +7,7 @@ import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { DOCK_ID, DockApp } from "./DockApp";
 import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
-import { TaskTracker } from "./TaskTracker";
+import { TaskDrawer } from "./TaskDrawer";
 import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
@@ -30,6 +30,7 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   // Opened for a moment (mobile, or a nav group clicked in the collapsed dock): floats
   // over the page and closes again once the user picks a page or clicks away.
   const [isDockOpen, setIsDockOpen] = useState(false);
+  const [isTaskDrawerExpanded, setIsTaskDrawerExpanded] = useState(false);
   const isDockFloating = isDockOpen && (isMobile || !isDockPinned);
   const isDockExpanded = isMobile ? isDockOpen : isDockPinned || isDockOpen;
   const isDockOverlay = !isMobile && isDockFloating;
@@ -97,13 +98,20 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
           onToggleDock={onToggleDock}
           onOpenDock={onOpenDock}
           onNavSelect={onNavSelect}
+          isTaskDrawerExpanded={isTaskDrawerExpanded}
+          onToggleTaskDrawer={() =>
+            setIsTaskDrawerExpanded(!isTaskDrawerExpanded)
+          }
         />
       }
+      notificationDrawer={
+        <TaskDrawer onClose={() => setIsTaskDrawerExpanded(false)} />
+      }
+      isNotificationDrawerExpanded={isTaskDrawerExpanded}
       skipToContent={PageSkipToContent}
       mainContainerId={pageId}
     >
       {children}
-      <TaskTracker />
     </Page>
   );
 };

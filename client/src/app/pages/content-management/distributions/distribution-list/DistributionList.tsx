@@ -8,8 +8,6 @@ import {
   Button,
   Content,
   ContentVariants,
-  Flex,
-  FlexItem,
   Label,
   PageSection,
   PaginationVariant,
@@ -34,7 +32,6 @@ import { DocumentTitle } from "@app/components/DocumentTitle";
 import { DomainContextSelector } from "@app/components/DomainContextSelector";
 import { ListPagination } from "@app/components/ListPagination";
 import { MultiSelectFilter } from "@app/components/MultiSelectFilter";
-import { PendingCreatesStatus } from "@app/components/PendingCreatesStatus";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { resourceTaskExpansions } from "@app/components/resourceTaskExpansions";
 import { ResourceTaskStatus } from "@app/components/ResourceTaskStatus";
@@ -47,6 +44,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   distributionKeys,
   useDistributionDeleteMutation,
@@ -59,7 +57,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -76,6 +73,7 @@ const UNAVAILABLE_TYPE_TOOLTIP: TooltipProps = {
 
 export const DistributionList: React.FC = () => {
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -96,8 +94,7 @@ export const DistributionList: React.FC = () => {
   const canCreate = useCreatableTypes("distribution").length > 0;
   const deleteMutation = useDistributionDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Distribution "${name}" deletion started`,
       }),
@@ -342,34 +339,25 @@ export const DistributionList: React.FC = () => {
               </DataViewFilters>
             }
             actions={
-              <Flex
-                spaceItems={{ default: "spaceItemsMd" }}
-                alignItems={{ default: "alignItemsCenter" }}
-                flexWrap={{ default: "nowrap" }}
-              >
-                <FlexItem>
-                  {canCreate ? (
-                    <Button
-                      variant="primary"
-                      onClick={() =>
-                        void navigate({
-                          to: "/content-management/$pulpDomain/distributions/create",
-                          params: { pulpDomain },
-                        })
-                      }
-                    >
-                      Create distribution
-                    </Button>
-                  ) : (
-                    <Tooltip content="No distribution plugin is available. Install a content plugin (e.g. pulp_file) to create distributions.">
-                      <Button variant="primary" isAriaDisabled>
-                        Create distribution
-                      </Button>
-                    </Tooltip>
-                  )}
-                </FlexItem>
-                <PendingCreatesStatus entityType="distribution" />
-              </Flex>
+              canCreate ? (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    void navigate({
+                      to: "/content-management/$pulpDomain/distributions/create",
+                      params: { pulpDomain },
+                    })
+                  }
+                >
+                  Create distribution
+                </Button>
+              ) : (
+                <Tooltip content="No distribution plugin is available. Install a content plugin (e.g. pulp_file) to create distributions.">
+                  <Button variant="primary" isAriaDisabled>
+                    Create distribution
+                  </Button>
+                </Tooltip>
+              )
             }
             pagination={
               <ListPagination

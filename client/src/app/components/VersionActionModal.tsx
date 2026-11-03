@@ -7,12 +7,12 @@ import type {
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
 import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useNotifications } from "@app/hooks/useNotifications";
+import { useTaskStarted } from "@app/hooks/useTaskStarted";
 import {
   useRepositoryModifyMutation,
   useRepositoryVersionDeleteMutation,
   useRepositoryVersionRepairMutation,
 } from "@app/queries/repositories";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 export type VersionAction = "restore" | "repair" | "delete";
@@ -38,6 +38,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   onDeleted,
 }) => {
   const { addNotification } = useNotifications();
+  const taskStarted = useTaskStarted();
   const number = String(version.number);
   const name = `"${repository.name}"`;
   const notifyError = ({
@@ -54,8 +55,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
 
   const deleteMutation = useRepositoryVersionDeleteMutation({
     onSuccess: (data) => {
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Deleting version ${number} of ${name}`,
       });
@@ -66,8 +66,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   });
   const repairMutation = useRepositoryVersionRepairMutation({
     onSuccess: (data) =>
-      notifyTaskStarted({
-        addNotification,
+      taskStarted({
         taskHref: data.task,
         title: `Repairing version ${number} of ${name}`,
       }),

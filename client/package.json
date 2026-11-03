@@ -70,8 +70,7 @@
     "victory-zoom-container": "^37.4.1",
     "yaml": "^2.9.1",
     "yup": "^1.7.1",
-    "zod": "^4.6.7",
-    "zustand": "^5.0.16"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",

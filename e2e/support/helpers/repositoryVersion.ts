@@ -1,23 +1,35 @@
 import { expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
+
+import type { PulpApi } from "./pulp-api";
 
 /**
- * Asserts the "Version N created" outcome toast after a content change.
- *
- * The UI only surfaces it once its task poll (every DEFAULT_REFETCH_INTERVAL = 5s)
- * observes the dispatched change finishing, so the toast can lag the action by nearly a
- * full poll cycle. Waiting a whole cycle past the 5s default — rather than racing the
- * poll with the default expect timeout — is what keeps these assertions stable on a
- * slower CI backend. Pass a larger `timeout` for a flow that waits on two tasks
- * (e.g. create then modify).
+ * Waits until a content change has made the repository's latest version `version`, read
+ * from Pulp: the UI reports the outcome in the task drawer, not in a toast. Pass a larger
+ * `timeout` for a flow that waits on two tasks (e.g. create then modify).
  */
-export async function expectVersionCreated(
-  page: Page,
-  name: string,
-  version: number,
+export async function expectVersionCreated({
+  api,
+  name,
+  version,
   timeout = 15_000,
-): Promise<void> {
-  await expect(
-    page.getByText(`Version ${version} of "${name}" created`),
-  ).toBeVisible({ timeout });
+}: {
+  api: PulpApi;
+  name: string;
+  version: number;
+  timeout?: number;
+}): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const repository = await api.findByName<{ pulp_href: string }>(
+          "repositories",
+          name,
+        );
+        return repository
+          ? api.latestVersionNumber(repository.pulp_href)
+          : undefined;
+      },
+      { timeout },
+    )
+    .toBe(version);
 }
