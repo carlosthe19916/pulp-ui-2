@@ -33,6 +33,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type AlternateContentSource,
   useAcsDeleteMutation,
@@ -40,10 +41,7 @@ import {
   useAcsRefreshMutation,
 } from "@app/queries/acs";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
-import {
-  notifyTaskGroupStarted,
-  notifyTaskStarted,
-} from "@app/utils/taskNotify";
+import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 import { getAcsTypes } from "@plugins";
 
@@ -57,6 +55,7 @@ import { AcsModal } from "./components/AcsModal";
 export const AcsList: React.FC = () => {
   const { plugins } = useApiStatus();
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const types = getAcsTypes({ installed: plugins });
   const [selectedPath, setSelectedPath] = useState<string>();
   const acsType =
@@ -109,8 +108,7 @@ export const AcsList: React.FC = () => {
   });
   const deleteMutation = useAcsDeleteMutation({
     onSuccess: (result, { name }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: result.task,
         title: `Deletion of "${name}" started`,
       }),

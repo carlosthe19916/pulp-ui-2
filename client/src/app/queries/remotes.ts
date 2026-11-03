@@ -19,6 +19,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -203,13 +204,13 @@ export const useRemoteCreateMutation = (
 /** PATCHes a remote by its own `pulp_href` (which embeds plugin + type). */
 export const useRemoteUpdateMutation = (
   options?: IMutationCallbacks<
-    GenericRemoteResponse | AsyncOperationResponse,
+    IWriteResult<GenericRemoteResponse>,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    GenericRemoteResponse | AsyncOperationResponse,
+    IWriteResult<GenericRemoteResponse>,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -219,12 +220,12 @@ export const useRemoteUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<GenericRemoteResponse | AsyncOperationResponse> =>
-      (
+    }): Promise<IWriteResult<GenericRemoteResponse>> =>
+      toWriteResult(
         await axiosInstance.patch<
           GenericRemoteResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+        >(toProxyHref(href), body),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: remoteKeys.list() });
       void queryClient.invalidateQueries({

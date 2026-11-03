@@ -10,6 +10,7 @@ import {
   type UseQueryResult,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import type { AxiosResponse } from "axios";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -209,10 +210,20 @@ export const taskDetailQueryOptions = ({
     },
   });
 
-/**
- * Polls a dispatched task until it ends and returns it; rejects with the task's
- * failure detail. For a mutation that must hand back what the task created.
- */
+/** A dispatched task ended failed or canceled; the message is Pulp's error. */
+export class TaskFailedError extends Error {
+  readonly task: TaskResponse;
+
+  constructor(task: TaskResponse) {
+    super(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+    this.name = "TaskFailedError";
+    this.task = task;
+  }
+}
+
+/** What a write that waits for its task can reject with. */
+export type TaskWriteError = DrfAxiosError | TaskFailedError;
+
 /**
  * How long `waitForTask` waits before its next check: 1 s, 2 s, … up to the poll interval,
  * so short tasks still resolve fast and long ones (uploads) aren't checked every second.
@@ -220,6 +231,10 @@ export const taskDetailQueryOptions = ({
 export const taskPollDelay = (attempt: number): number =>
   Math.min(1000 * attempt, DEFAULT_REFETCH_INTERVAL);
 
+/**
+ * Polls a dispatched task until it ends and returns it; rejects with `TaskFailedError`.
+ * For a mutation that must hand back what the task created.
+ */
 export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
   for (let attempt = 1; ; attempt++) {
     const { data: task } = await axiosInstance.get<TaskResponse>(
@@ -227,17 +242,34 @@ export const waitForTask = async (taskHref: string): Promise<TaskResponse> => {
     );
     if (task.state === "completed") return task;
     if (isTerminalTaskState(task.state)) {
-      throw new Error(getTaskErrorMessage(task) ?? `Task ${task.state}`);
+      throw new TaskFailedError(task);
     }
     await new Promise((resolve) => setTimeout(resolve, taskPollDelay(attempt)));
   }
 };
+
+/** A `200 | 202` write: the object it returned, or the task it started. */
+export type IWriteResult<T> =
+  { kind: "object"; object: T } | { kind: "task"; taskHref: string };
+
+/**
+ * Reads a write whose operation declares `200` (the object) and `202` (a task) by its
+ * status, as the spec does.
+ */
+export const toWriteResult = <T>(
+  response: AxiosResponse<T | AsyncOperationResponse>,
+): IWriteResult<T> =>
+  response.status === 202
+    ? { kind: "task", taskHref: (response.data as AsyncOperationResponse).task }
+    : { kind: "object", object: response.data as T };
 
 /** Poll result for one task href: its latest state and whether it 404'd (purged). */
 export interface ITaskStateProbe {
   state?: string;
   name?: string;
   notFound: boolean;
+  /** The last read failed for another reason (403, 5xx, network). */
+  isReadError: boolean;
   /** The task's failure detail, when it ended in `failed` (see `getTaskErrorMessage`). */
   errorMessage?: string;
   /** Hrefs the task created (e.g. a new repository version). */
@@ -274,6 +306,7 @@ export const useTaskDetailQueries = ({
           state: result?.data?.state,
           name: result?.data?.name,
           notFound: result?.error?.response?.status === 404,
+          isReadError: !!result?.error && result.error.response?.status !== 404,
           errorMessage: getTaskErrorMessage(result?.data),
           createdResources: result?.data?.created_resources ?? [],
         });

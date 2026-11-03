@@ -23,13 +23,11 @@ import {
 } from "@app/components/TypeaheadSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
-import { useNotifications } from "@app/hooks/useNotifications";
-import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { usePublicationCreateMutation } from "@app/queries/publications";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getPulpType } from "@catalog";
 
@@ -53,11 +51,8 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
   repoHref,
   repoVersionHref,
 }) => {
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const { recordPendingCreate } = usePendingCreateRecorder({
-    entityType: "publication",
-  });
   const createMutation = usePublicationCreateMutation();
 
   const [repoSearch, setRepoSearch] = useState("");
@@ -132,14 +127,12 @@ export const PublishModal: React.FC<IPublishModalProps> = ({
           selectedRepoLabel ??
           repositoryOptions.find((option) => option.value === values.repository)
             ?.label;
-        notifyTaskStarted({
-          addNotification,
+        taskReporter.reportStarted({
           taskHref,
           title: repositoryName
             ? `Publication started for "${repositoryName}"`
             : "Publication started",
         });
-        recordPendingCreate({ taskHref, name: repositoryName ?? "" });
       }
     } catch (error) {
       setSubmitError(

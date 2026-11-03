@@ -12,7 +12,7 @@ description: >-
 
 Constraints: `.rulesync/rules/toastr.md` (toasts, callbacks, `mutate` vs `mutateAsync`) and
 `.rulesync/rules/forms.md` (in-form submission errors), realising
-`docs/adr/0006-async-task-feedback.md`. Read them first; this skill shows how. The snippets
+`docs/adr/0006-how-tasks-are-reported.md`. Read them first; this skill shows how. The snippets
 use a made-up `widget` resource.
 
 ## Where each piece goes
@@ -27,8 +27,9 @@ use a made-up `widget` resource.
 | One-off action (cancel, purge)         | the page/component with the handler        | `mutate(vars, { onSettled: closeDialog })`                | danger toast                         |
 | Chained or result-built success (rare) | the component, `mutateAsync` + try/catch   | toast **before** `onClose`                                | in-form (`catch` → `setSubmitError`) |
 
-A 202 response (task) toasts with `notifyTaskStarted({ addNotification, taskHref, title })`;
-a sync response toasts the entity (`addNotification({ title, variant: "success" })`).
+A write that starts a Pulp task reports through `useTaskReporter()` (see `toastr.md` § Tasks):
+`taskReporter.reportStarted(...)`, or `taskReporter.reportWrite(...)` for a `200 | 202` update. A
+sync response toasts the entity (`addNotification({ title, variant: "success" })`).
 
 ## 1. Mutation hook (`queries/<family>.ts`)
 
@@ -72,8 +73,7 @@ const [deleteTarget, setDeleteTarget] = useState<WidgetResponse | null>(null);
 
 const deleteMutation = useWidgetDeleteMutation({
   onSuccess: (data, { name }) =>
-    notifyTaskStarted({
-      addNotification,
+    taskReporter.reportStarted({
       taskHref: data.task,
       title: `Widget "${name}" deletion started`,
     }),
@@ -179,12 +179,11 @@ export const ResetWidgetModal: React.FC<IResetWidgetModalProps> = ({
   widget,
   onClose,
 }) => {
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const resetMutation = useWidgetResetMutation({
     onSuccess: (data) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Reset of "${widget.name}" started`,
       }),
@@ -227,8 +226,7 @@ const onSubmit = async (values: IWidgetPublishValues) => {
     const result = await publishMutation.mutateAsync({
       body: valuesToBody(values),
     });
-    notifyTaskStarted({
-      addNotification,
+    taskReporter.reportStarted({
       taskHref: result.task,
       title: `Publication of "${sourceLabel}" started`, // result + local form state
     });

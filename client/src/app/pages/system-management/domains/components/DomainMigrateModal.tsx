@@ -2,11 +2,10 @@ import type React from "react";
 
 import type { DomainResponse, StorageClassEnum } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { useDomainMigrateMutation } from "@app/queries/domains";
 import type { IEntityField } from "@app/utils/entityField";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { STORAGE_BACKENDS } from "../utils/storageBackends";
@@ -43,12 +42,11 @@ export const DomainMigrateModal: React.FC<IDomainMigrateModalProps> = ({
   domain,
   onClose,
 }) => {
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useDomainMigrateMutation({
     onSuccess: (data, { domainName }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Storage migration of "${domainName}" started`,
       }),

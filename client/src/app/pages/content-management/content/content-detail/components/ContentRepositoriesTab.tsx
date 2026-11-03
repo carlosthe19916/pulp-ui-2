@@ -41,8 +41,6 @@ interface IContentRepositoriesTabProps {
   href: string;
   /** Asks to remove the content from a repository (the page confirms and runs it). */
   onRemoveFromRepository: (repository: RepositoryResponse) => void;
-  /** This page's content change is running: row actions wait for it. */
-  isLocked: boolean;
 }
 
 const COLUMNS = ["Repository", "Type", "Latest version", "Last updated"];
@@ -60,7 +58,6 @@ const locationAnswer = (count: number): string => {
 export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
   href,
   onRemoveFromRepository,
-  isLocked,
 }) => {
   const { name: pulpDomain } = useSelectedDomain();
   const [pagination, setPagination] = usePersistentState({
@@ -175,7 +172,7 @@ export const ContentRepositoriesTab: React.FC<IContentRepositoriesTabProps> = ({
                           {
                             title: "Remove from this repository",
                             onClick: () => onRemoveFromRepository(repository),
-                            ...(isLocked || getActiveCount(repository.prn) > 0
+                            ...(getActiveCount(repository.prn) > 0
                               ? REPOSITORY_LOCKED_PROPS
                               : {}),
                             ...disabledProps({

@@ -4,12 +4,10 @@ import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityCreatePage } from "@app/components/EntityCreatePage";
 import { useCreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
-import { useNotifications } from "@app/hooks/useNotifications";
-import { usePendingCreateRecorder } from "@app/hooks/usePendingCreateRecorder";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { usePublicationCreateMutation } from "@app/queries/publications";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 const routeApi = getRouteApi(
@@ -22,11 +20,8 @@ export const PublicationCreate: React.FC = () => {
   const navigateSearch = routeApi.useNavigate();
   const { type } = routeApi.useSearch();
   const { name: pulpDomain } = useSelectedDomain();
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
-  const { recordPendingCreate } = usePendingCreateRecorder({
-    entityType: "publication",
-  });
 
   const selection = useCreateTypeSelect({
     entity: "publication",
@@ -40,12 +35,10 @@ export const PublicationCreate: React.FC = () => {
   // Publishing is a task (202): the list shows the publication once it finishes.
   const createMutation = usePublicationCreateMutation({
     onSuccess: (data) => {
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: "Publication creation started",
       });
-      recordPendingCreate({ taskHref: data.task, name: "" });
     },
     onError: (error) =>
       setSubmitError(

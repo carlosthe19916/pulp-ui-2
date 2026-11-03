@@ -10,6 +10,7 @@ export {
 } from "./createCatalog";
 export { definePlugin } from "./definePlugin";
 export {
+  type ActionResponseKind,
   type ContentUploadMechanism,
   type IAcsDef,
   ENTITY_TYPES,

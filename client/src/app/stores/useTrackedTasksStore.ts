@@ -1,111 +1,55 @@
-import type { EntityType } from "@catalog";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-/** The async-create entity types tracked (both return 202 + task). */
-export type PendingCreateEntityType = Extract<
-  EntityType,
-  "distribution" | "publication"
->;
-
-interface ITrackedTaskBase {
+/** A task this browser started, as recorded when it started. */
+export interface ITrackedTask {
   taskHref: string;
+  /** The started toast's title, e.g. `Sync of "my-repo" started`. */
+  title: string;
   startedAt: number;
 }
 
-/** A content change (modify, add, remove, upload, restore) on one repository. */
-export interface ITrackedContentChange extends ITrackedTaskBase {
-  kind: "content-change";
-  repositoryHref: string;
-  repositoryName: string;
-  /** The latest version when the change started, for the "No changes" toast. */
-  latestVersion?: string;
-}
-
-/** An async create whose new row appears in its list once the task finishes. */
-export interface ITrackedCreate extends ITrackedTaskBase {
-  kind: "create";
-  entityType: PendingCreateEntityType;
-  domainName: string;
-  name: string;
-}
-
-export type ITrackedTask = ITrackedContentChange | ITrackedCreate;
-
-type TrackedTaskInput =
-  Omit<ITrackedContentChange, "startedAt"> | Omit<ITrackedCreate, "startedAt">;
-
-/** A failed content change, kept for the repository's inline alert. */
-export interface ITaskFailure {
-  taskHref: string;
-  message?: string;
-}
-
 interface ITrackedTasksState {
+  /** Newest first. */
   tasks: ITrackedTask[];
-  /** Content-change failures by repository href; in memory only. */
-  failures: Record<string, ITaskFailure>;
-  track: (task: TrackedTaskInput) => void;
-  untrack: (taskHref: string) => void;
-  setFailure: (params: {
-    repositoryHref: string;
-    failure: ITaskFailure;
-  }) => void;
-  clearFailure: (repositoryHref: string) => void;
+  track: (task: Omit<ITrackedTask, "startedAt">) => void;
+  untrack: (taskHrefs: string[]) => void;
   reset: () => void;
 }
 
 export const TRACKED_TASKS_KEY = "pulp-ui/tracked-tasks";
-/** Safety net: on load, drop tasks that never settled within a day. */
+/** Tasks older than a day are dropped on load, so the list can't grow without bound. */
 const TRACKED_TASK_TTL_MS = 24 * 60 * 60 * 1000;
 
 const isFresh = (task: ITrackedTask) =>
   Date.now() - task.startedAt < TRACKED_TASK_TTL_MS;
 
-const withoutFailure = (
-  failures: Record<string, ITaskFailure>,
-  repositoryHref: string,
-) =>
-  Object.fromEntries(
-    Object.entries(failures).filter(([href]) => href !== repositoryHref),
-  );
-
 /**
- * Tasks this browser started and follows until they finish, wherever the user goes;
- * persisted so a reload resumes them. `TaskTracker` polls and settles them.
+ * The tasks this browser started (the Tasks API can't filter by creator), kept across
+ * reloads; the task drawer reads each one's state from Pulp.
  */
 export const useTrackedTasksStore = create<ITrackedTasksState>()(
   persist(
     (set) => ({
       tasks: [],
-      failures: {},
       track: (task) =>
         set((state) => ({
-          tasks: state.tasks.some((t) => t.taskHref === task.taskHref)
-            ? state.tasks
-            : [...state.tasks, { ...task, startedAt: Date.now() }],
-          failures:
-            task.kind === "content-change"
-              ? withoutFailure(state.failures, task.repositoryHref)
-              : state.failures,
+          tasks: [
+            { ...task, startedAt: Date.now() },
+            ...state.tasks.filter((t) => t.taskHref !== task.taskHref),
+          ],
         })),
-      untrack: (taskHref) =>
+      untrack: (taskHrefs) =>
         set((state) => ({
-          tasks: state.tasks.filter((t) => t.taskHref !== taskHref),
+          tasks: state.tasks.filter((t) => !taskHrefs.includes(t.taskHref)),
         })),
-      setFailure: ({ repositoryHref, failure }) =>
-        set((state) => ({
-          failures: { ...state.failures, [repositoryHref]: failure },
-        })),
-      clearFailure: (repositoryHref) =>
-        set((state) => ({
-          failures: withoutFailure(state.failures, repositoryHref),
-        })),
-      reset: () => set({ tasks: [], failures: {} }),
+      reset: () => set({ tasks: [] }),
     }),
     {
       name: TRACKED_TASKS_KEY,
-      version: 1,
+      // Version 1 kept a different entry shape; those entries are dropped.
+      version: 2,
+      migrate: () => ({ tasks: [] }),
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ tasks: state.tasks }),
       merge: (persisted, current) => ({

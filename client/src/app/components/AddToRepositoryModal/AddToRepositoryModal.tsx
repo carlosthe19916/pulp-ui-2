@@ -25,9 +25,9 @@ import { FormSubmitError } from "@app/components/FormSubmitError";
 import { GatedButton } from "@app/components/GatedButton";
 import { TypeaheadSelect } from "@app/components/TypeaheadSelect";
 import { DROPDOWN_PAGE_SIZE } from "@app/constants";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import type { IContentUnitRef } from "@app/hooks/useContentUnitSelection";
 import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
+import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import { useSubmitError } from "@app/hooks/useSubmitError";
 import {
@@ -61,7 +61,7 @@ interface IAddToRepositoryModalProps {
   units: IContentUnitRef[];
   onClose: () => void;
   /** The change was accepted: the page follows its task to the end. */
-  onStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onStarted: (change: IContentChangeStartedParams) => void;
 }
 
 /** Adds content units to a repository the user picks; the change creates a new version. */

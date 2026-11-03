@@ -5,13 +5,13 @@ import type { IAcsType } from "@plugins";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   type AlternateContentSource,
   useAcsCreateMutation,
   useAcsUpdateMutation,
 } from "@app/queries/acs";
 import { buildDefaultValues } from "@app/utils/formSchema";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 import { ACS_FIELDS } from "../utils/acsTypes";
@@ -29,6 +29,7 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   onClose,
 }) => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const onError = (error: unknown) =>
     setSubmitError(
@@ -47,16 +48,11 @@ export const AcsModal: React.FC<IAcsModalProps> = ({
   });
   const updateMutation = useAcsUpdateMutation({
     onSuccess: (data) =>
-      "task" in data
-        ? notifyTaskStarted({
-            addNotification,
-            taskHref: data.task,
-            title: `Update of "${acs?.name}" started`,
-          })
-        : addNotification({
-            title: `Source "${data.name}" saved`,
-            variant: "success",
-          }),
+      taskReporter.reportWrite({
+        result: data,
+        finishedTitle: `Source "${acs?.name}" saved`,
+        startedTitle: `Update of "${acs?.name}" started`,
+      }),
     onError,
   });
 

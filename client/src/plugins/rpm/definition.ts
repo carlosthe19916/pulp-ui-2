@@ -25,6 +25,7 @@ export const rpm = definePlugin({
           path: "/rpm/prune/",
           target: "repository",
           repositoryParam: { key: "repo_hrefs", list: true },
+          responseKind: "taskGroup",
         },
         scan: { path: "scan/", target: "version" },
       },

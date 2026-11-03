@@ -2,15 +2,9 @@ import type React from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 
-import {
-  Alert,
-  AlertActionCloseButton,
-  AlertActionLink,
-} from "@patternfly/react-core";
+import { Alert, AlertActionLink } from "@patternfly/react-core";
 
-import type { RepositoryResponse } from "@app/client";
 import type { EntityTaskKind } from "@app/hooks/useResourceTasks";
-import { latestVersionNumber } from "@app/utils/latestVersionNumber";
 import { extractTaskDomain, extractTaskId } from "@app/utils/taskHref";
 
 const RUNNING_COPY: Partial<
@@ -32,23 +26,13 @@ const DEFAULT_RUNNING_COPY = {
 };
 
 interface IRepositoryTaskAlertProps {
-  repository: RepositoryResponse;
-  /** The task running on the repository, if any. */
-  running?: { taskHref?: string; kind?: EntityTaskKind };
-  /** The last content change failed. */
-  failure?: { taskHref: string; message?: string } | null;
-  onCloseFailure: () => void;
+  /** The task running on the repository. */
+  running: { taskHref?: string; kind?: EntityTaskKind };
 }
 
-/**
- * Inline status above a repository's content: a running task (writes are paused),
- * or the last failed content change ("Nothing changed").
- */
+/** Inline status above a repository's content while a task runs (writes are paused). */
 export const RepositoryTaskAlert: React.FC<IRepositoryTaskAlertProps> = ({
-  repository,
   running,
-  failure,
-  onCloseFailure,
 }) => {
   const navigate = useNavigate();
   const viewTask = (taskHref: string) => (
@@ -67,39 +51,16 @@ export const RepositoryTaskAlert: React.FC<IRepositoryTaskAlertProps> = ({
     </AlertActionLink>
   );
 
-  if (running) {
-    const copy =
-      (running.kind && RUNNING_COPY[running.kind]) || DEFAULT_RUNNING_COPY;
-    return (
-      <Alert
-        variant="info"
-        isInline
-        title={copy.title}
-        actionLinks={running.taskHref ? viewTask(running.taskHref) : undefined}
-      >
-        {copy.body}
-      </Alert>
-    );
-  }
-
-  if (failure) {
-    const name = `"${repository.name}"`;
-    const versionNumber = latestVersionNumber(repository);
-    return (
-      <Alert
-        variant="warning"
-        isInline
-        title={`Could not change the content of ${name}`}
-        actionClose={<AlertActionCloseButton onClose={onCloseFailure} />}
-        actionLinks={viewTask(failure.taskHref)}
-      >
-        {failure.message ? `${failure.message} ` : ""}
-        Nothing changed.
-        {versionNumber !== undefined &&
-          ` ${name} is still at version ${versionNumber}.`}
-      </Alert>
-    );
-  }
-
-  return null;
+  const copy =
+    (running.kind && RUNNING_COPY[running.kind]) || DEFAULT_RUNNING_COPY;
+  return (
+    <Alert
+      variant="info"
+      isInline
+      title={copy.title}
+      actionLinks={running.taskHref ? viewTask(running.taskHref) : undefined}
+    >
+      {copy.body}
+    </Alert>
+  );
 };

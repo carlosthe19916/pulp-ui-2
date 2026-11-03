@@ -37,6 +37,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   domainKeys,
   useDomainDeleteMutation,
@@ -46,7 +47,6 @@ import {
 import { notifyLabelsResult } from "@app/utils/batchNotify";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import { DomainMigrateModal } from "./components/DomainMigrateModal";
@@ -72,6 +72,7 @@ const YesNoLabel: React.FC<IYesNoLabelProps> = ({ value }) => (
 
 export const DomainList: React.FC = () => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const [modalState, setModalState] = useState<
@@ -88,8 +89,7 @@ export const DomainList: React.FC = () => {
 
   const deleteMutation = useDomainDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Domain "${name}" deletion started`,
       }),

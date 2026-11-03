@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "@support/fixtures";
-import { expectVersionCreated } from "@support/helpers/repositoryVersion";
+import { expectLatestVersion } from "@support/helpers/repositoryVersion";
 import { mockInFlightTask } from "@support/helpers/taskMock";
 import { uniqueName } from "@support/helpers/unique";
 import type { ContentPage } from "@support/pom/ContentPage";
@@ -64,8 +64,9 @@ test.describe("Repository content writes", () => {
     await expect(dialog).toContainText("a.txt");
     await dialog.getByRole("button", { name: "Remove", exact: true }).click();
 
-    await expectVersionCreated(page, name, 4);
-    await expect(files.getByRole("row")).toHaveCount(2); // header + c.txt
+    await expectLatestVersion({ api, repositoryName: name, version: 4 });
+    // The page refreshes on its next task poll, up to a full cycle after the version exists.
+    await expect(files.getByRole("row")).toHaveCount(2, { timeout: 15_000 }); // header + c.txt
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["c.txt"]);
   });
 
@@ -86,8 +87,10 @@ test.describe("Repository content writes", () => {
     await dialog.getByRole("textbox").fill(name);
     await confirm.click();
 
-    await expectVersionCreated(page, name, 2);
-    await expect(page.getByText(`No content in "${name}" yet`)).toBeVisible();
+    await expectLatestVersion({ api, repositoryName: name, version: 2 });
+    await expect(page.getByText(`No content in "${name}" yet`)).toBeVisible({
+      timeout: 15_000,
+    });
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual([]);
   });
 
@@ -120,7 +123,7 @@ test.describe("Repository content writes", () => {
       .check();
     await dialog.getByRole("button", { name: "Add 1 unit" }).click();
 
-    await expectVersionCreated(page, target, 2);
+    await expectLatestVersion({ api, repositoryName: target, version: 2 });
     expect(await api.latestFilePaths(targetRepository.pulp_href)).toEqual([
       "extra.txt",
       "shared.txt",
@@ -143,7 +146,7 @@ test.describe("Repository content writes", () => {
       .setInputFiles([textFile("one.txt"), textFile("two.txt")]);
     await dialog.getByRole("button", { name: "Upload", exact: true }).click();
 
-    await expectVersionCreated(page, name, 1);
+    await expectLatestVersion({ api, repositoryName: name, version: 1 });
     expect(await api.latestVersionNumber(repository.pulp_href)).toBe(1);
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual([
       "one.txt",
@@ -185,7 +188,7 @@ test.describe("Repository content writes", () => {
     expect(await api.latestVersionNumber(repository.pulp_href)).toBe(0);
     await dialog.getByRole("button", { name: `Add 1 to "${name}"` }).click();
 
-    await expectVersionCreated(page, name, 1);
+    await expectLatestVersion({ api, repositoryName: name, version: 1 });
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["ok.txt"]);
   });
 
@@ -231,7 +234,7 @@ test.describe("Repository content writes", () => {
       .getByRole("button", { name: "Restore", exact: true })
       .click();
 
-    await expectVersionCreated(page, name, 3);
+    await expectLatestVersion({ api, repositoryName: name, version: 3 });
     expect(await api.latestFilePaths(repository.pulp_href)).toEqual(["a.txt"]);
   });
 });

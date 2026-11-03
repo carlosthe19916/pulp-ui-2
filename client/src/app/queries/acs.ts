@@ -16,6 +16,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -110,22 +111,22 @@ export const useAcsCreateMutation = (
 /** Updates an ACS; Pulp answers with the source or, when it must, a task. */
 export const useAcsUpdateMutation = (
   options?: IMutationCallbacks<
-    AlternateContentSource | AsyncOperationResponse,
+    IWriteResult<AlternateContentSource>,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    AlternateContentSource | AsyncOperationResponse,
+    IWriteResult<AlternateContentSource>,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      (
+      toWriteResult(
         await axiosInstance.patch<
           AlternateContentSource | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+        >(toProxyHref(href), body),
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: acsKeys.list() });
       options?.onSuccess?.(data, vars);

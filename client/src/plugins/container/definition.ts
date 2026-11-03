@@ -40,6 +40,7 @@ export const container = definePlugin({
         "remove-signatures": {
           path: "remove_signatures/",
           target: "repository",
+          responseKind: "inline",
         },
         sign,
         migrate: { path: "migrate/", target: "repository" },

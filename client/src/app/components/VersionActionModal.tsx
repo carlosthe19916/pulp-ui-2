@@ -5,14 +5,14 @@ import type {
   RepositoryVersionResponse,
 } from "@app/client";
 import { ConfirmActionModal } from "@app/components/ConfirmActionModal";
-import type { useContentChangeTask } from "@app/hooks/useContentChangeTask";
 import { useNotifications } from "@app/hooks/useNotifications";
+import type { IContentChangeStartedParams } from "@app/hooks/useReportContentChangeStarted";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRepositoryModifyMutation,
   useRepositoryVersionDeleteMutation,
   useRepositoryVersionRepairMutation,
 } from "@app/queries/repositories";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 export type VersionAction = "restore" | "repair" | "delete";
@@ -23,7 +23,7 @@ interface IVersionActionModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   /** Restore is a content change: the page follows it to the end. */
-  onRestoreStarted: ReturnType<typeof useContentChangeTask>["watch"];
+  onRestoreStarted: (change: IContentChangeStartedParams) => void;
   /** Called after a delete is accepted (e.g. to leave the deleted version's page). */
   onDeleted?: () => void;
 }
@@ -38,6 +38,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   onDeleted,
 }) => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const number = String(version.number);
   const name = `"${repository.name}"`;
   const notifyError = ({
@@ -54,8 +55,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
 
   const deleteMutation = useRepositoryVersionDeleteMutation({
     onSuccess: (data) => {
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Deleting version ${number} of ${name}`,
       });
@@ -66,8 +66,7 @@ export const VersionActionModal: React.FC<IVersionActionModalProps> = ({
   });
   const repairMutation = useRepositoryVersionRepairMutation({
     onSuccess: (data) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Repairing version ${number} of ${name}`,
       }),

@@ -27,7 +27,7 @@ else has an owner already:
 - Code outside React (auth providers, axios interceptors, route guards) uses
   `useXStore.getState()`.
 - A store never fetches, toasts or invalidates queries. The component that reacts to it does
-  (`TaskTracker` polls tracked tasks and owns their toasts).
+  (`TaskFinishRefresher` refreshes queries when a tracked task finishes).
 
 ## Persistence
 

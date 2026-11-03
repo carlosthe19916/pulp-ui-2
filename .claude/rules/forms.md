@@ -69,8 +69,8 @@ pulpTypes: def.compatibleRemoteTypes })`); the page passes no filter.
   `useCreateTypeSelect` (`@app/hooks`); edit routes take the form from `getEntityForm`
   (`@plugins`) and prime the object fresh.
 - An edit page passes `can("change")` and the running task (`useRunningTask`, or
-  `useRepositoryActivity` for a repository) to `EntityEditPage`, and toasts the update with
-  `notifyUpdateResult` (a task or the updated object).
+  `useRepositoryActivity` for a repository) to `EntityEditPage`, and reports the update with
+  `taskReporter.reportWrite` from `useTaskReporter()` (the updated object, or its task).
 - The page's `onSubmit` runs the mutation and calls the `saved(href?)` helper from its
   call-level `onSuccess`; the kit lifts the leave prompt and calls `onSaved`, where the page
   navigates (an edit → the detail page; a remote or repository create → its new detail page,

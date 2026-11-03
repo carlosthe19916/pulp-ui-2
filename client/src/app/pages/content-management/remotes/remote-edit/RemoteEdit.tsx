@@ -3,16 +3,15 @@ import type React from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityEditPage } from "@app/components/EntityEditPage";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useRemoteUpdateMutation,
   useSuspenseRemoteDetailQuery,
 } from "@app/queries/remotes";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface IRemoteEditProps {
@@ -27,7 +26,7 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: remote } = useSuspenseRemoteDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -36,10 +35,10 @@ export const RemoteEdit: React.FC<IRemoteEditProps> = ({
 
   const updateMutation = useRemoteUpdateMutation({
     onSuccess: (data) =>
-      notifyUpdateResult({
-        addNotification,
-        data,
-        subject: `Remote "${name}"`,
+      taskReporter.reportWrite({
+        result: data,
+        finishedTitle: `Remote "${name}" updated`,
+        startedTitle: `Remote "${name}" update started`,
       }),
     onError: (error) =>
       setSubmitError(

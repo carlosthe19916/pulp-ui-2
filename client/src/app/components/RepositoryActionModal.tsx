@@ -4,8 +4,9 @@ import type { RepositoryResponse } from "@app/client";
 import { TaskActionModal } from "@app/components/TaskActionModal";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import { useRepositoryActionMutation } from "@app/queries/repositories";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
+import { notifyTaskGroupStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import type { IPluginAction } from "@plugin-sdk/ui";
 
@@ -27,17 +28,29 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
   onClose,
 }) => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const mutation = useRepositoryActionMutation({
     onSuccess: (data) => {
-      if ("task" in data) {
-        notifyTaskStarted({
-          addNotification,
-          taskHref: data.task,
-          title: `${action.label} started`,
-        });
-      } else {
-        addNotification({ title: `${action.label} started`, variant: "info" });
+      switch (data.kind) {
+        case "task":
+          taskReporter.reportStarted({
+            taskHref: data.task.task,
+            title: `${action.label} started`,
+          });
+          return;
+        case "taskGroup":
+          notifyTaskGroupStarted({
+            addNotification,
+            taskGroupHref: data.taskGroup.task_group,
+            title: `${action.label} started`,
+          });
+          return;
+        case "inline":
+          addNotification({
+            title: `${action.label} done`,
+            variant: "success",
+          });
       }
     },
     onError: (error) =>
@@ -71,7 +84,12 @@ export const RepositoryActionModal: React.FC<IRepositoryActionModalProps> = ({
       onSubmit={(body) => {
         clearSubmitError();
         mutation.mutate(
-          { targetHref, path: action.path, body: withRepository(body) },
+          {
+            targetHref,
+            path: action.path,
+            responseKind: action.responseKind,
+            body: withRepository(body),
+          },
           { onSuccess: onClose },
         );
       }}

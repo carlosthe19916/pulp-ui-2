@@ -8,6 +8,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import type { AxiosProgressEvent } from "axios";
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
@@ -25,7 +26,7 @@ import type {
   IContentTypeListParams,
 } from "./contentTypes";
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
-import { waitForTask } from "./tasks";
+import { type TaskWriteError, waitForTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -258,11 +259,11 @@ export interface IContentUploadVariables {
  * callers add the hrefs in one `modify/` so a batch makes one version.
  */
 export const useContentUploadMutation = (
-  options?: IMutationCallbacks<string, IContentUploadVariables>,
+  options?: IMutationCallbacks<string, IContentUploadVariables, TaskWriteError>,
 ) => {
   const domain = useSelectedDomain();
   const queryClient = useQueryClient();
-  return useMutation<string, DrfAxiosError, IContentUploadVariables>({
+  return useMutation<string, TaskWriteError, IContentUploadVariables>({
     mutationFn: async ({
       apiPath,
       mechanism,
@@ -277,20 +278,29 @@ export const useContentUploadMutation = (
       }
       if (file) body.append("file", file);
       if (upload) body.append("upload", upload);
-      const path =
-        mechanism === "upload" ? `${apiPath}/upload/` : `${apiPath}/`;
-      const { data } = await axiosInstance.post<
-        MultipleArtifactContentResponse | AsyncOperationResponse
-      >(pulpApiPath(`content/${path}`, domain), body, {
-        adapter: "xhr",
-        onUploadProgress: (event) =>
+      const config = {
+        adapter: "xhr" as const,
+        onUploadProgress: (event: AxiosProgressEvent) =>
           onProgress?.(event.total ? event.loaded / event.total : 0),
-      });
-      if ("task" in data) {
-        const task = await waitForTask(data.task);
-        return task.created_resources?.[0] ?? "";
+      };
+      // The spec declares one answer per mechanism: `upload/` is 201 with the content,
+      // the collection POST is 202 with a task that creates it.
+      if (mechanism === "upload") {
+        const { data } =
+          await axiosInstance.post<MultipleArtifactContentResponse>(
+            pulpApiPath(`content/${apiPath}/upload/`, domain),
+            body,
+            config,
+          );
+        return data.pulp_href ?? "";
       }
-      return data.pulp_href ?? "";
+      const { data } = await axiosInstance.post<AsyncOperationResponse>(
+        pulpApiPath(`content/${apiPath}/`, domain),
+        body,
+        config,
+      );
+      const task = await waitForTask(data.task);
+      return task.created_resources?.[0] ?? "";
     },
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: contentKeys.list() });

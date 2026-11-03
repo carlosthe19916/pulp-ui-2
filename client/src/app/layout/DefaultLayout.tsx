@@ -7,7 +7,12 @@ import { useLocalStorage } from "@app/hooks/useStorage";
 
 import { DOCK_ID, DockApp } from "./DockApp";
 import { HeaderApp, MOBILE_DOCK_TOGGLE_ID } from "./HeaderApp";
-import { TaskTracker } from "./TaskTracker";
+import {
+  TASK_DRAWER_ID,
+  TASK_DRAWER_TOGGLE_ID,
+  TaskDrawer,
+} from "./TaskDrawer";
+import { TaskFinishRefresher } from "./TaskFinishRefresher";
 import { useIsMobile } from "./useIsMobile";
 
 interface IDefaultLayoutProps {
@@ -30,6 +35,7 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   // Opened for a moment (mobile, or a nav group clicked in the collapsed dock): floats
   // over the page and closes again once the user picks a page or clicks away.
   const [isDockOpen, setIsDockOpen] = useState(false);
+  const [isTaskDrawerExpanded, setIsTaskDrawerExpanded] = useState(false);
   const isDockFloating = isDockOpen && (isMobile || !isDockPinned);
   const isDockExpanded = isMobile ? isDockOpen : isDockPinned || isDockOpen;
   const isDockOverlay = !isMobile && isDockFloating;
@@ -73,6 +79,11 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
 
   const onOpenDock = () => setIsDockOpen(true);
 
+  const closeTaskDrawer = () => {
+    setIsTaskDrawerExpanded(false);
+    document.getElementById(TASK_DRAWER_TOGGLE_ID)?.focus();
+  };
+
   const onNavSelect = () => {
     if (isDockFloating) {
       closeDock();
@@ -97,13 +108,24 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
           onToggleDock={onToggleDock}
           onOpenDock={onOpenDock}
           onNavSelect={onNavSelect}
+          isTaskDrawerExpanded={isTaskDrawerExpanded}
+          onToggleTaskDrawer={() =>
+            setIsTaskDrawerExpanded(!isTaskDrawerExpanded)
+          }
         />
+      }
+      notificationDrawer={<TaskDrawer onClose={closeTaskDrawer} />}
+      isNotificationDrawerExpanded={isTaskDrawerExpanded}
+      onNotificationDrawerExpand={() =>
+        document
+          .querySelector<HTMLElement>(`#${TASK_DRAWER_ID} button`)
+          ?.focus()
       }
       skipToContent={PageSkipToContent}
       mainContainerId={pageId}
     >
       {children}
-      <TaskTracker />
+      <TaskFinishRefresher />
     </Page>
   );
 };

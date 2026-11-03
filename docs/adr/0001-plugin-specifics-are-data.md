@@ -29,7 +29,7 @@ actions (sign, tag, copy, prune, repair metadata, scan, rebuild…), and nearly 
       UI doesn't know still appear in lists, read-only.
 - [ ] Each plugin action is declared as data: label, fields, and whether it applies to a
       repository or to a version. One shared action form renders every plugin action, and Sync,
-      following [0006](0006-async-task-feedback.md).
+      following [0006](0006-how-tasks-are-reported.md).
 - [ ] Plugin actions appear in the repository or version actions menu only for plugins that have
       them; a few also appear as row actions where their object is listed (e.g. untag on a tag).
 - [ ] Plugin-only pages, tabs and reads that need a screen (Ansible collections, container

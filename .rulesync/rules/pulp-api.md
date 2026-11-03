@@ -18,9 +18,11 @@ or the generated client: its params, filters, `ordering` enum and declared respo
 
 ## Writes and tasks
 
-- Type a write by the responses its operation declares; don't assume a task. Code that needs
-  the task checks for `task` in the response; a `202`'s new object is `created_resources[0]` on
-  the finished task.
+- Type a write by the responses its operation declares; don't assume a task. Read a `200 | 202`
+  answer by its status (`toWriteResult`), never by looking for a `task` key in the body. A plugin
+  definition declares what its endpoints answer (a content type's `upload`, an action's
+  `responseKind`), checked against the spec by `plugins/specConformance.test.ts`. A `202`'s new
+  object is `created_resources[0]` on the finished task.
 - Task completion uses `isTerminalTaskState` (`queries/tasks.ts`), which includes `skipped`;
   never `state === "completed"` alone.
 - Cancel is `PATCH {task_href}` `{ state: "canceled" }`; `DELETE` removes the task record and

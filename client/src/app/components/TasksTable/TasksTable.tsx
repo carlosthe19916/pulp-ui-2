@@ -24,6 +24,7 @@ import { useDebouncedValue } from "@app/hooks/useDebouncedValue";
 import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import type { ITaskListParams } from "@app/queries/tasks";
 import {
   isCancelable,
@@ -40,7 +41,6 @@ import {
   extractTaskId,
   shortTaskName,
 } from "@app/utils/taskHref";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import {
@@ -78,6 +78,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   const [deleteTaskHref, setDeleteTaskHref] = useState<string | null>(null);
 
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const cancelMutation = useTaskCancelMutation({
     onSuccess: () =>
       addNotification({ title: "Task cancel requested", variant: "info" }),
@@ -104,8 +105,7 @@ export const TasksTable: React.FC<ITasksTableProps> = ({
   });
   const purgeMutation = useTaskPurgeMutation({
     onSuccess: (data) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: "Purge task started",
       }),

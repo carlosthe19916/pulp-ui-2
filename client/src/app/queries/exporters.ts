@@ -18,6 +18,7 @@ import type {
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 
 import { taskKeys } from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -160,23 +161,23 @@ export const useExporterCreateMutation = (
 /** Pulp answers with the exporter or, when it must, a task. */
 export const useExporterUpdateMutation = (
   options?: IMutationCallbacks<
-    Exporter | AsyncOperationResponse,
+    IWriteResult<Exporter>,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    Exporter | AsyncOperationResponse,
+    IWriteResult<Exporter>,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
     mutationFn: async ({ href, body }) =>
-      (
+      toWriteResult(
         await axiosInstance.patch<Exporter | AsyncOperationResponse>(
           toProxyHref(href),
           body,
-        )
-      ).data,
+        ),
+      ),
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: exporterKeys.list() });
       options?.onSuccess?.(data, vars);

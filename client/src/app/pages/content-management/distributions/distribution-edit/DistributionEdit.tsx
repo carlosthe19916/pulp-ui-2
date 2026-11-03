@@ -3,16 +3,15 @@ import type React from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { EntityEditPage } from "@app/components/EntityEditPage";
-import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectPermissions } from "@app/hooks/useObjectPermissions";
 import { useRunningTask } from "@app/hooks/useRunningTask";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   useDistributionUpdateMutation,
   useSuspenseDistributionDetailQuery,
 } from "@app/queries/distributions";
 import { extractIdFromHref } from "@app/queries/utils/pulpHref";
-import { notifyUpdateResult } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 
 interface IDistributionEditProps {
@@ -27,7 +26,7 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
   href,
 }) => {
   const navigate = useNavigate();
-  const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const { data: distribution } = useSuspenseDistributionDetailQuery({ href });
   const { can } = useObjectPermissions({ href });
@@ -36,10 +35,10 @@ export const DistributionEdit: React.FC<IDistributionEditProps> = ({
 
   const updateMutation = useDistributionUpdateMutation({
     onSuccess: (data) =>
-      notifyUpdateResult({
-        addNotification,
-        data,
-        subject: `Distribution "${name}"`,
+      taskReporter.reportWrite({
+        result: data,
+        finishedTitle: `Distribution "${name}" updated`,
+        startedTitle: `Distribution "${name}" update started`,
       }),
     onError: (error) =>
       setSubmitError(

@@ -33,10 +33,10 @@ import { useNotifications } from "@app/hooks/useNotifications";
 import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useSubmitError } from "@app/hooks/useSubmitError";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import type { IEntityField } from "@app/utils/entityField";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { formatDateTime, getMutationErrorMessage } from "@app/utils/utils";
 
 import {
@@ -56,6 +56,7 @@ const CREATE_FIELDS: IEntityField[] = [
 /** Container namespaces: the first path segment of pushed repositories. */
 export const ContainerNamespaceList: React.FC = () => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const { submitError, setSubmitError, clearSubmitError } = useSubmitError();
   const [isCreating, setIsCreating] = useState(false);
   const [accessTarget, setAccessTarget] =
@@ -116,8 +117,7 @@ export const ContainerNamespaceList: React.FC = () => {
   });
   const deleteMutation = useContainerNamespaceDeleteMutation({
     onSuccess: (result, { name }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: result.task,
         title: `Namespace "${name}" deletion started`,
       }),

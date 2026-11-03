@@ -20,6 +20,7 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -112,28 +113,23 @@ export const useDomainCreateMutation = (
 
 export const useDomainUpdateMutation = (
   options?: IMutationCallbacks<
-    DomainResponse | AsyncOperationResponse,
+    IWriteResult<DomainResponse>,
     { href: string; body: PatchedDomain }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DomainResponse | AsyncOperationResponse,
+    IWriteResult<DomainResponse>,
     DrfAxiosError,
     { href: string; body: PatchedDomain }
   >({
-    mutationFn: async ({
-      href,
-      body,
-    }: {
-      href: string;
-      body: PatchedDomain;
-    }) => {
-      const response = await axiosInstance.patch<
-        DomainResponse | AsyncOperationResponse
-      >(toProxyHref(href), body);
-      return response.data;
-    },
+    mutationFn: async ({ href, body }: { href: string; body: PatchedDomain }) =>
+      toWriteResult(
+        await axiosInstance.patch<DomainResponse | AsyncOperationResponse>(
+          toProxyHref(href),
+          body,
+        ),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });
       void queryClient.invalidateQueries({

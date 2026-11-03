@@ -45,6 +45,7 @@ import { useObjectsPermissions } from "@app/hooks/useObjectPermissions";
 import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useResourceTasks } from "@app/hooks/useResourceTasks";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
+import { useTaskReporter } from "@app/hooks/useTaskReporter";
 import {
   repositoryKeys,
   useRepositoriesListQuery,
@@ -57,7 +58,6 @@ import {
 } from "@app/queries/utils/pulpHref";
 import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
-import { notifyTaskStarted } from "@app/utils/taskNotify";
 import { getMutationErrorMessage } from "@app/utils/utils";
 import { getAvailableTypes, getPulpType } from "@catalog";
 import { getEntityForm, getTypeLabel } from "@plugins";
@@ -69,6 +69,7 @@ import {
 
 export const RepositoryList: React.FC = () => {
   const { addNotification } = useNotifications();
+  const taskReporter = useTaskReporter();
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
@@ -93,8 +94,7 @@ export const RepositoryList: React.FC = () => {
   const canCreate = useCreatableTypes("repository").length > 0;
   const deleteMutation = useRepositoryDeleteMutation({
     onSuccess: (data, { name }) =>
-      notifyTaskStarted({
-        addNotification,
+      taskReporter.reportStarted({
         taskHref: data.task,
         title: `Repository "${name}" deletion started`,
       }),

@@ -20,6 +20,7 @@ import { getPulpType } from "@catalog";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { taskKeys } from "./tasks";
+import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
@@ -242,13 +243,13 @@ export const useDistributionCreateMutation = (
 /** PATCHes a distribution by its own `pulp_href` (which embeds plugin + type). */
 export const useDistributionUpdateMutation = (
   options?: IMutationCallbacks<
-    DistributionResponse | AsyncOperationResponse,
+    IWriteResult<DistributionResponse>,
     { href: string; body: Record<string, unknown> }
   >,
 ) => {
   const queryClient = useQueryClient();
   return useMutation<
-    DistributionResponse | AsyncOperationResponse,
+    IWriteResult<DistributionResponse>,
     DrfAxiosError,
     { href: string; body: Record<string, unknown> }
   >({
@@ -258,12 +259,12 @@ export const useDistributionUpdateMutation = (
     }: {
       href: string;
       body: Record<string, unknown>;
-    }): Promise<DistributionResponse | AsyncOperationResponse> =>
-      (
+    }): Promise<IWriteResult<DistributionResponse>> =>
+      toWriteResult(
         await axiosInstance.patch<
           DistributionResponse | AsyncOperationResponse
-        >(toProxyHref(href), body)
-      ).data,
+        >(toProxyHref(href), body),
+      ),
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: distributionKeys.list() });
       void queryClient.invalidateQueries({

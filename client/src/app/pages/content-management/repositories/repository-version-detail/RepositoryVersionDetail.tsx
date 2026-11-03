@@ -28,6 +28,7 @@ import {
   useObjectPermissions,
   VERSION_ACTION_VERBS,
 } from "@app/hooks/useObjectPermissions";
+import { useReportContentChangeStarted } from "@app/hooks/useReportContentChangeStarted";
 import { useRepositoryActivity } from "@app/hooks/useRepositoryActivity";
 import {
   useRepositoryDetailQuery,
@@ -68,7 +69,8 @@ export const RepositoryVersionDetail: React.FC<
   const { data: repository } = useRepositoryDetailQuery({
     href: repositoryHref,
   });
-  const { contentChange, running, lockedProps } = useRepositoryActivity({
+  const reportContentChangeStarted = useReportContentChangeStarted();
+  const { running, lockedProps } = useRepositoryActivity({
     repository,
   });
   const [action, setAction] = useState<VersionAction | null>(null);
@@ -164,14 +166,9 @@ export const RepositoryVersionDetail: React.FC<
 
       <PageSection>
         <Stack hasGutter>
-          {repository && (running || contentChange.failure) && (
+          {running && (
             <StackItem>
-              <RepositoryTaskAlert
-                repository={repository}
-                running={running}
-                failure={contentChange.failure}
-                onCloseFailure={contentChange.clearFailure}
-              />
+              <RepositoryTaskAlert running={running} />
             </StackItem>
           )}
           {repoEntity?.scan && (
@@ -228,7 +225,7 @@ export const RepositoryVersionDetail: React.FC<
           version={version}
           repository={repository}
           onClose={() => setAction(null)}
-          onRestoreStarted={contentChange.watch}
+          onRestoreStarted={reportContentChangeStarted}
           onDeleted={() =>
             void navigate({
               to: "/content-management/$pulpDomain/repositories/$repositoryType/$repositoryId",
