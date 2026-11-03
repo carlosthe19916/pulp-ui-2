@@ -17,7 +17,6 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { ContentInventoryCard } from "./components/ContentInventoryCard";
 import { DetailsCard } from "./components/DetailsCard";
 import { FailedTasksCard } from "./components/FailedTasksCard";
-import { RecentTasksCard } from "./components/RecentTasksCard";
 import { StorageCard } from "./components/StorageCard";
 import { SystemHealthCard } from "./components/SystemHealthCard";
 import { TaskActivityCard } from "./components/TaskActivityCard";
@@ -51,11 +50,8 @@ export const Dashboard: React.FC = () => {
             <GridItem span={12} md={6} lg={4}>
               <StorageCard />
             </GridItem>
-            <GridItem span={12} md={6} lg={5}>
+            <GridItem span={12}>
               <DetailsCard />
-            </GridItem>
-            <GridItem span={12} lg={7}>
-              <RecentTasksCard />
             </GridItem>
           </Grid>
         </Stack>
