@@ -47,7 +47,20 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           editUrl: `${GITHUB_URL}/tree/main/website/`,
         },
-        blog: false,
+        blog: {
+          showReadingTime: true,
+          blogTitle: "Pulp UI blog",
+          blogDescription:
+            "Notes on building a web console for the Pulp artifact repository manager.",
+          editUrl: `${GITHUB_URL}/tree/main/website/`,
+          feedOptions: {
+            type: ["rss", "atom"],
+            xslt: true,
+          },
+          onInlineTags: "throw",
+          onInlineAuthors: "throw",
+          onUntruncatedBlogPosts: "throw",
+        },
         theme: {
           customCss: "./src/css/custom.css",
         },
@@ -88,6 +101,11 @@ const config: Config = {
           activeBaseRegex: "^/pulp-ui-2/#features$",
         },
         {
+          to: "/blog",
+          label: "Blog",
+          position: "left",
+        },
+        {
           href: "https://pulpproject.org/",
           label: "Pulp Project",
           position: "right",
@@ -122,6 +140,7 @@ const config: Config = {
         {
           title: "Project",
           items: [
+            { label: "Blog", to: "/blog" },
             { label: "GitHub", href: GITHUB_URL },
             { label: "Report an issue", href: `${GITHUB_URL}/issues` },
           ],
