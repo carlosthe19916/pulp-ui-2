@@ -156,6 +156,23 @@ Every upload or cache fill creates a new repository version (**Versions** tab). 
 | `No matching distribution found` for PyPI | The proxy distribution has no pull-through remote, or the remote's **Include projects** excludes the package.          |
 | Base URL shows the wrong host             | Set `PYPI_API_HOSTNAME` on the Pulp server to the URL clients use (see [Tutorials](./index.md#non-local-servers)).     |
 
+## More Python guides
+
+- [Curate a PyPI mirror with filters](./python/curate-mirror-with-filters.md)
+- [Block packages from a repository](./python/blocklist-packages.md)
+- [Scan packages for vulnerabilities](./python/scan-for-vulnerabilities.md)
+- [Import a remote from a Bandersnatch config](./python/import-from-bandersnatch.md)
+- [Repair package metadata](./python/repair-metadata.md)
+
+:::info[Not yet in Pulp UI]
+
+Yanking a published package (marking a release as "do not install unless pinned") the way
+pypi.org does. Pulp UI shows yanked packages under the repository's **Yanked** browse section but
+can't yank from the UI yet. For now, yank through the Pulp CLI or REST API — see
+[pulp_python](https://pulpproject.org/pulp_python/).
+
+:::
+
 ## Clean up
 
 Delete the two distributions, then the two repositories, then the `pypi-proxy` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.

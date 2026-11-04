@@ -141,6 +141,14 @@ Reads from `/pulp/content/` are anonymous unless the distribution has a content 
 | An uploaded package doesn't show up in `dnf` | dnf cached the old metadata. Run `dnf clean metadata` or `dnf makecache --refresh`.                        |
 | GPG check failures                           | The packages aren't signed. Set `gpgcheck=0` for testing, or sign them and configure `gpgkey`.             |
 
+## More RPM guides
+
+- [Scan for vulnerabilities](./rpm/scan-for-vulnerabilities.md) — flag CVEs in your packages.
+- [Sign content](./rpm/sign-content.md) — GPG-sign packages and metadata.
+- [Prune & retention](./rpm/prune-and-retention.md) — keep repositories from growing forever.
+- [Promote with copy](./rpm/promote-with-advanced-copy.md) — move tested packages to a release repo.
+- [Upload comps & advisories](./rpm/upload-comps-and-advisories.md) — add groups, errata and packages.
+
 ## Clean up
 
 Delete the two distributions, then the two repositories, then the `rpm-upstream` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
