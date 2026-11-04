@@ -63,8 +63,9 @@ jobs:
               continue
             fi
             # Use releases/latest, not the tags list: some repos carry noisy,
-            # non-release tags that sort above the real latest release.
-            latest="$(gh api "repos/pulp/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")"
+            # non-release tags that sort above the real latest release. Trust gh's
+            # exit status: on a 404 (no release yet) it still prints the error JSON.
+            latest="$(gh api "repos/pulp/$repo/releases/latest" --jq '.tag_name' 2>/dev/null)" || latest=""
             if [ -z "$latest" ] || [ "$latest" = "$ref" ]; then
               printf '%s\n' "$line" >>"$tmp"
               continue
