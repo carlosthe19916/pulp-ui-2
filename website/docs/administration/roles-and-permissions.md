@@ -6,10 +6,30 @@ sidebar_position: 4
 
 # Roles & permissions
 
-A **role** is a named set of permissions you can assign to a user or group — globally, on a single object, or within a domain. Manage roles under **Administration → Roles**, where the role form has a permission picker. Pulp ships built-in roles per plugin (for example `rpm.rpmrepository_owner`); the creator of an object automatically gets its owner role.
+A **role** is a named set of permissions — like a permission target or privilege set in
+Artifactory/Nexus. You assign a role to a [user](./users.md) or [group](./groups.md) at one of three
+scopes:
 
-To grant a role on a specific repository, remote or distribution, use that object's **Access** tab — see [Granting access to objects](./object-access.md). For the people roles are assigned to, see [Users](./users.md) and [Groups](./groups.md). For the concepts behind RBAC, see [Access control](../concepts/access-control.md).
+| Scope      | Means                                     | Example                                      |
+| ---------- | ----------------------------------------- | -------------------------------------------- |
+| **Global** | The permission applies everywhere.        | "Can create any RPM repository."             |
+| **Object** | The permission applies to one object.     | "Owner of _this_ repository."                |
+| **Domain** | The permission applies within one domain. | "Manage everything in the `staging` domain." |
 
-:::note
-This page is a work in progress. Contributions are welcome on [GitHub](https://github.com/carlosthe19916/pulp-ui-2/tree/main/website/docs/administration/roles-and-permissions.md).
-:::
+## Built-in roles
+
+Pulp ships roles per plugin, named `<app>.<model>_<level>` — for example
+`rpm.rpmrepository_owner`, `rpm.rpmrepository_viewer`, `core.task_owner`. When you create an object,
+you automatically get its **owner** role. Built-in roles cover most needs.
+
+## Create a custom role
+
+1. Go to **Administration → Roles** and click **Create**.
+2. Name the role and use the **permission picker** to select its permissions.
+3. Save, then assign it — globally/per-domain to [users](./users.md) or [groups](./groups.md), or on
+   a single object via its [Access tab](./object-access.md).
+
+## See also
+
+[Granting access to objects](./object-access.md) · [Access policies](./access-policies.md) ·
+[Access control concepts](../concepts/access-control.md)

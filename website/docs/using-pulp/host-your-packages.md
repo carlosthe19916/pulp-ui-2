@@ -5,27 +5,41 @@ sidebar_position: 3
 
 # Host your packages
 
-Publish your own packages, images or files to Pulp.
+**Goal:** publish your own packages, images or files to Pulp — the equivalent of an Artifactory
+**hosted** (local) repository.
 
 ## Upload (most ecosystems)
 
-1. **Create a Repository** for your content type (or open an existing one).
-2. Use **Upload content** — a type-driven modal — to add a package. It becomes
-   [content](../concepts/entities.md), is added to the repository (new version), and is ready to
+1. **Create a Repository** for your content type — **Content Management → Repositories → Create** —
+   or open an existing one.
+2. Click **Upload content**. A single, type-aware dialog takes the file (an RPM, a wheel, a `.gem`,
+   a `.deb`, a tarball, …). The upload becomes [content](../concepts/entities.md), is added to the
+   repository as a new [version](./versions-and-rollback.md), and is ready to
    [serve](./serve-content.md).
-3. Some clients can publish directly (for example `twine upload`, `npm publish`, `gem push`) —
-   the [tutorials](../tutorials/index.md) show which.
+3. **Serve it** — [Serve content](./serve-content.md).
+
+:::tip
+Many clients can publish straight to Pulp instead of using the UI — `twine upload` (Python),
+`npm publish`, `gem push`, `mvn deploy`. The matching [tutorial](../tutorials/index.md) shows the
+client config.
+:::
 
 ## Push (containers)
 
-Container images aren't uploaded — `podman push` / `docker push` to Pulp creates the repository.
+Container images aren't uploaded through the UI — you **push** them with your container tool, which
+creates the repository on the fly:
+
+```bash
+podman push <pulp-host>/<base_path>:<tag>
+```
+
 See the [Container tutorial](../tutorials/container.mdx).
 
 ## Import (OSTree)
 
-OSTree uses **Import archive** instead of upload. See the [OSTree tutorial](../tutorials/ostree.mdx).
+OSTree content arrives as a commit archive: use **Import archive** on the repository instead of
+Upload. See the [OSTree tutorial](../tutorials/ostree.mdx).
 
-:::note
-Outline page — full walkthrough and screenshots to follow. Reference:
-[Content](./reference/content.md), [Repositories](./reference/repositories.md).
-:::
+## Reference
+
+Full details: [Content](./reference/content.md), [Repositories](./reference/repositories.md).

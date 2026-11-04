@@ -6,10 +6,11 @@ sidebar_position: 1
 
 # Administration
 
-This is the admin guide: managing **who can do what** and the **shape of the Pulp installation**.
-These tasks live under the **Administration** and **System Management** groups in the navigation.
-For running and configuring the Pulp UI itself (install, auth modes, branding), see
-[Running Pulp UI](../running-pulp-ui/environment.md).
+This is the admin guide: managing **who can do what** and the **shape of the Pulp installation** —
+the equivalent of the Security and System sections in Artifactory or Nexus. These tasks live under
+the **Administration** and **System Management** groups in the navigation. For running and
+configuring the Pulp UI itself (install, auth modes, branding), see
+[Running Pulp UI](../running-pulp-ui/installation.md).
 
 ## Identity and access
 
@@ -32,6 +33,7 @@ See [Access control](../concepts/access-control.md) for the concepts.
 - [Monitoring](./monitoring.md) — dashboard, tasks, schedules, workers, vulnerability reports.
 
 :::note
-RBAC note (see [Access control](../concepts/access-control.md)): the UI **disables** actions a user
-can't perform rather than hiding them.
+Pulp UI shows the same navigation to everyone. [RBAC](../concepts/access-control.md) decides what
+you can actually do: lists return only what you may see, and actions you lack permission for are
+**disabled with a tooltip**, not hidden. A superuser sees and can do everything.
 :::

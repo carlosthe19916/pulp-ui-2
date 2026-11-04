@@ -5,29 +5,35 @@ sidebar_position: 7
 
 # Versions and rollback
 
-Every change to a repository's content creates a new **immutable** [repository version](../concepts/entities.md).
-That makes rollback and auditing easy.
+Every change to a repository's content creates a new **immutable**
+[repository version](../concepts/entities.md) — like an automatic, numbered snapshot on every
+commit. Rollback and auditing come for free; there's no "undo my last sync" to fear.
 
-## In the UI
+## Work with versions
 
-- A repository's **Versions** tab lists every version and what changed.
-- Open a version to see its content and, from the version detail page:
-  - **Restore as latest** — roll the repository back to that version.
-  - **Repair** — re-download/verify missing or corrupt artifacts.
-  - **Delete** — remove an old version.
-- If a version was scanned, a **vulnerability** alert appears.
+Open a repository → **Versions** tab. It lists every version and what changed between them. Open a
+version for its content, and from the version's detail page:
 
-## Keeping versions tidy
+| Action                | Does                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| **Restore as latest** | Roll the repository back to this version (as a new version). |
+| **Repair**            | Re-download or re-verify missing/corrupt artifacts.          |
+| **Delete**            | Remove an old version you no longer need.                    |
 
-Set `retain_repo_versions` on the repository to auto-prune old versions. Versions currently being
-served by a distribution are protected from pruning.
+If the version was scanned, a **vulnerability** alert appears on it — see
+[Monitoring](../administration/monitoring.md).
 
-## Freezing what clients see
+## Keep versions tidy
 
-Point a [Distribution](./serve-content.md) at a specific version instead of the repository, so new
-syncs don't change what clients get.
+Set **Retain repo versions** on the repository to auto-prune old ones (keep, say, the last 5).
+Versions currently served by a [Distribution](./serve-content.md) are protected from pruning.
 
-:::note
-Outline page — full walkthrough and screenshots to follow. Reference:
+## Freeze what clients see
+
+By default a Distribution serves the repository's latest version, so a sync changes what clients
+get. To pin it, point the Distribution at a **specific version** (or a Publication). See
+[Serve content](./serve-content.md).
+
+## Reference
+
 [Repositories](./reference/repositories.md).
-:::
