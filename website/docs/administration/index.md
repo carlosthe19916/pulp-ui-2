@@ -1,5 +1,6 @@
 ---
 title: Administration
+description: The admin guide to Pulp UI — manage users, groups, roles and permissions, and configure domains, storage and the shape of a shared Pulp installation.
 sidebar_label: Overview
 sidebar_position: 1
 ---

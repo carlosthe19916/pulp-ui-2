@@ -1,5 +1,6 @@
 ---
 title: Using Pulp
+description: The end-user guide to Pulp UI — mirror an upstream, host your own packages, serve them at a URL, and point your tools at Pulp, the way you would with Artifactory or Nexus.
 sidebar_label: Overview
 sidebar_position: 1
 ---

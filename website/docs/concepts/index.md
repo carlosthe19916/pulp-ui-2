@@ -1,5 +1,6 @@
 ---
 title: Concepts
+description: Pulp's core concepts for Artifactory and Nexus users — how repositories, remotes, distributions, publications and repository versions map to the tools you already know.
 sidebar_label: Pulp for Artifactory users
 sidebar_position: 1
 ---

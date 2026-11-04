@@ -83,6 +83,18 @@ const config: Config = {
 
   themeConfig: {
     image: "img/pulp_logo.png",
+    metadata: [
+      {
+        name: "keywords",
+        content:
+          "pulp, pulp ui, pulp project, repository manager, artifact repository, rpm, container, ansible, python, pypi, deb, maven, npm, patternfly, artifactory alternative, nexus alternative",
+      },
+      {
+        name: "description",
+        content:
+          "Pulp UI is a modern web console for Pulp, the open source platform for managing repositories of software packages (RPM, container, Ansible, Python, and more).",
+      },
+    ],
     announcementBar: {
       id: "work_in_progress",
       content:

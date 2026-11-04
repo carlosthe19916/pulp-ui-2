@@ -1,5 +1,6 @@
 ---
 title: Running Pulp UI
+description: Deploy and configure the Pulp UI itself — how the app is served, its development and production modes, and how to connect it to a Pulp server.
 sidebar_label: Deployment
 sidebar_position: 1
 ---
