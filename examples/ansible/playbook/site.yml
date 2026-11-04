@@ -1,0 +1,13 @@
+- name: Use collections installed from Pulp
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Greet with example.hello, from the hosted repository
+      example.hello.greet:
+        name: Pulp
+      register: greeting
+
+    - name: Print the greeting
+      ansible.builtin.debug:
+        msg: "{{ greeting.message }}"

@@ -1,0 +1,5 @@
+.env
+.gem-demo/
+build/
+Gemfile.lock
+!.env.example

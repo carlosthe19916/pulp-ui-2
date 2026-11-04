@@ -16,7 +16,10 @@ To add a tutorial:
 
 Rules: show the UI first and REST/CLI never in the body (setup.sh covers automation); every
 command must work as written against the local backend; keep each step to what a reader does
-and sees; link to the plugin docs for depth instead of copying them.
+and sees; link to the plugin docs for depth instead of copying them. When a step doesn't apply
+to the ecosystem (no pull-through cache, no native publish), keep the heading and explain the
+Pulp alternative: a synced mirror, Upload content in Pulp UI. setup.sh and demo.sh source
+examples/_lib/pulp.sh for the REST helpers.
 -->
 
 # <Ecosystem> repository manager

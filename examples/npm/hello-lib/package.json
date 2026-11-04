@@ -1,0 +1,11 @@
+{
+  "name": "@example/hello-lib",
+  "version": "1.0.0",
+  "description": "A tiny library published to Pulp by the npm tutorial.",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "license": "MIT"
+}

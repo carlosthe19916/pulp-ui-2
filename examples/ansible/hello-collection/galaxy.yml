@@ -1,0 +1,16 @@
+namespace: example
+name: hello
+version: 1.0.0
+readme: README.md
+authors:
+  - Pulp UI tutorial
+description: A tiny collection published to Pulp by the Ansible tutorial.
+license:
+  - MIT
+tags:
+  - tutorial
+dependencies:
+  ansible.posix: ">=2.0.0"
+repository: https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/ansible
+build_ignore:
+  - "*.tar.gz"
