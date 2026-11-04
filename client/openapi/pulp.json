@@ -17,19 +17,19 @@
             "url": "https://pulpproject.org/assets/pulp_logo_icon.svg"
         },
         "x-pulp-app-versions": {
-            "core": "3.122.0.dev",
-            "certguard": "3.122.0.dev",
-            "file": "3.122.0.dev",
-            "rpm": "3.40.0.dev",
-            "container": "2.30.0.dev",
-            "python": "3.37.0.dev",
-            "gem": "0.9.0.dev",
-            "maven": "0.35.0.dev",
-            "npm": "0.11.0.dev",
-            "hugging_face": "0.4.0.dev",
-            "ansible": "0.31.0.dev",
-            "deb": "3.12.0.dev",
-            "ostree": "2.7.0.dev"
+            "core": "3.123.1",
+            "certguard": "3.123.1",
+            "file": "3.123.1",
+            "rpm": "3.39.5",
+            "container": "2.30.1",
+            "python": "3.38.0",
+            "gem": "0.8.0",
+            "maven": "0.37.0",
+            "npm": "0.10.2",
+            "hugging_face": "0.3.2",
+            "ansible": "0.30.3",
+            "deb": "3.11.1",
+            "ostree": "2.6.1"
         },
         "x-pulp-domain-enabled": true
     },
@@ -4084,81 +4084,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/NestedRoleResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/pulp/{pulp_domain}/api/v3/ansible/copy/": {
-            "post": {
-                "operationId": "copy_content",
-                "description": "Trigger an asynchronous task to copy ansible content from one repository into another, creating a new repository version.",
-                "summary": "Copy content",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Task-Diagnostics",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "List of profilers to use on tasks."
-                    },
-                    {
-                        "in": "path",
-                        "name": "pulp_domain",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "x-isDomain": true
-                    }
-                ],
-                "tags": [
-                    "Ansible: Copy"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Copy"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Copy"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Copy"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "basicAuth": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {
-                        "remoteUserAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "202": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/AsyncOperationResponse"
                                 }
                             }
                         },
@@ -18778,12 +18703,10 @@
                             "items": {
                                 "type": "string",
                                 "enum": [
-                                    "-but_automatic_upgrades",
                                     "-codename",
                                     "-description",
                                     "-distribution",
                                     "-label",
-                                    "-not_automatic",
                                     "-origin",
                                     "-pk",
                                     "-pulp_created",
@@ -18795,12 +18718,10 @@
                                     "-timestamp_of_interest",
                                     "-upstream_id",
                                     "-version",
-                                    "but_automatic_upgrades",
                                     "codename",
                                     "description",
                                     "distribution",
                                     "label",
-                                    "not_automatic",
                                     "origin",
                                     "pk",
                                     "pulp_created",
@@ -18815,7 +18736,7 @@
                                 ]
                             }
                         },
-                        "description": "Ordering\n\n* `pulp_id` - Pulp id\n* `-pulp_id` - Pulp id (descending)\n* `pulp_created` - Pulp created\n* `-pulp_created` - Pulp created (descending)\n* `pulp_last_updated` - Pulp last updated\n* `-pulp_last_updated` - Pulp last updated (descending)\n* `pulp_type` - Pulp type\n* `-pulp_type` - Pulp type (descending)\n* `upstream_id` - Upstream id\n* `-upstream_id` - Upstream id (descending)\n* `pulp_labels` - Pulp labels\n* `-pulp_labels` - Pulp labels (descending)\n* `timestamp_of_interest` - Timestamp of interest\n* `-timestamp_of_interest` - Timestamp of interest (descending)\n* `codename` - Codename\n* `-codename` - Codename (descending)\n* `suite` - Suite\n* `-suite` - Suite (descending)\n* `distribution` - Distribution\n* `-distribution` - Distribution (descending)\n* `version` - Version\n* `-version` - Version (descending)\n* `origin` - Origin\n* `-origin` - Origin (descending)\n* `label` - Label\n* `-label` - Label (descending)\n* `description` - Description\n* `-description` - Description (descending)\n* `not_automatic` - Not automatic\n* `-not_automatic` - Not automatic (descending)\n* `but_automatic_upgrades` - But automatic upgrades\n* `-but_automatic_upgrades` - But automatic upgrades (descending)\n* `pk` - Pk\n* `-pk` - Pk (descending)",
+                        "description": "Ordering\n\n* `pulp_id` - Pulp id\n* `-pulp_id` - Pulp id (descending)\n* `pulp_created` - Pulp created\n* `-pulp_created` - Pulp created (descending)\n* `pulp_last_updated` - Pulp last updated\n* `-pulp_last_updated` - Pulp last updated (descending)\n* `pulp_type` - Pulp type\n* `-pulp_type` - Pulp type (descending)\n* `upstream_id` - Upstream id\n* `-upstream_id` - Upstream id (descending)\n* `pulp_labels` - Pulp labels\n* `-pulp_labels` - Pulp labels (descending)\n* `timestamp_of_interest` - Timestamp of interest\n* `-timestamp_of_interest` - Timestamp of interest (descending)\n* `codename` - Codename\n* `-codename` - Codename (descending)\n* `suite` - Suite\n* `-suite` - Suite (descending)\n* `distribution` - Distribution\n* `-distribution` - Distribution (descending)\n* `version` - Version\n* `-version` - Version (descending)\n* `origin` - Origin\n* `-origin` - Origin (descending)\n* `label` - Label\n* `-label` - Label (descending)\n* `description` - Description\n* `-description` - Description (descending)\n* `pk` - Pk\n* `-pk` - Pk (descending)",
                         "explode": false,
                         "style": "form"
                     },
@@ -68857,101 +68778,6 @@
                 }
             }
         },
-        "/api/pulp/{pulp_domain}/api/v3/pulp_ansible/tags/": {
-            "get": {
-                "operationId": "pulp_ansible_tags_list",
-                "description": "ViewSet for Tag models.",
-                "summary": "List collection versions",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Task-Diagnostics",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "List of profilers to use on tasks."
-                    },
-                    {
-                        "name": "limit",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "offset",
-                        "required": false,
-                        "in": "query",
-                        "description": "The initial index from which to return the results.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "path",
-                        "name": "pulp_domain",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "required": true,
-                        "x-isDomain": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "fields",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "A list of fields to include in the response."
-                    },
-                    {
-                        "in": "query",
-                        "name": "exclude_fields",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "A list of fields to exclude from the response."
-                    }
-                ],
-                "tags": [
-                    "Pulp_Ansible: Tags"
-                ],
-                "security": [
-                    {
-                        "basicAuth": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {
-                        "remoteUserAuthentication": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedTagResponseList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/api/pulp/{pulp_domain}/api/v3/pulp_container/namespaces/": {
             "get": {
                 "operationId": "pulp_container_namespaces_list",
@@ -105925,6 +105751,17 @@
                     },
                     {
                         "in": "query",
+                        "name": "pagination",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cursor"
+                            ]
+                        },
+                        "description": "Set to cursor for count-free cursor pagination."
+                    },
+                    {
+                        "in": "query",
                         "name": "repository_version",
                         "schema": {
                             "type": "string",
@@ -106033,6 +105870,17 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "pagination",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cursor"
+                            ]
+                        },
+                        "description": "Set to cursor to opt into count-free cursor pagination. Without this parameter, limit/offset pagination remains unchanged."
                     },
                     {
                         "in": "query",
@@ -106556,7 +106404,7 @@
         "{maven_maven_repository_href}versions/": {
             "get": {
                 "operationId": "repositories_maven_maven_versions_list",
-                "description": "MavenRepositoryVersion represents a single Maven repository version.",
+                "description": "MavenRepositoryVersion represents a single Maven repository version.\n\nCursor pagination is a Maven-only pilot. If successful, this behavior should\nmove to pulpcore so repository-version endpoints share one cursor contract\nacross plugins.",
                 "summary": "List repository versions",
                 "parameters": [
                     {
@@ -106856,7 +106704,7 @@
         "{maven_maven_repository_version_href}": {
             "get": {
                 "operationId": "repositories_maven_maven_versions_read",
-                "description": "MavenRepositoryVersion represents a single Maven repository version.",
+                "description": "MavenRepositoryVersion represents a single Maven repository version.\n\nCursor pagination is a Maven-only pilot. If successful, this behavior should\nmove to pulpcore so repository-version endpoints share one cursor contract\nacross plugins.",
                 "summary": "Inspect a repository version",
                 "parameters": [
                     {
@@ -120096,6 +119944,7 @@
                                     "-pulp_id",
                                     "-pulp_last_updated",
                                     "-q_select",
+                                    "-remote_policy",
                                     "-sock_connect_timeout",
                                     "-sock_read_timeout",
                                     "-tls_validation",
@@ -120119,6 +119968,7 @@
                                     "pulp_id",
                                     "pulp_last_updated",
                                     "q_select",
+                                    "remote_policy",
                                     "sock_connect_timeout",
                                     "sock_read_timeout",
                                     "tls_validation",
@@ -120127,7 +119977,7 @@
                                 ]
                             }
                         },
-                        "description": "Ordering\n\n* `pulp_id` - Pulp id\n* `-pulp_id` - Pulp id (descending)\n* `pulp_created` - Pulp created\n* `-pulp_created` - Pulp created (descending)\n* `pulp_last_updated` - Pulp last updated\n* `-pulp_last_updated` - Pulp last updated (descending)\n* `name` - Name\n* `-name` - Name (descending)\n* `base_url` - Base url\n* `-base_url` - Base url (descending)\n* `api_root` - Api root\n* `-api_root` - Api root (descending)\n* `domain` - Domain\n* `-domain` - Domain (descending)\n* `ca_cert` - Ca cert\n* `-ca_cert` - Ca cert (descending)\n* `client_cert` - Client cert\n* `-client_cert` - Client cert (descending)\n* `client_key` - Client key\n* `-client_key` - Client key (descending)\n* `tls_validation` - Tls validation\n* `-tls_validation` - Tls validation (descending)\n* `username` - Username\n* `-username` - Username (descending)\n* `password` - Password\n* `-password` - Password (descending)\n* `download_concurrency` - Download concurrency\n* `-download_concurrency` - Download concurrency (descending)\n* `max_retries` - Max retries\n* `-max_retries` - Max retries (descending)\n* `total_timeout` - Total timeout\n* `-total_timeout` - Total timeout (descending)\n* `connect_timeout` - Connect timeout\n* `-connect_timeout` - Connect timeout (descending)\n* `sock_connect_timeout` - Sock connect timeout\n* `-sock_connect_timeout` - Sock connect timeout (descending)\n* `sock_read_timeout` - Sock read timeout\n* `-sock_read_timeout` - Sock read timeout (descending)\n* `q_select` - Q select\n* `-q_select` - Q select (descending)\n* `policy` - Policy\n* `-policy` - Policy (descending)\n* `last_replication` - Last replication\n* `-last_replication` - Last replication (descending)\n* `pk` - Pk\n* `-pk` - Pk (descending)",
+                        "description": "Ordering\n\n* `pulp_id` - Pulp id\n* `-pulp_id` - Pulp id (descending)\n* `pulp_created` - Pulp created\n* `-pulp_created` - Pulp created (descending)\n* `pulp_last_updated` - Pulp last updated\n* `-pulp_last_updated` - Pulp last updated (descending)\n* `name` - Name\n* `-name` - Name (descending)\n* `base_url` - Base url\n* `-base_url` - Base url (descending)\n* `api_root` - Api root\n* `-api_root` - Api root (descending)\n* `domain` - Domain\n* `-domain` - Domain (descending)\n* `ca_cert` - Ca cert\n* `-ca_cert` - Ca cert (descending)\n* `client_cert` - Client cert\n* `-client_cert` - Client cert (descending)\n* `client_key` - Client key\n* `-client_key` - Client key (descending)\n* `tls_validation` - Tls validation\n* `-tls_validation` - Tls validation (descending)\n* `username` - Username\n* `-username` - Username (descending)\n* `password` - Password\n* `-password` - Password (descending)\n* `download_concurrency` - Download concurrency\n* `-download_concurrency` - Download concurrency (descending)\n* `max_retries` - Max retries\n* `-max_retries` - Max retries (descending)\n* `total_timeout` - Total timeout\n* `-total_timeout` - Total timeout (descending)\n* `connect_timeout` - Connect timeout\n* `-connect_timeout` - Connect timeout (descending)\n* `sock_connect_timeout` - Sock connect timeout\n* `-sock_connect_timeout` - Sock connect timeout (descending)\n* `sock_read_timeout` - Sock read timeout\n* `-sock_read_timeout` - Sock read timeout (descending)\n* `remote_policy` - Remote policy\n* `-remote_policy` - Remote policy (descending)\n* `q_select` - Q select\n* `-q_select` - Q select (descending)\n* `policy` - Policy\n* `-policy` - Policy (descending)\n* `last_replication` - Last replication\n* `-last_replication` - Last replication (descending)\n* `pk` - Pk\n* `-pk` - Pk (descending)",
                         "explode": false,
                         "style": "form"
                     },
@@ -122787,6 +122637,72 @@
                 }
             }
         },
+        "/api/pulp/api/v3/ansible/copy/": {
+            "post": {
+                "operationId": "copy_content",
+                "description": "Trigger an asynchronous task to copy ansible content from one repository into another, creating a new repository version.",
+                "summary": "Copy content",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Task-Diagnostics",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "List of profilers to use on tasks."
+                    }
+                ],
+                "tags": [
+                    "Ansible: Copy"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Copy"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Copy"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Copy"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "remoteUserAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AsyncOperationResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/pulp/api/v3/docs/api.json": {
             "get": {
                 "operationId": "docs_api.json_get",
@@ -123175,6 +123091,92 @@
                 }
             }
         },
+        "/api/pulp/api/v3/pulp_ansible/tags/": {
+            "get": {
+                "operationId": "pulp_ansible_tags_list",
+                "description": "ViewSet for Tag models.",
+                "summary": "List collection versions",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "X-Task-Diagnostics",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "List of profilers to use on tasks."
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "fields",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "A list of fields to include in the response."
+                    },
+                    {
+                        "in": "query",
+                        "name": "exclude_fields",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "description": "A list of fields to exclude from the response."
+                    }
+                ],
+                "tags": [
+                    "Pulp_Ansible: Tags"
+                ],
+                "security": [
+                    {
+                        "basicAuth": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "remoteUserAuthentication": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedTagResponseList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/pulp/api/v3/status/": {
             "get": {
                 "operationId": "status_read",
@@ -123437,136 +123439,6 @@
                     {
                         "remoteUserAuthentication": []
                     }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/pulp/maven/{pulp_domain}/{name}/{path}": {
-            "get": {
-                "operationId": "pulp_maven_get",
-                "description": "Responds to GET requests about manifests by reference",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Task-Diagnostics",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "List of profilers to use on tasks."
-                    },
-                    {
-                        "in": "path",
-                        "name": "name",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[\\w-]+$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "path",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^.*$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "pulp_domain",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[-a-zA-Z0-9_]+$"
-                        },
-                        "required": true,
-                        "x-isDomain": true
-                    },
-                    {
-                        "in": "query",
-                        "name": "fields",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "A list of fields to include in the response."
-                    },
-                    {
-                        "in": "query",
-                        "name": "exclude_fields",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "A list of fields to exclude from the response."
-                    }
-                ],
-                "tags": [
-                    "Pulp: Maven"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "No response body"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "pulp_maven_put",
-                "description": "ViewSet for interacting with maven deploy API",
-                "parameters": [
-                    {
-                        "in": "header",
-                        "name": "X-Task-Diagnostics",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "List of profilers to use on tasks."
-                    },
-                    {
-                        "in": "path",
-                        "name": "name",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[\\w-]+$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "path",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^.*$"
-                        },
-                        "required": true
-                    },
-                    {
-                        "in": "path",
-                        "name": "pulp_domain",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^[-a-zA-Z0-9_]+$"
-                        },
-                        "required": true,
-                        "x-isDomain": true
-                    }
-                ],
-                "tags": [
-                    "Pulp: Maven"
                 ],
                 "responses": {
                     "200": {
@@ -134940,7 +134812,8 @@
                 "properties": {
                     "addon_id": {
                         "type": "string",
-                        "description": "Addon id."
+                        "description": "Addon id.",
+                        "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9._-]+$"
                     },
                     "uid": {
                         "type": "string",
@@ -135197,26 +135070,43 @@
                 "type": "object",
                 "description": "A serializer for ArtifactDistribution.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "An optional content-guard."
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
                     },
-                    "pulp_last_updated": {
+                    "base_url": {
                         "type": "string",
-                        "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                        "description": "The URL for accessing the publication as defined by this distribution."
                     },
                     "pulp_href": {
                         "type": "string",
                         "format": "uri",
                         "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
+                    },
+                    "no_content_change_since": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                    },
+                    "base_path": {
+                        "type": "string",
+                        "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
                     },
                     "hidden": {
                         "type": "boolean",
@@ -135228,43 +135118,26 @@
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN)."
                     },
-                    "no_content_change_since": {
+                    "pulp_last_updated": {
                         "type": "string",
+                        "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
-                    "repository_version": {
+                    "name": {
                         "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
                     },
                     "content_guard_prn": {
                         "type": "string",
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN) of the associated optional content guard."
                     },
-                    "pulp_created": {
+                    "content_guard": {
                         "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of creation."
-                    },
-                    "base_url": {
-                        "type": "string",
-                        "readOnly": true,
-                        "description": "The URL for accessing the publication as defined by this distribution."
-                    },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
-                    },
-                    "base_path": {
-                        "type": "string",
-                        "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "An optional content-guard."
                     }
                 },
                 "required": [
@@ -136280,8 +136153,17 @@
                 "description": "A serializer for Content Copy API.",
                 "properties": {
                     "config": {
-                        "type": "object",
                         "description": "A JSON document describing sources, destinations, and content to be copied"
+                    },
+                    "structured": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Also copy any distributions, components, and releases as needed for any packages being copied. This will allow for structured publications of the target repository.Default is set to True"
+                    },
+                    "dependency_solving": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Also copy dependencies of any packages being copied. NOT YETIMPLEMENTED! You must keep this at \"False\"!"
                     }
                 },
                 "required": [
@@ -139261,13 +139143,17 @@
                     "releases": {
                         "description": "List of all the releases of the package"
                     },
-                    "urls": {}
+                    "urls": {},
+                    "vulnerabilities": {
+                        "description": "Known vulnerabilities for the selected package version."
+                    }
                 },
                 "required": [
                     "info",
                     "last_serial",
                     "releases",
-                    "urls"
+                    "urls",
+                    "vulnerabilities"
                 ]
             },
             "PackageTypesEnum": {
@@ -144825,6 +144711,15 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
+                    "remote_policy": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RemotePolicyEnum"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Download policy for remotes created during replication. One of 'immediate', 'on_demand', or 'streamed'. Distinct from 'policy', which controls how replicate manages local objects. Defaults to the Remote default ('immediate') when unset.\n\n* `immediate` - When syncing, download all metadata and content now.\n* `on_demand` - When syncing, download metadata, but do not download content now. Instead, download content as clients request it, and save it in Pulp to be served for future client requests.\n* `streamed` - When syncing, download metadata, but do not download content now. Instead,download content as clients request it, but never save it in Pulp. This causes future requests for that same content to have to be downloaded again."
+                    },
                     "q_select": {
                         "type": "string",
                         "nullable": true,
@@ -145217,16 +145112,43 @@
                 "type": "object",
                 "description": "A serializer for Git Collection Remotes.",
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name for this remote."
-                    },
-                    "proxy_url": {
+                    "client_cert": {
                         "type": "string",
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The proxy URL. Format: scheme://host:port"
+                        "description": "A PEM encoded client certificate used for authentication."
+                    },
+                    "url": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The URL of an external content source."
+                    },
+                    "total_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
+                    "proxy_password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The password to authenticate to the proxy. Extra leading and trailing whitespace characters are not trimmed."
+                    },
+                    "ca_cert": {
+                        "type": "string",
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
+                    },
+                    "sock_connect_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
                     "sock_read_timeout": {
                         "type": "number",
@@ -145235,17 +145157,24 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
-                    "url": {
+                    "name": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "The URL of an external content source."
+                        "description": "A unique name for this remote."
                     },
-                    "password": {
+                    "client_key": {
                         "type": "string",
                         "writeOnly": true,
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The password to be used for authentication when syncing. Extra leading and trailing whitespace characters are not trimmed."
+                        "description": "A PEM encoded private key used for authentication."
+                    },
+                    "proxy_username": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The username to authenticte to the proxy."
                     },
                     "max_retries": {
                         "type": "integer",
@@ -145260,63 +145189,28 @@
                             "nullable": true
                         }
                     },
-                    "headers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object"
-                        },
-                        "description": "Headers for aiohttp.Clientsession"
-                    },
-                    "username": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "The username to be used for authentication when syncing."
-                    },
-                    "proxy_username": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "The username to authenticte to the proxy."
-                    },
                     "tls_validation": {
                         "type": "boolean",
                         "description": "If True, TLS peer validation must be performed."
                     },
-                    "sock_connect_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
+                    "proxy_url": {
+                        "type": "string",
                         "nullable": true,
-                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                        "minLength": 1,
+                        "description": "The proxy URL. Format: scheme://host:port"
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The password to be used for authentication when syncing. Extra leading and trailing whitespace characters are not trimmed."
                     },
                     "rate_limit": {
                         "type": "integer",
                         "format": "int64",
                         "nullable": true,
                         "description": "Limits requests per second for each concurrent downloader"
-                    },
-                    "download_concurrency": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Total number of simultaneous connections. If not set then the default value will be used.",
-                        "minimum": 1
-                    },
-                    "total_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
-                    },
-                    "ca_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
                     },
                     "connect_timeout": {
                         "type": "number",
@@ -145325,25 +145219,26 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
-                    "client_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded client certificate used for authentication."
+                    "headers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "description": "Headers for aiohttp.Clientsession"
                     },
-                    "proxy_password": {
+                    "download_concurrency": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Total number of simultaneous connections. If not set then the default value will be used.",
+                        "minimum": 1
+                    },
+                    "username": {
                         "type": "string",
                         "writeOnly": true,
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The password to authenticate to the proxy. Extra leading and trailing whitespace characters are not trimmed."
-                    },
-                    "client_key": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded private key used for authentication."
+                        "description": "The username to be used for authentication when syncing."
                     },
                     "metadata_only": {
                         "type": "boolean",
@@ -145547,33 +145442,6 @@
                 "type": "object",
                 "description": "A serializer for ContainerDistribution.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
-                    },
-                    "hidden": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether this distribution should be shown in the content app."
-                    },
-                    "repository_version": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
-                    },
                     "pulp_labels": {
                         "type": "object",
                         "additionalProperties": {
@@ -145585,6 +145453,33 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
+                    },
+                    "hidden": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether this distribution should be shown in the content app."
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    },
+                    "content_guard": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "private": {
                         "type": "boolean",
@@ -145602,33 +145497,6 @@
                 "type": "object",
                 "description": "A serializer for a specialized pull-through distribution referencing sub-distributions.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
-                    },
-                    "hidden": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether this distribution should be shown in the content app."
-                    },
-                    "repository_version": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
-                    },
                     "pulp_labels": {
                         "type": "object",
                         "additionalProperties": {
@@ -145640,6 +145508,33 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "The registry path exposed by this pull-through distribution."
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
+                    },
+                    "hidden": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether this distribution should be shown in the content app."
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    },
+                    "content_guard": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "remote": {
                         "type": "string",
@@ -145832,18 +145727,18 @@
                 "type": "object",
                 "description": "Serializer for Container Push Repositories.",
                 "properties": {
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
                     "retain_repo_versions": {
                         "type": "integer",
                         "format": "int64",
                         "nullable": true,
                         "description": "Retain X versions of the repository. Default is null which retains all versions.",
-                        "minimum": 1
-                    },
-                    "retain_checkpoints": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
                         "minimum": 1
                     },
                     "description": {
@@ -145858,12 +145753,12 @@
                         "nullable": true,
                         "description": "A reference to an associated signing service."
                     },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
+                    "retain_checkpoints": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
+                        "minimum": 1
                     },
                     "name": {
                         "type": "string",
@@ -148426,6 +148321,11 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Whether to sync available provenances for Python packages."
+                    },
+                    "vulnerabilities": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to scan the new repository version for vulnerabilities after a sync."
                     }
                 }
             },
@@ -149525,7 +149425,7 @@
                     "finished_before": {
                         "type": "string",
                         "format": "date-time",
-                        "default": "2026-09-18",
+                        "default": "2026-10-05",
                         "description": "Purge tasks completed earlier than this timestamp. Format '%Y-%m-%d[T%H:%M:%S]'"
                     },
                     "states": {
@@ -150094,6 +149994,15 @@
                         "description": "Limits requests per second for each concurrent downloader"
                     }
                 }
+            },
+            "RemotePolicyEnum": {
+                "enum": [
+                    "immediate",
+                    "on_demand",
+                    "streamed"
+                ],
+                "type": "string",
+                "description": "* `immediate` - When syncing, download all metadata and content now.\n* `on_demand` - When syncing, download metadata, but do not download content now. Instead, download content as clients request it, and save it in Pulp to be served for future client requests.\n* `streamed` - When syncing, download metadata, but do not download content now. Instead,download content as clients request it, but never save it in Pulp. This causes future requests for that same content to have to be downloaded again."
             },
             "RemoveImage": {
                 "type": "object",
@@ -151561,6 +151470,15 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
+                    "remote_policy": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RemotePolicyEnum"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Download policy for remotes created during replication. One of 'immediate', 'on_demand', or 'streamed'. Distinct from 'policy', which controls how replicate manages local objects. Defaults to the Remote default ('immediate') when unset.\n\n* `immediate` - When syncing, download all metadata and content now.\n* `on_demand` - When syncing, download metadata, but do not download content now. Instead, download content as clients request it, and save it in Pulp to be served for future client requests.\n* `streamed` - When syncing, download metadata, but do not download content now. Instead,download content as clients request it, but never save it in Pulp. This causes future requests for that same content to have to be downloaded again."
+                    },
                     "q_select": {
                         "type": "string",
                         "nullable": true,
@@ -151688,6 +151606,15 @@
                         "minimum": 0.0,
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
+                    "remote_policy": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RemotePolicyEnum"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Download policy for remotes created during replication. One of 'immediate', 'on_demand', or 'streamed'. Distinct from 'policy', which controls how replicate manages local objects. Defaults to the Remote default ('immediate') when unset.\n\n* `immediate` - When syncing, download all metadata and content now.\n* `on_demand` - When syncing, download metadata, but do not download content now. Instead, download content as clients request it, and save it in Pulp to be served for future client requests.\n* `streamed` - When syncing, download metadata, but do not download content now. Instead,download content as clients request it, but never save it in Pulp. This causes future requests for that same content to have to be downloaded again."
                     },
                     "hidden_fields": {
                         "type": "array",
@@ -152004,7 +151931,8 @@
                 "properties": {
                     "variant_id": {
                         "type": "string",
-                        "description": "Variant id."
+                        "description": "Variant id.",
+                        "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9._-]+$"
                     },
                     "uid": {
                         "type": "string",
@@ -153094,34 +153022,6 @@
                 "type": "object",
                 "description": "A serializer for CollectionVersion Content.",
                 "properties": {
-                    "artifact": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Artifact file representing the physical content"
-                    },
-                    "upload": {
-                        "type": "string",
-                        "format": "uri",
-                        "writeOnly": true,
-                        "description": "An uncommitted upload that may be turned into the content unit."
-                    },
-                    "overwrite": {
-                        "type": "boolean",
-                        "writeOnly": true,
-                        "description": "When set to true, existing content in the repository with the same unique key will be silently overwritten. When set to false, the task will fail if content would be overwritten. Only used when 'repository' is specified. Defaults to true."
-                    },
-                    "file": {
-                        "type": "string",
-                        "format": "binary",
-                        "writeOnly": true,
-                        "description": "An uploaded file that may be turned into the content unit."
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "writeOnly": true,
-                        "description": "A URI of a repository the new content unit should be associated with."
-                    },
                     "pulp_labels": {
                         "type": "object",
                         "additionalProperties": {
@@ -153129,6 +153029,12 @@
                             "nullable": true
                         },
                         "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
+                    },
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "writeOnly": true,
+                        "description": "An uploaded file that may be turned into the content unit."
                     },
                     "file_url": {
                         "type": "string",
@@ -153144,6 +153050,28 @@
                         ],
                         "writeOnly": true,
                         "description": "Configuration for the download process (e.g., proxies, auth, timeouts). Only applicable when providing a 'file_url."
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "writeOnly": true,
+                        "description": "A URI of a repository the new content unit should be associated with."
+                    },
+                    "artifact": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Artifact file representing the physical content"
+                    },
+                    "upload": {
+                        "type": "string",
+                        "format": "uri",
+                        "writeOnly": true,
+                        "description": "An uncommitted upload that may be turned into the content unit."
+                    },
+                    "overwrite": {
+                        "type": "boolean",
+                        "writeOnly": true,
+                        "description": "When set to true, existing content in the repository with the same unique key will be silently overwritten. When set to false, the task will fail if content would be overwritten. Only used when 'repository' is specified. Defaults to true."
                     },
                     "expected_name": {
                         "type": "string",
@@ -153224,21 +153152,24 @@
                 "type": "object",
                 "description": "A serializer for CollectionVersion Content.",
                 "properties": {
-                    "pulp_last_updated": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
-                    },
-                    "vuln_report": {
-                        "type": "string",
-                        "format": "uri",
-                        "readOnly": true
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
                     },
                     "pulp_href": {
                         "type": "string",
                         "format": "uri",
                         "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
                     },
                     "artifact": {
                         "type": "string",
@@ -153250,19 +153181,16 @@
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN)."
                     },
-                    "pulp_created": {
+                    "pulp_last_updated": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp of creation."
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        },
-                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
+                    "vuln_report": {
+                        "type": "string",
+                        "format": "uri",
+                        "readOnly": true
                     },
                     "sha256": {
                         "type": "string",
@@ -153517,16 +153445,43 @@
                 "type": "object",
                 "description": "A serializer for Git Collection Remotes.",
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name for this remote."
-                    },
-                    "proxy_url": {
+                    "client_cert": {
                         "type": "string",
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The proxy URL. Format: scheme://host:port"
+                        "description": "A PEM encoded client certificate used for authentication."
+                    },
+                    "url": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The URL of an external content source."
+                    },
+                    "total_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
+                    "proxy_password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The password to authenticate to the proxy. Extra leading and trailing whitespace characters are not trimmed."
+                    },
+                    "ca_cert": {
+                        "type": "string",
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
+                    },
+                    "sock_connect_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
                     "sock_read_timeout": {
                         "type": "number",
@@ -153535,17 +153490,24 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
-                    "url": {
+                    "name": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "The URL of an external content source."
+                        "description": "A unique name for this remote."
                     },
-                    "password": {
+                    "client_key": {
                         "type": "string",
                         "writeOnly": true,
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The password to be used for authentication when syncing. Extra leading and trailing whitespace characters are not trimmed."
+                        "description": "A PEM encoded private key used for authentication."
+                    },
+                    "proxy_username": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The username to authenticte to the proxy."
                     },
                     "max_retries": {
                         "type": "integer",
@@ -153560,63 +153522,28 @@
                             "nullable": true
                         }
                     },
-                    "headers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object"
-                        },
-                        "description": "Headers for aiohttp.Clientsession"
-                    },
-                    "username": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "The username to be used for authentication when syncing."
-                    },
-                    "proxy_username": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "The username to authenticte to the proxy."
-                    },
                     "tls_validation": {
                         "type": "boolean",
                         "description": "If True, TLS peer validation must be performed."
                     },
-                    "sock_connect_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
+                    "proxy_url": {
+                        "type": "string",
                         "nullable": true,
-                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                        "minLength": 1,
+                        "description": "The proxy URL. Format: scheme://host:port"
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "nullable": true,
+                        "minLength": 1,
+                        "description": "The password to be used for authentication when syncing. Extra leading and trailing whitespace characters are not trimmed."
                     },
                     "rate_limit": {
                         "type": "integer",
                         "format": "int64",
                         "nullable": true,
                         "description": "Limits requests per second for each concurrent downloader"
-                    },
-                    "download_concurrency": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Total number of simultaneous connections. If not set then the default value will be used.",
-                        "minimum": 1
-                    },
-                    "total_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
-                    },
-                    "ca_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
                     },
                     "connect_timeout": {
                         "type": "number",
@@ -153625,25 +153552,26 @@
                         "nullable": true,
                         "description": "aiohttp.ClientTimeout.connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
-                    "client_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded client certificate used for authentication."
+                    "headers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "description": "Headers for aiohttp.Clientsession"
                     },
-                    "proxy_password": {
+                    "download_concurrency": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Total number of simultaneous connections. If not set then the default value will be used.",
+                        "minimum": 1
+                    },
+                    "username": {
                         "type": "string",
                         "writeOnly": true,
                         "nullable": true,
                         "minLength": 1,
-                        "description": "The password to authenticate to the proxy. Extra leading and trailing whitespace characters are not trimmed."
-                    },
-                    "client_key": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "nullable": true,
-                        "minLength": 1,
-                        "description": "A PEM encoded private key used for authentication."
+                        "description": "The username to be used for authentication when syncing."
                     },
                     "metadata_only": {
                         "type": "boolean",
@@ -153664,25 +153592,38 @@
                 "type": "object",
                 "description": "A serializer for Git Collection Remotes.",
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "A unique name for this remote."
-                    },
-                    "proxy_url": {
+                    "client_cert": {
                         "type": "string",
                         "nullable": true,
-                        "description": "The proxy URL. Format: scheme://host:port"
-                    },
-                    "sock_read_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                        "description": "A PEM encoded client certificate used for authentication."
                     },
                     "url": {
                         "type": "string",
                         "description": "The URL of an external content source."
+                    },
+                    "total_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
+                    "pulp_href": {
+                        "type": "string",
+                        "format": "uri",
+                        "readOnly": true
+                    },
+                    "ca_cert": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
+                    },
+                    "sock_connect_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
                     },
                     "hidden_fields": {
                         "type": "array",
@@ -153704,11 +153645,21 @@
                         "readOnly": true,
                         "description": "List of hidden (write only) fields"
                     },
-                    "pulp_created": {
+                    "prn": {
                         "type": "string",
-                        "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp of creation."
+                        "description": "The Pulp Resource Name (PRN)."
+                    },
+                    "sock_read_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.sock_read (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "A unique name for this remote."
                     },
                     "max_retries": {
                         "type": "integer",
@@ -153723,6 +153674,34 @@
                             "nullable": true
                         }
                     },
+                    "tls_validation": {
+                        "type": "boolean",
+                        "description": "If True, TLS peer validation must be performed."
+                    },
+                    "proxy_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The proxy URL. Format: scheme://host:port"
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
+                    },
+                    "rate_limit": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Limits requests per second for each concurrent downloader"
+                    },
+                    "connect_timeout": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.0,
+                        "nullable": true,
+                        "description": "aiohttp.ClientTimeout.connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
+                    },
                     "headers": {
                         "type": "array",
                         "items": {
@@ -153736,63 +153715,12 @@
                         "readOnly": true,
                         "description": "Timestamp of the most recent update of the remote."
                     },
-                    "pulp_href": {
-                        "type": "string",
-                        "format": "uri",
-                        "readOnly": true
-                    },
-                    "tls_validation": {
-                        "type": "boolean",
-                        "description": "If True, TLS peer validation must be performed."
-                    },
-                    "sock_connect_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.sock_connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
-                    },
-                    "rate_limit": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Limits requests per second for each concurrent downloader"
-                    },
                     "download_concurrency": {
                         "type": "integer",
                         "format": "int64",
                         "nullable": true,
                         "description": "Total number of simultaneous connections. If not set then the default value will be used.",
                         "minimum": 1
-                    },
-                    "prn": {
-                        "type": "string",
-                        "readOnly": true,
-                        "description": "The Pulp Resource Name (PRN)."
-                    },
-                    "total_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.total (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
-                    },
-                    "ca_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "A PEM encoded CA certificate used to validate the server certificate presented by the remote server."
-                    },
-                    "connect_timeout": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0.0,
-                        "nullable": true,
-                        "description": "aiohttp.ClientTimeout.connect (q.v.) for download-connections. The default is null, which will cause the default from the aiohttp library to be used."
-                    },
-                    "client_cert": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "A PEM encoded client certificate used for authentication."
                     },
                     "metadata_only": {
                         "type": "boolean",
@@ -153812,6 +153740,20 @@
                 "type": "object",
                 "description": "A serializer for Role versions.",
                 "properties": {
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "writeOnly": true,
+                        "description": "A URI of a repository the new content unit should be associated with."
+                    },
                     "artifact": {
                         "type": "string",
                         "format": "uri",
@@ -153821,20 +153763,6 @@
                         "type": "boolean",
                         "writeOnly": true,
                         "description": "When set to true, existing content in the repository with the same unique key will be silently overwritten. When set to false, the task will fail if content would be overwritten. Only used when 'repository' is specified. Defaults to true."
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "writeOnly": true,
-                        "description": "A URI of a repository the new content unit should be associated with."
-                    },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        },
-                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
                     },
                     "version": {
                         "type": "string",
@@ -154156,21 +154084,24 @@
                 "type": "object",
                 "description": "A serializer for Role versions.",
                 "properties": {
-                    "pulp_last_updated": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
-                    },
-                    "vuln_report": {
-                        "type": "string",
-                        "format": "uri",
-                        "readOnly": true
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
                     },
                     "pulp_href": {
                         "type": "string",
                         "format": "uri",
                         "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
                     },
                     "artifact": {
                         "type": "string",
@@ -154182,19 +154113,16 @@
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN)."
                     },
-                    "pulp_created": {
+                    "pulp_last_updated": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp of creation."
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        },
-                        "description": "A dictionary of arbitrary key/value pairs used to describe a specific Content instance."
+                    "vuln_report": {
+                        "type": "string",
+                        "format": "uri",
+                        "readOnly": true
                     },
                     "version": {
                         "type": "string"
@@ -154414,33 +154342,6 @@
                 "type": "object",
                 "description": "A serializer for ContainerDistribution.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
-                    },
-                    "hidden": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether this distribution should be shown in the content app."
-                    },
-                    "repository_version": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
-                    },
                     "pulp_labels": {
                         "type": "object",
                         "additionalProperties": {
@@ -154452,6 +154353,33 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
+                    },
+                    "hidden": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether this distribution should be shown in the content app."
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    },
+                    "content_guard": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "private": {
                         "type": "boolean",
@@ -154473,25 +154401,44 @@
                 "type": "object",
                 "description": "A serializer for ContainerDistribution.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "pulp_last_updated": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
                     },
                     "pulp_href": {
                         "type": "string",
                         "format": "uri",
                         "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
+                    },
+                    "no_content_change_since": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                    },
+                    "base_path": {
+                        "type": "string",
+                        "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
                     },
                     "hidden": {
                         "type": "boolean",
@@ -154503,44 +154450,25 @@
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN)."
                     },
-                    "no_content_change_since": {
+                    "pulp_last_updated": {
                         "type": "string",
+                        "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
-                    "repository_version": {
+                    "name": {
                         "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
                     },
                     "content_guard_prn": {
                         "type": "string",
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN) of the associated optional content guard."
                     },
-                    "pulp_created": {
+                    "content_guard": {
                         "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of creation."
-                    },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
-                    },
-                    "base_path": {
-                        "type": "string",
-                        "description": "The base (relative) path component of the published url. Avoid paths that                     overlap with other distribution base paths (e.g. \"foo\" and \"foo/bar\")"
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "registry_path": {
                         "type": "string",
@@ -154639,33 +154567,6 @@
                 "type": "object",
                 "description": "A serializer for a specialized pull-through distribution referencing sub-distributions.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
-                    },
-                    "hidden": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether this distribution should be shown in the content app."
-                    },
-                    "repository_version": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
-                    },
                     "pulp_labels": {
                         "type": "object",
                         "additionalProperties": {
@@ -154677,6 +154578,33 @@
                         "type": "string",
                         "minLength": 1,
                         "description": "The registry path exposed by this pull-through distribution."
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
+                    },
+                    "hidden": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether this distribution should be shown in the content app."
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    },
+                    "content_guard": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "remote": {
                         "type": "string",
@@ -154712,25 +154640,44 @@
                 "type": "object",
                 "description": "A serializer for a specialized pull-through distribution referencing sub-distributions.",
                 "properties": {
-                    "content_guard": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "An optional content-guard. If none is specified, a default one will be used."
-                    },
-                    "pulp_last_updated": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "A unique name. Ex, `rawhide` and `stable`."
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
                     },
                     "pulp_href": {
                         "type": "string",
                         "format": "uri",
                         "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
+                    },
+                    "no_content_change_since": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                    },
+                    "base_path": {
+                        "type": "string",
+                        "description": "The registry path exposed by this pull-through distribution."
+                    },
+                    "repository": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "The latest RepositoryVersion for this Repository will be served."
+                    },
+                    "repository_version": {
+                        "type": "string",
+                        "format": "uri",
+                        "nullable": true,
+                        "description": "RepositoryVersion to be served"
                     },
                     "hidden": {
                         "type": "boolean",
@@ -154742,44 +154689,25 @@
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN)."
                     },
-                    "no_content_change_since": {
+                    "pulp_last_updated": {
                         "type": "string",
+                        "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp since when the distributed content served by this distribution has not changed. If equals to `null`, no guarantee is provided about content changes."
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
-                    "repository_version": {
+                    "name": {
                         "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "RepositoryVersion to be served"
-                    },
-                    "repository": {
-                        "type": "string",
-                        "format": "uri",
-                        "nullable": true,
-                        "description": "The latest RepositoryVersion for this Repository will be served."
+                        "description": "A unique name. Ex, `rawhide` and `stable`."
                     },
                     "content_guard_prn": {
                         "type": "string",
                         "readOnly": true,
                         "description": "The Pulp Resource Name (PRN) of the associated optional content guard."
                     },
-                    "pulp_created": {
+                    "content_guard": {
                         "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of creation."
-                    },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
-                    },
-                    "base_path": {
-                        "type": "string",
-                        "description": "The registry path exposed by this pull-through distribution."
+                        "format": "uri",
+                        "description": "An optional content-guard. If none is specified, a default one will be used."
                     },
                     "remote": {
                         "type": "string",
@@ -155152,18 +155080,18 @@
                 "type": "object",
                 "description": "Serializer for Container Push Repositories.",
                 "properties": {
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
                     "retain_repo_versions": {
                         "type": "integer",
                         "format": "int64",
                         "nullable": true,
                         "description": "Retain X versions of the repository. Default is null which retains all versions.",
-                        "minimum": 1
-                    },
-                    "retain_checkpoints": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
                         "minimum": 1
                     },
                     "description": {
@@ -155178,12 +155106,12 @@
                         "nullable": true,
                         "description": "A reference to an associated signing service."
                     },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
+                    "retain_checkpoints": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
+                        "minimum": 1
                     },
                     "name": {
                         "type": "string",
@@ -155199,11 +155127,12 @@
                 "type": "object",
                 "description": "Serializer for Container Push Repositories.",
                 "properties": {
-                    "pulp_last_updated": {
-                        "type": "string",
-                        "format": "date-time",
-                        "readOnly": true,
-                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
+                    "pulp_labels": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string",
+                            "nullable": true
+                        }
                     },
                     "retain_repo_versions": {
                         "type": "integer",
@@ -155211,16 +155140,6 @@
                         "nullable": true,
                         "description": "Retain X versions of the repository. Default is null which retains all versions.",
                         "minimum": 1
-                    },
-                    "pulp_href": {
-                        "type": "string",
-                        "format": "uri",
-                        "readOnly": true
-                    },
-                    "prn": {
-                        "type": "string",
-                        "readOnly": true,
-                        "description": "The Pulp Resource Name (PRN)."
                     },
                     "versions_href": {
                         "type": "string",
@@ -155232,12 +155151,16 @@
                         "format": "uri",
                         "readOnly": true
                     },
-                    "retain_checkpoints": {
-                        "type": "integer",
-                        "format": "int64",
-                        "nullable": true,
-                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
-                        "minimum": 1
+                    "pulp_href": {
+                        "type": "string",
+                        "format": "uri",
+                        "readOnly": true
+                    },
+                    "pulp_created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "description": "Timestamp of creation."
                     },
                     "description": {
                         "type": "string",
@@ -155250,18 +155173,23 @@
                         "nullable": true,
                         "description": "A reference to an associated signing service."
                     },
-                    "pulp_created": {
+                    "retain_checkpoints": {
+                        "type": "integer",
+                        "format": "int64",
+                        "nullable": true,
+                        "description": "Retain X checkpoint publications for the repository. Default is null which retains all checkpoints.",
+                        "minimum": 1
+                    },
+                    "prn": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "The Pulp Resource Name (PRN)."
+                    },
+                    "pulp_last_updated": {
                         "type": "string",
                         "format": "date-time",
                         "readOnly": true,
-                        "description": "Timestamp of creation."
-                    },
-                    "pulp_labels": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string",
-                            "nullable": true
-                        }
+                        "description": "Timestamp of the last time this resource was updated. Note: for immutable resources - like content, repository versions, and publication - pulp_created and pulp_last_updated dates will be the same."
                     },
                     "name": {
                         "type": "string",
@@ -158115,16 +158043,6 @@
                         "nullable": true,
                         "minLength": 1
                     },
-                    "not_automatic": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1
-                    },
-                    "but_automatic_upgrades": {
-                        "type": "string",
-                        "nullable": true,
-                        "minLength": 1
-                    },
                     "architectures": {
                         "type": "array",
                         "items": {
@@ -158536,14 +158454,6 @@
                         "nullable": true
                     },
                     "description": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "not_automatic": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "but_automatic_upgrades": {
                         "type": "string",
                         "nullable": true
                     },
@@ -165614,6 +165524,11 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Whether to sync available provenances for Python packages."
+                    },
+                    "vulnerabilities": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to scan the new repository version for vulnerabilities after a sync."
                     }
                 },
                 "required": [
@@ -165806,6 +165721,11 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Whether to sync available provenances for Python packages."
+                    },
+                    "vulnerabilities": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to scan the new repository version for vulnerabilities after a sync."
                     }
                 },
                 "required": [

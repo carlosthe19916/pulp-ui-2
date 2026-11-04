@@ -75,6 +75,10 @@ export const pythonRemoteForm = remoteForm(python.remote["python.python"])(
           }),
           f.switch("prereleases", { label: "Include pre-releases" }),
           f.switch("provenance", { label: "Sync provenance" }),
+          f.switch("vulnerabilities", {
+            label: "Scan for vulnerabilities",
+            help: "Scan the new repository version after each sync.",
+          }),
         ]),
       ]),
       s.collapsible(SECTION_IDS.auth, "Authentication", authSection(f)),
