@@ -32,7 +32,6 @@ export const ansible = definePlugin({
           target: "repository",
         },
         "rebuild-metadata": { path: "rebuild_metadata/", target: "repository" },
-        copy: { path: "/ansible/copy/", target: "repository" },
       },
     },
   },
