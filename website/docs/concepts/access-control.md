@@ -5,24 +5,33 @@ sidebar_position: 6
 
 # Access control (RBAC)
 
-Pulp uses role-based access control. The concepts:
+Pulp uses role-based access control, the same idea as Artifactory permission targets or GitHub team
+permissions: you grant **roles** to **users** and **groups**, and a role is a bundle of permissions.
 
-- **Users** and **Groups** — identities, and collections of users. Both are global (not per-domain).
-- **Role** — a named set of permissions. Assignable at three scopes:
-  - **global** (model level) — e.g. "can create any RPM repository",
-  - **object** — e.g. "owner of _this_ repository" (granted on the object's **Access** tab),
-  - **domain** — the role applies within one domain.
-- **Access policy** — the rules a viewset enforces to decide who may call which action. Advanced;
-  most users rely on roles.
+## The pieces
 
-Creating an object automatically grants you its **owner** role.
+- **Users** and **Groups** — identities, and collections of users. Both are global, not per-domain.
+- **Role** — a named set of permissions, assignable at three scopes:
+
+  | Scope      | Means                                                  | Example                          |
+  | ---------- | ------------------------------------------------------ | -------------------------------- |
+  | **global** | Applies to every object of a type.                     | "Create any RPM repository."     |
+  | **object** | Applies to one object (granted on its **Access** tab). | "Owner of _this_ repository."    |
+  | **domain** | Applies within one [domain](./domains.md).             | "Manage everything in `team-a`." |
+
+- **Access policy** — the low-level rules a Pulp API endpoint enforces. Advanced; most of the time
+  you work with roles, not policies.
+
+Creating an object automatically grants you its **owner** role — so the person who makes a repository
+can manage it without an admin stepping in.
 
 ## How it shows up in Pulp UI
 
 - The UI doesn't hide admin pages by role. Instead, RBAC filters what the API returns: lists come
-  back with only the objects you can see, and actions you lack permission for are **disabled with a
-  tooltip**, not hidden.
-- A superuser sees and can do everything.
+  back with only the objects you're allowed to see.
+- Actions you can't perform are **disabled with a tooltip**, not hidden — so you can tell the feature
+  exists and that you'd need permission.
+- A **superuser** sees and can do everything.
 
 ## Where to manage it
 

@@ -5,17 +5,18 @@ sidebar_position: 8
 
 # Signing services
 
-A signing service wraps a GPG key and script so Pulp can **sign content and metadata** — RPM
-metadata (`repomd.xml`), Debian `Release` files, Ansible collections, container manifests, and more.
+A signing service wraps a GPG key and a signing script so Pulp can **cryptographically sign content
+and metadata** — RPM metadata (`repomd.xml`), Debian `Release` files, Ansible collections, container
+manifests, and more — so clients can verify what they download.
 
 View configured signing services under **System Management → Signing Services**. They are global.
 
 ## How they're used
 
-Signing services are **registered on the server** (CLI/config), then **selected in the UI** where
-signing applies — a repository's **Signing** section, or a sign action. The relevant ecosystem
-[tutorials](../tutorials/index.md) (RPM, Debian, Ansible, Container) show where.
+1. An administrator **registers** a signing service on the server (it needs the key and script on the
+   Pulp host, so this is a server-side step, not a UI one).
+2. In the UI, you then **select** that signing service where signing applies — for example a
+   repository's **Signing** section, or a sign action on a repository.
 
-:::note
-Outline page — full walkthrough and screenshots to follow.
-:::
+The relevant ecosystem [tutorials](../tutorials/index.md) (RPM, Debian, Ansible, Container) show
+exactly where signing is chosen for each type.

@@ -7,16 +7,17 @@ sidebar_position: 14
 
 Housekeeping for a Pulp installation, under **System Management → Maintenance**.
 
-## Common tasks
+## Orphan cleanup
 
-- **Orphan cleanup** — delete content and artifacts no longer referenced by any repository version,
-  reclaiming disk space.
-- **Repair** — re-download or re-verify missing/corrupt artifacts.
+Deleting a repository or version leaves its bytes behind until nothing references them. Run **orphan
+cleanup** to delete content and artifacts no longer in any repository version and reclaim disk space.
+It respects `retain_repo_versions` and never removes content still served by a
+[distribution](../using-pulp/serve-content.md).
 
-Both run as [tasks](../concepts/tasks.md). Orphan cleanup respects `retain_repo_versions` and
-protects content still served by a distribution. To inspect stored bytes first, see
+## Repair
+
+Run **repair** to re-download or re-verify artifacts that are missing or corrupt — useful after
+storage problems. You can also repair a single repository version from its detail page.
+
+Both run as [tasks](../concepts/tasks.md). To see what's stored before cleaning up, check
 [Storage](./storage.md).
-
-:::note
-Outline page — full walkthrough and screenshots to follow.
-:::

@@ -6,25 +6,28 @@ sidebar_position: 6
 
 # Granting access to objects
 
-Besides global roles, you can grant a [role](./roles-and-permissions.md) on a **single object** —
-for example making a user the owner of one repository without giving them access to any other.
+Besides global roles, you can grant a [role](./roles-and-permissions.md) on a **single object** — for
+example making someone the owner of one repository without touching anything else. This is Pulp's
+equivalent of per-repository permissions in Artifactory/Nexus.
 
-## How
+## Grant a role on one object
 
-- Repositories, Remotes, Distributions and Publications have an **Access** tab. Open it to grant or
-  revoke a user's or group's role on that object.
-- Objects without their own page (for example [content guards](./content-guards.md)) offer a
-  **Manage access** row action that does the same.
+1. Open the repository, remote, distribution or publication.
+2. Go to its **Access** tab.
+3. Add a [user](./users.md) or [group](./groups.md) and pick the role to grant (for example
+   `..._owner` or `..._viewer`). Remove a grant from the same tab.
 
-This is the per-object scope described in [Access control](../concepts/access-control.md). The
-creator of an object automatically gets its owner role.
+For objects without their own page (such as [content guards](./content-guards.md)), use the
+**Manage access** action on the object's row — it does the same thing.
 
-## Typical use
+## Typical use: a CI account
 
-Create a CI user, then grant it only the `..._owner` (or a publish-only) role on the one repository
-it needs — instead of reusing an administrator. The ecosystem [tutorials](../tutorials/index.md)
-reference this pattern.
+Create a dedicated CI [user](./users.md), then grant it only an owner (or publish-only) role on the
+one repository it deploys to — instead of reusing an administrator. The ecosystem
+[tutorials](../tutorials/index.md) reference this pattern.
 
-:::note
-Outline page — full walkthrough and screenshots to follow.
-:::
+## Good to know
+
+- The creator of an object automatically gets its owner role.
+- This is the **object** scope from [Access control](../concepts/access-control.md); global and
+  per-domain grants are done on [Roles](./roles-and-permissions.md).

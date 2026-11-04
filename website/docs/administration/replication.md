@@ -5,19 +5,25 @@ sidebar_position: 13
 
 # Replication
 
-Mirror another ("upstream") Pulp: register it, and replication auto-creates the matching remotes,
-repositories and distributions, then syncs them. Use this when the two servers **can** reach each
-other (otherwise see [Export & import](./export-import.md)).
+Mirror a whole other ("upstream") Pulp: register it, run replication, and Pulp auto-creates the
+matching remotes, repositories and distributions and syncs them — so the two servers serve the same
+content. Use this when the servers **can** reach each other (otherwise see
+[Export & import](./export-import.md)).
 
 Manage it under **System Management → Upstream Pulps**.
 
-## Common tasks
+## Replicate from another Pulp
 
-- **Register an Upstream Pulp** (URL + credentials).
-- **Replicate** — run the sync; policies control what's created/removed (`all`, `labeled`,
-  `nodelete`) and a label filter narrows the set.
-- Replicate **between domains** on the same server.
+1. Go to **System Management → Upstream Pulps** and **Register** the upstream (its URL and
+   credentials).
+2. Run **Replicate**. A **policy** controls what happens to local objects not present upstream:
+   - `all` — mirror exactly, removing extras,
+   - `labeled` — act only on labeled objects,
+   - `nodelete` — add and update, never delete.
+3. Optionally narrow the set with a **label filter**.
+
+You can also replicate **between domains** on the same server.
 
 :::note
-Outline page — full walkthrough and screenshots to follow. Replication is a tech preview in Pulp.
+Replication is a tech preview in Pulp.
 :::

@@ -5,8 +5,31 @@ sidebar_position: 5
 
 # Distributions
 
-A distribution makes content available at a base path on Pulp's content app. It points at a publication or a repository (version). Open **Content Management → Distributions** to create one and choose the base path clients will use.
+A distribution is the **URL clients pull from** — the public face of a repository. Nothing you create
+is reachable until a distribution exposes it, so this is the step that "turns on" a repo. Its
+`base_path` becomes the address:
 
-:::note
-This page is a work in progress. Contributions are welcome on [GitHub](https://github.com/carlosthe19916/pulp-ui-2/tree/main/website/docs/using-pulp/reference/distributions.md).
-:::
+```
+/pulp/content/<domain>/<base_path>/
+```
+
+Manage distributions under **Content Management → Distributions**: create, edit, delete, and open one
+for its detail page (with an **Access** tab for per-object roles).
+
+## What it points at
+
+| Serve              | Result                                                      |
+| ------------------ | ----------------------------------------------------------- |
+| A repository       | Always serves its **latest** version (updates as you sync). |
+| A specific version | Freezes what clients see.                                   |
+| A publication      | For rpm/deb/gem, the generated metadata.                    |
+
+## Protecting it
+
+By default `/pulp/content/` is anonymous. Attach a
+[content guard](../../administration/content-guards.md) to require authentication or a certificate.
+
+## See also
+
+[Serve content](../serve-content.md) · [Consume content](../consume-content.md) ·
+[Content guards](../../administration/content-guards.md)

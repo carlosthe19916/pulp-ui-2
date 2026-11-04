@@ -5,30 +5,38 @@ sidebar_position: 2
 
 # Mirror an upstream
 
-Proxy a public registry (PyPI, Docker Hub, a Fedora mirror, …) so your tools pull through Pulp.
+**Goal:** proxy a public registry (PyPI, Docker Hub, a Fedora mirror, …) so your tools pull through
+Pulp instead of hitting the internet — Pulp's version of an Artifactory **remote** (proxy)
+repository.
 
 ## Steps
 
-1. **Create a Remote** — **Content Management → Remotes → Create**. Pick the content type, set the
-   upstream URL, credentials and a [download policy](../concepts/download-policies.md)
-   (`on_demand` is usual for large upstreams).
-2. **Create a Repository** of the same type and **Sync** it from the Remote. The sync runs as a
-   [task](./monitor-tasks.md); each sync that changes content makes a new
-   [version](./versions-and-rollback.md).
-3. **Serve it** — see [Serve content](./serve-content.md).
+1. **Create a Remote** — **Content Management → Remotes → Create**. The form adapts to the content
+   type you pick. The fields that matter:
+   - **Name** and **URL** — the upstream (for example `https://pypi.org` or a Fedora mirror).
+   - **Credentials / TLS** — only if the upstream is private.
+   - **Download policy** — how much to fetch at sync time. `On demand` is the usual default; see
+     [Download policies](../concepts/download-policies.md).
+2. **Create a Repository** of the same content type — **Content Management → Repositories → Create**
+   — and set its **Remote** to the one above (or pick it when you sync).
+3. **Sync** — open the repository and choose **Sync**. It runs as a
+   [task](./monitor-tasks.md); every sync that changes content produces a new immutable
+   [version](./versions-and-rollback.md). Re-sync anytime to pull upstream updates.
+4. **Serve it** so clients can reach it — [Serve content](./serve-content.md).
 
 ## Cache vs mirror vs pull-through
 
-- **On-demand sync** — fetch metadata now, packages on first request. Good default.
-- **Mirror (complete)** — bit-for-bit copy of the upstream, including removals.
-- **Pull-through cache** — skip the sync entirely; attach the Remote to a Distribution and Pulp
-  caches on first request. Supported by some ecosystems — see
-  [Download policies](../concepts/download-policies.md).
+| Approach               | What Pulp stores                                  | Like (Artifactory)        |
+| ---------------------- | ------------------------------------------------- | ------------------------- |
+| **On-demand sync**     | Metadata now, each package on first request.      | Remote repo, lazy cache.  |
+| **Complete mirror**    | A bit-for-bit copy, including upstream removals.  | Fully replicated remote.  |
+| **Pull-through cache** | Nothing up front; caches on first client request. | Remote repo, no pre-sync. |
+
+With pull-through you skip the sync and the repository entirely: attach the Remote to a
+**Distribution** and Pulp fetches on demand. Supported by Python, Gem, npm, Container, Maven and
+Hugging Face — see [Download policies](../concepts/download-policies.md).
 
 ## Per-ecosystem
 
-Each [tutorial](../tutorials/index.md) shows the exact Remote fields and policy for its ecosystem.
-
-:::note
-Outline page — full walkthrough and screenshots to follow. Reference: [Remotes](./reference/remotes.md).
-:::
+Each [tutorial](../tutorials/index.md) lists the exact Remote URL, filters and policy for its
+ecosystem. Full field reference: [Remotes](./reference/remotes.md).

@@ -5,8 +5,8 @@ sidebar_position: 3
 
 # The content workflow
 
-There are two ways content gets into Pulp — syncing from upstream, and uploading your own — and
-one way it gets out: a distribution.
+There are two ways content gets **into** Pulp — syncing from upstream, and adding your own — and one
+way it gets **out**: a distribution.
 
 ## Mirror from upstream
 
@@ -20,24 +20,30 @@ Remote ──sync──▶ Repository ──▶ Repository version ──▶ [Pu
 3. For ecosystems that need it, create a **Publication** from the version.
 4. Create a **Distribution** to serve it at a URL.
 
-## Host your own
+Walk it in the UI: [Mirror an upstream](../using-pulp/mirror-an-upstream.md).
+
+## Add your own
 
 ```
-upload ──▶ Content ──▶ Repository version ──▶ [Publication] ──▶ Distribution ──▶ client
+upload / push ──▶ Content ──▶ Repository version ──▶ [Publication] ──▶ Distribution ──▶ client
 ```
 
-Upload a package in Pulp UI (or push, for container images). It becomes **Content**, is added to a
-repository (creating a new version), and is served the same way.
+Most ecosystems: **upload** a package in Pulp UI. Containers are different — you `podman push`
+straight to Pulp, like pushing to any registry. OSTree uses **import**. Either way the content lands
+in a repository (new version) and is served the same way.
+
+Walk it in the UI: [Host your packages](../using-pulp/host-your-packages.md).
 
 ## Where publications apply
 
-| Needs a publication | Serves from the repository version                           |
+A Publication is only needed where the client reads a generated index.
+
+| Needs a publication | Serves straight from the repository version                  |
 | ------------------- | ------------------------------------------------------------ |
 | RPM, Debian, Gem    | Python, Ansible, Container, OSTree, npm, Maven, Hugging Face |
 
-## Walk it in the UI
+## Get it out
 
-[Mirror an upstream](../using-pulp/mirror-an-upstream.md) ·
-[Host your packages](../using-pulp/host-your-packages.md) ·
-[Serve content](../using-pulp/serve-content.md) ·
-[Consume content](../using-pulp/consume-content.md)
+A [Distribution](./entities.md) is the only thing clients talk to. Point it at the repository to
+always serve the latest version, or pin it to a version/publication to freeze what clients see. Then
+[consume](../using-pulp/consume-content.md) it with the native tool (`pip`, `dnf`, `podman`, …).
