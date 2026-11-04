@@ -162,3 +162,15 @@ updates:
         update-types: ["minor", "patch"]
         patterns:
           - "*"
+
+  # examples/ holds the tutorials' runnable projects, pinned to the versions the docs show.
+  # An entry that ignores every dependency stops both version and security update PRs there;
+  # add one per ecosystem a new example brings in.
+  - package-ecosystem: "maven"
+    directories:
+      - "/examples/**"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"
