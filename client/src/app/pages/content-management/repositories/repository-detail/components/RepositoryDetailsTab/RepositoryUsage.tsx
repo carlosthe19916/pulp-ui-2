@@ -20,6 +20,7 @@ import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 import {
   repositoryDistributionsPickerParams,
+  useDistributionDetailQuery,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 
@@ -40,15 +41,18 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
     params: repositoryDistributionsPickerParams(repositoryHref),
   });
   const [selectedHref, setSelectedHref] = useState<string>();
+  const distributions = data?.results ?? [];
+  const selected =
+    distributions.find((d) => d.pulp_href === selectedHref) ?? distributions[0];
+  // The aggregate list has the content app's `base_url` only; the typed detail has the URLs
+  // clients use (`/pypi/` base_url, `registry_path`, `client_url`).
+  const { data: detail, isLoading: isDetailLoading } =
+    useDistributionDetailQuery({ href: selected?.pulp_href ?? null });
 
-  if (isLoading) {
+  if (isLoading || isDetailLoading) {
     return null;
   }
 
-  const distributions = data?.results ?? [];
-
-  const selected =
-    distributions.find((d) => d.pulp_href === selectedHref) ?? distributions[0];
   if (!selected) {
     return (
       <EmptyState titleText="Not served yet" headingLevel="h4" variant="xs">
@@ -94,11 +98,11 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
         <DescriptionListGroup>
           <DescriptionListTerm>Content URL</DescriptionListTerm>
           <DescriptionListDescription>
-            <ContentUrlLink distribution={selected} />
+            <ContentUrlLink distribution={detail ?? selected} />
           </DescriptionListDescription>
         </DescriptionListGroup>
       </DescriptionList>
-      <PluginRepositoryClientSetup distribution={selected} />
+      <PluginRepositoryClientSetup distribution={detail ?? selected} />
     </Stack>
   );
 };
