@@ -76,6 +76,8 @@ npm workspaces:
 | `server/` | Express production server   |
 | `e2e/`    | Playwright end-to-end tests |
 
+Runnable companions to the website tutorials live in [`examples/`](examples/) (not a workspace).
+
 ## Tech Stack
 
 React 19, TypeScript, PatternFly 6, and TanStack Query & Router.

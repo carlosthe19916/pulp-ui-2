@@ -1,0 +1,49 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:09.000
+Create a Maven remote named maven-central. The URL is Maven Central, repo1.maven.org/maven2.
+
+2
+00:00:09.000 --> 00:00:19.000
+Create a Maven repository with the same name, and leave Remote empty. For Maven, the remote belongs on the distribution.
+
+3
+00:00:19.000 --> 00:00:32.000
+Create a Maven distribution. Name and base path are maven-central. Choose the maven-central repository. Open Pull-through caching and pick the maven-central remote.
+
+4
+00:00:32.000 --> 00:00:41.000
+This base URL is what clients use, like a Nexus repository URL. Client setup is ready to copy.
+
+5
+00:00:41.000 --> 00:00:50.000
+Hosted repositories skip the remote. Create maven-releases, and set the base path to the same name.
+
+6
+00:00:50.000 --> 00:00:58.000
+Create maven-snapshots the same way. Pulp keeps releases and snapshots as two repositories.
+
+7
+00:00:58.000 --> 00:01:08.000
+settings.xml mirrors Central to the Pulp cache. Read from the content URL. Deploy to the Maven upload URL.
+
+8
+00:01:08.000 --> 00:01:14.000
+mvn package downloads commons-lang3 and the build plugins through that cache.
+
+9
+00:01:14.000 --> 00:01:19.000
+In maven-central, Versions grew by one version for each cached file.
+
+10
+00:01:19.000 --> 00:01:29.000
+mvn deploy uploads hello-lib 1.0.0 to maven-releases. The snapshot went to maven-snapshots.
+
+11
+00:01:29.000 --> 00:01:38.000
+Browse maven-releases and open hello-lib 1.0.0. Install shows the Maven and Gradle snippets.
+
+12
+00:01:38.000 --> 00:01:49.400
+Clear the local copy and run hello-app. Maven fetches hello-lib from Pulp, and the app prints Hello, Pulp.

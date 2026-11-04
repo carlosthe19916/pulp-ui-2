@@ -43,3 +43,4 @@ Pulp UI works with the content plugins installed on your Pulp server, including 
 
 - [Install Pulp UI](./getting-started/installation.md)
 - [Take your first steps](./getting-started/first-steps.md)
+- [Set up a repository manager for your ecosystem](./tutorials/index.md), for example [Maven](./tutorials/maven.mdx)

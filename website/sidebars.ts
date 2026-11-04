@@ -11,6 +11,12 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Tutorials",
+      link: { type: "doc", id: "tutorials/index" },
+      items: ["tutorials/maven"],
+    },
+    {
+      type: "category",
       label: "Configuration",
       items: [
         "configuration/environment",

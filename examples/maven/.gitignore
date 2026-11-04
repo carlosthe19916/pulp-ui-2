@@ -1,0 +1,5 @@
+.env
+.m2-demo/
+target/
+.flattened-pom.xml
+!.env.example

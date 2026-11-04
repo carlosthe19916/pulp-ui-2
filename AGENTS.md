@@ -60,6 +60,10 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
         └── data/             # test fixtures (upload samples)
 ```
 
+`examples/<ecosystem>/` (not a workspace) holds the runnable companion of each website tutorial
+(`website/docs/tutorials/`): `.env.example`, `setup.sh`, `demo.sh` and the client projects. A new
+tutorial starts from `website/docs/tutorials/_template.md`.
+
 ## Key Commands
 
 ```bash
