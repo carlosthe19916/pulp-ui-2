@@ -16,6 +16,8 @@ Pulp UI is an independent project maintained by an individual contributor in [th
 
 Pulp is API-first: everything it does is exposed through a REST API. Pulp UI puts a [PatternFly](https://www.patternfly.org/)-based interface on top of that API so you can manage your content from the browser.
 
+If you've used Artifactory or Nexus, Pulp does the same job — proxy upstreams, host your own packages, serve them at a URL — with different names. [Concepts](./concepts/index.md) maps one to the other.
+
 ## Who is it for?
 
 - **Platform and release engineers** who mirror upstream content (RHEL, Fedora, PyPI, Docker Hub, Galaxy, …) and promote it through environments.
@@ -41,6 +43,7 @@ Pulp UI works with the content plugins installed on your Pulp server, including 
 
 ## Next steps
 
+- New to Pulp? Start with [Concepts](./concepts/index.md).
 - [Install Pulp UI](./getting-started/installation.md)
 - [Take your first steps](./getting-started/first-steps.md)
-- [Set up a repository manager for your ecosystem](./tutorials/index.md), for example [Maven](./tutorials/maven.mdx)
+- [Use Pulp day to day](./using-pulp/index.md), or [set up a repository manager for your ecosystem](./tutorials/index.md), for example [Maven](./tutorials/maven.mdx)

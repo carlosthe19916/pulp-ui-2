@@ -58,5 +58,5 @@ The image runs as a non-root user and listens on port `8080`. When `NODE_EXTRA_C
 
 ## Next steps
 
-- [Configure Pulp UI](../configuration/environment.md)
+- [Configure Pulp UI](../running-pulp-ui/environment.md)
 - [Take your first steps](./first-steps.md)
