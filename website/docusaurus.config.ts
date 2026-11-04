@@ -106,12 +106,17 @@ const config: Config = {
           title: "Documentation",
           items: [
             { label: "Introduction", to: "/docs/intro" },
+            { label: "Concepts", to: "/docs/concepts" },
             {
               label: "Installation",
               to: "/docs/getting-started/installation",
             },
-            { label: "Configuration", to: "/docs/configuration/environment" },
-            { label: "User guide", to: "/docs/user-guide/overview" },
+            { label: "Using Pulp", to: "/docs/using-pulp" },
+            { label: "Administration", to: "/docs/administration" },
+            {
+              label: "Running Pulp UI",
+              to: "/docs/running-pulp-ui/installation",
+            },
           ],
         },
         {

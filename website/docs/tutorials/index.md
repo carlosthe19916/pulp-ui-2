@@ -30,7 +30,7 @@ Every tutorial assumes:
 
 1. **A Pulp server with the plugin installed.** For a local one, run `npm run backend:setup` and `npm run backend:start` from the repository root. It listens on `http://localhost:5003` with the user `admin` / `password`, domains enabled and `API_ROOT` set to `/api/pulp/`.
 2. **Pulp UI connected to it.** Run `npm run start:dev` and open `http://localhost:3000`. See [Installation](../getting-started/installation.md).
-3. **A domain.** With domains enabled, pick one in the domain selector (the examples use `default`). Content URLs then include the domain, for example `/pulp/content/default/<base-path>/`. See [Domains](../user-guide/domains.md).
+3. **A domain.** With domains enabled, pick one in the domain selector (the examples use `default`). Content URLs then include the domain, for example `/pulp/content/default/<base-path>/`. See [Domains](../concepts/domains.md).
 
 ### Non-local servers
 
