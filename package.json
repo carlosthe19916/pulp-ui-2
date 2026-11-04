@@ -30,6 +30,7 @@
     "test:e2e": "npm run test -w e2e",
     "test:e2e:local": "npm run test:local -w e2e --",
     "backend": "scripts/backend/oci-env.sh",
+    "backend:openapi": "scripts/backend/openapi.sh",
     "backend:plugins": "scripts/backend/plugins.sh",
     "backend:setup": "scripts/backend/setup.sh",
     "backend:start": "scripts/backend/oci-env.sh compose up",
