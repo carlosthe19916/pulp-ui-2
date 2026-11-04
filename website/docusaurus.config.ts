@@ -39,6 +39,19 @@ const config: Config = {
 
   plugins: ["./plugins/tailwind.ts"],
 
+  themes: [
+    [
+      // Build-time, fully local search index (no external crawler or service).
+      "@easyops-cn/docusaurus-search-local",
+      {
+        hashed: true,
+        indexBlog: true,
+        indexPages: true,
+        highlightSearchTermsOnTargetPage: true,
+      },
+    ],
+  ],
+
   presets: [
     [
       "classic",
