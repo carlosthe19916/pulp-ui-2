@@ -158,6 +158,20 @@ Publishing requires a user who can modify the repository; see [Access management
 | `Collection ... already exists`                                          | That version is already in the repository. Bump `version` in `galaxy.yml`.                                                                                        |
 | Client URL shows the container's hostname                                | Set `ANSIBLE_API_HOSTNAME` on the Pulp server to the URL clients use.                                                                                             |
 
+## More Ansible guides
+
+- [Sync from Red Hat Automation Hub](./ansible/sync-from-automation-hub.md) — token-protected, certified collections
+- [Mirror roles and Git collections](./ansible/mirror-roles-and-git.md) — role and Git remotes
+- [Sign and verify collections](./ansible/sign-and-verify-collections.md)
+- [Copy and move collections](./ansible/copy-and-move-collections.md) — promote between repositories
+- [Mark collections](./ansible/mark-collections.md) — label versions as `certified`, `stable`, …
+
+:::info[Not yet in Pulp UI]
+
+An **on-demand pull-through cache for Galaxy / Automation Hub** — where the first client request for a collection fetches and caches it, the way Artifactory or Nexus proxy a registry lazily. Pulp Ansible needs an explicit **sync** of the collections listed in a remote's **Requirements**. For now, list what you need and sync (see [Sync from Automation Hub](./ansible/sync-from-automation-hub.md)).
+
+:::
+
 ## Clean up
 
 Delete the two distributions, then the two repositories, then the `ansible-upstream` remote, each from its list's row actions. Stored collections are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.

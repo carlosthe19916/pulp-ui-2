@@ -147,6 +147,14 @@ A container repository's **Actions** menu has **Tag image**, **Untag image**, **
 | `manifest unknown` through the cache              | The image isn't on Docker Hub under that name, or the remote's **Exclude repositories** filters it. Official images need `library/`. |
 | Image path without the domain fails               | With domains enabled, every image path starts with the domain: `localhost:5003/default/...`.                                         |
 
+## More container guides
+
+- [Tag and untag images](./container/tag-and-untag-images.md) — manage tags; push-repo actions.
+- [Copy images between repositories](./container/copy-images-between-repositories.md) — promote without re-pushing.
+- [Sign images](./container/sign-images.md) — manifest signing services and the sign action.
+- [Build an image](./container/build-an-image.md) — build from a Containerfile (tech preview).
+- [Manage namespaces](./container/manage-namespaces.md) — group repositories and control pushes.
+
 ## Clean up
 
 Delete the `hello-app` distribution and repository, then the `docker-hub` pull-through distribution and the distributions and repositories it created, then the `docker-hub` remote. Stored blobs are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
