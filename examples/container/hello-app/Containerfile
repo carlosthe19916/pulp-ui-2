@@ -1,0 +1,5 @@
+# The base image comes through the Pulp cache of Docker Hub (see demo.sh for the build args).
+ARG REGISTRY=localhost:5003/default/docker-hub
+FROM ${REGISTRY}/library/busybox:1.37
+COPY hello.sh /hello.sh
+CMD ["sh", "/hello.sh"]

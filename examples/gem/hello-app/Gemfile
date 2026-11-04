@@ -1,0 +1,7 @@
+# Everything resolves through the Pulp cache of rubygems.org...
+source ENV.fetch("GEM_PROXY_URL", "http://localhost:5003/pulp/content/default/rubygems-proxy/")
+
+# ...and your own gems come from the hosted repository.
+source ENV.fetch("GEM_HOSTED_URL", "http://localhost:5003/pulp/content/default/gems-hosted/") do
+  gem "hello_pulp", ">= 1.0"
+end

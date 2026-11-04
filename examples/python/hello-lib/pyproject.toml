@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "example-hello-lib"
+dynamic = ["version"]
+description = "A tiny library published to Pulp by the Python tutorial."
+requires-python = ">=3.9"
+dependencies = ["rich>=13"]
+
+[tool.hatch.version]
+source = "env"
+variable = "HELLO_LIB_VERSION"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hello_lib"]

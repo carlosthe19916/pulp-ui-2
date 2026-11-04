@@ -1,0 +1,13 @@
+{
+  "name": "hello-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An app that installs @example/hello-lib from Pulp and picocolors through the Pulp cache.",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@example/hello-lib": "^1.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "license": "MIT"
+}

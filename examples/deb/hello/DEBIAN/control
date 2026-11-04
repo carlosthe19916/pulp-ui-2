@@ -1,0 +1,7 @@
+Package: hello-pulp
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Pulp UI tutorial <noreply@example.com>
+Description: Prints a greeting; published to Pulp by the APT tutorial

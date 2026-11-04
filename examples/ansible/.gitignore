@@ -1,0 +1,4 @@
+.env
+.ansible-demo/
+*.tar.gz
+!.env.example
