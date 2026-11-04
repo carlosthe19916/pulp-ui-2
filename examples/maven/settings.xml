@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Maven client settings for the Pulp Maven tutorial. Copy to ~/.m2/settings.xml or pass with -s.
+     Values come from environment variables; see .env.example. -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+  <!-- Credentials for mvn deploy. The ids match distributionManagement in the pom. -->
+  <servers>
+    <server>
+      <id>pulp-releases</id>
+      <username>${env.PULP_USER}</username>
+      <password>${env.PULP_PASSWORD}</password>
+    </server>
+    <server>
+      <id>pulp-snapshots</id>
+      <username>${env.PULP_USER}</username>
+      <password>${env.PULP_PASSWORD}</password>
+    </server>
+  </servers>
+
+  <!-- Every request for Maven Central goes to the Pulp pull-through cache instead. -->
+  <mirrors>
+    <mirror>
+      <id>pulp-central</id>
+      <name>Maven Central through Pulp</name>
+      <url>${env.PULP_CONTENT_URL}/maven-central/</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+
+  <!-- Resolve your own artifacts from the hosted repositories. -->
+  <profiles>
+    <profile>
+      <id>pulp</id>
+      <properties>
+        <pulp.deploy.url>${env.PULP_DEPLOY_URL}</pulp.deploy.url>
+      </properties>
+      <repositories>
+        <repository>
+          <id>pulp-releases</id>
+          <url>${env.PULP_CONTENT_URL}/maven-releases/</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>pulp-snapshots</id>
+          <url>${env.PULP_CONTENT_URL}/maven-snapshots/</url>
+          <releases><enabled>false</enabled></releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>pulp</activeProfile>
+  </activeProfiles>
+</settings>
