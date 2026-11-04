@@ -99,6 +99,7 @@ npm run backend:setup    # clone/force-reset .backend/ to the pinned refs (re-ru
 npm run backend:start
 npm run backend:stop
 npm run backend:plugins  # show the plugin set; `-- rpm container` / `-- all` switch it (wipes data)
+npm run backend:openapi  # write client/openapi/pulp.json from the running backend (then npm run generate)
 npm run backend -- compose logs -f   # any other oci-env command
 
 # Regenerate OpenAPI client from spec

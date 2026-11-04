@@ -34,6 +34,8 @@ workflows:
     '.github/workflows/plugin-versions-update.yaml':
         - 'actions/checkout@v6'
         - 'actions/create-github-app-token@v2.2.2'
+        - 'actions/setup-python@v5'
+        - 'docker/login-action@v3'
         - 'peter-evans/create-pull-request@v7'
     '.github/workflows/release.yaml':
         - 'actions/checkout@v6'

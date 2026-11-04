@@ -97,3 +97,10 @@ The shared clone/install/env-file steps live in the composite action
 = one reproducible backend. The `plugin-versions-update.yaml` workflow bumps these to the latest
 release daily and opens an auto-merging PR that the e2e suite gates. To change versions by hand,
 edit the file directly; `oci_env` tracks `main` and is bumped manually (it publishes no releases).
+
+The spec follows the pins: the same PR regenerates `client/openapi/pulp.json` from a backend booted
+at the bumped versions (`scripts/backend/openapi.sh`, the base image pulled from ghcr), so the UI
+is never built against an API no pinned release serves. When the API changed in a way the UI must
+follow, the PR's checks fail and the fix goes on its branch; later runs leave a bump PR with extra
+commits alone instead of recreating it. After a manual pin change, run `npm run backend:setup`,
+restart the backend, then `npm run backend:openapi` and `npm run generate`.
