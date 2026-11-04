@@ -1,6 +1,7 @@
 ---
 slug: /intro
 title: Introduction
+description: Pulp UI is a web console for Pulp, the open source platform for managing repositories of software packages and serving them to consumers. Learn what it does and who it is for.
 sidebar_position: 1
 ---
 

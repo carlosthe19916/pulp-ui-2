@@ -1,5 +1,6 @@
 ---
 title: Installation
+description: Install Pulp UI from its container image and connect it to your Pulp 3 server, with the prerequisites and run commands you need to get started.
 sidebar_position: 1
 ---
 

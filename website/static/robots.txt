@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://carlosthe19916.github.io/pulp-ui-2/sitemap.xml
