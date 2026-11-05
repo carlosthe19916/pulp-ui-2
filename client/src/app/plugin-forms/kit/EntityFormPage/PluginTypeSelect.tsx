@@ -2,13 +2,18 @@ import type React from "react";
 
 import {
   FormGroup,
+  FormHelperText,
   FormSelect,
   FormSelectOption,
+  HelperText,
+  HelperTextItem,
 } from "@patternfly/react-core";
 
 export interface ITypeOption {
   pulpType: string;
   label: string;
+  /** The job this type is for, shown under the select. */
+  description?: string;
 }
 
 interface IPluginTypeSelectProps {
@@ -24,8 +29,12 @@ export const PluginTypeSelect: React.FC<IPluginTypeSelectProps> = ({
   options,
   value,
   onChange,
-}) =>
-  options.length < 2 ? null : (
+}) => {
+  if (options.length < 2) return null;
+  const description = options.find(
+    (option) => option.pulpType === value,
+  )?.description;
+  return (
     <FormGroup label="Type" fieldId={id} isRequired>
       <FormSelect
         id={id}
@@ -40,5 +49,13 @@ export const PluginTypeSelect: React.FC<IPluginTypeSelectProps> = ({
           />
         ))}
       </FormSelect>
+      {description && (
+        <FormHelperText>
+          <HelperText>
+            <HelperTextItem>{description}</HelperTextItem>
+          </HelperText>
+        </FormHelperText>
+      )}
     </FormGroup>
   );
+};

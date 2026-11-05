@@ -70,9 +70,15 @@ export const debUi = definePluginUi({
       },
     },
     publication: {
-      "deb.apt-publication": { form: debPublicationForm },
+      "deb.apt-publication": {
+        description:
+          "Rebuilds Release and Packages from the content you curate. Use this when you upload your own packages.",
+        form: debPublicationForm,
+      },
       "deb.verbatim-publication": {
         label: "APT (verbatim)",
+        description:
+          "Republishes the upstream files unchanged. Use this for a faithful mirror.",
         form: debVerbatimPublicationForm,
       },
     },

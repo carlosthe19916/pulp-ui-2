@@ -1,41 +1,35 @@
 ---
-title: Access control
-sidebar_position: 6
+title: Who can push
+description: Role scopes, the owner role you get on create, a CI user that can publish, and how OIDC accounts appear.
+sidebar_label: Who can push
+sidebar_position: 4
 ---
 
-# Access control (RBAC)
+# Who can push
 
-Pulp uses role-based access control, the same idea as Artifactory permission targets or GitHub team
-permissions: you grant **roles** to **users** and **groups**, and a role is a bundle of permissions.
+Downloads are anonymous until a distribution has a guard (see [What clients see](./what-clients-see.md)). Publishing, uploading and syncing need a role.
 
-## The pieces
+A role is a named set of permissions. You assign it to a user or a group at one of three scopes:
 
-- **Users** and **Groups** — identities, and collections of users. Both are global, not per-domain.
-- **Role** — a named set of permissions, assignable at three scopes:
+| Scope  | Applies to                                          | Example                         |
+| ------ | --------------------------------------------------- | ------------------------------- |
+| Global | Every object of that type.                          | Create any RPM repository.      |
+| Domain | Everything in one [domain](./operating.md#domains). | Manage everything in `staging`. |
+| Object | One repository, remote, distribution or guard.      | Owner of this repository.       |
 
-  | Scope      | Means                                                  | Example                          |
-  | ---------- | ------------------------------------------------------ | -------------------------------- |
-  | **global** | Applies to every object of a type.                     | "Create any RPM repository."     |
-  | **object** | Applies to one object (granted on its **Access** tab). | "Owner of _this_ repository."    |
-  | **domain** | Applies within one [domain](./domains.md).             | "Manage everything in `team-a`." |
+Built-in roles ship with each plugin and are named `<plugin>.<model>_<level>`, for example `rpm.rpmrepository_owner`. Creating an object gives you its **owner** role. A custom role is a set of permissions you pick and name.
 
-- **Access policy** — the low-level rules a Pulp API endpoint enforces. Advanced; most of the time
-  you work with roles, not policies.
+## What surprises people
 
-Creating an object automatically grants you its **owner** role — so the person who makes a repository
-can manage it without an admin stepping in.
+- **A user with no roles** can sign in, but every list is empty. The console shows the same navigation to everyone and disables actions you cannot perform.
+- **A superuser** bypasses every check. Turn it on only for administrators.
+- **Users and groups are global**, not per domain. Grant roles to a group so access follows the team. Deleting a group keeps the roles a member was granted directly or through another group.
+- **Object grants** are on the object's **Access** tab. Objects without their own page, such as content guards, use **Manage access** on the list row.
+- **Hugging Face** has no object roles. Grant its global roles instead.
+- **Access policies** are the per-endpoint rules underneath roles, including the hook that grants owner on create. Editing one can lock users out of an action. Change roles instead, unless you mean to change the default rules.
 
-## How it shows up in Pulp UI
+## A CI account
 
-- The UI doesn't hide admin pages by role. Instead, RBAC filters what the API returns: lists come
-  back with only the objects you're allowed to see.
-- Actions you can't perform are **disabled with a tooltip**, not hidden — so you can tell the feature
-  exists and that you'd need permission.
-- A **superuser** sees and can do everything.
+Create a user for the pipeline. Grant it owner, or a narrower custom role, on the one repository it publishes to. Do not reuse an administrator account.
 
-## Where to manage it
-
-[Users](../administration/users.md) · [Groups](../administration/groups.md) ·
-[Roles & permissions](../administration/roles-and-permissions.md) ·
-[Granting access to objects](../administration/object-access.md) ·
-[Access policies](../administration/access-policies.md)
+With [OIDC](../running-pulp-ui/authentication.md), the identity provider creates the account on first sign-in. Pulp UI cannot create it, so grant roles once the account exists.

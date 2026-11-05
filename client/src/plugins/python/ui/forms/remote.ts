@@ -28,7 +28,7 @@ export const pythonRemoteForm = remoteForm(python.remote["python.python"])(
         f.row([
           f.stringList("includes", {
             label: "Include projects",
-            help: "Project specifiers to sync, e.g. django or requests>=2.30. Empty syncs the whole index.",
+            help: "Project specifiers, e.g. django or requests>=2.30. Empty on a sync mirrors the whole index. Empty on a pull-through cache fetches only what clients ask for.",
           }),
           f.stringList("excludes", {
             label: "Exclude projects",

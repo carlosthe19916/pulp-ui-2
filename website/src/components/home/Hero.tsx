@@ -36,7 +36,7 @@ export default function Hero(): React.ReactElement {
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              to="/docs/getting-started/installation"
+              to="/docs/running-pulp-ui/container"
               className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-6 py-3 font-display font-medium text-white no-underline transition hover:bg-brand-60 hover:text-white hover:no-underline"
             >
               Get started

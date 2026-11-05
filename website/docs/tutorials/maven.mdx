@@ -1,36 +1,21 @@
 ---
 title: Maven repository manager
-description: Proxy Maven Central, host your own releases and snapshots, and point Maven and Gradle at Pulp.
+description: Cache Maven Central, publish releases and snapshots, and the two URLs Maven must not mix up.
 sidebar_label: Maven
 sidebar_position: 2
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
 # Maven repository manager
 
-Set up Pulp the way you would set up Nexus or Artifactory for Maven: a cache of Maven Central, hosted repositories for your own releases and snapshots, and a Maven client that uses them for everything.
+Cache Maven Central for every build, and publish your own releases and snapshots to Pulp. Release and snapshot are two repositories by convention. Pulp does not enforce a release policy, and it does not offer a group repository: `settings.xml` lists each one.
 
 ```text
-mvn / gradle --> Pulp --+-- maven-central    pull-through cache --> Maven Central
+mvn / gradle --> Pulp --+-- maven-central    pull-through --> Maven Central
                         +-- maven-releases   hosted
                         +-- maven-snapshots  hosted
 ```
-
-| Nexus / Artifactory        | Pulp                                                                                                  |
-| -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Remote + repository + distribution with a **pull-through remote**                                     |
-| Hosted (local) repository  | Repository + distribution; `mvn deploy` uploads to it                                                 |
-| Release / snapshot policy  | Two repositories by convention; Pulp itself does not separate them                                    |
-| Group (virtual) repository | Not available; list the repositories in `settings.xml` instead                                        |
-| Staging and promotion      | Copy content between repositories; every change is a new [repository version](#versions-and-rollback) |
-| "Set me up"                | **Client setup** snippet on distributions, **Install** snippet on packages                            |
-
-## Watch it first
-
-The whole tutorial in under two minutes, from the first form in Pulp UI to `hello-app` resolving `hello-lib` from Pulp.
 
 <video
   controls
@@ -52,64 +37,40 @@ The whole tutorial in under two minutes, from the first form in Pulp UI to `hell
   Your browser can't play this video.{" "}
   <a href={useBaseUrl("/videos/tutorials/maven-setup-natural.mp4")}>
     Download it
-  </a>{" "}
-  instead.
+  </a>
+  .
 </video>
 
-## Prerequisites
+You need Pulp with `pulp_maven`, JDK 17, Maven 3.9, and the projects in [`examples/maven`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/maven) (`hello-lib` publishes, `hello-app` consumes). `examples/maven/setup.sh` creates the Pulp objects. URLs below are the local backend (`http://localhost:5003`, domain `default`).
 
-- Pulp UI connected to a Pulp server with `pulp_maven`, signed in as a user who can create Maven repositories (see [Tutorials](./index.md#before-you-start))
-- JDK 17 or later and Maven 3.9 or later
-- The example projects in [`examples/maven`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/maven): `hello-lib`, a library you publish, and `hello-app`, which uses it
+## Cache Maven Central
 
-The URLs below are for the local backend (`http://localhost:5003`, domain `default`). Replace them with the ones your distributions show.
+Three objects, and the remote hangs on the **distribution**, not the repository:
 
-:::tip[In a hurry?]
+| Object | What matters |
+| ------ | ------------ |
+| Remote `maven-central` | URL `https://repo1.maven.org/maven2/`. |
+| Repository `maven-central` | Leave its remote empty. |
+| Distribution `maven-central` | Base path `maven-central`, repository `maven-central`, pull-through remote `maven-central`. |
 
-`examples/maven/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/maven/demo.sh` runs steps 3 to 5. See [Run the examples](./index.md#run-the-examples).
+The first request for an artifact downloads it once, stores it, and adds it to the repository as a new version. Later requests are served from Pulp, including when Maven Central is unreachable, until you remove the remote.
 
-:::
+## Publish releases and snapshots
 
-## 1. Proxy Maven Central
+A hosted repository plus a distribution, with no remote, for `maven-releases` and again for `maven-snapshots`. Use the repository name as the base path.
 
-Pulp caches Maven Central with three objects: a **remote** that knows the upstream URL, a **repository** that stores what was fetched, and a **distribution** that serves the repository and falls back to the remote for anything missing.
+Each hosted repository has two URLs:
 
-1. **Content Management → Remotes → Create remote.** Type **Maven**, name `maven-central`, URL `https://repo1.maven.org/maven2/`.
-
-   ![Create Maven remote form](/img/tutorials/maven/remote-create.png)
-
-2. **Repositories → Create repository.** Type **Maven**, name `maven-central`. Leave **Remote** empty: for Maven, the remote belongs on the distribution.
-3. **Distributions → Create distribution.** Type **Maven**, name and base path `maven-central`, repository `maven-central`. Open **Pull-through caching** and pick the `maven-central` remote.
-
-   ![Create Maven distribution form with a pull-through remote](/img/tutorials/maven/dist-create.png)
-
-The distribution page shows the **Base URL** Maven reads from, with a ready-made **Client setup** snippet:
-
-![Maven distribution details with the base URL and client setup snippet](/img/tutorials/maven/dist-detail.png)
-
-Every artifact a client asks for is downloaded once, stored, and added to `maven-central` as a new repository version. It stays available if Maven Central is unreachable or if you later remove the remote.
-
-## 2. Host your own packages
-
-Create a repository and a distribution for each of `maven-releases` and `maven-snapshots`, as in step 1 but without a remote. Use the repository name as the base path.
-
-You now have two URLs per hosted repository. They are easy to mix up:
-
-| Purpose              | URL                                                          | Keyed by        |
-| -------------------- | ------------------------------------------------------------ | --------------- |
-| Read (resolve)       | `http://localhost:5003/pulp/content/default/maven-releases/` | Base path       |
-| Write (`mvn deploy`) | `http://localhost:5003/pulp/maven/default/maven-releases/`   | Repository name |
+| Purpose | URL | Keyed by |
+| ------- | --- | -------- |
+| Read (resolve) | `http://localhost:5003/pulp/content/default/maven-releases/` | Base path |
+| Write (`mvn deploy`) | `http://localhost:5003/pulp/maven/default/maven-releases/` | Repository name |
 
 The deploy URL is `<pulp>/pulp/maven/<domain>/<repository-name>/`. Without domains, drop `<domain>/`.
-
-## 3. Configure Maven
-
-Put this in `~/.m2/settings.xml`. It sends every Maven Central request to the Pulp cache, adds the hosted repositories, and stores the deploy credentials.
 
 ```xml title="~/.m2/settings.xml"
 <settings>
   <servers>
-    <!-- Deploy credentials: a Pulp user allowed to modify Maven repositories. -->
     <server>
       <id>pulp-releases</id>
       <username>admin</username>
@@ -121,7 +82,6 @@ Put this in `~/.m2/settings.xml`. It sends every Maven Central request to the Pu
       <password>password</password>
     </server>
   </servers>
-
   <mirrors>
     <mirror>
       <id>pulp-central</id>
@@ -129,7 +89,6 @@ Put this in `~/.m2/settings.xml`. It sends every Maven Central request to the Pu
       <mirrorOf>central</mirrorOf>
     </mirror>
   </mirrors>
-
   <profiles>
     <profile>
       <id>pulp</id>
@@ -148,40 +107,15 @@ Put this in `~/.m2/settings.xml`. It sends every Maven Central request to the Pu
       </repositories>
     </profile>
   </profiles>
-
   <activeProfiles>
     <activeProfile>pulp</activeProfile>
   </activeProfiles>
 </settings>
 ```
 
-:::tip
+`mirrorOf` must be `central`, or `*,!pulp-releases,!pulp-snapshots`. `*` also sends your hosted repositories to the cache. Encrypt the password with [`mvn --encrypt-password`](https://maven.apache.org/guides/mini/guide-encryption.html). The example [`settings.xml`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/maven/settings.xml) reads values from the environment.
 
-Encrypt the passwords with [`mvn --encrypt-password`](https://maven.apache.org/guides/mini/guide-encryption.html). The example's [`settings.xml`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/maven/settings.xml) reads every value from environment variables instead, so you can run it with `mvn -s settings.xml` without touching `~/.m2`.
-
-:::
-
-## 4. Resolve dependencies through Pulp
-
-Build `hello-lib`. Maven downloads its plugins and `commons-lang3` from the Pulp cache:
-
-```bash
-cd examples/maven/hello-lib
-mvn package
-```
-
-```text
-[INFO] Downloading from pulp-central: http://localhost:5003/pulp/content/default/maven-central/org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.pom
-[INFO] Downloaded from pulp-central: http://localhost:5003/pulp/content/default/maven-central/org/apache/commons/commons-lang3/3.17.0/commons-lang3-3.17.0.pom (31 kB at 638 kB/s)
-...
-[INFO] BUILD SUCCESS
-```
-
-In Pulp UI, open the `maven-central` repository: **Versions** grew by one version per cached file, and **Content → Browse** lists the cached packages.
-
-## 5. Publish your package
-
-`hello-lib/pom.xml` declares where `mvn deploy` uploads. The ids match the `<server>` entries above:
+`hello-lib` declares the deploy URLs. The `<server>` id and the `distributionManagement` id are the same string:
 
 ```xml title="hello-lib/pom.xml"
 <distributionManagement>
@@ -196,100 +130,38 @@ In Pulp UI, open the `maven-central` repository: **Versions** grew by one versio
 </distributionManagement>
 ```
 
-:::note
-
-The example pom writes `${pulp.deploy.url}/maven-releases/`; its `settings.xml` sets `pulp.deploy.url`. Use whichever suits your team.
-
-:::
-
-Deploy a snapshot, then a release. Maven picks the repository from the version:
-
 ```bash
-mvn deploy -Drevision=1.0.1-SNAPSHOT   # → maven-snapshots
-mvn deploy -Drevision=1.0.0            # → maven-releases
-```
-
-```text
-[INFO] Uploading to pulp-releases: http://localhost:5003/pulp/maven/default/maven-releases/org/example/pulp/hello-lib/1.0.0/hello-lib-1.0.0.jar
-[INFO] Uploaded to pulp-releases: http://localhost:5003/pulp/maven/default/maven-releases/org/example/pulp/hello-lib/1.0.0/hello-lib-1.0.0.jar (2.8 kB at 4.3 kB/s)
-[INFO] Uploading to pulp-releases: http://localhost:5003/pulp/maven/default/maven-releases/org/example/pulp/hello-lib/maven-metadata.xml
-...
-[INFO] BUILD SUCCESS
-```
-
-Open the `maven-releases` repository → **Content → Browse** and select a version. The package panel shows the POM details and an **Install** snippet for Maven and Gradle:
-
-![hello-lib 1.0.0 in the maven-releases repository with its install snippet](/img/tutorials/maven/package.png)
-
-## 6. Consume your package
-
-`hello-app` depends on `org.example.pulp:hello-lib:1.0.0`. Remove the local copy so Maven has to fetch it from Pulp:
-
-```bash
+cd examples/maven/hello-lib
+mvn package
+mvn deploy -Drevision=1.0.1-SNAPSHOT
+mvn deploy -Drevision=1.0.0
 rm -rf ~/.m2/repository/org/example/pulp
-cd ../hello-app
-mvn -q compile exec:java
+cd ../hello-app && mvn -q compile exec:java
 ```
 
-```text
-Hello, Pulp!
-```
-
-<Tabs groupId="build-tool">
-<TabItem value="maven" label="Maven">
-
-Nothing else to do: the `pulp` profile in `settings.xml` makes `maven-releases` and `maven-snapshots` available to every project.
-
-</TabItem>
-<TabItem value="gradle" label="Gradle">
+Gradle lists the content URLs, not the deploy URLs. `isAllowInsecureProtocol` is only for plain `http://`:
 
 ```kotlin title="build.gradle.kts"
 repositories {
     maven { url = uri("http://localhost:5003/pulp/content/default/maven-central/"); isAllowInsecureProtocol = true }
     maven { url = uri("http://localhost:5003/pulp/content/default/maven-releases/"); isAllowInsecureProtocol = true }
 }
-
-dependencies {
-    implementation("org.example.pulp:hello-lib:1.0.0")
-}
 ```
 
-`isAllowInsecureProtocol` is only needed for plain `http://` URLs like the local backend's.
+## What the form does not say
 
-</TabItem>
-</Tabs>
-
-## Going further
-
-### Promote between repositories
-
-Use a staging repository (for example `maven-staging`) as the deploy target, and copy what passes your checks into `maven-releases`. Open the target repository → **Actions → Add content…** → **From another repository**. Pulp copies references only: no file is uploaded or downloaded again. See [Promote Maven content](https://pulpproject.org/pulp_maven/docs/user/guides/promote/).
-
-### Versions and rollback
-
-Every deploy, cache fill or promotion creates a new repository version (**Versions** tab). To freeze what clients see, edit the distribution and choose **Serve → Repository version**. Point it back at **Repository** to follow the latest version again.
-
-Pulp accepts a second deploy of an existing release version and replaces its files in a new repository version. If you need immutable releases, deploy to staging and promote.
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Deploys require a user with permission to modify the repository: create a deploy-only user and role in [Access management](../administration/roles-and-permissions.md) for CI, instead of reusing an administrator.
-
-### Maintenance
-
-The repository **Actions** menu has repair tasks for Maven: **Repair metadata** regenerates `maven-metadata.xml`, and **Build path index** / **Compact path index** maintain the index that speeds up lookups (**Path index** tab). See [Maven metadata](https://pulpproject.org/pulp_maven/docs/user/guides/metadata/).
+- A second deploy of an existing release **replaces** the files in a new repository version. Deploy to a staging repository and copy into `maven-releases` when a release must stay immutable. Copy copies references, not bytes.
+- Point the distribution at a repository version to freeze what clients resolve. Point it back at the repository to follow the latest version. See [What clients see](../concepts/what-clients-see.md).
+- Deploys need a user who can modify that repository. See [Who can push](../concepts/access-control.md).
+- **Repair metadata** regenerates `maven-metadata.xml`. **Build path index** and **Compact path index** maintain the lookup index. Neither is a re-sync. See [Maven metadata](https://pulpproject.org/pulp_maven/docs/user/guides/metadata/).
 
 ## Troubleshooting
 
-| Symptom                           | Cause and fix                                                                                                              |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `401 Unauthorized` on deploy      | No credentials: the `<server>` `id` must match the `distributionManagement` `id`.                                          |
-| `403 Forbidden` on deploy         | The user can't modify that repository. Grant a Maven role in Access management.                                            |
-| `404` on deploy                   | Deploy URL uses the base path or misses the domain. Use `/pulp/maven/<domain>/<repository-name>/`.                         |
-| Your own artifacts aren't found   | `mirrorOf` is `*`, which also redirects `pulp-releases` to the cache. Use `central` or `*,!pulp-releases,!pulp-snapshots`. |
-| A new snapshot isn't picked up    | Run Maven with `-U`, or keep `updatePolicy` `always` for the snapshots repository.                                         |
-| Cache misses for a known artifact | The distribution has no pull-through remote, or the remote URL is wrong. Check the **Pull-through caching** section.       |
-
-## Clean up
-
-Delete the three distributions, then the three repositories, then the `maven-central` remote, each from its list's row actions. The stored artifacts are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `401 Unauthorized` on deploy | The `<server>` id does not match `distributionManagement`. |
+| `403 Forbidden` on deploy | That user cannot modify the repository. |
+| `404` on deploy | The URL used the content base path. Use `/pulp/maven/<domain>/<repository-name>/`. |
+| Your artifacts are not found | `mirrorOf` is `*`, so `pulp-releases` is sent to the cache. Exclude those ids. |
+| A new snapshot is not picked up | `updatePolicy` `always` on the snapshots repository, or `mvn -U`. |
+| Cache misses for a known artifact | The distribution has no pull-through remote, or the remote URL is wrong. |

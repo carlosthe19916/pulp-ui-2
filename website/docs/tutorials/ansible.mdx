@@ -1,73 +1,48 @@
 ---
 title: Ansible Galaxy server
-description: Mirror the Galaxy collections you need, host your own, and point ansible-galaxy at Pulp.
+description: A private Galaxy. Sync the collections you list, including from Automation Hub, and publish your own.
 sidebar_label: Ansible
 sidebar_position: 9
 ---
 
 # Ansible Galaxy server
 
-Set up Pulp the way you would set up Nexus, Artifactory or a private Automation Hub for Ansible: a mirror of the Galaxy collections you depend on, a hosted server for your own collections, and `ansible-galaxy` installing from both.
+The job is a private Galaxy: the collections you choose to mirror, often certified content from Red Hat Automation Hub, plus collections you publish. Public `galaxy.ansible.com` is the same mechanism with no token.
 
 ```text
-ansible-galaxy --> Pulp --+-- ansible-upstream  mirror of listed collections --> galaxy.ansible.com
-                          +-- ansible-hosted    hosted
+ansible-galaxy --> Pulp --+-- listed collections   sync, immediate
+                          +-- ansible-hosted       ansible-galaxy collection publish
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Collection remote with a **Requirements** list + repository, **Sync**ed                       |
-| Hosted (local) repository  | Repository + distribution; `ansible-galaxy collection publish` uploads to it                  |
-| Group (virtual) repository | Not available; list both servers in `ansible.cfg`, which tries them in order                  |
-| "Set me up"                | **Client setup** snippet (`ansible.cfg`) on distributions, **Install** snippet on collections |
+There is no on-demand download and no pull-through cache. A sync copies the collections named in **Requirements**, now. An empty requirements list tries to mirror the whole server.
 
-Pulp has no pull-through cache for Ansible: you **sync** the collections listed in the remote's **Requirements**, with their dependencies.
+You need Pulp with `pulp_ansible`, ansible-core 2.15+, and [`examples/ansible`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/ansible). The client URL is `<pulp>/pulp_ansible/galaxy/<domain>/<base-path>/`. `ANSIBLE_API_HOSTNAME` on the server must be the URL clients use, or that URL shows the container hostname. See [Tutorials](./index.md#settings-the-local-backend-already-has).
 
-## Prerequisites
+## Sync a list
 
-- Pulp UI connected to a Pulp server with `pulp_ansible`, signed in as a user who can create Ansible repositories (see [Tutorials](./index.md#before-you-start))
-- ansible-core 2.15 or later
-- The example in [`examples/ansible`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/ansible): `hello-collection`, the `example.hello` collection you publish, and `playbook`, which uses it
+A collection remote syncs with the `immediate` policy only.
 
-The URLs below are for the local backend. Galaxy URLs have the form `<pulp>/pulp_ansible/galaxy/<domain>/<base-path>/`; the distribution page shows yours as its client URL. On another server, `ANSIBLE_API_HOSTNAME` must be the URL clients use (see [Tutorials](./index.md#non-local-servers)).
+| Field | What it does |
+| ----- | ------------ |
+| URL | Galaxy API, `https://galaxy.ansible.com/api/`, or a hub such as `https://console.redhat.com/api/automation-hub/content/published/`. |
+| Requirements | The collections to mirror. This is the set. |
+| Sync dependencies | On pulls what those collections depend on. |
+| Highest versions to sync | The N newest of each collection. Empty syncs every version. |
+| Signed collections only | Mirror only versions that carry a signature. |
+| Token and SSO URL | Automation Hub. Galaxy needs neither. The token is the hub offline token. The SSO URL is where it is exchanged. |
 
-:::tip[In a hurry?]
+```yaml title="Requirements"
+collections:
+  - name: ansible.posix
+    version: ">=2.0.0"
+  - name: redhat.rhel_system_roles
+```
 
-`examples/ansible/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/ansible/demo.sh` runs steps 3 to 6. See [Run the examples](./index.md#run-the-examples).
+Attach the remote to an Ansible repository and sync. Serve the repository with an Ansible distribution.
 
-:::
+## Publish, and the order of servers
 
-## 1. Mirror collections from Galaxy
-
-1. **Content Management → Remotes → Create remote.** Type **Ansible collection**, name `ansible-upstream`, URL `https://galaxy.ansible.com/api/`. In **Requirements**, list what to mirror:
-
-   ```yaml
-   collections:
-     - name: ansible.posix
-       version: ">=2.0.0"
-   ```
-
-   Keep **Sync dependencies** on so the collections they need come along.
-
-   ![Create Ansible collection remote form](/img/tutorials/ansible/remote-create.png)
-
-2. **Repositories → Create repository.** Type **Ansible**, name `ansible-upstream`, remote `ansible-upstream`.
-3. On the repository page, **Actions → Sync**. **Content → Browse** then lists the mirrored collection versions.
-4. **Distributions → Create distribution.** Type **Ansible**, name and base path `ansible-upstream`, repository `ansible-upstream`.
-
-:::warning
-
-With `galaxy.ansible.com` and no requirements, a sync downloads every collection on Galaxy. Always list what you need.
-
-:::
-
-## 2. Host your own collections
-
-Create a repository and a distribution named `ansible-hosted`, as in step 1 but without a remote. The distribution page shows the server URL and an `ansible.cfg` snippet:
-
-![Ansible distribution details with the Galaxy server URL and ansible.cfg snippet](/img/tutorials/ansible/dist-detail.png)
-
-## 3. Configure ansible-galaxy
+There is no group repository. `server_list` is the order `ansible-galaxy` tries.
 
 ```ini title="ansible.cfg"
 [galaxy]
@@ -84,94 +59,42 @@ username = admin
 password = password
 ```
 
-`ansible-galaxy` looks for each collection on the servers in `server_list` order. The local backend requires credentials to read its Galaxy API; on a server that allows anonymous reads, only the hosted server needs them, to publish. The example's `demo.sh` points the same server names at your Pulp with `ANSIBLE_GALAXY_SERVER_<NAME>_URL` variables.
-
-## 4. Publish your collection
+The local backend requires credentials to read the Galaxy API. A server that allows anonymous reads only needs them on the server you publish to.
 
 ```bash
 cd examples/ansible
 ansible-galaxy collection build hello-collection
 ansible-galaxy collection publish -s pulp_hosted example-hello-1.0.0.tar.gz
-```
-
-```text
-Publishing collection artifact 'example-hello-1.0.0.tar.gz' to pulp_hosted http://localhost:5003/pulp_ansible/galaxy/default/ansible-hosted/api
-Collection has been successfully published and imported to the Galaxy server pulp_hosted http://localhost:5003/pulp_ansible/galaxy/default/ansible-hosted/api
-```
-
-Open `ansible-hosted` → **Content → Browse** and select the collection for its contents and **Install** snippet:
-
-![example.hello in the ansible-hosted repository with its install snippet](/img/tutorials/ansible/package.png)
-
-## 5. Install through Pulp
-
-`example.hello` depends on `ansible.posix`. Installing it pulls one from each server:
-
-```bash
 ansible-galaxy collection install -r playbook/requirements.yml
-```
-
-```text
-Installing 'example.hello:1.0.0' to '.../ansible_collections/example/hello'
-example.hello:1.0.0 was installed successfully
-Installing 'ansible.posix:2.2.2' to '.../ansible_collections/ansible/posix'
-ansible.posix:2.2.2 was installed successfully
-```
-
-## 6. Run the playbook
-
-```bash
 ansible-playbook -i localhost, playbook/site.yml
 ```
 
-```text
-TASK [Print the greeting] ******************************************************
-ok: [localhost] => {
-    "msg": "Hello, Pulp!"
-}
-```
+## Other sources, promotion, trust
 
-## Going further
+| Remote | When |
+| ------ | ---- |
+| Ansible collection | A Galaxy v3 API. The usual case. |
+| Ansible role | Legacy Galaxy v1 roles. `ansible-galaxy role install -s <url>`. |
+| Ansible (Git) | The collection exists only in Git. Set the URL and a ref. **Metadata only** indexes without downloading artifacts. |
 
-### Promote between repositories
+**Copy collection version** leaves it in the source, which is staging to release. **Move collection version** removes it from the source. If the Galaxy metadata looks stale after either, **Rebuild metadata**.
 
-Copy a tested collection version from a staging repository into a release repository with **Actions → Copy collection versions**, or move it with **Move collection versions**.
+**Mark** adds a label such as `certified` that clients can filter on. **Unmark** removes it. Marks, deprecations, namespaces and roles are labels or synced content. You do not upload them as files.
 
-### Signing and deprecation
+**Sign collections** uses a [signing service](../concepts/operating.md#signing) on the server. Verifying a mirror is **Signed collections only** on the remote.
 
-**Sign collections** signs collection versions with a signing service configured on the server, and **Signed collections only** on a remote mirrors only signed versions. See [Signatures](https://pulpproject.org/pulp_ansible/docs/user/guides/signature/).
+:::info[Not in this plugin]
 
-### Versions and rollback
-
-Every sync or publish creates a new repository version (**Versions** tab). Edit the distribution and choose **Serve → Repository version** to freeze what clients see.
-
-### Access control
-
-Publishing requires a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
-
-## Troubleshooting
-
-| Symptom                                                                  | Cause and fix                                                                                                                                                     |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Could not satisfy the following requirements` for a mirrored collection | The server rejected an anonymous read, or the collection isn't in the mirror. Add credentials to that server, or add the collection to **Requirements** and sync. |
-| `401` on publish                                                         | No credentials for the hosted server. Set `username`/`password` or a `token` in its `ansible.cfg` section.                                                        |
-| `Collection ... already exists`                                          | That version is already in the repository. Bump `version` in `galaxy.yml`.                                                                                        |
-| Client URL shows the container's hostname                                | Set `ANSIBLE_API_HOSTNAME` on the Pulp server to the URL clients use.                                                                                             |
-
-## More Ansible guides
-
-- [Sync from Red Hat Automation Hub](./ansible/sync-from-automation-hub.md) — token-protected, certified collections
-- [Mirror roles and Git collections](./ansible/mirror-roles-and-git.md) — role and Git remotes
-- [Sign and verify collections](./ansible/sign-and-verify-collections.md)
-- [Copy and move collections](./ansible/copy-and-move-collections.md) — promote between repositories
-- [Mark collections](./ansible/mark-collections.md) — label versions as `certified`, `stable`, …
-
-:::info[Not yet in Pulp UI]
-
-An **on-demand pull-through cache for Galaxy / Automation Hub** — where the first client request for a collection fetches and caches it, the way Artifactory or Nexus proxy a registry lazily. Pulp Ansible needs an explicit **sync** of the collections listed in a remote's **Requirements**. For now, list what you need and sync (see [Sync from Automation Hub](./ansible/sync-from-automation-hub.md)).
+An on-demand pull-through cache of Galaxy or Automation Hub. Pulp Ansible syncs the requirements list. Listing what you need is the set.
 
 :::
 
-## Clean up
+## Troubleshooting
 
-Delete the two distributions, then the two repositories, then the `ansible-upstream` remote, each from its list's row actions. Stored collections are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `Could not satisfy the following requirements` | The collection is not in the mirror, or the server rejected an anonymous read. Add it to **Requirements** and sync, or set credentials. |
+| `401` on publish | That `ansible.cfg` server has no `username` / `password` or token. |
+| `Collection ... already exists` | That version is already in the repository. Bump `version` in `galaxy.yml`. |
+| Client URL shows the wrong host | Set `ANSIBLE_API_HOSTNAME`. |
+| A sync tries to download all of Galaxy or the hub | **Requirements** is empty. |

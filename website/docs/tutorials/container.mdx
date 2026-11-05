@@ -1,67 +1,42 @@
 ---
 title: Container registry
-description: Cache Docker Hub, push your own images, and pull them with podman or docker from Pulp.
+description: Three container jobs — cache a registry on pull, sync a named image, or push — and the object each one uses.
 sidebar_label: Container
 sidebar_position: 5
 ---
 
 # Container registry
 
-Set up Pulp the way you would set up Nexus, Artifactory or Harbor as a container registry: a pull-through cache of Docker Hub, and a registry you push your own images to.
+Three jobs, three objects. Picking the wrong one is the usual failure.
 
 ```text
-podman / docker --> Pulp registry --+-- default/docker-hub/<image>  pull-through cache --> Docker Hub
-                                    +-- default/hello-app            pushed
+podman --> Pulp --+-- docker-hub/<image>   pull-through cache of Docker Hub
+                  +-- a synced image       tags you named ahead of time
+                  +-- hello-app            created by podman push
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | **Container (pull-through)** remote + distribution; each pulled image gets its own repository |
-| Hosted (local) repository  | Created by the first `podman push`: a push repository and its distribution                    |
-| Group (virtual) repository | Not available; every repository has its own path in the registry                              |
-| Curated mirror             | Container remote with an **Upstream name** and tag filters, then **Sync**                     |
-| "Set me up"                | **Client setup** snippet on distributions and on the **Browse** view                          |
+Pull-through is a tech preview in `pulp_container`. You need Pulp with `pulp_container`, podman 4 (or docker), and [`examples/container`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/container). The registry host is `localhost:5003`. With domains, the domain is the first path segment: `localhost:5003/default/<image>`. A path without the domain fails.
 
-See [Pull-through caching](https://pulpproject.org/pulp_container/docs/admin/guides/pull-through-caching/) in the plugin documentation; it is a tech preview in `pulp_container`.
+The local backend sets `TOKEN_AUTH_DISABLED=True`, so the registry uses basic auth. A production server usually runs Pulp's token server. A `500` from `/v2/` means token auth is on and no token server is configured. See [Authentication](https://pulpproject.org/pulp_container/docs/admin/learn/authentication/).
 
-## Prerequisites
+## Cache a registry on pull
 
-- Pulp UI connected to a Pulp server with `pulp_container`, signed in as a user who can create container remotes and distributions (see [Tutorials](./index.md#before-you-start))
-- podman 4 or later (or docker; replace `podman` with `docker` in the commands)
-- The example in [`examples/container`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/container): `hello-app`, a `Containerfile` built on busybox
+A **Container (pull-through)** remote plus a **Container (pull-through)** distribution. There is no repository to create and no sync. Pulp creates a repository and a distribution per image as clients pull. **Include repositories** and **Exclude repositories** limit what may be cached (`library/*`).
 
-The registry is `localhost:5003`. With domains enabled, the domain is the first path segment of every image: `localhost:5003/default/<image>`.
-
-:::note[Registry authentication]
-
-The local backend sets `TOKEN_AUTH_DISABLED=True`, so the registry uses basic auth: anyone can pull public images, and pushing needs a Pulp user. A production server usually runs Pulp's token server instead; see [Authentication](https://pulpproject.org/pulp_container/docs/admin/learn/authentication/).
-
-:::
-
-:::tip[In a hurry?]
-
-`examples/container/setup.sh` creates the pull-through cache of step 1 through the REST API, and `examples/container/demo.sh` runs steps 2 to 5. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Cache Docker Hub
-
-1. **Content Management → Remotes → Create remote.** Type **Container (pull-through)**, name `docker-hub`, URL `https://registry-1.docker.io`. **Include repositories** and **Exclude repositories** can limit which images may be cached, for example `library/*`.
-
-   ![Create container pull-through remote form](/img/tutorials/container/remote-create.png)
-
-2. **Distributions → Create distribution.** Type **Container (pull-through)**, name and base path `docker-hub`, remote `docker-hub`. No repository: Pulp creates one per image as clients pull it.
-
-Any Docker Hub image is now available under the `docker-hub` base path:
-
-| Docker Hub                       | Through Pulp                                             |
-| -------------------------------- | -------------------------------------------------------- |
+| Docker Hub | Through Pulp |
+| ---------- | ------------ |
 | `docker.io/library/busybox:1.37` | `localhost:5003/default/docker-hub/library/busybox:1.37` |
-| `docker.io/pulp/pulp:latest`     | `localhost:5003/default/docker-hub/pulp/pulp:latest`     |
+| `docker.io/pulp/pulp:latest` | `localhost:5003/default/docker-hub/pulp/pulp:latest` |
 
-## 2. Configure the client
+Official images need the `library/` prefix.
 
-The local backend serves plain `http://`, so tell podman not to require TLS for it, either per command with `--tls-verify=false` or once in `registries.conf`:
+## Pin a set of tags
+
+A normal **Container** remote: registry URL, **Upstream name** (`library/busybox`), **Include tags** (`1.37*`). A **Container** repository uses that remote. Sync, then serve it with a **Container** distribution (not the pull-through type). This is the job when clients must not be able to pull whatever they ask for.
+
+## Push images
+
+`podman push` creates the repository and the distribution. You do not create them first, and you cannot upload a manifest. Blobs, manifests and tags arrive by push or by sync.
 
 ```toml title="/etc/containers/registries.conf.d/pulp.conf"
 [[registry]]
@@ -69,92 +44,41 @@ location = "localhost:5003"
 insecure = true
 ```
 
-For docker, add `"insecure-registries": ["localhost:5003"]` to `/etc/docker/daemon.json`. Then log in with a Pulp user to push:
+Docker uses `"insecure-registries": ["localhost:5003"]` in `/etc/docker/daemon.json`.
 
 ```bash
 podman login localhost:5003 -u admin -p password
-```
-
-## 3. Pull through the cache
-
-```bash
-podman pull localhost:5003/default/docker-hub/library/busybox:1.37
-```
-
-```text
-Trying to pull localhost:5003/default/docker-hub/library/busybox:1.37...
-Writing manifest to image destination
-30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb
-```
-
-Pulp created a `docker-hub/library/busybox` repository and distribution for the image. Later pulls of the same tag are served from Pulp.
-
-## 4. Push your image
-
-`hello-app/Containerfile` builds on the cached busybox. Build it and push it to Pulp:
-
-```bash
 cd examples/container
+podman pull localhost:5003/default/docker-hub/library/busybox:1.37
 podman build -t localhost:5003/default/hello-app:1.0.0 hello-app
 podman push localhost:5003/default/hello-app:1.0.0
-```
-
-The push creates the `hello-app` repository and distribution. The distribution page shows the **Client setup** snippet:
-
-![hello-app distribution details with the podman pull snippet](/img/tutorials/container/dist-detail.png)
-
-Open the `hello-app` repository → **Content → Browse** to see its tags and manifests:
-
-![The 1.0.0 tag of hello-app with its manifest details](/img/tutorials/container/package.png)
-
-## 5. Run it from Pulp
-
-```bash
-podman rmi localhost:5003/default/hello-app:1.0.0
 podman run --rm localhost:5003/default/hello-app:1.0.0
 ```
 
-```text
-Trying to pull localhost:5003/default/hello-app:1.0.0...
-Hello, Pulp!
-```
+**Private** on a distribution requires a login to pull. Pushing requires a user allowed to create repositories in that namespace. The first push to a new prefix creates the namespace. Grant a role on the namespace to limit who can push under it.
 
-## Going further
+Namespace storage quotas and tag expiry, the way Harbor and Quay do them, are not a Pulp feature. Prune the repository and [reclaim orphans](../concepts/disk.md).
 
-### A curated mirror
+## Promote, sign, build
 
-To pin what's available instead of caching anything clients ask for, create a remote of type **Container** with **Upstream name** `library/busybox` and **Include tags** `1.37*`, a **Container** repository with that remote, then run **Actions → Sync**. Serve it with a **Container** distribution.
+A tag is a name pointing at a manifest digest. Untagging removes the name and leaves the manifest. **Copy tags** and **Copy manifests** copy references into another repository, which is how you promote `:1.2.0` to a release repository without pushing again.
 
-### Tags, copies and promotion
+A [signing service](../concepts/operating.md#signing) on the repository signs manifests as they are added. **Sign images** signs existing tags. To mirror a registry that publishes sigstore signatures, set the remote's sigstore URL so the sync fetches them.
 
-A container repository's **Actions** menu has **Tag image**, **Untag image**, **Copy tags** and **Copy manifests**. Copy a tested tag from a staging repository into a release repository to promote it without pushing again.
+:::info[Not yet in Pulp UI]
 
-### Signing
+Rejecting an unsigned pull. Pulp stores signatures. Enforcement is client policy (`cosign`, podman). See [image signing](https://pulpproject.org/pulp_container/docs/admin/guides/sign-image/).
 
-**Sign images** signs manifests with a signing service configured on the server. See [Sign images](https://pulpproject.org/pulp_container/docs/admin/guides/sign-image/).
+:::
 
-### Access control
-
-**Private** on a distribution hides its images from anonymous pulls. Pushing requires a user who can create repositories in the namespace; see [Access management](../administration/roles-and-permissions.md).
+**Build image** builds from a Containerfile inside Pulp and tags the result. It is a tech preview.
 
 ## Troubleshooting
 
-| Symptom                                           | Cause and fix                                                                                                                        |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `http: server gave HTTP response to HTTPS client` | The client expects TLS. Use `--tls-verify=false` or mark `localhost:5003` insecure (step 2).                                         |
-| `500` from `/v2/`                                 | The server has token auth enabled but no token server. Set `TOKEN_AUTH_DISABLED=True` or configure the token server.                 |
-| `unauthorized` on push                            | Not logged in, or the user can't push to that namespace. Run `podman login` with a user allowed to create repositories.              |
-| `manifest unknown` through the cache              | The image isn't on Docker Hub under that name, or the remote's **Exclude repositories** filters it. Official images need `library/`. |
-| Image path without the domain fails               | With domains enabled, every image path starts with the domain: `localhost:5003/default/...`.                                         |
-
-## More container guides
-
-- [Tag and untag images](./container/tag-and-untag-images.md) — manage tags; push-repo actions.
-- [Copy images between repositories](./container/copy-images-between-repositories.md) — promote without re-pushing.
-- [Sign images](./container/sign-images.md) — manifest signing services and the sign action.
-- [Build an image](./container/build-an-image.md) — build from a Containerfile (tech preview).
-- [Manage namespaces](./container/manage-namespaces.md) — group repositories and control pushes.
-
-## Clean up
-
-Delete the `hello-app` distribution and repository, then the `docker-hub` pull-through distribution and the distributions and repositories it created, then the `docker-hub` remote. Stored blobs are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `http: server gave HTTP response to HTTPS client` | Mark `localhost:5003` insecure, or pass `--tls-verify=false`. |
+| `500` from `/v2/` | Token auth is enabled and no token server is configured. |
+| `unauthorized` on push | `podman login` with a user allowed to push to that namespace. |
+| `manifest unknown` through the cache | The image is not on that registry under that name, or **Exclude repositories** filters it. Official images need `library/`. |
+| Image path without the domain fails | With domains, every path starts with the domain. |

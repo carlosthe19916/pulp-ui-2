@@ -1,88 +1,34 @@
 ---
 title: RubyGems repository manager
-description: Proxy rubygems.org, host your own gems, and point gem and Bundler at Pulp.
+description: Cache rubygems.org and publish gems. Clients need a publication, and the Gemfile lists both sources.
 sidebar_label: RubyGems
 sidebar_position: 8
 ---
 
 # RubyGems repository manager
 
-Set up Pulp the way you would set up Nexus or Artifactory for Ruby: a cache of rubygems.org, a hosted source for your own gems, and `gem` and Bundler installing through Pulp.
+Cache rubygems.org, and publish gems of your own. Unlike Python, a gem distribution serves a **publication** (the compact index), and there is no combined index: the Gemfile lists both sources. Unlike Maven, npm and Python, a pull-through cache does not add the downloaded gems to a repository. The distribution has no repository. The gems show up as content.
 
 ```text
-gem / bundle --> Pulp --+-- rubygems-proxy  pull-through cache --> rubygems.org
-                        +-- gems-hosted     hosted
+gem / bundler --> Pulp --+-- rubygems-proxy  pull-through --> index.rubygems.org
+                         +-- gems-hosted     your gems, after a publication
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| Proxy (remote) repository  | Remote + distribution with a **pull-through remote**                                       |
-| Hosted (local) repository  | Repository + distribution; gems are uploaded in Pulp UI or through the API, then published |
-| Group (virtual) repository | Not available; list both sources in the `Gemfile`                                          |
-| "Set me up"                | **Client setup** snippet on distributions, **Install** snippet on gems                     |
+You need Pulp with `pulp_gem`, Ruby, and [`examples/gem`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/gem). `setup.sh` creates the objects.
 
-## Prerequisites
+| Object | What matters |
+| ------ | ------------ |
+| Remote `rubygems-proxy` | URL `https://index.rubygems.org/`, policy **On demand**. |
+| Distribution `rubygems-proxy` | No repository. Pull-through remote `rubygems-proxy`. |
+| Repository `gems-hosted` | No remote. |
+| Distribution `gems-hosted` | Repository `gems-hosted`. It serves the latest **publication**, so publish after every upload. |
 
-- Pulp UI connected to a Pulp server with `pulp_gem`, signed in as a user who can create gem repositories (see [Tutorials](./index.md#before-you-start))
-- Ruby 3.0 or later with Bundler
-- The example projects in [`examples/gem`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/gem): `hello-lib`, the `hello_pulp` gem you publish, and `hello-app`, which uses it
-
-The URLs below are for the local backend (`http://localhost:5003`, domain `default`). Replace them with the ones your distributions show.
-
-:::tip[In a hurry?]
-
-`examples/gem/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/gem/demo.sh` runs steps 3 to 6. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Proxy rubygems.org
-
-1. **Content Management → Remotes → Create remote.** Type **Gem**, name `rubygems-proxy`, URL `https://index.rubygems.org/`, download policy **On demand**.
-
-   ![Create Gem remote form](/img/tutorials/gem/remote-create.png)
-
-2. **Distributions → Create distribution.** Type **Gem**, name and base path `rubygems-proxy`, no repository. Open **Pull-through caching** and pick the `rubygems-proxy` remote.
-
-![Gem distribution details with the base URL and pull-through remote](/img/tutorials/gem/dist-detail.png)
-
-Each gem a client installs is downloaded once and stored in Pulp; later installs are served from Pulp. Unlike Maven, npm and Python, `pulp_gem` doesn't add cached gems to a repository, so the distribution needs none: find them under **Content Management → Content**.
-
-## 2. Host your own gems
-
-1. **Repositories → Create repository.** Type **Gem**, name `gems-hosted`, no remote.
-2. **Distributions → Create distribution.** Type **Gem**, name and base path `gems-hosted`, repository `gems-hosted`.
-
-A gem distribution serves the repository's latest **publication**, not the repository itself: after adding gems you publish the repository (step 4).
-
-## 3. Install through Pulp
+`gem push` is not implemented. Upload the `.gem`, then publish. To sync a set ahead of time instead of caching on install, give a repository the remote, set **Gem selection** (for example `rails` → `~> 7.1`), sync, and publish.
 
 ```bash
 gem install --clear-sources --source http://localhost:5003/pulp/content/default/rubygems-proxy/ rainbow
+cd examples/gem/hello-lib && gem build hello_pulp.gemspec
 ```
-
-```text
-Successfully installed rainbow-3.1.1
-1 gem installed
-```
-
-## 4. Publish your gem
-
-Build the example gem:
-
-```bash
-cd examples/gem/hello-lib
-gem build hello_pulp.gemspec
-```
-
-`gem push` isn't supported by Pulp. Open the `gems-hosted` repository, click **Upload content**, and pick `hello_pulp-1.0.0.gem`. Then run **Actions → Publish** so the distribution serves the new version. In CI, upload and publish through the REST API instead, as `demo.sh` does.
-
-Open **Content → Browse** and select the gem for its details and **Install** snippets:
-
-![hello_pulp in the gems-hosted repository with its install snippets](/img/tutorials/gem/package.png)
-
-## 5. Configure Bundler
-
-`hello-app/Gemfile` takes everything from the cache, and `hello_pulp` from the hosted source:
 
 ```ruby title="hello-app/Gemfile"
 source "http://localhost:5003/pulp/content/default/rubygems-proxy/"
@@ -92,46 +38,15 @@ source "http://localhost:5003/pulp/content/default/gems-hosted/" do
 end
 ```
 
-A `source` block pins those gems to that source, so a same-named gem on rubygems.org can't replace yours. The example's `Gemfile` reads both URLs from environment variables.
+A `source` block pins those gems to that source, so a same-named gem on rubygems.org cannot replace yours.
 
-## 6. Consume your gem
-
-```bash
-cd ../hello-app
-bundle install
-ruby app.rb
-```
-
-```text
-Bundle complete! 1 Gemfile dependency, 2 gems now installed.
-Hello, Pulp!
-```
-
-`hello_pulp` comes from `gems-hosted`, and its dependency `rainbow` from the cache.
-
-## Going further
-
-### Mirror instead of cache
-
-To sync a curated set ahead of time, give a repository the remote, fill **Gem selection** on the remote (for example `rails` → `~> 7.1`), and run **Actions → Sync**, then **Actions → Publish**.
-
-### Versions and rollback
-
-Every upload creates a new repository version, and every publish a new publication. Edit the distribution and choose **Serve → Publication** to keep serving an older one.
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Uploads require a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
+Point the distribution at an older publication to keep serving it. See [What clients see](../concepts/what-clients-see.md).
 
 ## Troubleshooting
 
-| Symptom                                     | Cause and fix                                                                   |
-| ------------------------------------------- | ------------------------------------------------------------------------------- |
-| A newly uploaded gem isn't found            | The repository wasn't published after the upload. Run **Actions → Publish**.    |
-| `gem push` fails                            | Pulp doesn't implement the push API. Upload in Pulp UI or through the REST API. |
-| `Could not find gem` for a public gem       | The proxy distribution has no pull-through remote, or the remote URL is wrong.  |
-| Bundler resolves your gem from rubygems.org | The gem isn't inside the hosted `source ... do` block.                          |
-
-## Clean up
-
-Delete the two distributions, then the `gems-hosted` repository, then the `rubygems-proxy` remote, each from its list's row actions. Stored gems are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| A newly uploaded gem is not found | The repository was not published after the upload. |
+| `gem push` fails | Upload the `.gem`. Pulp does not implement the push API. |
+| `Could not find gem` for a public gem | The proxy distribution has no pull-through remote, or the remote URL is wrong. |
+| Bundler resolves your gem from rubygems.org | The gem is outside the hosted `source ... do` block. |

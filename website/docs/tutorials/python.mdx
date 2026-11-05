@@ -1,67 +1,40 @@
 ---
 title: Python repository manager
-description: Proxy PyPI, host your own Python packages, and point pip and twine at Pulp.
+description: One PyPI index for private packages and PyPI, or a curated mirror, and the include-list that means the opposite on each.
 sidebar_label: Python
 sidebar_position: 4
 ---
 
 # Python repository manager
 
-Set up Pulp the way you would set up Nexus or Artifactory for Python: a cache of PyPI, a hosted index for your own packages, and pip and twine pointed at Pulp.
+Two jobs. A pull-through cache of PyPI, and one index that serves your packages and falls back to PyPI. The second is how you avoid dependency confusion: if the repository already has the project, Pulp does not ask PyPI.
 
 ```text
-pip / twine --> Pulp --+-- pypi-proxy   pull-through cache --> pypi.org
-                       +-- pypi-hosted  hosted
+pip / twine --> Pulp --+-- pypi-proxy   pull-through --> pypi.org
+                       +-- pypi-hosted  your packages, optional PyPI fallback
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Remote + repository + distribution with a **pull-through remote**                                                      |
-| Hosted (local) repository  | Repository + distribution; `twine upload` uploads to it                                                                |
-| Group (virtual) repository | One distribution serving a hosted repository **and** a pull-through remote, see [One index](#one-index-for-everything) |
-| "Set me up"                | **Client setup** snippet on distributions, **Install** snippet on packages                                             |
+You need Pulp with `pulp_python`, Python 3.9+, and [`examples/python`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/python). `setup.sh` creates a separate cache and a hosted index. URLs are the local backend, domain `default`. On another server, `PYPI_API_HOSTNAME` must be the URL clients use, or the base URL in the UI is wrong. See [Tutorials](./index.md#settings-the-local-backend-already-has).
 
-## Prerequisites
+You do not create a publication. The distribution serves the repository.
 
-- Pulp UI connected to a Pulp server with `pulp_python`, signed in as a user who can create Python repositories (see [Tutorials](./index.md#before-you-start))
-- Python 3.9 or later
-- The example projects in [`examples/python`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/python): `hello-lib`, a library you publish as `example-hello-lib`, and `hello-app`, which uses it
+## A cache, and a hosted index
 
-The URLs below are for the local backend (`http://localhost:5003`, domain `default`). Replace them with the ones your distributions show.
+The pull-through remote belongs on the distribution. Leave **Include projects** empty on a pull-through remote: empty means "fetch what clients ask for."
 
-:::tip[In a hurry?]
+| Object | What matters |
+| ------ | ------------ |
+| Remote `pypi-proxy` | URL `https://pypi.org/`, policy **On demand**, includes empty. |
+| Repository `pypi-proxy` | No remote. |
+| Distribution `pypi-proxy` | Repository `pypi-proxy`, pull-through remote `pypi-proxy`. |
+| `pypi-hosted` | Repository and distribution, no remote. **Allow uploads** on. |
 
-`examples/python/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/python/demo.sh` runs steps 3 to 6. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Proxy PyPI
-
-1. **Content Management → Remotes → Create remote.** Type **Python**, name `pypi-proxy`, URL `https://pypi.org/`, download policy **On demand**. Leave **Include projects** empty: a pull-through cache fetches only what clients ask for.
-
-   ![Create Python remote form](/img/tutorials/python/remote-create.png)
-
-2. **Repositories → Create repository.** Type **Python**, name `pypi-proxy`. Leave **Remote** empty.
-3. **Distributions → Create distribution.** Type **PyPI**, name and base path `pypi-proxy`, repository `pypi-proxy`. Open **Pull-through caching** and pick the `pypi-proxy` remote.
-
-The distribution page shows the index URL with a **Client setup** snippet:
-
-![PyPI distribution details with the base URL and pull-through remote](/img/tutorials/python/dist-detail.png)
-
-Every file pip downloads is fetched once from PyPI, stored, and added to `pypi-proxy` as a new repository version.
-
-## 2. Host your own packages
-
-Create a repository and a distribution named `pypi-hosted`, as in step 1 but without a remote. Keep **Allow uploads** on in the distribution.
-
-| Purpose                | URL                                                      |
-| ---------------------- | -------------------------------------------------------- |
-| Read (`pip install`)   | `http://localhost:5003/pypi/default/pypi-hosted/simple/` |
+| Purpose | URL |
+| ------- | --- |
+| Read (`pip install`) | `http://localhost:5003/pypi/default/pypi-hosted/simple/` |
 | Write (`twine upload`) | `http://localhost:5003/pypi/default/pypi-hosted/legacy/` |
 
-Both are `<pulp>/pypi/<domain>/<base-path>/` plus `simple/` or `legacy/`. Without domains, drop `<domain>/`. You don't need a publication: the distribution serves the repository directly.
-
-## 3. Configure pip and twine
+Both are `<pulp>/pypi/<domain>/<base-path>/` plus `simple/` or `legacy/`.
 
 ```ini title="~/.config/pip/pip.conf"
 [global]
@@ -81,98 +54,64 @@ password = password
 
 :::warning[Dependency confusion]
 
-With `extra-index-url`, pip picks the highest version across both indexes. If someone publishes `example-hello-lib` 99.0 on PyPI, pip installs it. Use a single index ([One index for everything](#one-index-for-everything)), or names you have reserved on PyPI.
+`extra-index-url` makes pip pick the highest version across both indexes. A public `example-hello-lib` 99.0 would win. Prefer the single index below, or a project name you have reserved on PyPI.
 
 :::
-
-The example's [`pip.conf`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/python/pip.conf) and [`.pypirc`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/python/.pypirc) hold the same settings; `demo.sh` passes them as environment variables.
-
-## 4. Install through Pulp
-
-Create a virtual environment and install the build tools. pip downloads them from the Pulp cache:
 
 ```bash
 cd examples/python
 python3 -m venv .venv && source .venv/bin/activate
 pip install build twine
-```
-
-In Pulp UI, `pypi-proxy` → **Content → Browse** now lists `build`, `twine` and their dependencies.
-
-## 5. Publish your package
-
-```bash
 HELLO_LIB_VERSION=1.0.0 python -m build -o dist hello-lib
 twine upload -r pulp dist/*
-```
-
-```text
-Uploading distributions to http://localhost:5003/pypi/default/pypi-hosted/legacy/
-Uploading example_hello_lib-1.0.0-py3-none-any.whl
-Uploading example_hello_lib-1.0.0.tar.gz
-```
-
-Open `pypi-hosted` → **Content → Browse** and select the package. The panel shows its metadata and an **Install** snippet:
-
-![example-hello-lib in the pypi-hosted repository with its install snippet](/img/tutorials/python/package.png)
-
-## 6. Consume your package
-
-`hello-app` requires `example-hello-lib`, which in turn requires `rich` from PyPI:
-
-```bash
 pip install -r hello-app/requirements.txt
 python hello-app/app.py
 ```
 
-```text
-Hello, Pulp!
-```
+`twine --skip-existing` is not supported. Bump the version.
 
-`example-hello-lib` comes from `pypi-hosted`, and `rich` from the `pypi-proxy` cache.
+## One index
 
-## Going further
+Point the hosted distribution at repository `pypi-hosted` and set its pull-through remote to `pypi-proxy`. One `index-url` then serves your packages and PyPI. For a project the repository has, Pulp lists only that repository's files.
 
-### One index for everything
+The catch: files fetched from PyPI are added to `pypi-hosted` too, so cached and hosted packages share one repository.
 
-A PyPI distribution can serve a repository and fall back to a pull-through remote for anything the repository doesn't have. Point a distribution at `pypi-hosted` and set its pull-through remote to `pypi-proxy`: one `index-url` then serves your packages and PyPI. For a project the repository has, Pulp lists only the repository's files and doesn't ask PyPI, which avoids dependency confusion.
+## A curated mirror
 
-The catch: files fetched from PyPI are added to `pypi-hosted` too, mixing cached and hosted packages in one repository.
+To sync a set ahead of time, put the specifiers on the remote and sync the repository. **Include projects** empty on a **sync** means all of PyPI. Empty on a pull-through cache means the opposite.
 
-### Mirror instead of cache
+| Field | Effect |
+| ----- | ------ |
+| Includes | Only these projects, with specifiers (`django>=4.2`). |
+| Excludes | Projects to leave out. |
+| Package types | `sdist`, `bdist_wheel`, and so on. |
+| Exclude platforms | Drop wheels you do not need, such as Windows. |
+| Latest versions to keep | The N newest releases of each project. `0` keeps all. |
+| Include pre-releases | Off leaves them out. |
 
-To sync a curated set ahead of time, set **Include projects** on the remote (for example `requests>=2.30`) and run **Actions → Sync** on the repository. Leave **Include projects** empty only if you mean to mirror all of PyPI.
+A **blocklist** on the repository skips a project on sync and refuses it on upload, even when it exists on PyPI. A block is a project name, optionally a version, optionally one filename. Removing the block allows the next sync or upload.
 
-### Versions, rollback and access control
+If you already have a [Bandersnatch](https://pypi.org/project/bandersnatch/) config, **From Bandersnatch config** on the remote create menu builds a Python remote from `bandersnatch.conf`. Read the generated includes and excludes before you sync. Bandersnatch and Pulp do not spell every filter the same way.
 
-Every upload or cache fill creates a new repository version (**Versions** tab). Edit the distribution and choose **Serve → Repository version** to freeze what clients see. Uploads require a user who can modify the repository: see [Access management](../administration/roles-and-permissions.md).
+## What the UI shows and does not do
 
-## Troubleshooting
-
-| Symptom                                   | Cause and fix                                                                                                          |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `400 ... already exists in index`         | That file name is already in the repository. Bump the version; twine's `--skip-existing` isn't supported against Pulp. |
-| `403` or `405` on upload                  | The user can't modify the repository, or the distribution's **Allow uploads** is off.                                  |
-| `No matching distribution found` for PyPI | The proxy distribution has no pull-through remote, or the remote's **Include projects** excludes the package.          |
-| Base URL shows the wrong host             | Set `PYPI_API_HOSTNAME` on the Pulp server to the URL clients use (see [Tutorials](./index.md#non-local-servers)).     |
-
-## More Python guides
-
-- [Curate a PyPI mirror with filters](./python/curate-mirror-with-filters.md)
-- [Block packages from a repository](./python/blocklist-packages.md)
-- [Scan packages for vulnerabilities](./python/scan-for-vulnerabilities.md)
-- [Import a remote from a Bandersnatch config](./python/import-from-bandersnatch.md)
-- [Repair package metadata](./python/repair-metadata.md)
+**Repair metadata** regenerates each package's metadata in place. The repository version does not change. Re-downloading a missing file is [repair](../concepts/disk.md), a different operation.
 
 :::info[Not yet in Pulp UI]
 
-Yanking a published package (marking a release as "do not install unless pinned") the way
-pypi.org does. Pulp UI shows yanked packages under the repository's **Yanked** browse section but
-can't yank from the UI yet. For now, yank through the Pulp CLI or REST API — see
-[pulp_python](https://pulpproject.org/pulp_python/).
+Yanking a release (do not install unless pinned), the way PyPI does. Pulp stores yanks and the repository's **Yanked** section lists them. Yanking itself is the Pulp API today. See [pulp_python](https://pulpproject.org/pulp_python/).
 
 :::
 
-## Clean up
+Vulnerability reports do not change content. Turn **Scan for vulnerabilities** on the remote to scan after each sync, or scan one repository version on demand. To keep a package out, block it.
 
-Delete the two distributions, then the two repositories, then the `pypi-proxy` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+Uploads need a user who can modify the repository. See [Who can push](../concepts/access-control.md).
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `400 ... already exists in index` | That filename is already in the repository. Bump the version. |
+| `403` or `405` on upload | The user cannot modify the repository, or **Allow uploads** is off. |
+| `No matching distribution found` for a public package | The distribution has no pull-through remote, or **Include projects** excludes it. |
+| Base URL shows the wrong host | Set `PYPI_API_HOSTNAME` to the URL clients use. |

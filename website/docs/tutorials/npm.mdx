@@ -1,77 +1,44 @@
 ---
 title: npm repository manager
-description: Proxy registry.npmjs.org, host your own scoped packages, and point npm at Pulp.
+description: Cache registry.npmjs.org, publish a scope, and the publish URL npm authenticates against.
 sidebar_label: npm
 sidebar_position: 3
 ---
 
 # npm repository manager
 
-Set up Pulp the way you would set up Nexus or Artifactory for npm: a cache of the public registry, a hosted registry for your own packages, and an `.npmrc` that sends every install through Pulp.
+Cache the public registry for installs, and publish your own scope to Pulp. There is no group repository: `.npmrc` sends the scope to the hosted registry and everything else to the cache.
 
 ```text
-npm --> Pulp --+-- npm-proxy   pull-through cache --> registry.npmjs.org
+npm --> Pulp --+-- npm-proxy   pull-through --> registry.npmjs.org
                +-- npm-hosted  hosted (@example/*)
 ```
 
-| Nexus / Artifactory        | Pulp                                                                       |
-| -------------------------- | -------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Remote + repository + distribution with a **pull-through remote**          |
-| Hosted (local) repository  | Repository + distribution; `npm publish` uploads to it                     |
-| Group (virtual) repository | Not available; route your scope to the hosted registry in `.npmrc` instead |
-| "Set me up"                | **Client setup** snippet on distributions, **Install** snippet on packages |
-
 :::caution[Tech preview]
 
-npm pull-through caching is a tech preview in `pulp_npm`. It works for installs, but expect rough edges, such as the one in [Troubleshooting](#troubleshooting).
+npm pull-through is a tech preview in `pulp_npm`. Installs work. Hosted metadata has a gap called out below.
 
 :::
 
-## Prerequisites
+You need Pulp with `pulp_npm`, npm, and [`examples/npm`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/npm). `setup.sh` creates the objects. URLs are the local backend, domain `default`.
 
-- Pulp UI connected to a Pulp server with `pulp_npm`, signed in as a user who can create npm repositories (see [Tutorials](./index.md#before-you-start))
-- Node.js 20 or later with npm
-- The example projects in [`examples/npm`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/npm): `hello-lib`, a library you publish as `@example/hello-lib`, and `hello-app`, which uses it
+## Cache and host
 
-The URLs below are for the local backend (`http://localhost:5003`, domain `default`). Replace them with the ones your distributions show.
+The pull-through remote belongs on the **distribution**. The repository's own remote stays empty.
 
-:::tip[In a hurry?]
+| Object | What matters |
+| ------ | ------------ |
+| Remote `npm-proxy` | URL `https://registry.npmjs.org/`. |
+| Repository `npm-proxy` | No remote. |
+| Distribution `npm-proxy` | Base path `npm-proxy`, repository `npm-proxy`, pull-through remote `npm-proxy`. |
+| `npm-hosted` | Repository and distribution, no remote. Base path `npm-hosted`. |
 
-`examples/npm/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/npm/demo.sh` runs steps 3 to 6. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Proxy registry.npmjs.org
-
-1. **Content Management → Remotes → Create remote.** Type **npm**, name `npm-proxy`, URL `https://registry.npmjs.org/`, download policy **On demand**.
-
-   ![Create npm remote form](/img/tutorials/npm/remote-create.png)
-
-2. **Repositories → Create repository.** Type **npm**, name `npm-proxy`. Leave **Remote** empty: the remote belongs on the distribution.
-3. **Distributions → Create distribution.** Type **npm**, name and base path `npm-proxy`, repository `npm-proxy`. Open **Pull-through caching** and pick the `npm-proxy` remote.
-
-The distribution page shows the registry URL npm reads from, with a **Client setup** snippet:
-
-![npm distribution details with the base URL and pull-through remote](/img/tutorials/npm/dist-detail.png)
-
-The first install of a package downloads its tarball once and adds it to `npm-proxy` as a new repository version. Later installs are served from Pulp.
-
-## 2. Host your own packages
-
-Create a repository and a distribution named `npm-hosted`, as in step 1 but without a remote. Use the repository name as the base path.
-
-npm uses two different URLs for a hosted registry:
-
-| Purpose               | URL                                                      | Keyed by  |
-| --------------------- | -------------------------------------------------------- | --------- |
-| Read (`npm install`)  | `http://localhost:5003/pulp/content/default/npm-hosted/` | Base path |
-| Write (`npm publish`) | `http://localhost:5003/npm/default/npm-hosted/`          | Base path |
+| Purpose | URL |
+| ------- | --- |
+| Read (`npm install`) | `http://localhost:5003/pulp/content/default/npm-hosted/` |
+| Write (`npm publish`) | `http://localhost:5003/npm/default/npm-hosted/` |
 
 The publish URL is `<pulp>/npm/<domain>/<base-path>/`. Without domains, drop `<domain>/`.
-
-## 3. Configure npm
-
-Put this in the project's `.npmrc` (or `~/.npmrc`). Every package comes from the cache, except the `@example` scope, which comes from the hosted registry:
 
 ```ini title=".npmrc"
 registry=http://localhost:5003/pulp/content/default/npm-proxy/
@@ -79,67 +46,23 @@ registry=http://localhost:5003/pulp/content/default/npm-proxy/
 //localhost:5003/npm/default/npm-hosted/:_auth=YWRtaW46cGFzc3dvcmQ=
 ```
 
-`_auth` is the base64 of `user:password` (`printf admin:password | base64`) for a Pulp user allowed to modify `npm-hosted`. The example's [`.npmrc`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/npm/.npmrc) reads every value from environment variables instead.
-
-## 4. Publish your package
-
-npm publishes a scoped package to its scope's registry, so point the scope at the publish URL for this command:
+`_auth` is the base64 of `user:password` (`printf admin:password | base64`) for a user who can modify `npm-hosted`. The key is the publish URL **without the scheme**, ending in `/`. The example [`.npmrc`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/npm/.npmrc) reads the values from the environment.
 
 ```bash
 cd examples/npm/hello-lib
 npm publish --@example:registry=http://localhost:5003/npm/default/npm-hosted/
+cd ../hello-app && npm install && node index.js
 ```
 
-```text
-npm notice Publishing to http://localhost:5003/npm/default/npm-hosted/ with tag latest and default access
-+ @example/hello-lib@1.0.0
-```
+`package-lock.json` still records `registry.npmjs.org` for public packages. npm rewrites that to your registry on install.
 
-Open the `npm-hosted` repository → **Content → Browse** and select the package. The panel shows an **Install** snippet:
-
-![@example/hello-lib in the npm-hosted repository with its install snippet](/img/tutorials/npm/package.png)
-
-## 5. Install through Pulp
-
-`hello-app` depends on `@example/hello-lib` and on `picocolors` from the public registry:
-
-```bash
-cd ../hello-app
-npm install
-node index.js
-```
-
-```text
-added 2 packages in 286ms
-Hello, Pulp!
-```
-
-`@example/hello-lib` comes from `npm-hosted` and `picocolors` from `npm-proxy`. `package-lock.json` still shows `registry.npmjs.org` for `picocolors`: npm records public packages under their canonical URL and rewrites it to your configured registry on install.
-
-## 6. Verify in Pulp UI
-
-- `npm-proxy` → **Versions** grew by one version per cached package, and **Content → Browse** lists `picocolors`.
-- `npm-hosted` → **Content → Browse** lists `@example/hello-lib`. Each publish is a new repository version.
-
-## Going further
-
-### Versions and rollback
-
-Every publish or cache fill creates a new repository version (**Versions** tab). To freeze what clients see, edit the distribution and choose **Serve → Repository version**.
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Publishing requires a user who can modify the repository: create a publish-only user and role in [Access management](../administration/roles-and-permissions.md) for CI.
+Reads are anonymous until the distribution has a [content guard](../concepts/what-clients-see.md). A CI user needs permission to modify the hosted repository. See [Who can push](../concepts/access-control.md). Point the distribution at a repository version to freeze what installs resolve.
 
 ## Troubleshooting
 
-| Symptom                                             | Cause and fix                                                                                                                                                                                           |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENEEDAUTH` on publish                              | No credentials for the publish URL. The `.npmrc` key must be the publish URL without the scheme, ending in `/`: `//localhost:5003/npm/default/npm-hosted/:_auth`.                                       |
-| Publish goes to `/pulp/content/...` and fails       | `--registry` doesn't apply to scoped packages. Use `--@example:registry=<publish URL>`.                                                                                                                 |
-| A published package's dependencies aren't installed | `pulp_npm` 0.10 doesn't list a hosted package's `dependencies` in its metadata. Declare them in the consuming app too, as `hello-app` does with `picocolors`, or keep hosted libraries dependency-free. |
-| `404` installing a public package                   | The proxy distribution has no pull-through remote, or the remote URL is wrong. Check **Pull-through caching** on `npm-proxy`.                                                                           |
-
-## Clean up
-
-Delete the two distributions, then the two repositories, then the `npm-proxy` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `ENEEDAUTH` on publish | The `.npmrc` key must be `//<host>/npm/<domain>/<base-path>/:_auth`. |
+| Publish goes to `/pulp/content/...` | `--registry` does not apply to a scoped package. Pass `--@example:registry=<publish URL>`. |
+| A published package's dependencies are missing | `pulp_npm` 0.10 does not list a hosted package's `dependencies` in its metadata. Declare them in the app, or keep the library dependency-free. |
+| `404` installing a public package | The proxy distribution has no pull-through remote, or the remote URL is wrong. |

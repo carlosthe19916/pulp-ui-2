@@ -1,35 +1,35 @@
 ---
-title: Download policies
-sidebar_position: 4
+title: When bytes are fetched
+description: Immediate, on-demand, streamed and pull-through, which ecosystems use each, and what breaks if the upstream disappears.
+sidebar_label: When bytes are fetched
+sidebar_position: 2
 ---
 
-# Download policies & pull-through caching
+# When bytes are fetched
 
-A Remote's **download policy** decides when Pulp fetches the actual package bytes during a sync.
-It's the trade-off between disk usage and self-sufficiency.
+A remote's download policy decides when Pulp stores the package bytes. Pull-through is a different mechanism: the remote hangs off a distribution and the first client request fills the cache.
 
-| Policy      | When bytes are fetched                                  | Use it for                                  |
-| ----------- | ------------------------------------------------------- | ------------------------------------------- |
-| `immediate` | All at sync time (default).                             | Content you must have offline / air-gapped. |
-| `on_demand` | Metadata now; each package on first request, then kept. | Large upstreams (PyPI, a full RPM mirror).  |
-| `streamed`  | On request, and **not** stored.                         | Throwaway / nightly content.                |
+| Mode         | When the bytes arrive                                    | Use it when                                          |
+| ------------ | -------------------------------------------------------- | ---------------------------------------------------- |
+| `immediate`  | All of them at sync time.                                | The copy must work with the upstream offline.        |
+| `on_demand`  | Metadata at sync; each file on first request, then kept. | A large distro or index you will not copy in full.   |
+| `streamed`   | On request, and not stored.                              | Content you do not need to keep.                     |
+| Pull-through | Nothing up front. The first client request downloads it. | A cache of a public registry, filled by real builds. |
 
-With `on_demand`, the first client to request a package pays the upstream round-trip; everyone after
-gets it from Pulp. It's the usual choice for big registries you don't want to copy in full.
+The first client to request an on-demand or pull-through file pays the upstream round trip. Everyone after gets it from Pulp.
 
 :::warning
-With `on_demand` or `streamed`, deleting the Remote (or losing upstream access) breaks serving —
-clients get 404s for bytes Pulp never stored. Switch to `immediate` and re-sync if you need a
-self-contained copy.
+On-demand and streamed files 404 if the remote is deleted or the upstream is unreachable, because Pulp never stored the bytes. Switch to `immediate` and sync again for a copy that stands alone. [Export](./disconnected.md) also refuses on-demand content: the artifacts have to exist.
 :::
 
-## Pull-through caching
+## Which ecosystems use which
 
-Pull-through caching skips the sync entirely. You attach a Remote to a **Distribution**, and Pulp
-fetches and caches any package the first time a client asks for it — exactly like an **Artifactory
-remote repository** or Docker Hub's registry mirror. No `includes`/`excludes` list to maintain: the
-cache fills itself from real usage.
+| Family                                                | How content arrives                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Maven, npm, Python, RubyGems, Container, Hugging Face | Pull-through cache. Python, RubyGems and Container can also sync a named set ahead of time. Hugging Face is pull-through only. |
+| RPM, Debian, File, OSTree                             | Sync. On demand is the usual policy: metadata now, each package or file on first request. There is no pull-through.            |
+| Ansible collections                                   | Sync, and only `immediate`. The remote's requirements list is the set. An empty list tries to mirror the whole server.         |
 
-Supported by **Python, Gem, npm, Container, Maven and Hugging Face** (several still tech preview).
-Hugging Face is cache-first by design. See each ecosystem's [tutorial](../tutorials/index.md) for
-whether it uses a synced mirror or pull-through.
+npm and container pull-through are tech previews in their plugins.
+
+A Maven, npm or Python pull-through remote belongs on the **distribution**. Leaving it only on the repository does not make the cache answer client requests. A RubyGems pull-through distribution needs no repository: cached gems are stored as content and are not added to one. A container pull-through distribution creates a repository per image as clients pull.

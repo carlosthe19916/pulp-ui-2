@@ -1,129 +1,39 @@
 ---
 title: Generic file repository
-description: Mirror file trees, host build artifacts at stable URLs, and download them with curl.
+description: Serve ISOs and other files at a stable URL, and mirror one Pulp from another with a PULP_MANIFEST.
 sidebar_label: Files (raw)
 sidebar_position: 10
 ---
 
 # Generic file repository
 
-Set up Pulp the way you would set up a Nexus **raw** or Artifactory **generic** repository: a place for build artifacts, installers, ISOs or anything else, served at stable URLs and downloaded with `curl`.
+Raw artifacts: ISOs, installers, vendor binaries. Also the way one Pulp mirrors another's files. There is no pull-through cache, and there is no package manager. The client is `curl`.
 
 ```text
-curl / wget --> Pulp --+-- files-upstream  mirror (synced on demand) --> PULP_MANIFEST
-                       +-- files-hosted    hosted
+curl --> Pulp --+-- files-upstream  sync of a PULP_MANIFEST
+                +-- files-hosted    files you upload
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Remote pointing at a `PULP_MANIFEST` + repository, **Sync**ed with the **On demand** policy       |
-| Hosted (local) repository  | Repository with **Auto-publish** + distribution; files are uploaded in Pulp UI or through the API |
-| Group (virtual) repository | Not available; each distribution has its own base URL                                             |
-| Checksums                  | Every publication writes a `PULP_MANIFEST` with the SHA-256 and size of each file                 |
+A file remote syncs a **`PULP_MANIFEST`**: a CSV of `path,sha256,size` for each file next to it. The remote URL is that file, not its directory. Any web server can host one. **On demand** stores the manifest now and each file on first download.
 
-Pulp has no pull-through cache for files. A file remote syncs a **`PULP_MANIFEST`**: a CSV that lists `path,sha256,size` for each file next to it. Any web server can serve one, which makes it easy to mirror a file tree between Pulp servers.
+A **Git** remote is the other source: files from a Git ref, for a tree that is not already published as a manifest.
 
-## Prerequisites
+The repository needs a **publication**. Auto-publish writes one on every change, including a new `PULP_MANIFEST`. A distribution with no publication 404s. Because every publication writes that manifest, a second Pulp syncs `files-hosted` by pointing a File remote at `http://localhost:5003/pulp/content/default/files-hosted/PULP_MANIFEST`.
 
-- Pulp UI connected to a Pulp server with `pulp_file` (part of `pulpcore`), signed in as a user who can create file repositories (see [Tutorials](./index.md#before-you-start))
-- `curl`, `tar` and `sha256sum`
-- The example in [`examples/file`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/file): `hello/`, packaged as the artifact you publish
-
-The URLs below are for the local backend (`http://localhost:5003`, domain `default`). Replace them with the ones your distributions show.
-
-:::tip[In a hurry?]
-
-`examples/file/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/file/demo.sh` runs steps 3 to 5. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Mirror a file tree
-
-1. **Content Management → Remotes → Create remote.** Type **File**, name `files-upstream`, URL `https://fixtures.pulpproject.org/file/PULP_MANIFEST`, download policy **On demand**.
-
-   ![Create File remote form](/img/tutorials/file/remote-create.png)
-
-2. **Repositories → Create repository.** Type **File**, name `files-upstream`, remote `files-upstream`, and turn on **Auto-publish**.
-3. On the repository page, **Actions → Sync**.
-4. **Distributions → Create distribution.** Type **File**, name and base path `files-upstream`, repository `files-upstream`.
+[`examples/file`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/file) uses the fixture `https://fixtures.pulpproject.org/file/PULP_MANIFEST`. `pulp_file` ships with pulpcore.
 
 ```bash
-curl -O http://localhost:5003/pulp/content/default/files-upstream/1.iso
+curl -O http://localhost:5003/pulp/content/default/files-hosted/hello-1.0.0.tar.gz
+curl -O http://localhost:5003/pulp/content/default/files-hosted/PULP_MANIFEST
+sha256sum -c <(awk -F, '{print $2 "  " $1}' PULP_MANIFEST)
 ```
 
-To mirror a Git repository's files instead, use a remote of type **File (Git)**.
-
-## 2. Host your own files
-
-Create a repository named `files-hosted` with **Auto-publish** on and no remote, and a distribution with base path `files-hosted`.
-
-![File distribution details with the base URL and download snippet](/img/tutorials/file/dist-detail.png)
-
-## 3. Publish an artifact
-
-Package the example:
-
-```bash
-cd examples/file
-tar -czf hello-1.0.0.tar.gz -C hello .
-```
-
-Open the `files-hosted` repository, click **Upload content**, pick `hello-1.0.0.tar.gz`, and set **Relative path** to `hello/1.0.0/hello-1.0.0.tar.gz`. The relative path is the file's URL under the distribution, so choose a layout and keep to it, for example `<name>/<version>/<file>`. In CI, upload through the REST API instead, as `demo.sh` does.
-
-![hello-1.0.0.tar.gz in the files-hosted repository](/img/tutorials/file/package.png)
-
-Uploading a file to an existing relative path replaces it in a new repository version; the previous file stays in the older versions.
-
-## 4. Download it
-
-```bash
-curl -O http://localhost:5003/pulp/content/default/files-hosted/hello/1.0.0/hello-1.0.0.tar.gz
-```
-
-## 5. Verify it
-
-The published `PULP_MANIFEST` holds the expected checksum:
-
-```bash
-curl -s http://localhost:5003/pulp/content/default/files-hosted/PULP_MANIFEST
-```
-
-```text
-hello/1.0.0/hello-1.0.0.tar.gz,2e0d5047636c731f86c8639830f3beff2c6bfd85aeca4183683a7a5309ebc07d,178
-```
-
-```bash
-echo "<sha256 from the manifest>  hello-1.0.0.tar.gz" | sha256sum -c -
-tar -xzf hello-1.0.0.tar.gz && sh hello.sh
-```
-
-```text
-hello-1.0.0.tar.gz: OK
-Hello, Pulp!
-```
-
-## Going further
-
-### Mirror one Pulp from another
-
-Because every publication writes a `PULP_MANIFEST`, another Pulp server can sync `files-hosted` with a File remote pointing at `http://localhost:5003/pulp/content/default/files-hosted/PULP_MANIFEST`.
-
-### Versions and rollback
-
-Every upload creates a new repository version (**Versions** tab). Edit the distribution and choose **Serve → Repository version** to freeze what clients see.
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section): an RBAC or certificate guard keeps artifacts private. Uploads require a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
+Re-uploading the same relative path replaces the file in a new repository version. Compare against the current manifest. Point the distribution at a version to freeze the tree. See [What clients see](../concepts/what-clients-see.md). An RBAC or certificate [content guard](../concepts/operating.md#content-guards) is how these URLs stop being anonymous.
 
 ## Troubleshooting
 
-| Symptom                             | Cause and fix                                                                                  |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `404` for a file you uploaded       | The repository has no new publication. Turn on **Auto-publish**, or run **Actions → Publish**. |
-| Sync fails reading the manifest     | The remote URL must be the `PULP_MANIFEST` file itself, not its directory.                     |
-| Checksum mismatch after a re-upload | The relative path now points at the new file. Compare against the current `PULP_MANIFEST`.     |
-
-## Clean up
-
-Delete the two distributions, then the two repositories, then the `files-upstream` remote, each from its list's row actions. Stored files are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `404` for a file you uploaded | No publication. Auto-publish, or publish. |
+| Sync fails reading the manifest | The remote URL must be the `PULP_MANIFEST` file itself. |
+| Checksum mismatch after a re-upload | The path now points at the new file. Check the current manifest. |
