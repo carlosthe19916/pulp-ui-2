@@ -8,6 +8,8 @@ export const useCreatableTypes = (entity: EntityType): ITypeOption[] => {
   const installed = useApiStatus().plugins;
   return getAvailableTypes({ entity, installed }).flatMap(({ pulpType }) => {
     const entry = getEntityForm({ entity, pulpType, mode: "create" });
-    return entry ? [{ pulpType, label: entry.label }] : [];
+    return entry
+      ? [{ pulpType, label: entry.label, description: entry.description }]
+      : [];
   });
 };

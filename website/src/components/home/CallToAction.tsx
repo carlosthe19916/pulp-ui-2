@@ -15,7 +15,7 @@ export default function CallToAction(): React.ReactElement {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
-            to="/docs/getting-started/installation"
+            to="/docs/running-pulp-ui/container"
             className="rounded-full bg-white px-6 py-3 font-display font-medium text-brand-60 no-underline transition hover:bg-brand-10 hover:text-brand-70 hover:no-underline"
           >
             Get started

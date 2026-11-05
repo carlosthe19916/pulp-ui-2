@@ -1,4 +1,5 @@
 import type React from "react";
+import { useState } from "react";
 
 import {
   createMemoryHistory,
@@ -15,6 +16,7 @@ import { render } from "vitest-browser-react";
 import { defineForm } from "../defineForm";
 import { testForm } from "../testForm";
 import { EntityFormPage } from "./EntityFormPage";
+import { PluginTypeSelect } from "./PluginTypeSelect";
 
 // Monaco isn't needed to test the page: a plain textarea stands in for the code editor.
 vi.mock(import("../fields/CodeEditorField"), () => ({
@@ -242,6 +244,46 @@ describe("EntityFormPage", () => {
       .fill("https://mirror.example.com/");
     await screen.getByRole("button", { name: "Save" }).click();
     await expect.poll(() => onSubmit.mock.calls.length).toBe(1);
+  });
+
+  it("shows the selected type's job under the Type select", async () => {
+    const Harness = () => {
+      const [value, setValue] = useState("deb.apt-publication");
+      return (
+        <PluginTypeSelect
+          id="type"
+          value={value}
+          onChange={setValue}
+          options={[
+            {
+              pulpType: "deb.apt-publication",
+              label: "APT",
+              description:
+                "Rebuilds Release and Packages from the content you curate.",
+            },
+            {
+              pulpType: "deb.verbatim-publication",
+              label: "APT (verbatim)",
+              description: "Republishes the upstream files unchanged.",
+            },
+          ]}
+        />
+      );
+    };
+    const screen = await render(<Harness />);
+    await expect
+      .element(
+        screen.getByText(
+          "Rebuilds Release and Packages from the content you curate.",
+        ),
+      )
+      .toBeVisible();
+    await screen
+      .getByRole("combobox", { name: "Type" })
+      .selectOptions("APT (verbatim)");
+    await expect
+      .element(screen.getByText("Republishes the upstream files unchanged."))
+      .toBeVisible();
   });
 
   it("shows the submission error at the top of the form", async () => {

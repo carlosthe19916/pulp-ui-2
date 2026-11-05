@@ -20,7 +20,9 @@ export const containerPushRepositoryForm = repositoryForm(
   },
   docsUrl: "https://pulpproject.org/pulp_container/",
   sections: [
-    s.essentials(repositoryIdentity(f)),
+    s.essentials(repositoryIdentity(f), {
+      description: "Created by podman push. You cannot upload a manifest here.",
+    }),
     s.collapsible("signing", "Signing", [
       signingServiceField(f, "manifest_signing_service", {
         label: "Manifest signing service",

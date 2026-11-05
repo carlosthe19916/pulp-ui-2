@@ -37,7 +37,7 @@ export default function QuickStart(): React.ReactElement {
             ))}
           </ul>
           <Link
-            to="/docs/getting-started/installation"
+            to="/docs/running-pulp-ui/container"
             className="mt-8 inline-block font-display font-medium"
           >
             Read the installation guide →

@@ -31,6 +31,8 @@ export type Generic = typeof GENERIC;
 export interface ITypeUi<F extends IFormDef = IFormDef> {
   /** The name in the Type select; defaults to the plugin's label. */
   label?: string;
+  /** Shown under the Type select: which job this type is. */
+  description?: string;
   form: F;
 }
 

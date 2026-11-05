@@ -1,105 +1,42 @@
 ---
 title: Hugging Face model cache
-description: Cache models and datasets from the Hugging Face Hub and point the hf CLI and huggingface_hub at Pulp.
+description: Cache models and datasets from the Hugging Face Hub. The plugin does not host your own models.
 sidebar_label: Hugging Face
 sidebar_position: 11
 ---
 
 # Hugging Face model cache
 
-Set up Pulp the way you would set up a Nexus or Artifactory Hugging Face proxy: a cache of the Hugging Face Hub, so models and datasets are downloaded once and then served from your network.
+One job: the first download of a model or dataset is fetched from the Hub and then served from Pulp, including gated models when the remote has a token that can read them.
 
 ```text
-hf / huggingface_hub --> Pulp --+-- hf-proxy  pull-through cache --> huggingface.co
+hf / huggingface_hub --> Pulp -- hf-proxy  pull-through --> huggingface.co
 ```
 
-| Nexus / Artifactory       | Pulp                                                                                    |
-| ------------------------- | --------------------------------------------------------------------------------------- |
-| Proxy (remote) repository | Remote + distribution with a **pull-through remote**                                    |
-| Hosted (local) repository | Not available in `pulp_hugging_face`; see [Host your own files](#2-host-your-own-files) |
-| "Set me up"               | **Client setup** snippet (`HF_ENDPOINT`) on the distribution                            |
+Pull-through is the only mode `pulp_hugging_face` supports. There is no sync and no repository to create. Hub API calls (model info, file lists) are forwarded to the Hub. The files are stored in Pulp.
 
-## Prerequisites
+Hosting your own models is not in this plugin. Share those files from a [file repository](./file.mdx).
 
-- Pulp UI connected to a Pulp server with `pulp_hugging_face`, signed in as a user who can create Hugging Face remotes and distributions (see [Tutorials](./index.md#before-you-start))
-- Python 3.9 or later with `huggingface_hub` (it provides the `hf` CLI, formerly `huggingface-cli`)
-- The example in [`examples/hugging_face`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/hugging_face): `load_model.py`, which downloads a model through Pulp
+You need Pulp with `pulp_hugging_face`, and `huggingface_hub` (the `hf` CLI). [`examples/hugging_face`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/hugging_face) downloads `hf-internal-testing/tiny-random-bert`, a tiny test model. `setup.sh` creates the remote and the distribution.
 
-The examples use `hf-internal-testing/tiny-random-bert`, a model of a few hundred kilobytes made for tests.
-
-:::tip[In a hurry?]
-
-`examples/hugging_face/setup.sh` creates the Pulp objects of step 1 through the REST API, and `examples/hugging_face/demo.sh` runs steps 3 and 4. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Proxy the Hugging Face Hub
-
-1. **Content Management → Remotes → Create remote.** Type **Hugging Face**, name `hf-proxy`, URL `https://huggingface.co`, download policy **On demand**. For private or gated models, set **Access token** to a Hugging Face token that can read them.
-
-   ![Create Hugging Face remote form](/img/tutorials/hugging_face/remote-create.png)
-
-2. **Distributions → Create distribution.** Type **Hugging Face**, name and base path `hf-proxy`, no repository. Open **Pull-through caching** and pick the `hf-proxy` remote.
-
-![Hugging Face distribution details with the HF_ENDPOINT client setup](/img/tutorials/hugging_face/dist-detail.png)
-
-Pull-through is the only mode `pulp_hugging_face` supports: there is no sync, so you don't need a repository. Downloaded files are stored in Pulp (**Content Management → Content**); Hub API calls (model info, file lists) are forwarded to the Hub.
-
-## 2. Host your own files
-
-`pulp_hugging_face` has no upload. To share your own model files, use a [generic file repository](./file.mdx) and download them by URL.
-
-## 3. Configure the client
-
-Every Hugging Face client reads the Hub URL from `HF_ENDPOINT`:
+| Object | What matters |
+| ------ | ------------ |
+| Remote `hf-proxy` | URL `https://huggingface.co`, policy **On demand**. **Access token** for a private or gated model. |
+| Distribution `hf-proxy` | No repository. Pull-through remote `hf-proxy`. |
 
 ```bash
 export HF_ENDPOINT=http://localhost:5003/pulp/content/default/hf-proxy
-```
-
-Leave off the trailing slash, as the **Client setup** snippet does.
-
-## 4. Download through Pulp
-
-With the CLI:
-
-```bash
 hf download hf-internal-testing/tiny-random-bert config.json
 ```
 
-From Python, as [`load_model.py`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/hugging_face/load_model.py) does:
+No trailing slash. `transformers` and `datasets` read `HF_ENDPOINT` too.
 
-```python
-from huggingface_hub import snapshot_download
-
-path = snapshot_download("hf-internal-testing/tiny-random-bert", allow_patterns=["*.json"])
-```
-
-```text
-HF_ENDPOINT=http://localhost:5003/pulp/content/default/hf-proxy
-  config.json
-  special_tokens_map.json
-  tokenizer.json
-  tokenizer_config.json
-model_type=bert hidden_size=32
-```
-
-Libraries built on `huggingface_hub`, such as `transformers` and `datasets`, honour `HF_ENDPOINT` too.
-
-## Going further
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard. `pulp_hugging_face` has no per-object roles: grant the plugin's global roles in [Access management](../administration/roles-and-permissions.md).
+The plugin has no per-object roles. Grant its global roles. See [Who can push](../concepts/access-control.md). Reads of the content URL are anonymous until the distribution has a content guard.
 
 ## Troubleshooting
 
-| Symptom                              | Cause and fix                                                                             |
-| ------------------------------------ | ----------------------------------------------------------------------------------------- | ------------ |
-| Downloads still go to huggingface.co | `HF_ENDPOINT` isn't set in the client's environment (check with `env                      | grep HF\_`). |
-| `401` or `403` for a model           | The model is private or gated. Set **Access token** on the remote to a token with access. |
-| `404` for every file                 | The distribution has no pull-through remote.                                              |
-
-## Clean up
-
-Delete the `hf-proxy` distribution, then the `hf-proxy` remote. Cached files are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| Downloads still go to huggingface.co | `HF_ENDPOINT` is unset in that process. |
+| `401` or `403` for a model | The model is private or gated. Set **Access token** on the remote. |
+| `404` for every file | The distribution has no pull-through remote. |

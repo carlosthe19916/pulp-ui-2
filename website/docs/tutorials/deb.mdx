@@ -1,135 +1,60 @@
 ---
 title: APT repository manager
-description: Mirror upstream Debian repositories, host your own .deb packages, and point apt at Pulp.
+description: Mirror a Debian or Ubuntu slice, or publish your own packages. The publication type decides which.
 sidebar_label: APT (Debian)
 sidebar_position: 7
 ---
 
 # APT repository manager
 
-Set up Pulp the way you would set up Nexus, Artifactory or Aptly for Debian packages: a mirror of an upstream APT repository, a hosted repository for your own `.deb` packages, and `apt` installing from both.
+Mirror a slice of Debian or Ubuntu, or publish `.deb` packages you build. The choice that matters is the publication.
 
 ```text
-apt --> Pulp --+-- apt-upstream  mirror (synced on demand) --> upstream APT repository
-               +-- apt-hosted    hosted
+apt --> Pulp --+-- apt-upstream  on-demand mirror of one suite
+               +-- apt-hosted    packages you upload, structured publication
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Proxy (remote) repository  | Remote + repository, **Sync**ed with the **On demand** policy: metadata now, packages on first request |
-| Hosted (local) repository  | Repository with **Auto-publish** + distribution; packages are uploaded in Pulp UI or through the API   |
-| Group (virtual) repository | Not available; add one `sources.list` line per distribution                                            |
-| "Set me up"                | **Client setup** snippet on distributions, **Install** snippet on packages                             |
+There is no pull-through cache. You sync. **On demand** downloads the indexes now and each package on first install. A wrong distribution, component or architecture fails the sync. **Ignore missing package indices** skips an index the upstream does not have. Leave **GPG public key** set on a real remote so Pulp verifies `Release` on every sync.
 
-Pulp has no pull-through cache for APT: you **sync** a remote instead. With the **On demand** policy, a sync downloads only the indices, and each package is fetched from upstream the first time a client asks for it.
+[`examples/deb`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/deb) mirrors `http://nginx.org/packages/debian/` (`bookworm`, component `nginx`, `amd64`) because it is small. For Debian itself use `http://deb.debian.org/debian/`, limited to the suites you need. The remote URL is the directory that contains `dists/`.
 
-## Prerequisites
+## Structured or verbatim
 
-- Pulp UI connected to a Pulp server with `pulp_deb`, signed in as a user who can create APT repositories (see [Tutorials](./index.md#before-you-start))
-- A Debian or Ubuntu machine with `apt` and `dpkg-deb`, or podman to run them in a container
-- The example in [`examples/deb`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/deb): `hello/`, the tree of a package you publish
+| Publication | What clients get | Use it when |
+| ----------- | ---------------- | ----------- |
+| APT | Pulp rebuilds `Release` and `Packages` from the content in the repository. **Auto-publish** creates this. | You upload your own packages, or you want a suite you curate. |
+| APT (verbatim) | The upstream files, unchanged. | You want a faithful mirror of that slice, including upstream metadata. |
 
-The examples mirror nginx's own Debian repository, `http://nginx.org/packages/debian/` (distribution `bookworm`, component `nginx`, `amd64`), which syncs in seconds. For real use, mirror Debian itself, `http://deb.debian.org/debian/`, limited to the distributions, components and architectures you need.
+Both types exist on the publication create form. The structured form can also publish a simple `default` distribution that contains every package.
 
-:::tip[In a hurry?]
+## Publish your own package
 
-`examples/deb/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/deb/demo.sh` runs steps 3 to 5 in a Debian container. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Mirror an upstream repository
-
-1. **Content Management → Remotes → Create remote.** Type **APT**, name `apt-upstream`, URL `http://nginx.org/packages/debian/` (the directory that holds `dists/`), **Distributions** `bookworm`, **Components** `nginx`, **Architectures** `amd64`, download policy **On demand**.
-
-   ![Create APT remote form](/img/tutorials/deb/remote-create.png)
-
-2. **Repositories → Create repository.** Type **APT**, name `apt-upstream`, remote `apt-upstream`, and turn on **Auto-publish**: Pulp writes the `Release` and `Packages` files for every new version.
-3. On the repository page, **Actions → Sync**.
-4. **Distributions → Create distribution.** Type **APT**, name and base path `apt-upstream`, repository `apt-upstream`.
-
-Leave **GPG public key** on the remote empty only for testing: with the upstream key set, Pulp verifies the `Release` file on every sync.
-
-## 2. Host your own packages
-
-Create a repository named `apt-hosted` with **Auto-publish** on and no remote, and a distribution with base path `apt-hosted`.
-
-![APT distribution details with the base URL and sources.list snippet](/img/tutorials/deb/dist-detail.png)
-
-## 3. Publish a package
-
-Build the example package:
-
-```bash
-cd examples/deb
-dpkg-deb --root-owner-group --build hello build/hello-pulp_1.0.0_all.deb
-```
-
-There is no `apt` command to publish a package. Open the `apt-hosted` repository, click **Upload content**, pick the `.deb`, and set **Distribution** `stable` and **Component** `main`. Those two fields decide where the package appears in the published repository: `dists/stable/main/`. In CI, upload through the REST API instead, as `demo.sh` does.
-
-Open **Content → Browse** and select the package for its details and an **Install** snippet:
-
-![hello-pulp in the apt-hosted repository with its install snippet](/img/tutorials/deb/package.png)
-
-## 4. Configure apt
-
-Add one line per distribution:
+A hosted repository with **Auto-publish**, no remote, and a distribution. Upload sets **Distribution** and **Component**. Those two fields are the path: `dists/stable/main/`.
 
 ```text title="/etc/apt/sources.list.d/pulp.list"
 deb [trusted=yes] http://localhost:5003/pulp/content/default/apt-upstream/ bookworm nginx
 deb [trusted=yes] http://localhost:5003/pulp/content/default/apt-hosted/ stable main
 ```
 
-`[trusted=yes]` because the published `Release` files aren't signed. With a signing service on the repository (**Signing** section), drop it and add the key with `signed-by=` instead.
-
-## 5. Install through Pulp
+`[trusted=yes]` is for an unsigned `Release`. Select a [signing service](../concepts/operating.md#signing) on the repository to sign `Release`, then drop `trusted=yes` and add `signed-by=`.
 
 ```bash
-sudo apt-get update
-sudo apt-get install hello-pulp nginx
-hello-pulp
-apt-cache policy hello-pulp nginx
+cd examples/deb
+dpkg-deb --root-owner-group --build hello build/hello-pulp_1.0.0_all.deb
 ```
 
-```text
-Hello, Pulp!
-hello-pulp:
- *** 1.0.0 500
-        500 http://localhost:5003/pulp/content/default/apt-hosted stable/main all Packages
-nginx:
- *** 1.30.6-1~bookworm 500
-        500 http://localhost:5003/pulp/content/default/apt-upstream bookworm/nginx amd64 Packages
-```
+There is no `apt` command to publish. Upload the `.deb` with distribution `stable` and component `main`.
 
-nginx's own dependencies (`libc6`, `libssl3`...) still come from the machine's Debian sources. Mirror Debian too, and replace those sources, to serve everything from Pulp.
+Dependencies such as `libc6` still come from the machine's Debian sources unless you mirror those suites too and replace the machine's sources.
 
-## Going further
-
-### Promote between repositories
-
-Copy packages from a staging repository into a release repository: **Actions → Add content…** on the target, or **Advanced copy** to bring dependencies along. See [Advanced copy](https://pulpproject.org/pulp_deb/docs/user/guides/advanced_copy/).
-
-### Versions and rollback
-
-Every sync or upload creates a new repository version (**Versions** tab). Edit a distribution and choose **Serve → Repository version** to freeze what clients see.
-
-### Signing
-
-Pick a signing service in the repository's **Signing** section to sign the `Release` files. See [Signing service](https://pulpproject.org/pulp_deb/docs/user/guides/signing_service/).
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Uploads require a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
+Copy into a release suite copies references. Advanced copy brings dependencies along. Point the distribution at a repository version or an older publication to freeze the suite. See [What clients see](../concepts/what-clients-see.md).
 
 ## Troubleshooting
 
-| Symptom                            | Cause and fix                                                                                                                                |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `404 Not Found` for `.../Release`  | The repository has no publication. Turn on **Auto-publish** and add content, or run **Actions → Publish**.                                   |
-| `The repository ... is not signed` | Add `[trusted=yes]` for testing, or sign the repository and configure `signed-by=`.                                                          |
-| The uploaded package isn't found   | The `sources.list` line uses a different distribution or component than the upload. Match **Distribution** and **Component**.                |
-| `held broken packages`             | A dependency isn't in any configured source. Keep the Debian sources, or mirror them.                                                        |
-| Sync fails on missing indices      | The remote lists a distribution, component or architecture the upstream doesn't have. Fix it, or turn on **Ignore missing package indices**. |
-
-## Clean up
-
-Delete the two distributions, then the two repositories, then the `apt-upstream` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `404` for `Release` | No publication. Auto-publish, or publish. |
+| `The repository is not signed` | `[trusted=yes]` for a test, or sign and set `signed-by=`. |
+| The uploaded package is not found | `sources.list` uses a different distribution or component than the upload. |
+| `held broken packages` | A dependency is not in any configured source. Mirror Debian, or keep the machine's sources. |
+| Sync fails on missing indices | The remote names a distribution, component or architecture the upstream does not have. |

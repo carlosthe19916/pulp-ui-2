@@ -1,7 +1,7 @@
 ---
 slug: /intro
 title: Introduction
-description: Pulp UI is a web console for Pulp, the open source platform for managing repositories of software packages and serving them to consumers. Learn what it does and who it is for.
+description: Pulp UI is a web console for Pulp. Start from the job you have, not from a tour of the screens.
 sidebar_position: 1
 ---
 
@@ -13,38 +13,27 @@ Pulp UI is an independent project maintained by an individual contributor in [th
 
 :::
 
-**Pulp UI** is a web console for [Pulp](https://pulpproject.org/), the open source platform for managing repositories of software packages and making them available to a large number of consumers.
+**Pulp UI** is a web console for [Pulp](https://pulpproject.org/), the open source platform for managing repositories of software packages and serving them to clients. Pulp is API-first. The UI is one way to drive that API.
 
-Pulp is API-first: everything it does is exposed through a REST API. Pulp UI puts a [PatternFly](https://www.patternfly.org/)-based interface on top of that API so you can manage your content from the browser.
+The screens name the objects. These docs cover the decisions the screens do not: which object a job needs, the client file, and what breaks later.
 
-If you've used Artifactory or Nexus, Pulp does the same job — proxy upstreams, host your own packages, serve them at a URL — with different names. [Concepts](./concepts/index.md) maps one to the other.
+## Start from the job
 
-## Who is it for?
+| You want to                                                                 | Read                                                                                      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Cache Maven Central, npmjs, PyPI or RubyGems, and publish your own packages | [If you know Artifactory](./concepts/index.md), then the [tutorial](./tutorials/index.md) |
+| Mirror Fedora, RHEL, Debian or Ubuntu and promote a curated set             | [RPM](./tutorials/rpm.mdx) or [APT](./tutorials/deb.mdx)                                  |
+| Cache a container registry, or push images                                  | [Container](./tutorials/container.mdx)                                                    |
+| Run a private Galaxy or mirror Automation Hub                               | [Ansible](./tutorials/ansible.mdx)                                                        |
+| Serve ISOs and other files, including to another Pulp                       | [Files](./tutorials/file.mdx)                                                             |
+| Cache Hugging Face models                                                   | [Hugging Face](./tutorials/hugging_face.mdx)                                              |
+| Serve rpm-ostree or image-mode commits                                      | [OSTree](./tutorials/ostree.mdx)                                                          |
+| Move content to a server that cannot reach this one                         | [Disconnected and multi-site](./concepts/disconnected.md)                                 |
+| Let CI publish without an administrator account                             | [Who can push](./concepts/access-control.md)                                              |
+| Run the server: stuck tasks, signing, download guards, tenants              | [Operating Pulp](./concepts/operating.md)                                                 |
 
-- **Platform and release engineers** who mirror upstream content (RHEL, Fedora, PyPI, Docker Hub, Galaxy, …) and promote it through environments.
-- **Developers** who need to find out what is in a repository, which version is published, or why a sync failed.
-- **Administrators** who manage users, groups, roles and domains on a shared Pulp installation.
+Pulp UI shows the plugins installed on your server and only offers types those plugins provide.
 
-## What you can do
+## Install
 
-| Area                  | What it covers                                                        |
-| --------------------- | --------------------------------------------------------------------- |
-| **Remotes**           | Define upstream sources and how content is fetched from them.         |
-| **Repositories**      | Create repositories, sync them from remotes, inspect versions.        |
-| **Publications**      | Generate the metadata clients need from a repository version.         |
-| **Distributions**     | Serve a publication or repository version at a stable URL.            |
-| **Content**           | Browse and inspect packages, images, collections and other artifacts. |
-| **Tasks**             | Follow long-running operations such as syncs and deletions.           |
-| **Domains**           | Switch between isolated Pulp domains (multi-tenancy).                 |
-| **Access management** | Manage users, groups and roles.                                       |
-
-## Supported content types
-
-Pulp UI works with the content plugins installed on your Pulp server, including RPM, Container, Python, Ansible, Debian, Maven, npm, Ruby Gems, OSTree, Hugging Face and File. Pulp UI detects which plugins are installed and only offers to create resources for those.
-
-## Next steps
-
-- New to Pulp? Start with [Concepts](./concepts/index.md).
-- [Install Pulp UI](./getting-started/installation.md)
-- [Take your first steps](./getting-started/first-steps.md)
-- [Use Pulp day to day](./using-pulp/index.md), or [set up a repository manager for your ecosystem](./tutorials/index.md), for example [Maven](./tutorials/maven.mdx)
+[Install Pulp UI](./running-pulp-ui/container.md) from its container image and point it at your Pulp server.

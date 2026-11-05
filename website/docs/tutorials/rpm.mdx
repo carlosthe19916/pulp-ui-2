@@ -1,87 +1,34 @@
 ---
 title: RPM repository manager
-description: Mirror upstream RPM repositories, host your own packages, and point dnf at Pulp.
+description: Mirror an RPM distribution on demand, promote a curated set, and point dnf at a generated repo file.
 sidebar_label: RPM
 sidebar_position: 6
 ---
 
 # RPM repository manager
 
-Set up Pulp the way you would set up Nexus, Artifactory or Satellite for RPM packages: a mirror of an upstream repository, a hosted repository for your own packages, and `dnf` installing from both.
+Mirror a distribution (Fedora, EPEL, RHEL, Oracle Linux) and promote the set you want clients to install. Uploading a single RPM is how you add your own package to that set. It is not the reason to run Pulp.
 
 ```text
-dnf --> Pulp --+-- rpm-upstream  mirror (synced on demand) --> upstream repository
-               +-- rpm-hosted    hosted
+dnf --> Pulp --+-- rpm-upstream  on-demand mirror --> a distro repository
+               +-- rpm-releases  the set you promote
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Proxy (remote) repository  | Remote + repository, **Sync**ed with the **On demand** policy: metadata now, packages on first request |
-| Hosted (local) repository  | Repository with **Auto-publish** + distribution; packages are uploaded in Pulp UI or through the API   |
-| Group (virtual) repository | Not available; add one `.repo` file per distribution                                                   |
-| Staging and promotion      | Copy content between repositories; every change is a new repository version                            |
-| "Set me up"                | **Generate a .repo file** on distributions, **Install** snippet on packages                            |
+There is no pull-through cache. You sync. With **On demand**, the sync downloads metadata now and each package on the first `dnf` request. [Export](../concepts/disconnected.md) needs `immediate` so the bytes exist. A closer mirror for those on-demand bytes is an alternate content source, on the same page.
 
-Pulp has no pull-through cache for RPM: you **sync** a remote instead. With the **On demand** policy, a sync downloads only the metadata, and each package is fetched from upstream the first time a client asks for it.
+You need Pulp with `pulp_rpm`, and `dnf` (or a Fedora container). [`examples/rpm`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/rpm) mirrors the tiny fixture `https://fixtures.pulpproject.org/rpm-unsigned/` and builds `hello-pulp`. For a real mirror use the distro, for example `https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/`. The remote URL is the directory that contains `repodata/`.
 
-## Prerequisites
+## Mirror a distro
 
-- Pulp UI connected to a Pulp server with `pulp_rpm`, signed in as a user who can create RPM repositories (see [Tutorials](./index.md#before-you-start))
-- A Fedora, RHEL or CentOS Stream machine with `dnf` and `rpm-build`, or podman to run them in a container
-- The example in [`examples/rpm`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/rpm): `hello/hello.spec`, the spec of a package you publish
-
-The examples mirror `https://fixtures.pulpproject.org/rpm-unsigned/`, a tiny test repository that syncs in seconds. For real use, mirror your distribution, for example EPEL: `https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/`.
-
-:::tip[In a hurry?]
-
-`examples/rpm/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/rpm/demo.sh` runs steps 3 to 5 in a Fedora container. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Mirror an upstream repository
-
-1. **Content Management → Remotes → Create remote.** Type **RPM**, name `rpm-upstream`, URL `https://fixtures.pulpproject.org/rpm-unsigned/` (the directory that holds `repodata/`), download policy **On demand**.
-
-   ![Create RPM remote form](/img/tutorials/rpm/remote-create.png)
-
-2. **Repositories → Create repository.** Type **RPM**, name `rpm-upstream`, remote `rpm-upstream`, and turn on **Auto-publish**: Pulp writes the repository metadata for every new version.
-3. On the repository page, **Actions → Sync**. When the task finishes, **Content** lists the upstream packages.
-4. **Distributions → Create distribution.** Type **RPM**, name and base path `rpm-upstream`, repository `rpm-upstream`, and turn on **Generate a .repo file**.
-
-To keep the mirror current, sync it again (or on a schedule with the API); each sync that finds changes creates a new repository version.
-
-## 2. Host your own packages
-
-Create a repository named `rpm-hosted` with **Auto-publish** on and no remote, and a distribution with base path `rpm-hosted` and **Generate a .repo file** on.
-
-![RPM distribution details with the base URL and client setup snippet](/img/tutorials/rpm/dist-detail.png)
-
-## 3. Publish a package
-
-Build the example package:
+| Object | What matters |
+| ------ | ------------ |
+| Remote | Policy **On demand**. An **ULN** remote is a different type: Oracle Linux channels, with Oracle credentials, not a plain URL. |
+| Repository | That remote, and **Auto-publish**. Without a publication, `dnf` 404s on `repodata`. |
+| Distribution | The repository, and **Generate a .repo file**. |
 
 ```bash
-cd examples/rpm
-rpmbuild -bb --define "_topdir $PWD/build" hello/hello.spec
-```
-
-```text
-Wrote: .../build/RPMS/noarch/hello-pulp-1.0.0-1.noarch.rpm
-```
-
-There is no `dnf` command to publish an RPM. Open the `rpm-hosted` repository, click **Upload content**, and pick `hello-pulp-1.0.0-1.noarch.rpm`. Pulp adds it to a new repository version and, with **Auto-publish**, regenerates the metadata. In CI, upload through the REST API instead, as `demo.sh` does.
-
-Open **Content → Browse** and select the package for its details and an **Install** snippet:
-
-![hello-pulp in the rpm-hosted repository with its install snippet](/img/tutorials/rpm/package.png)
-
-## 4. Configure dnf
-
-Each distribution serves a ready-made `.repo` file at `<base URL>config.repo`:
-
-```bash
-sudo curl -o /etc/yum.repos.d/rpm-upstream.repo http://localhost:5003/pulp/content/default/rpm-upstream/config.repo
-sudo curl -o /etc/yum.repos.d/rpm-hosted.repo http://localhost:5003/pulp/content/default/rpm-hosted/config.repo
+sudo curl -o /etc/yum.repos.d/rpm-upstream.repo \
+  http://localhost:5003/pulp/content/default/rpm-upstream/config.repo
 ```
 
 ```ini title="/etc/yum.repos.d/rpm-hosted.repo"
@@ -93,62 +40,61 @@ gpgcheck=0
 enabled=1
 ```
 
-`gpgcheck=0` because neither the fixtures nor `hello-pulp` are signed. With signed packages, set **Client repo config** on the repository to add `gpgkey` and `gpgcheck=1` to the generated file.
+`gpgcheck=0` is for unsigned fixtures. With signed packages, set **Client repo config** on the repository so the generated file carries `gpgkey` and `gpgcheck=1`. The signing service itself is [registered on the server](../concepts/operating.md#signing). The repository selects `metadata_signing_service` (signs `repomd.xml`), `package_signing_service`, and the package signing fingerprint. There is no separate sign action. Publish, or add content with auto-publish, so the next version is signed.
 
-## 5. Install through Pulp
+## Promote
 
-```bash
-sudo dnf install bear hello-pulp
-hello-pulp
+Copy between repositories copies references, not bytes.
+
+**Add content** from another repository copies the packages you pick.
+
+**Advanced copy** also solves dependencies. The UI takes a JSON list of instructions:
+
+```json
+[
+  {
+    "source_repo_version": "<href>",
+    "dest_repo": "<href>",
+    "content": ["<package href>"]
+  }
+]
 ```
 
-```text
-Package     Arch   Version Repository        Size
-Installing:
- bear       noarch 4.1-1   rpm-upstream  42.0   B
- hello-pulp noarch 1.0.0-1 rpm-hosted    34.0   B
-...
-Hello, Pulp!
-```
+:::info[Not yet in Pulp UI]
 
-`bear` comes from the mirror: Pulp downloaded it from upstream on this first request and keeps it. `hello-pulp` comes from your hosted repository.
+A package picker for advanced copy, so you choose packages instead of pasting hrefs. Until then, build this `config` or use the [Pulp API](https://pulpproject.org/pulp_rpm/docs/user/guides/copy-content/).
 
-## Going further
+:::
 
-### Promote between repositories
+Point the release distribution at a repository version to freeze what `dnf` sees while the next sync lands in staging. See [What clients see](../concepts/what-clients-see.md).
 
-Use `rpm-hosted` as a staging repository and copy what passes your checks into a release repository: open the target repository → **Actions → Add content…**, or **Advanced copy** to bring dependencies along. Pulp copies references only.
+## What a client can see besides RPMs
 
-### Versions, rollback and retention
+| Content | How it arrives |
+| ------- | -------------- |
+| Packages | Upload the `.rpm`, or sync. |
+| Advisories (errata) | Upload the advisory JSON. |
+| Package groups | Upload a `comps.xml`. **Replace existing comps content** overwrites; otherwise Pulp merges. |
+| Module streams, categories, environments, langpacks, kickstart trees | Sync only. They are view-only. |
 
-Every sync or upload creates a new repository version. Edit a distribution and choose **Serve → Repository version** to freeze what clients see. **Retained package versions** on the repository keeps only the newest N versions of each package, and **Prune packages** removes old ones from a mirror.
+:::info[Not yet in Pulp UI]
 
-### Signing
+An advisory form (CVEs, severity, affected packages). Prepare the JSON and upload it, or use the [advisory API](https://pulpproject.org/pulp_rpm/docs/user/guides/upload-advisory/).
 
-The repository's **Signing** section picks a signing service for the metadata (`repomd.xml`). See [Sign metadata](https://pulpproject.org/pulp_rpm/docs/user/guides/metadata_signing/).
+:::
 
-### Access control
+There is no `dnf` command to publish an RPM. Upload it. Auto-publish regenerates the metadata.
 
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Uploads require a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
+## Keep the mirror small, and see the CVEs
+
+**Retain package versions** on the repository keeps the newest N versions of each package. **Retain repo versions** keeps the newest N repository versions. A version a distribution is serving is kept. **Prune packages** is the one-off: `keep_days` (default 14) and `dry_run` to preview. It keeps the newest of each package and creates a new version. [Orphan cleanup](../concepts/disk.md) is what frees the bytes afterwards.
+
+Vulnerability scanning reports and does not remove packages. Scan one repository version on demand, or set the repository's vulnerability scanning so each sync scans the new version. The report is on the scanned version. Promote or prune to drop what you will not ship.
 
 ## Troubleshooting
 
-| Symptom                                      | Cause and fix                                                                                              |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `404` for `repodata/repomd.xml`              | The repository has no publication. Turn on **Auto-publish** and add content, or run **Actions → Publish**. |
-| `404` for `config.repo`                      | **Generate a .repo file** is off on the distribution.                                                      |
-| Sync fails with `404`                        | The remote URL doesn't point at the directory holding `repodata/`.                                         |
-| An uploaded package doesn't show up in `dnf` | dnf cached the old metadata. Run `dnf clean metadata` or `dnf makecache --refresh`.                        |
-| GPG check failures                           | The packages aren't signed. Set `gpgcheck=0` for testing, or sign them and configure `gpgkey`.             |
-
-## More RPM guides
-
-- [Scan for vulnerabilities](./rpm/scan-for-vulnerabilities.md) — flag CVEs in your packages.
-- [Sign content](./rpm/sign-content.md) — GPG-sign packages and metadata.
-- [Prune & retention](./rpm/prune-and-retention.md) — keep repositories from growing forever.
-- [Promote with copy](./rpm/promote-with-advanced-copy.md) — move tested packages to a release repo.
-- [Upload comps & advisories](./rpm/upload-comps-and-advisories.md) — add groups, errata and packages.
-
-## Clean up
-
-Delete the two distributions, then the two repositories, then the `rpm-upstream` remote, each from its list's row actions. Stored packages are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| `404` for `repodata` | The repository has no publication. Turn on **Auto-publish**, or publish. |
+| A package from the mirror is not installed | On demand has not fetched it yet, or the remote is gone. On-demand bytes 404 when the upstream is unreachable. See [When bytes are fetched](../concepts/download-policies.md). |
+| `gpgcheck` fails on the fixture | The packages are unsigned. `gpgcheck=0` until you select a signing service and publish again. |

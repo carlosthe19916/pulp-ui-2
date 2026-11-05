@@ -152,13 +152,13 @@ const config: Config = {
             { label: "Concepts", to: "/docs/concepts" },
             {
               label: "Installation",
-              to: "/docs/getting-started/installation",
+              to: "/docs/running-pulp-ui/container",
             },
-            { label: "Using Pulp", to: "/docs/using-pulp" },
-            { label: "Administration", to: "/docs/administration" },
+            { label: "Tutorials", to: "/docs/tutorials" },
+            { label: "Operating Pulp", to: "/docs/concepts/operating" },
             {
-              label: "Running Pulp UI",
-              to: "/docs/running-pulp-ui/installation",
+              label: "Configuration",
+              to: "/docs/running-pulp-ui/environment",
             },
           ],
         },

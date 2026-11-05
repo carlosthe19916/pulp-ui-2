@@ -9,7 +9,6 @@ import {
 import { remoteForm } from "@plugin-sdk/ui";
 
 import { ansible } from "../../definition";
-import { isPublicGalaxyUrl } from "./galaxy";
 
 const REQUIREMENTS_TEMPLATE = `---
 collections:
@@ -17,9 +16,6 @@ collections:
     version: ">=1.5.0"
   - name: community.general
 `;
-
-const isPublicGalaxy = ({ values }: IFormContext): boolean =>
-  typeof values.url === "string" && isPublicGalaxyUrl(values.url);
 
 const hasRequirements = ({ values }: IFormContext): boolean =>
   typeof values.requirements_file === "string" &&
@@ -48,12 +44,12 @@ export const ansibleCollectionRemoteForm = remoteForm(
         language: "yaml",
         template: REQUIREMENTS_TEMPLATE,
         downloadName: "requirements",
-        help: "A requirements.yml listing the collections (and versions) to sync. Without one, the remote syncs everything the server offers.",
+        help: "A requirements.yml listing the collections to sync. Empty tries to mirror everything the server offers, including all of Galaxy or Automation Hub.",
         warnings: [
           {
-            when: (ctx) => isPublicGalaxy(ctx) && !hasRequirements(ctx),
+            when: (ctx) => !hasRequirements(ctx),
             message:
-              "Without requirements, a sync from galaxy.ansible.com downloads every collection on Galaxy.",
+              "Without requirements, a sync tries to mirror the whole server.",
           },
         ],
       }),

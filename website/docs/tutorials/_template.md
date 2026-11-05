@@ -1,62 +1,45 @@
 ---
-title: <Ecosystem> repository manager
-description: Proxy <public registry>, host your own <packages>, and point <client> at Pulp.
+title: <Job this ecosystem is for>
+description: <One sentence: the outcome, not the screens.>
 sidebar_label: <Ecosystem>
 ---
 
 <!--
-Template for an ecosystem tutorial. Files starting with "_" are not rendered.
+Template for an ecosystem page. Files starting with "_" are not rendered.
 
-To add a tutorial:
-1. Copy this file to tutorials/<ecosystem>.mdx and fill in every section, keeping the headings.
+To add one:
+1. Copy this file to tutorials/<ecosystem>.mdx. Lead with the jobs a person installs
+   this plugin for. Do not reuse another ecosystem's outline.
 2. Create examples/<ecosystem>/ with README.md, .env.example, setup.sh, demo.sh and the
-   smallest projects that publish and consume a package (see examples/maven/).
-3. Capture screenshots into website/static/img/tutorials/<ecosystem>/ from a local backend.
-4. Add the page to the "Tutorials" category in website/sidebars.ts and to tutorials/index.md.
+   smallest project that exercises the client. setup.sh and demo.sh source
+   examples/_lib/pulp.sh. Commands in the page must work as written against the local backend.
+3. Add the page to the Tutorials category in website/sidebars.ts and to tutorials/index.md.
 
-Rules: show the UI first and REST/CLI never in the body (setup.sh covers automation); every
-command must work as written against the local backend; keep each step to what a reader does
-and sees; link to the plugin docs for depth instead of copying them. When a step doesn't apply
-to the ecosystem (no pull-through cache, no native publish), keep the heading and explain the
-Pulp alternative: a synced mirror, Upload content in Pulp UI. setup.sh and demo.sh source
-examples/_lib/pulp.sh for the REST helpers.
+A sentence stays only when someone who already has the screen open still needs it:
+
+- Decision. Which objects, which field is the non-obvious one, and what Pulp does instead of
+  the tool the reader came from.
+- Client contract. The file, URL shape, or command the in-UI snippet does not fully cover.
+- Consequence. What happens later that the form never says.
+- Symptom. A client error mapped to a Pulp cause.
+
+Name a screen at most once, as a pointer. No numbered click paths, no screenshots of forms.
+When Pulp can do something the UI does not expose, say what it is, why it matters, and that
+it is API-only today. When the plugin cannot do something, say that as a plugin limit.
+Link to the plugin docs for depth instead of copying them.
 -->
 
-# <Ecosystem> repository manager
+# <Job this ecosystem is for>
 
-One paragraph: what the reader ends up with, and the Nexus/Artifactory equivalent.
+One paragraph: the outcome, and who the reader is.
 
-| Nexus / Artifactory  | Pulp |
-| -------------------- | ---- |
-| Proxy repository     |      |
-| Hosted repository    |      |
-| Group / virtual repo |      |
+## <Primary job>
 
-## Prerequisites
+The objects and the field values that are not obvious. The client file. The trap.
 
-- Pulp UI connected to a Pulp server with `pulp_<plugin>` (see [Tutorials](./index.md))
-- Client tools and versions
-- The example project: [`examples/<ecosystem>`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/<ecosystem>)
-
-## 1. Proxy the public registry
-
-## 2. Host your own packages
-
-## 3. Configure the client
-
-## 4. Consume packages through Pulp
-
-## 5. Publish a package
-
-## 6. Verify in Pulp UI
-
-## Going further
-
-Promotion, versions and rollback, access control, maintenance.
+## <Next job, only if this ecosystem has one>
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 | ------- | ------------- |
-
-## Clean up

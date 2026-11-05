@@ -68,14 +68,22 @@ export const containerUi = definePluginUi({
       },
     ],
     remote: {
-      "container.container": { form: containerRemoteForm },
+      "container.container": {
+        description:
+          "Sync one image and the tags you name. Official images on Docker Hub use the library/ prefix.",
+        form: containerRemoteForm,
+      },
       "container.pull-through": {
         label: "Container (pull-through)",
+        description:
+          "Cache a registry as clients pull. Pair it with a pull-through distribution. This does not sync ahead of time.",
         form: containerPullThroughRemoteForm,
       },
     },
     repository: {
       "container.container": {
+        description:
+          "Holds images synced from a container remote. podman push uses a push repository, which Pulp creates when you push.",
         form: containerRepositoryForm,
         browse,
         tab: null,
@@ -92,9 +100,16 @@ export const containerUi = definePluginUi({
       },
     },
     distribution: {
-      "container.container": { form: containerDistributionForm, clientSetup },
+      "container.container": {
+        description:
+          "Serves a repository you synced, or one a push created. Turn on Private to require a login for pulls.",
+        form: containerDistributionForm,
+        clientSetup,
+      },
       "container.pull-through": {
         label: "Container (pull-through)",
+        description:
+          "Serves a pull-through cache. Pulp creates a repository per image as clients pull.",
         form: containerPullThroughDistributionForm,
         clientSetup,
       },

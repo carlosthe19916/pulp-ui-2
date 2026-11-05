@@ -1,63 +1,30 @@
 ---
 title: OSTree repository manager
-description: Mirror upstream OSTree refs, import your own commits, and pull them with ostree from Pulp.
+description: An image-mode source of truth — mirror refs, import an archive, and pin clients to a commit.
 sidebar_label: OSTree
 sidebar_position: 12
 ---
 
 # OSTree repository manager
 
-Use Pulp as the content server for OSTree-based systems (Fedora Atomic, Fedora IoT, RHEL for Edge): mirror the refs you deploy from upstream, import commits your build pipeline produces, and point `ostree` at Pulp to pull both.
+The content server for rpm-ostree and image mode (Fedora CoreOS, RHEL image mode, Silverblue, IoT). Mirror the refs you deploy, import the commits your build produces, and point `ostree` at Pulp. This is not a package repository.
 
 ```text
-ostree --> Pulp --+-- ostree-upstream  mirror of selected refs --> upstream OSTree repository
-                  +-- ostree-hosted    imported commits
+ostree / rpm-ostree --> Pulp --+-- ostree-upstream  the refs you named
+                               +-- ostree-hosted    commits you imported
 ```
 
-| Nexus / Artifactory        | Pulp                                                                                    |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| Proxy (remote) repository  | Remote with **Include refs** + repository, **Sync**ed                                   |
-| Hosted (local) repository  | Repository + distribution; commits are imported from an archive with **Import archive** |
-| Group (virtual) repository | Not available; add one `ostree remote` per distribution                                 |
-| "Set me up"                | **Client setup** snippet (`ostree remote add`) on distributions                         |
+There is no `ostree push`. A distribution serves the repository version in `archive` format. No publication.
 
-Nexus and Artifactory have no OSTree format; the closest equivalent is serving the repository as static files. Pulp adds versioning, filtering by ref and imports.
+You need Pulp with `pulp_ostree` and the `ostree` tool. [`examples/ostree`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/ostree) mirrors `https://fixtures.pulpproject.org/ostree/small/` (`stable` and `rawhide`) and imports a commit of its own. `setup.sh` creates the objects.
 
-## Prerequisites
+## Mirror refs
 
-- Pulp UI connected to a Pulp server with `pulp_ostree`, signed in as a user who can create OSTree repositories (see [Tutorials](./index.md#before-you-start))
-- The `ostree` tool (Fedora: `dnf install ostree`), or podman to run it in a Fedora container
-- The example in [`examples/ostree`](https://github.com/carlosthe19916/pulp-ui-2/tree/main/examples/ostree): `hello/`, a tree you commit and import
+A remote, a repository that syncs from it, and a distribution. Only the remote has settings that matter: **Include refs** is the set, and a name that matches nothing syncs nothing without an error. **Commit depth** `0` fetches the latest commit only.
 
-The examples mirror `https://fixtures.pulpproject.org/ostree/small/`, a tiny test repository with `stable` and `rawhide` refs.
+## Import a disconnected build
 
-:::tip[In a hurry?]
-
-`examples/ostree/setup.sh` creates every Pulp object of steps 1 and 2 through the REST API, and `examples/ostree/demo.sh` runs steps 3 to 5 in a Fedora container. See [Run the examples](./index.md#run-the-examples).
-
-:::
-
-## 1. Mirror upstream refs
-
-1. **Content Management → Remotes → Create remote.** Type **OSTree**, name `ostree-upstream`, URL `https://fixtures.pulpproject.org/ostree/small/`, **Include refs** `stable`. **Commit depth** limits how much history each sync fetches (0 is the latest commit only).
-
-   ![Create OSTree remote form](/img/tutorials/ostree/remote-create.png)
-
-2. **Repositories → Create repository.** Type **OSTree**, name `ostree-upstream`, remote `ostree-upstream`.
-3. On the repository page, **Actions → Sync**.
-4. **Distributions → Create distribution.** Type **OSTree**, name and base path `ostree-upstream`, repository `ostree-upstream`.
-
-OSTree repositories need no publication: the distribution serves the latest repository version in `archive` format.
-
-## 2. Host your own commits
-
-Create a repository and a distribution named `ostree-hosted`, as in step 1 but without a remote.
-
-![OSTree distribution details with the ostree remote add snippet](/img/tutorials/ostree/dist-detail.png)
-
-## 3. Import a commit
-
-Commit the example tree to a local repository in `archive` mode and pack it as a tarball:
+Image builders emit an `archive`-mode repository. `ostree init --mode=archive` is the format Pulp accepts.
 
 ```bash
 cd examples/ostree
@@ -66,65 +33,27 @@ ostree commit --repo=build/hello-repo --branch=hello/stable --tree=dir=hello --s
 tar -cf build/hello-repo.tar -C build hello-repo
 ```
 
-`ostree` has no push. Open the `ostree-hosted` repository → **Actions → Import archive…**, pick `hello-repo.tar`, and set **Repository name** to `hello-repo`, the top directory inside the tarball. Leave **Ref** empty to import every ref; set it to add new commits on top of an existing ref. In CI, import through the REST API instead, as `demo.sh` does.
-
-Image builders produce the same kind of tarball: see [Import commits](https://github.com/pulp/pulp_ostree/blob/main/docs/user/guides/import-commit.md).
-
-**Content → Browse** lists the imported ref and its commit:
-
-![The hello/stable ref in the ostree-hosted repository](/img/tutorials/ostree/package.png)
-
-## 4. Configure ostree
+Import the tarball onto the hosted repository. **Repository name** must be the tarball's top directory (`hello-repo`). Leave **Ref** empty to import every ref. Set it to add commits on top of an existing ref. See [Import commits](https://github.com/pulp/pulp_ostree/blob/main/docs/user/guides/import-commit.md).
 
 ```bash
-ostree remote add --no-gpg-verify pulp-hosted http://localhost:5003/pulp/content/default/ostree-hosted/
-ostree remote add --no-gpg-verify pulp-upstream http://localhost:5003/pulp/content/default/ostree-upstream/
-```
-
-Add `--repo=<path>` to work on a repository other than the system one. `--no-gpg-verify` because these commits aren't signed.
-
-## 5. Pull through Pulp
-
-```bash
+ostree remote add --no-gpg-verify pulp-hosted \
+  http://localhost:5003/pulp/content/default/ostree-hosted/
 ostree pull pulp-hosted hello/stable
-ostree pull pulp-upstream stable
-ostree refs
-ostree cat pulp-hosted:hello/stable /usr/bin/hello-pulp | sh
 ```
 
-```text
-5 metadata, 1 content objects fetched; 550 B transferred in 0 seconds; 30 bytes content written
-3 metadata, 1 content objects fetched; 404 B transferred in 0 seconds; 0 bytes content written
-pulp-hosted:hello/stable
-pulp-upstream:stable
-Hello, Pulp!
-```
+`--no-gpg-verify` is for unsigned commits. Signed commits omit it. On an rpm-ostree system, `rpm-ostree rebase pulp-hosted:hello/stable` deploys the ref.
 
-On an rpm-ostree system, `rpm-ostree rebase pulp-hosted:hello/stable` deploys the ref.
+## What clients download
 
-## Going further
+**Compute static deltas** (on by default) generates deltas between commits, so an update is smaller than a full pull.
 
-### Versions and rollback
-
-Every sync or import creates a new repository version (**Versions** tab). Edit a distribution and choose **Serve → Repository version** to keep clients on a known-good commit while you test a new one.
-
-### Static deltas
-
-**Compute static deltas** on the repository (on by default) makes Pulp generate deltas between commits, so clients download less when they update.
-
-### Access control
-
-Reads from `/pulp/content/` are anonymous unless the distribution has a content guard (**Access** section). Imports require a user who can modify the repository; see [Access management](../administration/roles-and-permissions.md).
+Point the distribution at a repository version to keep clients on a known-good commit while you test the next import. See [What clients see](../concepts/what-clients-see.md). This import is the disconnected path. The generic exporter is for other plugins. See [Disconnected and multi-site](../concepts/disconnected.md).
 
 ## Troubleshooting
 
-| Symptom                                       | Cause and fix                                                                                  |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Import fails: repository not found in archive | **Repository name** must match the tarball's top directory (`hello-repo` above).               |
-| Import fails on the repository format         | Only `archive` mode repositories can be imported. Create it with `ostree init --mode=archive`. |
-| `GPG verification enabled, but no signatures` | The commits aren't signed. Add the remote with `--no-gpg-verify`, or sign them.                |
-| Sync finds nothing                            | **Include refs** doesn't match any upstream ref.                                               |
-
-## Clean up
-
-Delete the two distributions, then the two repositories, then the `ostree-upstream` remote, each from its list's row actions. Stored objects are freed by Pulp's [orphan cleanup](https://pulpproject.org/pulpcore/docs/user/guides/reclaim-disk-space/) task.
+| Symptom | Cause and fix |
+| ------- | ------------- |
+| Import fails: repository not found in archive | **Repository name** must match the tarball's top directory. |
+| Import fails on the repository format | Only `archive` mode. `ostree init --mode=archive`. |
+| `GPG verification enabled, but no signatures` | The commits are unsigned. `--no-gpg-verify`, or sign them. |
+| Sync finds nothing | **Include refs** matches no upstream ref. |

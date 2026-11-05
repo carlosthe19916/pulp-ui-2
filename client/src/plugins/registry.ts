@@ -68,6 +68,8 @@ const PLUGIN_UI: { [I in PluginId]: IPluginModule<I> } = {
 /** A type's form, its name in the Type select, and whether it can be created and edited. */
 export interface IFormEntry {
   label: string;
+  /** The job this type is for, shown under the Type select. */
+  description?: string;
   form: IFormDef;
   modes: readonly FormMode[];
 }
@@ -126,6 +128,7 @@ for (const { id: pluginId } of PLUGIN_DEFINITIONS) {
         entity === "repository" ? ui.repository?.[pulpType]?.modes : undefined;
       forms[entity].set(pulpType, {
         label: typeUi.label ?? ui.label,
+        description: typeUi.description,
         form: typeUi.form,
         modes: modes ?? DEFAULT_MODES[entity],
       });
