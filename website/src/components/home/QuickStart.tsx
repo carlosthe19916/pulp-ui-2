@@ -1,58 +1,63 @@
 import React from "react";
 
 import Link from "@docusaurus/Link";
-import CodeBlock from "@theme/CodeBlock";
-import { Check } from "lucide-react";
+import useBrokenLinks from "@docusaurus/useBrokenLinks";
+import { ArrowRight, Check } from "lucide-react";
+
+import SectionHeading from "./SectionHeading";
+import Terminal from "./Terminal";
 
 const POINTS = [
-  "Single container image, no database of its own",
+  "A single container image, no database of its own",
   "Connects to your existing Pulp 3 server",
   "Basic or OpenID Connect authentication",
-  "Custom branding at build time",
+  "Your own logo and product name at build time",
 ];
 
+const COMMAND = `podman run -d --name pulp-ui \\
+    -p 8080:8080 \\
+    -e PULP_API_URL=https://pulp.example.com \\
+    -e AUTH=basic \\
+    ghcr.io/carlosthe19916/pulp-ui-2:latest`;
+
 export default function QuickStart(): React.ReactElement {
+  useBrokenLinks().collectAnchor("quick-start");
   return (
-    <section data-testid="home-quick-start" className="py-24">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-2">
+    <section
+      id="quick-start"
+      data-testid="home-quick-start"
+      className="scroll-mt-24 bg-page pt-8 pb-24 sm:pb-32"
+    >
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-[5fr_7fr] lg:gap-16">
         <div>
-          <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">
-            Quick start
-          </p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            Up and running in minutes
-          </h2>
-          <p className="mt-4 text-lg text-gray-60 dark:text-gray-30">
-            Pulp UI ships as a lightweight container. Point it at your Pulp API
-            and open your browser.
-          </p>
-          <ul className="mt-6 list-none space-y-3 p-0">
+          <SectionHeading
+            align="left"
+            eyebrow="Quick start"
+            title="Running in one command"
+            description="Pulp UI ships as a lightweight container. Point it at your Pulp API and open your browser."
+          />
+          <ul className="m-0 mt-8 list-none space-y-3 p-0">
             {POINTS.map((point) => (
-              <li key={point} className="m-0 flex items-center gap-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-50/15 text-green-50 dark:text-green-30">
-                  <Check size={16} />
-                </span>
+              <li key={point} className="m-0 flex items-start gap-3 text-fg">
+                <Check
+                  size={18}
+                  aria-hidden
+                  className="mt-1 shrink-0 text-accent"
+                />
                 {point}
               </li>
             ))}
           </ul>
           <Link
             to="/docs/running-pulp-ui/container"
-            className="mt-8 inline-block font-display font-medium"
+            className="mt-8 inline-flex items-center gap-1.5 font-display font-medium text-accent no-underline hover:text-accent-hover hover:no-underline"
           >
-            Read the installation guide →
+            Read the installation guide
+            <ArrowRight size={16} aria-hidden />
           </Link>
         </div>
         <div className="min-w-0">
-          <CodeBlock language="bash" title="Terminal">
-            {`podman run -d --name pulp-ui \\
-  -p 8080:8080 \\
-  -e PULP_API_URL=https://pulp.example.com \\
-  -e AUTH=basic \\
-  ghcr.io/carlosthe19916/pulp-ui-2:latest
-
-# Open http://localhost:8080`}
-          </CodeBlock>
+          <Terminal command={COMMAND} comment="Open http://localhost:8080" />
         </div>
       </div>
     </section>

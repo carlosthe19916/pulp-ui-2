@@ -1,30 +1,32 @@
 import React from "react";
 
 import Link from "@docusaurus/Link";
+import { ArrowRight } from "lucide-react";
 
 export default function CallToAction(): React.ReactElement {
   return (
-    <section data-testid="home-cta" className="px-6 pb-24">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-gradient-to-r from-brand-60 via-brand-50 to-purple-50 px-8 py-16 text-center text-white sm:px-16">
-        <h2 className="text-3xl font-bold text-white sm:text-4xl">
-          Ready to take control of your content?
+    <section data-testid="home-cta" className="bg-page px-6 py-24 sm:py-32">
+      <div className="mx-auto max-w-6xl rounded-2xl border border-line bg-page-alt px-8 py-16 text-center sm:px-16">
+        <h2 className="mb-0 font-display text-3xl font-bold tracking-tight text-balance text-fg sm:text-4xl">
+          Give your Pulp server a console
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-brand-10">
-          Install Pulp UI next to your Pulp server and start managing
-          repositories from the browser today.
+        <p className="mx-auto mt-4 mb-0 max-w-xl text-lg text-balance text-fg-subtle">
+          Install Pulp UI next to Pulp, or follow a tutorial for the content
+          type you work with.
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             to="/docs/running-pulp-ui/container"
-            className="rounded-full bg-white px-6 py-3 font-display font-medium text-brand-60 no-underline transition hover:bg-brand-10 hover:text-brand-70 hover:no-underline"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display font-medium text-on-accent no-underline transition-colors hover:bg-accent-hover hover:text-on-accent hover:no-underline"
           >
             Get started
+            <ArrowRight size={18} aria-hidden />
           </Link>
           <Link
-            to="/docs/intro"
-            className="rounded-full border border-white/60 px-6 py-3 font-display font-medium text-white no-underline transition hover:bg-white/10 hover:text-white hover:no-underline"
+            to="/docs/tutorials"
+            className="inline-flex items-center rounded-full border border-line-strong bg-surface px-6 py-3 font-display font-medium text-fg no-underline transition-colors hover:border-fg-muted hover:text-fg hover:no-underline"
           >
-            Read the docs
+            Browse tutorials
           </Link>
         </div>
       </div>

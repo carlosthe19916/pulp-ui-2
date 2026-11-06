@@ -40,6 +40,16 @@ test.describe("landing page", () => {
     await expect(video).not.toHaveAttribute("autoplay");
     await expect(video.locator("track")).toHaveCount(0);
 
+    await expect(page.getByTestId("home-terminal")).toContainText("podman run");
+    await expect(page.locator("body")).not.toContainText(/apache/i);
+
+    await page
+      .getByTestId("home-hero")
+      .getByRole("link", { name: "Get started" })
+      .click();
+    await expect(page).toHaveURL(/#quick-start$/);
+    await expect(page.getByTestId("home-terminal")).toBeInViewport();
+
     await attachErrors(testInfo, errors);
     expect(errors, "landing page should log no runtime errors").toEqual([]);
   });

@@ -175,7 +175,7 @@ const config: Config = {
           items: [{ label: "Pulp Project", href: "https://pulpproject.org/" }],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Carlos Feria. Licensed under Apache 2.0.<br />Pulp UI is an independent community project. It is not an official Pulp Project product and is not endorsed by the Pulp Project.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Carlos Feria.<br />Pulp UI is an independent community project. It is not an official Pulp Project product and is not endorsed by the Pulp Project.`,
     },
     prism: {
       theme: prismThemes.github,

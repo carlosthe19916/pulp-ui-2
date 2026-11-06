@@ -4,14 +4,14 @@ import useBrokenLinks from "@docusaurus/useBrokenLinks";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
-  Building2,
-  Cloud,
-  GitBranch,
-  KeyRound,
-  Search,
+  CloudDownload,
+  FolderSearch,
+  History,
   Send,
-  Users,
+  ShieldCheck,
 } from "lucide-react";
+
+import SectionHeading from "./SectionHeading";
 
 interface IFeature {
   icon: LucideIcon;
@@ -21,52 +21,40 @@ interface IFeature {
 
 const FEATURES: IFeature[] = [
   {
-    icon: Cloud,
-    title: "Sync from upstream",
+    icon: CloudDownload,
+    title: "Mirror upstream sources",
     description:
-      "Define remotes for public or private sources and mirror them on demand, immediately or lazily.",
+      "Define remotes for public or private sources and sync them on demand, in full or on first request.",
   },
   {
-    icon: GitBranch,
+    icon: History,
     title: "Versioned repositories",
     description:
-      "Every change creates an immutable repository version. Inspect exactly what each version contains.",
+      "Every change creates an immutable version. See what each one contains and roll back in a click.",
   },
   {
     icon: Send,
-    title: "Publish & distribute",
+    title: "Publish and distribute",
     description:
-      "Turn repository versions into publications and serve them to clients through distributions.",
+      "Serve the version you trust at a stable URL that dnf, podman, pip and other clients understand.",
   },
   {
-    icon: Search,
-    title: "Browse content",
+    icon: FolderSearch,
+    title: "Browse any content type",
     description:
-      "Find and filter packages, images and collections with views tailored to each content type.",
+      "Search packages, images and collections with views tailored to each Pulp plugin.",
   },
   {
     icon: Activity,
-    title: "Task monitoring",
+    title: "Follow every task",
     description:
-      "Follow syncs, publishes and deletions in real time and inspect failures without leaving the UI.",
+      "Watch syncs and publishes run in real time and read failures without leaving the console.",
   },
   {
-    icon: Building2,
-    title: "Multi-tenant domains",
+    icon: ShieldCheck,
+    title: "Domains and access control",
     description:
-      "Isolate teams and environments with Pulp domains and switch between them in one click.",
-  },
-  {
-    icon: Users,
-    title: "Users, groups & roles",
-    description:
-      "Manage who can do what with Pulp's role-based access control, straight from the browser.",
-  },
-  {
-    icon: KeyRound,
-    title: "Enterprise sign-in",
-    description:
-      "Log in with Pulp credentials or plug into your identity provider through OpenID Connect.",
+      "Isolate teams with domains, grant roles to users and groups, and sign in through OpenID Connect.",
   },
 ];
 
@@ -76,32 +64,24 @@ export default function Features(): React.ReactElement {
     <section
       id="features"
       data-testid="home-features"
-      className="scroll-mt-16 py-24"
+      className="scroll-mt-16 bg-page py-24 sm:py-32"
     >
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">
-            Features
-          </p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            Everything you need to run your artifact pipeline
-          </h2>
-          <p className="mt-4 text-lg text-gray-60 dark:text-gray-30">
-            Pulp UI brings the full power of Pulp to a clean, PatternFly-based
-            console that's built for daily use.
-          </p>
-        </div>
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading
+          eyebrow="Features"
+          title="Everything Pulp does, in a console built for daily use"
+          description="Pulp UI covers the full content lifecycle on top of your existing Pulp server, using the same PatternFly design as the rest of your tools."
+        />
+        <div className="mt-16 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="group rounded-xl border border-gray-20 bg-white p-6 transition hover:-translate-y-0.5 hover:border-brand-40 hover:shadow-lg dark:border-gray-70 dark:bg-gray-90 dark:hover:border-brand-40"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-10 text-brand-50 dark:bg-brand-50/20 dark:text-brand-30">
-                <Icon size={22} />
+            <div key={title} className="bg-page p-8">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <Icon size={20} aria-hidden />
               </div>
-              <h3 className="mt-5 text-lg font-medium">{title}</h3>
-              <p className="mb-0 text-sm leading-relaxed text-gray-60 dark:text-gray-30">
+              <h3 className="mt-5 mb-2 font-display text-lg font-medium text-fg">
+                {title}
+              </h3>
+              <p className="mb-0 leading-relaxed text-fg-subtle">
                 {description}
               </p>
             </div>

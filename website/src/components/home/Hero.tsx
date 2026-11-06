@@ -10,11 +10,19 @@ function HeroVideo(): React.ReactElement {
   const src = useBaseUrl("/videos/home/pulp-ui-next.mp4");
   const poster = useBaseUrl("/videos/home/pulp-ui-next-poster.jpg");
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl shadow-brand-50/20">
+    <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-[0_24px_64px_-24px_rgba(0,0,0,0.35)]">
+      <div
+        aria-hidden
+        className="flex items-center gap-1.5 border-b border-line px-4 py-3"
+      >
+        <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
+        <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
+        <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
+      </div>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the homepage plays this film with captions off */}
       <video
         data-testid="home-hero-video"
-        className="block aspect-video w-full"
+        className="block aspect-video w-full bg-black"
         controls
         playsInline
         preload="metadata"
@@ -30,48 +38,48 @@ export default function Hero(): React.ReactElement {
   return (
     <section
       data-testid="home-hero"
-      className="relative overflow-hidden bg-gray-95 text-white"
+      className="relative overflow-hidden bg-page"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,102,204,0.55),transparent_60%),radial-gradient(ellipse_at_bottom_left,rgba(94,64,190,0.35),transparent_55%)]"
+        className="home-hero-backdrop pointer-events-none absolute inset-0"
       />
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 pt-20 pb-24 lg:grid-cols-2 lg:items-center lg:pt-28 lg:pb-32">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm text-brand-20">
-            <span className="h-2 w-2 rounded-full bg-green-30" />
-            Independent community project · Apache 2.0
-          </span>
-          <h1 className="mt-6 font-display text-4xl leading-tight font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Every artifact you manage with Pulp.{" "}
-            <span className="bg-gradient-to-r from-brand-30 to-purple-30 bg-clip-text text-transparent">
-              One console.
-            </span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-gray-30">
-            Pulp UI is an independent, community-built web interface for Pulp.
-            Sync from upstream remotes, version your repositories, publish and
-            distribute RPMs, containers, Python packages, Ansible collections
-            and more — without touching the REST API.
+      <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-sm text-fg-subtle">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            The web console for Pulp
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <h1 className="mb-0 font-display text-4xl leading-[1.1] font-bold tracking-tight text-balance text-fg sm:text-6xl">
+            Every Pulp repository,
+            <br className="hidden sm:block" />{" "}
+            <span className="text-accent">one console.</span>
+          </h1>
+          <p className="mx-auto mt-6 mb-0 max-w-2xl text-lg leading-relaxed text-balance text-fg-subtle sm:text-xl">
+            Mirror upstream sources, version and promote content, and serve
+            RPMs, container images, Python packages, Ansible collections and
+            more, all from your browser.
+          </p>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
             <Link
-              to="/docs/running-pulp-ui/container"
-              className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-6 py-3 font-display font-medium text-white no-underline transition hover:bg-brand-60 hover:text-white hover:no-underline"
+              to="#quick-start"
+              className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-display font-medium text-on-accent no-underline transition-colors hover:bg-accent-hover hover:text-on-accent hover:no-underline"
             >
               Get started
-              <ArrowRight size={18} />
+              <ArrowRight size={18} aria-hidden />
             </Link>
             <Link
               href="https://github.com/carlosthe19916/pulp-ui-2"
-              className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 font-display font-medium text-white no-underline transition hover:border-white hover:bg-white/10 hover:text-white hover:no-underline"
+              className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface px-6 py-3 font-display font-medium text-fg no-underline transition-colors hover:border-fg-muted hover:text-fg hover:no-underline"
             >
               <GithubIcon />
               View on GitHub
             </Link>
           </div>
         </div>
-        <HeroVideo />
+        <div className="mx-auto mt-16 max-w-5xl sm:mt-20">
+          <HeroVideo />
+        </div>
       </div>
     </section>
   );

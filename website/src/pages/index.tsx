@@ -16,10 +16,10 @@ export default function Home(): React.ReactElement {
     <Layout title={siteConfig.tagline} description={siteConfig.tagline}>
       <main>
         <Hero />
+        <QuickStart />
         <ContentTypes />
         <Features />
         <HowItWorks />
-        <QuickStart />
         <CallToAction />
       </main>
     </Layout>
