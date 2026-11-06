@@ -1,7 +1,7 @@
 ---
 name: how-content-is-viewed
 description: Content is immutable and shown in three places — global list, content page, and version content with a per-ecosystem Browse view plus an All content list; a shared detail drawer; no admin download.
-status: Accepted
+status: Accepted (amended by 0018)
 ---
 
 # 0004. How content is viewed
@@ -19,8 +19,9 @@ ecosystem's own sites.
 
 - [ ] **Content list** (global): every unit in the domain, filterable by type, label, repository
       version, orphaned state, and the difference between two versions.
-- [ ] **Content page**: Details rendered for the unit's type, Artifacts (size, checksums), and
-      Repositories (repositories whose _latest_ version holds it).
+- [ ] **Content page**: Details rendered for the unit's type (with its signatures or provenance,
+      [0018](0018-signatures-and-provenance.md)), Artifacts (size, checksums), and Repositories
+      (repositories whose _latest_ version holds it).
 - [ ] **Version content** (inside a repository or version page): the content of one version, with
       **Browse** (the plugin view) and **All content** (the generic list). Plugins without a
       Browse view show only All content.

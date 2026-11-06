@@ -29,6 +29,9 @@ const containerManifestContent = lazyViews(
 const containerTagContent = lazyViews(
   () => import("./content/ContainerTagContent"),
 );
+const containerSignatureContent = lazyViews(
+  () => import("./content/ContainerSignatureContent"),
+);
 
 const browse: IPluginBrowse<TypesOf<typeof container, "content">> = {
   sections: [
@@ -120,7 +123,10 @@ export const containerUi = definePluginUi({
         panel: containerManifestContent("ContainerManifestContent"),
         search: { param: "digest", label: "digest" },
       },
-      "container.signature": { panel: GENERIC, search: null },
+      "container.signature": {
+        panel: containerSignatureContent("ContainerSignatureContent"),
+        search: null,
+      },
       "container.tag": {
         panel: containerTagContent("ContainerTagContent"),
         search: { param: "name", label: "tag" },

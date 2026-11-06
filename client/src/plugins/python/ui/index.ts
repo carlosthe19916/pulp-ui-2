@@ -13,6 +13,9 @@ import { pipInstall } from "./helpers";
 const pythonBrowse = lazyViews(() => import("./browse/PythonBrowse"));
 const pythonBlocklistTab = lazyViews(() => import("./tabs/PythonBlocklistTab"));
 const pythonContent = lazyViews(() => import("./content/PythonContent"));
+const pythonProvenanceContent = lazyViews(
+  () => import("./content/PythonProvenanceContent"),
+);
 const bandersnatchRemoteModal = lazyViews(
   () => import("./modals/BandersnatchRemoteModal"),
 );
@@ -80,7 +83,7 @@ export const pythonUi = definePluginUi({
         upload: [],
       },
       "python.provenance": {
-        panel: GENERIC,
+        panel: pythonProvenanceContent("PythonProvenanceContent"),
         search: null,
         upload: [
           {

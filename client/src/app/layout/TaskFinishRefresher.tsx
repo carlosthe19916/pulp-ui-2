@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -17,10 +17,15 @@ const [TASKS_ROOT_KEY] = taskKeys.all();
  */
 export const TaskFinishRefresher: React.FC = () => {
   const queryClient = useQueryClient();
-  // Only tasks whose running state was read: a task still loading after a reload isn't
-  // "finishing" when its first read says completed.
+  const [mountedAt] = useState(Date.now);
+  // An unread task counts as running only if started since mount: a fast one can finish before
+  // its first read, while one reloaded mid-run isn't "finishing" when first read as completed.
   const runningSignature = useTrackedTasks()
-    .filter((task) => !!task.state && !isTerminalTaskState(task.state))
+    .filter((task) =>
+      task.state
+        ? !isTerminalTaskState(task.state)
+        : task.startedAt >= mountedAt,
+    )
     .map((task) => task.taskHref)
     .join("|");
 

@@ -23,7 +23,7 @@ import { useRepositoryDetailQuery } from "@app/queries/repositories";
 import { platformOf } from "@app/utils/pluginContentFormat";
 import type { IBrowseContext } from "@plugin-sdk/ui";
 
-import { isMultiArch, pullCommand } from "../helpers";
+import { cosignStatus, isMultiArch, pullCommand } from "../helpers";
 
 const MANIFEST_FIELDS = [
   "pulp_href",
@@ -33,6 +33,7 @@ const MANIFEST_FIELDS = [
   "os",
   "architecture",
   "compressed_image_size",
+  "type",
 ];
 
 interface IUseSignedManifestsOptions {
@@ -201,6 +202,7 @@ export const ContainerTags: React.FC<IBrowseContext> = ({
                 statuses={[
                   isMultiArch(byHref.get(tag.tagged_manifest)) && "multiArch",
                   signed.has(tag.tagged_manifest) && "signed",
+                  cosignStatus(byHref.get(tag.tagged_manifest)),
                 ]}
               />
             ),
@@ -327,6 +329,7 @@ export const ContainerManifests: React.FC<IBrowseContext> = ({
               statuses={[
                 isMultiArch(manifest) && "multiArch",
                 signed.has(manifest.pulp_href ?? "") && "signed",
+                cosignStatus(manifest),
               ]}
             />
           ),

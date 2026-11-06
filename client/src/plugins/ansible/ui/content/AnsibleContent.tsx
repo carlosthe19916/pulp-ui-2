@@ -1,6 +1,9 @@
 import type React from "react";
 
-import type { AnsibleCollectionVersionResponse } from "@app/client";
+import type {
+  AnsibleCollectionVersionResponse,
+  AnsibleCollectionVersionSignatureResponse,
+} from "@app/client";
 import {
   ContentHeader,
   ContentPanelLayout,
@@ -13,7 +16,13 @@ import {
   links,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
-import { useContentDetailQuery } from "@app/queries/content";
+import { lookupScope, Signatures } from "@app/components/Signatures";
+import { usePersistentState } from "@app/hooks/usePersistentState";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import type { IContentPanelProps } from "@plugin-sdk/ui";
 
 interface ICollectionContent {
@@ -54,10 +63,33 @@ const CollectionContents: React.FC<ICollectionContentsProps> = ({ href }) => {
   );
 };
 
+const toSignature = (signature: AnsibleCollectionVersionSignatureResponse) => ({
+  key: signature.pubkey_fingerprint ?? "",
+  signingService: signature.signing_service,
+  href: signature.pulp_href,
+});
+
 /** Ansible Galaxy style: FQCN, install command, tags, contents; project links in the sidebar. */
-export const AnsibleContent: React.FC<IContentPanelProps> = ({ href }) => {
+export const AnsibleContent: React.FC<IContentPanelProps> = ({
+  href,
+  versionHref,
+}) => {
   const { data, isLoading, error } =
     useContentDetailQuery<AnsibleCollectionVersionResponse>({ href });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "state",
+  });
+  const signatures = useContentTypeListQuery({
+    pulpType: "ansible.collection_signature",
+    params: {
+      signed_collection: href,
+      repository_version: versionHref,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+      fields: ["pulp_href", "pubkey_fingerprint", "signing_service"],
+    },
+  });
 
   const fqcn = `${data?.namespace}.${data?.name}`;
   const tags = (data?.tags ?? [])
@@ -104,6 +136,16 @@ export const AnsibleContent: React.FC<IContentPanelProps> = ({ href }) => {
         <LabelList items={tags} emptyText="No tags" />
       </ContentSection>
       <CollectionContents href={href} />
+      <Signatures
+        isLoading={signatures.isLoading}
+        emptyText={`No signatures in ${lookupScope(versionHref)}`}
+        paging={{
+          count: signatures.data?.count ?? 0,
+          pagination,
+          onPaginationChange: setPagination,
+        }}
+        signatures={(signatures.data?.results ?? []).map(toSignature)}
+      />
     </ContentPanelLayout>
   );
 };

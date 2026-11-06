@@ -17,8 +17,16 @@ import {
   links,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
-import { useContentDetailQuery } from "@app/queries/content";
+import { lookupScope } from "@app/components/Signatures";
+import { usePersistentState } from "@app/hooks/usePersistentState";
+import {
+  useContentDetailQuery,
+  useContentTypeListQuery,
+} from "@app/queries/content";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import type { IContentPanelProps } from "@plugin-sdk/ui";
+
+import { PythonProvenance } from "./PythonProvenance";
 
 const PACKAGE_TYPES: Record<string, string> = {
   sdist: "Source",
@@ -33,9 +41,25 @@ const shortLicense = (license?: string) =>
     : undefined;
 
 /** PyPI style: pip install and requirements; project links in the sidebar. */
-export const PythonContent: React.FC<IContentPanelProps> = ({ href }) => {
+export const PythonContent: React.FC<IContentPanelProps> = ({
+  href,
+  versionHref,
+}) => {
   const { data, isLoading, error } =
     useContentDetailQuery<PythonPythonPackageContentResponse>({ href });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "state",
+  });
+  const provenance = useContentTypeListQuery({
+    pulpType: "python.provenance",
+    params: {
+      package: href,
+      repository_version: versionHref,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+    },
+  });
 
   const requirements = asStrings(data?.requires_dist);
   const packageType = data?.packagetype;
@@ -91,6 +115,16 @@ export const PythonContent: React.FC<IContentPanelProps> = ({ href }) => {
       <ContentSection title="Requirements">
         <LabelList items={requirements} emptyText="No requirements" />
       </ContentSection>
+      <PythonProvenance
+        provenances={provenance.data?.results ?? []}
+        isLoading={provenance.isLoading}
+        emptyText={`No provenance in ${lookupScope(versionHref)}`}
+        paging={{
+          count: provenance.data?.count ?? 0,
+          pagination,
+          onPaginationChange: setPagination,
+        }}
+      />
     </ContentPanelLayout>
   );
 };

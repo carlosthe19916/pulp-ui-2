@@ -189,16 +189,29 @@ interface IFactListProps {
 export const FactList: React.FC<IFactListProps> = ({ title, items }) =>
   items.length > 0 && (
     <ContentSection title={title}>
-      <DescriptionList isCompact>
-        {items.map(({ term, value }) => (
-          <DescriptionListGroup key={term}>
-            <DescriptionListTerm>{term}</DescriptionListTerm>
-            <DescriptionListDescription>{value}</DescriptionListDescription>
-          </DescriptionListGroup>
-        ))}
-      </DescriptionList>
+      <FactDescriptions items={items} />
     </ContentSection>
   );
+
+interface IFactDescriptionsProps {
+  items: IFact[];
+  "aria-label"?: string;
+}
+
+/** Facts as a compact description list, for a section holding several of them. */
+export const FactDescriptions: React.FC<IFactDescriptionsProps> = ({
+  items,
+  "aria-label": ariaLabel,
+}) => (
+  <DescriptionList isCompact aria-label={ariaLabel}>
+    {items.map(({ term, value }) => (
+      <DescriptionListGroup key={term}>
+        <DescriptionListTerm>{term}</DescriptionListTerm>
+        <DescriptionListDescription>{value}</DescriptionListDescription>
+      </DescriptionListGroup>
+    ))}
+  </DescriptionList>
+);
 
 interface ILinkListProps {
   links: ILink[];
@@ -213,23 +226,35 @@ export const LinkList: React.FC<ILinkListProps> = ({ links }) =>
       >
         {links.map(({ label, url }) => (
           <FlexItem key={label}>
-            <Button
-              variant="link"
-              isInline
-              component="a"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              icon={<ExternalLinkAltIcon />}
-              iconPosition="end"
-            >
-              {label}
-            </Button>
+            <ExternalLink url={url}>{label}</ExternalLink>
           </FlexItem>
         ))}
       </Flex>
     </ContentSection>
   );
+
+interface IExternalLinkProps {
+  url: string;
+  children: React.ReactNode;
+}
+
+export const ExternalLink: React.FC<IExternalLinkProps> = ({
+  url,
+  children,
+}) => (
+  <Button
+    variant="link"
+    isInline
+    component="a"
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    icon={<ExternalLinkAltIcon />}
+    iconPosition="end"
+  >
+    {children}
+  </Button>
+);
 
 interface IChecksumProps {
   value: string;

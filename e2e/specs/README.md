@@ -33,18 +33,19 @@ representative per free-text equivalence class plus the boundaries.
 Each entity has one spec, describing its own list, create/edit/delete, detail, tabs and
 navigation end to end:
 
-| File                                     | Prefix | Covers                                                                    |
-| ---------------------------------------- | ------ | ------------------------------------------------------------------------- |
-| [users.md](users.md)                     | `USR`  | Users list, create/edit/delete, detail, Groups tab, Roles tab, nav        |
-| [groups.md](groups.md)                   | `GRP`  | Groups list, permissions, create/edit/delete, detail, Users/Roles tabs    |
-| [roles.md](roles.md)                     | `ROL`  | Roles list, locked roles, create/edit/delete, permission input            |
-| [access-policies.md](access-policies.md) | `ACP`  | Access policy list, edit, reset, permissions, effect                      |
-| [domains.md](domains.md)                 | `DOM`  | Domains list, storage expand, create/edit/delete, feature-disabled states |
-| [form-pages.md](form-pages.md)           | `FORM` | What every create/edit form page shares, on the remote pages              |
-| [remotes.md](remotes.md)                 | `RMT`  | Remotes list actions, per-plugin create, edit, detail settings, delete    |
-| [repositories.md](repositories.md)       | `REP`  | Repository create/edit pages, remote picker, push types, About settings   |
-| [distributions.md](distributions.md)     | `DST`  | Distribution create/edit pages, detail page, source choice, base path     |
-| [publications.md](publications.md)       | `PUB`  | Publication create page, detail page, version choice, publishable types   |
+| File                                           | Prefix | Covers                                                                    |
+| ---------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| [users.md](users.md)                           | `USR`  | Users list, create/edit/delete, detail, Groups tab, Roles tab, nav        |
+| [groups.md](groups.md)                         | `GRP`  | Groups list, permissions, create/edit/delete, detail, Users/Roles tabs    |
+| [roles.md](roles.md)                           | `ROL`  | Roles list, locked roles, create/edit/delete, permission input            |
+| [access-policies.md](access-policies.md)       | `ACP`  | Access policy list, edit, reset, permissions, effect                      |
+| [domains.md](domains.md)                       | `DOM`  | Domains list, storage expand, create/edit/delete, feature-disabled states |
+| [form-pages.md](form-pages.md)                 | `FORM` | What every create/edit form page shares, on the remote pages              |
+| [remotes.md](remotes.md)                       | `RMT`  | Remotes list actions, per-plugin create, edit, detail settings, delete    |
+| [repositories.md](repositories.md)             | `REP`  | Repository create/edit pages, remote picker, push types, About settings   |
+| [distributions.md](distributions.md)           | `DST`  | Distribution create/edit pages, detail page, source choice, base path     |
+| [publications.md](publications.md)             | `PUB`  | Publication create page, detail page, version choice, publishable types   |
+| [content-signatures.md](content-signatures.md) | `SIG`  | Signatures and provenance on content details, links to what they sign     |
 
 ## Writing a scenario
 

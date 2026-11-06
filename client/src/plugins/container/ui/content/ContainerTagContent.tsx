@@ -15,7 +15,10 @@ import type { IContentPanelProps } from "@plugin-sdk/ui";
 import { ManifestDetails } from "./ManifestDetails";
 
 /** Quay-style tag page: the tag and the image it points at. */
-export const ContainerTagContent: React.FC<IContentPanelProps> = ({ href }) => {
+export const ContainerTagContent: React.FC<IContentPanelProps> = ({
+  href,
+  versionHref,
+}) => {
   const tag = useContentDetailQuery<ContainerTagResponse>({ href });
   const manifest = useContentDetailQuery<ContainerManifestResponse>({
     href: tag.data?.tagged_manifest ?? null,
@@ -34,7 +37,7 @@ export const ContainerTagContent: React.FC<IContentPanelProps> = ({ href }) => {
         />
       }
     >
-      <ManifestDetails manifest={manifest.data} />
+      <ManifestDetails manifest={manifest.data} versionHref={versionHref} />
     </ContentPanelLayout>
   );
 };

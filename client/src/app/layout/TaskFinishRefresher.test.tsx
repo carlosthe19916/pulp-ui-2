@@ -7,10 +7,10 @@ import { type ITrackedTaskStatus, useTrackedTasks } from "./useTrackedTasks";
 
 vi.mock(import("./useTrackedTasks"), () => ({ useTrackedTasks: vi.fn() }));
 
-const task = (state?: string): ITrackedTaskStatus => ({
+const task = (state?: string, startedAt = 0): ITrackedTaskStatus => ({
   taskHref: "/t/1/",
   title: "A",
-  startedAt: 0,
+  startedAt,
   state,
   notFound: false,
   isUnreadable: false,
@@ -18,17 +18,17 @@ const task = (state?: string): ITrackedTaskStatus => ({
   isActive: state === undefined || state === "running",
 });
 
-const setup = async (state?: string) => {
+const setup = async (state?: string, startedAt = 0) => {
   const queryClient = new QueryClient();
   const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-  vi.mocked(useTrackedTasks).mockReturnValue([task(state)]);
+  vi.mocked(useTrackedTasks).mockReturnValue([task(state, startedAt)]);
   const screen = await render(
     <QueryClientProvider client={queryClient}>
       <TaskFinishRefresher />
     </QueryClientProvider>,
   );
   const rerenderWith = (next?: string) => {
-    vi.mocked(useTrackedTasks).mockReturnValue([task(next)]);
+    vi.mocked(useTrackedTasks).mockReturnValue([task(next, startedAt)]);
     return screen.rerender(
       <QueryClientProvider client={queryClient}>
         <TaskFinishRefresher />
@@ -49,5 +49,14 @@ describe("TaskFinishRefresher", () => {
     const { invalidate, rerenderWith } = await setup(undefined);
     await rerenderWith("completed");
     expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it("refreshes when a task started on this page finishes before its first read", async () => {
+    const { invalidate, rerenderWith } = await setup(
+      undefined,
+      Date.now() + 1000,
+    );
+    await rerenderWith("completed");
+    expect(invalidate).toHaveBeenCalledOnce();
   });
 });

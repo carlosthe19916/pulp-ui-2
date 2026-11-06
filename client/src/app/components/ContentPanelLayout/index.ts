@@ -15,6 +15,8 @@ export {
   ContentHeader,
   ContentPanelLayout,
   ContentSection,
+  ExternalLink,
+  FactDescriptions,
   FactList,
   InstallSnippet,
   LabelList,

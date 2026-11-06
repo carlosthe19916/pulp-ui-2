@@ -17,7 +17,12 @@ export const PluginContentPanel: React.FC<IContentPanelProps> = ({
   const panel = getContentPanel(resolvePulpType(href) ?? "") ?? BaseContent;
   return (
     <Suspense fallback={<Spinner aria-label="Loading content" />}>
-      {createElement(panel, { href, versionHref })}
+      {/* Keyed so a panel's paged sections restart when the drawer switches unit or version. */}
+      {createElement(panel, {
+        key: `${versionHref}|${href}`,
+        href,
+        versionHref,
+      })}
     </Suspense>
   );
 };

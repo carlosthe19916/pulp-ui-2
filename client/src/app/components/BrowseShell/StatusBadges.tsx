@@ -7,6 +7,9 @@ const STATUS = {
   attested: { text: "Provenance", color: "green" },
   prerelease: { text: "Prerelease", color: "purple" },
   multiArch: { text: "Multi-arch", color: "blue" },
+  cosignSignature: { text: "Cosign signature", color: "grey" },
+  cosignAttestation: { text: "Cosign attestation", color: "grey" },
+  sbom: { text: "SBOM", color: "grey" },
 } as const;
 
 export type BrowseStatus = keyof typeof STATUS;

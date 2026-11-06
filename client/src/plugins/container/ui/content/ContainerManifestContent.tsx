@@ -14,6 +14,7 @@ import { ManifestDetails } from "./ManifestDetails";
 /** Harbor-style artifact page for one manifest. */
 export const ContainerManifestContent: React.FC<IContentPanelProps> = ({
   href,
+  versionHref,
 }) => {
   const { data, isLoading, error } =
     useContentDetailQuery<ContainerManifestResponse>({ href });
@@ -36,7 +37,7 @@ export const ContainerManifestContent: React.FC<IContentPanelProps> = ({
         />
       }
     >
-      <ManifestDetails manifest={data} />
+      <ManifestDetails manifest={data} versionHref={versionHref} />
     </ContentPanelLayout>
   );
 };

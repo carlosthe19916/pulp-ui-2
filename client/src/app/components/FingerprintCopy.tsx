@@ -2,7 +2,7 @@ import type React from "react";
 
 import { ClipboardCopy } from "@patternfly/react-core";
 
-import { formatFingerprint } from "../utils/publicKey";
+import { formatFingerprint } from "@app/utils/openpgpKeys";
 
 interface IFingerprintCopyProps {
   fingerprint?: string;
