@@ -14,10 +14,11 @@ import {
 import DownloadIcon from "@patternfly/react-icons/dist/esm/icons/download-icon";
 
 import type { SigningServiceResponse } from "@app/client";
+import { FingerprintCopy } from "@app/components/FingerprintCopy";
+import { longKeyId } from "@app/utils/openpgpKeys";
 import { formatDateTime } from "@app/utils/utils";
 
-import { downloadPublicKey, longKeyId } from "../../utils/publicKey";
-import { FingerprintCopy } from "../FingerprintCopy";
+import { downloadPublicKey } from "../../utils/publicKey";
 
 interface ISigningServiceDetailsProps {
   service: SigningServiceResponse;

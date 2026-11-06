@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatFingerprint, longKeyId } from "./publicKey";
+import { formatFingerprint, longKeyId, parseKey } from "./openpgpKeys";
 
 const FINGERPRINT = "9c3e2ac9c71a34af5445a5cc6ab3a0278b0c480c";
 
@@ -23,5 +23,26 @@ describe("longKeyId", () => {
 
   it("is undefined for a non-hex value", () => {
     expect(longKeyId("")).toBeUndefined();
+  });
+});
+
+describe("parseKey", () => {
+  it.each([
+    [
+      FINGERPRINT,
+      { fingerprint: FINGERPRINT.toUpperCase(), keyId: "6AB3A0278B0C480C" },
+    ],
+    [
+      `v4:${FINGERPRINT}`,
+      { fingerprint: FINGERPRINT.toUpperCase(), keyId: "6AB3A0278B0C480C" },
+    ],
+    [
+      `v6:${FINGERPRINT}`,
+      { fingerprint: FINGERPRINT.toUpperCase(), keyId: "9C3E2AC9C71A34AF" },
+    ],
+    ["keyid:6ab3a0278b0c480c", { keyId: "6AB3A0278B0C480C" }],
+    ["not-hex", {}],
+  ])("reads %s", (identifier, expected) => {
+    expect(parseKey(identifier)).toEqual(expected);
   });
 });

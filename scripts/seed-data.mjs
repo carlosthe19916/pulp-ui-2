@@ -29,6 +29,7 @@ const ONLY = args.includes("--only") ? new Set(onlyArg.split(",")) : null;
 const PREFIX = "seed-";
 const LABELS = { seeded: "true", env: "dev" };
 const FIXTURES = "https://fixtures.pulpproject.org";
+const SIGNING_SERVICE = "pulp-ui-dev-signing";
 const TEST_CA = readFileSync(
   new URL("../e2e/support/data/test-ca.pem", import.meta.url),
   "utf8",
@@ -124,6 +125,40 @@ async function publish(collection, repoHref, extra = {}) {
   return (await waitTask(task)).created_resources[0];
 }
 
+const dataFile = (name) =>
+  new File(
+    [readFileSync(new URL(`../e2e/support/data/${name}`, import.meta.url))],
+    name,
+  );
+
+/** A multipart create that runs as a task; returns the created hrefs. */
+async function upload(collection, fields) {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  const res = await fetch(`${API_URL}${collectionUrl(collection)}`, {
+    method: "POST",
+    headers: { Authorization: AUTH },
+    body: form,
+  });
+  if (!res.ok) {
+    throw new Error(`POST ${collection} → ${res.status} ${await res.text()}`);
+  }
+  return (await waitTask((await res.json()).task)).created_resources;
+}
+
+const contentOf = (created) =>
+  created.find((href) => href.includes("/content/"));
+
+/** The first unit of a content type in a repository's latest version that matches `filter`. */
+async function findInLatest(repoHref, collection, filter) {
+  const { latest_version_href } = await request("GET", repoHref);
+  const page = await request(
+    "GET",
+    `${collectionUrl(collection)}?${new URLSearchParams({ ...filter, repository_version: latest_version_href, limit: "1" })}`,
+  );
+  return page.results?.[0];
+}
+
 // ---------------------------------------------------------------- plugins
 //
 // One entry per plugin: a remote, a repository synced from it, a publication
@@ -152,6 +187,22 @@ const PLUGINS = [
     id: "rpm",
     remote: ["remotes/rpm/rpm", { url: `${FIXTURES}/rpm-with-modules/` }],
     repository: ["repositories/rpm/rpm", {}],
+    // Synced packages have no recorded keys; uploaded signed ones do (ADR 0018).
+    afterSync: async ({ repo }) => {
+      for (const rpm of ["camel-0.1-1.noarch.rpm", "bear-4.1-1.noarch.rpm"]) {
+        // The upload replaces the synced package of the same NEVRA.
+        const name = rpm.split("-")[0];
+        const current = await findInLatest(repo, "content/rpm/packages", {
+          name,
+        });
+        if (current?.signing_keys?.length) continue;
+        await upload("content/rpm/packages", {
+          file_url: `${FIXTURES}/rpm-signed/${rpm}`,
+          relative_path: rpm,
+          repository: repo,
+        });
+      }
+    },
     publication: "publications/rpm/rpm",
     distribution: "distributions/rpm/rpm",
   },
@@ -177,6 +228,22 @@ const PLUGINS = [
       },
     ],
     repository: ["repositories/container/container", {}],
+    // Adds a Red Hat image with its sigstore signatures (on demand: manifests only).
+    afterSync: async ({ repo }) => {
+      const signed = await ensure("remotes/container/container", {
+        name: `${PREFIX}container-signed`,
+        url: "https://registry.access.redhat.com",
+        upstream_name: "ubi9/ubi-micro",
+        include_tags: ["9.4"],
+        policy: "on_demand",
+        sigstore: "https://access.redhat.com/webassets/docker/content/sigstore",
+      });
+      if (
+        !(await findInLatest(repo, "content/container/tags", { name: "9.4" }))
+      ) {
+        await sync(repo, signed, { force: true, mirror: false });
+      }
+    },
     distribution: "distributions/container/container",
   },
   {
@@ -186,6 +253,27 @@ const PLUGINS = [
       { url: `${FIXTURES}/python-pypi/`, includes: ["shelf-reader"] },
     ],
     repository: ["repositories/python/python", {}],
+    // Adds a wheel with its PyPI (PEP 740) provenance.
+    afterSync: async ({ repo }) => {
+      const wheel = "sampleproject-4.0.0-py3-none-any.whl";
+      if (
+        await findInLatest(repo, "content/python/packages", { filename: wheel })
+      ) {
+        return;
+      }
+      const pkg = contentOf(
+        await upload("content/python/packages", {
+          file: dataFile(wheel),
+          relative_path: wheel,
+          repository: repo,
+        }),
+      );
+      await upload("content/python/provenance", {
+        file: dataFile(`${wheel}.provenance.json`),
+        package: pkg,
+        repository: repo,
+      });
+    },
     publication: "publications/python/pypi",
     distribution: "distributions/python/pypi",
   },
@@ -200,6 +288,39 @@ const PLUGINS = [
       },
     ],
     repository: ["repositories/ansible/ansible", {}],
+    // Adds a collection signed by the dev signing service, when the backend has it.
+    afterSync: async ({ repo }) => {
+      const filter = { namespace: "pulpui", name: "signed" };
+      let collection = await findInLatest(
+        repo,
+        "content/ansible/collection_versions",
+        filter,
+      );
+      if (!collection) {
+        await upload("content/ansible/collection_versions", {
+          file: dataFile("pulpui-signed-1.0.0.tar.gz"),
+          repository: repo,
+        });
+        collection = await findInLatest(
+          repo,
+          "content/ansible/collection_versions",
+          filter,
+        );
+      }
+      const service = await findByName("signing-services", SIGNING_SERVICE);
+      const signed = await findInLatest(
+        repo,
+        "content/ansible/collection_signatures",
+        { signed_collection: collection.pulp_href },
+      );
+      if (service && !signed) {
+        const { task } = await request("POST", `${repo}sign/`, {
+          content_units: [collection.pulp_href],
+          signing_service: service.pulp_href,
+        });
+        await waitTask(task);
+      }
+    },
     distribution: "distributions/ansible/ansible",
   },
   {
@@ -333,6 +454,24 @@ async function seedExtras() {
     remote: acsRemote,
   });
   done.push("file alternate content source");
+
+  // A keyring holding the dev signing key, whose OpenPGP signature packets can be browsed.
+  const service = await findByName("signing-services", SIGNING_SERVICE);
+  if (service) {
+    const keyring = await ensure("repositories/core/openpgp_keyring", {
+      name: `${PREFIX}keyring`,
+      description: `The ${SIGNING_SERVICE} public key`,
+    });
+    // A keyring has no versions endpoint to filter content by, so check its version number.
+    const { latest_version_href } = await request("GET", keyring);
+    if (latest_version_href.endsWith("/versions/0/")) {
+      await upload("content/core/openpgp_publickey", {
+        file: new File([service.public_key], `${SIGNING_SERVICE}.asc`),
+        repository: keyring,
+      });
+    }
+    done.push("keyring seed-keyring with the dev signing key");
+  }
 
   // A sync that fails, so the task views have an error to show.
   const broken = await ensure("remotes/file/file", {

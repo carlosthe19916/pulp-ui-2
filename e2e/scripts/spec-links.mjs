@@ -31,6 +31,7 @@ const SPEC_FILES = [
   "repositories.md",
   "distributions.md",
   "publications.md",
+  "content-signatures.md",
 ];
 // Scan the whole test tree: transform() only acts on tests carrying an @<ID> tag or an
 // ID-prefixed title, so untagged specs elsewhere are left untouched.

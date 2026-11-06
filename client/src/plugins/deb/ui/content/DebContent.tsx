@@ -17,6 +17,7 @@ import {
   links,
   StorageFacts,
 } from "@app/components/ContentPanelLayout";
+import { embeddedKeysEmptyText, Signatures } from "@app/components/Signatures";
 import { useContentDetailQuery } from "@app/queries/content";
 import type { IContentPanelProps } from "@plugin-sdk/ui";
 
@@ -85,6 +86,10 @@ export const DebContent: React.FC<IContentPanelProps> = ({ href }) => {
           emptyText="No dependencies"
         />
       </ContentSection>
+      <Signatures
+        signatures={(data?.signing_keys ?? []).map((key) => ({ key }))}
+        emptyText={embeddedKeysEmptyText(data?.signing_keys)}
+      />
     </ContentPanelLayout>
   );
 };

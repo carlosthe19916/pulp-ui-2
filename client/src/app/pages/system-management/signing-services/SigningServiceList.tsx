@@ -19,6 +19,7 @@ import {
 
 import { dataViewBodyStates } from "@app/components/dataViewStates";
 import { DocumentTitle } from "@app/components/DocumentTitle";
+import { FingerprintCopy } from "@app/components/FingerprintCopy";
 import { ListPagination } from "@app/components/ListPagination";
 import { RevealCellOnExpand } from "@app/components/RevealCellOnExpand";
 import { TableEmptyState } from "@app/components/TableEmptyState";
@@ -29,7 +30,6 @@ import type { DataViewTh } from "@app/utils/dataViewTypes";
 import { columnSort } from "@app/utils/sortHelpers";
 import { formatDateTime } from "@app/utils/utils";
 
-import { FingerprintCopy } from "./components/FingerprintCopy";
 import { SigningServiceDetails } from "./components/SigningServiceDetails";
 import {
   SIGNING_SERVICE_LIST_STATE,

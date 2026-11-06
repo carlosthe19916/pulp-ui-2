@@ -10,7 +10,9 @@ export interface ILink {
   url: string;
 }
 
-const isPresent = (value: unknown) => value != null && value !== "";
+// `false` comes from `cond && <X />` and renders nothing, so it is dropped too.
+const isPresent = (value: unknown) =>
+  value != null && value !== "" && value !== false;
 
 export const facts = (values: Record<string, React.ReactNode>): IFact[] =>
   Object.entries(values)

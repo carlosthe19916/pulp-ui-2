@@ -11,16 +11,24 @@ import {
   facts,
   LabelList,
 } from "@app/components/ContentPanelLayout";
+import { lookupScope, Signatures } from "@app/components/Signatures";
+import { usePersistentState } from "@app/hooks/usePersistentState";
 import { useContentTypeListQuery } from "@app/queries/content";
+import { PAGINATION_STATE } from "@app/utils/listState";
 import { platformOf } from "@app/utils/pluginContentFormat";
+
+import { signatureOf } from "./signature";
 
 interface IManifestDetailsProps {
   manifest?: ContainerManifestResponse;
+  /** Scopes the signatures to the version shown, when there is one. */
+  versionHref?: string;
 }
 
-/** Image facts, platforms of a multi-arch index, and image labels. */
+/** Image facts, platforms of a multi-arch index, image labels and signatures. */
 export const ManifestDetails: React.FC<IManifestDetailsProps> = ({
   manifest,
+  versionHref,
 }) => {
   const listed = manifest?.listed_manifests ?? [];
   const children = useContentTypeListQuery({
@@ -31,6 +39,28 @@ export const ManifestDetails: React.FC<IManifestDetailsProps> = ({
       fields: ["pulp_href", "digest", "os", "architecture"],
     },
     options: { enabled: listed.length > 0 },
+  });
+  const [pagination, setPagination] = usePersistentState({
+    ...PAGINATION_STATE,
+    storage: "state",
+  });
+  const signatures = useContentTypeListQuery({
+    pulpType: "container.signature",
+    params: {
+      manifest: [manifest?.digest ?? ""],
+      repository_version: versionHref,
+      limit: pagination.perPage,
+      offset: (pagination.page - 1) * pagination.perPage,
+      fields: [
+        "pulp_href",
+        "key_id",
+        "fingerprint",
+        "type",
+        "creator",
+        "timestamp",
+      ],
+    },
+    options: { enabled: !!manifest },
   });
   // Image labels are in the API response but not in the generated type.
   const labels = asStringRecord(
@@ -68,6 +98,19 @@ export const ManifestDetails: React.FC<IManifestDetailsProps> = ({
       <FactList
         title="Labels"
         items={Object.entries(labels).map(([term, value]) => ({ term, value }))}
+      />
+      <Signatures
+        isLoading={signatures.isLoading}
+        emptyText={`No signatures in ${lookupScope(versionHref)}`}
+        paging={{
+          count: signatures.data?.count ?? 0,
+          pagination,
+          onPaginationChange: setPagination,
+        }}
+        signatures={(signatures.data?.results ?? []).map((signature) => ({
+          ...signatureOf(signature),
+          href: signature.pulp_href,
+        }))}
       />
     </>
   );

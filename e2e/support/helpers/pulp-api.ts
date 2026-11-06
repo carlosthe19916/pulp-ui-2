@@ -445,6 +445,42 @@ export class PulpApi {
     await this.waitForTask(task);
   }
 
+  /**
+   * Create content through a task-running multipart POST (an upload, or a create by
+   * `file_url`), e.g. `uploadContent("content/rpm/packages", {...})`; returns the created hrefs.
+   */
+  async uploadContent(
+    typedCollection: string,
+    multipart: Record<
+      string,
+      string | { name: string; mimeType: string; buffer: Buffer }
+    >,
+  ): Promise<string[]> {
+    const task = await this.postTask(this.collectionUrl(typedCollection), {
+      multipart,
+    });
+    return task.created_resources ?? [];
+  }
+
+  /** POST a task-running action on an object (e.g. `<repository>sign/`) and wait for it. */
+  async runAction(href: string, body: Record<string, unknown>): Promise<void> {
+    await this.postTask(href, { data: body });
+  }
+
+  private async postTask(
+    url: string,
+    options: Parameters<APIRequestContext["post"]>[1],
+  ): Promise<ITaskResponse> {
+    const res = await this.ctx.post(url, options);
+    if (res.status() !== 202) {
+      throw new Error(
+        `POST ${url} failed (${res.status()}): ${await res.text()}`,
+      );
+    }
+    const { task } = (await res.json()) as { task: string };
+    return this.waitForTask(task);
+  }
+
   private async createSync(
     collection: string,
     body: Record<string, unknown>,

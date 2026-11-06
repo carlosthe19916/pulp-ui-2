@@ -21,6 +21,9 @@ const ansibleNamespaceContent = lazyViews(
 const ansibleRoleContent = lazyViews(
   () => import("./content/AnsibleRoleContent"),
 );
+const ansibleSignatureContent = lazyViews(
+  () => import("./content/AnsibleSignatureContent"),
+);
 
 export const ansibleUi = definePluginUi({
   definition: ansible,
@@ -106,7 +109,7 @@ export const ansibleUi = definePluginUi({
       "ansible.collection_deprecation": { panel: GENERIC, search: null },
       "ansible.collection_mark": { panel: GENERIC, search: null },
       "ansible.collection_signature": {
-        panel: GENERIC,
+        panel: ansibleSignatureContent("AnsibleSignatureContent"),
         search: null,
         upload: [
           {
