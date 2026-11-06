@@ -1,20 +1,25 @@
 import React from "react";
 
+import SectionHeading from "./SectionHeading";
+
 const STEPS = [
   {
-    title: "Connect a remote",
+    term: "Remote",
+    title: "Connect an upstream",
     description:
-      "Point Pulp at an upstream source — a CDN, registry, PyPI, Galaxy or your own server.",
+      "Point Pulp at a CDN, registry, PyPI, Galaxy or a server of your own.",
   },
   {
-    title: "Sync into a repository",
+    term: "Repository",
+    title: "Sync and version",
     description:
-      "Pull content into a repository. Each sync produces a new, immutable repository version.",
+      "Pull content in. Each sync produces a new, immutable repository version.",
   },
   {
-    title: "Distribute to clients",
+    term: "Distribution",
+    title: "Serve to clients",
     description:
-      "Publish the version you trust and expose it at a stable URL for dnf, podman, pip and friends.",
+      "Expose the version you trust at a stable URL, and promote new ones when ready.",
   },
 ];
 
@@ -22,28 +27,31 @@ export default function HowItWorks(): React.ReactElement {
   return (
     <section
       data-testid="home-how-it-works"
-      className="bg-gray-10 py-24 dark:bg-gray-90"
+      className="border-y border-line bg-page-alt py-24 sm:py-32"
     >
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="font-display text-sm font-medium tracking-widest text-brand-50 uppercase dark:text-brand-30">
-            How it works
-          </p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            From upstream to production in three steps
-          </h2>
-        </div>
-        <ol className="mt-16 grid list-none gap-8 p-0 md:grid-cols-3">
+      <div className="mx-auto max-w-6xl px-6">
+        <SectionHeading
+          eyebrow="How it works"
+          title="From upstream to production in three steps"
+        />
+        <ol className="m-0 mt-16 grid list-none gap-6 p-0 md:grid-cols-3">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="relative m-0">
-              <div className="flex items-center gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display text-lg font-bold text-white">
+            <li
+              key={step.term}
+              className="m-0 rounded-xl border border-line bg-page p-8"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-accent font-display text-sm font-bold text-accent">
                   {index + 1}
                 </span>
-                <span className="hidden h-px flex-1 bg-gray-30 md:block dark:bg-gray-70" />
+                <span className="font-mono text-sm text-fg-muted">
+                  {step.term}
+                </span>
               </div>
-              <h3 className="mt-6 text-xl font-medium">{step.title}</h3>
-              <p className="text-gray-60 dark:text-gray-30">
+              <h3 className="mt-6 mb-2 font-display text-xl font-medium text-fg">
+                {step.title}
+              </h3>
+              <p className="mb-0 leading-relaxed text-fg-subtle">
                 {step.description}
               </p>
             </li>

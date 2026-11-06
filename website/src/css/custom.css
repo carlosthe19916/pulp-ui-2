@@ -42,6 +42,22 @@
   --color-green-30: #afdc8f;
 }
 
+/* Semantic home-page colors; values switch with the color mode below. */
+@theme inline {
+  --color-page: var(--home-page);
+  --color-page-alt: var(--home-page-alt);
+  --color-surface: var(--home-surface);
+  --color-line: var(--home-line);
+  --color-line-strong: var(--home-line-strong);
+  --color-fg: var(--home-fg);
+  --color-fg-subtle: var(--home-fg-subtle);
+  --color-fg-muted: var(--home-fg-muted);
+  --color-accent: var(--home-accent);
+  --color-accent-hover: var(--home-accent-hover);
+  --color-accent-soft: var(--home-accent-soft);
+  --color-on-accent: var(--home-on-accent);
+}
+
 :root {
   --ifm-color-primary: #0066cc;
   --ifm-color-primary-dark: #005cb8;
@@ -73,6 +89,23 @@
   /* PatternFly 6 warning palette (yellow-10 / yellow-70) */
   --announcement-bar-background: #fff4cc;
   --announcement-bar-color: #73480b;
+
+  /* PatternFly 6 light theme */
+  --home-page: #ffffff;
+  --home-page-alt: #f2f2f2;
+  --home-surface: #ffffff;
+  --home-line: #e0e0e0;
+  --home-line-strong: #c7c7c7;
+  --home-fg: #151515;
+  --home-fg-subtle: #4d4d4d;
+  --home-fg-muted: #707070;
+  --home-accent: #0066cc;
+  --home-accent-hover: #004d99;
+  --home-accent-soft: #e0f0ff;
+  --home-on-accent: #ffffff;
+  --home-glow: rgba(0, 102, 204, 0.12);
+  --home-glow-alt: rgba(94, 64, 190, 0.08);
+  --home-grid: rgba(21, 21, 21, 0.05);
 }
 
 [data-theme="dark"] {
@@ -93,6 +126,23 @@
 
   --announcement-bar-background: #73480b;
   --announcement-bar-color: #fff4cc;
+
+  /* PatternFly 6 dark theme */
+  --home-page: #151515;
+  --home-page-alt: #1f1f1f;
+  --home-surface: #1f1f1f;
+  --home-line: #292929;
+  --home-line-strong: #4d4d4d;
+  --home-fg: #f2f2f2;
+  --home-fg-subtle: #c7c7c7;
+  --home-fg-muted: #a3a3a3;
+  --home-accent: #92c5f9;
+  --home-accent-hover: #b9dafc;
+  --home-accent-soft: rgba(146, 197, 249, 0.12);
+  --home-on-accent: #151515;
+  --home-glow: rgba(67, 148, 229, 0.22);
+  --home-glow-alt: rgba(94, 64, 190, 0.18);
+  --home-grid: rgba(255, 255, 255, 0.035);
 }
 
 .navbar__title {
@@ -112,4 +162,25 @@
 .button {
   font-family: var(--font-display);
   font-weight: 500;
+}
+
+/* Home hero backdrop: faint grid fading out, with a soft brand glow. */
+.home-hero-backdrop {
+  background-image:
+    radial-gradient(60% 50% at 50% 0%, var(--home-glow), transparent 70%),
+    radial-gradient(40% 40% at 85% 30%, var(--home-glow-alt), transparent 70%),
+    linear-gradient(var(--home-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--home-grid) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    48px 48px,
+    48px 48px;
+  mask-image: linear-gradient(to bottom, black 55%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
