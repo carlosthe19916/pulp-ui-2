@@ -27,6 +27,19 @@ test.describe("landing page", () => {
       ).toBeVisible();
     }
 
+    const video = page.getByTestId("home-hero-video");
+    await expect(video).toBeVisible();
+    await expect(video).toHaveAttribute(
+      "src",
+      /\/videos\/home\/pulp-ui-next\.mp4$/,
+    );
+    await expect(video).toHaveAttribute(
+      "poster",
+      /\/videos\/home\/pulp-ui-next-poster\.jpg$/,
+    );
+    await expect(video).not.toHaveAttribute("autoplay");
+    await expect(video.locator("track")).toHaveCount(0);
+
     await attachErrors(testInfo, errors);
     expect(errors, "landing page should log no runtime errors").toEqual([]);
   });

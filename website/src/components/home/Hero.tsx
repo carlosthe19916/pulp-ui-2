@@ -1,10 +1,30 @@
 import React from "react";
 
 import Link from "@docusaurus/Link";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 import { ArrowRight } from "lucide-react";
 
 import GithubIcon from "./GithubIcon";
-import ProductPreview from "./ProductPreview";
+
+function HeroVideo(): React.ReactElement {
+  const src = useBaseUrl("/videos/home/pulp-ui-next.mp4");
+  const poster = useBaseUrl("/videos/home/pulp-ui-next-poster.jpg");
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl shadow-brand-50/20">
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the homepage plays this film with captions off */}
+      <video
+        data-testid="home-hero-video"
+        className="block aspect-video w-full"
+        controls
+        playsInline
+        preload="metadata"
+        poster={poster}
+        src={src}
+        aria-label="Pulp and Pulp UI: where artifacts live, and the console for managing them"
+      />
+    </div>
+  );
+}
 
 export default function Hero(): React.ReactElement {
   return (
@@ -51,7 +71,7 @@ export default function Hero(): React.ReactElement {
             </Link>
           </div>
         </div>
-        <ProductPreview />
+        <HeroVideo />
       </div>
     </section>
   );
