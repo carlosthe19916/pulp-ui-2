@@ -22,17 +22,15 @@ export const useServedAt = ({
     params: repositoryDistributionsPickerParams(repositoryHref),
   });
   const listed = data?.results[0];
-  // `registry_path` is only on the typed detail; the aggregate list omits it.
-  const { data: detail } = useDistributionDetailQuery({
+  // Client URLs (`/pypi/` base_url, `registry_path`) are only on the typed detail.
+  const { data: detail, isError } = useDistributionDetailQuery({
     href: listed?.pulp_href ?? null,
   });
+  const served = (detail ?? (isError ? listed : undefined)) as
+    Record<string, unknown> | undefined;
 
   return {
-    baseUrl: asString(
-      (listed as Record<string, unknown> | undefined)?.base_url,
-    ),
-    registryPath: asString(
-      (detail as Record<string, unknown> | undefined)?.registry_path,
-    ),
+    baseUrl: asString(served?.base_url),
+    registryPath: asString(served?.registry_path),
   };
 };

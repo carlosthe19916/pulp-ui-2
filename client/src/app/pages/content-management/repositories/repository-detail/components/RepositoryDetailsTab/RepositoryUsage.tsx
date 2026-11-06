@@ -20,6 +20,7 @@ import { ContentUrlLink } from "@app/components/ContentUrlLink";
 import { PluginRepositoryClientSetup } from "@app/components/PluginRepositoryClientSetup";
 import {
   repositoryDistributionsPickerParams,
+  useDistributionDetailQuery,
   useDistributionsListQuery,
 } from "@app/queries/distributions";
 
@@ -40,15 +41,17 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
     params: repositoryDistributionsPickerParams(repositoryHref),
   });
   const [selectedHref, setSelectedHref] = useState<string>();
+  const distributions = data?.results ?? [];
+  const selected =
+    distributions.find((d) => d.pulp_href === selectedHref) ?? distributions[0];
+  // Client URLs (`/pypi/` base_url, `registry_path`, `client_url`) are only on the typed detail.
+  const { data: detail, isLoading: isDetailLoading } =
+    useDistributionDetailQuery({ href: selected?.pulp_href ?? null });
 
   if (isLoading) {
     return null;
   }
 
-  const distributions = data?.results ?? [];
-
-  const selected =
-    distributions.find((d) => d.pulp_href === selectedHref) ?? distributions[0];
   if (!selected) {
     return (
       <EmptyState titleText="Not served yet" headingLevel="h4" variant="xs">
@@ -90,15 +93,19 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
           </FlexItem>
         </Flex>
       )}
-      <DescriptionList isCompact isHorizontal>
-        <DescriptionListGroup>
-          <DescriptionListTerm>Content URL</DescriptionListTerm>
-          <DescriptionListDescription>
-            <ContentUrlLink distribution={selected} />
-          </DescriptionListDescription>
-        </DescriptionListGroup>
-      </DescriptionList>
-      <PluginRepositoryClientSetup distribution={selected} />
+      {!isDetailLoading && (
+        <>
+          <DescriptionList isCompact isHorizontal>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Content URL</DescriptionListTerm>
+              <DescriptionListDescription>
+                <ContentUrlLink distribution={detail ?? selected} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+          <PluginRepositoryClientSetup distribution={detail ?? selected} />
+        </>
+      )}
     </Stack>
   );
 };

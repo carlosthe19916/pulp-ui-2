@@ -4,7 +4,6 @@ import { Label } from "@patternfly/react-core";
 
 import type { PythonPythonPackageContentResponse } from "@app/client";
 import {
-  asStringRecord,
   asStrings,
   ContentHeader,
   ContentPanelLayout,
@@ -26,6 +25,7 @@ import {
 import { PAGINATION_STATE } from "@app/utils/listState";
 import type { IContentPanelProps } from "@plugin-sdk/ui";
 
+import { parseJsonField, projectUrls } from "../helpers";
 import { PythonProvenance } from "./PythonProvenance";
 
 const PACKAGE_TYPES: Record<string, string> = {
@@ -61,7 +61,7 @@ export const PythonContent: React.FC<IContentPanelProps> = ({
     },
   });
 
-  const requirements = asStrings(data?.requires_dist);
+  const requirements = asStrings(parseJsonField(data?.requires_dist));
   const packageType = data?.packagetype;
 
   return (
@@ -87,7 +87,7 @@ export const PythonContent: React.FC<IContentPanelProps> = ({
           <LinkList
             links={links({
               Homepage: data?.home_page,
-              ...asStringRecord(data?.project_urls),
+              ...projectUrls(data?.project_urls),
               Download: data?.download_url,
             })}
           />
