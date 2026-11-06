@@ -44,12 +44,11 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
   const distributions = data?.results ?? [];
   const selected =
     distributions.find((d) => d.pulp_href === selectedHref) ?? distributions[0];
-  // The aggregate list has the content app's `base_url` only; the typed detail has the URLs
-  // clients use (`/pypi/` base_url, `registry_path`, `client_url`).
+  // Client URLs (`/pypi/` base_url, `registry_path`, `client_url`) are only on the typed detail.
   const { data: detail, isLoading: isDetailLoading } =
     useDistributionDetailQuery({ href: selected?.pulp_href ?? null });
 
-  if (isLoading || isDetailLoading) {
+  if (isLoading) {
     return null;
   }
 
@@ -94,15 +93,19 @@ export const RepositoryUsage: React.FC<IRepositoryUsageProps> = ({
           </FlexItem>
         </Flex>
       )}
-      <DescriptionList isCompact isHorizontal>
-        <DescriptionListGroup>
-          <DescriptionListTerm>Content URL</DescriptionListTerm>
-          <DescriptionListDescription>
-            <ContentUrlLink distribution={detail ?? selected} />
-          </DescriptionListDescription>
-        </DescriptionListGroup>
-      </DescriptionList>
-      <PluginRepositoryClientSetup distribution={detail ?? selected} />
+      {!isDetailLoading && (
+        <>
+          <DescriptionList isCompact isHorizontal>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Content URL</DescriptionListTerm>
+              <DescriptionListDescription>
+                <ContentUrlLink distribution={detail ?? selected} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+          <PluginRepositoryClientSetup distribution={detail ?? selected} />
+        </>
+      )}
     </Stack>
   );
 };
