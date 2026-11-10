@@ -8,7 +8,7 @@
 # a PR to the latest release of each plugin and lets e2e gate the merge. oci_env has
 # no releases, so it tracks main and is bumped by hand.
 oci_env              main
-pulpcore             3.123.2
+pulpcore             3.118.7
 pulp_rpm             3.39.5
 pulp_container       2.30.1
 pulp_python          3.38.0
