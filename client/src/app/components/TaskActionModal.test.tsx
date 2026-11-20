@@ -53,7 +53,7 @@ const Harness: React.FC<IHarnessProps> = ({ onSubmit }) => {
 };
 
 const nameBox = (screen: Awaited<ReturnType<typeof render>>) =>
-  screen.getByRole("textbox", { name: "Name", exact: true });
+  screen.getByRole("textbox", { name: "Name" });
 
 describe("TaskActionModal", () => {
   it("swaps the fields on a new formKey without remounting the modal", async () => {

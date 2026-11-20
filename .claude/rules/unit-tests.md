@@ -46,6 +46,10 @@ it("adds the typed tag on Enter", async () => {
 - Query with locators: `getByRole(role, { name })` first, then `getByLabelText`,
   `getByText`; `getByTestId` only when nothing else works. PatternFly `Table` cells are
   `gridcell`.
+- Locators match the whole text, case-sensitive (Vitest's default), so write what the user
+  hears, including PatternFly's screen-reader text: `getByText("Name is required: error status;")`
+  for a field error, `getByRole("heading", { name: "Info alert:Sync started" })` for an alert
+  title. Use a `RegExp` only for a deliberately partial match, and don't pass `exact: true`.
 - Interact through the locator (`.click()`, `.fill()`) or `userEvent` from `vitest/browser`,
   never `@testing-library/user-event` or `fireEvent`.
 - Assert on the DOM with `await expect.element(locator)`, which retries; plain `expect` is
@@ -75,9 +79,8 @@ it("adds the typed tag on Enter", async () => {
   (`[birpc] rpc is closed`); use a **full factory** that returns only the exports the component
   under test uses (e.g. a modal form needs just its two mutation hooks).
 - A form inside a modal needs `useNotifications` mocked — it throws without its provider.
-- A modal's accessible name concatenates its field labels, so `getByLabelText("Password")` can
-  match the dialog too; prefer `getByRole("textbox", { name, exact: true })` (password inputs
-  included).
+- Find a modal's fields with `getByRole("textbox", { name })` (password inputs included)
+  rather than `getByLabelText`.
 
 ## What belongs here vs e2e
 
@@ -92,6 +95,8 @@ Pass/fail rubric for `/eval`. Check changed `*.test.ts` / `*.test.tsx` files.
 
 - [ ] Colocated; explicit imports from `vitest`, `vitest-browser-react`, `vitest/browser`.
 - [ ] Components and hooks use awaited `render` / `renderHook`; locators prefer role + name.
+- [ ] Locator text is the whole announced text (screen-reader suffixes included) or a `RegExp`;
+      no `exact: true`.
 - [ ] Interactions via locator methods or `vitest/browser` `userEvent`; DOM assertions via
       `await expect.element(…)`; no Testing Library, `waitFor` or manual `act()`.
 - [ ] Mocks use `vi.mock(import(…))` + `vi.mocked` at module boundaries.

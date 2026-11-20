@@ -33,9 +33,7 @@ describe("PublicationDetailsView", () => {
     );
 
     for (const title of ["Source", "Metadata"]) {
-      await expect
-        .element(screen.getByText(title, { exact: true }))
-        .toBeVisible();
+      await expect.element(screen.getByText(title)).toBeVisible();
     }
     await expect.element(screen.getByText("repository link")).toBeVisible();
     await expect
@@ -46,10 +44,8 @@ describe("PublicationDetailsView", () => {
       .element(screen.getByText("Manifest file name"))
       .toBeInTheDocument();
     // The source is in the Source card, not repeated among the settings.
-    expect(screen.getByText("Repository", { exact: true }).all()).toHaveLength(
-      1,
-    );
+    expect(screen.getByText("Repository").all()).toHaveLength(1);
     // Publications have no labels.
-    expect(screen.getByText("Labels", { exact: true }).all()).toHaveLength(0);
+    expect(screen.getByText("Labels").all()).toHaveLength(0);
   });
 });

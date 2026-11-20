@@ -60,55 +60,47 @@ const selectBackend = (
 describe("DomainModal — create form", () => {
   it("rejects an invalid name", async () => {
     const screen = await openCreate();
-    await screen
-      .getByRole("textbox", { name: "Name", exact: true })
-      .fill("bad name");
+    await screen.getByRole("textbox", { name: "Name" }).fill("bad name");
     await expect
       .element(
         screen.getByText(
-          "Name may only contain letters, numbers, hyphens and underscores",
+          "Name may only contain letters, numbers, hyphens and underscores: error status;",
         ),
       )
       .toBeVisible();
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     expect(createMutate).not.toHaveBeenCalled();
   });
 
   it("requires the S3 fields and clears each when filled", async () => {
     const screen = await openCreate();
-    await screen
-      .getByRole("textbox", { name: "Name", exact: true })
-      .fill("my-domain");
+    await screen.getByRole("textbox", { name: "Name" }).fill("my-domain");
     await selectBackend(screen, "Amazon S3");
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
 
     await expect
-      .element(screen.getByText("Bucket name is required"))
+      .element(screen.getByText("Bucket name is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Access key is required"))
+      .element(screen.getByText("Access key is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Secret key is required"))
+      .element(screen.getByText("Secret key is required: error status;"))
       .toBeVisible();
 
     await screen
-      .getByRole("textbox", { name: "Bucket name", exact: true })
+      .getByRole("textbox", { name: "Bucket name" })
       .fill("my-bucket");
-    await screen
-      .getByRole("textbox", { name: "Access key", exact: true })
-      .fill("AKIA");
-    await screen
-      .getByRole("textbox", { name: "Secret key", exact: true })
-      .fill("secret");
+    await screen.getByRole("textbox", { name: "Access key" }).fill("AKIA");
+    await screen.getByRole("textbox", { name: "Secret key" }).fill("secret");
     await expect
-      .element(screen.getByText("Bucket name is required"))
+      .element(screen.getByText("Bucket name is required: error status;"))
       .not.toBeInTheDocument();
     await expect
-      .element(screen.getByText("Access key is required"))
+      .element(screen.getByText("Access key is required: error status;"))
       .not.toBeInTheDocument();
     await expect
-      .element(screen.getByText("Secret key is required"))
+      .element(screen.getByText("Secret key is required: error status;"))
       .not.toBeInTheDocument();
     // Submit was blocked while the fields were missing.
     expect(createMutate).not.toHaveBeenCalled();
@@ -116,20 +108,18 @@ describe("DomainModal — create form", () => {
 
   it("requires the Azure fields", async () => {
     const screen = await openCreate();
-    await screen
-      .getByRole("textbox", { name: "Name", exact: true })
-      .fill("my-domain");
+    await screen.getByRole("textbox", { name: "Name" }).fill("my-domain");
     await selectBackend(screen, "Azure Blob");
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
 
     await expect
-      .element(screen.getByText("Container is required"))
+      .element(screen.getByText("Container is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Account name is required"))
+      .element(screen.getByText("Account name is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Account key is required"))
+      .element(screen.getByText("Account key is required: error status;"))
       .toBeVisible();
     expect(createMutate).not.toHaveBeenCalled();
   });
@@ -143,16 +133,16 @@ describe("DomainModal — edit form", () => {
       <DomainModal isOpen domain={fileSystemDomain} onClose={vi.fn()} />,
     );
     await selectBackend(screen, "Amazon S3");
-    await screen.getByRole("button", { name: "Save", exact: true }).click();
+    await screen.getByRole("button", { name: "Save" }).click();
 
     await expect
-      .element(screen.getByText("Bucket name is required"))
+      .element(screen.getByText("Bucket name is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Access key is required"))
+      .element(screen.getByText("Access key is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Secret key is required"))
+      .element(screen.getByText("Secret key is required: error status;"))
       .toBeVisible();
     // The switch must block the update, not submit an S3 domain with no credentials.
     expect(updateMutate).not.toHaveBeenCalled();

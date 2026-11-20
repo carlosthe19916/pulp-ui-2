@@ -109,12 +109,14 @@ describe("EntityFormPage", () => {
   it("opens a collapsed section that holds an error after a failed submit", async () => {
     const { screen, onSubmit } = await renderPage();
     await screen.getByRole("button", { name: "Create" }).click();
-    await expect.element(screen.getByText("Name is required")).toBeVisible();
+    await expect
+      .element(screen.getByText("Name is required: error status;"))
+      .toBeVisible();
     await expect
       .element(screen.getByRole("button", { name: "Authentication" }))
       .toHaveAttribute("aria-expanded", "true");
     await expect
-      .element(screen.getByText("Password is required"))
+      .element(screen.getByText("Password is required: error status;"))
       .toBeVisible();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -157,9 +159,7 @@ describe("EntityFormPage", () => {
     await expect
       .element(screen.getByRole("button", { name: "Authentication" }))
       .toHaveAttribute("aria-expanded", "true");
-    await expect
-      .element(screen.getByText("Set", { exact: true }))
-      .toBeVisible();
+    await expect.element(screen.getByText("Set")).toBeVisible();
   });
 
   it("asks before leaving with values carried over from another type", async () => {

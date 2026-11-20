@@ -42,15 +42,17 @@ describe("GroupModal — create form", () => {
 
   it("requires a name", async () => {
     const screen = await render(<GroupModal isOpen onClose={vi.fn()} />);
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
-    await expect.element(screen.getByText("Name is required")).toBeVisible();
+    await screen.getByRole("button", { name: "Create" }).click();
+    await expect
+      .element(screen.getByText("Name is required: error status;"))
+      .toBeVisible();
     expect(createMutate).not.toHaveBeenCalled();
   });
 
   it("submits a valid name through the create mutation", async () => {
     const screen = await render(<GroupModal isOpen onClose={vi.fn()} />);
     await screen.getByRole("textbox", { name: "Name" }).fill("ops");
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     expect(createMutate).toHaveBeenCalledOnce();
     expect(createMutate.mock.calls[0][0]).toMatchObject({ name: "ops" });
   });
