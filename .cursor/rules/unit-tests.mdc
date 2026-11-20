@@ -78,8 +78,6 @@ it("adds the typed tag on Enter", async () => {
   (`[birpc] rpc is closed`); use a **full factory** that returns only the exports the component
   under test uses (e.g. a modal form needs just its two mutation hooks).
 - A form inside a modal needs `useNotifications` mocked — it throws without its provider.
-- Find a modal's fields with `getByRole("textbox", { name })` (password inputs included)
-  rather than `getByLabelText`.
 
 ## What belongs here vs e2e
 
