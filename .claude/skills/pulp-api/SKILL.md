@@ -16,7 +16,9 @@ wiring (Lists, Writes, Tasks, Errors and permissions, Filters, Outside the REST 
 ## 1. Find the operation
 
 `client/openapi/pulp.json` is the source of truth (~4 MB: grep it by path or `operationId`,
-never read it whole). The generated client mirrors it and is usually faster:
+never read it whole). It is a dump of the backend at the pinned versions in `plugin-versions.txt`,
+refreshed by the daily version bump or `npm run backend:openapi`; never edit it by hand. The
+generated client mirrors it and is usually faster:
 
 ```bash
 grep -n "<operationId or path fragment>" client/src/app/client/sdk.gen.ts    # URL, method
