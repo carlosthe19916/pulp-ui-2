@@ -44,7 +44,8 @@ export default defineConfig({
     {
       name: "ignore-process-env",
       transform(code) {
-        return code.replace(/process\.env/g, "({})");
+        // Runs before Vite's define, so leave NODE_ENV for define to replace.
+        return code.replace(/process\.env(?!\.NODE_ENV)/g, "({})");
       },
     },
     viteStaticCopy({
