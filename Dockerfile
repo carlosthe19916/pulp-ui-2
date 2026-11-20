@@ -1,5 +1,5 @@
 # Builder image
-FROM registry.access.redhat.com/ubi9/nodejs-22:latest AS builder
+FROM registry.access.redhat.com/ubi9/nodejs-24:latest AS builder
 
 USER 1001
 COPY --chown=1001 . .
@@ -12,7 +12,7 @@ RUN \
   npm run dist
 
 # Runner image
-FROM registry.access.redhat.com/ubi9/nodejs-22-minimal:latest
+FROM registry.access.redhat.com/ubi9/nodejs-24-minimal:latest
 
 # Add ps package to allow liveness probe for k8s cluster
 # Add tar package to allow copying files with kubectl scp
@@ -31,7 +31,7 @@ LABEL name="pulp/pulp-ui" \
       io.k8s.display-name="pulp-ui" \
       io.k8s.description="Pulp - User Interface" \
       io.openshift.expose-services="8080:http" \
-      io.openshift.tags="pulp,ui,nodejs22" \
+      io.openshift.tags="pulp,ui,nodejs24" \
       io.openshift.min-cpu="100m" \
       io.openshift.min-memory="350Mi"
 
