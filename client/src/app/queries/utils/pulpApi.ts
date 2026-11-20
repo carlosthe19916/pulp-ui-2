@@ -3,6 +3,7 @@ import { normalizePulpApiRoot } from "@pulp-ui/common";
 import type { StatusResponse } from "@app/client";
 import type {
   PulpCollection,
+  PulpCollectionApiPath,
   PulpCollections,
   PulpEndpoint,
   PulpHrefActions,
@@ -29,54 +30,74 @@ export const defaultDomainFromStatus = (
 const domainSegment = (domain: IPulpDomain): string =>
   domain.enabled ? `/${domain.name}` : "";
 
-/** Strip any leading slash(es) so the endpoint joins with exactly one separator. */
-const stripLeadingSlash = (endpoint: string): string =>
-  endpoint.replace(/^\/+/, "");
+export type { PulpCollectionApiPath };
 
 const v3Path = (endpoint: string, domain: IPulpDomain): string =>
-  `/api/pulp${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
+  `/api/pulp${domainSegment(domain)}/api/v3/${endpoint}`;
 
 /**
  * Build a domain-scoped v3 API path behind the `/api/pulp` proxy marker. The endpoint is
  * checked against the spec (`PulpEndpoint`, relative to `api/v3/`); the domain segment is
- * added only when the server has domains enabled.
+ * added only when the server has domains enabled. The leading-`/` form is how plugin actions
+ * name an endpoint (`/rpm/copy/`).
  */
 export const pulpApiPath = (
   endpoint: PulpEndpoint | `/${PulpEndpoint}`,
   domain: IPulpDomain,
-): string => v3Path(endpoint, domain);
+): string => v3Path(endpoint.replace(/^\//, ""), domain);
 
 /** Build the path of an endpoint outside any domain (`status/`, `livez/`). */
 export const pulpRootApiPath = (endpoint: PulpRootEndpoint): string =>
   `/api/pulp/api/v3/${endpoint}`;
 
-/** Every action any apiPath of a plugin collection has (`""` is the collection itself). */
-export type PulpCollectionAction<C extends PulpCollection> = {
-  [K in keyof PulpCollections[C]]: PulpCollections[C][K];
-}[keyof PulpCollections[C]];
+/** The actions every apiPath in `A` has, so a union of types only gets the ones they share. */
+type SharedAction<
+  C extends PulpCollection,
+  A extends PulpCollectionApiPath<C>,
+> = (
+  A extends unknown ? (action: PulpCollections[C][A]) => void : never
+) extends (action: infer Shared) => void
+  ? Shared & string
+  : never;
+
+/** `action` may be omitted only when the collection itself (`""`) is an endpoint. */
+type CollectionActionArg<
+  C extends PulpCollection,
+  A extends PulpCollectionApiPath<C>,
+> =
+  "" extends SharedAction<C, A>
+    ? { action?: SharedAction<C, A> }
+    : { action: SharedAction<C, A> };
 
 /**
  * Build the path of a plugin collection (`remotes/<apiPath>/<action>`) for a type known at
  * runtime, e.g. from the catalog.
  */
-export const pulpCollectionPath = <C extends PulpCollection>({
+export const pulpCollectionPath = <
+  C extends PulpCollection,
+  A extends PulpCollectionApiPath<C>,
+>({
   collection,
   apiPath,
   domain,
   action,
 }: {
   collection: C;
-  apiPath: string;
+  apiPath: A;
   domain: IPulpDomain;
-  action?: PulpCollectionAction<C>;
-}): string => v3Path(`${collection}/${apiPath}/${action ?? ""}`, domain);
+} & CollectionActionArg<C, A>): string =>
+  v3Path(`${collection}/${apiPath}/${action ?? ""}`, domain);
 
-/** Append an action to an href (`{href}sync/`), checked against the href's resource kind. */
-export const hrefAction = <K extends PulpHrefKind>({
+/**
+ * Append an action to an href (`{href}sync/`). `kind` exists only for the type check: with it
+ * the action must be one that kind takes; without it (a query generic over the resource,
+ * like `my_permissions/`), any href action in the spec is accepted.
+ */
+export const hrefAction = <K extends PulpHrefKind = PulpHrefKind>({
   href,
   action,
 }: {
-  kind: K;
+  kind?: K;
   href: string;
   action: PulpHrefActions[K];
 }): string => `${toProxyHref(href)}${action}`;
@@ -90,8 +111,7 @@ const apiRoot = (): string => normalizePulpApiRoot(ENV.PULP_API_ROOT ?? "");
 export const pulpHref = (
   endpoint: `${PulpEndpoint}${string}/`,
   domain: IPulpDomain,
-): string =>
-  `${apiRoot()}${domainSegment(domain)}/api/v3/${stripLeadingSlash(endpoint)}`;
+): string => `${apiRoot()}${domainSegment(domain)}/api/v3/${endpoint}`;
 
 /**
  * Normalize any pulp_href to the `/api/pulp` proxy marker by swapping its `API_ROOT`

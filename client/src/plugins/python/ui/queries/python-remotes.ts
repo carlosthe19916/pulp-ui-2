@@ -9,7 +9,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { remoteKeys } from "@app/queries/remotes";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
-import { pulpApiPath } from "@app/queries/utils/pulpApi";
+import { pulpCollectionPath } from "@app/queries/utils/pulpApi";
 
 import { python } from "../../definition";
 
@@ -36,10 +36,12 @@ export const useBandersnatchRemoteCreateMutation = (
       if (policy) form.append("policy", policy);
       return (
         await axiosInstance.post<GenericRemoteResponse>(
-          pulpApiPath(
-            `remotes/${remote.apiPath}/${remote.createFrom.bandersnatch.path}`,
+          pulpCollectionPath({
+            collection: "remotes",
+            apiPath: remote.apiPath,
             domain,
-          ),
+            action: remote.createFrom.bandersnatch.path,
+          }),
           form,
         )
       ).data;

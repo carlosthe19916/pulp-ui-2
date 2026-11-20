@@ -73,6 +73,25 @@ describe("pulpCollectionPath", () => {
     ).toBe("/api/pulp/default/api/v3/remotes/rpm/rpm/");
   });
 
+  it("requires the action when the collection itself isn't an endpoint", () => {
+    expect(
+      pulpCollectionPath({
+        collection: "content",
+        apiPath: "maven/maven",
+        domain: disabled,
+        action: "index-page/",
+      }),
+    ).toBe("/api/pulp/api/v3/content/maven/maven/index-page/");
+    expect(
+      // @ts-expect-error content/maven/maven/ alone doesn't exist
+      pulpCollectionPath({
+        collection: "content",
+        apiPath: "maven/maven",
+        domain: disabled,
+      }),
+    ).toBeTruthy();
+  });
+
   it("appends an action under the collection", () => {
     expect(
       pulpCollectionPath({
@@ -89,7 +108,16 @@ describe("pulpCollectionPath", () => {
       pulpCollectionPath({
         // @ts-expect-error not a plugin collection
         collection: "tasks",
+        // @ts-expect-error so its apiPaths are unknown too
         apiPath: "x/y",
+        domain: disabled,
+      }),
+    ).toBeTruthy();
+    expect(
+      pulpCollectionPath({
+        collection: "remotes",
+        // @ts-expect-error not a remote type
+        apiPath: "rpm/rpms",
         domain: disabled,
       }),
     ).toBeTruthy();
@@ -99,6 +127,21 @@ describe("pulpCollectionPath", () => {
         apiPath: "rpm/rpm",
         domain: disabled,
         // @ts-expect-error remotes have no upload
+        action: "upload/",
+      }),
+    ).toBeTruthy();
+  });
+});
+
+describe("pulpCollectionPath with a union of apiPaths", () => {
+  it("only allows the actions every apiPath in the union has", () => {
+    const apiPath = "file/files" as "file/files" | "gem/gem";
+    expect(
+      pulpCollectionPath({
+        collection: "content",
+        apiPath,
+        domain: disabled,
+        // @ts-expect-error gem/gem has no upload/
         action: "upload/",
       }),
     ).toBeTruthy();

@@ -25,7 +25,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 export const GroupsQueryKey = "groups";
 
@@ -74,15 +75,14 @@ export const groupsListQueryOptions = ({
     ...options,
     queryKey: groupKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGroupResponseList> => {
-      const response = await axiosInstance.get<PaginatedGroupResponseList>(
-        pulpApiPath("groups/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      const response = await pulpGet({
+        endpoint: "groups/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -125,7 +125,7 @@ export const groupUsersListQueryOptions = ({
     queryKey: groupKeys.usersQuery(groupHref, params),
     queryFn: async (): Promise<PaginatedGroupUserResponseList> => {
       const response = await axiosInstance.get<PaginatedGroupUserResponseList>(
-        `${toProxyHref(groupHref)}users/`,
+        hrefAction({ kind: "groups", href: groupHref, action: "users/" }),
         {
           params: {
             ...params,
@@ -173,10 +173,7 @@ export const useGroupCreateMutation = (
   const domain = useDefaultDomain();
   return useMutation<GroupResponse, DrfAxiosError, Group>({
     mutationFn: async (body: Group) => {
-      const response = await axiosInstance.post<GroupResponse>(
-        pulpApiPath("groups/", domain),
-        body,
-      );
+      const response = await pulpPost({ endpoint: "groups/", domain, body });
       return response.data;
     },
     onSuccess: (data, variables) => {

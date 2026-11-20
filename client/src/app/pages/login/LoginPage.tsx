@@ -21,6 +21,7 @@ import {
 } from "@app/context/Auth/basicAuthHelpers";
 import { useApiStatus } from "@app/hooks/useApiStatus";
 import { useTheme } from "@app/hooks/useTheme";
+import { pulpApiPath } from "@app/queries/utils/pulpApi";
 import { getBranding } from "@app/utils/branding";
 
 const INVALID_CREDENTIALS = "Invalid login credentials.";
@@ -97,9 +98,10 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        apiStatus.status?.domain_enabled
-          ? `/api/pulp/${DEFAULT_PULP_DOMAIN}/api/v3/groups/?limit=1&offset=0`
-          : `/api/pulp/api/v3/groups/?limit=1&offset=0`,
+        `${pulpApiPath("groups/", {
+          enabled: apiStatus.status?.domain_enabled ?? false,
+          name: DEFAULT_PULP_DOMAIN,
+        })}?limit=1&offset=0`,
         {
           headers: {
             Authorization: encodeBasicAuthHeader({ username, password }),

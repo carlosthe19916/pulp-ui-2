@@ -17,9 +17,7 @@ import { repositoryKeys } from "@app/queries/repositories";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
-import { toProxyHref } from "@app/queries/utils/pulpApi";
-
-const BLOCKLIST_PATH = "blocklist_entries/";
+import { hrefAction, toProxyHref } from "@app/queries/utils/pulpApi";
 
 export type IPythonBlocklistListParams =
   ListParams<RepositoriesPythonPythonBlocklistEntriesListData>;
@@ -57,7 +55,11 @@ export const pythonBlocklistQueryOptions = ({
       async (): Promise<PaginatedpythonPythonBlocklistEntryResponseList> =>
         (
           await axiosInstance.get<PaginatedpythonPythonBlocklistEntryResponseList>(
-            `${toProxyHref(repositoryHref)}${BLOCKLIST_PATH}`,
+            hrefAction({
+              kind: "repositories",
+              href: repositoryHref,
+              action: "blocklist_entries/",
+            }),
             {
               params: {
                 ...params,
@@ -95,7 +97,11 @@ export const usePythonBlocklistCreateMutation = (
     mutationFn: async ({ repositoryHref, body }) =>
       (
         await axiosInstance.post<PythonPythonBlocklistEntryResponse>(
-          `${toProxyHref(repositoryHref)}${BLOCKLIST_PATH}`,
+          hrefAction({
+            kind: "repositories",
+            href: repositoryHref,
+            action: "blocklist_entries/",
+          }),
           body,
         )
       ).data,

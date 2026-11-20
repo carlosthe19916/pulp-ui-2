@@ -18,7 +18,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const VulnReportsQueryKey = "vuln-reports";
 
@@ -50,15 +51,14 @@ export const vulnReportsListQueryOptions = ({
     queryKey: vulnReportKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedVulnerabilityReportResponseList>(
-          pulpApiPath("vuln_report/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "vuln_report/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 

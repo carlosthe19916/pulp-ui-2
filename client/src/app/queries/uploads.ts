@@ -7,9 +7,7 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
-  ArtifactResponse,
   AsyncOperationResponse,
-  PaginatedArtifactResponseList,
   PaginatedUploadResponseList,
   UploadResponse,
   UploadsListData,
@@ -22,7 +20,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 interface IPutChunksParams {
   domain: IPulpDomain;
@@ -32,10 +31,11 @@ interface IPutChunksParams {
 
 /** Creates an upload of the file's size and PUTs each chunk; returns the upload href. */
 const putChunks = async ({ domain, file, onProgress }: IPutChunksParams) => {
-  const { data: upload } = await axiosInstance.post<UploadResponse>(
-    pulpApiPath("uploads/", domain),
-    { size: file.size },
-  );
+  const { data: upload } = await pulpPost({
+    endpoint: "uploads/",
+    domain,
+    body: { size: file.size },
+  });
   const href = upload.pulp_href ?? "";
   for (const chunk of planChunks({ size: file.size })) {
     const body = new FormData();
@@ -103,31 +103,32 @@ export const useArtifactUploadMutation = (
   >({
     mutationFn: async ({ file, onProgress }) => {
       const sha256 = await sha256Hex(file);
-      const { data: existing } =
-        await axiosInstance.get<PaginatedArtifactResponseList>(
-          pulpApiPath("artifacts/", domain),
-          { params: { sha256 } },
-        );
+      const { data: existing } = await pulpGet({
+        endpoint: "artifacts/",
+        domain,
+        params: { sha256 },
+      });
       const reused = existing.results[0]?.pulp_href;
       if (reused) return reused;
 
       if (file.size <= CHUNK_SIZE) {
         const body = new FormData();
         body.append("file", file);
-        const { data } = await axiosInstance.post<ArtifactResponse>(
-          pulpApiPath("artifacts/", domain),
+        const { data } = await pulpPost({
+          endpoint: "artifacts/",
+          domain,
           body,
-          {
+          config: {
             adapter: "xhr",
             onUploadProgress: (event) =>
               onProgress?.(event.total ? event.loaded / event.total : 0),
           },
-        );
+        });
         return data.pulp_href ?? "";
       }
       const upload = await putChunks({ domain, file, onProgress });
       const { data } = await axiosInstance.post<AsyncOperationResponse>(
-        `${toProxyHref(upload)}commit/`,
+        hrefAction({ kind: "uploads", href: upload, action: "commit/" }),
         { sha256 },
       );
       const task = await waitForTask(data.task);
@@ -161,15 +162,14 @@ export const uploadsListQueryOptions = ({
     queryKey: uploadKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedUploadResponseList>(
-          pulpApiPath("uploads/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "uploads/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import type { ContentUploadMechanism } from "@catalog";
+import type { ContentUploadTarget } from "@catalog";
 
 import { useContentUploadMutation } from "@app/queries/content";
 import { useChunkedUploadMutation } from "@app/queries/uploads";
@@ -21,8 +21,8 @@ export interface IUploadItem {
 }
 
 interface IUseUploadQueueOptions {
-  apiPath: string;
-  mechanism: ContentUploadMechanism;
+  /** Where the files go; absent for a type that can't be uploaded, whose files fail. */
+  target?: ContentUploadTarget;
   /** Initial upload fields for a newly picked file. */
   defaultFields: (file: File) => Record<string, string>;
 }
@@ -32,8 +32,7 @@ interface IUseUploadQueueOptions {
  * `stop` lets the current file finish and skips the rest.
  */
 export const useUploadQueue = ({
-  apiPath,
-  mechanism,
+  target,
   defaultFields,
 }: IUseUploadQueueOptions) => {
   const [items, setItems] = useState<IUploadItem[]>([]);
@@ -56,18 +55,18 @@ export const useUploadQueue = ({
       update({
         id: item.id,
         patch:
-          fraction >= 1 && mechanism === "create"
+          fraction >= 1 && target?.upload === "create"
             ? { progress: 100, status: "processing" }
             : { progress: Math.round(fraction * 100) },
       });
     try {
+      if (!target) throw new Error("This content type can't be uploaded");
       const upload =
         item.file.size > CHUNK_SIZE
           ? await chunkedMutation.mutateAsync({ file: item.file, onProgress })
           : undefined;
       const contentHref = await uploadMutation.mutateAsync({
-        apiPath,
-        mechanism,
+        target,
         fields: item.fields,
         file: upload ? undefined : item.file,
         upload,

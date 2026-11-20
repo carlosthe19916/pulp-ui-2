@@ -1,12 +1,12 @@
 import type { VersionResponse } from "@app/client";
 import type {
+  PulpCollectionApiPath,
+  PulpCollections,
   PulpEndpoint,
   PulpHrefActions,
 } from "@app/client/pulpEndpoints.gen";
 import type {
-  AcsEndpoints,
   ContentEndpoints,
-  ContentGuardEndpoints,
   DistributionEndpoints,
   PublicationEndpoints,
   RemoteEndpoints,
@@ -36,12 +36,34 @@ export interface IEndpointsByEntity {
   publication: PublicationEndpoints;
 }
 
+/** The plugin collection each entity's types live in. */
+interface IEntityCollections {
+  remote: "remotes";
+  repository: "repositories";
+  distribution: "distributions";
+  publication: "publications";
+}
+
+/** An entity's `<app>/<slug>` collection segment, as the OpenAPI spec has it. */
+export type ApiPath<E extends EntityType> = PulpCollectionApiPath<
+  IEntityCollections[E]
+>;
+/** Content collections with a list endpoint (others, like `maven/maven`, can't be browsed). */
+export type ContentApiPath = keyof ContentEndpoints & string;
+type ContentCollections = PulpCollections["content"];
+/** Content apiPaths with a synchronous `upload/` endpoint. */
+export type ContentUploadApiPath = {
+  [K in ContentApiPath]: "upload/" extends ContentCollections[K] ? K : never;
+}[ContentApiPath];
+export type ContentGuardApiPath = PulpCollectionApiPath<"contentguards">;
+export type AcsApiPath = PulpCollectionApiPath<"acs">;
+
 /** A Pulp type identifier, e.g. "file.file" or "rpm.uln". */
 export type PulpType = string;
 
 interface IEntityTypeDef<E extends EntityType> {
   /** The `<app>/<slug>` collection segment; must exist in the OpenAPI spec. */
-  apiPath: keyof IEndpointsByEntity[E] & string;
+  apiPath: ApiPath<E>;
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
 }
@@ -53,7 +75,10 @@ interface IEntityTypeDef<E extends EntityType> {
  */
 export type ActionResponseKind = "task" | "taskGroup" | "inline";
 
-/** Where an action POSTs: an action of the target's href, or `/` and a domain-scoped endpoint. */
+/**
+ * Where an action POSTs: an action of the target's href, or `/` and a domain-scoped endpoint.
+ * It catches typos, not a type lacking the action: it accepts any repository or version action.
+ */
 export type ActionPath =
   | PulpHrefActions["repositories"]
   | PulpHrefActions["repositories/versions"]
@@ -72,10 +97,13 @@ export interface IActionDef {
   responseKind?: ActionResponseKind;
 }
 
+type RemoteCollections = PulpCollections["remotes"];
+type RemoteCollectionAction = RemoteCollections[keyof RemoteCollections];
+
 /** Another way to create an object of a type: a POST relative to its collection. */
 export interface ICreateFromDef {
-  /** Relative to the type's collection, e.g. `from_bandersnatch/`. */
-  path: string;
+  /** Relative to the type's collection, e.g. `from_bandersnatch/`; checked against every remote type's actions, not this type's. */
+  path: Exclude<RemoteCollectionAction, "">;
 }
 
 export interface IRemoteDef extends IEntityTypeDef<"remote"> {
@@ -105,16 +133,21 @@ export interface IRepositoryDef extends IEntityTypeDef<"repository"> {
  */
 export type ContentUploadMechanism = "upload" | "create";
 
-export interface IContentDef {
-  /** Omitted for endpoint-less types (listed only inside a version). */
-  apiPath?: keyof ContentEndpoints & string;
-  /** Absent: read-only (sync or push only). */
-  upload?: ContentUploadMechanism;
-}
+/** Where a content upload goes: the mechanism and an apiPath that has its endpoint. */
+export type ContentUploadTarget =
+  | { upload: "upload"; apiPath: ContentUploadApiPath }
+  | { upload: "create"; apiPath: ContentApiPath };
+
+/**
+ * A content type: its list endpoint, omitted for endpoint-less types (listed only inside a
+ * version), and how it is uploaded, absent when read-only (sync or push only).
+ */
+export type IContentDef =
+  ContentUploadTarget | { apiPath?: ContentApiPath; upload?: undefined };
 
 /** A content guard type: who may download content a distribution serves. */
 export interface IContentGuardDef {
-  apiPath: keyof ContentGuardEndpoints & string;
+  apiPath: ContentGuardApiPath;
   /** Exposes per-object role endpoints (`my_permissions/` etc.); default true. */
   rolesManaged?: boolean;
   /** Downloads are granted through the guard's own downloader role (RBAC). */
@@ -123,7 +156,7 @@ export interface IContentGuardDef {
 
 /** The plugin's alternate content source collection. */
 export interface IAcsDef {
-  apiPath: keyof AcsEndpoints & string;
+  apiPath: AcsApiPath;
   /** The remote type an ACS of this plugin points at. */
   remoteType: string;
 }

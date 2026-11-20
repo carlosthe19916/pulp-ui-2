@@ -15,12 +15,12 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { taskKeys } from "@app/queries/tasks";
-import {} from "@app/queries/tasks";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "@app/queries/utils/pulpApi";
+import { toProxyHref } from "@app/queries/utils/pulpApi";
+import { pulpGet, pulpPost } from "@app/queries/utils/pulpRequest";
 
 export const ContainerNamespacesQueryKey = "container-namespaces";
 
@@ -46,15 +46,14 @@ export const containerNamespacesListQueryOptions = ({
       queryKey: containerNamespaceKeys.listQuery(domain, params),
       queryFn: async () =>
         (
-          await axiosInstance.get<PaginatedcontainerContainerNamespaceResponseList>(
-            pulpApiPath("pulp_container/namespaces/", domain),
-            {
-              params: {
-                ...params,
-                ordering: params.ordering ? [params.ordering] : undefined,
-              },
+          await pulpGet({
+            endpoint: "pulp_container/namespaces/",
+            domain,
+            params: {
+              ...params,
+              ordering: params.ordering ? [params.ordering] : undefined,
             },
-          )
+          })
         ).data,
     },
   );
@@ -82,12 +81,8 @@ export const useContainerNamespaceCreateMutation = (
     ContainerContainerNamespace
   >({
     mutationFn: async (body) =>
-      (
-        await axiosInstance.post<ContainerContainerNamespaceResponse>(
-          pulpApiPath("pulp_container/namespaces/", domain),
-          body,
-        )
-      ).data,
+      (await pulpPost({ endpoint: "pulp_container/namespaces/", domain, body }))
+        .data,
     onSuccess: (data, body) => {
       void queryClient.invalidateQueries({
         queryKey: containerNamespaceKeys.list(),

@@ -61,16 +61,16 @@ export const widgetsListQueryOptions = ({
   queryOptions<PaginatedWidgetResponseList, DrfAxiosError>({
     queryKey: widgetKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedWidgetResponseList> => {
-      const response = await axiosInstance.get<PaginatedWidgetResponseList>(
-        pulpApiPath("widgets/", domain),
-        {
-          params: {
-            ...params,
-            // Pulp's `ordering` is an array param
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      // The endpoint, params and response type are checked against the spec.
+      const response = await pulpGet({
+        endpoint: "widgets/",
+        domain,
+        params: {
+          ...params,
+          // Pulp's `ordering` is an array param
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -194,7 +194,7 @@ export const widgetPartsListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedWidgetPartResponseList>(
-          `${toProxyHref(widgetHref)}parts/`,
+          hrefAction({ kind: "widgets", href: widgetHref, action: "parts/" }),
           { params },
         )
       ).data,

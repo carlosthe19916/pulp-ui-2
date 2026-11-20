@@ -165,7 +165,7 @@ const importer = definePlugin({
   remote: {
     "importer.importer": {
       apiPath: "file/file",
-      createFrom: { config: { path: "from_config/" } },
+      createFrom: { config: { path: "from_bandersnatch/" } },
     },
   },
   repository: {

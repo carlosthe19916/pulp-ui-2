@@ -4,14 +4,13 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 
-import { axiosInstance } from "@app/axios-config/apiInit";
 import type { PaginatedWorkerResponseList, WorkersListData } from "@app/client";
 import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const WorkersQueryKey = "workers";
 
@@ -45,15 +44,14 @@ export const workersListQueryOptions = ({
     queryKey: workerKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedWorkerResponseList>(
-          pulpApiPath("workers/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "workers/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 

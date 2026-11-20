@@ -1,12 +1,35 @@
 ---
 description: 'Apply when code calls or interprets the Pulp REST API: follow what the spec declares (sync vs 202 task, filters, ordering) and use the shared helpers for task state, errors and permissions.'
-globs: client/src/app/queries/**,client/src/app/hooks/**,client/src/plugins/*/definition.ts
+globs: client/src/app/queries/**,client/src/app/hooks/**,client/src/plugins/*/definition.ts,client/src/plugins/*/ui/queries/**
 ---
 
 # Pulp API usage
 
 Before wiring an endpoint, read its operation in the OpenAPI spec (`client/openapi/pulp.json`)
 or the generated client: its params, filters, `ordering` enum and declared responses.
+
+## Request URLs
+
+Build every request URL with the helpers in `queries/utils/pulpApi.ts` and
+`queries/utils/pulpRequest.ts`, which `npm run generate` types against the spec
+(`client/src/app/client/pulpEndpoints.gen.ts`); never write a path as a string literal or
+template (appending an id or a query string to a helper's result is fine). A typo, a missing
+trailing slash or an action the resource doesn't have fails to compile.
+
+- A fixed endpoint: `pulpGet({ endpoint: "tasks/", domain, params })` /
+  `pulpPost({ endpoint, domain, body })`, which also type the params, body and response from
+  the spec. Other methods, or a body the spec can't check (a field-driven form's
+  `Record<string, unknown>`): `pulpApiPath(endpoint, domain)` with the generated response type.
+- A plugin type's collection, from the catalog's `apiPath`:
+  `pulpCollectionPath({ collection: "remotes", apiPath, domain, action? })`.
+- An action or sub-resource of an object: `hrefAction({ kind?, href, action })`, with `kind`
+  when the resource kind is known (`"repositories"`); the object itself: `toProxyHref(href)`.
+- Outside any domain (`status/`, `livez/`): `pulpRootApiPath(endpoint)`.
+- Never write the domain segment: the server may run with or without `DOMAIN_ENABLED`, and
+  `pulpApiPath` adds it from the `IPulpDomain`.
+- `pulpApiPath(endpoint, domain)` and `pulpHref(endpoint, domain)` stay positional like the
+  `build*Href` builders: two fixed, obvious args read best as a path. The other helpers take
+  one object.
 
 ## Writes and tasks
 
@@ -63,6 +86,9 @@ Don't build new UI on deprecated fields or endpoints (`deprecated: true` in the 
 Pass/fail rubric for `/eval`. Check changed files under `queries/`, `hooks/` and plugin
 definitions.
 
+- [ ] Request URLs come from `pulpGet` / `pulpPost`, `pulpApiPath`, `pulpCollectionPath`,
+      `hrefAction`, `pulpRootApiPath` or `toProxyHref`; no URL string or template, and no
+      hand-built domain segment.
 - [ ] Write responses are typed from the operation's declared statuses; task handling doesn't
       assume every write returns `202`.
 - [ ] Task completion uses `isTerminalTaskState` (includes `skipped`); cancel is a `PATCH` with

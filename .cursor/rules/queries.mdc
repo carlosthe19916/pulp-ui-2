@@ -52,7 +52,7 @@ Key factories (`widgetKeys.listQuery(domain, params)`, `widgetKeys.detail(href)`
 ## href only, pure keys
 
 - A query that targets one resource takes an **href** (the resource's, or the parent's for a
-  nested list, read as `${toProxyHref(parentHref)}child/`), never an id.
+  nested list, read as `hrefAction({ href: parentHref, action: "child/" })`), never an id.
 - id→href building lives **only in route loaders**: the loader calls `build*Href(…)`, primes
   the query with `query({ ...options, staleTime: "static" })` and returns `{ href }` for the
   page.

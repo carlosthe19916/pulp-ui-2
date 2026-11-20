@@ -9,7 +9,6 @@ import {
 
 import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
-  LoginResponse,
   PaginatedUserResponseList,
   PatchedUser,
   UserResponse,
@@ -25,7 +24,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 export const UsersQueryKey = "users";
 
@@ -63,15 +63,14 @@ export const usersListQueryOptions = ({
   queryOptions<PaginatedUserResponseList, DrfAxiosError>({
     queryKey: userKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedUserResponseList> => {
-      const response = await axiosInstance.get<PaginatedUserResponseList>(
-        pulpApiPath("users/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      const response = await pulpGet({
+        endpoint: "users/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -104,9 +103,7 @@ export const isSuperuserQueryOptions = ({ domain }: { domain: IPulpDomain }) =>
   queryOptions<boolean, DrfAxiosError>({
     queryKey: userKeys.isSuperuser(domain),
     queryFn: async () => {
-      const { data: me } = await axiosInstance.get<LoginResponse>(
-        pulpApiPath("login/", domain),
-      );
+      const { data: me } = await pulpGet({ endpoint: "login/", domain });
       try {
         await axiosInstance.get(toProxyHref(me.pulp_href ?? ""));
         return true;
@@ -139,10 +136,7 @@ export const useUserCreateMutation = (
   const domain = useDefaultDomain();
   return useMutation<UserResponse, DrfAxiosError, UserWritable>({
     mutationFn: async (body: UserWritable) => {
-      const response = await axiosInstance.post<UserResponse>(
-        pulpApiPath("users/", domain),
-        body,
-      );
+      const response = await pulpPost({ endpoint: "users/", domain, body });
       return response.data;
     },
     onSuccess: (data, variables) => {

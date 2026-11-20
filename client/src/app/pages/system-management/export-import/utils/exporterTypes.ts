@@ -1,8 +1,9 @@
+import type { PulpCollectionApiPath } from "@app/queries/utils/pulpApi";
 import type { IEntityField } from "@app/utils/entityField";
 
 /** One exporter type: how it is configured and what one export takes. */
 export interface IExporterType {
-  apiPath: string;
+  apiPath: PulpCollectionApiPath<"exporters">;
   label: string;
   fields: IEntityField[];
   exportFields: IEntityField[];

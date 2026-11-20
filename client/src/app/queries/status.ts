@@ -5,6 +5,7 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type { StatusResponse } from "@app/client";
 
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
+import { pulpRootApiPath } from "./utils/pulpApi";
 
 export const StatusQueryKey = "pulp-status";
 
@@ -12,7 +13,7 @@ export const statusQueryOptions = queryOptions<StatusResponse, DrfAxiosError>({
   queryKey: [StatusQueryKey],
   queryFn: async () => {
     const response = await axiosInstance.get<StatusResponse>(
-      `/api/pulp/api/v3/status/`,
+      pulpRootApiPath("status/"),
     );
     const contentType = String(response.headers["content-type"] ?? "");
     if (!contentType.includes("application/json")) {

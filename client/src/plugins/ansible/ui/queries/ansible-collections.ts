@@ -1,6 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   AnsibleCollectionsListData,
   PaginatedansibleCollectionResponseList,
@@ -9,7 +8,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "@app/queries/utils/listParams";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
-import { pulpApiPath } from "@app/queries/utils/pulpApi";
+import { pulpGet } from "@app/queries/utils/pulpRequest";
 
 export const AnsibleCollectionsQueryKey = "ansible-collections";
 
@@ -35,15 +34,14 @@ export const ansibleCollectionsListQueryOptions = ({
     queryKey: ansibleCollectionKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedansibleCollectionResponseList>(
-          pulpApiPath("ansible/collections/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "ansible/collections/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 

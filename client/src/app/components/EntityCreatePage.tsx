@@ -1,6 +1,6 @@
 import type React from "react";
 
-import type { EntityType } from "@catalog";
+import type { ApiPath, EntityType } from "@catalog";
 
 import {
   Breadcrumb,
@@ -13,17 +13,17 @@ import type { ICreateTypeSelect } from "@app/hooks/useCreateTypeSelect";
 import { EntityFormPage, type ISubmitHelpers } from "@app/plugin-forms";
 import type { IMutationErrorMessage } from "@app/utils/utils";
 
-interface IEntityCreatePageProps {
-  entityType: EntityType;
+interface IEntityCreatePageProps<E extends EntityType> {
+  entityType: E;
   /** From `useCreateTypeSelect`. */
-  selection: ICreateTypeSelect;
+  selection: ICreateTypeSelect<E>;
   listLink: React.ReactNode;
   submitError: IMutationErrorMessage | null;
   isSubmitting: boolean;
   /** Runs the create POST against `apiPath`; call `saved()` from its success callback. */
   onSubmit: (
     body: Record<string, unknown>,
-    helpers: ISubmitHelpers & { apiPath: string },
+    helpers: ISubmitHelpers & { apiPath: ApiPath<E> },
   ) => void;
   /** Where to go after creating, given the new object's href when the request returned it. */
   onSaved: (created: { pulpType: string; href?: string }) => void;
@@ -35,7 +35,7 @@ interface IEntityCreatePageProps {
  * the empty state when no type can be created. Controlled: the page owns the mutation,
  * toasts and navigation.
  */
-export const EntityCreatePage: React.FC<IEntityCreatePageProps> = ({
+export const EntityCreatePage = <E extends EntityType>({
   entityType,
   selection: { pulpType, entry, apiPath, typeSelect, initialValues },
   listLink,
@@ -44,7 +44,7 @@ export const EntityCreatePage: React.FC<IEntityCreatePageProps> = ({
   onSubmit,
   onSaved,
   onCancel,
-}) => {
+}: IEntityCreatePageProps<E>) => {
   if (!pulpType || !entry || !apiPath) {
     return (
       <PageSection>

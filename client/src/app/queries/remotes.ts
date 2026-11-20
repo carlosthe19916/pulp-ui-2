@@ -23,13 +23,9 @@ import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import {
-  pulpApiPath,
-  pulpCollectionPath,
-  pulpHref,
-  toProxyHref,
-} from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import { pulpCollectionPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const RemotesQueryKey = "remotes";
@@ -69,16 +65,14 @@ export const remotesListQueryOptions = ({
     ...options,
     queryKey: remoteKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedGenericRemoteResponseList> => {
-      const response =
-        await axiosInstance.get<PaginatedGenericRemoteResponseList>(
-          pulpApiPath("remotes/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
-          },
-        );
+      const response = await pulpGet({
+        endpoint: "remotes/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
+        },
+      });
       return response.data;
     },
   });
@@ -175,7 +169,7 @@ export const useSuspenseRemoteDetailQuery = ({ href }: { href: string }) =>
 export const useRemoteCreateMutation = (
   options?: IMutationCallbacks<
     GenericRemoteResponse,
-    { apiPath: string; body: Record<string, unknown> }
+    { apiPath: PulpCollectionApiPath<"remotes">; body: Record<string, unknown> }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -183,13 +177,13 @@ export const useRemoteCreateMutation = (
   return useMutation<
     GenericRemoteResponse,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    { apiPath: PulpCollectionApiPath<"remotes">; body: Record<string, unknown> }
   >({
     mutationFn: async ({
       apiPath,
       body,
     }: {
-      apiPath: string;
+      apiPath: PulpCollectionApiPath<"remotes">;
       body: Record<string, unknown>;
     }): Promise<GenericRemoteResponse> =>
       (

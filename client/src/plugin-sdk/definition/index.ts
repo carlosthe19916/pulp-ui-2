@@ -11,6 +11,10 @@ export {
 export { definePlugin } from "./definePlugin";
 export {
   type ActionPath,
+  type ApiPath,
+  type ContentApiPath,
+  type ContentUploadApiPath,
+  type ContentUploadTarget,
   type ActionResponseKind,
   type ContentUploadMechanism,
   type IAcsDef,

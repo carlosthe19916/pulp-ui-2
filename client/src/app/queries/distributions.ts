@@ -24,7 +24,7 @@ import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
 import {
   pulpApiPath,
   pulpCollectionPath,
@@ -81,7 +81,7 @@ export const distributionsListQueryOptions = ({
   options,
 }: {
   domain: IPulpDomain;
-  apiPath?: string;
+  apiPath?: PulpCollectionApiPath<"distributions">;
   params: IDistributionListParams;
   options?: Omit<
     UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
@@ -117,7 +117,7 @@ export const useDistributionsListQuery = ({
   params,
   options,
 }: {
-  apiPath?: string;
+  apiPath?: PulpCollectionApiPath<"distributions">;
   params: IDistributionListParams;
   options?: Omit<
     UseQueryOptions<PaginatedDistributionResponseList, DrfAxiosError>,
@@ -217,7 +217,10 @@ export const buildDistributionHref = (
 export const useDistributionCreateMutation = (
   options?: IMutationCallbacks<
     AsyncOperationResponse,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"distributions">;
+      body: Record<string, unknown>;
+    }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -225,13 +228,16 @@ export const useDistributionCreateMutation = (
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"distributions">;
+      body: Record<string, unknown>;
+    }
   >({
     mutationFn: async ({
       apiPath,
       body,
     }: {
-      apiPath: string;
+      apiPath: PulpCollectionApiPath<"distributions">;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
       (

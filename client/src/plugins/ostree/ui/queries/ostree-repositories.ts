@@ -10,7 +10,7 @@ import { repositoryKeys } from "@app/queries/repositories";
 import { taskKeys } from "@app/queries/tasks";
 import type { IMutationCallbacks } from "@app/queries/utils/mutationCallbacks";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
-import { toProxyHref } from "@app/queries/utils/pulpApi";
+import { hrefAction } from "@app/queries/utils/pulpApi";
 
 /**
  * Imports an uploaded OSTree archive (an artifact) into a new repository version:
@@ -29,9 +29,13 @@ export const useOstreeImportMutation = (
     { repository: RepositoryResponse; body: OstreeImportAll & { ref?: string } }
   >({
     mutationFn: async ({ repository, body }) => {
-      const action = body.ref ? "import_commits" : "import_all";
+      const action = body.ref ? "import_commits/" : "import_all/";
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        `${toProxyHref(repository.pulp_href ?? "")}${action}/`,
+        hrefAction({
+          kind: "repositories",
+          href: repository.pulp_href ?? "",
+          action,
+        }),
         body,
       );
       return response.data;
