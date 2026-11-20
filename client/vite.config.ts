@@ -49,7 +49,8 @@ export default defineConfig({
     {
       name: "ignore-process-env",
       transform(code) {
-        return code.replace(/process\.env/g, "({})");
+        // Runs before Vite's define, so leave NODE_ENV for define to replace.
+        return code.replace(/process\.env(?!\.NODE_ENV)/g, "({})");
       },
     },
     // v4 keeps the source directory structure, so each target says where it lands.
