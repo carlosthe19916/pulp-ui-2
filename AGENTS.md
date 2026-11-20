@@ -64,6 +64,14 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 (`website/docs/tutorials/`): `.env.example`, `setup.sh`, `demo.sh` and the client projects. A new
 tutorial starts from `website/docs/tutorials/_template.md`.
 
+## Branches
+
+Two major versions are developed side by side ([VERSIONING.md](VERSIONING.md)): `main` is the
+stable SPA (1.x), and `next` is the server-rendered version with AI features (2.x). Target `main`
+with every change both versions need, including fixes, shared code, ADRs and rules. A bot merges
+`main` into `next`. Only server, SSR or AI code goes to `next`. Never merge or cherry-pick
+`next` into `main`.
+
 ## Key Commands
 
 ```bash

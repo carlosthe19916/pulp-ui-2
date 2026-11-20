@@ -2,13 +2,13 @@ name: Build Container Image
 
 on:
   push:
-    branches: [main]
+    branches: [main, next, "release-*"]
     tags:
       - "v*"
   release:
     types: [published]
   pull_request:
-    branches: [main]
+    branches: [main, next, "release-*"]
   workflow_dispatch:
 
 env:
@@ -71,10 +71,14 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
             org.opencontainers.image.description=Pulp - User Interface
+          # Pre-releases (2.0.0-alpha.1) only get {{version}}: metadata-action skips the other
+          # semver patterns for them. `latest` is main (the stable line), `next` the next major.
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=next,enable=${{ github.ref == 'refs/heads/next' }}
             type=sha
 
       - name: Build image (PR verification)

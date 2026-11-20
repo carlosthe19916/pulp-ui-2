@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - "main"
+      - "next"
+      - "release-*"
   pull_request:
     branches:
       - "main"
+      - "next"
+      - "release-*"
   workflow_dispatch:
   workflow_call:
 
@@ -70,6 +74,14 @@ jobs:
           name: coverage
           path: client/coverage/
           if-no-files-found: ignore
+
+  release-version:
+    # The release workflow's version logic (VERSIONING.md)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test next-version.sh
+        run: .github/scripts/next-version.test.sh
 
   codeql:
     runs-on: ubuntu-latest

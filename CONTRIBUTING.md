@@ -104,6 +104,11 @@ fix: handle empty response in task detail
 docs: update contributing guide
 ```
 
+## Branches and releases
+
+`main` holds the current version (1.x) and `next` the next major version (2.x, server rendering
+and AI). Which branch a PR targets, how releases and backports work: [VERSIONING.md](VERSIONING.md).
+
 ## Architecture
 
 - How the code works: [docs/internals/](docs/internals/)

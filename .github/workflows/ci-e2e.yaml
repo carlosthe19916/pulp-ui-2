@@ -2,9 +2,9 @@ name: E2E Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, next, "release-*"]
   pull_request:
-    branches: [main]
+    branches: [main, next, "release-*"]
   # Stacked branches (whose PRs target another branch) run it by hand.
   workflow_dispatch:
 
