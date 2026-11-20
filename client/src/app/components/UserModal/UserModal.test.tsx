@@ -62,7 +62,7 @@ beforeEach(() => {
 
 const openCreate = () => render(<UserModal isOpen onClose={vi.fn()} />);
 const password = (screen: Awaited<ReturnType<typeof openCreate>>) =>
-  screen.getByRole("textbox", { name: "Password", exact: true });
+  screen.getByRole("textbox", { name: "Password" });
 const fillValid = async (screen: Awaited<ReturnType<typeof openCreate>>) => {
   await screen.getByRole("textbox", { name: "Username" }).fill("alice");
   await password(screen).fill("Pulp-e2e-Xk92mfz!");
@@ -92,10 +92,10 @@ describe("UserModal — create form", () => {
       .element(screen.getByRole("heading", { name: "Create User" }))
       .toBeVisible();
     await expect
-      .element(screen.getByRole("button", { name: "Create", exact: true }))
+      .element(screen.getByRole("button", { name: "Create" }))
       .toBeVisible();
     await expect
-      .element(screen.getByRole("button", { name: "Cancel", exact: true }))
+      .element(screen.getByRole("button", { name: "Cancel" }))
       .toBeVisible();
   });
 
@@ -103,7 +103,7 @@ describe("UserModal — create form", () => {
     const onClose = vi.fn();
     const screen = await render(<UserModal isOpen onClose={onClose} />);
     await screen.getByRole("textbox", { name: "Username" }).fill("alice");
-    await screen.getByRole("button", { name: "Cancel", exact: true }).click();
+    await screen.getByRole("button", { name: "Cancel" }).click();
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
     expect(createMutate).not.toHaveBeenCalled();
@@ -120,12 +120,12 @@ describe("UserModal — create form", () => {
 
   it("shows the required errors when submitted untouched", async () => {
     const screen = await openCreate();
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     await expect
-      .element(screen.getByText("Username is required"))
+      .element(screen.getByText("Username is required: error status;"))
       .toBeVisible();
     await expect
-      .element(screen.getByText("Password is required"))
+      .element(screen.getByText("Password is required: error status;"))
       .toBeVisible();
     expect(createMutate).not.toHaveBeenCalled();
   });
@@ -134,11 +134,19 @@ describe("UserModal — create form", () => {
     const screen = await openCreate();
     await password(screen).fill("short");
     await expect
-      .element(screen.getByText("Password must be at least 8 characters"))
+      .element(
+        screen.getByText(
+          "Password must be at least 8 characters: error status;",
+        ),
+      )
       .toBeVisible();
     await password(screen).fill("Pulp-e2e-Xk92mfz!");
     await expect
-      .element(screen.getByText("Password must be at least 8 characters"))
+      .element(
+        screen.getByText(
+          "Password must be at least 8 characters: error status;",
+        ),
+      )
       .not.toBeInTheDocument();
   });
 
@@ -146,7 +154,7 @@ describe("UserModal — create form", () => {
     const screen = await openCreate();
     await screen.getByRole("textbox", { name: "Email" }).fill("not-an-email");
     await expect
-      .element(screen.getByText("Invalid email address"))
+      .element(screen.getByText("Invalid email address: error status;"))
       .toBeVisible();
   });
 
@@ -171,7 +179,7 @@ describe("UserModal — create form", () => {
     nextResult = "error";
     const screen = await openCreate();
     await fillValid(screen);
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     await expect
       .element(screen.getByRole("heading", { name: /^Danger alert:/ }))
       .toBeVisible();
@@ -182,12 +190,12 @@ describe("UserModal — create form", () => {
     const onClose = vi.fn();
     const screen = await render(<UserModal isOpen onClose={onClose} />);
     await fillValid(screen);
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     await expect
       .element(screen.getByRole("heading", { name: /^Danger alert:/ }))
       .toBeVisible();
     nextResult = "success";
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -195,7 +203,7 @@ describe("UserModal — create form", () => {
     nextResult = "error";
     const screen = await render(<UserModal isOpen onClose={vi.fn()} />);
     await fillValid(screen);
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     await expect
       .element(screen.getByRole("heading", { name: /^Danger alert:/ }))
       .toBeVisible();

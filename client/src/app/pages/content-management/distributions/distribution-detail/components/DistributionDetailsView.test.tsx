@@ -65,9 +65,7 @@ describe("DistributionDetailsView", () => {
     );
 
     for (const title of ["Serving", "General", "Access", "Metadata"]) {
-      await expect
-        .element(screen.getByText(title, { exact: true }))
-        .toBeVisible();
+      await expect.element(screen.getByText(title)).toBeVisible();
     }
     await expect.element(screen.getByText("Base path")).toBeVisible();
     await expect.element(screen.getByText("Content guard")).toBeVisible();
@@ -75,8 +73,6 @@ describe("DistributionDetailsView", () => {
       .element(screen.getByText("https://content.example.com/files/stable/"))
       .toBeVisible();
     // The source is in the Serving card, not repeated among the settings.
-    expect(screen.getByText("Repository", { exact: true }).all()).toHaveLength(
-      1,
-    );
+    expect(screen.getByText("Repository").all()).toHaveLength(1);
   });
 });

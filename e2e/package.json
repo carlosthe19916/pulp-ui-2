@@ -10,6 +10,6 @@
     "spec:links:fix": "node scripts/spec-links.mjs --write"
   },
   "dependencies": {
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.65.1"
   }
 }

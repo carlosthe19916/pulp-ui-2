@@ -89,12 +89,10 @@ describe("DomainList — Status column", () => {
     const screen = await renderList();
 
     await expect
-      .element(screen.getByRole("columnheader", { name: "Name", exact: true }))
+      .element(screen.getByRole("columnheader", { name: "Name" }))
       .toBeVisible();
     await expect
-      .element(
-        screen.getByRole("columnheader", { name: "Status", exact: true }),
-      )
+      .element(screen.getByRole("columnheader", { name: "Status" }))
       .not.toBeInTheDocument();
   });
 
@@ -103,9 +101,7 @@ describe("DomainList — Status column", () => {
     const screen = await renderList();
 
     await expect
-      .element(
-        screen.getByRole("columnheader", { name: "Status", exact: true }),
-      )
+      .element(screen.getByRole("columnheader", { name: "Status" }))
       .toBeVisible();
   });
 });

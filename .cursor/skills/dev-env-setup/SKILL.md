@@ -11,7 +11,7 @@ proceeding when indicated. Run every command from the repository root.
 
 ## Step 1 — Check prerequisites
 
-Check `git`, `node` (22+), `npm`, `python3` (with `venv`), `podman` and `podman-compose` (1.2+).
+Check `git`, `node` (24+), `npm`, `python3` (with `venv`), `podman` and `podman-compose` (1.2+).
 Report what is missing.
 
 Do not run privileged installation commands (`sudo dnf`, `brew`) for the user. Point them at

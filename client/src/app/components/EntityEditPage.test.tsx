@@ -54,7 +54,11 @@ describe("EntityEditPage", () => {
     });
 
     await expect
-      .element(screen.getByText("An update is in progress"))
+      .element(
+        screen.getByRole("heading", {
+          name: "Info alert:An update is in progress",
+        }),
+      )
       .toBeVisible();
     await expect.element(screen.getByText(/You can still save/)).toBeVisible();
     await expect

@@ -46,8 +46,10 @@ describe("RoleModal — create form", () => {
 
   it("requires a name", async () => {
     const screen = await render(<RoleModal isOpen onClose={vi.fn()} />);
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
-    await expect.element(screen.getByText("Name is required")).toBeVisible();
+    await screen.getByRole("button", { name: "Create" }).click();
+    await expect
+      .element(screen.getByText("Name is required: error status;"))
+      .toBeVisible();
     expect(createMutate).not.toHaveBeenCalled();
   });
 
@@ -56,7 +58,7 @@ describe("RoleModal — create form", () => {
     await screen.getByRole("textbox", { name: "Name" }).fill("custom.reader");
     await screen.getByRole("textbox", { name: "Add permission" }).click();
     await userEvent.keyboard("core.view_task{Enter}");
-    await screen.getByRole("button", { name: "Create", exact: true }).click();
+    await screen.getByRole("button", { name: "Create" }).click();
     expect(createMutate).toHaveBeenCalledOnce();
     expect(createMutate.mock.calls[0][0]).toMatchObject({
       name: "custom.reader",

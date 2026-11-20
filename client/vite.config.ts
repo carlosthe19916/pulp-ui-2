@@ -29,6 +29,11 @@ export const brandingAssetPath = () =>
 const brandingPath: string = brandingAssetPath();
 const manifestPath = path.resolve(brandingPath, "manifest.json");
 const faviconPath = path.resolve(brandingPath, "favicon.ico");
+// Folders above `branding/` in its path relative to this config, which the static copy strips.
+const brandingStripBase = path
+  .relative(import.meta.dirname, path.dirname(brandingPath))
+  .split(path.sep)
+  .filter((segment) => segment !== "..").length;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -47,19 +52,23 @@ export default defineConfig({
         return code.replace(/process\.env/g, "({})");
       },
     },
+    // v4 keeps the source directory structure, so each target says where it lands.
     viteStaticCopy({
       targets: [
         {
           src: manifestPath,
           dest: ".",
+          rename: { stripBase: true },
         },
         {
           src: brandingPath,
           dest: ".",
+          rename: { stripBase: brandingStripBase },
         },
         {
           src: faviconPath,
           dest: ".",
+          rename: { stripBase: true },
         },
       ],
     }),
@@ -76,7 +85,7 @@ export default defineConfig({
           {
             name: "copy-index",
             closeBundle: () => {
-              const distDir = path.resolve(__dirname, "dist");
+              const distDir = path.resolve(import.meta.dirname, "dist");
               const src = path.join(distDir, "index.html");
               const dest = path.join(distDir, "index.html.ejs");
 
@@ -102,10 +111,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@app": path.resolve(__dirname, "./src/app"),
-      "@catalog": path.resolve(__dirname, "./src/plugins/catalog"),
-      "@plugin-sdk": path.resolve(__dirname, "./src/plugin-sdk"),
-      "@plugins": path.resolve(__dirname, "./src/plugins"),
+      "@app": path.resolve(import.meta.dirname, "./src/app"),
+      "@catalog": path.resolve(import.meta.dirname, "./src/plugins/catalog"),
+      "@plugin-sdk": path.resolve(import.meta.dirname, "./src/plugin-sdk"),
+      "@plugins": path.resolve(import.meta.dirname, "./src/plugins"),
     },
   },
   // Scan every source file for deps up front: coverage transforms untested files late,
@@ -114,38 +123,6 @@ export default defineConfig({
     entries: ["src/**/*.{ts,tsx}"],
   },
   build: {
-    rollupOptions: {
-      output: {
-        // Group only modules already in the graph into stable vendor chunks.
-        // The function form (vs. a list of package names) avoids force-resolving
-        // a package's barrel, which would pull in tree-shaken-away optional deps.
-        manualChunks(id) {
-          if (!id.includes("node_modules")) {
-            return undefined;
-          }
-          if (id.includes("/react/") || id.includes("/react-dom/")) {
-            return "react";
-          }
-          // Before the PatternFly rule: the code editor is only imported lazily, so leave it
-          // to the lazy chunk instead of the eager one (a named chunk would cycle with react).
-          if (
-            id.includes("/monaco-editor/") ||
-            id.includes("/@monaco-editor/") ||
-            id.includes("/@patternfly/react-code-editor/")
-          ) {
-            return undefined;
-          }
-          // Topology stays in its lazy route chunk with d3 and mobx.
-          if (
-            id.includes("/@patternfly/") &&
-            !id.includes("/@patternfly/react-topology/")
-          ) {
-            return "patternfly";
-          }
-          return undefined;
-        },
-      },
-    },
     sourcemap: process.env.NODE_ENV === "development",
   },
   server: {
@@ -172,14 +149,6 @@ export default defineConfig({
       }),
       headless: true,
       instances: [{ browser: "chromium" }],
-    },
-    server: {
-      deps: {
-        inline: [
-          "@patternfly/react-styles", // Ensures its CSS imports are ignored
-          "@pulp-ui/common", // Required for vite.config.ts imports
-        ],
-      },
     },
     coverage: {
       provider: "v8",

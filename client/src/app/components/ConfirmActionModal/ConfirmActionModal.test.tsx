@@ -27,10 +27,10 @@ describe("ConfirmActionModal", () => {
       .element(screen.getByText(/Are you sure you want to delete "alice"/))
       .toBeVisible();
     await expect
-      .element(screen.getByRole("button", { name: "Delete", exact: true }))
+      .element(screen.getByRole("button", { name: "Delete" }))
       .toBeVisible();
     await expect
-      .element(screen.getByRole("button", { name: "Cancel", exact: true }))
+      .element(screen.getByRole("button", { name: "Cancel" }))
       .toBeVisible();
   });
 
@@ -46,7 +46,7 @@ describe("ConfirmActionModal", () => {
         onCancel={vi.fn()}
       />,
     );
-    const remove = screen.getByRole("button", { name: "Remove", exact: true });
+    const remove = screen.getByRole("button", { name: "Remove" });
     await expect.element(remove).toBeVisible();
     await expect.element(remove).toHaveClass(/pf-m-primary/);
   });
@@ -62,7 +62,7 @@ describe("ConfirmActionModal", () => {
         onCancel={vi.fn()}
       />,
     );
-    await screen.getByRole("button", { name: "Delete", exact: true }).click();
+    await screen.getByRole("button", { name: "Delete" }).click();
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
@@ -78,7 +78,7 @@ describe("ConfirmActionModal", () => {
           onCancel={onCancel}
         />,
       );
-      await screen.getByRole("button", { name: dismiss, exact: true }).click();
+      await screen.getByRole("button", { name: dismiss }).click();
       expect(onCancel).toHaveBeenCalledOnce();
     }
     const onCancel = vi.fn();

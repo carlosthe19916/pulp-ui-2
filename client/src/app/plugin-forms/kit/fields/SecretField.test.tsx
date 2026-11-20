@@ -46,9 +46,7 @@ describe("SecretField", () => {
       mode: "edit",
       isSet: true,
     });
-    await expect
-      .element(screen.getByText("Set", { exact: true }))
-      .toBeVisible();
+    await expect.element(screen.getByText("Set")).toBeVisible();
     await screen.getByRole("button", { name: "Clear Password" }).click();
     expect(onChange).toHaveBeenLastCalledWith({
       mode: "clear",
