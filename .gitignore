@@ -9,6 +9,7 @@ node_modules/
 coverage/
 __screenshots__/
 .vitest-attachments/
+.vitest/
 .nyc_output/
 
 # generated files

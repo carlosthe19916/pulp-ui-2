@@ -76,7 +76,7 @@ export default defineConfig({
           {
             name: "copy-index",
             closeBundle: () => {
-              const distDir = path.resolve(__dirname, "dist");
+              const distDir = path.resolve(import.meta.dirname, "dist");
               const src = path.join(distDir, "index.html");
               const dest = path.join(distDir, "index.html.ejs");
 
@@ -102,10 +102,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@app": path.resolve(__dirname, "./src/app"),
-      "@catalog": path.resolve(__dirname, "./src/plugins/catalog"),
-      "@plugin-sdk": path.resolve(__dirname, "./src/plugin-sdk"),
-      "@plugins": path.resolve(__dirname, "./src/plugins"),
+      "@app": path.resolve(import.meta.dirname, "./src/app"),
+      "@catalog": path.resolve(import.meta.dirname, "./src/plugins/catalog"),
+      "@plugin-sdk": path.resolve(import.meta.dirname, "./src/plugin-sdk"),
+      "@plugins": path.resolve(import.meta.dirname, "./src/plugins"),
     },
   },
   // Scan every source file for deps up front: coverage transforms untested files late,
@@ -114,35 +114,41 @@ export default defineConfig({
     entries: ["src/**/*.{ts,tsx}"],
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        // Group only modules already in the graph into stable vendor chunks.
-        // The function form (vs. a list of package names) avoids force-resolving
-        // a package's barrel, which would pull in tree-shaken-away optional deps.
-        manualChunks(id) {
-          if (!id.includes("node_modules")) {
-            return undefined;
-          }
-          if (id.includes("/react/") || id.includes("/react-dom/")) {
-            return "react";
-          }
-          // Before the PatternFly rule: the code editor is only imported lazily, so leave it
-          // to the lazy chunk instead of the eager one (a named chunk would cycle with react).
-          if (
-            id.includes("/monaco-editor/") ||
-            id.includes("/@monaco-editor/") ||
-            id.includes("/@patternfly/react-code-editor/")
-          ) {
-            return undefined;
-          }
-          // Topology stays in its lazy route chunk with d3 and mobx.
-          if (
-            id.includes("/@patternfly/") &&
-            !id.includes("/@patternfly/react-topology/")
-          ) {
-            return "patternfly";
-          }
-          return undefined;
+        codeSplitting: {
+          groups: [
+            {
+              // Group only modules already in the graph into stable vendor chunks.
+              // The function form (vs. a list of package names) avoids force-resolving
+              // a package's barrel, which would pull in tree-shaken-away optional deps.
+              name(id) {
+                if (!id.includes("node_modules")) {
+                  return null;
+                }
+                if (id.includes("/react/") || id.includes("/react-dom/")) {
+                  return "react";
+                }
+                // Before the PatternFly rule: the code editor is only imported lazily, so leave it
+                // to the lazy chunk instead of the eager one (a named chunk would cycle with react).
+                if (
+                  id.includes("/monaco-editor/") ||
+                  id.includes("/@monaco-editor/") ||
+                  id.includes("/@patternfly/react-code-editor/")
+                ) {
+                  return null;
+                }
+                // Topology stays in its lazy route chunk with d3 and mobx.
+                if (
+                  id.includes("/@patternfly/") &&
+                  !id.includes("/@patternfly/react-topology/")
+                ) {
+                  return "patternfly";
+                }
+                return null;
+              },
+            },
+          ],
         },
       },
     },
@@ -172,6 +178,8 @@ export default defineConfig({
       }),
       headless: true,
       instances: [{ browser: "chromium" }],
+      // Vitest 5 defaults to exact text locators; keep Vitest 4's substring matching.
+      locators: { exact: false },
     },
     server: {
       deps: {
