@@ -29,6 +29,11 @@ export const brandingAssetPath = () =>
 const brandingPath: string = brandingAssetPath();
 const manifestPath = path.resolve(brandingPath, "manifest.json");
 const faviconPath = path.resolve(brandingPath, "favicon.ico");
+// Folders above `branding/` in its path relative to this config, which the static copy strips.
+const brandingStripBase = path
+  .relative(import.meta.dirname, path.dirname(brandingPath))
+  .split(path.sep)
+  .filter((segment) => segment !== "..").length;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -58,8 +63,7 @@ export default defineConfig({
         {
           src: brandingPath,
           dest: ".",
-          // Drops `common/dist`, keeping `branding/...`.
-          rename: { stripBase: 2 },
+          rename: { stripBase: brandingStripBase },
         },
         {
           src: faviconPath,

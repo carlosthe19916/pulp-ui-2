@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "license": "Apache-2.0",
   "private": true,
+  "engines": {
+    "node": ">=22.22"
+  },
   "scripts": {
     "generate": "npm run generate -ws --if-present",
     "clean": "rimraf ./dist && npm run clean -ws --if-present",
