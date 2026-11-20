@@ -19,7 +19,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 export const RolesQueryKey = "roles";
 
@@ -49,15 +50,14 @@ export const rolesListQueryOptions = ({
   queryOptions<PaginatedRoleResponseList, DrfAxiosError>({
     queryKey: roleKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRoleResponseList> => {
-      const response = await axiosInstance.get<PaginatedRoleResponseList>(
-        pulpApiPath("roles/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      const response = await pulpGet({
+        endpoint: "roles/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -74,10 +74,7 @@ export const useRoleCreateMutation = (
   const domain = useDefaultDomain();
   return useMutation<RoleResponse, DrfAxiosError, Role>({
     mutationFn: async (body: Role) => {
-      const response = await axiosInstance.post<RoleResponse>(
-        pulpApiPath("roles/", domain),
-        body,
-      );
+      const response = await pulpPost({ endpoint: "roles/", domain, body });
       return response.data;
     },
     onSuccess: (data, variables) => {

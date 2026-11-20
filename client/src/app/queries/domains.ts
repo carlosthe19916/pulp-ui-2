@@ -25,7 +25,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const DomainsQueryKey = "domains";
@@ -66,15 +67,14 @@ export const domainsListQueryOptions = ({
     ...options,
     queryKey: domainKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedDomainResponseList> => {
-      const response = await axiosInstance.get<PaginatedDomainResponseList>(
-        pulpApiPath("domains/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      const response = await pulpGet({
+        endpoint: "domains/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -97,10 +97,11 @@ export const useDomainCreateMutation = (
   const apiDomain = useDefaultDomain();
   return useMutation<DomainResponse, DrfAxiosError, Domain>({
     mutationFn: async (body: Domain) => {
-      const response = await axiosInstance.post<DomainResponse>(
-        pulpApiPath("domains/", apiDomain),
+      const response = await pulpPost({
+        endpoint: "domains/",
+        domain: apiDomain,
         body,
-      );
+      });
       return response.data;
     },
     onSuccess: (data, variables) => {
@@ -188,10 +189,11 @@ export const useDomainMigrateMutation = (
   >({
     mutationFn: async ({ domainName, body }) =>
       (
-        await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath("domains/migrate/", { enabled: true, name: domainName }),
+        await pulpPost({
+          endpoint: "domains/migrate/",
+          domain: { enabled: true, name: domainName },
           body,
-        )
+        })
       ).data,
     onSuccess: (data, vars) => {
       void queryClient.invalidateQueries({ queryKey: domainKeys.list() });

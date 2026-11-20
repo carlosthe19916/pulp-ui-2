@@ -19,7 +19,7 @@ import type {
 
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import { hrefAction } from "./utils/pulpApi";
 
 export const AccessQueryKey = "access";
 
@@ -51,7 +51,7 @@ export const objectRolesQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<ObjectRolesResponse>(
-          `${toProxyHref(href)}list_roles/`,
+          hrefAction({ href, action: "list_roles/" }),
         )
       ).data,
   });
@@ -75,7 +75,7 @@ export const myPermissionsQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<MyPermissionsResponse>(
-          `${toProxyHref(href)}my_permissions/`,
+          hrefAction({ href, action: "my_permissions/" }),
         )
       ).data,
     // Permissions change rarely; don't refetch on every mount.
@@ -137,7 +137,7 @@ const useObjectRoleMutation = ({
   action,
   options,
 }: {
-  action: "add_role" | "remove_role";
+  action: "add_role/" | "remove_role/";
   options?: IMutationCallbacks<NestedRoleResponse, IObjectRoleVariables>;
 }) => {
   const queryClient = useQueryClient();
@@ -145,7 +145,7 @@ const useObjectRoleMutation = ({
     mutationFn: async ({ href, body }) =>
       (
         await axiosInstance.post<NestedRoleResponse>(
-          `${toProxyHref(href)}${action}/`,
+          hrefAction({ href, action }),
           body,
         )
       ).data,
@@ -162,9 +162,9 @@ const useObjectRoleMutation = ({
 /** Grants a role on one object to users and/or groups. */
 export const useAddObjectRoleMutation = (
   options?: IMutationCallbacks<NestedRoleResponse, IObjectRoleVariables>,
-) => useObjectRoleMutation({ action: "add_role", options });
+) => useObjectRoleMutation({ action: "add_role/", options });
 
 /** Revokes a role on one object from users and/or groups. */
 export const useRemoveObjectRoleMutation = (
   options?: IMutationCallbacks<NestedRoleResponse, IObjectRoleVariables>,
-) => useObjectRoleMutation({ action: "remove_role", options });
+) => useObjectRoleMutation({ action: "remove_role/", options });

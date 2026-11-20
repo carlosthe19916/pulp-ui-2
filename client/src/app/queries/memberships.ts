@@ -13,7 +13,7 @@ import { groupKeys } from "./groups";
 import { userKeys } from "./users";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import { hrefAction } from "./utils/pulpApi";
 import { extractIdFromHref } from "./utils/pulpHref";
 import type { IBatchResult } from "./utils/settleBatch";
 import { settleBatch } from "./utils/settleBatch";
@@ -38,9 +38,12 @@ const addMember = ({
   groupHref: string;
   username: string;
 }) =>
-  axiosInstance.post(`${toProxyHref(groupHref)}users/`, {
-    username,
-  } satisfies GroupUser);
+  axiosInstance.post(
+    hrefAction({ kind: "groups", href: groupHref, action: "users/" }),
+    {
+      username,
+    } satisfies GroupUser,
+  );
 
 interface IGroupUsersBatchAddArgs {
   groupHref: string;
@@ -108,9 +111,13 @@ export const useMembershipRemoveMutation = (
   const queryClient = useQueryClient();
   return useMutation<void, DrfAxiosError, IMembershipRemoveArgs>({
     mutationFn: async ({ user, group }: IMembershipRemoveArgs) => {
-      await axiosInstance.delete<void>(
-        `${toProxyHref(group.pulp_href ?? "")}users/${extractIdFromHref(user.pulp_href ?? "")}/`,
-      );
+      const groupUsers = hrefAction({
+        kind: "groups",
+        href: group.pulp_href ?? "",
+        action: "users/",
+      });
+      const userId = extractIdFromHref(user.pulp_href ?? "");
+      await axiosInstance.delete<void>(`${groupUsers}${userId}/`);
     },
     onSuccess: (data, variables) => {
       invalidateMembership(queryClient);

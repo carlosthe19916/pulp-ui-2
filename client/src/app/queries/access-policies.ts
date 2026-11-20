@@ -17,7 +17,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const AccessPoliciesQueryKey = "access-policies";
 
@@ -41,15 +42,14 @@ export const accessPoliciesListQueryOptions = ({
     queryKey: accessPolicyKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedAccessPolicyResponseList>(
-          pulpApiPath("access_policies/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "access_policies/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 
@@ -96,7 +96,11 @@ export const useAccessPolicyResetMutation = (
       mutationFn: async (policy) =>
         (
           await axiosInstance.post<AccessPolicyResponse>(
-            `${toProxyHref(policy.pulp_href ?? "")}reset/`,
+            hrefAction({
+              kind: "access_policies",
+              href: policy.pulp_href ?? "",
+              action: "reset/",
+            }),
           )
         ).data,
       onSuccess: (data, policy) => {

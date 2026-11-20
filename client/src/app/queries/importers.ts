@@ -23,7 +23,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 export const ImportersQueryKey = "importers";
 
@@ -53,15 +54,14 @@ export const importersListQueryOptions = ({
     queryKey: importerKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedPulpImporterResponseList>(
-          pulpApiPath("importers/core/pulp/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "importers/core/pulp/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 
@@ -93,7 +93,7 @@ export const importsListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedImportResponseList>(
-          `${toProxyHref(href)}imports/`,
+          hrefAction({ kind: "importers", href, action: "imports/" }),
           { params },
         )
       ).data,
@@ -121,6 +121,7 @@ export const useImporterCreateMutation = (
     DrfAxiosError,
     Record<string, unknown>
   >({
+    // The body comes from a field-driven form, which pulpPost can't check.
     mutationFn: async (body) =>
       (
         await axiosInstance.post<PulpImporterResponse>(
@@ -191,7 +192,7 @@ export const useImportMutation = (
     mutationFn: async ({ href, body }) =>
       (
         await axiosInstance.post<TaskGroupOperationResponse>(
-          `${toProxyHref(href)}imports/`,
+          hrefAction({ kind: "importers", href, action: "imports/" }),
           body,
         )
       ).data,
@@ -221,10 +222,11 @@ export const useImportCheckMutation = (
   >({
     mutationFn: async (body) =>
       (
-        await axiosInstance.post<PulpImportCheckResponse>(
-          pulpApiPath("importers/core/pulp/import-check/", domain),
+        await pulpPost({
+          endpoint: "importers/core/pulp/import-check/",
+          domain,
           body,
-        )
+        })
       ).data,
     onSuccess: options?.onSuccess,
     onError: options?.onError,

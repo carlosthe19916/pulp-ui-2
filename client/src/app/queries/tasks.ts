@@ -29,7 +29,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { pulpGet, pulpPost } from "./utils/pulpRequest";
 
 export const TasksQueryKey = "tasks";
 
@@ -99,15 +100,14 @@ const fetchTasksPage = async (
   domain: IPulpDomain,
   params: ITaskListParams,
 ): Promise<PaginatedTaskResponseList> => {
-  const response = await axiosInstance.get<PaginatedTaskResponseList>(
-    pulpApiPath("tasks/", domain),
-    {
-      params: {
-        ...params,
-        ordering: params.ordering ? [params.ordering] : undefined,
-      },
+  const response = await pulpGet({
+    endpoint: "tasks/",
+    domain,
+    params: {
+      ...params,
+      ordering: params.ordering ? [params.ordering] : undefined,
     },
-  );
+  });
   return response.data;
 };
 
@@ -432,7 +432,7 @@ export const taskProfileArtifactsQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<ProfileArtifactResponse>(
-          `${toProxyHref(href)}profile_artifacts/`,
+          hrefAction({ kind: "tasks", href, action: "profile_artifacts/" }),
         )
       ).data,
   });
@@ -450,13 +450,14 @@ export const useTaskPurgeMutation = (
   const domain = useSelectedDomain();
   return useMutation<AsyncOperationResponse, DrfAxiosError, Purge>({
     mutationFn: async (body: Purge) => {
-      const response = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath("tasks/purge/", domain),
-        {
+      const response = await pulpPost({
+        endpoint: "tasks/purge/",
+        domain,
+        body: {
           finished_before: body.finished_before,
           states: body.states,
         },
-      );
+      });
       return response.data;
     },
     onSuccess: (data, variables) => {

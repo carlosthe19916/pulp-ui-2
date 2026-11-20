@@ -19,7 +19,8 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { hrefAction, pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const UpstreamPulpsQueryKey = "upstream-pulps";
 
@@ -43,15 +44,14 @@ export const upstreamPulpsListQueryOptions = ({
     queryKey: upstreamPulpKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedUpstreamPulpResponseList>(
-          pulpApiPath("upstream-pulps/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "upstream-pulps/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 
@@ -74,6 +74,7 @@ export const useUpstreamPulpCreateMutation = (
     DrfAxiosError,
     Record<string, unknown>
   >({
+    // The body comes from a field-driven form, which pulpPost can't check.
     mutationFn: async (body) =>
       (
         await axiosInstance.post<UpstreamPulpResponse>(
@@ -144,7 +145,7 @@ export const useUpstreamPulpReplicateMutation = (
     mutationFn: async ({ href, body }) =>
       (
         await axiosInstance.post<TaskGroupOperationResponse>(
-          `${toProxyHref(href)}replicate/`,
+          hrefAction({ kind: "upstream-pulps", href, action: "replicate/" }),
           body,
         )
       ).data,

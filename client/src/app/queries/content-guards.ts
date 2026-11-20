@@ -17,8 +17,9 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import { pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const ContentGuardsQueryKey = "content-guards";
 
@@ -57,15 +58,14 @@ export const contentGuardsListQueryOptions = ({
     queryKey: contentGuardKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedContentGuardResponseList> =>
       (
-        await axiosInstance.get<PaginatedContentGuardResponseList>(
-          pulpApiPath("contentguards/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "contentguards/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 
@@ -104,7 +104,10 @@ export const useContentGuardDetailQuery = ({ href }: { href: string }) =>
 export const useContentGuardCreateMutation = (
   options?: IMutationCallbacks<
     ContentGuard,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"contentguards">;
+      body: Record<string, unknown>;
+    }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -112,12 +115,15 @@ export const useContentGuardCreateMutation = (
   return useMutation<
     ContentGuard,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"contentguards">;
+      body: Record<string, unknown>;
+    }
   >({
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<ContentGuard>(
-          pulpApiPath(`contentguards/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "contentguards", apiPath, domain }),
           body,
         )
       ).data,

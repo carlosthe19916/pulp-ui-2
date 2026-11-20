@@ -1,19 +1,21 @@
 import type { VersionResponse } from "@app/client";
 
 import {
-  type ContentUploadMechanism,
+  type ApiPath,
+  type ContentGuardApiPath,
   ENTITY_TYPES,
   type EntityType,
   type IAcsDef,
   type IActionDef,
+  type IContentDef,
   type IPluginDefinition,
   type IsInstalled,
   type PulpType,
 } from "./types";
 
 /** One entity's endpoint for a pulp_type. */
-export interface IPulpTypeEntity {
-  apiPath: string;
+export interface IPulpTypeEntity<E extends EntityType = EntityType> {
+  apiPath: ApiPath<E>;
   /** Exposes per-object role endpoints (`my_permissions/` etc.). */
   rolesManaged: boolean;
 }
@@ -22,7 +24,8 @@ export interface IRepositoryAction extends IActionDef {
   key: string;
 }
 
-export interface IPulpTypeRepository extends IPulpTypeEntity {
+/** What a repository type offers beyond its endpoint. */
+interface IRepositoryFacts {
   compatibleRemoteTypes: PulpType[];
   compatiblePublicationTypes: PulpType[];
   contentChanges: "modify" | "addRemove" | null;
@@ -34,18 +37,17 @@ export interface IPulpTypeRepository extends IPulpTypeEntity {
   contentTypes: PulpType[];
 }
 
+export type IPulpTypeRepository = IPulpTypeEntity<"repository"> &
+  IRepositoryFacts;
+
 /** A content type: its list endpoint (absent for endpoint-less types) and upload mechanism. */
-export interface IContentType {
-  pulpType: PulpType;
-  apiPath?: string;
-  upload?: ContentUploadMechanism;
-}
+export type IContentType = { pulpType: PulpType } & IContentDef;
 
 /** A content guard type: its collection, role endpoints and download roles. */
 export interface IContentGuardType {
   pulpType: PulpType;
   pluginId: string;
-  apiPath: string;
+  apiPath: ContentGuardApiPath;
   rolesManaged: boolean;
   downloaderRole: boolean;
 }
@@ -61,11 +63,10 @@ export interface IPulpType {
   /** The id of the plugin that declares it. */
   pluginId: string;
   isAvailable: IsInstalled;
+  // Mapped over the entity so `entities[entity].apiPath` stays `ApiPath<E>` for a generic E.
   entities: {
-    repository?: IPulpTypeRepository;
-    remote?: IPulpTypeEntity;
-    distribution?: IPulpTypeEntity;
-    publication?: IPulpTypeEntity;
+    [E in EntityType]?: IPulpTypeEntity<E> &
+      (E extends "repository" ? IRepositoryFacts : unknown);
   };
 }
 
@@ -82,8 +83,7 @@ const installedCheck =
 const contentTypesOf = (definition: IPluginDefinition): IContentType[] =>
   Object.entries(definition.content ?? {}).map(([pulpType, content]) => ({
     pulpType,
-    apiPath: content.apiPath,
-    upload: content.upload,
+    ...content,
   }));
 
 const isScan = (action: IActionDef) =>

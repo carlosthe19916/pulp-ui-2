@@ -2,7 +2,7 @@ import { axiosInstance } from "@app/axios-config/apiInit";
 import type { SetLabel, UnsetLabel } from "@app/client";
 import type { ILabelChanges } from "@app/utils/pulpLabels";
 
-import { toProxyHref } from "./utils/pulpApi";
+import { hrefAction } from "./utils/pulpApi";
 import { type IBatchResult, settleBatch } from "./utils/settleBatch";
 
 export interface ILabelsChangeVariables extends ILabelChanges {
@@ -34,10 +34,10 @@ export const applyLabelChanges = ({
     request: (op) =>
       op.kind === "set"
         ? axiosInstance.post(
-            `${toProxyHref(href)}set_label/`,
+            hrefAction({ href, action: "set_label/" }),
             op.label satisfies SetLabel,
           )
-        : axiosInstance.post(`${toProxyHref(href)}unset_label/`, {
+        : axiosInstance.post(hrefAction({ href, action: "unset_label/" }), {
             key: op.key,
           } satisfies UnsetLabel),
   });

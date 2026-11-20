@@ -20,8 +20,13 @@ import { getPulpType } from "@catalog";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
 
@@ -61,7 +66,7 @@ export const publicationsListQueryOptions = ({
   options,
 }: {
   domain: IPulpDomain;
-  apiPath?: string;
+  apiPath?: PulpCollectionApiPath<"publications">;
   params: IPublicationListParams;
   options?: PublicationListOptions;
 }) =>
@@ -71,10 +76,13 @@ export const publicationsListQueryOptions = ({
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
         await axiosInstance.get<PaginatedPublicationResponseList>(
-          pulpApiPath(
-            apiPath ? `publications/${apiPath}/` : "publications/",
-            domain,
-          ),
+          apiPath
+            ? pulpCollectionPath({
+                collection: "publications",
+                apiPath,
+                domain,
+              })
+            : pulpApiPath("publications/", domain),
           {
             params: {
               ...params,
@@ -91,7 +99,7 @@ export const usePublicationsListQuery = ({
   params,
   options,
 }: {
-  apiPath?: string;
+  apiPath?: PulpCollectionApiPath<"publications">;
   params: IPublicationListParams;
   options?: PublicationListOptions;
 }) => {
@@ -160,7 +168,10 @@ export const usePublicationDeleteMutation = (
 export const usePublicationCreateMutation = (
   options?: IMutationCallbacks<
     AsyncOperationResponse,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"publications">;
+      body: Record<string, unknown>;
+    }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -168,18 +179,21 @@ export const usePublicationCreateMutation = (
   return useMutation<
     AsyncOperationResponse,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"publications">;
+      body: Record<string, unknown>;
+    }
   >({
     mutationFn: async ({
       apiPath,
       body,
     }: {
-      apiPath: string;
+      apiPath: PulpCollectionApiPath<"publications">;
       body: Record<string, unknown>;
     }): Promise<AsyncOperationResponse> =>
       (
         await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`publications/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "publications", apiPath, domain }),
           body,
         )
       ).data,

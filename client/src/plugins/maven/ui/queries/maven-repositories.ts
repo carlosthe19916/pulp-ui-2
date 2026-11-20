@@ -17,7 +17,7 @@ import { repositoryKeys } from "@app/queries/repositories";
 import type { MultiOrderListParams } from "@app/queries/utils/listParams";
 import type { DrfAxiosError } from "@app/queries/utils/openapiErrorTypes";
 import type { IPulpDomain } from "@app/queries/utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "@app/queries/utils/pulpApi";
+import { hrefAction, pulpCollectionPath } from "@app/queries/utils/pulpApi";
 
 import { maven } from "../../definition";
 
@@ -70,7 +70,11 @@ export const mavenPackagesListQueryOptions = ({
     queryFn: async (): Promise<PaginatedMavenRepositoryPackageListResponse> =>
       (
         await axiosInstance.get<PaginatedMavenRepositoryPackageListResponse>(
-          `${toProxyHref(repositoryHref)}packages/`,
+          hrefAction({
+            kind: "repositories",
+            href: repositoryHref,
+            action: "packages/",
+          }),
           { params },
         )
       ).data,
@@ -107,7 +111,11 @@ export const mavenMetricsQueryOptions = ({
     queryFn: async (): Promise<MavenRepositoryMetricsResponse> =>
       (
         await axiosInstance.get<MavenRepositoryMetricsResponse>(
-          `${toProxyHref(repositoryHref)}metrics/`,
+          hrefAction({
+            kind: "repositories",
+            href: repositoryHref,
+            action: "metrics/",
+          }),
           { params },
         )
       ).data,
@@ -142,7 +150,11 @@ export const mavenPathIndexStatusQueryOptions = ({
     queryFn: async (): Promise<MavenPathIndexStatusResponse> =>
       (
         await axiosInstance.get<MavenPathIndexStatusResponse>(
-          `${toProxyHref(repositoryHref)}path_index_status/`,
+          hrefAction({
+            kind: "repositories",
+            href: repositoryHref,
+            action: "path_index_status/",
+          }),
         )
       ).data,
   });
@@ -185,10 +197,11 @@ export const mavenPackageHrefQueryOptions = ({
     queryFn: async (): Promise<string | null> => {
       const { data } =
         await axiosInstance.get<PaginatedmavenMavenPackageResponseList>(
-          pulpApiPath(
-            `content/${maven.content["maven.package"].apiPath}/`,
+          pulpCollectionPath({
+            collection: "content",
+            apiPath: maven.content["maven.package"].apiPath,
             domain,
-          ),
+          }),
           { params: { ...gav, fields: ["pulp_href"] } },
         );
       return data.results[0]?.pulp_href ?? null;

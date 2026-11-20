@@ -26,16 +26,23 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getPulpType } from "@catalog";
-import type { ActionResponseKind } from "@plugin-sdk/definition";
+import type { ActionPath, ActionResponseKind } from "@plugin-sdk/definition";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { type IWriteResult, taskKeys, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import {
+  hrefAction,
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 import { parseRepositoryVersionHref, resolvePulpType } from "./utils/pulpHref";
+import { pulpGet } from "./utils/pulpRequest";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const RepositoriesQueryKey = "repositories";
@@ -89,15 +96,14 @@ export const repositoriesListQueryOptions = ({
     ...options,
     queryKey: repositoryKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedRepositoryResponseList> => {
-      const response = await axiosInstance.get<PaginatedRepositoryResponseList>(
-        pulpApiPath("repositories/", domain),
-        {
-          params: {
-            ...params,
-            ordering: params.ordering ? [params.ordering] : undefined,
-          },
+      const response = await pulpGet({
+        endpoint: "repositories/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
         },
-      );
+      });
       return response.data;
     },
   });
@@ -175,7 +181,7 @@ export const useRepositorySyncMutation = (
       body: RepositorySyncBody;
     }) => {
       const response = await axiosInstance.post<AsyncOperationResponse>(
-        `${toProxyHref(href)}sync/`,
+        hrefAction({ kind: "repositories", href, action: "sync/" }),
         body,
       );
       return response.data;
@@ -200,11 +206,15 @@ export interface IRepositoryActionVariables {
   /** The repository or repository version the action runs on. */
   targetHref: string;
   /** Relative to `targetHref`, or a collection endpoint when it starts with `/`. */
-  path: string;
+  path: ActionPath;
   /** What the operation answers, from the action's definition; default `task`. */
   responseKind?: ActionResponseKind;
   body: Record<string, unknown>;
 }
+
+const isEndpointPath = (
+  path: ActionPath,
+): path is Extract<ActionPath, `/${string}`> => path.startsWith("/");
 
 /** The request body: multipart when it carries a file, JSON otherwise. */
 const toActionBody = (body: Record<string, unknown>) => {
@@ -239,9 +249,9 @@ export const useRepositoryActionMutation = (
     IRepositoryActionVariables
   >({
     mutationFn: async ({ targetHref, path, responseKind = "task", body }) => {
-      const url = path.startsWith("/")
-        ? pulpApiPath(path.slice(1), domain)
-        : `${toProxyHref(targetHref)}${path}`;
+      const url = isEndpointPath(path)
+        ? pulpApiPath(path, domain)
+        : hrefAction({ href: targetHref, action: path });
       const { data } = await axiosInstance.post<unknown>(
         url,
         toActionBody(body),
@@ -391,7 +401,11 @@ export const useRepositoryVersionRepairMutation = (
     mutationFn: async (version: RepositoryVersionResponse) =>
       (
         await axiosInstance.post<AsyncOperationResponse>(
-          `${toProxyHref(version.pulp_href ?? "")}repair/`,
+          hrefAction({
+            kind: "repositories/versions",
+            href: version.pulp_href ?? "",
+            action: "repair/",
+          }),
           { verify_checksums: true },
         )
       ).data,
@@ -421,7 +435,11 @@ export const repositoryVersionsListQueryOptions = ({
     queryFn: async (): Promise<PaginatedRepositoryVersionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedRepositoryVersionResponseList>(
-          `${toProxyHref(repositoryHref)}versions/`,
+          hrefAction({
+            kind: "repositories",
+            href: repositoryHref,
+            action: "versions/",
+          }),
           {
             params: {
               ...params,
@@ -542,7 +560,10 @@ export const useSuspenseRepositoryVersionDetailQuery = ({
 export const useRepositoryCreateMutation = (
   options?: IMutationCallbacks<
     RepositoryResponse,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"repositories">;
+      body: Record<string, unknown>;
+    }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -550,18 +571,21 @@ export const useRepositoryCreateMutation = (
   return useMutation<
     RepositoryResponse,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"repositories">;
+      body: Record<string, unknown>;
+    }
   >({
     mutationFn: async ({
       apiPath,
       body,
     }: {
-      apiPath: string;
+      apiPath: PulpCollectionApiPath<"repositories">;
       body: Record<string, unknown>;
     }): Promise<RepositoryResponse> =>
       (
         await axiosInstance.post<RepositoryResponse>(
-          pulpApiPath(`repositories/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "repositories", apiPath, domain }),
           body,
         )
       ).data,

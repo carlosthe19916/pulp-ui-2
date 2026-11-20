@@ -22,7 +22,7 @@ import { userKeys } from "./users";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import { toProxyHref } from "./utils/pulpApi";
+import { hrefAction, toProxyHref } from "./utils/pulpApi";
 import type { IBatchResult } from "./utils/settleBatch";
 import { settleBatch } from "./utils/settleBatch";
 
@@ -70,7 +70,7 @@ export const roleAssignmentsListQueryOptions = ({
     queryKey: rolesQueryKey(kind, href, params),
     queryFn: async (): Promise<PaginatedRoleAssignmentList> => {
       const response = await axiosInstance.get<PaginatedRoleAssignmentList>(
-        `${toProxyHref(href)}roles/`,
+        hrefAction({ href, action: "roles/" }),
         {
           params: {
             ...params,
@@ -119,7 +119,7 @@ export const useRoleAssignmentsBatchCreateMutation = (
         items: roleNames,
         label: (role) => role,
         request: (role) =>
-          axiosInstance.post(`${toProxyHref(href)}roles/`, {
+          axiosInstance.post(hrefAction({ href, action: "roles/" }), {
             role,
             content_object: null,
           } satisfies UserRole & GroupRole),

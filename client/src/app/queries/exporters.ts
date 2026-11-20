@@ -22,8 +22,8 @@ import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import { hrefAction, pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
 
 export const ExportersQueryKey = "exporters";
 
@@ -63,7 +63,7 @@ export const exportersListQueryOptions = ({
   params,
 }: {
   domain: IPulpDomain;
-  apiPath: string;
+  apiPath: PulpCollectionApiPath<"exporters">;
   params: IExporterListParams;
 }) =>
   queryOptions<PaginatedPulpExporterResponseList, DrfAxiosError>({
@@ -71,7 +71,7 @@ export const exportersListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedPulpExporterResponseList>(
-          pulpApiPath(`exporters/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "exporters", apiPath, domain }),
           {
             params: {
               ...params,
@@ -86,7 +86,7 @@ export const useExportersListQuery = ({
   apiPath,
   params,
 }: {
-  apiPath: string;
+  apiPath: PulpCollectionApiPath<"exporters">;
   params: IExporterListParams;
 }) => {
   const domain = useSelectedDomain();
@@ -112,7 +112,7 @@ export const exportsListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedPulpExportResponseList>(
-          `${toProxyHref(href)}exports/`,
+          hrefAction({ kind: "exporters", href, action: "exports/" }),
           { params },
         )
       ).data,
@@ -133,7 +133,10 @@ export const useExportsListQuery = ({
 export const useExporterCreateMutation = (
   options?: IMutationCallbacks<
     Exporter,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"exporters">;
+      body: Record<string, unknown>;
+    }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -141,12 +144,15 @@ export const useExporterCreateMutation = (
   return useMutation<
     Exporter,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    {
+      apiPath: PulpCollectionApiPath<"exporters">;
+      body: Record<string, unknown>;
+    }
   >({
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<Exporter>(
-          pulpApiPath(`exporters/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "exporters", apiPath, domain }),
           body,
         )
       ).data,
@@ -222,7 +228,7 @@ export const useExportMutation = (
     mutationFn: async ({ href, body }) =>
       (
         await axiosInstance.post<AsyncOperationResponse>(
-          `${toProxyHref(href)}exports/`,
+          hrefAction({ kind: "exporters", href, action: "exports/" }),
           body,
         )
       ).data,

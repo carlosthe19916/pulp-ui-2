@@ -22,6 +22,7 @@ never read it whole). The generated client mirrors it and is usually faster:
 grep -n "<operationId or path fragment>" client/src/app/client/sdk.gen.ts    # URL, method
 grep -n "export type <Op>Data\b" -A 30 client/src/app/client/types.gen.ts    # params, body
 grep -n "export type <Op>Responses\b" -A 10 client/src/app/client/types.gen.ts  # 2xx types
+grep -n '"<path relative to api/v3/>"' client/src/app/client/pulpEndpoints.gen.ts # URL helpers
 ```
 
 `<Op>Data["query"]` lists every query param (`UsersListData["query"]`). A plugin's endpoint
@@ -51,7 +52,8 @@ one that has it, then `npm run generate`.
 
 ## 3. Wire it
 
-Reads: the `add-query` skill. Writes and their toasts: the `add-mutation` skill. Plugin
+Build the URL with the typed helpers (`pulpGet` / `pulpPost`, `pulpCollectionPath`,
+`hrefAction`, `pulpRootApiPath`; see `.rulesync/rules/pulp-api.md`). Reads: the `add-query` skill. Writes and their toasts: the `add-mutation` skill. Plugin
 endpoints and fields: the plugin's definition (`client/src/plugins/<id>/definition.ts`).
 
 When you verify a new quirk against a backend, add it to `docs/internals/pulp-api-notes.md`.

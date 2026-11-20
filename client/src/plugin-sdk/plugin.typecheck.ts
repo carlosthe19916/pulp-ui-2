@@ -26,7 +26,7 @@ const widget = definePlugin({
       compatibleRemoteTypes: ["widget.widget"],
       compatiblePublicationTypes: [],
       contentChanges: "modify",
-      actions: { prune: { path: "prune/", target: "repository" } },
+      actions: { prune: { path: "/rpm/prune/", target: "repository" } },
     },
   },
   content: {
@@ -165,7 +165,7 @@ const importer = definePlugin({
   remote: {
     "importer.importer": {
       apiPath: "file/file",
-      createFrom: { config: { path: "from_config/" } },
+      createFrom: { config: { path: "from_bandersnatch/" } },
     },
   },
   repository: {

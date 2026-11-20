@@ -1,6 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { axiosInstance } from "@app/axios-config/apiInit";
 import type {
   PaginatedTaskScheduleResponseList,
   TaskSchedulesListData,
@@ -10,7 +9,7 @@ import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const TaskSchedulesQueryKey = "task-schedules";
 
@@ -34,15 +33,14 @@ export const taskSchedulesListQueryOptions = ({
     queryKey: taskScheduleKeys.listQuery(domain, params),
     queryFn: async () =>
       (
-        await axiosInstance.get<PaginatedTaskScheduleResponseList>(
-          pulpApiPath("task-schedules/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
+        await pulpGet({
+          endpoint: "task-schedules/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
           },
-        )
+        })
       ).data,
   });
 

@@ -6,15 +6,15 @@ import {
   type FormValues,
   type ITypeSelectProps,
 } from "@app/plugin-forms";
-import { type EntityType, getPulpType } from "@catalog";
+import { type ApiPath, type EntityType, getPulpType } from "@catalog";
 import { getEntityForm, type IFormEntry } from "@plugins";
 
-export interface ICreateTypeSelect {
+export interface ICreateTypeSelect<E extends EntityType = EntityType> {
   /** The selected type: `?type=` when creatable, else the first creatable one. */
   pulpType?: string;
   entry?: IFormEntry;
   /** The collection the create POST goes to. */
-  apiPath?: string;
+  apiPath?: ApiPath<E>;
   typeSelect: ITypeSelectProps;
   /** Values carried over from the type the user switched away from. */
   initialValues?: FormValues;
@@ -24,15 +24,15 @@ export interface ICreateTypeSelect {
  * A create page's Type select: resolves the selected type and, on a switch, keeps the
  * values the two forms share. `onTypeChange` writes the new type to the URL.
  */
-export const useCreateTypeSelect = ({
+export const useCreateTypeSelect = <E extends EntityType>({
   entity,
   type,
   onTypeChange,
 }: {
-  entity: EntityType;
+  entity: E;
   type: string | undefined;
   onTypeChange: (pulpType: string) => void;
-}): ICreateTypeSelect => {
+}): ICreateTypeSelect<E> => {
   const [carried, setCarried] = useState<{
     pulpType: string;
     values: FormValues;

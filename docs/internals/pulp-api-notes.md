@@ -3,6 +3,20 @@
 Behaviour of the Pulp REST API that isn't obvious from the spec, verified against a local
 backend. Paths drop the `/api/pulp/{domain}/api/v3/` prefix.
 
+## URLs and domains
+
+- Pulp registers the same routes with or without `DOMAIN_ENABLED`; only the `{domain}/`
+  segment comes and goes. Operation ids drop it too, so the generated names are the same in
+  both modes. The UI's URL types (`pulpEndpoints.gen.ts`) are relative to `api/v3/` and the
+  domain is added at runtime.
+- `status/`, `livez/` and `docs/` sit outside any domain (with domains on they're also served
+  inside one, but left out of the spec), as do pulp_ansible's `ansible/copy/` and
+  `pulp_ansible/tags/`.
+- Only a spec dumped with `DOMAIN_ENABLED` tells those apart from domain-scoped endpoints, so
+  `npm run generate` refuses one without `{pulp_domain}` paths.
+- Every href the API returns already carries its domain (or none), so an action appended to it
+  (`sync/`, `set_label/`) needs no domain handling.
+
 ## Lists
 
 - Aggregate lists (`repositories/`, `content/`, …) return sparse, untyped rows and the generic

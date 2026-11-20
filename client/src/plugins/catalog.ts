@@ -88,7 +88,10 @@ export const {
 } = createCatalog(PLUGIN_DEFINITIONS);
 
 export {
+  type ApiPath,
+  type ContentApiPath,
   type ContentUploadMechanism,
+  type ContentUploadTarget,
   ENTITY_TYPES,
   type EntityType,
   type IAcsFact,

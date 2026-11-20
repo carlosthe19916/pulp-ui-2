@@ -12,7 +12,8 @@ import { useDefaultDomain } from "@app/hooks/useDefaultDomain";
 import type { ListParams } from "./utils/listParams";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { toProxyHref } from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 
 export const SigningServicesQueryKey = "signing-services";
 
@@ -50,16 +51,14 @@ export const signingServicesListQueryOptions = ({
     ...options,
     queryKey: signingServiceKeys.listQuery(domain, params),
     queryFn: async (): Promise<PaginatedSigningServiceResponseList> => {
-      const response =
-        await axiosInstance.get<PaginatedSigningServiceResponseList>(
-          pulpApiPath("signing-services/", domain),
-          {
-            params: {
-              ...params,
-              ordering: params.ordering ? [params.ordering] : undefined,
-            },
-          },
-        );
+      const response = await pulpGet({
+        endpoint: "signing-services/",
+        domain,
+        params: {
+          ...params,
+          ordering: params.ordering ? [params.ordering] : undefined,
+        },
+      });
       return response.data;
     },
   });

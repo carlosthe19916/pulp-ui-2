@@ -1,4 +1,4 @@
-import type { ContentUploadMechanism } from "@catalog";
+import type { ContentUploadTarget } from "@catalog";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   queryOptions,
@@ -30,8 +30,13 @@ import { type TaskWriteError, waitForTask } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  type IPulpDomain,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
+import { pulpGet } from "./utils/pulpRequest";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const ContentQueryKey = "content";
@@ -79,16 +84,14 @@ export const contentListQueryOptions = ({
     queryKey: contentKeys.listQuery(domain, params),
     queryFn:
       async (): Promise<PaginatedMultipleArtifactContentResponseList> => {
-        const response =
-          await axiosInstance.get<PaginatedMultipleArtifactContentResponseList>(
-            pulpApiPath("content/", domain),
-            {
-              params: {
-                ...params,
-                ordering: params.ordering ? [params.ordering] : undefined,
-              },
-            },
-          );
+        const response = await pulpGet({
+          endpoint: "content/",
+          domain,
+          params: {
+            ...params,
+            ordering: params.ordering ? [params.ordering] : undefined,
+          },
+        });
         return response.data;
       },
   });
@@ -110,9 +113,16 @@ export const useContentListQuery = ({
   return useQuery(contentListQueryOptions({ domain, params, options }));
 };
 
-/** A content type's own list endpoint (`content/<apiPath>/`), from the catalog. */
-const contentTypeUrl = (pulpType: ContentTypeKey, domain: IPulpDomain) =>
-  pulpApiPath(`content/${getContentType(pulpType)?.apiPath}/`, domain);
+/**
+ * A content type's own list endpoint (`content/<apiPath>/`), from the catalog; `""` for a
+ * type without one, whose query is disabled.
+ */
+const contentTypeUrl = (pulpType: ContentTypeKey, domain: IPulpDomain) => {
+  const apiPath = getContentType(pulpType)?.apiPath;
+  return apiPath
+    ? pulpCollectionPath({ collection: "content", apiPath, domain })
+    : "";
+};
 
 type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
   UseQueryOptions<ContentTypePage<K>, DrfAxiosError>,
@@ -121,9 +131,10 @@ type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
 
 /**
  * One content type's own list (`content/<apiPath>/`): typed rows, its filters and
- * multi-field ordering. The caller decides every param.
+ * multi-field ordering. The caller decides every param. Not exported: only the hooks below,
+ * which disable it for a type without an endpoint, may run it.
  */
-export const contentTypeListQueryOptions = <K extends ContentTypeKey>({
+const contentTypeListQueryOptions = <K extends ContentTypeKey>({
   domain,
   pulpType,
   params,
@@ -242,12 +253,11 @@ export const buildContentHref = (
 };
 
 /**
- * One content upload: the type's `apiPath` and catalog upload `mechanism`, its
- * upload fields, and the bytes — the `file` itself, or the href of a chunked `upload`.
+ * One content upload: the type's catalog `target` (apiPath and mechanism), its upload
+ * fields, and the bytes — the `file` itself, or the href of a chunked `upload`.
  */
 export interface IContentUploadVariables {
-  apiPath: string;
-  mechanism: ContentUploadMechanism;
+  target: ContentUploadTarget;
   fields: Record<string, string>;
   file?: File;
   upload?: string;
@@ -265,8 +275,7 @@ export const useContentUploadMutation = (
   const queryClient = useQueryClient();
   return useMutation<string, TaskWriteError, IContentUploadVariables>({
     mutationFn: async ({
-      apiPath,
-      mechanism,
+      target,
       fields,
       file,
       upload,
@@ -285,17 +294,26 @@ export const useContentUploadMutation = (
       };
       // The spec declares one answer per mechanism: `upload/` is 201 with the content,
       // the collection POST is 202 with a task that creates it.
-      if (mechanism === "upload") {
+      if (target.upload === "upload") {
         const { data } =
           await axiosInstance.post<MultipleArtifactContentResponse>(
-            pulpApiPath(`content/${apiPath}/upload/`, domain),
+            pulpCollectionPath({
+              collection: "content",
+              apiPath: target.apiPath,
+              domain,
+              action: "upload/",
+            }),
             body,
             config,
           );
         return data.pulp_href ?? "";
       }
       const { data } = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath(`content/${apiPath}/`, domain),
+        pulpCollectionPath({
+          collection: "content",
+          apiPath: target.apiPath,
+          domain,
+        }),
         body,
         config,
       );

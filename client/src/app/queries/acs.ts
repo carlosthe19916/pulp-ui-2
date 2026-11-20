@@ -20,8 +20,8 @@ import { type IWriteResult, toWriteResult } from "./tasks";
 import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
-import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { type IPulpDomain, type PulpCollectionApiPath } from "./utils/pulpApi";
+import { hrefAction, pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
 
 export const AcsQueryKey = "acs";
 
@@ -44,7 +44,7 @@ export const acsListQueryOptions = ({
   params,
 }: {
   domain: IPulpDomain;
-  apiPath: string;
+  apiPath: PulpCollectionApiPath<"acs">;
   params: IAcsListParams;
 }) =>
   queryOptions<
@@ -55,7 +55,7 @@ export const acsListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedfileFileAlternateContentSourceResponseList>(
-          pulpApiPath(`acs/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "acs", apiPath, domain }),
           {
             params: {
               ...params,
@@ -70,7 +70,7 @@ export const useAcsListQuery = ({
   apiPath,
   params,
 }: {
-  apiPath: string;
+  apiPath: PulpCollectionApiPath<"acs">;
   params: IAcsListParams;
 }) => {
   const domain = useSelectedDomain();
@@ -83,7 +83,7 @@ export const useAcsListQuery = ({
 export const useAcsCreateMutation = (
   options?: IMutationCallbacks<
     AlternateContentSource,
-    { apiPath: string; body: Record<string, unknown> }
+    { apiPath: PulpCollectionApiPath<"acs">; body: Record<string, unknown> }
   >,
 ) => {
   const domain = useSelectedDomain();
@@ -91,12 +91,12 @@ export const useAcsCreateMutation = (
   return useMutation<
     AlternateContentSource,
     DrfAxiosError,
-    { apiPath: string; body: Record<string, unknown> }
+    { apiPath: PulpCollectionApiPath<"acs">; body: Record<string, unknown> }
   >({
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<AlternateContentSource>(
-          pulpApiPath(`acs/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "acs", apiPath, domain }),
           body,
         )
       ).data,
@@ -175,7 +175,11 @@ export const useAcsRefreshMutation = (
     mutationFn: async (acs) =>
       (
         await axiosInstance.post<TaskGroupOperationResponse>(
-          `${toProxyHref(acs.pulp_href ?? "")}refresh/`,
+          hrefAction({
+            kind: "acs",
+            href: acs.pulp_href ?? "",
+            action: "refresh/",
+          }),
         )
       ).data,
     onSuccess: (data, acs) => {

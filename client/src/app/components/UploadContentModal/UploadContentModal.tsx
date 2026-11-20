@@ -47,8 +47,7 @@ export const UploadContentModal: React.FC<IUploadContentModalProps> = ({
   const [pulpType, setPulpType] = useState(contentTypes[0]?.pulpType ?? "");
   const contentType = getContentType(pulpType);
   const queue = useUploadQueue({
-    apiPath: contentType?.apiPath ?? "",
-    mechanism: contentType?.upload ?? "upload",
+    target: contentType?.upload ? contentType : undefined,
     defaultFields: (file) =>
       Object.fromEntries(
         perFileFields(contentType).map((field) => [
