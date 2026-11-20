@@ -1,12 +1,19 @@
 name: E2E Tests
 
 on:
+  # Not on pushes to next: everything reaches next through a PR whose required checks
+  # already ran on the same merge result (the main-into-next sync included).
   push:
-    branches: [main, next, "release-*"]
+    branches: [main, "release-*"]
   pull_request:
     branches: [main, next, "release-*"]
   # Stacked branches (whose PRs target another branch) run it by hand.
   workflow_dispatch:
+
+# A newer run for the same PR or branch supersedes the older one.
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   # Fork-fallback tarball path (when we cannot push to / pull from ghcr).

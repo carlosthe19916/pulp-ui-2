@@ -11,14 +11,21 @@ on:
     branches: [main, next, "release-*"]
   workflow_dispatch:
 
+# A newer push to a PR supersedes its older build; pushes, tags and releases publish, so they
+# are never cancelled.
+concurrency:
+  group: image-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   changes:
-    # Only PRs are gated; pushes to main, tags and releases always build.
-    if: github.event_name == 'pull_request'
+    # Only PRs are gated; pushes to main, tags and releases always build. The main-into-next
+    # sync PR is skipped: its head is a main commit whose push already built the image.
+    if: github.event_name == 'pull_request' && github.head_ref != 'sync/main-into-next'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read

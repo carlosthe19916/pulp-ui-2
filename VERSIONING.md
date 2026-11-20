@@ -149,9 +149,11 @@ patch with the release workflow (`ref: release-X.Y`).
 
 ## Repository settings (once)
 
-- **Rulesets** for `main`, `next` and `release-*`: PRs required, the CI and e2e checks
-  required, no force push, no deletion. `main` and `release-*` only allow squash merges.
-  `next` allows squash and merge commits, for the sync PR.
+- **Rulesets** for `main`, `next` and `release-*`: PRs required, the `ci` and `e2e-gate`
+  checks required (from GitHub Actions), no force push, no deletion. `main` and `release-*`
+  only allow squash merges. `next` allows squash and merge commits, for the sync PR. Without
+  `next`'s required checks, auto-merge lands the sync PR before its checks finish, and CI and
+  e2e don't run on pushes to `next` (the PR checks are its gate).
 - **Allow merge commits** turned on in the repository settings (only `next`'s ruleset uses it).
 - **Tags** `v*`: never deleted or moved. Only the release workflow and admins create them.
 - **Labels**: `sync-conflict`, and `backport release-X.Y` for each older line.
