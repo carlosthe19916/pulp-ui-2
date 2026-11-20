@@ -47,19 +47,24 @@ export default defineConfig({
         return code.replace(/process\.env/g, "({})");
       },
     },
+    // v4 keeps the source directory structure, so each target says where it lands.
     viteStaticCopy({
       targets: [
         {
           src: manifestPath,
           dest: ".",
+          rename: { stripBase: true },
         },
         {
           src: brandingPath,
           dest: ".",
+          // Drops `common/dist`, keeping `branding/...`.
+          rename: { stripBase: 2 },
         },
         {
           src: faviconPath,
           dest: ".",
+          rename: { stripBase: true },
         },
       ],
     }),
