@@ -26,7 +26,7 @@ import type {
 } from "@app/client";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { getPulpType } from "@catalog";
-import type { ActionResponseKind } from "@plugin-sdk/definition";
+import type { ActionPath, ActionResponseKind } from "@plugin-sdk/definition";
 
 import { applyLabelChanges, type ILabelsChangeVariables } from "./labels";
 import { type IWriteResult, taskKeys, toWriteResult } from "./tasks";
@@ -34,7 +34,12 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 import { parseRepositoryVersionHref, resolvePulpType } from "./utils/pulpHref";
 import type { IBatchResult } from "./utils/settleBatch";
 
@@ -200,11 +205,15 @@ export interface IRepositoryActionVariables {
   /** The repository or repository version the action runs on. */
   targetHref: string;
   /** Relative to `targetHref`, or a collection endpoint when it starts with `/`. */
-  path: string;
+  path: ActionPath;
   /** What the operation answers, from the action's definition; default `task`. */
   responseKind?: ActionResponseKind;
   body: Record<string, unknown>;
 }
+
+const isEndpointPath = (
+  path: ActionPath,
+): path is Extract<ActionPath, `/${string}`> => path.startsWith("/");
 
 /** The request body: multipart when it carries a file, JSON otherwise. */
 const toActionBody = (body: Record<string, unknown>) => {
@@ -239,8 +248,8 @@ export const useRepositoryActionMutation = (
     IRepositoryActionVariables
   >({
     mutationFn: async ({ targetHref, path, responseKind = "task", body }) => {
-      const url = path.startsWith("/")
-        ? pulpApiPath(path.slice(1), domain)
+      const url = isEndpointPath(path)
+        ? pulpApiPath(path, domain)
         : `${toProxyHref(targetHref)}${path}`;
       const { data } = await axiosInstance.post<unknown>(
         url,
@@ -561,7 +570,7 @@ export const useRepositoryCreateMutation = (
     }): Promise<RepositoryResponse> =>
       (
         await axiosInstance.post<RepositoryResponse>(
-          pulpApiPath(`repositories/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "repositories", apiPath, domain }),
           body,
         )
       ).data,

@@ -18,7 +18,7 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpApiPath, pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
 
 export const ContentGuardsQueryKey = "content-guards";
 
@@ -117,7 +117,7 @@ export const useContentGuardCreateMutation = (
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<ContentGuard>(
-          pulpApiPath(`contentguards/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "contentguards", apiPath, domain }),
           body,
         )
       ).data,

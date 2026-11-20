@@ -25,7 +25,12 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const DistributionsQueryKey = "distributions";
@@ -89,10 +94,13 @@ export const distributionsListQueryOptions = ({
     queryFn: async (): Promise<PaginatedDistributionResponseList> => {
       const response =
         await axiosInstance.get<PaginatedDistributionResponseList>(
-          pulpApiPath(
-            apiPath ? `distributions/${apiPath}/` : "distributions/",
-            domain,
-          ),
+          apiPath
+            ? pulpCollectionPath({
+                collection: "distributions",
+                apiPath,
+                domain,
+              })
+            : pulpApiPath("distributions/", domain),
           {
             params: {
               ...params,
@@ -228,7 +236,7 @@ export const useDistributionCreateMutation = (
     }): Promise<AsyncOperationResponse> =>
       (
         await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`distributions/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "distributions", apiPath, domain }),
           body,
         )
       ).data,

@@ -21,7 +21,7 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
 
 export const AcsQueryKey = "acs";
 
@@ -55,7 +55,7 @@ export const acsListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedfileFileAlternateContentSourceResponseList>(
-          pulpApiPath(`acs/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "acs", apiPath, domain }),
           {
             params: {
               ...params,
@@ -96,7 +96,7 @@ export const useAcsCreateMutation = (
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<AlternateContentSource>(
-          pulpApiPath(`acs/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "acs", apiPath, domain }),
           body,
         )
       ).data,

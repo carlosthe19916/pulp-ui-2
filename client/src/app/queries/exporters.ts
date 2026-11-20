@@ -23,7 +23,7 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, toProxyHref } from "./utils/pulpApi";
+import { pulpCollectionPath, toProxyHref } from "./utils/pulpApi";
 
 export const ExportersQueryKey = "exporters";
 
@@ -71,7 +71,7 @@ export const exportersListQueryOptions = ({
     queryFn: async () =>
       (
         await axiosInstance.get<PaginatedPulpExporterResponseList>(
-          pulpApiPath(`exporters/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "exporters", apiPath, domain }),
           {
             params: {
               ...params,
@@ -146,7 +146,7 @@ export const useExporterCreateMutation = (
     mutationFn: async ({ apiPath, body }) =>
       (
         await axiosInstance.post<Exporter>(
-          pulpApiPath(`exporters/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "exporters", apiPath, domain }),
           body,
         )
       ).data,

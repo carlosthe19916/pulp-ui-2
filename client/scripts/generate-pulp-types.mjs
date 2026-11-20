@@ -1,8 +1,17 @@
 /**
- * Emit `src/app/client/pulpTypes.gen.ts`: for each plugin collection in the OpenAPI spec
- * (`<entity>/<app>/<slug>/`), the generated request and list types its operations use, keyed
- * by the `<app>/<slug>` apiPath. Plugin definitions type their `apiPath` against these maps,
- * so a path the API doesn't have fails to compile and forms find their body type by path.
+ * Emit two files from the OpenAPI spec:
+ * - `src/app/client/pulpTypes.gen.ts`: for each plugin collection (`<entity>/<app>/<slug>/`),
+ *   the generated request and list types its operations use, keyed by the `<app>/<slug>`
+ *   apiPath. Plugin definitions type their `apiPath` against these maps, so a path the API
+ *   doesn't have fails to compile and forms find their body type by path.
+ * - `src/app/client/pulpEndpoints.gen.ts`: the endpoint paths relative to `api/v3/`, the
+ *   plugin collections and the actions appended to an href, which `queries/utils/pulpApi.ts`
+ *   types its URL builders against.
+ *
+ * Paths are kept relative to `api/v3/`, the part that is the same whether or not the server
+ * has DOMAIN_ENABLED; the domain segment is added at runtime. The spec must be dumped with
+ * DOMAIN_ENABLED: only then are domain-scoped endpoints (`{pulp_domain}/api/v3/…`) told
+ * apart from the ones outside any domain (`status/`, `livez/`, `docs/…`).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,9 +22,19 @@ const spec = JSON.parse(
   readFileSync(join(root, "openapi/pulp.json"), "utf8"),
 );
 const target = join(root, "src/app/client/pulpTypes.gen.ts");
+const endpointsTarget = join(root, "src/app/client/pulpEndpoints.gen.ts");
+
+// The v3 prefix, with or without the domain segment.
+const V3_PREFIX = /^\/api\/pulp\/(\{pulp_domain\}\/)?api\/v3\//;
+
+if (!Object.keys(spec.paths).some((path) => path.includes("{pulp_domain}/api/v3/"))) {
+  throw new Error(
+    "generate-pulp-types: openapi/pulp.json has no domain-scoped paths; dump it from a Pulp with DOMAIN_ENABLED.",
+  );
+}
 
 const COLLECTION =
-  /^\/api\/pulp\/\{pulp_domain\}\/api\/v3\/(remotes|repositories|distributions|publications|content|acs|contentguards)\/([^/{}]+)\/([^/{}]+)\/$/;
+  /^(remotes|repositories|distributions|publications|content|acs|contentguards)\/([^/{}]+)\/([^/{}]+)\/$/;
 
 // How @hey-api/openapi-ts names an operation's types: PascalCase of the operationId.
 const typeName = (operationId) =>
@@ -49,7 +68,8 @@ const maps = {
 const imports = new Set();
 
 for (const [path, item] of Object.entries(spec.paths)) {
-  const match = COLLECTION.exec(path);
+  const prefix = V3_PREFIX.exec(path);
+  const match = prefix && COLLECTION.exec(path.slice(prefix[0].length));
   if (!match) continue;
   const [, collection, app, slug] = match;
   const apiPath = `${app}/${slug}`;
@@ -96,3 +116,147 @@ ${block("ContentGuardEndpoints", "Content guard collections by apiPath: create a
 
 writeFileSync(target, source);
 console.log(`generate-pulp-types: wrote ${target}`);
+
+// --- pulpEndpoints.gen.ts ---
+
+const METHODS = ["get", "post", "put", "patch", "delete"];
+const operationsOf = (item) =>
+  METHODS.filter((method) => item[method]?.operationId).map((method) => [
+    method,
+    item[method].operationId,
+  ]);
+
+const scoped = new Map(); // endpoint -> path item, inside a domain
+const rootEndpoints = [];
+for (const [path, item] of Object.entries(spec.paths)) {
+  const prefix = V3_PREFIX.exec(path);
+  if (!prefix) continue;
+  const endpoint = path.slice(prefix[0].length);
+  if (prefix[1]) scoped.set(endpoint, item);
+  else rootEndpoints.push(endpoint);
+}
+
+// Plugin collections: `<collection>/<app>/<slug>/` and the actions after it (`upload/`).
+const PLUGIN_COLLECTION = /^([^/{}]+)\/([^/{}]+\/[^/{}]+)\/(.*)$/;
+const collections = {};
+for (const endpoint of scoped.keys()) {
+  const match = PLUGIN_COLLECTION.exec(endpoint);
+  if (!match) continue;
+  const [, collection, apiPath, action] = match;
+  ((collections[collection] ??= {})[apiPath] ??= new Set()).add(action);
+}
+
+// Href actions: an operation on `{x_href}<action>` belongs to the resource whose list
+// operationId is the longest prefix of its own (`repositories_file_file_` for
+// `repositories_file_file_sync`). Lists under an href (`{group_href}users/`) name a nested
+// kind (`groups/users`), so `groups_users_delete` on `{groups_user_href}` lands there.
+const HREF_PATH = /^\{\w+_href\}(.*)$/;
+const listKinds = new Map(); // operationId prefix -> { kind, path }
+for (const [endpoint, item] of scoped) {
+  const id = item.get?.operationId;
+  if (id?.endsWith("_list")) {
+    listKinds.set(id.slice(0, -"list".length), { kind: endpoint.split("/")[0], path: endpoint });
+  }
+}
+const hrefPaths = Object.entries(spec.paths).filter(([path]) => HREF_PATH.test(path));
+const kindOf = (operationId, path) => {
+  let best;
+  for (const [prefix, entry] of listKinds) {
+    if (entry.path === path || !operationId.startsWith(prefix)) continue;
+    if (!best || prefix.length > best[0].length) best = [prefix, entry];
+  }
+  return best?.[1].kind;
+};
+// Nested lists first, so the kinds they introduce are known when actions are sorted.
+for (const [path, item] of hrefPaths) {
+  const id = item.get?.operationId;
+  const action = HREF_PATH.exec(path)[1];
+  if (!id?.endsWith("_list") || !action) continue;
+  const parent = kindOf(id, path);
+  if (parent) {
+    listKinds.set(id.slice(0, -"list".length), {
+      kind: `${parent}/${action.replace(/\/$/, "")}`,
+      path,
+    });
+  }
+}
+const hrefActions = {};
+for (const [path, item] of hrefPaths) {
+  const action = HREF_PATH.exec(path)[1];
+  if (!action) continue;
+  for (const [, operationId] of operationsOf(item)) {
+    const kind = kindOf(operationId, path);
+    if (kind) (hrefActions[kind] ??= new Set()).add(action);
+  }
+}
+
+const literal = (value) => JSON.stringify(value);
+const union = (values) =>
+  [...values].sort().map(literal).join(" | ") || "never";
+
+const endpointImports = new Set();
+const endpointRows = [...scoped]
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([endpoint, item]) => {
+    const members = operationsOf(item).map(([method, operationId]) => {
+      const name = typeName(operationId);
+      endpointImports.add(`${name}Data`).add(`${name}Responses`);
+      return `${method}: { data: ${name}Data; responses: ${name}Responses }`;
+    });
+    return `  ${literal(endpoint)}: { ${members.join("; ")} };`;
+  });
+
+const collectionRows = Object.entries(collections)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([collection, byApiPath]) => {
+    const rows = Object.entries(byApiPath)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([apiPath, actions]) => `    ${literal(apiPath)}: ${union(actions)};`);
+    return `  ${literal(collection)}: {\n${rows.join("\n")}\n  };`;
+  });
+
+const hrefActionRows = Object.entries(hrefActions)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([kind, actions]) => `  ${literal(kind)}: ${union(actions)};`);
+
+const endpointsSource = `// Generated by scripts/generate-pulp-types.mjs from openapi/pulp.json. Do not edit.
+import type {
+${[...endpointImports]
+  .sort()
+  .map((name) => `  ${name},`)
+  .join("\n")}
+} from "./types.gen";
+
+/**
+ * Domain-scoped endpoints, relative to \`api/v3/\` (the domain segment, when enabled, is
+ * added at runtime), with each method's operation types.
+ */
+export interface PulpEndpoints {
+${endpointRows.join("\n")}
+}
+
+export type PulpEndpoint = keyof PulpEndpoints;
+
+/** Endpoints outside any domain, relative to \`api/v3/\`. */
+export type PulpRootEndpoint = ${union(rootEndpoints)};
+
+/**
+ * Plugin collections (\`<collection>/<apiPath>/<action>\`): for each apiPath, the actions
+ * under it (\`""\` is the collection itself).
+ */
+export interface PulpCollections {
+${collectionRows.join("\n")}
+}
+
+export type PulpCollection = keyof PulpCollections;
+
+/** The actions an href of each resource kind takes (\`{href}sync/\`). */
+export interface PulpHrefActions {
+${hrefActionRows.join("\n")}
+}
+
+export type PulpHrefKind = keyof PulpHrefActions;
+`;
+
+writeFileSync(endpointsTarget, endpointsSource);
+console.log(`generate-pulp-types: wrote ${endpointsTarget}`);

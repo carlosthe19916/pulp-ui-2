@@ -21,7 +21,12 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 
 export const PublicationsQueryKey = "publications";
 
@@ -71,10 +76,13 @@ export const publicationsListQueryOptions = ({
     queryFn: async (): Promise<PaginatedPublicationResponseList> => {
       const response =
         await axiosInstance.get<PaginatedPublicationResponseList>(
-          pulpApiPath(
-            apiPath ? `publications/${apiPath}/` : "publications/",
-            domain,
-          ),
+          apiPath
+            ? pulpCollectionPath({
+                collection: "publications",
+                apiPath,
+                domain,
+              })
+            : pulpApiPath("publications/", domain),
           {
             params: {
               ...params,
@@ -179,7 +187,7 @@ export const usePublicationCreateMutation = (
     }): Promise<AsyncOperationResponse> =>
       (
         await axiosInstance.post<AsyncOperationResponse>(
-          pulpApiPath(`publications/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "publications", apiPath, domain }),
           body,
         )
       ).data,

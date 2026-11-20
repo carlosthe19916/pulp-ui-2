@@ -31,7 +31,12 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const ContentQueryKey = "content";
@@ -110,9 +115,16 @@ export const useContentListQuery = ({
   return useQuery(contentListQueryOptions({ domain, params, options }));
 };
 
-/** A content type's own list endpoint (`content/<apiPath>/`), from the catalog. */
+/**
+ * A content type's own list endpoint (`content/<apiPath>/`), from the catalog. The query is
+ * disabled while the type has no apiPath.
+ */
 const contentTypeUrl = (pulpType: ContentTypeKey, domain: IPulpDomain) =>
-  pulpApiPath(`content/${getContentType(pulpType)?.apiPath}/`, domain);
+  pulpCollectionPath({
+    collection: "content",
+    apiPath: getContentType(pulpType)?.apiPath ?? "",
+    domain,
+  });
 
 type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
   UseQueryOptions<ContentTypePage<K>, DrfAxiosError>,
@@ -288,14 +300,19 @@ export const useContentUploadMutation = (
       if (mechanism === "upload") {
         const { data } =
           await axiosInstance.post<MultipleArtifactContentResponse>(
-            pulpApiPath(`content/${apiPath}/upload/`, domain),
+            pulpCollectionPath({
+              collection: "content",
+              apiPath,
+              domain,
+              action: "upload/",
+            }),
             body,
             config,
           );
         return data.pulp_href ?? "";
       }
       const { data } = await axiosInstance.post<AsyncOperationResponse>(
-        pulpApiPath(`content/${apiPath}/`, domain),
+        pulpCollectionPath({ collection: "content", apiPath, domain }),
         body,
         config,
       );

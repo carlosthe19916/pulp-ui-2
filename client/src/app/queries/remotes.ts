@@ -24,7 +24,12 @@ import type { ListParams } from "./utils/listParams";
 import type { IMutationCallbacks } from "./utils/mutationCallbacks";
 import type { DrfAxiosError } from "./utils/openapiErrorTypes";
 import type { IPulpDomain } from "./utils/pulpApi";
-import { pulpApiPath, pulpHref, toProxyHref } from "./utils/pulpApi";
+import {
+  pulpApiPath,
+  pulpCollectionPath,
+  pulpHref,
+  toProxyHref,
+} from "./utils/pulpApi";
 import type { IBatchResult } from "./utils/settleBatch";
 
 export const RemotesQueryKey = "remotes";
@@ -189,7 +194,7 @@ export const useRemoteCreateMutation = (
     }): Promise<GenericRemoteResponse> =>
       (
         await axiosInstance.post<GenericRemoteResponse>(
-          pulpApiPath(`remotes/${apiPath}/`, domain),
+          pulpCollectionPath({ collection: "remotes", apiPath, domain }),
           body,
         )
       ).data,

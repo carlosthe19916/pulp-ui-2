@@ -26,7 +26,7 @@ const widget = definePlugin({
       compatibleRemoteTypes: ["widget.widget"],
       compatiblePublicationTypes: [],
       contentChanges: "modify",
-      actions: { prune: { path: "prune/", target: "repository" } },
+      actions: { prune: { path: "/rpm/prune/", target: "repository" } },
     },
   },
   content: {

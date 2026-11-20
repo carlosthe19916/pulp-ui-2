@@ -1,5 +1,9 @@
 import type { VersionResponse } from "@app/client";
 import type {
+  PulpEndpoint,
+  PulpHrefActions,
+} from "@app/client/pulpEndpoints.gen";
+import type {
   AcsEndpoints,
   ContentEndpoints,
   ContentGuardEndpoints,
@@ -49,12 +53,18 @@ interface IEntityTypeDef<E extends EntityType> {
  */
 export type ActionResponseKind = "task" | "taskGroup" | "inline";
 
+/** Where an action POSTs: an action of the target's href, or `/` and a domain-scoped endpoint. */
+export type ActionPath =
+  | PulpHrefActions["repositories"]
+  | PulpHrefActions["repositories/versions"]
+  | `/${PulpEndpoint}`;
+
 /**
  * A plugin action's POST. `path` is relative to the target's href (`sign/`), or a
  * collection endpoint when it starts with `/` (`/rpm/copy/`).
  */
 export interface IActionDef {
-  path: string;
+  path: ActionPath;
   target: "repository" | "version";
   /** For collection endpoints: the body field the repository href fills (`list`: as a list). */
   repositoryParam?: { key: string; list?: boolean };
