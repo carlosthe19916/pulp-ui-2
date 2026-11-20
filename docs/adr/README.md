@@ -32,6 +32,7 @@ To change a decision, add a new record with the next number, set the old one's `
 | [0016](0016-task-history-tab.md)                 | Detail pages show a task history                         |
 | [0017](0017-app-shell-layout.md)                 | The app shell is a masthead and an expandable sidebar    |
 | [0018](0018-signatures-and-provenance.md)        | Content shows its signatures and provenance              |
+| [0019](0019-ai-assistant.md)                     | The AI assistant: operator-enabled, any provider (2.x)   |
 
 ## Template
 
