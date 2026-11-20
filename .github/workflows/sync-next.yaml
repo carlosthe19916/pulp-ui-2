@@ -12,7 +12,9 @@ name: Sync main into next
 #
 # Setup required: the pulp-ui-bot GitHub App (BOT_APP_ID / BOT_APP_PRIVATE_KEY, as in
 # plugin-versions-update.yaml) with contents, pull-requests and workflows write (main's commits
-# change workflow files), and "Allow merge commits" enabled in the repository settings.
+# change workflow files), "Allow merge commits" enabled in the repository settings, and next's
+# ruleset requiring the `ci` and `e2e-gate` checks (VERSIONING.md). Without required checks,
+# auto-merge merges the PR at once, before its checks run.
 on:
   push:
     branches: [main]
