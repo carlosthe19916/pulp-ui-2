@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.22+
 - npm 10+
 - Podman (+ `podman-compose`) for the local oci-env Pulp backend; see below
 
