@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  # Not on pushes to next: everything reaches next through a PR whose required checks
+  # already ran on the same merge result (the main-into-next sync included).
   push:
     branches:
       - "main"
-      - "next"
       - "release-*"
   pull_request:
     branches:
@@ -13,6 +14,11 @@ on:
       - "release-*"
   workflow_dispatch:
   workflow_call:
+
+# A newer run for the same PR or branch supersedes the older one.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
