@@ -10,9 +10,10 @@ outputs:
     value: ${{ steps.website.outputs.website }}
   app:
     description: >-
-      true when any file outside website/** changed (client, common, server,
-      e2e, root/shared config, CI). Broad on purpose: unknown/shared files run
-      the full client + e2e suite.
+      true when any file outside website/** and the docs changed (client, common,
+      server, e2e, root/shared config, CI). Broad on purpose: unknown/shared files
+      run the full client + e2e suite. The docs are docs/**, the root *.md files
+      and LICENSE, which no build, lint or test reads.
     value: ${{ steps.app.outputs.app }}
   image:
     description: >-
@@ -32,8 +33,10 @@ runs:
             - 'website/**'
             - '.github/workflows/website.yaml'
     # Separate step: `every` makes a file match only if it matches all patterns,
-    # so the negation excludes website/** (with the default `some`, '**' alone
-    # matches every file and app is always true).
+    # so the negations exclude website/** and the docs (with the default `some`,
+    # '**' alone matches every file and app is always true). Markdown that a check
+    # reads stays in: .rulesync/** (rules:check) and e2e/specs/** (spec:links).
+    # Remove a docs exclusion if a build or test starts reading those files.
     - id: app
       uses: dorny/paths-filter@v3
       with:
@@ -42,6 +45,9 @@ runs:
           app:
             - '**'
             - '!website/**'
+            - '!docs/**'
+            - '!*.md'
+            - '!LICENSE'
     - id: image
       uses: dorny/paths-filter@v3
       with:
