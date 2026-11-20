@@ -23,7 +23,7 @@ Build every request URL with the helpers in `queries/utils/pulpApi.ts` and
 `queries/utils/pulpRequest.ts`, which `npm run generate` types against the spec
 (`client/src/app/client/pulpEndpoints.gen.ts`); never write a path as a string literal or
 template (appending an id or a query string to a helper's result is fine). A typo, a missing
-trailing slash or an action the resource doesn't have fails to compile.
+trailing slash or an action no resource of that kind has fails to compile.
 
 - A fixed endpoint: `pulpGet({ endpoint: "tasks/", domain, params })` /
   `pulpPost({ endpoint, domain, body })`, which also type the params, body and response from

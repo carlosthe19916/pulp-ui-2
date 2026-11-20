@@ -13,6 +13,8 @@ import type {
 import { DEFAULT_PULP_DOMAIN } from "@app/constants";
 import { ENV } from "@app/env";
 
+export type { PulpCollectionApiPath };
+
 /** Live API domain: whether pulpcore has DOMAIN_ENABLED, and the active slug. */
 export interface IPulpDomain {
   enabled: boolean;
@@ -29,8 +31,6 @@ export const defaultDomainFromStatus = (
 
 const domainSegment = (domain: IPulpDomain): string =>
   domain.enabled ? `/${domain.name}` : "";
-
-export type { PulpCollectionApiPath };
 
 const v3Path = (endpoint: string, domain: IPulpDomain): string =>
   `/api/pulp${domainSegment(domain)}/api/v3/${endpoint}`;

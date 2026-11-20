@@ -131,9 +131,10 @@ type ContentTypeListOptions<K extends ContentTypeKey> = Omit<
 
 /**
  * One content type's own list (`content/<apiPath>/`): typed rows, its filters and
- * multi-field ordering. The caller decides every param.
+ * multi-field ordering. The caller decides every param. Not exported: only the hooks below,
+ * which disable it for a type without an endpoint, may run it.
  */
-export const contentTypeListQueryOptions = <K extends ContentTypeKey>({
+const contentTypeListQueryOptions = <K extends ContentTypeKey>({
   domain,
   pulpType,
   params,
