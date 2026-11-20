@@ -28,8 +28,10 @@ updates:
       default-days: 7
       semver-major-days: 14
     open-pull-requests-limit: 15
+    # deps-dev (only devDependencies) releases nothing; deps (runtime) a patch (VERSIONING.md)
     commit-message:
       prefix: "chore(deps): "
+      prefix-development: "chore(deps-dev): "
     allow:
       - dependency-type: direct
     ignore:
@@ -133,6 +135,29 @@ updates:
           - "*"
         exclude-patterns:
           - "@hey-api/*"
+
+  # Updates target main and reach next through sync-next.yaml (VERSIONING.md). Once next has
+  # dependencies main doesn't (SSR, AI), uncomment this entry and list only those, so a
+  # dependency never gets one PR per branch. Dependabot fails on a target-branch that doesn't
+  # exist, hence commented out until then.
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   target-branch: "next"
+  #   schedule:
+  #     interval: "monthly"
+  #   cooldown:
+  #     default-days: 7
+  #     semver-major-days: 14
+  #   commit-message:
+  #     prefix: "chore(deps): "
+  #     prefix-development: "chore(deps-dev): "
+  #   allow:
+  #     - dependency-name: "@copilotkit/*"
+  #     - dependency-name: "@tanstack/react-start"
+  #   groups:
+  #     next-only:
+  #       patterns:
+  #         - "*"
 
   # The website is a standalone package, not a root workspace, so it needs its
   # own npm entry. These PRs touch only website/** and auto-merge once the

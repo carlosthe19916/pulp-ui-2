@@ -1,0 +1,40 @@
+name: Backport
+
+# Copies a merged PR to an older line: each `backport release-X.Y` label opens a PR to the
+# release-X.Y branch with the PR's commits (VERSIONING.md). Add the label before or after the
+# merge. A backport that doesn't apply cleanly is reported on the PR, to be done by hand.
+#
+# Setup required: the pulp-ui-bot GitHub App (BOT_APP_ID / BOT_APP_PRIVATE_KEY) with contents,
+# pull-requests and workflows write, so the backport PR runs CI.
+on:
+  pull_request_target:
+    types: [closed, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  backport:
+    runs-on: ubuntu-latest
+    # pull_request_target runs base-repo code only (this workflow and the action), never the PR's
+    if: >-
+      github.event.pull_request.merged &&
+      (github.event.action == 'closed' || startsWith(github.event.label.name, 'backport '))
+    steps:
+      - name: Get bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Open backport PRs
+        uses: korthout/backport-action@v4.7.2
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          label_pattern: "^backport (release-[0-9]+\\.[0-9]+)$"
+          pull_title: "${pull_title} (backport to ${target_branch})"

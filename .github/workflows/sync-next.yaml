@@ -1,0 +1,127 @@
+name: Sync main into next
+
+# Brings every change on main (the stable line) into next (the next major), so work both need
+# is done once, on main (VERSIONING.md). On each push to main it points the sync/main-into-next
+# branch at main and keeps a PR "chore: merge main into next" open on it, merged with a merge
+# commit by auto-merge once next's required checks pass.
+#
+# On a conflict the PR gets the sync-conflict label and waits for a person: merge origin/next
+# into sync/main-into-next, resolve (regenerate generated files rather than hand-merging them)
+# and push. A branch holding such a resolution is never moved; run this workflow again (or
+# merge the PR) once it's pushed.
+#
+# Setup required: the pulp-ui-bot GitHub App (BOT_APP_ID / BOT_APP_PRIVATE_KEY, as in
+# plugin-versions-update.yaml) with contents, pull-requests and workflows write (main's commits
+# change workflow files), and "Allow merge commits" enabled in the repository settings.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-next
+  cancel-in-progress: false
+
+env:
+  SYNC_BRANCH: sync/main-into-next
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Point the sync branch at main
+        id: branch
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --heads origin next >/dev/null; then
+            echo "::notice::There is no next branch; nothing to sync"
+            echo "sync=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch -q origin main next
+          main_sha=$(git rev-parse origin/main)
+
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" >/dev/null; then
+            git fetch -q origin "$SYNC_BRANCH"
+            sync_sha=$(git rev-parse "origin/$SYNC_BRANCH")
+            # Commits on neither main nor next: someone's conflict resolution, kept
+            if ! git merge-base --is-ancestor "$sync_sha" "$main_sha" &&
+              ! git merge-base --is-ancestor "$sync_sha" origin/next; then
+              echo "::notice::$SYNC_BRANCH holds a conflict resolution; not moving it"
+              echo "sync=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          if git merge-base --is-ancestor "$main_sha" origin/next; then
+            echo "::notice::next already has main ($main_sha)"
+            echo "sync=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git push -q --force origin "$main_sha:refs/heads/$SYNC_BRANCH"
+          echo "sync=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open the PR and enable auto-merge
+        if: steps.branch.outputs.sync == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --head "$SYNC_BRANCH" --base next --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            body=$(printf '%s\n\n%s\n' \
+              "Brings the latest changes on \`main\` into \`next\` ([VERSIONING.md]($GITHUB_SERVER_URL/$GH_REPO/blob/main/VERSIONING.md))." \
+              "Merged with a **merge commit** (never squash), so the next sync only carries newer commits.")
+            url=$(gh pr create --base next --head "$SYNC_BRANCH" --title "chore: merge main into next" --body "$body")
+            pr=${url##*/}
+          fi
+
+          # GitHub computes mergeability in the background
+          state=UNKNOWN
+          for _ in $(seq 1 20); do
+            state=$(gh pr view "$pr" --json mergeable --jq .mergeable)
+            [ "$state" != UNKNOWN ] && break
+            sleep 6
+          done
+
+          labels=$(gh pr view "$pr" --json labels --jq '[.labels[].name] | join(",")')
+          if [ "$state" = CONFLICTING ]; then
+            if [[ ",$labels," != *",sync-conflict,"* ]]; then
+              gh pr edit "$pr" --add-label sync-conflict
+              gh pr comment "$pr" --body-file - <<'EOF'
+          `main` conflicts with `next`. To resolve it:
+
+          ```bash
+          git fetch origin
+          git switch sync/main-into-next
+          git merge origin/next
+          # resolve; regenerate generated files (npm install, npm run generate, npm run rules)
+          git push
+          ```
+
+          Then merge this PR with a **merge commit**, or run the "Sync main into next" workflow to enable auto-merge.
+          EOF
+            fi
+            echo "::warning::PR #$pr conflicts with next"
+          else
+            if [[ ",$labels," == *",sync-conflict,"* ]]; then
+              gh pr edit "$pr" --remove-label sync-conflict
+            fi
+            gh pr merge "$pr" --auto --merge
+          fi

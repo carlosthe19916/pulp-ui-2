@@ -9,7 +9,7 @@ name: Auto-merge dependabot PRs
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
-    branches: [main]
+    branches: [main, next]
 
 permissions:
   contents: write
