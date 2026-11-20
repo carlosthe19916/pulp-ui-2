@@ -90,6 +90,9 @@ jobs:
         run: .github/scripts/next-version.test.sh
 
   codeql:
+    needs: changes
+    # Nothing to scan when only the website or the docs changed.
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
