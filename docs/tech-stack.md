@@ -31,7 +31,8 @@ The main pieces, by area:
 | --------------------------------------------- | ------------------------------------------ |
 | [TypeScript](https://www.typescriptlang.org/) | Language                                   |
 | [Vite](https://vite.dev/)                     | Client dev server and bundler              |
-| [Rollup](https://rollupjs.org/)               | Builds for `common` and `server`           |
+| [Rolldown](https://rolldown.rs/)              | Builds `server`                            |
+| [tsdown](https://tsdown.dev/)                 | Builds `common` (ESM, CJS and its types)   |
 | [Express](https://expressjs.com/)             | Production server (static serving + proxy) |
 
 ## Code generation

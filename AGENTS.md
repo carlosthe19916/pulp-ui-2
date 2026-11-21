@@ -19,7 +19,7 @@ Four npm workspaces (`@app` alias maps to `client/src/app/`):
 
 ```
 ├── common/                   # shared ESM module (branding, env config)
-│                             #   built with Rollup → ESM (.mjs) + CJS (.cjs)
+│                             #   built with tsdown (Rolldown) → ESM (.mjs) + CJS (.cjs)
 ├── client/                   # React SPA (Vite, TypeScript, PatternFly)
 │   └── src/                  #   dev server: port 3000 with proxy to backend
 │       ├── main.tsx          # app entry point
@@ -162,7 +162,7 @@ changed files. In Claude Code, `/eval` does this.
 
 ### `npm run start:dev` (development mode)
 
-Builds `common` once, then concurrently watches `common` (rollup rebuild on change) and runs the Vite dev server on port 3000 with HMR.
+Builds `common` once, then concurrently watches `common` (tsdown rebuild on change) and runs the Vite dev server on port 3000 with HMR.
 
 Vite handles both static serving and API proxying (the `server/` workspace isn't needed):
 
