@@ -340,7 +340,7 @@
               ["^\\u0000?react\\u0000?$", "^\\u0000?react-"],
               ["^\\u0000?@?\\w"],
               ["^\\u0000?@patternfly/"],
-              ["^\\u0000?@(app|catalog|plugin-sdk|plugins)(/|$)"],
+              ["^\\u0000?@(ai|app|catalog|plugin-sdk|plugins)(/|$)"],
               ["^\\u0000?\\."]
             ]
           }

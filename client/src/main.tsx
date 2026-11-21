@@ -30,7 +30,10 @@ root.render(
         </AnimationsProvider>
       </AuthProvider>
       {import.meta.env.DEV ? (
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ReactQueryDevtools
+          initialIsOpen={false}
+          buttonPosition="bottom-left"
+        />
       ) : null}
     </QueryClientProvider>
   </StrictMode>,
