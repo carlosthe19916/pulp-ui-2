@@ -16,8 +16,8 @@
     "format:fast": "oxfmt --check './src/**/*.{ts,tsx,js,json}'",
     "format:fast:fix": "oxfmt './src/**/*.{ts,tsx,js,json}'",
     "prebuild": "npm run clean",
-    "build": "cross-env NODE_ENV=production rollup -c",
-    "start:dev": "cross-env NODE_ENV=development ROLLUP_RUN=true rollup -c -w",
+    "build": "cross-env NODE_ENV=production rolldown -c",
+    "start:dev": "cross-env NODE_ENV=development RUN_SERVER=true rolldown -c -w",
     "start": "npm run build && node --enable-source-maps dist/index.js"
   },
   "dependencies": {

@@ -32,8 +32,8 @@ export interface IBrandingStrings {
   };
 }
 
-// TS resolves this import to a stub JSON file (via `paths`); the rollup build
-// replaces it with the real branding JSON via a virtual plugin.
+// TS resolves this import to a stub JSON file (via `paths`); the build replaces it with the
+// real branding JSON via a virtual plugin.
 import stringsStub from "@branding/strings.json";
 
 export const brandingStrings: IBrandingStrings = stringsStub;

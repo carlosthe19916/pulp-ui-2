@@ -41,7 +41,7 @@ export type PulpEnvType = {
 };
 
 /** Keys in `PulpEnv` that are server-only and not sent to the client. */
-export const SERVER_ENV_KEYS = ["PORT", "PULP_API_URL", "BRANDING"];
+export const SERVER_ENV_KEYS: string[] = ["PORT", "PULP_API_URL", "BRANDING"];
 
 /**
  * Normalize Pulp `API_ROOT`: leading slash, no trailing slash.
@@ -91,7 +91,7 @@ export const buildPulpEnv = ({
   BRANDING,
 });
 
-export const PULP_ENV_DEFAULTS = buildPulpEnv();
+export const PULP_ENV_DEFAULTS: PulpEnvType = buildPulpEnv();
 
 /** Current `@pulp-ui` environment config from `process.env`. */
-export const PULP_ENV = buildPulpEnv(process.env);
+export const PULP_ENV: PulpEnvType = buildPulpEnv(process.env);

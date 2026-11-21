@@ -86,11 +86,15 @@ updates:
           - "http-proxy-middleware"
           - "http-terminator"
 
-      # @vitest/browser-playwright pins vitest exactly.
+      # @vitest/browser-playwright pins vitest exactly; vite and tsdown pin rolldown, which builds
+      # server (and common, through tsdown). Keep vite, rolldown and tsdown on the same rolldown
+      # minor (`npm ls rolldown` shows one copy); bump them together by hand if a PR splits them.
       vite-vitest:
         update-types: ["minor", "patch"]
         patterns:
           - "vite"
+          - "rolldown"
+          - "tsdown"
           - "vite-plugin-*"
           - "@vitejs/*"
           - "vitest"
@@ -102,10 +106,10 @@ updates:
           - "@playwright/test"
           - "playwright"
 
-      rollup:
+      # Rollup plugins that the Rolldown builds of common and server still run.
+      rollup-plugins:
         update-types: ["minor", "patch"]
         patterns:
-          - "rollup"
           - "rollup-*"
           - "@rollup/*"
 
