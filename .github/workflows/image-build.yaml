@@ -38,6 +38,8 @@ jobs:
 
   build:
     needs: changes
+    # A normal multi-arch build takes under 10 minutes; fail fast instead of GitHub's 6-hour default.
+    timeout-minutes: 30
     # On PRs, build only when the image's dependencies changed (a skipped
     # required check counts as passing). `!cancelled()` lets non-PR events run
     # even though `changes` is skipped for them.
