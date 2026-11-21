@@ -7,8 +7,8 @@ import { Skeleton } from "@patternfly/react-core";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
 import { repositoriesListQueryOptions } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { isForbiddenError } from "@app/utils/isHttpError";
 
+import { refuseForbidden } from "../refuseForbidden";
 import { repositorySearchParams } from "./repositorySearchParams";
 import { RepositorySearchResults } from "./RepositorySearchResults";
 
@@ -30,28 +30,25 @@ export const useRepositorySearchTool = () => {
         "Find repositories in the current domain by name and show them to the user as a list with links and types.",
       parameters,
       // The model gets a summary; the user sees the card the render draws, from the same query.
-      handler: async ({ name }) => {
-        try {
-          const page = await queryClient.query(
-            repositoriesListQueryOptions({
-              domain,
-              params: repositorySearchParams(name),
-            }),
-          );
-          return {
-            count: page.count,
-            shown: page.results.map((repository) => ({
-              name: repository.name,
-              type: resolvePulpType(repository.pulp_href),
-            })),
-          };
-        } catch (error) {
-          if (isForbiddenError(error)) {
-            return { error: "The user isn't allowed to list repositories." };
-          }
-          throw error;
-        }
-      },
+      handler: ({ name }) =>
+        refuseForbidden({
+          action: "list repositories",
+          read: async () => {
+            const page = await queryClient.query(
+              repositoriesListQueryOptions({
+                domain,
+                params: repositorySearchParams(name),
+              }),
+            );
+            return {
+              count: page.count,
+              shown: page.results.map((repository) => ({
+                name: repository.name,
+                type: resolvePulpType(repository.pulp_href),
+              })),
+            };
+          },
+        }),
       // While the arguments stream in, `name` is partial; search only once it is complete.
       render: ({ args, status }) =>
         status === ToolCallStatus.InProgress || !args.name ? (

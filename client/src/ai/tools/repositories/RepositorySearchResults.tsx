@@ -1,7 +1,6 @@
 import type React from "react";
 
 import {
-  Alert,
   Card,
   CardBody,
   CardHeader,
@@ -19,8 +18,8 @@ import { PulpTypeLabel } from "@app/components/PulpTypeLabel";
 import { ResourceHrefLink } from "@app/components/ResourceHrefLink";
 import { useRepositoriesListQuery } from "@app/queries/repositories";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
-import { isForbiddenError } from "@app/utils/isHttpError";
 
+import { ToolReadError } from "../../components/ToolReadError";
 import { repositorySearchParams } from "./repositorySearchParams";
 
 interface IRepositorySearchResultsProps {
@@ -40,15 +39,10 @@ export const RepositorySearchResults: React.FC<
   }
   if (error) {
     return (
-      <Alert
-        variant="danger"
-        isInline
-        isPlain
-        title={
-          isForbiddenError(error)
-            ? "You don't have permission to list repositories"
-            : "Could not load repositories"
-        }
+      <ToolReadError
+        error={error}
+        action="list repositories"
+        subject="repositories"
       />
     );
   }

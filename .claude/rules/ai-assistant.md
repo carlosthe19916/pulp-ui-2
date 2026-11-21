@@ -23,7 +23,8 @@ frontend tools in the browser (`client/src/ai/`) that read Pulp and draw the ans
 - **Tools** are `useFrontendTool` from `@copilotkit/react-core/v2` with a zod schema. The handler
   reads through the app's `*QueryOptions` (`queryClient.query`) and returns the model a short
   summary; the `render` draws app components from the same query, once the arguments are complete
-  (not `ToolCallStatus.InProgress`). Never render markup the model wrote.
+  (not `ToolCallStatus.InProgress`). Never render markup the model wrote. The tool and its
+  card share one params builder (`<entity>/<x>Params.ts`), so both read the same cache slot.
 - **Read-only, as the user.** Tools call Pulp from the browser with the user's session; the server
   never calls Pulp. A tool that changes anything needs a new ADR.
 
@@ -35,9 +36,13 @@ ai/
   AiAssistant.tsx       # CopilotKit provider; mounts the chat, the context and the tools
   AssistantChat/        # the PatternFly chat (component folder)
   context/              # what the assistant knows: one hook per kind of context
+  components/           # result pieces shared by tools of several entities (ToolReadError)
   tools/
     index.ts            # useAssistantTools(): every tool, in one list
+    refuseForbidden.ts  # wraps a handler's read: a 403 becomes a refusal for the model
+    publishes.ts  taskErrorForModel.ts   # other helpers tools of several entities share
     repositories/       # one folder per Pulp entity: its tools, their result components, tests
+    tasks/  distributions/  status/
 ```
 
 - A new tool goes in its entity's folder under `tools/` (a new folder for a new entity) and is
