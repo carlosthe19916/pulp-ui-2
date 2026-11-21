@@ -112,6 +112,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      "@ai": path.resolve(import.meta.dirname, "./src/ai"),
       "@app": path.resolve(import.meta.dirname, "./src/app"),
       "@catalog": path.resolve(import.meta.dirname, "./src/plugins/catalog"),
       "@plugin-sdk": path.resolve(import.meta.dirname, "./src/plugin-sdk"),
@@ -137,6 +138,10 @@ export default defineConfig({
           rewritePulpApiPath(path, PULP_ENV.PULP_API_ROOT ?? ""),
         changeOrigin: true,
         cookieDomainRewrite: "",
+      },
+      // The AI assistant's runtime, served by the UI server that start:dev runs.
+      "/copilotkit": {
+        target: `http://localhost:${PULP_ENV.PORT ?? "8080"}`,
       },
     },
   },
