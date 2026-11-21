@@ -1,5 +1,7 @@
 # Builder image
-FROM registry.access.redhat.com/ubi9/nodejs-24:latest AS builder
+# The build output is plain JavaScript and static files, so build once on the CI machine's own
+# platform; only the runtime stage below is per-architecture.
+FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/nodejs-24:latest AS builder
 
 USER 1001
 COPY --chown=1001 . .
