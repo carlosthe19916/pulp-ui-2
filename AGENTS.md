@@ -162,9 +162,9 @@ changed files. In Claude Code, `/eval` does this.
 
 ### `npm run start:dev` (development mode)
 
-Builds `common` once, then concurrently watches `common` (rollup rebuild on change) and runs the Vite dev server on port 3000 with HMR.
+Builds `common` once, then concurrently watches `common` (rollup rebuild on change) and runs the Vite dev server on port 3000 with HMR. Scripts load `.env` and then `.env.local` (`dotenv -c`), which git ignores: put keys there, never in `.env`. It also runs the `server/` workspace on `PORT` (default 8080), which serves the AI assistant's `/copilotkit` endpoint (2.x) for Vite to proxy; the assistant is on only when `.env.local` sets its `AI_*` variables.
 
-Vite handles both static serving and API proxying (the `server/` workspace isn't needed):
+Vite handles both static serving and API proxying (the `server/` workspace is needed only for the AI assistant):
 
 | Path   | Proxied to     | Default                 |
 | ------ | -------------- | ----------------------- |

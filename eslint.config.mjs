@@ -150,7 +150,7 @@ export default defineConfig([
       "simple-import-sort": simpleImportSort,
     },
     rules: {
-      // Five blocks: react → packages → @patternfly → @app/@catalog/@plugin-sdk/@plugins → relative.
+      // Five blocks: react → packages → @patternfly → @ai/@app/@catalog/@plugin-sdk/@plugins → relative.
       "simple-import-sort/imports": [
         "error",
         {
@@ -158,7 +158,7 @@ export default defineConfig([
             ["^\\u0000?react\\u0000?$", "^\\u0000?react-"],
             ["^\\u0000?@?\\w"],
             ["^\\u0000?@patternfly/"],
-            ["^\\u0000?@(app|catalog|plugin-sdk|plugins)(/|$)"],
+            ["^\\u0000?@(ai|app|catalog|plugin-sdk|plugins)(/|$)"],
             ["^\\u0000?\\."],
           ],
         },

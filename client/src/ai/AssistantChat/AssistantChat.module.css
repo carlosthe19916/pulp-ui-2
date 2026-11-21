@@ -1,0 +1,5 @@
+/* PatternFly's chatbot toggle has no z-index, so the Page's main container covers it; lift it to
+   the chat window's level. */
+.toggle {
+  z-index: var(--pf-t--global--z-index--md);
+}

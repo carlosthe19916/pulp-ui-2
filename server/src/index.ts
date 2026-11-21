@@ -13,12 +13,19 @@ import {
   SERVER_ENV_KEYS,
   brandingStrings,
   encodeEnv,
+  readAiConfig,
 } from "@pulp-ui/common";
+import { AI_RUNTIME_ROUTE, createAiHandler } from "./ai.js";
 import proxies from "./proxies.js";
 
 const debugMode = process.env.DEBUG === "1";
 if (debugMode) {
-  console.log("CONSOLE_ENV", PULP_ENV);
+  // The image sets DEBUG=1, so keep the provider key and endpoint out of the logs.
+  console.log("CONSOLE_ENV", {
+    ...PULP_ENV,
+    AI_API_KEY: PULP_ENV.AI_API_KEY && "<redacted>",
+    AI_BASE_URL: PULP_ENV.AI_BASE_URL && "<redacted>",
+  });
 }
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -30,6 +37,16 @@ const app = express();
 app.set("x-powered-by", false);
 
 app.use(createProxyMiddleware(proxies.api));
+
+// The AI assistant exists only when a provider is configured.
+const ai = readAiConfig(PULP_ENV);
+if (ai.problem) {
+  console.warn(`AI assistant disabled: ${ai.problem}`);
+}
+if (ai.config) {
+  app.all(AI_RUNTIME_ROUTE, createAiHandler(ai.config));
+  console.log(`AI assistant enabled: ${ai.config.provider} ${ai.config.model}`);
+}
 
 app.engine("ejs", ejs.renderFile);
 app.use(express.json());

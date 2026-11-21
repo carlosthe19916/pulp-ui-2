@@ -27,8 +27,8 @@
     "start:dev:common": "npm run start:dev -w common",
     "start:dev:server": "npm run start:dev -w server",
     "start:dev:client": "npm run start:dev -w client",
-    "start:dev": "dotenv -- npm run build -w common && dotenv -- concurrently -n common,client -c 'white.bold.inverse,green.bold.inverse,blue.bold.inverse' 'npm:start:dev:common' 'npm:start:dev:client'",
-    "start": "dotenv -- npm run build -w common -w client && dotenv -- npm run start -w server",
+    "start:dev": "dotenv -c -- npm run build -w common && dotenv -c -- concurrently -n common,server,client -c 'white.bold.inverse,green.bold.inverse,blue.bold.inverse' 'npm:start:dev:common' 'npm:start:dev:server' 'npm:start:dev:client'",
+    "start": "dotenv -c -- npm run build -w common -w client && dotenv -c -- npm run start -w server",
     "test": "npm run test -w common -w client -w server --if-present --",
     "test:e2e": "npm run test -w e2e",
     "test:e2e:local": "npm run test:local -w e2e --",
@@ -101,5 +101,8 @@
     "*.{json,md,yaml,yml,css}": [
       "prettier --write"
     ]
+  },
+  "scarfSettings": {
+    "enabled": false
   }
 }

@@ -1,3 +1,5 @@
+import { readAiConfig } from "./ai.js";
+
 /** Define process.env to contain `PulpEnvType` */
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -38,10 +40,33 @@ export type PulpEnvType = {
 
   /** Location of branding files (relative paths computed from the project source root) */
   BRANDING?: string;
+
+  /** AI assistant LLM provider: openai, anthropic, google or openai-compatible */
+  AI_PROVIDER?: string;
+
+  /** AI assistant model id, passed to the provider unchanged */
+  AI_MODEL?: string;
+
+  /** AI assistant provider key; optional for openai-compatible */
+  AI_API_KEY?: string;
+
+  /** AI assistant endpoint; required for openai-compatible */
+  AI_BASE_URL?: string;
+
+  /** Derived from the `AI_*` variables by `buildPulpEnv`; the only one the browser gets */
+  AI_ENABLED?: "true" | "false";
 };
 
 /** Keys in `PulpEnv` that are server-only and not sent to the client. */
-export const SERVER_ENV_KEYS = ["PORT", "PULP_API_URL", "BRANDING"];
+export const SERVER_ENV_KEYS = [
+  "PORT",
+  "PULP_API_URL",
+  "BRANDING",
+  "AI_PROVIDER",
+  "AI_MODEL",
+  "AI_API_KEY",
+  "AI_BASE_URL",
+];
 
 /**
  * Normalize Pulp `API_ROOT`: leading slash, no trailing slash.
@@ -73,6 +98,12 @@ export const buildPulpEnv = ({
   PULP_API_ROOT = "/pulp",
 
   BRANDING,
+
+  AI_PROVIDER,
+  AI_MODEL,
+  AI_API_KEY,
+  AI_BASE_URL,
+  AI_ENABLED = "false",
 }: Partial<PulpEnvType> = {}): PulpEnvType => ({
   NODE_ENV,
   PORT,
@@ -89,6 +120,16 @@ export const buildPulpEnv = ({
   PULP_API_ROOT,
 
   BRANDING,
+
+  AI_PROVIDER,
+  AI_MODEL,
+  AI_API_KEY,
+  AI_BASE_URL,
+  // On the server the AI_* values decide; the browser gets none of them and keeps what it was sent.
+  AI_ENABLED: readAiConfig({ AI_PROVIDER, AI_MODEL, AI_API_KEY, AI_BASE_URL })
+    .config
+    ? "true"
+    : AI_ENABLED,
 });
 
 export const PULP_ENV_DEFAULTS = buildPulpEnv();
