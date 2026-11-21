@@ -17,6 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"],
     "paths": {
+      "@ai": ["./src/ai"],
       "@app/*": ["./src/app/*"],
       "@catalog": ["./src/plugins/catalog"],
       "@plugin-sdk/*": ["./src/plugin-sdk/*"],

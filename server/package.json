@@ -17,10 +17,12 @@
     "format:fast:fix": "oxfmt './src/**/*.{ts,tsx,js,json}'",
     "prebuild": "npm run clean",
     "build": "cross-env NODE_ENV=production rollup -c",
-    "start:dev": "cross-env NODE_ENV=development ROLLUP_RUN=true rollup -c -w",
+    "start:dev": "cross-env NODE_ENV=development ROLLUP_RUN=true COPILOTKIT_TELEMETRY_DISABLED=true rollup -c -w",
     "start": "npm run build && node --enable-source-maps dist/index.js"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.144",
+    "@copilotkit/runtime": "^1.90.0",
     "ejs": "^7.0.2",
     "express": "^5.3.0",
     "http-proxy-middleware": "^4.2.2",
