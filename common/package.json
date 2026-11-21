@@ -7,13 +7,18 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist",
+  "types": "./dist/index.d.cts",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "scripts": {
@@ -28,7 +33,7 @@
     "format:fast": "oxfmt --check './src/**/*.{ts,tsx,js,json}'",
     "format:fast:fix": "oxfmt './src/**/*.{ts,tsx,js,json}'",
     "prebuild": "npm run clean",
-    "build": "cross-env NODE_ENV=production rollup -c",
-    "start:dev": "cross-env NODE_ENV=development rollup -c --watch"
+    "build": "cross-env NODE_ENV=production tsdown",
+    "start:dev": "cross-env NODE_ENV=development tsdown --watch"
   }
 }
