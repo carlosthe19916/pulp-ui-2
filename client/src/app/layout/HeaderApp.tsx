@@ -3,6 +3,7 @@ import { useReducer, useState } from "react";
 
 import {
   Brand,
+  Button,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -20,9 +21,11 @@ import {
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
+  Tooltip,
 } from "@patternfly/react-core";
 import ExternalLinkAltIcon from "@patternfly/react-icons/dist/esm/icons/external-link-alt-icon";
 import RhUiQuestionMarkCircleFillIcon from "@patternfly/react-icons/dist/esm/icons/rh-ui-question-mark-circle-fill-icon";
+import TerminalIcon from "@patternfly/react-icons/dist/esm/icons/terminal-icon";
 import UserIcon from "@patternfly/react-icons/dist/esm/icons/user-icon";
 
 import { ThemeSelector } from "@app/components/ThemeSelector";
@@ -39,6 +42,8 @@ interface IHeaderAppProps {
   onSidebarToggle: () => void;
   isTaskDrawerExpanded: boolean;
   onToggleTaskDrawer: () => void;
+  isTerminalOpen: boolean;
+  onToggleTerminal: () => void;
 }
 
 /** The masthead: sidebar toggle, brand, and the tasks, help, theme and user menus. */
@@ -47,6 +52,8 @@ export const HeaderApp: React.FC<IHeaderAppProps> = ({
   onSidebarToggle,
   isTaskDrawerExpanded,
   onToggleTaskDrawer,
+  isTerminalOpen,
+  onToggleTerminal,
 }) => {
   const auth = useAuth();
   const {
@@ -92,12 +99,26 @@ export const HeaderApp: React.FC<IHeaderAppProps> = ({
                 gap={{ default: "gapNone", md: "gapMd" }}
               >
                 {isLoggedIn && (
-                  <ToolbarItem>
-                    <TaskDrawerBadge
-                      isExpanded={isTaskDrawerExpanded}
-                      onToggle={onToggleTaskDrawer}
-                    />
-                  </ToolbarItem>
+                  <>
+                    <ToolbarItem>
+                      <Tooltip content="Command line terminal">
+                        <Button
+                          variant="plain"
+                          aria-label="Command line terminal"
+                          aria-expanded={isTerminalOpen}
+                          isClicked={isTerminalOpen}
+                          icon={<TerminalIcon />}
+                          onClick={onToggleTerminal}
+                        />
+                      </Tooltip>
+                    </ToolbarItem>
+                    <ToolbarItem>
+                      <TaskDrawerBadge
+                        isExpanded={isTaskDrawerExpanded}
+                        onToggle={onToggleTaskDrawer}
+                      />
+                    </ToolbarItem>
+                  </>
                 )}
                 <ToolbarItem>
                   <Dropdown

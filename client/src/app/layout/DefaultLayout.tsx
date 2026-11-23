@@ -13,6 +13,7 @@ import {
   TaskDrawer,
 } from "./TaskDrawer";
 import { TaskFinishRefresher } from "./TaskFinishRefresher";
+import { TerminalDrawer } from "./TerminalDrawer";
 
 interface IDefaultLayoutProps {
   children?: React.ReactNode;
@@ -35,6 +36,7 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
   // On mobile the sidebar overlays the page, so it starts closed and closes after a pick.
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isTaskDrawerExpanded, setIsTaskDrawerExpanded] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
   const isSidebarOpen = isMobile ? isMobileSidebarOpen : isDesktopSidebarOpen;
 
@@ -67,6 +69,10 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
           onToggleTaskDrawer={() =>
             setIsTaskDrawerExpanded(!isTaskDrawerExpanded)
           }
+          isTerminalOpen={isTerminalOpen}
+          onToggleTerminal={() => {
+            setIsTerminalOpen(!isTerminalOpen);
+          }}
         />
       }
       sidebar={
@@ -83,7 +89,12 @@ export const DefaultLayout: React.FC<IDefaultLayoutProps> = ({ children }) => {
       skipToContent={PageSkipToContent}
       mainContainerId={pageId}
     >
-      {children}
+      <TerminalDrawer
+        isOpen={isTerminalOpen}
+        onClose={() => setIsTerminalOpen(false)}
+      >
+        {children}
+      </TerminalDrawer>
       <TaskFinishRefresher />
     </Page>
   );
