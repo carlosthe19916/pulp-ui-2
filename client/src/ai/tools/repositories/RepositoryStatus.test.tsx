@@ -138,7 +138,7 @@ describe("RepositoryStatus", () => {
     await expect
       .element(
         screen.getByText(
-          "No distribution points at this repository: warning status;",
+          "No distribution serves this repository: warning status;",
         ),
       )
       .toBeVisible();
@@ -205,7 +205,7 @@ describe("RepositoryStatus", () => {
     await expect
       .element(
         screen.getByText(
-          "No distribution points at this repository: warning status;",
+          "No distribution serves this repository: warning status;",
         ),
       )
       .not.toBeInTheDocument();

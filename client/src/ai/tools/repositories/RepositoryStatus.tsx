@@ -19,6 +19,7 @@ import {
   ListItem,
   Skeleton,
 } from "@patternfly/react-core";
+import textStyles from "@patternfly/react-styles/css/utilities/Text/text";
 
 import type { RepositoryResponse } from "@app/client";
 import { ContentUrlLink } from "@app/components/ContentUrlLink";
@@ -44,12 +45,14 @@ import { extractTaskId, shortTaskName } from "@app/utils/taskHref";
 import { formatDateTime, getTaskErrorMessage } from "@app/utils/utils";
 
 import { ToolReadError } from "../../components/ToolReadError";
-import { publishes } from "../publishes";
 import {
+  distributionsByHrefParams,
   lastSyncParams,
   presentCounts,
-  publicationsCountParams,
+  publicationApiPathOf,
+  publicationsParams,
   repositoryByNameParams,
+  servingHrefsOf,
   VERSIONS_COUNT_PARAMS,
 } from "./repositoryStatusParams";
 
@@ -102,7 +105,8 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
   const { name: pulpDomain } = useSelectedDomain();
   const href = repository.pulp_href ?? "";
   const pulpType = resolvePulpType(href);
-  const isPublished = publishes(href);
+  const publicationApiPath = publicationApiPathOf(href);
+  const isPublished = !!publicationApiPath;
 
   const latestQuery = useRepositoryVersionDetailQuery({
     href: repository.latest_version_href ?? null,
@@ -116,8 +120,14 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
     options: { enabled: !!repository.prn },
   });
   const publicationsQuery = usePublicationsListQuery({
-    params: publicationsCountParams(href),
+    apiPath: publicationApiPath,
+    params: publicationsParams(href),
     options: { enabled: isPublished },
+  });
+  const servingHrefs = servingHrefsOf(publicationsQuery.data);
+  const viaPublicationsQuery = useDistributionsListQuery({
+    params: distributionsByHrefParams(servingHrefs),
+    options: { enabled: servingHrefs.length > 0 },
   });
   const distributionsQuery = useDistributionsListQuery({
     params: repositoryDistributionsPickerParams(href),
@@ -129,7 +139,14 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
   const sync = syncsQuery.data?.results[0];
   const syncError = sync ? getTaskErrorMessage(sync) : undefined;
   const remote = remoteQuery.data;
-  const serving = distributionsQuery.data?.results ?? [];
+  const serving = [
+    ...(distributionsQuery.data?.results ?? []),
+    ...(viaPublicationsQuery.data?.results ?? []),
+  ];
+  const servingQuery = {
+    isLoading: distributionsQuery.isLoading || viaPublicationsQuery.isLoading,
+    error: distributionsQuery.error ?? viaPublicationsQuery.error,
+  };
 
   return (
     <Card isCompact>
@@ -211,7 +228,7 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
                   href={repository.remote}
                   label={remote.name}
                 />
-                <Content component="small">
+                <Content component="small" className={textStyles.textBreakWord}>
                   {remote.url}
                   {remote.policy ? `, ${remote.policy}` : ""}
                   {remote.proxy_url ? `, through ${remote.proxy_url}` : ""}
@@ -244,7 +261,9 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
                     </Content>
                   </Flex>
                   {syncError ? (
-                    <Content component="p">{syncError}</Content>
+                    <Content component="p" className={textStyles.textBreakWord}>
+                      {syncError}
+                    </Content>
                   ) : null}
                 </>
               ) : (
@@ -255,7 +274,7 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
           <Fact
             term="Served by"
             subject="the distributions"
-            query={distributionsQuery}
+            query={servingQuery}
           >
             {serving.length > 0 ? (
               <List isPlain>
@@ -271,7 +290,7 @@ const RepositoryStatusCard: React.FC<IRepositoryStatusCardProps> = ({
                 ))}
               </List>
             ) : (
-              <Warning>No distribution points at this repository</Warning>
+              <Warning>No distribution serves this repository</Warning>
             )}
           </Fact>
         </DescriptionList>

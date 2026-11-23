@@ -20,16 +20,18 @@ import { tasksListQueryOptions } from "@app/queries/tasks";
 import { resolvePulpType } from "@app/queries/utils/pulpHref";
 import { summaryTotal } from "@app/utils/contentSummary";
 
-import { publishes } from "../publishes";
 import { refuseForbidden } from "../refuseForbidden";
 import { taskErrorForModel } from "../taskErrorForModel";
 import { readSeparately, summarize } from "./readSeparately";
 import { RepositoryStatus } from "./RepositoryStatus";
 import {
+  distributionsByHrefParams,
   lastSyncParams,
   presentCounts,
-  publicationsCountParams,
+  publicationApiPathOf,
+  publicationsParams,
   repositoryByNameParams,
+  servingHrefsOf,
   VERSIONS_COUNT_PARAMS,
 } from "./repositoryStatusParams";
 
@@ -67,7 +69,7 @@ export const useRepositoryStatusTool = () => {
               return { error: `No repository is named "${name}".` };
             }
             const href = repository.pulp_href;
-            const isPublished = publishes(href);
+            const publicationApiPath = publicationApiPathOf(href);
             const [latest, versions, lastSync, publications, serving, remote] =
               await Promise.all([
                 repository.latest_version_href
@@ -97,12 +99,13 @@ export const useRepositoryStatusTool = () => {
                       ),
                     )
                   : undefined,
-                isPublished
+                publicationApiPath
                   ? readSeparately(
                       queryClient.query(
                         publicationsListQueryOptions({
                           domain,
-                          params: publicationsCountParams(href),
+                          apiPath: publicationApiPath,
+                          params: publicationsParams(href),
                         }),
                       ),
                     )
@@ -123,6 +126,18 @@ export const useRepositoryStatusTool = () => {
                     )
                   : undefined,
               ]);
+            const servingHrefs = summarize(publications, servingHrefsOf);
+            const viaPublications =
+              Array.isArray(servingHrefs) && servingHrefs.length > 0
+                ? await readSeparately(
+                    queryClient.query(
+                      distributionsListQueryOptions({
+                        domain,
+                        params: distributionsByHrefParams(servingHrefs),
+                      }),
+                    ),
+                  )
+                : undefined;
             return {
               type: resolvePulpType(href),
               latestVersion: summarize(latest, (version) => ({
@@ -158,12 +173,20 @@ export const useRepositoryStatusTool = () => {
                   policy: detail.policy,
                   tlsValidation: detail.tls_validation,
                 })) ?? "none",
-              // Distributions serving a specific version or publication aren't found by this filter.
+              // Its own distributions, then those serving its publications.
               distributionsServingIt: summarize(serving, (list) =>
                 list.results.map((distribution) => ({
                   name: distribution.name,
                   url: distribution.base_url,
                 })),
+              ),
+              distributionsServingItsPublications: summarize(
+                viaPublications,
+                (list) =>
+                  list.results.map((distribution) => ({
+                    name: distribution.name,
+                    url: distribution.base_url,
+                  })),
               ),
             };
           },

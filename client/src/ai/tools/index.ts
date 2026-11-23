@@ -1,4 +1,7 @@
+import { useFindEndpointsTool } from "./api/useFindEndpointsTool";
+import { usePulpGetTool } from "./api/usePulpGetTool";
 import { useDistributionSearchTool } from "./distributions/useDistributionSearchTool";
+import { useReadGuideTool } from "./guides/useReadGuideTool";
 import { useRepositorySearchTool } from "./repositories/useRepositorySearchTool";
 import { useRepositoryStatusTool } from "./repositories/useRepositoryStatusTool";
 import { useSystemStatusTool } from "./status/useSystemStatusTool";
@@ -11,4 +14,7 @@ export const useAssistantTools = () => {
   useTaskListTool();
   useDistributionSearchTool();
   useSystemStatusTool();
+  useFindEndpointsTool();
+  usePulpGetTool();
+  useReadGuideTool();
 };
