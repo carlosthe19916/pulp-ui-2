@@ -49,9 +49,9 @@ export const useRepositorySearchTool = () => {
             };
           },
         }),
-      // While the arguments stream in, `name` is partial; search only once it is complete.
       render: ({ args, status }) =>
-        status === ToolCallStatus.InProgress || !args.name ? (
+        // An empty name lists every repository, so only a missing one means "still streaming".
+        status === ToolCallStatus.InProgress || args.name === undefined ? (
           <Skeleton screenreaderText="Looking up repositories" />
         ) : (
           <RepositorySearchResults name={args.name} />

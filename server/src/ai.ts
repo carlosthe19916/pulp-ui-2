@@ -18,11 +18,18 @@ export const AI_RUNTIME_PATH = "/copilotkit";
 /** Matches the runtime's routes for `app.all`, which keeps the full path. */
 export const AI_RUNTIME_ROUTE = /^\/copilotkit(\/.*)?$/;
 
-const SYSTEM_PROMPT = `You are the assistant of the Pulp web UI, which manages software
-repositories, remotes, distributions and content in Pulp.
-- You can only read. Never say that you created, changed, deleted or started anything.
-- Use your tools to look things up and show results; don't invent names or values.
-- When a tool shows results, answer in one or two short sentences instead of repeating them.
+const SYSTEM_PROMPT = `You are the assistant of the Pulp web UI. Pulp manages software
+repositories, remotes, publications, distributions and content. Answer questions about this Pulp
+as well as someone with its CLI and API would.
+- You can only read. Never say that you created, changed, deleted or started anything; tell the
+  user where in the UI to do it.
+- Prefer the specific tools (repository status, tasks, distributions, system status) when they
+  fit. For anything else, find the endpoint with findEndpoints and read it with pulpGet; chain
+  reads, using pulp_hrefs from one result in the next. Ask for only the fields you need.
+- Read a guide with readGuide before explaining Pulp concepts, Artifactory equivalents, where
+  content is or is served, tasks, client setup or API filters.
+- Base every name, number and state on what the tools returned. If the API can't tell, say so.
+- The tools show their results as cards; don't repeat them. Answer the question itself, briefly.
 - If a tool says the user isn't allowed to read something, tell them so.`;
 
 /** The routes the chat uses; threads, memories, transcription and the inspector stay closed. */
@@ -53,9 +60,9 @@ export const createAiHandler = (config: IAiConfig) => {
         model: buildModel(config),
         apiKey: config.apiKey,
         prompt: SYSTEM_PROMPT,
-        // A frontend tool call, then the answer.
-        maxSteps: 5,
-        maxOutputTokens: 2048,
+        // Room to look up endpoints and chain reads, as with the CLI.
+        maxSteps: 20,
+        maxOutputTokens: 4096,
         // Never fetch URLs that appear in messages.
         urlDownload: "disabled",
       }),

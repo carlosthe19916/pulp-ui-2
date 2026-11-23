@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import {
   useAgent,
   useCopilotKit,
+  useRenderActivityMessage,
   useRenderToolCall,
 } from "@copilotkit/react-core/v2";
 
@@ -42,6 +43,9 @@ import type { AssistantDisplayMode } from "@app/layout/assistantDisplayMode";
 import styles from "./AssistantChat.module.css";
 
 const ASSISTANT_NAME = "Pulp assistant";
+
+/** CopilotKit's tool for composed views; its view arrives as its own message. */
+const RENDER_UI_TOOL = "render_ui";
 
 /** PatternFly's display modes, in its options-menu order. */
 const DISPLAY_MODES: {
@@ -94,6 +98,7 @@ export const AssistantChat: React.FC<IAssistantChatProps> = ({
   const { agent } = useAgent();
   const { copilotkit } = useCopilotKit();
   const renderToolCall = useRenderToolCall();
+  const { renderActivityMessage } = useRenderActivityMessage();
 
   const messages = agent.messages;
   const isRunning = agent.isRunning;
@@ -177,20 +182,42 @@ export const AssistantChat: React.FC<IAssistantChatProps> = ({
                 />
               );
             }
+            // A view the model composed from the generative UI catalog.
+            if (message.role === "activity") {
+              const view = renderActivityMessage(message);
+              return view ? (
+                <Message
+                  key={message.id}
+                  role="bot"
+                  name={ASSISTANT_NAME}
+                  isAvatarHidden
+                  extraContent={{ afterMainContent: view }}
+                />
+              ) : null;
+            }
             if (message.role !== "assistant") {
               return null;
             }
-            const toolCards = (message.toolCalls ?? []).map((toolCall) => (
-              <div key={toolCall.id}>
-                {renderToolCall({
-                  toolCall,
-                  toolMessage: messages.find(
-                    (other): other is Extract<typeof other, { role: "tool" }> =>
-                      other.role === "tool" && other.toolCallId === toolCall.id,
-                  ),
-                })}
-              </div>
-            ));
+            const toolCards = (message.toolCalls ?? [])
+              .filter((toolCall) => toolCall.function.name !== RENDER_UI_TOOL)
+              .map((toolCall) => (
+                <div key={toolCall.id}>
+                  {renderToolCall({
+                    toolCall,
+                    toolMessage: messages.find(
+                      (
+                        other,
+                      ): other is Extract<typeof other, { role: "tool" }> =>
+                        other.role === "tool" &&
+                        other.toolCallId === toolCall.id,
+                    ),
+                  })}
+                </div>
+              ));
+            // A turn that only composed a view has nothing of its own to show; the view follows.
+            if (!message.content && toolCards.length === 0) {
+              return null;
+            }
             return (
               <Message
                 key={message.id}

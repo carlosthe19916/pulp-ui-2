@@ -17,6 +17,7 @@ import {
   Flex,
   Skeleton,
 } from "@patternfly/react-core";
+import textStyles from "@patternfly/react-styles/css/utilities/Text/text";
 
 import { TaskStateLabel } from "@app/components/TaskStateLabel";
 import { useSelectedDomain } from "@app/hooks/useSelectedDomain";
@@ -104,7 +105,12 @@ export const TaskResults: React.FC<ITaskResultsProps> = ({ state, name }) => {
                               <TaskStateLabel state={task.state} isCompact />
                             </Flex>
                             {detail ? (
-                              <Content component="p">{detail}</Content>
+                              <Content
+                                component="p"
+                                className={textStyles.textBreakWord}
+                              >
+                                {detail}
+                              </Content>
                             ) : null}
                             <Content component="small">
                               {formatDateTime(when)}

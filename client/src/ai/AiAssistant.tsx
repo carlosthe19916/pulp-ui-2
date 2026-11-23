@@ -8,6 +8,7 @@ import type { AssistantDisplayMode } from "@app/layout/assistantDisplayMode";
 
 import { AssistantChat } from "./AssistantChat";
 import { usePageContext } from "./context/usePageContext";
+import { assistantUI } from "./generative-ui/assistantUI";
 import { useAssistantTools } from "./tools";
 
 /** Served by the UI server, on the same origin. */
@@ -34,6 +35,8 @@ export const AiAssistant: React.FC<IAiAssistantProps> = (chatProps) => (
     showIntelligenceIndicator={false}
     // The chat is PatternFly's; CopilotKit's dev inspector would float over the masthead.
     enableInspector={false}
+    // The model can also compose views from these components, with the render_ui tool.
+    generativeUI={{ ui: assistantUI }}
   >
     <AssistantTools />
     <AssistantChat {...chatProps} />
